@@ -1,0 +1,407 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Sshd</title><link>https://go-authn.github.io/docs/0.1/de/tags/sshd/</link><description>Recent content in Sshd on go-authn</description><generator>Hugo -- gohugo.io</generator><language>de</language><atom:link href="https://go-authn.github.io/docs/0.1/de/tags/sshd/index.xml" rel="self" type="application/rss+xml"/><item><title>sshcert-authorize</title><link>https://go-authn.github.io/docs/0.1/de/sshcert/authorize/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/de/sshcert/authorize/</guid><description>
+&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; fragt es bei jeder Anmeldung mit Zertifikat, welche Principals sich an dem
+Konto anmelden dürfen. Es antwortet nur dann mit den Principals des Kontos, wenn der
+Domain-Grant des Zertifikats diesen Host nennt; andernfalls antwortet es nichts, und
+&lt;code&gt;sshd&lt;/code&gt; lehnt das Zertifikat ab. Es übernimmt die Argumente, Flags, Ausgabe und das
+Log-Format von GÉANTs &lt;code&gt;ssh-cert-authorize&lt;/code&gt; und unterscheidet sich darin, was es ablehnt.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="how-sshd-calls-it"&gt;Wie sshd es aufruft&lt;span class="hx:absolute hx:-mt-20" id="how-sshd-calls-it"&gt;&lt;/span&gt;
+&lt;a href="#how-sshd-calls-it" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# /etc/ssh/sshd_config
+TrustedUserCAKeys /etc/ssh/efp-ssh-ca.pub
+AuthorizedPrincipalsCommand /usr/local/bin/sshcert-authorize %u %k
+AuthorizedPrincipalsCommandUser nobody&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -o root -g root -m &lt;span class="m"&gt;0755&lt;/span&gt; sshcert-authorize /usr/local/bin/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; login.example.org &amp;gt; /etc/ssh/cert-allowed-domain.conf&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;und, für jedes lokale Konto, die Principals, die sich daran anmelden dürfen, einer pro
+Zeile, in &lt;code&gt;/etc/ssh/auth_principals/&amp;lt;account&amp;gt;&lt;/code&gt;. sshd führt den Befehl nur von einem Pfad
+aus, der root gehört und für niemanden sonst beschreibbar ist.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;%u&lt;/code&gt; ist das Konto, an dem die Anmeldung erfolgt. &lt;code&gt;%k&lt;/code&gt; ist das Zertifikat, base64; eine
+ganze Zeile &lt;code&gt;ssh-...-cert-v01@openssh.com BASE64&lt;/code&gt; wird ebenfalls gelesen, und fehlt das
+Argument, wird das Zertifikat von der Standardeingabe gelesen. Ein drittes Argument,
+&lt;code&gt;%t&lt;/code&gt;, muss dann der Typ des Zertifikats sein.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Exit&lt;/th&gt;
+&lt;th&gt;gibt aus&lt;/th&gt;
+&lt;th&gt;sshd&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;die Principals des Kontos, einer pro Zeile&lt;/td&gt;
+&lt;td&gt;lässt das Zertifikat zu, wenn einer seiner Principals darunter ist&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;1&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;nichts&lt;/td&gt;
+&lt;td&gt;lehnt es ab&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;2&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;nichts&lt;/td&gt;
+&lt;td&gt;lehnt es ab: Die Argumente waren falsch&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Es prüft weder die Signatur noch die CA noch die Gültigkeitsdaten&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Nichts in dem Befehl prüft die Signatur des Zertifikats oder sein
+Gültigkeitsfenster: Das tut sshd, das der CA über &lt;code&gt;TrustedUserCAKeys&lt;/code&gt; vertraut.
+Der Befehl entscheidet eine einzige Frage: ob das Zertifikat für diesen Host und
+dieses Konto bestimmt ist.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;Was es ablehnt&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;In der Reihenfolge, in der es prüft:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;einen Kontonamen, der leer, &lt;code&gt;.&lt;/code&gt; oder &lt;code&gt;..&lt;/code&gt; ist oder &lt;code&gt;/&lt;/code&gt;, &lt;code&gt;\&lt;/code&gt; oder ein NUL enthält;&lt;/li&gt;
+&lt;li&gt;einen Host ohne konfigurierte Domain oder einen, der kein gültiger Hostname ist;&lt;/li&gt;
+&lt;li&gt;ein Zertifikat, das sich nicht parsen lässt, einen bloßen Schlüssel oder ein Host-Zertifikat;&lt;/li&gt;
+&lt;li&gt;ein &lt;code&gt;%t&lt;/code&gt;, das nicht der Typ des Zertifikats ist;&lt;/li&gt;
+&lt;li&gt;mit &lt;code&gt;--krl&lt;/code&gt; ein Zertifikat, das die Liste widerruft, oder &lt;strong&gt;jedes&lt;/strong&gt; Zertifikat, wenn
+die Liste nicht gelesen werden kann oder abgelaufen ist;&lt;/li&gt;
+&lt;li&gt;einen Domain-Grant, der vorhanden und fehlerhaft ist, &lt;strong&gt;unabhängig von den Flags&lt;/strong&gt;;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;überhaupt keinen Domain-Grant&lt;/strong&gt;, sofern nicht &lt;code&gt;--allow-no-grant&lt;/code&gt; gesetzt ist;&lt;/li&gt;
+&lt;li&gt;einen Grant, von dessen Mustern keines auf einen der Namen des Hosts passt;&lt;/li&gt;
+&lt;li&gt;ein Konto ohne Principals-Datei oder mit einer leeren.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Die Namen des Hosts sind &lt;code&gt;--domain&lt;/code&gt; oder die Variable, die &lt;code&gt;--domain-env&lt;/code&gt; nennt, oder die
+Zeilen von &lt;code&gt;--domain-file&lt;/code&gt; (Leerzeilen und &lt;code&gt;#&lt;/code&gt;-Kommentare werden ignoriert; mehrere Zeilen
+sind mehrere Namen, von denen jeder passen darf).&lt;/p&gt;
+&lt;p&gt;Mit Zertifikaten, die von einer Test-CA für das Konto &lt;code&gt;alice&lt;/code&gt; signiert sind, dessen
+Principals-Datei &lt;code&gt;a1b2c3@univ-example.fr&lt;/code&gt; aufführt, auf einem Host namens
+&lt;code&gt;login.hpc.example.org&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.fr granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.fr&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.fr&amp;#34;] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+a1b2c3@univ-example.fr&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Die letzte Zeile ist die Antwort, die sshd liest; die Zeilen davor sind das Log, hier auf
+der Standardfehlerausgabe. Ein Zertifikat, das anderen Hosts gewährt wurde:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-other-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1003 key_id=&amp;#34;a1b2c3@univ-example.fr other host&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;domain not granted&amp;#34; grant=[&amp;#34;*.elsewhere.example.net&amp;#34;] serial=1003 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Ein Zertifikat ohne Grant:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-nogrant-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1002 key_id=&amp;#34;a1b2c3@univ-example.fr no grant&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;no domain grant&amp;#34; serial=1002 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Ein Konto ohne Principals-Datei und ein bloßer Schlüssel:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals bob &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.fr granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+WARNING: action=denied user=bob domain=login.hpc.example.org reason=&amp;#34;no principals file for the user&amp;#34; serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice.pub)&amp;#34;
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;a ssh-ed25519 key, not a certificate&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Jeder dieser Aufrufe endete mit &lt;code&gt;1&lt;/code&gt; und gab nichts auf der Standardausgabe aus.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-a-certificate-with-no-grant-is-refused"&gt;Warum ein Zertifikat ohne Grant abgelehnt wird&lt;span class="hx:absolute hx:-mt-20" id="why-a-certificate-with-no-grant-is-refused"&gt;&lt;/span&gt;
+&lt;a href="#why-a-certificate-with-no-grant-is-refused" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;GÉANTs &lt;code&gt;ssh-cert-authorize&lt;/code&gt; lässt ein Zertifikat ohne Domain-Grant durch
+(„might be valid for non-domain-based auth“), ebenso eines, dessen Grant es nicht
+parsen kann oder das leer ist. Dann lässt eine Site, die in &lt;code&gt;TrustedUserCAKeys&lt;/code&gt;
+&lt;strong&gt;zwei&lt;/strong&gt; CAs vertraut (der der Föderation und ihrer eigenen für das Personal, oder einer
+Test-CA), ein Zertifikat der zweiten CA auf jedem Host herein, für jeden Principal in einer
+Principals-Datei, ganz ohne Domain-Prüfung. Der Domain-Filter ist nur dann ein Filter,
+wenn ein Zertifikat, das nicht sagt, wo es verwendet werden darf, abgelehnt wird.&lt;/p&gt;
+&lt;p&gt;Eine Site, die GÉANTs Verhalten wirklich will, sagt das, und der Befehl protokolliert
+jedes Mal, wenn er es anwendet:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --allow-no-grant --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-nogrant-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1002 key_id=&amp;#34;a1b2c3@univ-example.fr no grant&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+WARNING: action=no_grant_allowed user=alice domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.fr&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.fr&amp;#34;] domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+a1b2c3@univ-example.fr&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Selbst dann wird ein Grant, der vorhanden, aber fehlerhaft ist, abgelehnt.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="krl"&gt;&lt;code&gt;--krl&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="krl"&gt;&lt;/span&gt;
+&lt;a href="#krl" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;RevokedKeys&lt;/code&gt; ist sshds eigene Prüfung, die vor dem Befehl erfolgt, für jeden Schlüssel
+und jedes Zertifikat, und sie widerruft auch einen CA-Schlüssel; bevorzugen Sie sie.
+&lt;code&gt;--krl FILE&lt;/code&gt; prüft eine OpenSSH-KRL innerhalb des Befehls und ergänzt, was sshd nicht
+tut: Es lehnt &lt;strong&gt;jedes&lt;/strong&gt; Zertifikat ab, sobald die Liste abgelaufen ist (ihre Erweiterung
+&lt;code&gt;expires@go-authn.github.io&lt;/code&gt;, die sshd ignoriert), und jedes Zertifikat, wenn die Liste
+nicht gelesen werden kann. Eine Liste ohne Ablaufdatum wird ohne eines verwendet.&lt;/p&gt;
+&lt;p&gt;Mit der KRL, die &lt;a href="https://go-authn.github.io/docs/0.1/de/authn-revokd/"&gt;authn-revokd&lt;/a&gt; schreibt: eine
+aktuelle und dann die fail-closed Liste, die es schreibt, wenn die Liste des Ausstellers
+&lt;a href="https://go-authn.github.io/docs/0.1/de/authn-revokd/lapse/"&gt;verfällt&lt;/a&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.fr granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.fr&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.fr&amp;#34;] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+a1b2c3@univ-example.fr
+$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.fr granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;certificate revoked&amp;#34; serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+$ sshcert-authorize --syslog=false --krl missing.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.fr granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;KRL unreadable: open missing.krl: no such file or directory&amp;#34; serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Der zweite Aufruf wird abgelehnt, weil die Liste den &lt;strong&gt;CA-Schlüssel&lt;/strong&gt; des Zertifikats
+widerruft: Die Prüfung umfasst den eigenen Schlüssel des Zertifikats, seine Seriennummer
+und Key-ID sowie den Schlüssel, der es signiert hat.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="flags"&gt;Flags&lt;span class="hx:absolute hx:-mt-20" id="flags"&gt;&lt;/span&gt;
+&lt;a href="#flags" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize -help
+usage: sshcert-authorize [flags] USER [CERTIFICATE [KEYTYPE]]
+An sshd AuthorizedPrincipalsCommand (%u %k) that refuses a certificate whose
+ssh-domain-grant@core.aai.geant.org extension does not grant this host, or that has none.
+-allow-no-grant
+let in a certificate with no domain grant (GÉANT&amp;#39;s behaviour); a malformed grant is still refused
+-debug
+log details
+-domain string
+the host&amp;#39;s domain (overrides --domain-env and --domain-file)
+-domain-env string
+environment variable holding the host&amp;#39;s domain
+-domain-file string
+file holding the host&amp;#39;s domain, one name per line (default &amp;#34;/etc/ssh/cert-allowed-domain.conf&amp;#34;)
+-extension string
+name of the domain-grant extension (default &amp;#34;ssh-domain-grant@core.aai.geant.org&amp;#34;)
+-krl string
+refuse certificates this OpenSSH KRL revokes, and every certificate once it has expired or cannot be read
+-principals-dir string
+directory of principals files, one per user (default &amp;#34;/etc/ssh/auth_principals&amp;#34;)
+-syslog
+log to syslog, facility AUTH (--syslog=false: to stderr) (default true)
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;Logs&lt;/strong&gt; sind &lt;code&gt;key=value&lt;/code&gt;-Zeilen (&lt;code&gt;action=cert_processed&lt;/code&gt;, &lt;code&gt;action=denied&lt;/code&gt;,
+&lt;code&gt;action=authorized&lt;/code&gt;, mit &lt;code&gt;serial&lt;/code&gt; und &lt;code&gt;ca_fingerprint&lt;/code&gt;), standardmäßig an syslog,
+Facility AUTH. sshd verwirft die Standardfehlerausgabe des Befehls, lassen Sie syslog im
+Produktivbetrieb also eingeschaltet; &lt;code&gt;--debug&lt;/code&gt; schreibt zusätzlich alles auf die
+Standardfehlerausgabe. Ein Wert, der vom Client kommt, etwa der Kontoname, wird in
+Anführungszeichen gesetzt, wenn er ein Leerzeichen, &lt;code&gt;=&lt;/code&gt;, ein Anführungszeichen oder ein
+Steuerzeichen enthält, sodass er kein Log-Feld fälschen kann.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;-version&lt;/code&gt;&lt;/strong&gt; gibt die Modulversion aus, in einem Release-Binary ebenso wie in einem,
+das mit &lt;code&gt;go install&lt;/code&gt; gebaut wurde:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.5
+$ sshcert-authorize -version
+sshcert-authorize v0.1.5&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Vor v0.1.5 gab ein Binary aus &lt;code&gt;go install&lt;/code&gt; &lt;code&gt;sshcert-authorize dev&lt;/code&gt; aus.&lt;/p&gt;</description></item><item><title>Wenn eine Liste verfällt</title><link>https://go-authn.github.io/docs/0.1/de/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/de/authn-revokd/lapse/</guid><description>
+&lt;p&gt;Eine Widerrufsprüfung, die alles durchlässt, wenn die Liste nicht zu bekommen ist, ist
+genau die, die ein Angreifer aushebelt, der die Liste blockieren kann. Wenn authn-revokd also
+keine aktuelle Liste einer Quelle hält, wird das, was die Liste dieser Quelle schützt,
+&lt;strong&gt;abgelehnt&lt;/strong&gt;, bis wieder eine aktuelle Liste eintrifft.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Ausgabe&lt;/th&gt;
+&lt;th&gt;solange eine Quelle keine aktuelle Liste hat&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;eine KRL, für &lt;code&gt;sshd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;authn-revokd schreibt eine KRL, die &lt;strong&gt;den CA-Schlüssel der Quelle widerruft&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;eine CRL, für einen TLS-Server&lt;/td&gt;
+&lt;td&gt;die abgelaufene CRL bleibt an ihrem Platz; OpenSSL lehnt eine abgelaufene CRL von sich aus ab&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;Für sshd: die CA selbst widerrufen&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; kennt keinen Ablauf einer Liste: Es würde die zuletzt geschriebene Datei für immer
+weiterlesen. Es prüft aber den &lt;strong&gt;CA-Schlüssel&lt;/strong&gt; jedes Zertifikats gegen
+&lt;code&gt;RevokedKeys&lt;/code&gt;. Anstelle der Liste, für die es nicht bürgen kann, setzt authn-revokd daher
+den eigenen Schlüssel der CA in die Ausgabe, und jedes Zertifikat, das diese CA signiert hat, wird
+abgelehnt, und nichts sonst.&lt;/p&gt;
+&lt;p&gt;Hier ist der Aussteller gestoppt, und die KRL-Quelle hat &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;, sodass die
+gehaltene Kopie innerhalb einer Minute statt einer Stunde verfällt. Die CRL-Quelle hat kein
+&lt;code&gt;max_age&lt;/code&gt;, und ihre Kopie ist noch aktuell:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-10T21:54:55Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:2zKzlmqkMRAvBYIAisepe9ulFWDmDbTVCjcfCylTkOo # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt; ist &lt;code&gt;not current&lt;/code&gt;, und seine Ausgabe schlägt geschlossen fehl (fail closed); &lt;code&gt;bridge-x509&lt;/code&gt;
+ist nur &lt;code&gt;not fetched&lt;/code&gt;, und seine CRL bleibt, wie sie war
+(&lt;a href="https://go-authn.github.io/docs/0.1/de/authn-revokd/verification/#what--once-reports"&gt;was &lt;code&gt;-once&lt;/code&gt; meldet&lt;/a&gt;).
+&lt;code&gt;SHA256:2zKz...&lt;/code&gt; ist die SSH-CA der Bridge. Ein Zertifikat, das sie signiert hat, ist nun
+für alles, was die Datei liest, widerrufen:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Der Kommentar sagt &lt;code&gt;FAIL CLOSED&lt;/code&gt; und nennt die Quelle, sodass eine Person, die
+&lt;code&gt;ssh-keygen -Q -l&lt;/code&gt; liest, sieht, warum. Das Datum der Datei ist 1970, wenn jede Quelle
+verfallen ist. Die Ausgabe wird geschrieben, &lt;strong&gt;sobald eine Synchronisierung es bemerkt&lt;/strong&gt;, was für den Daemon
+sein nächster &lt;code&gt;refresh&lt;/code&gt; ist und für den Timer sein nächster Takt. Wenn wieder eine aktuelle Liste
+eintrifft, schreibt die nächste Synchronisierung sie anstelle des CA-Schlüssels, und die Zertifikate der CA
+werden wieder angenommen.&lt;/p&gt;
+&lt;p&gt;Dasselbe geschieht &lt;strong&gt;vor der ersten Liste&lt;/strong&gt;: Eine nie abgerufene Quelle hat nichts
+Aktuelles, und ihre CA ist ab dem ersten Schreiben widerrufen. Eine neue Installation lehnt
+die Zertifikate der CA ab, bis ihre erste Liste die Prüfung besteht, statt sie
+ungeprüft anzunehmen.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;Jede CA für sich&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;In einer Ausgabe, die mehrere Quellen zusammenführt, wird nur die CA der verfallenen Quelle
+widerrufen. Die anderen behalten ihre Listen. Eine Liste, die sich nicht zusammenführen lässt (jenseits der
+Seriennummernbereiche, die go-authn/krl behält), schlägt nur für ihre eigene CA geschlossen fehl, und
+&lt;code&gt;/healthz&lt;/code&gt; nennt sie. Nur wenn sich die Listen einzeln, aber nicht gemeinsam zusammenführen lassen, wird jede CA
+der Ausgabe widerrufen, und der Kommentar sagt es
+(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;). Stattdessen die alte Datei zu behalten,
+würde einen späteren Verfall unbemerkt lassen.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;Für einen TLS-Server: die CRL selbst&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Eine CRL sagt bereits, wann sie aufhört, aktuell zu sein, und OpenSSL lehnt eine ab, die
+ihr &lt;code&gt;nextUpdate&lt;/code&gt; überschritten hat („CRL has expired“). authn-revokd lässt daher die letzte geprüfte
+CRL an ihrem Platz, und der TLS-Server schlägt von sich aus geschlossen fehl. Deshalb wird auch
+&lt;code&gt;max_age&lt;/code&gt; bei einer Quelle abgelehnt, die eine CRL-Ausgabe speist: Ein Server, der
+die CRL geladen hat, behält sie bis zu ihrem &lt;code&gt;nextUpdate&lt;/code&gt;, was auch immer authn-revokd schreibt.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;Leser, die den Ablauf selbst prüfen&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Die zusammengeführte KRL trägt einen Ablauf, den ersten ihrer aktuellen Eingaben. Ein Leser,
+der ihn prüft, etwa &lt;code&gt;ssh_krl_file&lt;/code&gt; von go-fileshare oder
+&lt;a href="https://go-authn.github.io/docs/0.1/de/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;,
+sieht authn-revokd anhalten, wie er den Aussteller anhalten sähe.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Das funktioniert nur, solange authn-revokd läuft&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Dass die Datei geschlossen fehlschlägt, besorgt authn-revokd. Solange es gestoppt ist, liest sshd
+weiter die zuletzt geschriebene Datei, aktuell oder nicht. Daher &lt;code&gt;Restart=always&lt;/code&gt; beim
+Daemon und die Überwachung der Unit, des Timers oder von &lt;code&gt;/healthz&lt;/code&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

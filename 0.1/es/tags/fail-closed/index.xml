@@ -1,0 +1,114 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Fail Closed</title><link>https://go-authn.github.io/docs/0.1/es/tags/fail-closed/</link><description>Recent content in Fail Closed on go-authn</description><generator>Hugo -- gohugo.io</generator><language>es</language><atom:link href="https://go-authn.github.io/docs/0.1/es/tags/fail-closed/index.xml" rel="self" type="application/rss+xml"/><item><title>Cuando una lista caduca</title><link>https://go-authn.github.io/docs/0.1/es/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/es/authn-revokd/lapse/</guid><description>
+&lt;p&gt;Una comprobación de revocación que deja pasar todo cuando no se puede obtener la
+lista es la que derrota un atacante capaz de bloquear la lista. Así que cuando
+authn-revokd no tiene ninguna lista vigente de un origen, lo que protege la lista de
+ese origen se &lt;strong&gt;rechaza&lt;/strong&gt;, hasta que vuelva a llegar una lista vigente.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;salida&lt;/th&gt;
+&lt;th&gt;mientras un origen no tiene lista vigente&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;una KRL, para &lt;code&gt;sshd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;authn-revokd escribe una KRL que &lt;strong&gt;revoca la clave de la CA del origen&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;una CRL, para un servidor TLS&lt;/td&gt;
+&lt;td&gt;la CRL caducada se deja en su sitio; OpenSSL rechaza por sí solo una CRL caducada&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;Para sshd: revocar la propia CA&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; no tiene noción de la caducidad de una lista: seguiría leyendo para siempre el
+último archivo escrito. Pero sí comprueba la &lt;strong&gt;clave de la CA&lt;/strong&gt; de cada certificado
+contra &lt;code&gt;RevokedKeys&lt;/code&gt;. Así que, en lugar de la lista que no puede avalar, authn-revokd
+pone en la salida la propia clave de la CA, y se rechaza cada certificado que firmó
+esa CA, y nada más.&lt;/p&gt;
+&lt;p&gt;Aquí el emisor está detenido, y el origen KRL tiene &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;, de modo que la
+copia guardada caduca en menos de un minuto en lugar de una hora. El origen CRL no
+tiene &lt;code&gt;max_age&lt;/code&gt;, y su copia sigue vigente:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-10T21:54:55Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:2zKzlmqkMRAvBYIAisepe9ulFWDmDbTVCjcfCylTkOo # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt; está &lt;code&gt;not current&lt;/code&gt;, y su salida está en modo cerrado; &lt;code&gt;bridge-x509&lt;/code&gt; solo
+está &lt;code&gt;not fetched&lt;/code&gt;, y su CRL se deja como estaba
+(&lt;a href="https://go-authn.github.io/docs/0.1/es/authn-revokd/verification/#what--once-reports"&gt;lo que informa &lt;code&gt;-once&lt;/code&gt;&lt;/a&gt;).
+&lt;code&gt;SHA256:2zKz...&lt;/code&gt; es la CA SSH del bridge. Un certificado firmado por ella queda ahora
+revocado para todo lo que lea el archivo:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;El comentario dice &lt;code&gt;FAIL CLOSED&lt;/code&gt; y nombra el origen, así que una persona que lea
+&lt;code&gt;ssh-keygen -Q -l&lt;/code&gt; ve por qué. La fecha del archivo es 1970 cuando todos los orígenes
+han caducado. La salida se escribe &lt;strong&gt;en cuanto una sincronización lo detecta&lt;/strong&gt;, que
+para el demonio es su siguiente &lt;code&gt;refresh&lt;/code&gt; y para el temporizador su siguiente disparo.
+Cuando vuelve a llegar una lista vigente, la siguiente sincronización la escribe en
+lugar de la clave de la CA, y los certificados de la CA vuelven a aceptarse.&lt;/p&gt;
+&lt;p&gt;Lo mismo ocurre &lt;strong&gt;antes de la primera lista&lt;/strong&gt;: un origen que nunca se ha descargado no
+tiene nada vigente, y su CA queda revocada desde la primera escritura. Una instalación
+nueva rechaza los certificados de la CA hasta que su primera lista se verifica, en
+lugar de aceptarlos sin comprobar.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;Cada CA por su cuenta&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;En una salida que fusiona varios orígenes, solo se revoca la CA del origen caducado.
+Los demás conservan sus listas. Una lista que no se puede fusionar (más allá de los
+rangos de números de serie que admite go-authn/krl) falla en modo cerrado solo para su
+propia CA, y &lt;code&gt;/healthz&lt;/code&gt; la nombra. Solo si las listas se fusionan por separado pero no
+juntas se revocan todas las CA de la salida, y el comentario lo dice
+(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;). Conservar el archivo anterior en su
+lugar dejaría pasar desapercibida una caducidad posterior.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;Para un servidor TLS: la propia CRL&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Una CRL ya dice cuándo deja de estar vigente, y OpenSSL rechaza una que ha pasado su
+&lt;code&gt;nextUpdate&lt;/code&gt; (&amp;ldquo;CRL has expired&amp;rdquo;). Así que authn-revokd deja en su sitio la última CRL
+verificada, y el servidor TLS falla en modo cerrado por sí solo. Por eso también se
+rechaza &lt;code&gt;max_age&lt;/code&gt; en un origen que alimenta una salida CRL: un servidor que ha cargado
+la CRL la conserva hasta su &lt;code&gt;nextUpdate&lt;/code&gt;, escriba lo que escriba authn-revokd.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;Lectores que comprueban la caducidad por sí mismos&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;La KRL fusionada lleva una caducidad, la primera de sus entradas vigentes. Un lector
+que la comprueba, como el &lt;code&gt;ssh_krl_file&lt;/code&gt; de go-fileshare o
+&lt;a href="https://go-authn.github.io/docs/0.1/es/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;,
+ve detenerse authn-revokd igual que vería detenerse el emisor.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Esto solo funciona mientras authn-revokd se ejecuta&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Es authn-revokd quien pone el archivo en modo cerrado. Mientras está detenido, sshd
+sigue leyendo el último archivo escrito, vigente o no. De ahí &lt;code&gt;Restart=always&lt;/code&gt; en el
+demonio, y la supervisión de la unidad, o del temporizador, o de &lt;code&gt;/healthz&lt;/code&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

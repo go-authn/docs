@@ -1,0 +1,858 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Revocation</title><link>https://go-authn.github.io/docs/0.1/fr/tags/revocation/</link><description>Recent content in Revocation on go-authn</description><generator>Hugo -- gohugo.io</generator><language>fr</language><atom:link href="https://go-authn.github.io/docs/0.1/fr/tags/revocation/index.xml" rel="self" type="application/rss+xml"/><item><title>authn-revokd</title><link>https://go-authn.github.io/docs/0.1/fr/authn-revokd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/fr/authn-revokd/</guid><description>
+&lt;p&gt;&lt;strong&gt;OpenSSH n&amp;rsquo;a aucun moyen de distribuer une KRL, et rien dans une KRL ne dit qu&amp;rsquo;elle est
+périmée.&lt;/strong&gt; &lt;code&gt;sshd&lt;/code&gt; lit un fichier qui a cessé d&amp;rsquo;être mis à jour il y a des mois comme la liste
+en vigueur. authn-revokd comble ces deux lacunes pour les listes que publie
+&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-bridge/revocation/"&gt;authn-bridge&lt;/a&gt; : il
+récupère chaque liste, ne la garde que si elle se vérifie, l&amp;rsquo;écrit là où &lt;code&gt;sshd&lt;/code&gt; ou un serveur
+TLS la lit, et, quand une liste expire, en écrit une qui &lt;strong&gt;révoque l&amp;rsquo;AC (autorité de certification)
+elle-même&lt;/strong&gt;. Pur Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un seul binaire. Ces pages décrivent la v0.6.2.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.2
+$ authn-revokd -version
+authn-revokd v0.6.2
+$ authn-revokd -help
+Usage of authn-revokd:
+-config string
+the configuration file (default &amp;#34;/etc/authn-revokd/revokd.hcl&amp;#34;)
+-once
+sync once and exit: 1 when a list is not current, or could not be fetched
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;-help&lt;/code&gt; sort avec 0 ; avant la v0.6.2, il sortait avec 2.&lt;/p&gt;
+&lt;p&gt;Avant la v0.6.0, la commande s&amp;rsquo;appelait &lt;code&gt;revokd&lt;/code&gt;, et lisait &lt;code&gt;/etc/revokd.hcl&lt;/code&gt; par défaut.
+Plus rien ne lit ce fichier ; quand il est présent et que le nouveau fichier par défaut ne l&amp;rsquo;est pas,
+l&amp;rsquo;erreur nomme les deux chemins.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-does-in-one-run"&gt;Ce qu&amp;rsquo;il fait, en une exécution&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-in-one-run"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-in-one-run" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Face à un authn-bridge de test sur l&amp;rsquo;interface de bouclage, avec une source KRL et une source CRL :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-10T20:57:59Z, expires 2026-10-10T21:57:59Z
+bridge-x509: version 1791665879411, issued 2026-10-10T20:57:59Z, expires 2026-10-10T21:57:59Z
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
+output tls: wrote /tmp/docs-patch-a2daf7c8/revokd/out/bridge.crl
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261010T225759
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Une seconde exécution sans rien de nouveau n&amp;rsquo;affiche rien et sort avec 0 : une sortie n&amp;rsquo;est
+réécrite que lorsque son contenu change.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-the-transport-does-not-matter"&gt;Pourquoi le transport n&amp;rsquo;a pas d&amp;rsquo;importance&lt;span class="hx:absolute hx:-mt-20" id="why-the-transport-does-not-matter"&gt;&lt;/span&gt;
+&lt;a href="#why-the-transport-does-not-matter" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Chaque liste s&amp;rsquo;authentifie elle-même : une KRL par une signature SSHSIG détachée faite avec la
+propre clé de l&amp;rsquo;AC, une CRL par la signature de son AC. Chaque liste dit quand elle cesse d&amp;rsquo;être
+en vigueur. Une liste peut donc arriver par HTTPS, par HTTP en clair à l&amp;rsquo;intérieur d&amp;rsquo;une grappe, par un miroir,
+ou par un fichier. Le transport décide de la vitesse à laquelle un changement arrive, jamais de l&amp;rsquo;acceptation
+d&amp;rsquo;une liste falsifiée ou périmée.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;authentique&lt;/td&gt;
+&lt;td&gt;SSHSIG par la clé de l&amp;rsquo;AC SSH, espace de noms &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;signée par son AC&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;en vigueur&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;expires@go-authn.github.io&lt;/code&gt;, que sshd ignore&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;jamais en arrière&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;krl_version&lt;/code&gt;, puis date de génération&lt;/td&gt;
+&lt;td&gt;CRL Number, puis &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;refus en cas de doute&lt;/td&gt;
+&lt;td&gt;authn-revokd écrit une KRL qui révoque la clé de l&amp;rsquo;AC&lt;/td&gt;
+&lt;td&gt;OpenSSL refuse de lui-même une CRL expirée&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="where-to-go-next"&gt;Pour aller plus loin&lt;span class="hx:absolute hx:-mt-20" id="where-to-go-next"&gt;&lt;/span&gt;
+&lt;a href="#where-to-go-next" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/install/"&gt;L&amp;rsquo;installer&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;le démon, ou &lt;code&gt;-once&lt;/code&gt; sur un minuteur ; brancher sshd et nginx&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/configuration/"&gt;La configuration&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;sources, sorties, le miroir, et ce qui est refusé&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/verification/"&gt;Comment une liste est vérifiée&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;signature, dates, et jamais plus ancienne que la liste détenue, même après un redémarrage&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/lapse/"&gt;Quand une liste expire&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;la KRL qui révoque l&amp;rsquo;AC elle-même&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="what-it-does-not-do"&gt;Ce qu&amp;rsquo;il ne fait pas&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-not-do"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-not-do" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Une révocation n&amp;rsquo;atteint pas un serveur plus vite que la fréquence d&amp;rsquo;interrogation d&amp;rsquo;authn-revokd (&lt;code&gt;refresh&lt;/code&gt;),
+plus le délai de l&amp;rsquo;émetteur pour émettre à nouveau. Tant que l&amp;rsquo;émetteur est arrêté, ses
+certificats sont refusés à partir de l&amp;rsquo;expiration de la liste. Quiconque détient la clé d&amp;rsquo;une AC peut
+signer n&amp;rsquo;importe quelle liste, comme n&amp;rsquo;importe quel certificat.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;Licence&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause.&lt;/p&gt;</description></item><item><title>Comment une liste est vérifiée</title><link>https://go-authn.github.io/docs/0.1/fr/authn-revokd/verification/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/fr/authn-revokd/verification/</guid><description>
+&lt;p&gt;Une liste qui ne se vérifie pas n&amp;rsquo;est jamais écrite, servie ni utilisée. La dernière bonne
+copie reste. Une récupération qui échoue, pour quelque raison que ce soit, ne la remplace jamais par une réponse
+vide, qui ne révoquerait rien.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-signature"&gt;La signature&lt;span class="hx:absolute hx:-mt-20" id="the-signature"&gt;&lt;/span&gt;
+&lt;a href="#the-signature" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Une KRL&lt;/strong&gt; est récupérée avec sa signature, &lt;code&gt;&amp;lt;url&amp;gt;.sig&lt;/code&gt; : une SSHSIG en armure ASCII sur
+le fichier entier, faite avec la &lt;strong&gt;clé de l&amp;rsquo;AC SSH&lt;/strong&gt; configurée comme &lt;code&gt;ssh_ca&lt;/code&gt;, dans l&amp;rsquo;espace de noms
+&lt;code&gt;krl@go-authn.github.io&lt;/code&gt;. L&amp;rsquo;espace de noms empêche que la signature soit prise
+pour autre chose. Un signataire hache en SHA-512 ; SHA-256 est aussi accepté. Une
+signature RSA sous la forme SHA-1, que PROTOCOL.sshsig interdit, est refusée.&lt;/p&gt;
+&lt;p&gt;La KRL elle-même doit s&amp;rsquo;analyser comme &lt;code&gt;sshd&lt;/code&gt; l&amp;rsquo;analyse, et ne doit pas porter la propre
+section de signature d&amp;rsquo;OpenSSH, qu&amp;rsquo;OpenSSH ne vérifie jamais.&lt;/p&gt;
+&lt;p&gt;Une liste signée par toute autre clé est refusée :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-other.hcl -once
+bridge-ssh: revocation: the KRL&amp;#39;s signature does not verify by SHA256:SLbG7N&amp;#43;YZ/TQ6B3I1DQLYo2/6In4OWx5GYkRfKIxpxo: public key does not match
+bridge-x509: version 1791665695047, issued 2026-10-10T20:54:55Z, expires 2026-10-10T21:54:55Z
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/other.krl
+output tls: wrote /tmp/docs-patch-a2daf7c8/revokd/out/other.crl
+authn-revokd: not current: bridge-ssh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Ici, &lt;code&gt;ssh_ca&lt;/code&gt; nommait une clé qui n&amp;rsquo;avait pas signé la liste du bridge, et l&amp;rsquo;erreur nomme
+cette clé. Une signature qui ne se vérifie pas peut aussi être une liste émise de nouveau
+entre les deux requêtes, les deux sont donc récupérées une fois de plus avant que ce ne soit signalé.
+C&amp;rsquo;était la première récupération de cette source, il n&amp;rsquo;y avait donc aucune bonne copie à garder, et
+la sortie est d&amp;rsquo;emblée la &lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/lapse/"&gt;liste qui refuse en cas de doute&lt;/a&gt;.
+(Avant la v0.6.2, le même échec était signalé comme « the list changed between
+it and its signature », devant les mêmes mots.)&lt;/p&gt;
+&lt;p&gt;La signature est récupérée avec &lt;code&gt;If-Match: &amp;lt;the list's ETag&amp;gt;&lt;/code&gt;. Une liste émise
+de nouveau entre les deux requêtes répond &lt;code&gt;412&lt;/code&gt;, et les deux sont récupérées de nouveau.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Une CRL&lt;/strong&gt; est vérifiée par rapport au certificat d&amp;rsquo;AC configuré comme &lt;code&gt;x509_ca&lt;/code&gt; : sa
+signature d&amp;rsquo;abord, sur les octets bruts, &lt;strong&gt;avant&lt;/strong&gt; que le reste ne soit analysé, si bien qu&amp;rsquo;une grosse
+CRL signée par n&amp;rsquo;importe qui coûte une vérification de signature plutôt qu&amp;rsquo;une analyse. Ensuite, son
+émetteur doit être le sujet de ce certificat ; elle doit avoir un CRL Number et un
+&lt;code&gt;nextUpdate&lt;/code&gt; postérieur à son &lt;code&gt;thisUpdate&lt;/code&gt; ; et elle ne doit être ni une delta CRL, ni porter une
+extension critique autre que le CRL Number et l&amp;rsquo;Authority Key Identifier,
+ni une extension d&amp;rsquo;entrée critique.&lt;/p&gt;
+&lt;p&gt;Une KRL doit aussi &lt;strong&gt;dire quand elle expire&lt;/strong&gt;, dans l&amp;rsquo;extension &lt;code&gt;expires@go-authn.github.io&lt;/code&gt; :
+une KRL qui ne le dit pas ne pourrait jamais être distinguée d&amp;rsquo;une KRL périmée.&lt;/p&gt;
+&lt;p&gt;Les corps sont bornés : une KRL à 32 Mio, sa signature à 64 Kio, une CRL à 64 Mio.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-dates"&gt;Les dates&lt;span class="hx:absolute hx:-mt-20" id="the-dates"&gt;&lt;/span&gt;
+&lt;a href="#the-dates" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Une liste est en vigueur quand :&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;maintenant est avant son expiration (l&amp;rsquo;extension de la KRL, le &lt;code&gt;nextUpdate&lt;/code&gt; de la CRL) ;&lt;/li&gt;
+&lt;li&gt;elle n&amp;rsquo;a pas été émise plus de cinq minutes dans le futur : un émetteur dont l&amp;rsquo;horloge
+avance de plus que cela écrit des listes dont l&amp;rsquo;âge ne peut pas être connu ;&lt;/li&gt;
+&lt;li&gt;avec &lt;code&gt;max_age&lt;/code&gt;, elle n&amp;rsquo;a pas été émise depuis plus longtemps que cela.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Une liste qui n&amp;rsquo;est pas en vigueur est refusée à la récupération. Un &lt;code&gt;304 Not Modified&lt;/code&gt; n&amp;rsquo;apporte
+rien de nouveau : la copie détenue a pu expirer depuis, et elle est jugée de nouveau à chaque
+synchronisation.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="never-older-than-the-list-held"&gt;Jamais plus ancienne que la liste détenue&lt;span class="hx:absolute hx:-mt-20" id="never-older-than-the-list-held"&gt;&lt;/span&gt;
+&lt;a href="#never-older-than-the-list-held" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;La position d&amp;rsquo;une liste est sa &lt;strong&gt;version&lt;/strong&gt; (le &lt;code&gt;krl_version&lt;/code&gt; de la KRL, le CRL
+Number), puis son &lt;strong&gt;heure d&amp;rsquo;émission&lt;/strong&gt; (la date de génération de la KRL, le
+&lt;code&gt;thisUpdate&lt;/code&gt; de la CRL). Une liste ne peut remplacer celle détenue que si elle a une
+version plus élevée, ou la même version émise plus tard : les mêmes révocations, émises de nouveau
+avec une nouvelle expiration. Tout le reste est un retour en arrière : une liste plus ancienne rejouée ou restaurée,
+toujours signée et non expirée, qui annulerait la révocation de ce que la plus récente avait
+révoqué.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="across-restarts-too"&gt;Même après un redémarrage&lt;span class="hx:absolute hx:-mt-20" id="across-restarts-too"&gt;&lt;/span&gt;
+&lt;a href="#across-restarts-too" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;La liste détenue est conservée dans &lt;code&gt;state_dir&lt;/code&gt;, un fichier par source contenant la liste et
+sa signature ensemble, écrit par un seul renommage avec synchronisation du répertoire.
+Au démarrage, chaque copie est &lt;strong&gt;vérifiée de nouveau&lt;/strong&gt; (expirée ou non, elle ordonne ce qui vient
+ensuite), et une copie qui ne se vérifie plus n&amp;rsquo;est pas digne de confiance, pas même pour ordonner la
+suivante, et le journal le dit.&lt;/p&gt;
+&lt;p&gt;Ici, une source est dirigée, après un redémarrage, vers une liste qu&amp;rsquo;un processus bridge antérieur
+avait servie quatorze secondes plus tôt, toujours signée et toujours non expirée :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-10T20:54:50Z, expires 2026-10-10T21:54:50Z
+bridge-x509: version 1791665695047, issued 2026-10-10T20:54:55Z, expires 2026-10-10T21:54:55Z
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
+output tls: wrote /tmp/docs-patch-a2daf7c8/revokd/out/bridge.crl
+$ authn-revokd -config revokd-old.hcl -once
+bridge-ssh: file:///tmp/docs-patch-a2daf7c8/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-10T20:54:36Z, the copy held at 2026-10-10T20:54:50Z
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-10T21:54:50Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261010T225450
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La liste plus ancienne est refusée et la sortie garde la plus récente. Le processus qui
+l&amp;rsquo;a refusée n&amp;rsquo;avait jamais vu la liste plus récente : il l&amp;rsquo;a relue depuis &lt;code&gt;state_dir&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Puisque c&amp;rsquo;est l&amp;rsquo;état qui rend un retour en arrière détectable, le répertoire est soumis à la
+règle StrictModes de sshd (&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/configuration/#what-is-refused-at-start"&gt;la configuration&lt;/a&gt;).
+Un plantage entre deux écritures ne peut pas laisser une paire qui ne se vérifie pas, ce qui
+emporterait avec elle la protection contre le retour en arrière : la liste et sa signature sont un seul fichier.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what--once-reports"&gt;Ce que signale &lt;code&gt;-once&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="what--once-reports"&gt;&lt;/span&gt;
+&lt;a href="#what--once-reports" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-once&lt;/code&gt; sort avec &lt;code&gt;1&lt;/code&gt; quand une source n&amp;rsquo;a aucune liste en vigueur, quand sa &lt;strong&gt;dernière récupération
+a échoué&lt;/strong&gt;, ou quand une sortie n&amp;rsquo;a pas pu être écrite, et sa dernière ligne dit lequel
+des deux premiers cas c&amp;rsquo;est :&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;dernière ligne&lt;/th&gt;
+&lt;th&gt;la source&lt;/th&gt;
+&lt;th&gt;ses sorties&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not current: &amp;lt;source&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;ne détient aucune liste en vigueur : jamais récupérée, expirée, ou au-delà de &lt;code&gt;max_age&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;refusent en cas de doute pour sshd&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not fetched: &amp;lt;source&amp;gt; (the list held is current until &amp;lt;T&amp;gt;)&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;sa récupération a échoué, mais la copie détenue est toujours en vigueur&lt;/td&gt;
+&lt;td&gt;écrites à partir de cette copie, inchangées, jusqu&amp;rsquo;à &lt;code&gt;T&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Ici, l&amp;rsquo;émetteur est arrêté alors que les deux listes détenues sont toujours en vigueur :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-10T21:54:50Z), bridge-x509 (the list held is current until 2026-10-10T21:54:55Z)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Cette exécution a laissé &lt;code&gt;sshd.krl&lt;/code&gt; tel quel. Une fois qu&amp;rsquo;une liste détenue expire, la même source est
+signalée &lt;code&gt;not current&lt;/code&gt;, et les deux sortes peuvent partager la ligne, comme dans
+&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/lapse/"&gt;quand une liste expire&lt;/a&gt;. Avant la v0.6.2,
+les deux cas étaient signalés &lt;code&gt;not current&lt;/code&gt;, ce qui disait qu&amp;rsquo;une liste avait expiré alors que seule
+sa récupération avait échoué ; le code de sortie était déjà &lt;code&gt;1&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Le &lt;code&gt;/healthz&lt;/code&gt; du miroir juge plutôt d&amp;rsquo;après la copie détenue, et a répondu &lt;code&gt;ok&lt;/code&gt; pendant que
+l&amp;rsquo;émetteur était arrêté et que les copies étaient toujours en vigueur.&lt;/p&gt;</description></item><item><title>Quand une liste expire</title><link>https://go-authn.github.io/docs/0.1/fr/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/fr/authn-revokd/lapse/</guid><description>
+&lt;p&gt;Une vérification de révocation qui laisse tout passer quand la liste ne peut pas être obtenue est
+celle que déjoue un attaquant capable de bloquer la liste. Donc quand authn-revokd ne détient
+aucune liste en vigueur d&amp;rsquo;une source, ce que protège la liste de cette source est
+&lt;strong&gt;refusé&lt;/strong&gt;, jusqu&amp;rsquo;à ce qu&amp;rsquo;une liste en vigueur arrive de nouveau.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;sortie&lt;/th&gt;
+&lt;th&gt;tant qu&amp;rsquo;une source n&amp;rsquo;a aucune liste en vigueur&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;une KRL, pour &lt;code&gt;sshd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;authn-revokd écrit une KRL qui &lt;strong&gt;révoque la clé de l&amp;rsquo;AC de la source&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;une CRL, pour un serveur TLS&lt;/td&gt;
+&lt;td&gt;la CRL expirée est laissée en place ; OpenSSL refuse de lui-même une CRL expirée&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;Pour sshd : révoquer l&amp;rsquo;AC elle-même&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; n&amp;rsquo;a aucune notion de l&amp;rsquo;expiration d&amp;rsquo;une liste : il continuerait indéfiniment à lire le dernier fichier
+écrit. Mais il vérifie la &lt;strong&gt;clé de l&amp;rsquo;AC&lt;/strong&gt; de chaque certificat par rapport à
+&lt;code&gt;RevokedKeys&lt;/code&gt;. Donc, à la place de la liste dont il ne peut pas se porter garant, authn-revokd
+met la propre clé de l&amp;rsquo;AC dans la sortie, et chaque certificat que cette AC a signé est
+refusé, et rien d&amp;rsquo;autre.&lt;/p&gt;
+&lt;p&gt;Ici, l&amp;rsquo;émetteur est arrêté, et la source KRL a &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;, si bien que la
+copie détenue expire en moins d&amp;rsquo;une minute au lieu d&amp;rsquo;une heure. La source CRL n&amp;rsquo;a pas de
+&lt;code&gt;max_age&lt;/code&gt;, et sa copie est toujours en vigueur :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-10T21:54:55Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:2zKzlmqkMRAvBYIAisepe9ulFWDmDbTVCjcfCylTkOo # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt; est &lt;code&gt;not current&lt;/code&gt;, et sa sortie refuse en cas de doute ; &lt;code&gt;bridge-x509&lt;/code&gt;
+est seulement &lt;code&gt;not fetched&lt;/code&gt;, et sa CRL est laissée telle quelle
+(&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/verification/#what--once-reports"&gt;ce que signale &lt;code&gt;-once&lt;/code&gt;&lt;/a&gt;).
+&lt;code&gt;SHA256:2zKz...&lt;/code&gt; est l&amp;rsquo;AC SSH du bridge. Un certificat qu&amp;rsquo;elle a signé est désormais
+révoqué pour tout ce qui lit le fichier :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Le commentaire dit &lt;code&gt;FAIL CLOSED&lt;/code&gt; et nomme la source, si bien qu&amp;rsquo;une personne qui lit
+&lt;code&gt;ssh-keygen -Q -l&lt;/code&gt; voit pourquoi. La date du fichier est 1970 quand toutes les sources ont
+expiré. La sortie est écrite &lt;strong&gt;dès qu&amp;rsquo;une synchronisation s&amp;rsquo;en aperçoit&lt;/strong&gt;, c&amp;rsquo;est-à-dire, pour le démon,
+à son prochain &lt;code&gt;refresh&lt;/code&gt;, et pour le minuteur, à son prochain déclenchement. Quand une liste en vigueur
+arrive de nouveau, la synchronisation suivante l&amp;rsquo;écrit à la place de la clé de l&amp;rsquo;AC, et les
+certificats de l&amp;rsquo;AC sont de nouveau acceptés.&lt;/p&gt;
+&lt;p&gt;La même chose se produit &lt;strong&gt;avant la première liste&lt;/strong&gt; : une source jamais récupérée n&amp;rsquo;a rien
+d&amp;rsquo;en vigueur, et son AC est révoquée dès la première écriture. Une nouvelle installation refuse
+les certificats de l&amp;rsquo;AC jusqu&amp;rsquo;à ce que sa première liste se vérifie, plutôt que de les accepter
+sans contrôle.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;Chaque AC pour elle-même&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Dans une sortie qui fusionne plusieurs sources, seule l&amp;rsquo;AC de la source expirée est
+révoquée. Les autres gardent leurs listes. Une liste qui ne peut pas être fusionnée (au-delà des
+plages de numéros de série que conserve go-authn/krl) refuse en cas de doute pour sa propre AC seulement, et
+&lt;code&gt;/healthz&lt;/code&gt; la nomme. Ce n&amp;rsquo;est que si les listes fusionnent chacune seule mais pas ensemble que toutes les AC
+de la sortie sont révoquées, et le commentaire le dit
+(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;). Garder l&amp;rsquo;ancien fichier à la place
+laisserait passer inaperçue une expiration ultérieure.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;Pour un serveur TLS : la CRL elle-même&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Une CRL dit déjà quand elle cesse d&amp;rsquo;être en vigueur, et OpenSSL en refuse une qui a dépassé
+son &lt;code&gt;nextUpdate&lt;/code&gt; (« CRL has expired »). authn-revokd laisse donc la dernière CRL vérifiée
+en place, et le serveur TLS refuse de lui-même en cas de doute. C&amp;rsquo;est aussi pourquoi
+&lt;code&gt;max_age&lt;/code&gt; est refusé sur une source qui alimente une sortie CRL : un serveur qui a chargé
+la CRL la garde jusqu&amp;rsquo;à son &lt;code&gt;nextUpdate&lt;/code&gt;, quoi qu&amp;rsquo;authn-revokd écrive.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;Les lecteurs qui vérifient eux-mêmes l&amp;rsquo;expiration&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;La KRL fusionnée porte une expiration, la première de celles de ses entrées en vigueur. Un lecteur
+qui la vérifie, comme &lt;code&gt;ssh_krl_file&lt;/code&gt; de go-fileshare ou
+&lt;a href="https://go-authn.github.io/docs/0.1/fr/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;,
+voit l&amp;rsquo;arrêt d&amp;rsquo;authn-revokd comme il verrait l&amp;rsquo;arrêt de l&amp;rsquo;émetteur.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Cela ne fonctionne que tant qu&amp;rsquo;authn-revokd tourne&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;C&amp;rsquo;est authn-revokd qui fait refuser le fichier en cas de doute. Tant qu&amp;rsquo;il est arrêté, sshd continue de
+lire le dernier fichier écrit, en vigueur ou non. D&amp;rsquo;où &lt;code&gt;Restart=always&lt;/code&gt; sur
+le démon, et la surveillance de l&amp;rsquo;unité, ou du minuteur, ou de &lt;code&gt;/healthz&lt;/code&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>Ce qu'il révoque, et comment les serveurs l'apprennent</title><link>https://go-authn.github.io/docs/0.1/fr/authn-bridge/revocation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/fr/authn-bridge/revocation/</guid><description>
+&lt;p&gt;Désactiver une personne ou un établissement (&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-bridge/admin/"&gt;l&amp;rsquo;API d&amp;rsquo;administration&lt;/a&gt;)
+met fin à tout ce qui revient vers le fournisseur : jetons de rafraîchissement, &lt;code&gt;/userinfo&lt;/code&gt;,
+nouveaux certificats, mots de passe d&amp;rsquo;application. Ce qu&amp;rsquo;il a déjà distribué est
+vérifié ailleurs, par rapport à des clés, et deux mécanismes l&amp;rsquo;atteignent :&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;identifiant&lt;/th&gt;
+&lt;th&gt;repris par&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;un certificat SSH signé par cette AC&lt;/td&gt;
+&lt;td&gt;la &lt;strong&gt;KRL&lt;/strong&gt;, &lt;code&gt;GET /ssh/krl&lt;/code&gt;, avec sa signature à &lt;code&gt;/ssh/krl.sig&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;un certificat client X.509&lt;/td&gt;
+&lt;td&gt;la &lt;strong&gt;CRL&lt;/strong&gt;, &lt;code&gt;GET /x509/crl&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;un jeton d&amp;rsquo;accès, un certificat opkssh, tout ce qu&amp;rsquo;un serveur vérifie seul&lt;/td&gt;
+&lt;td&gt;un événement &lt;strong&gt;Shared Signals&lt;/strong&gt; &lt;code&gt;session-revoked&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;La révocation est définitive. Réactiver une personne ne lui rend pas ses
+certificats ; elle en reçoit de nouveaux. Une liste dont on pourrait retirer une révocation
+est une liste que quiconque atteint l&amp;rsquo;API d&amp;rsquo;administration pourrait modifier.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-lists"&gt;Les listes&lt;span class="hx:absolute hx:-mt-20" id="the-lists"&gt;&lt;/span&gt;
+&lt;a href="#the-lists" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Les deux sont émises comme le dit le protocole de go-authn/revocation, afin qu&amp;rsquo;elles puissent transiter
+par n&amp;rsquo;importe quoi (un miroir, du HTTP simple, un fichier) et rester vérifiables par quiconque
+les lit :&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;format&lt;/td&gt;
+&lt;td&gt;OpenSSH &lt;code&gt;PROTOCOL.krl&lt;/code&gt;, écrite par go-authn/krl : ce que lisent le &lt;code&gt;RevokedKeys&lt;/code&gt; de &lt;code&gt;sshd&lt;/code&gt; et &lt;code&gt;ssh-keygen -Q&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;DER, RFC 5280&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;signée&lt;/td&gt;
+&lt;td&gt;par une SSHSIG détachée avec la clé de l&amp;rsquo;AC SSH, espace de noms &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;par l&amp;rsquo;AC qui signe les certificats&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;à jour jusqu&amp;rsquo;à&lt;/td&gt;
+&lt;td&gt;son extension &lt;code&gt;expires@go-authn.github.io&lt;/code&gt; (que sshd ignore)&lt;/td&gt;
+&lt;td&gt;son &lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;ordonnée par&lt;/td&gt;
+&lt;td&gt;sa &lt;code&gt;krl_version&lt;/code&gt;, puis sa date de génération&lt;/td&gt;
+&lt;td&gt;son CRL Number, puis &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Chaque liste indique qu&amp;rsquo;elle cesse d&amp;rsquo;être à jour &lt;strong&gt;une heure&lt;/strong&gt; après son émission. Une liste est
+conservée et servie telle quelle jusqu&amp;rsquo;à mi-chemin de cette échéance, ou jusqu&amp;rsquo;à ce que quelque chose soit
+révoqué ; la requête suivante reçoit alors une nouvelle émission. Une émission n&amp;rsquo;est jamais datée d&amp;rsquo;avant
+celle qu&amp;rsquo;elle remplace, même si l&amp;rsquo;horloge recule, puisqu&amp;rsquo;un lecteur refuse une
+émission antérieure de la même version comme un retour en arrière. Le CRL Number augmente à chaque
+émission.&lt;/p&gt;
+&lt;p&gt;La KRL d&amp;rsquo;un fournisseur de test sans rien de révoqué :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -D - -o var/bridge.krl http://127.0.0.1:28473/ssh/krl
+HTTP/1.1 200 OK
+Cache-Control: max-age=60
+Content-Type: application/octet-stream
+Etag: &amp;#34;c3e6cb39788fe31df282c784e49f1ba9&amp;#34;
+Date: Sat, 10 Oct 2026 19:17:54 GMT
+Content-Length: 130
+$ ssh-keygen -Q -l -f var/bridge.krl
+# KRL version 0
+# Generated at 20261010T211754
+# Comment: go-authn/bridge http://127.0.0.1:28473&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;L&amp;rsquo;ETag est celui du contenu.&lt;/strong&gt; Un lecteur interroge avec &lt;code&gt;If-None-Match&lt;/code&gt;, et reçoit
+&lt;code&gt;304&lt;/code&gt; tant que l&amp;rsquo;émission qu&amp;rsquo;il détient est toujours celle servie ; puisque le contenu
+change au moins toutes les demi-heures, un lecteur qui interroge ne garde jamais une copie au-delà de son
+expiration :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o /dev/null -H &amp;#39;If-None-Match: &amp;#34;c3e6cb39788fe31df282c784e49f1ba9&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl
+304&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;La signature est récupérée avec &lt;code&gt;If-Match&lt;/code&gt;&lt;/strong&gt; sur l&amp;rsquo;ETag de la liste. Une liste
+réémise entre-temps répond &lt;code&gt;412&lt;/code&gt;, plutôt qu&amp;rsquo;une signature qui ne lui
+correspond pas :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o var/bridge.krl.sig -H &amp;#39;If-Match: &amp;#34;c3e6cb39788fe31df282c784e49f1ba9&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl.sig
+200
+$ curl -s -o /dev/null -H &amp;#39;If-Match: &amp;#34;stale&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl.sig
+412&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;ssh-keygen&lt;/code&gt; vérifie la signature, et la refuse dans tout autre espace de noms :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Y verify -f allowed -I bridge -n krl@go-authn.github.io -s bridge.krl.sig &amp;lt; bridge.krl
+Good &amp;#34;krl@go-authn.github.io&amp;#34; signature for bridge with ED25519 key SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;où &lt;code&gt;allowed&lt;/code&gt; est la ligne
+&lt;code&gt;bridge namespaces=&amp;quot;krl@go-authn.github.io&amp;quot; &amp;lt;the CA key from /ssh/config&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;La CRL, émise au même moment :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ openssl crl -inform DER -in var/bridge.crl -noout -text
+Certificate Revocation List (CRL):
+Version 2 (0x1)
+Signature Algorithm: ecdsa-with-SHA256
+Issuer: CN=go-authn bridge NFS client CA
+Last Update: Oct 10 19:18:02 2026 GMT
+Next Update: Oct 10 20:18:02 2026 GMT
+CRL extensions:
+X509v3 Authority Key Identifier:
+70:62:92:19:7D:D4:26:45:97:9B:32:20:0C:D4:67:02:45:6C:55:B9
+X509v3 CRL Number:
+1791659882080
+No Revoked Certificates.
+Signature Algorithm: ecdsa-with-SHA256
+Signature Value:
+30:45:02:20:50:1e:bd:e3:7b:39:32:6c:7b:d9:91:bd:bb:78:
+f2:74:ed:ca:da:74:77:e0:0f:39:e0:63:4c:45:91:47:ba:98:
+02:21:00:a0:1f:54:40:3f:75:66:af:f5:a9:a8:86:f3:2d:a9:
+d7:60:15:24:43:b6:80:a5:bb:45:49:9d:89:56:89:e0:68&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un certificat reste dans sa liste jusqu&amp;rsquo;à son expiration : un certificat expiré est
+refusé partout sans être listé.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="who-reads-them"&gt;Qui les lit&lt;span class="hx:absolute hx:-mt-20" id="who-reads-them"&gt;&lt;/span&gt;
+&lt;a href="#who-reads-them" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;Un &lt;code&gt;sshd&lt;/code&gt; ordinaire, ou nginx et d&amp;rsquo;autres serveurs TLS :
+&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/"&gt;authn-revokd&lt;/a&gt; récupère les listes,
+ne garde que celles qui se vérifient, les écrit là où les serveurs les lisent, et
+refuse en cas de doute pour sshd quand une liste expire.&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://go-fileshare.github.io/docs/latest/security/revocation-lists/" target="_blank" rel="noopener"&gt;go-fileshare&lt;/a&gt;
+les récupère et les vérifie lui-même, et refuse les certificats du fournisseur
+tant qu&amp;rsquo;il ne détient aucune liste à jour.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="shared-signals"&gt;Shared Signals&lt;span class="hx:absolute hx:-mt-20" id="shared-signals"&gt;&lt;/span&gt;
+&lt;a href="#shared-signals" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un jeton d&amp;rsquo;accès ou un certificat opkssh est vérifié là où il est utilisé, et aucune
+liste ne peut le nommer. Le fournisseur est donc un transmetteur OpenID Shared Signals : sur
+&lt;code&gt;DisablePerson&lt;/code&gt;, &lt;code&gt;RevokePerson&lt;/code&gt; et &lt;code&gt;DisableIdP&lt;/code&gt;, il met en file un événement CAEP
+&lt;strong&gt;&lt;code&gt;session-revoked&lt;/code&gt;&lt;/strong&gt; (tout ce qui a été émis pour ce sujet avant l&amp;rsquo;heure de
+l&amp;rsquo;événement est nul) pour chaque récepteur qui l&amp;rsquo;a demandé.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;state&lt;/span&gt; { &lt;span class="p"&gt;...&lt;/span&gt; }&lt;span class="c1"&gt; # required: a queue a restart empties loses revocations
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;ssf {} # event_retention&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;192h&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;by&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;fileshare-ssf&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # a receiver: client credentials, scope ssf
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/fileshare-ssf.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssf_receiver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/.well-known/ssf-configuration | jq .
+{
+&amp;#34;issuer&amp;#34;: &amp;#34;http://127.0.0.1:28473&amp;#34;,
+&amp;#34;jwks_uri&amp;#34;: &amp;#34;http://127.0.0.1:28473/jwks&amp;#34;,
+&amp;#34;delivery_methods_supported&amp;#34;: [
+&amp;#34;urn:ietf:rfc:8936&amp;#34;
+],
+&amp;#34;configuration_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams&amp;#34;,
+&amp;#34;status_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/status&amp;#34;,
+&amp;#34;add_subject_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/subjects:add&amp;#34;,
+&amp;#34;remove_subject_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/subjects:remove&amp;#34;,
+&amp;#34;verification_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/verify&amp;#34;,
+&amp;#34;spec_version&amp;#34;: &amp;#34;1_0&amp;#34;,
+&amp;#34;authorization_schemes&amp;#34;: [
+{
+&amp;#34;spec_urn&amp;#34;: &amp;#34;urn:ietf:rfc:6749&amp;#34;
+}
+]
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Remise par interrogation uniquement&lt;/strong&gt; (RFC 8936) : le récepteur demande ; rien ici n&amp;rsquo;appelle vers l&amp;rsquo;extérieur.&lt;/li&gt;
+&lt;li&gt;Un récepteur s&amp;rsquo;authentifie avec un jeton d&amp;rsquo;accès obtenu par l&amp;rsquo;octroi &lt;strong&gt;client
+credentials&lt;/strong&gt;, pour un client &lt;code&gt;ssf_receiver&lt;/code&gt; doté d&amp;rsquo;un secret, portée &lt;code&gt;ssf&lt;/code&gt;.
+Il ne voit que ses propres flux, dix au plus.&lt;/li&gt;
+&lt;li&gt;Les événements sont des SET (RFC 8417) signés avec la clé des jetons d&amp;rsquo;identité, sans &lt;code&gt;exp&lt;/code&gt; ni
+&lt;code&gt;sub&lt;/code&gt;. Le sujet est le &lt;strong&gt;compte&lt;/strong&gt;, &lt;code&gt;acct:&amp;lt;username&amp;gt;&lt;/code&gt;, par défaut : un &lt;code&gt;sub&lt;/code&gt;
+peut être pairwise, un par client. Un récepteur configuré
+&lt;code&gt;ssf_subject_format = &amp;quot;iss_sub&amp;quot;&lt;/code&gt; reçoit à la place l&amp;rsquo;émetteur et le &lt;code&gt;sub&lt;/code&gt; public.&lt;/li&gt;
+&lt;li&gt;Un établissement désactivé donne un événement par personne dont le fournisseur garde une trace
+là-bas, et un dont le sujet est le &lt;strong&gt;tenant&lt;/strong&gt;, l&amp;rsquo;entity ID de l&amp;rsquo;établissement,
+avec ses portées, qui couvre les personnes que le fournisseur a oubliées.&lt;/li&gt;
+&lt;li&gt;Les flux et les événements non remis sont conservés dans la base &lt;code&gt;state&lt;/code&gt; jusqu&amp;rsquo;à
+leur acquittement ou l&amp;rsquo;écoulement d&amp;rsquo;&lt;code&gt;event_retention&lt;/code&gt;. Un événement qu&amp;rsquo;un récepteur signale en
+erreur est redistribué, jusqu&amp;rsquo;à dix fois.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Le bloc SSF est refusé sans bloc &lt;code&gt;state&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: ssf: needs a state block: a queue a restart empties loses revocations&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>krl — listes de révocation de clés OpenSSH</title><link>https://go-authn.github.io/docs/0.1/fr/libraries/krl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/fr/libraries/krl/</guid><description>
+&lt;p&gt;&lt;strong&gt;Ce certificat ou cette clé SSH est-il révoqué — comme sshd répondrait ?&lt;/strong&gt; Le format
+binaire du &lt;code&gt;PROTOCOL.krl&lt;/code&gt; d&amp;rsquo;OpenSSH, la liste que &lt;code&gt;sshd&lt;/code&gt; charge par
+&lt;code&gt;RevokedKeys&lt;/code&gt; et qu&amp;rsquo;écrit &lt;code&gt;ssh-keygen -k&lt;/code&gt;. &lt;code&gt;golang.org/x/crypto/ssh&lt;/code&gt; ne le
+prend pas en charge.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/krl@v0.6.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;IsRevoked&lt;/code&gt; suit &lt;code&gt;ssh_krl_check_key&lt;/code&gt; dans le &lt;code&gt;krl.c&lt;/code&gt; d&amp;rsquo;OpenSSH : un certificat
+est révoqué quand son numéro de série ou son identifiant de clé est révoqué sous l&amp;rsquo;AC qui l&amp;rsquo;a signé ou
+sous n&amp;rsquo;importe quelle AC, quand la clé de son AC est révoquée, ou quand sa propre clé est révoquée par
+blob ou par empreinte SHA-1 ou SHA-256. Le numéro de série 0 — ce qu&amp;rsquo;écrit une AC quand elle
+n&amp;rsquo;en indique aucun — n&amp;rsquo;est jamais révoqué par numéro de série.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="example"&gt;Exemple&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
+&lt;a href="#example" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;package&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;crypto/ed25519&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;crypto/rand&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;time&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;github.com/go-authn/krl&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;golang.org/x/crypto/ssh&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ca&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;signer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;user&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;signer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// The issuer: certificate 42 is revoked, and so is everything for key ID &amp;#34;alice&amp;#34;.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;krl&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;NewBuilder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;revoked by the bridge&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;RevokeSerial&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ca&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;PublicKey&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;42&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;RevokeKeyID&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// nil: under any CA&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;SetExpires&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Now&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="nf"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Hour&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Marshal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Now&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;panic&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// The server: parse the list, then ask about each certificate.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;krl&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Parse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;panic&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;version&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Version&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;signed&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Signed&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;expires set&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Expires&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;IsZero&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;range&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kd"&gt;struct&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;serial&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;uint64&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}{{&lt;/span&gt;&lt;span class="mi"&gt;42&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;bob&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;43&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;bob&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;44&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;}}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;serial&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;IsRevoked&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nf"&gt;certificate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ca&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;user&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;PublicKey&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;serial&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;signer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Signer&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;priv&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ed25519&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;GenerateKey&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rand&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Reader&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;NewSignerFromKey&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;priv&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;s&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;certificate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ca&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Signer&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;key&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;PublicKey&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;serial&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;uint64&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Certificate&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Certificate&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Key&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Serial&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;serial&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;KeyId&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;CertType&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;UserCert&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ValidPrincipals&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ValidBefore&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;CertTimeInfinity&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;SignCert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rand&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Reader&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ca&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;panic&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;version 7 signed false expires set true
+42 bob true
+43 bob false
+44 alice true&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La même liste et les mêmes certificats, écrits dans des fichiers, obtiennent les trois mêmes réponses
+de &lt;code&gt;ssh-keygen -Q -f list.krl&lt;/code&gt; d&amp;rsquo;OpenSSH 10.3p1 : &lt;code&gt;REVOKED&lt;/code&gt;, &lt;code&gt;ok&lt;/code&gt;,
+&lt;code&gt;REVOKED&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="expiry-expiresgo-authngithubio"&gt;Expiration : &lt;code&gt;expires@go-authn.github.io&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="expiry-expiresgo-authngithubio"&gt;&lt;/span&gt;
+&lt;a href="#expiry-expiresgo-authngithubio" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Une KRL a une date de génération et une version, et rien ne dit quand elle cesse
+d&amp;rsquo;être en vigueur : une copie périmée ne peut donc pas être distinguée d&amp;rsquo;une copie à jour.
+&lt;code&gt;Builder.SetExpires&lt;/code&gt; écrit cette date dans une section d&amp;rsquo;extension nommée
+&lt;code&gt;ExtensionExpires&lt;/code&gt;, &lt;strong&gt;non critique&lt;/strong&gt; : &lt;code&gt;sshd&lt;/code&gt; et &lt;code&gt;ssh-keygen&lt;/code&gt; chargent donc la liste
+et l&amp;rsquo;ignorent ; &lt;code&gt;Parse&lt;/code&gt; la lit dans &lt;code&gt;KRL.Expires&lt;/code&gt;.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Pas de signatures&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;OpenSSH n&amp;rsquo;a jamais exposé de moyen d&amp;rsquo;écrire la section de signature d&amp;rsquo;une KRL et ne la
+vérifie plus. &lt;code&gt;Parse&lt;/code&gt; en saute une et positionne &lt;code&gt;Signed&lt;/code&gt;, qui ne dit rien de
+l&amp;rsquo;authenticité ; &lt;code&gt;Builder&lt;/code&gt; n&amp;rsquo;en écrit jamais. L&amp;rsquo;intégrité de la liste, et donc celle de son
+expiration, vient de son transport — HTTPS depuis un serveur authentifié — ou
+d&amp;rsquo;une signature SSHSIG détachée vérifiée par l&amp;rsquo;appelant, ce que ce paquet
+ne fait pas.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="merging-one-file-for-sshd"&gt;Fusion : un seul fichier pour sshd&lt;span class="hx:absolute hx:-mt-20" id="merging-one-file-for-sshd"&gt;&lt;/span&gt;
+&lt;a href="#merging-one-file-for-sshd" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; lisait un seul fichier &lt;code&gt;RevokedKeys&lt;/code&gt; jusqu&amp;rsquo;à OpenSSH 10.3 : un serveur
+qui fait confiance à plusieurs AC a donc besoin de leurs listes en une seule. &lt;code&gt;Builder.Merge&lt;/code&gt; ajoute chaque
+révocation d&amp;rsquo;une liste analysée. &lt;code&gt;Builder.MergeCA(k, ca, others...)&lt;/code&gt; garde la
+section de &lt;code&gt;k&lt;/code&gt; pour &lt;code&gt;ca&lt;/code&gt;, ses sections « toute AC » restreintes à &lt;code&gt;ca&lt;/code&gt;, et ses clés
+et empreintes explicites, et laisse de côté — en les comptant — les sections d&amp;rsquo;une autre AC et
+les clés ou empreintes qui désignent l&amp;rsquo;une des &lt;code&gt;others&lt;/code&gt;. &lt;code&gt;MergeCAWith&lt;/code&gt; avec
+&lt;code&gt;MergeOptions{DropKeys: true}&lt;/code&gt; laisse aussi de côté toute clé explicite sauf
+celle de &lt;code&gt;ca&lt;/code&gt; elle-même, pour une liste à qui l&amp;rsquo;on ne confie pas les utilisateurs de toutes les AC : une clé d&amp;rsquo;utilisateur révoquée
+exclut cet utilisateur sous toutes les AC du fichier fusionné, parce que &lt;code&gt;sshd&lt;/code&gt; vérifie la
+propre clé d&amp;rsquo;un certificat quel qu&amp;rsquo;en soit le signataire.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;Ce qu&amp;rsquo;il refuse, et pourquoi&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Parse&lt;/code&gt; refuse ce que &lt;code&gt;ssh-keygen&lt;/code&gt; et &lt;code&gt;sshd&lt;/code&gt; refusent : un nombre magique ou une version de format
+incorrects, des données tronquées ou en excédent, une section ou une sous-section de certificat
+inconnue, une extension inconnue marquée critique, une clé d&amp;rsquo;AC qu&amp;rsquo;OpenSSH ne sait pas
+analyser, le numéro de série 0, un intervalle de numéros de série inversé, un bitmap plus grand que ce qu&amp;rsquo;OpenSSH lit
+ou qui dépasse 2^64−1. Il refuse aussi une expiration malformée ou répétée :
+lue comme absente, elle transformerait une liste censée expirer en une liste qui n&amp;rsquo;expire jamais.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Builder&lt;/code&gt; refuse — au &lt;code&gt;Marshal&lt;/code&gt;, qui renvoie la première demande invalide —
+le numéro de série 0, un intervalle dont la borne basse vaut 0 ou dépasse sa borne haute, un identifiant de clé ou un
+commentaire contenant un NUL, un certificat donné là où une clé d&amp;rsquo;AC est attendue, et
+une expiration antérieure à la date de génération.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Une différence délibérée.&lt;/strong&gt; Pour de nombreux numéros de série épars et proches,
+&lt;code&gt;ssh-keygen -k&lt;/code&gt; écrit un bitmap plus large que ce qu&amp;rsquo;accepte son propre lecteur, puis
+refuse son propre fichier (&lt;em&gt;bignum is too large&lt;/em&gt;). &lt;code&gt;Parse&lt;/code&gt; refuse aussi ce fichier,
+comme le ferait &lt;code&gt;sshd&lt;/code&gt; ; &lt;code&gt;Builder&lt;/code&gt; commence une nouvelle section avant qu&amp;rsquo;un bitmap n&amp;rsquo;atteigne cette
+largeur, si bien que ce qu&amp;rsquo;il écrit est toujours lisible.&lt;/p&gt;
+&lt;p&gt;Parse alloue en proportion de ce que la liste révoque, comme OpenSSH : une KRL
+doit venir d&amp;rsquo;une source à qui l&amp;rsquo;on fait confiance pour ne pas en envoyer une énorme.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;Ce contre quoi il est vérifié&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
+&lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Le &lt;code&gt;ssh-keygen&lt;/code&gt; d&amp;rsquo;OpenSSH&lt;/strong&gt;, sur les voies Linux et macOS, où
+&lt;code&gt;KRL_REQUIRE_SSHKEYGEN=1&lt;/code&gt; fait de son absence un échec (Windows n&amp;rsquo;exécute que
+les tests en Go pur) :&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;une KRL écrite par &lt;code&gt;ssh-keygen -k&lt;/code&gt; avec tous les encodages de numéros de série, des identifiants de clé, trois
+AC plus « toute AC », des clés explicites et une clé d&amp;rsquo;AC révoquée : &lt;code&gt;IsRevoked&lt;/code&gt; répond
+comme &lt;code&gt;ssh-keygen -Q&lt;/code&gt; pour 250 certificats, et &lt;code&gt;Builder&lt;/code&gt;, à qui l&amp;rsquo;on donne les mêmes
+révocations, écrit &lt;strong&gt;les mêmes octets&lt;/strong&gt; ;&lt;/li&gt;
+&lt;li&gt;40 ensembles aléatoires de numéros de série écrits par les deux : identiques à l&amp;rsquo;octet près, et les mêmes réponses
+pour environ 9000 certificats ;&lt;/li&gt;
+&lt;li&gt;toutes les troncatures et environ 1400 corruptions d&amp;rsquo;un seul octet : &lt;code&gt;Parse&lt;/code&gt; refuse
+exactement ce que &lt;code&gt;ssh-keygen&lt;/code&gt; refuse ;&lt;/li&gt;
+&lt;li&gt;l&amp;rsquo;extension d&amp;rsquo;expiration se charge dans &lt;code&gt;ssh-keygen&lt;/code&gt;, et la même section marquée
+critique est refusée ;&lt;/li&gt;
+&lt;li&gt;les listes fusionnées révoquent exactement ce que révoque l&amp;rsquo;une de leurs sources.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;FuzzParse&lt;/code&gt;, amorcé avec des KRL écrites par &lt;code&gt;ssh-keygen&lt;/code&gt;, et &lt;code&gt;FuzzBuilder&lt;/code&gt; s&amp;rsquo;exécutent en CI.
+Le plancher de couverture est de 100 %, mesuré sur la voie Linux où &lt;code&gt;ssh-keygen&lt;/code&gt; est
+présent.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="reference"&gt;Référence&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
+&lt;a href="#reference" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/krl@v0.6.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/krl@v0.6.0&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>
