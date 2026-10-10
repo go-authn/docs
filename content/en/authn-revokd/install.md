@@ -34,7 +34,7 @@ own user can read them; the state stays `0700`.
 A release carries `authn-revokd-<os>-<arch>` for Linux, macOS and Windows on
 amd64 and arm64, with `SHA256SUMS` and build provenance
 ([verifying a download]({{< relref "/security/verifying-releases.md" >}})). Or
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.1`.
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.2`.
 
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
@@ -125,8 +125,10 @@ starts a `oneshot` running `systemctl reload nginx`.
 
 ## Or: `-once`, on a timer
 
-`authn-revokd -once` syncs once and exits, `1` when a source is not current.
-The outputs are written either way, and failed closed for sshd.
+`authn-revokd -once` syncs once and exits, `1` when a list is not current or
+could not be fetched ([what `-once` reports]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
+The outputs are written either way, and failed closed for sshd once a list
+lapses.
 
 ```ini
 # authn-revokd-once.service

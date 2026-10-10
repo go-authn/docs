@@ -25,19 +25,20 @@ A list signed by any other key is refused:
 
 ```
 $ authn-revokd -config revokd-other.hcl -once
-bridge-ssh: revocation: the list changed between it and its signature: revocation: the KRL's signature does not verify by SHA256:KlVzMwQjNXIi4sE7QhzlYlaKQus8aYQ9n4ERcyS1XS0: public key does not match
-bridge-x509: version 1791661668466, issued 2026-10-10T19:47:48Z, expires 2026-10-10T20:47:48Z
-output sshd: wrote /tmp/authn-lab/revokd/out/other.krl
-output tls: wrote /tmp/authn-lab/revokd/out/other.crl
+bridge-ssh: revocation: the KRL's signature does not verify by SHA256:SLbG7N+YZ/TQ6B3I1DQLYo2/6In4OWx5GYkRfKIxpxo: public key does not match
+bridge-x509: version 1791665695047, issued 2026-10-10T20:54:55Z, expires 2026-10-10T21:54:55Z
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/other.krl
+output tls: wrote /tmp/docs-patch-a2daf7c8/revokd/out/other.crl
 authn-revokd: not current: bridge-ssh
 ```
 
-Here `ssh_ca` named a key that did not sign bridge's list. The first words of
-the error are misleading: a signature that does not verify is first taken for a
-list issued again between the two requests, and both are fetched once more
-before it is reported. This was the first fetch of that source, so there was no
-good copy to keep, and the output is the
-[fail-closed list]({{< relref "/authn-revokd/lapse.md" >}}) at once.
+Here `ssh_ca` named a key that did not sign bridge's list, and the error names
+that key. A signature that does not verify may also be a list issued again
+between the two requests, so both are fetched once more before it is reported.
+This was the first fetch of that source, so there was no good copy to keep, and
+the output is the [fail-closed list]({{< relref "/authn-revokd/lapse.md" >}}) at
+once. (Before v0.6.2 the same failure was reported as "the list changed between
+it and its signature", ahead of the same words.)
 
 The signature is fetched with `If-Match: <the list's ETag>`. A list issued
 again between the two requests answers `412`, and both are fetched again.
@@ -86,21 +87,21 @@ At start each copy is **verified again** (expired or not, it orders what comes
 next), and a copy that no longer verifies is not trusted, not even to order the
 next one, and is said so in the log.
 
-Here a source is pointed, after a restart, at a list bridge served half an hour
-earlier, still signed and still unexpired:
+Here a source is pointed, after a restart, at a list an earlier bridge process
+served fourteen seconds before, still signed and still unexpired:
 
 ```
 $ authn-revokd -config revokd.hcl -once
-bridge-ssh: version 0, issued 2026-10-10T19:47:48Z, expires 2026-10-10T20:47:48Z
-bridge-x509: version 1791661668466, issued 2026-10-10T19:47:48Z, expires 2026-10-10T20:47:48Z
-output sshd: wrote /tmp/authn-lab/revokd/out/sshd.krl
-output tls: wrote /tmp/authn-lab/revokd/out/bridge.crl
+bridge-ssh: version 0, issued 2026-10-10T20:54:50Z, expires 2026-10-10T21:54:50Z
+bridge-x509: version 1791665695047, issued 2026-10-10T20:54:55Z, expires 2026-10-10T21:54:55Z
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
+output tls: wrote /tmp/docs-patch-a2daf7c8/revokd/out/bridge.crl
 $ authn-revokd -config revokd-old.hcl -once
-bridge-ssh: file:///tmp/authn-lab/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-10T19:17:54Z, the copy held at 2026-10-10T19:47:48Z
-authn-revokd: not current: bridge-ssh
+bridge-ssh: file:///tmp/docs-patch-a2daf7c8/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-10T20:54:36Z, the copy held at 2026-10-10T20:54:50Z
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-10T21:54:50Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
-# Generated at 20261010T214748
+# Generated at 20261010T225450
 # Comment: authn-revokd sshd
 ```
 
@@ -114,18 +115,29 @@ would take the rollback guard with it: the list and its signature are one file.
 
 ## What `-once` reports
 
-`-once` exits `1` naming every source whose **last fetch failed**, and every
-output that could not be written. That includes a source whose fetch failed
-while the copy it holds is still current: the output is then still written from
-that copy, unchanged, and is not failed closed until the copy lapses.
+`-once` exits `1` when a source has no current list, when its **last fetch
+failed**, or when an output could not be written, and its last line says which
+of the first two it is:
+
+| last line | the source | its outputs |
+|---|---|---|
+| `not current: <source>` | holds no current list: never fetched, expired, or past `max_age` | failed closed for sshd |
+| `not fetched: <source> (the list held is current until <T>)` | its fetch failed, but the copy held is still current | written from that copy, unchanged, until `T` |
+
+Here the issuer is stopped while both lists held are still current:
 
 ```
 $ authn-revokd -config revokd.hcl -once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
-authn-revokd: not current: bridge-ssh, bridge-x509
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-10T21:54:50Z), bridge-x509 (the list held is current until 2026-10-10T21:54:55Z)
 ```
 
-That run left `sshd.krl` as it was, since both lists held were still current.
+That run left `sshd.krl` as it was. Once a list held lapses, the same source is
+reported `not current`, and both kinds can share the line, as on
+[when a list lapses]({{< relref "/authn-revokd/lapse.md" >}}). Before v0.6.2
+both cases were reported `not current`, which said a list had lapsed when only
+its fetch had failed; the exit status was `1` then too.
+
 The mirror's `/healthz` judges by the copy held instead, and answered `ok` while
 the issuer was down and the copies still current.

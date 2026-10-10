@@ -200,10 +200,13 @@ in production; `--debug` also writes everything to standard error. A value that
 comes from the client, such as the account name, is quoted when it holds a
 space, `=`, a quote or a control character, so it cannot forge a log field.
 
-**`-version`** prints the tag only in a release binary, which sets it at build
-time. A binary from `go install` prints `dev`:
+**`-version`** prints the module version, in a release binary and in one
+built by `go install` alike:
 
 ```
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.5
 $ sshcert-authorize -version
-sshcert-authorize dev
+sshcert-authorize v0.1.5
 ```
+
+Before v0.1.5, a binary from `go install` printed `sshcert-authorize dev`.
