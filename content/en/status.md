@@ -9,7 +9,7 @@ These pages are documentation version **0.1**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.9.6** | `github.com/go-authn/authnd` |
+| authnd | **v0.10.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.20.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.1** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.4** | `github.com/go-authn/sshcert` |
@@ -40,6 +40,8 @@ dependencies are left out.
 | v0.9.4 | a `SIGHUP` no longer ends authnd: it is logged, and nothing is reloaded |
 | v0.9.5 | the release checks **every** binary's build information, not one |
 | v0.9.6 | `check` says why each person cannot be issued a ticket |
+| v0.10.0 | `check` opens the certificate and the keytab, as the server does; it names who cannot bind with a password, and who a token still admits; the listening line comes after the realm opens |
+| v0.10.1 | go-authn/kdc v0.4.2: a `till` of 19700101000000Z gets the longest ticket, not one expired in 1970 |
 
 ### authn-bridge
 
