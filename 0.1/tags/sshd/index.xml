@@ -273,11 +273,12 @@ AUTH, by default. sshd discards the command&amp;rsquo;s standard error, so keep 
 in production; &lt;code&gt;--debug&lt;/code&gt; also writes everything to standard error. A value that
 comes from the client, such as the account name, is quoted when it holds a
 space, &lt;code&gt;=&lt;/code&gt;, a quote or a control character, so it cannot forge a log field.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;&lt;code&gt;-version&lt;/code&gt;&lt;/strong&gt; prints the tag only in a release binary, which sets it at build
-time. A binary from &lt;code&gt;go install&lt;/code&gt; prints &lt;code&gt;dev&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;-version&lt;/code&gt;&lt;/strong&gt; prints the module version, in a release binary and in one
+built by &lt;code&gt;go install&lt;/code&gt; alike:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize -version
-sshcert-authorize dev&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.5
+$ sshcert-authorize -version
+sshcert-authorize v0.1.5&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -288,7 +289,8 @@ data-copied-label="Copied!"
 &lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
 &lt;/button&gt;
 &lt;/div&gt;
-&lt;/div&gt;</description></item><item><title>When a list lapses</title><link>https://go-authn.github.io/docs/0.1/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/authn-revokd/lapse/</guid><description>
+&lt;/div&gt;
+&lt;p&gt;Before v0.1.5, a binary from &lt;code&gt;go install&lt;/code&gt; printed &lt;code&gt;sshcert-authorize dev&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>When a list lapses</title><link>https://go-authn.github.io/docs/0.1/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/authn-revokd/lapse/</guid><description>
 &lt;p&gt;A revocation check that lets everything through when the list cannot be had is
 the one an attacker who can block the list defeats. So when authn-revokd holds
 no current list from a source, what that source&amp;rsquo;s list protects is
@@ -317,21 +319,22 @@ written for ever. But it checks the &lt;strong&gt;CA key&lt;/strong&gt; of every
 &lt;code&gt;RevokedKeys&lt;/code&gt;. So, in place of the list it cannot vouch for, authn-revokd
 puts the CA&amp;rsquo;s own key into the output, and every certificate that CA signed is
 refused, and nothing else.&lt;/p&gt;
-&lt;p&gt;Here the issuer is stopped, and the source has &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;, so the copy
-held lapses within a minute instead of an hour:&lt;/p&gt;
+&lt;p&gt;Here the issuer is stopped, and the KRL source has &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;, so the
+copy held lapses within a minute instead of an hour. The CRL source has no
+&lt;code&gt;max_age&lt;/code&gt;, and its copy is still current:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
 bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
-output sshd: wrote /tmp/authn-lab/revokd/out/sshd.krl
-authn-revokd: not current: bridge-ssh, bridge-x509
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-10T21:54:55Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
 # Generated at 19700101T010000
 # Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
-hash: SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg # ssh-ed25519
+hash: SHA256:2zKzlmqkMRAvBYIAisepe9ulFWDmDbTVCjcfCylTkOo # ssh-ed25519
 $ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
-ca-ssh.pub (ca-ssh.pub): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -343,7 +346,10 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;&lt;code&gt;SHA256:6gbN...&lt;/code&gt; is the bridge&amp;rsquo;s SSH CA. A certificate it signed is now
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt; is &lt;code&gt;not current&lt;/code&gt;, and its output is failed closed; &lt;code&gt;bridge-x509&lt;/code&gt;
+is only &lt;code&gt;not fetched&lt;/code&gt;, and its CRL is left as it was
+(&lt;a href="https://go-authn.github.io/docs/0.1/authn-revokd/verification/#what--once-reports"&gt;what &lt;code&gt;-once&lt;/code&gt; reports&lt;/a&gt;).
+&lt;code&gt;SHA256:2zKz...&lt;/code&gt; is the bridge&amp;rsquo;s SSH CA. A certificate it signed is now
 revoked as far as anything reading the file is concerned:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub

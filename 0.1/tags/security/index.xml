@@ -156,10 +156,10 @@ signature section, which OpenSSH never verifies.&lt;/p&gt;
 &lt;p&gt;A list signed by any other key is refused:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-other.hcl -once
-bridge-ssh: revocation: the list changed between it and its signature: revocation: the KRL&amp;#39;s signature does not verify by SHA256:KlVzMwQjNXIi4sE7QhzlYlaKQus8aYQ9n4ERcyS1XS0: public key does not match
-bridge-x509: version 1791661668466, issued 2026-10-10T19:47:48Z, expires 2026-10-10T20:47:48Z
-output sshd: wrote /tmp/authn-lab/revokd/out/other.krl
-output tls: wrote /tmp/authn-lab/revokd/out/other.crl
+bridge-ssh: revocation: the KRL&amp;#39;s signature does not verify by SHA256:SLbG7N&amp;#43;YZ/TQ6B3I1DQLYo2/6In4OWx5GYkRfKIxpxo: public key does not match
+bridge-x509: version 1791665695047, issued 2026-10-10T20:54:55Z, expires 2026-10-10T21:54:55Z
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/other.krl
+output tls: wrote /tmp/docs-patch-a2daf7c8/revokd/out/other.crl
 authn-revokd: not current: bridge-ssh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
@@ -172,12 +172,13 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Here &lt;code&gt;ssh_ca&lt;/code&gt; named a key that did not sign bridge&amp;rsquo;s list. The first words of
-the error are misleading: a signature that does not verify is first taken for a
-list issued again between the two requests, and both are fetched once more
-before it is reported. This was the first fetch of that source, so there was no
-good copy to keep, and the output is the
-&lt;a href="https://go-authn.github.io/docs/0.1/authn-revokd/lapse/"&gt;fail-closed list&lt;/a&gt; at once.&lt;/p&gt;
+&lt;p&gt;Here &lt;code&gt;ssh_ca&lt;/code&gt; named a key that did not sign bridge&amp;rsquo;s list, and the error names
+that key. A signature that does not verify may also be a list issued again
+between the two requests, so both are fetched once more before it is reported.
+This was the first fetch of that source, so there was no good copy to keep, and
+the output is the &lt;a href="https://go-authn.github.io/docs/0.1/authn-revokd/lapse/"&gt;fail-closed list&lt;/a&gt; at
+once. (Before v0.6.2 the same failure was reported as &amp;ldquo;the list changed between
+it and its signature&amp;rdquo;, ahead of the same words.)&lt;/p&gt;
 &lt;p&gt;The signature is fetched with &lt;code&gt;If-Match: &amp;lt;the list's ETag&amp;gt;&lt;/code&gt;. A list issued
 again between the two requests answers &lt;code&gt;412&lt;/code&gt;, and both are fetched again.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;A CRL&lt;/strong&gt; is checked against the CA certificate configured as &lt;code&gt;x509_ca&lt;/code&gt;: its
@@ -215,20 +216,20 @@ its signature together, written by a single rename with the directory synced.
 At start each copy is &lt;strong&gt;verified again&lt;/strong&gt; (expired or not, it orders what comes
 next), and a copy that no longer verifies is not trusted, not even to order the
 next one, and is said so in the log.&lt;/p&gt;
-&lt;p&gt;Here a source is pointed, after a restart, at a list bridge served half an hour
-earlier, still signed and still unexpired:&lt;/p&gt;
+&lt;p&gt;Here a source is pointed, after a restart, at a list an earlier bridge process
+served fourteen seconds before, still signed and still unexpired:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
-bridge-ssh: version 0, issued 2026-10-10T19:47:48Z, expires 2026-10-10T20:47:48Z
-bridge-x509: version 1791661668466, issued 2026-10-10T19:47:48Z, expires 2026-10-10T20:47:48Z
-output sshd: wrote /tmp/authn-lab/revokd/out/sshd.krl
-output tls: wrote /tmp/authn-lab/revokd/out/bridge.crl
+bridge-ssh: version 0, issued 2026-10-10T20:54:50Z, expires 2026-10-10T21:54:50Z
+bridge-x509: version 1791665695047, issued 2026-10-10T20:54:55Z, expires 2026-10-10T21:54:55Z
+output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
+output tls: wrote /tmp/docs-patch-a2daf7c8/revokd/out/bridge.crl
 $ authn-revokd -config revokd-old.hcl -once
-bridge-ssh: file:///tmp/authn-lab/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-10T19:17:54Z, the copy held at 2026-10-10T19:47:48Z
-authn-revokd: not current: bridge-ssh
+bridge-ssh: file:///tmp/docs-patch-a2daf7c8/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-10T20:54:36Z, the copy held at 2026-10-10T20:54:50Z
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-10T21:54:50Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
-# Generated at 20261010T214748
+# Generated at 20261010T225450
 # Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
@@ -248,15 +249,36 @@ sshd&amp;rsquo;s StrictModes rule (&lt;a href="https://go-authn.github.io/docs/0
 A crash between two writes cannot leave a pair that fails to verify, which
 would take the rollback guard with it: the list and its signature are one file.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what--once-reports"&gt;What &lt;code&gt;-once&lt;/code&gt; reports&lt;span class="hx:absolute hx:-mt-20" id="what--once-reports"&gt;&lt;/span&gt;
-&lt;a href="#what--once-reports" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-once&lt;/code&gt; exits &lt;code&gt;1&lt;/code&gt; naming every source whose &lt;strong&gt;last fetch failed&lt;/strong&gt;, and every
-output that could not be written. That includes a source whose fetch failed
-while the copy it holds is still current: the output is then still written from
-that copy, unchanged, and is not failed closed until the copy lapses.&lt;/p&gt;
+&lt;a href="#what--once-reports" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-once&lt;/code&gt; exits &lt;code&gt;1&lt;/code&gt; when a source has no current list, when its &lt;strong&gt;last fetch
+failed&lt;/strong&gt;, or when an output could not be written, and its last line says which
+of the first two it is:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;last line&lt;/th&gt;
+&lt;th&gt;the source&lt;/th&gt;
+&lt;th&gt;its outputs&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not current: &amp;lt;source&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;holds no current list: never fetched, expired, or past &lt;code&gt;max_age&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;failed closed for sshd&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not fetched: &amp;lt;source&amp;gt; (the list held is current until &amp;lt;T&amp;gt;)&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;its fetch failed, but the copy held is still current&lt;/td&gt;
+&lt;td&gt;written from that copy, unchanged, until &lt;code&gt;T&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Here the issuer is stopped while both lists held are still current:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
 bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
-authn-revokd: not current: bridge-ssh, bridge-x509&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-10T21:54:50Z), bridge-x509 (the list held is current until 2026-10-10T21:54:55Z)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -268,8 +290,12 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;That run left &lt;code&gt;sshd.krl&lt;/code&gt; as it was, since both lists held were still current.
-The mirror&amp;rsquo;s &lt;code&gt;/healthz&lt;/code&gt; judges by the copy held instead, and answered &lt;code&gt;ok&lt;/code&gt; while
+&lt;p&gt;That run left &lt;code&gt;sshd.krl&lt;/code&gt; as it was. Once a list held lapses, the same source is
+reported &lt;code&gt;not current&lt;/code&gt;, and both kinds can share the line, as on
+&lt;a href="https://go-authn.github.io/docs/0.1/authn-revokd/lapse/"&gt;when a list lapses&lt;/a&gt;. Before v0.6.2
+both cases were reported &lt;code&gt;not current&lt;/code&gt;, which said a list had lapsed when only
+its fetch had failed; the exit status was &lt;code&gt;1&lt;/code&gt; then too.&lt;/p&gt;
+&lt;p&gt;The mirror&amp;rsquo;s &lt;code&gt;/healthz&lt;/code&gt; judges by the copy held instead, and answered &lt;code&gt;ok&lt;/code&gt; while
 the issuer was down and the copies still current.&lt;/p&gt;</description></item><item><title>Security</title><link>https://go-authn.github.io/docs/0.1/security/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/security/</guid><description>
 &lt;p&gt;go-authn is asked to prove people, so its refusals are the design rather than
 the exceptions. This section gathers the ones that cross program boundaries;
