@@ -1,0 +1,108 @@
+---
+title: "Status"
+weight: 60
+description: "Which releases these pages describe, what each release added, and what is not implemented yet."
+tags: [status, releases]
+---
+
+These pages are documentation version **0.1**, and describe:
+
+| program | release | module |
+|---|---|---|
+| authnd | **v0.10.1** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.20.0** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.1** | `github.com/go-authn/revocation` |
+| sshcert-authorize | **v0.1.4** | `github.com/go-authn/sshcert` |
+
+The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}}).
+A new minor version of any program above is a new documentation version, so
+the pages a reader finds under `/docs/0.1/` keep describing what they
+installed.
+
+## What each release added
+
+Each line is the change a release was cut for. Releases that only updated
+dependencies are left out.
+
+### authnd
+
+| | |
+|---|---|
+| v0.1.0 | an LDAP server for people who are somewhere else: a file, a SQL database, another directory |
+| v0.2.0 | a second factor, over a protocol with one field |
+| v0.5.0 | password changes that touch exactly one identity; a reload with no race; the KDC sees changes |
+| v0.6.0 | the security fixes of oidc, directory, ldap, totp and mfa |
+| v0.7.0 | the old password is required to change one; secrets are compared as fixed-length digests |
+| v0.8.2 | a code counts only behind the right password; a reader is keyed by its configured DN |
+| v0.9.0 | built and tested with Go 1.27.1, pinned rather than `stable` |
+| v0.9.2 | release binaries, `SHA256SUMS` and build provenance on every tag |
+| v0.9.3 | binaries built outside the checkout; each must report the tag exactly |
+| v0.9.4 | a `SIGHUP` no longer ends authnd: it is logged, and nothing is reloaded |
+| v0.9.5 | the release checks **every** binary's build information, not one |
+| v0.9.6 | `check` says why each person cannot be issued a ticket |
+| v0.10.0 | `check` opens the certificate and the keytab, as the server does; it names who cannot bind with a password, and who a token still admits; the listening line comes after the realm opens |
+| v0.10.1 | go-authn/kdc v0.4.2: a `till` of 19700101000000Z gets the longest ticket, not one expired in 1970 |
+
+### authn-bridge
+
+| | |
+|---|---|
+| v0.1.0 | an OpenID Connect provider in front of a SAML federation |
+| v0.2.0 | the device grant, SSH certificates, application passwords, OpenPubkey |
+| v0.3.0 | an admin API (`bridge.admin.v1`), and `/healthz`, `/readyz`, `/metrics` |
+| v0.4.0 | ES256 access tokens |
+| v0.5.0 | TLS through go-authn/servercert, shared with go-fileshare |
+| v0.6.0 | certificates that can be revoked: an SSH KRL, and X.509 for NFS with a CRL |
+| v0.7.0 | state that survives a restart: refresh tokens and honoured access tokens |
+| v0.8.0 | a Shared Signals transmitter: CAEP `session-revoked` |
+| v0.9.0 | the fixes of an adversarial review of v0.8.1 |
+| v0.10.0 | revocation lists to be checked anywhere: a signed KRL, an expiry, an ETag of the content |
+| v0.10.2 | a CRL number for every issue; never an issue dated before the last |
+| v0.11.0 | groups held to their identity provider; disabling by identity; a bridge-only audience |
+| v0.12.0 | a login in progress lives in its sealed cookie, not in memory |
+| v0.13.0 | a confidential client may protect its code with the nonce (RFC 9700 2.1.1) |
+| v0.16.0 | `max_age` asks for a new authentication only when the last is too old |
+| v0.16.3 | a second review: every spelling revoked, disabling by `sub`, no replay across restarts |
+| v0.17.0 | WireGuard keys, registered by people and listed for a gateway |
+| v0.18.0 | an ID token without the person's claims; go-authn/saml v0.4.0 |
+| v0.19.0 | the EuroHPC SSH CA profile, opt-in per client |
+| v0.19.3 | release binaries, `SHA256SUMS` and build provenance on every tag |
+| v0.20.0 | the command is `authn-bridge`; a hardened systemd unit and an install guide |
+
+### authn-revokd
+
+| | |
+|---|---|
+| v0.1.0 | signed, expiring revocation lists: the protocol, the library, and revokd (agent and mirror) |
+| v0.2.0 | the fixes of an adversarial review |
+| v0.2.1 | each CA's list merged with its own key revocations; a CRL's signature checked before it is parsed |
+| v0.3.0 | key revocations scoped; failing closed per CA; the state directory's owner checked |
+| v0.5.0 | release binaries, `SHA256SUMS` and build provenance on every tag |
+| v0.6.0 | the command is `authn-revokd`; systemd units and an install guide; `SIGHUP` syncs at once |
+| v0.6.1 | `-version` prints on standard output |
+
+### sshcert
+
+| | |
+|---|---|
+| v0.1.0 | the domain-grant extension, and a fail-closed `sshcert-authorize` |
+| v0.1.2 | release binaries, `SHA256SUMS` and build provenance on every tag |
+| v0.1.4 | the release checks every binary's build information |
+
+## Not implemented yet
+
+- **Writes through LDAP**, beyond a person changing their own password. authnd
+  answers a modify of one's own `userPassword` and the RFC 3062 password modify
+  operation (what `ldappasswd` sends), both only with the current password, and
+  nothing else: add, delete and modifyDN exist in go-authn/ldap and are
+  deliberately not wired (`server.go`). The library carries a modify as an
+  ordered list (RFC 4511 4.6) and answers the read entry controls (RFC 4527), so
+  the shape is there; what is missing is the policy of who may write what.
+- **A second factor inside Kerberos**: OTP pre-authentication (RFC 6560) in
+  FAST (RFC 6113). Until it exists, a `kerberos` block and an `mfa` block
+  cannot both be configured.
+- **RC4-HMAC**: the realm issues aes256-cts-hmac-sha1-96 only, so a person
+  known only by an NT hash cannot be issued a ticket. This is a choice (RC4 is
+  deprecated by RFC 8429), not a gap waiting to be filled.
+- **Translations** of these pages: go-fileshare's documentation is in English,
+  French, Spanish and German; this site starts in English.
