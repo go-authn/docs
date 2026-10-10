@@ -153,8 +153,8 @@ $ kinit --password-file=dora.pwin zed@EXAMPLE.ORG
 kinit: krb5_get_init_creds: Error from KDC: no such principal in this realm
 ```
 
-The ticket lasts the default ten hours. bob typed the password his NT hash
-was computed from, and is still refused: the realm has no key for him. The
+The ticket lasts the default ten hours. bob typed the password their NT hash
+was computed from, and is still refused: the realm has no key for them. The
 KDC writes what it refused, with the Kerberos error code, to its output:
 
 ```

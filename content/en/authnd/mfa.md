@@ -72,7 +72,7 @@ That is the question to ask before turning the block on.
 
 ## What the binds look like
 
-The same configuration served, tess's code computed from her secret at the
+The same configuration served, tess's code computed from their secret at the
 moment of the bind:
 
 ```
@@ -95,8 +95,8 @@ $ ldapwhoami -x -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reade
 dn:cn=reader,dc=example,dc=org
 ```
 
-`tess.only` is her password with no code; `tess.both` her password and the
-current code, sent twice; `tess.badcode` her password and `000000`;
+`tess.only` is tess's password with no code; `tess.both` the same password and
+the current code, sent twice; `tess.badcode` that password and `000000`;
 `alice.code` alice's password and six digits. The client is told one thing —
 *invalid credentials* — whichever half was wrong: which one is a fact about
 the account, and telling somebody who has proved nothing narrows their next

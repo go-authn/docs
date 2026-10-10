@@ -99,7 +99,7 @@ für einen Sicherheitsschlüssel.
 | eine `Policy`, deren `Count` unter eins liegt | *a policy that requires 0 factors accepts anyone*. Es gibt keine Standardrichtlinie: Wie viel Nachweis genügt, entscheidet, wer die Sache schützt |
 | weniger angebotene Faktoren als `Count` | die Richtlinie kann nicht erfüllt werden, was auch immer sie antworten |
 | ein Faktor, dessen `Kind()` außerhalb der Aufzählung liegt | als eigene Art gezählt, ginge `Kind(42)` neben einer Passphrase als zwei Faktoren durch |
-| **derselbe Faktor zweimal** | eine Passphrase, zweimal übergeben, erfüllte `Count: 2`. „Derselbe“ heißt: derselbe Typ mit denselben Werten, Funktionen eingeschlossen; eine Funktion ist dieselbe Funktion, wenn sie denselben Code ausführt |
+| **derselbe Faktor zweimal** | vor v0.3.0 erfüllte eine Passphrase, zweimal übergeben, `Count: 2`, und vor v0.4.0 auch jeder Faktor, der eine Funktion enthält. „Derselbe“ heißt: derselbe Typ mit denselben Werten, Funktionen eingeschlossen; eine Funktion ist dieselbe Funktion, wenn sie denselben Code ausführt |
 
 Und während es fragt, hält es drei Dinge auseinander:
 

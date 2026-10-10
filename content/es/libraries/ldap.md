@@ -129,8 +129,9 @@ ldap_modify: Server is unwilling to perform (53)
 modifying entry "uid=dora,ou=people,dc=example,dc=org"
 ```
 
-`(uid=svc-*-prod)` devuelve `svc-web-prod` y no `svc-web-stage`: ese es el defecto,
-en la biblioteca a la que esta sustituye, que decidió que había que escribirla. El
+`(uid=svc-*-prod)` devuelve `svc-web-prod` y no `svc-web-stage`. La biblioteca a la
+que esta sustituye evaluaba ese filtro como `(uid=svc-*)` y devolvía también
+`svc-web-stage`; ese defecto es la razón por la que se escribió esta biblioteca. El
 root DSE no anuncia StartTLS, porque no se indicó ningún `TLSConfig`.
 
 ## Lo que rechaza, y por qué {#what-it-refuses-and-why}
@@ -138,8 +139,9 @@ root DSE no anuncia StartTLS, porque no se indicó ningún `TLSConfig`.
 **Un filtro significa una sola cosa.** Se analiza o se decodifica una sola vez en un
 árbol, y `String`, `EncodeFilter` y `Matches` leen todos ese árbol. Un atributo que
 no es una descripción de atributo según el RFC 4512 §2.5, o una regla de coincidencia
-que no es un OID, lo rechazan tanto `ParseFilter` como `DecodeFilter`: al volver a
-imprimirlo, un filtro «present» sobre el atributo `!x` se leía como un NOT.
+que no es un OID, lo rechazan tanto `ParseFilter` como `DecodeFilter`: antes de la
+v0.6.1, al volver a imprimirlo, un filtro «present» sobre el atributo `!x` se leía
+como un NOT.
 
 **Texto en claro, cuando se había prometido lo contrario.** StartTLS lo pide el
 *cliente*, así que un servidor que solo lo ofrece no ha prometido nada.
@@ -172,9 +174,9 @@ ManageDsaIT crítico se rechaza con `unavailableCriticalExtension`.
 | | por defecto | |
 |---|---|---|
 | `MaxMessageSize` | 4 MiB | una cabecera de cinco bytes que anuncia cuatro gigabytes se rechaza antes de reservar nada |
-| `MaxMessageElements` | 16384 | elementos BER contados antes de decodificar: 4 MiB de cadenas vacías llegaron a retener 373 MiB antes de cualquier bind |
+| `MaxMessageElements` | 16384 | elementos BER contados antes de decodificar: antes de la v0.5.0, 4 MiB de cadenas vacías retenían 373 MiB antes de cualquier bind |
 | `IdleTimeout` | 5 minutos | el mensaje entero debe llegar a tiempo, no su primer byte; un valor negativo significa nunca |
-| `MaxPending`, `MaxPendingAuth` | 100, 1000 | operaciones en curso antes y después de un bind, como el `conn_max_pending` de slapd; una más provoca un aviso de desconexión |
+| `MaxPending`, `MaxPendingAuth` | 100, 1000 | operaciones que una conexión puede tener en curso antes de su bind (`MaxPending`) y después (`MaxPendingAuth`), como `conn_max_pending` y `conn_max_pending_auth` de slapd; una conexión que se pasa recibe un aviso de desconexión y se cierra |
 | `MaxPagedSearches` | 4 | búsquedas paginadas abiertas por conexión, cada una una goroutine detenida a la espera de su siguiente entrada |
 
 El anidamiento de los filtros también está acotado: un desbordamiento de pila en Go

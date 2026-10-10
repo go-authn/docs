@@ -128,8 +128,9 @@ ldap_modify: Server is unwilling to perform (53)
 modifying entry "uid=dora,ou=people,dc=example,dc=org"
 ```
 
-`(uid=svc-*-prod)` returns `svc-web-prod` and not `svc-web-stage`: that is the
-defect, in the library this replaces, that decided it should be written. The
+`(uid=svc-*-prod)` returns `svc-web-prod` and not `svc-web-stage`. The library
+this one replaces evaluated that filter as `(uid=svc-*)` and returned
+`svc-web-stage` as well; that defect is why this library was written. The
 root DSE does not list StartTLS, because no `TLSConfig` was given.
 
 ## What it refuses, and why
@@ -137,8 +138,8 @@ root DSE does not list StartTLS, because no `TLSConfig` was given.
 **A filter means one thing.** It is parsed or decoded once into a tree, and
 `String`, `EncodeFilter` and `Matches` all read that tree. An attribute that is
 not an RFC 4512 §2.5 attribute description, or a matching rule that is not an
-OID, is refused by both `ParseFilter` and `DecodeFilter`: printed back, a
-"present" filter on the attribute `!x` read as a NOT.
+OID, is refused by both `ParseFilter` and `DecodeFilter`: before v0.6.1, printed
+back, a "present" filter on the attribute `!x` read as a NOT.
 
 **Plaintext, when it was promised otherwise.** StartTLS is asked for by the
 *client*, so a server that merely offers it has promised nothing.
@@ -172,9 +173,9 @@ aliases or referrals, so a critical ManageDsaIT is refused with
 | | default | |
 |---|---|---|
 | `MaxMessageSize` | 4 MiB | a five-byte header claiming four gigabytes is refused before anything is reserved |
-| `MaxMessageElements` | 16384 | BER elements counted before decoding: 4 MiB of empty strings once held 373 MiB before any bind |
+| `MaxMessageElements` | 16384 | BER elements counted before decoding: before v0.5.0, 4 MiB of empty strings held 373 MiB before any bind |
 | `IdleTimeout` | 5 minutes | the whole message must arrive in time, not its first byte; negative means never |
-| `MaxPending`, `MaxPendingAuth` | 100, 1000 | operations in flight before and after a bind, as slapd's `conn_max_pending`; one more is a notice of disconnection |
+| `MaxPending`, `MaxPendingAuth` | 100, 1000 | operations one connection may have in flight before it has bound (`MaxPending`) and after (`MaxPendingAuth`), as slapd's `conn_max_pending` and `conn_max_pending_auth`; a connection that goes over is sent a notice of disconnection and closed |
 | `MaxPagedSearches` | 4 | paged searches open per connection, each a goroutine parked on its next entry |
 
 Filter nesting is bounded as well: a stack overflow in Go kills the process.

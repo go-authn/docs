@@ -32,8 +32,8 @@ appartenant à root et que personne d'autre ne peut modifier.
 
 `%u` est le compte auquel on se connecte. `%k` est le certificat, en base64 ; une ligne entière
 `ssh-...-cert-v01@openssh.com BASE64` est lue aussi, et quand l'argument est
-absent le certificat est lu sur l'entrée standard. Un troisième argument, `%t`, doit
-alors être le type du certificat.
+absent le certificat est lu sur l'entrée standard. Un troisième argument, quand il y en a un
+(le `%t` de sshd), doit être le type du certificat, sinon le certificat est refusé.
 
 | sortie | affiche | sshd |
 |---|---|---|
@@ -141,9 +141,10 @@ KRL OpenSSH dans la commande, et ajoute ce que sshd ne fait pas : elle refuse
 que sshd ignore), et tous les certificats quand la liste ne peut pas être
 lue. Une liste sans expiration est utilisée sans expiration.
 
-Avec la KRL qu'écrit [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}), une
-liste à jour, puis celle qui refuse en cas de doute, qu'il écrit quand la liste de l'émetteur
-[expire]({{< relref "/authn-revokd/lapse.md" >}}) :
+Trois exécutions : avec la KRL qu'écrit [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}),
+d'abord une liste à jour, puis celle qui refuse en cas de doute, qu'il écrit quand la liste de l'émetteur
+[expire]({{< relref "/authn-revokd/lapse.md" >}}) ; et enfin avec `--krl` qui nomme un fichier
+qui n'existe pas :
 
 ```
 $ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-cert.pub)"
@@ -158,9 +159,10 @@ INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.fr granted" 
 WARNING: action=denied user=alice domain=login.hpc.example.org reason="KRL unreadable: open missing.krl: no such file or directory" serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
 ```
 
-La deuxième exécution est refusée parce que la liste révoque la **clé de l'AC**
+La deuxième exécution est refusée parce que la liste qui refuse en cas de doute révoque la **clé de l'AC**
 du certificat : la vérification couvre la clé propre du certificat, son numéro de série et son identifiant de clé, et
-la clé qui l'a signé.
+la clé qui l'a signé. La troisième est refusée parce que la liste ne peut pas être lue : l'absence
+de liste n'est pas prise pour « rien de révoqué ».
 
 ## Drapeaux {#flags}
 

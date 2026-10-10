@@ -14,9 +14,9 @@ key_file  = "/etc/authnd/key.pem"
 
 `cert_file` et `key_file` ensemble activent TLS ; l'un sans l'autre est
 refusé (*one without the other serves nothing*). TLS 1.2 est le minimum.
-authnd n'a pas de client ACME : quoi que ce soit qui écrive les deux fichiers —
-[go-authn/servercert]({{< relref "/libraries/_index.md" >}}), certbot, l'AC
-(autorité de certification) propre d'un site — les écrit, et authnd est **redémarré** après chaque renouvellement,
+authnd n'a pas de client ACME : les deux fichiers sont écrits par autre chose —
+[go-authn/servercert]({{< relref "/libraries/servercert.md" >}}), certbot, l'AC
+(autorité de certification) propre d'un site — et authnd est **redémarré** après chaque renouvellement,
 car le certificat est lu une seule fois, à l'ouverture de l'écouteur.
 
 ## Deux façons, un écouteur chacune {#two-ways-one-listener-each}

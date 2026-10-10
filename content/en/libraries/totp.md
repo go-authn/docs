@@ -7,8 +7,9 @@ tags: [libraries, totp, factors]
 ---
 
 **Is this six-digit code right — and has it been used before?** Time-based
-one-time passwords (RFC 6238), a `Verifier` that remembers what a server must,
-and the [mfa]({{< relref "/libraries/mfa.md" >}}) factor a policy asks.
+one-time passwords (RFC 6238); a `Verifier` that remembers what a server has
+to, the codes already used and the wrong ones; and a factor that an
+[mfa]({{< relref "/libraries/mfa.md" >}}) policy can ask for.
 
 ```sh
 go get github.com/go-authn/totp@v0.4.1
@@ -119,8 +120,8 @@ unavailable, so a policy cannot pass on the other factors and hide the mistake.
 
 **Guessing, per secret.** A `Verifier` counts wrong codes per **credential** —
 the secret, held only as its SHA-256 — not per name, because the name is
-whatever string the caller passes, and `dora`, `Dora` and `DORA` were once
-three counters for one secret.
+whatever string the caller passes, and before v0.3.0 `dora`, `Dora` and `DORA`
+were three counters for one secret.
 
 | field | default | |
 |---|---|---|
@@ -131,7 +132,9 @@ three counters for one secret.
 Only a wrong code counts; a replay, a code of the wrong length or a refused
 parameter does not bring a pause nearer. The whole check is made under one
 lock, so guesses sent at the same moment are counted one by one.
-`errors.Is(err, totp.ErrThrottled)` is true for both refusals.
+`ErrLockedOut` wraps `ErrThrottled`, so `errors.Is(err, totp.ErrThrottled)` is
+true for both refusals, and `errors.Is(err, totp.ErrLockedOut)` only for the
+lockout.
 
 **Parameters that cannot be right:**
 

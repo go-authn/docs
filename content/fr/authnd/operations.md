@@ -38,7 +38,8 @@ alice changed their own password
 stopping
 ```
 
-C'est une seule exécution : un `kill -HUP`, deux changements de mot de passe, puis un `kill -TERM`.
+C'est une seule exécution : un `kill -HUP`, deux tentatives de changement de mot de passe (la première
+refusée, la seconde acceptée), puis un `kill -TERM`.
 Le processus était toujours là après le `SIGHUP`.
 
 Un `SIGHUP` **tuait** autrefois authnd — le comportement par défaut de Go pour un signal que personne ne gère

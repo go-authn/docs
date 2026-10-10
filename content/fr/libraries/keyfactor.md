@@ -16,7 +16,9 @@ suffisent et ne connaît aucun périphérique. Aucun des deux n'importe l'autre 
 go get github.com/go-authn/keyfactor@v0.4.1
 ```
 
-En v0.4.1, il requiert `go-authn/fido` v0.6.0 et `go-authn/mfa` v0.5.0.
+En v0.4.1, son `go.mod` requiert au moins `go-authn/fido` v0.6.0 et
+`go-authn/mfa` v0.5.0 : des minimums, si bien qu'un programme qui requiert fido v0.6.1, la
+version que décrivent ces pages, est compilé avec la v0.6.1.
 
 La plateforme fournit un `Opener` — comment une clé est trouvée sur ce système — et
 ne garde que cela. Tout le reste est identique partout où il y a CTAP : l'assertion,
@@ -87,8 +89,10 @@ l'enregistrement :
 
 **La dernière tentative de PIN n'est pas dépensée sur une supposition.** `PINRetries` est interrogé en premier ;
 une clé qui n'acceptera plus de PIN tant qu'elle n'aura pas été débranchée est refusée, tout comme
-une clé à laquelle il reste **une tentative ou moins**. Une clé qui les a toutes épuisées se verrouille, puis
-définitivement, emportant tous les identifiants qu'elle contient.
+une clé à laquelle il reste **une tentative ou moins**. Selon CTAP, trois mauvais PIN de suite
+bloquent le PIN d'une clé jusqu'à ce qu'elle soit débranchée, et un compteur de tentatives qui
+atteint zéro le bloque définitivement : seule une réinitialisation lève ce blocage, en effaçant
+tous les identifiants qu'elle contient.
 
 **Un PIN n'est pas un second facteur.** Le type reste `mfa.Possession` : un PIN
 saisi dans la clé protège la clé, et n'identifie personne auprès de cette machine.

@@ -17,7 +17,7 @@ each program's own pages say what it refuses on its own.
 | authnd | a search by anyone but a declared `reader` | a bind proves who somebody is; it is not permission to list everybody |
 | authnd | a Kerberos ticket for a person whose source holds no password | a KDC needs a key derived from the password; an NT hash or a password check cannot produce one ([why]({{< relref "/authnd/kerberos.md" >}})) |
 | authnd | a `kerberos` block beside an `mfa` block | a kinit carries the password and nothing else, so the realm would issue tickets on one factor to people the `mfa` block says need two |
-| authn-bridge | an assertion nobody signed, an identifier from outside the institution's own scope | a federation is only as good as the narrowest thing each member may assert |
+| authn-bridge | an assertion nobody signed, an identifier from outside the institution's own scope | every member of a federation is trusted, so each must be held to its own people: otherwise any one institution could name anybody |
 | authn-revokd | a list that is unsigned, expired, or older than the one it holds | a mirror in between may delay a list, never forge it or roll it back |
 | authn-revokd | trusting a list that has lapsed | it writes one that revokes the CA itself, so sshd refuses rather than trusting a stale list |
 | sshcert-authorize | a certificate whose domain grant does not name this host | a certificate from a federation CA is not, by itself, permission for every host that trusts that CA |

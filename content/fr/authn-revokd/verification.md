@@ -37,8 +37,8 @@ cette clé. Une signature qui ne se vérifie pas peut aussi être une liste émi
 entre les deux requêtes, les deux sont donc récupérées une fois de plus avant que ce ne soit signalé.
 C'était la première récupération de cette source, il n'y avait donc aucune bonne copie à garder, et
 la sortie est d'emblée la [liste qui refuse en cas de doute]({{< relref "/authn-revokd/lapse.md" >}}).
-(Avant la v0.6.2, le même échec était signalé comme « the list changed between
-it and its signature », devant les mêmes mots.)
+(Avant la v0.6.2, le même échec portait « the list changed between it and its
+signature » devant le message ci-dessus, comme si la liste avait été émise de nouveau.)
 
 La signature est récupérée avec `If-Match: <the list's ETag>`. Une liste émise
 de nouveau entre les deux requêtes répond `412`, et les deux sont récupérées de nouveau.

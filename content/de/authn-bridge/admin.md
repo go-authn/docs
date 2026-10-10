@@ -154,7 +154,7 @@ die KRL; deshalb sind beide kurzlebig.
 ## Health und Metriken {#health-and-metrics}
 
 Die von go-net-health/endpoint, wie in go-fileshare, auf dem `metrics`-Listener, der
-nicht der öffentliche sein darf:
+nicht der öffentliche sein darf (eine Konfiguration, die ihn dazu macht, wird abgelehnt):
 
 | | |
 |---|---|
@@ -182,8 +182,9 @@ bridge_ssh_certificates_total 0
 bridge_x509_certificates_total 0
 ```
 
-Anmeldungen nach Ergebnis, Tokens nach Grant und Anwendungspasswörter erscheinen, sobald sie
-etwas gezählt haben. **Kein Label nennt eine Person oder eine Einrichtung**: Von welchen
+Die Zähler der Anmeldungen nach Ergebnis (`bridge_logins_total`), der Tokens nach Grant
+(`bridge_tokens_issued_total`) und der Anwendungspasswörter (`bridge_app_passwords_total`)
+erscheinen erst, wenn sie etwas gezählt haben. **Kein Label nennt eine Person oder eine Einrichtung**: Von welchen
 Universitäten Personen den Dienst nutzen, und wann, zu veröffentlichen ist nicht Sache des
-Anbieters. `bridge_metadata_valid_until_timestamp_seconds` ist die Metrik, auf die
-alarmiert werden sollte, bevor der Zeitpunkt erreicht ist: Danach kann sich niemand anmelden.
+Anbieters. Alarmieren Sie auf `bridge_metadata_valid_until_timestamp_seconds`, bevor der
+Zeitpunkt, den sie angibt, erreicht ist: Danach kann sich niemand anmelden.

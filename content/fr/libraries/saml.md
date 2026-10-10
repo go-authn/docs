@@ -185,13 +185,14 @@ Le certificat d'un IdP dans les métadonnées est digne de confiance parce que l
 signature de la fédération le nomme ; ses dates ne sont pas examinées, puisque
 les certificats d'IdP sont souvent autosignés et expirés.
 
-**Réponses**, à `Accept` — chacune une erreur pour l'appelant, destinée au journal du serveur :
+**Les réponses** sont vérifiées à `Accept`. Chaque refus ci-dessous est renvoyé à
+l'appelant sous forme d'erreur, destinée au journal du serveur :
 
 | | pourquoi |
 |---|---|
 | rien de signé, ou signé avec SHA-1 | saml-profiles 4.1.4.5 : en POST, l'assertion doit être signée. Un IdP Shibboleth signe la Response par défaut ; l'une ou l'autre est acceptée |
 | plus d'une assertion | c'est ainsi qu'une assertion signée et une non signée arrivent ensemble et que la mauvaise est lue (CVE-2022-41912) |
-| tout ce que la signature ne couvrait pas | seul l'élément reconstruit à partir des octets condensés est lu |
+| tout ce que la signature ne couvrait pas | ce n'est jamais lu : seul l'est l'élément reconstruit à partir des octets que la signature a condensés |
 | un identifiant à portée hors des `Scopes` de l'IdP | écarté : sinon n'importe quel IdP pourrait affirmer `alice@another-university.fr` |
 | un chiffré AES-CBC qu'aucune signature vérifiée ne couvre | pas même déchiffré : CBC non authentifié est un oracle de remplissage. Le transport de clé RSA PKCS#1 v1.5 n'est pas accepté du tout ; AES-GCM et RSA-OAEP le sont |
 | une autre audience, un autre ACS ou une autre requête ; une réponse non sollicitée ; une requête vieille de plus d'une heure | saml-profiles 4.1.4.3 |

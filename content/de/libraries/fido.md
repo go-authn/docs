@@ -123,8 +123,12 @@ statt halb dekodiert.
 {{< callout type="warning" >}}
 **Eine falsche PIN kostet einen Versuch**
 
-Ein Authenticator, dem die Versuche ausgehen, sperrt, bis er abgezogen wird, und dann
-dauerhaft. Fragen Sie `Key.PINRetries` ab, bevor Sie jemanden zur Eingabe auffordern.
+CTAP gibt einem Authenticator einen Zähler für PIN-Versuche, höchstens acht, und jede
+falsche PIN verbraucht einen. Drei falsche PINs hintereinander sperren die PIN, bis der
+Schlüssel abgezogen und wieder eingesteckt wird. Ein Zähler, der null erreicht, sperrt sie
+endgültig: Nur ein Reset hebt das auf, und ein Reset löscht jedes Credential auf dem
+Schlüssel. Fragen Sie `Key.PINRetries` ab, bevor Sie jemanden zur Eingabe auffordern: Es
+sagt, wie viele Versuche bleiben und ob der Schlüssel darauf wartet, abgezogen zu werden.
 {{< /callout >}}
 
 ## Wogegen es geprüft wird {#what-it-is-checked-against}

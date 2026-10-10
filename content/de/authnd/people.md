@@ -191,7 +191,8 @@ Quellen werden **in der Reihenfolge gefragt, in der sie geschrieben sind**, und 
 einen Namen kennt, besitzt ihn. Die `user`-Blöcke kommen immer zuerst, sodass ein lokal
 eingetragenes Dienstkonto nicht von jemandem mit demselben Namen
 in der Datenbank überschrieben wird. **Die Gruppenmitgliedschaft ist die Vereinigung** aller
-Quellen: `staff` oben hat alice und bob aus einer Datei und dora aus einer Datenbank.
+Quellen: Eine Gruppe, die sowohl ein `group`-Block als auch die `groups`-Abfrage einer
+Datenbank nennt, hat die Mitglieder beider.
 
 {{< callout type="warning" >}}
 **Zwei Namen, die sich nur in der Groß-/Kleinschreibung unterscheiden, werden abgelehnt**

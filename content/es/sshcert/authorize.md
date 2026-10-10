@@ -34,7 +34,8 @@ una ruta cuyo propietario es root y en la que nadie más puede escribir.
 `%u` es la cuenta en la que se inicia sesión. `%k` es el certificado, en base64;
 también se lee una línea completa `ssh-...-cert-v01@openssh.com BASE64`, y cuando
 falta el argumento el certificado se lee de la entrada estándar. Un tercer
-argumento, `%t`, debe ser entonces el tipo del certificado.
+argumento, cuando lo hay (el `%t` de sshd), debe ser el tipo del certificado; si no,
+el certificado se rechaza.
 
 | salida | muestra | sshd |
 |---|---|---|
@@ -144,9 +145,10 @@ que sshd no hace: rechaza **todos** los certificados en cuanto la lista ha caduc
 certificados cuando la lista no se puede leer. Una lista sin caducidad se usa sin
 ella.
 
-Con la KRL que escribe [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}), una
-vigente y después la de modo cerrado que escribe cuando la lista del emisor
-[caduca]({{< relref "/authn-revokd/lapse.md" >}}):
+Tres ejecuciones: con la KRL que escribe [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}),
+primero una vigente y después la de modo cerrado que escribe cuando la lista del emisor
+[caduca]({{< relref "/authn-revokd/lapse.md" >}}); y por último con `--krl` apuntando a un
+archivo que no existe:
 
 ```
 $ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-cert.pub)"
@@ -161,9 +163,10 @@ INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.fr granted" 
 WARNING: action=denied user=alice domain=login.hpc.example.org reason="KRL unreadable: open missing.krl: no such file or directory" serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
 ```
 
-La segunda ejecución se rechaza porque la lista revoca la **clave de la CA** del
+La segunda ejecución se rechaza porque la lista de modo cerrado revoca la **clave de la CA** del
 certificado: la comprobación abarca la propia clave del certificado, su número de
-serie y su ID de clave, y la clave que lo firmó.
+serie y su ID de clave, y la clave que lo firmó. La tercera se rechaza porque la lista
+no se puede leer: la falta de lista no se toma por «nada revocado».
 
 ## Opciones {#flags}
 

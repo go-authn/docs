@@ -10,8 +10,9 @@ tags: [authn-bridge, oidc, saml]
 Éducation-Recherche or eduGAIN, and applications get an OpenID Connect token.**
 The same login can also have an SSH key certified, an X.509 client certificate
 issued for NFS over TLS, an application password set for SMB and S3, or a
-WireGuard key registered. Whatever the provider issued, it can take back, and it
-publishes signed lists of what it has revoked. Pure Go, `CGO_ENABLED=0`, one
+WireGuard key registered. The provider can revoke what it issued, and it
+publishes signed lists of what it has revoked; an access token already handed
+out stays valid until it expires. Pure Go, `CGO_ENABLED=0`, one
 binary. These pages describe v0.20.1.
 
 ```sh

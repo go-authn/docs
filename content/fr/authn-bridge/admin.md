@@ -154,7 +154,7 @@ la KRL, ce qui explique que les deux soient courts.
 ## Santé et métriques {#health-and-metrics}
 
 Ceux de go-net-health/endpoint, comme dans go-fileshare, sur l'écouteur `metrics`, qui
-ne peut pas être l'écouteur public :
+ne doit pas être l'écouteur public (une configuration qui le fait est refusée) :
 
 | | |
 |---|---|
@@ -182,8 +182,9 @@ bridge_ssh_certificates_total 0
 bridge_x509_certificates_total 0
 ```
 
-Les connexions par issue, les jetons par type d'autorisation et les mots de passe d'application apparaissent dès qu'ils
-ont compté quelque chose. **Aucune étiquette ne nomme une personne ou un établissement** : quelles
+Les compteurs des connexions par issue (`bridge_logins_total`), des jetons par type d'autorisation
+(`bridge_tokens_issued_total`) et des mots de passe d'application (`bridge_app_passwords_total`)
+n'apparaissent qu'une fois qu'ils ont compté quelque chose. **Aucune étiquette ne nomme une personne ou un établissement** : quelles
 universités ont des personnes qui utilisent le service, et quand, ce n'est pas au fournisseur de le
-publier. `bridge_metadata_valid_until_timestamp_seconds` est celle sur laquelle alerter
-avant qu'elle soit atteinte : au-delà, personne ne peut se connecter.
+publier. Alertez sur `bridge_metadata_valid_until_timestamp_seconds` avant que l'instant
+qu'elle donne soit atteint : au-delà, personne ne peut se connecter.

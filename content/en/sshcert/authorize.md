@@ -32,8 +32,9 @@ owned by root and writable by nobody else.
 
 `%u` is the account being logged into. `%k` is the certificate, base64; a whole
 `ssh-...-cert-v01@openssh.com BASE64` line is read too, and when the argument is
-absent the certificate is read from standard input. A third argument, `%t`, must
-then be the certificate's type.
+absent the certificate is read from standard input. A third argument, when one
+is given (sshd's `%t`), must be the certificate's type, or the certificate is
+refused.
 
 | exit | prints | sshd |
 |---|---|---|
@@ -141,9 +142,10 @@ OpenSSH KRL inside the command, and adds what sshd does not do: it refuses
 extension, which sshd ignores), and every certificate when the list cannot be
 read. A list with no expiry is used without one.
 
-With the KRL [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) writes, a
-current one and then the fail-closed one it writes when the issuer's list
-[lapses]({{< relref "/authn-revokd/lapse.md" >}}):
+Three runs: with the KRL [authn-revokd]({{< relref "/authn-revokd/_index.md" >}})
+writes, first a current one, then the fail-closed one it writes when the
+issuer's list [lapses]({{< relref "/authn-revokd/lapse.md" >}}); and last with
+`--krl` naming a file that does not exist:
 
 ```
 $ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-cert.pub)"
@@ -158,9 +160,10 @@ INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.fr granted" 
 WARNING: action=denied user=alice domain=login.hpc.example.org reason="KRL unreadable: open missing.krl: no such file or directory" serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
 ```
 
-The second run is refused because the list revokes the certificate's **CA
-key**: the check covers the certificate's own key, its serial and key ID, and
-the key that signed it.
+The second run is refused because the fail-closed list revokes the
+certificate's **CA key**: the check covers the certificate's own key, its serial
+and key ID, and the key that signed it. The third is refused because the list
+cannot be read: no list is not taken to mean nothing revoked.
 
 ## Flags
 

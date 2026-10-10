@@ -96,7 +96,7 @@ which check refused it. An error means no context, and the returned token is
 empty.
 
 **A principal the acceptor does not answer for.** With
-`krb5.Principal("nfs/host.example.org")`, a keytab holding several services
+`krb5.Principal("nfs/files.example.org")`, a keytab holding several services
 answers for that one only.
 
 **A message whose signature does not match** is `ErrBadMIC`, whichever of the

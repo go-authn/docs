@@ -96,7 +96,7 @@ quelle vérification l'a refusé. Une erreur signifie aucun contexte, et le jeto
 vide.
 
 **Un principal pour lequel l'accepteur ne répond pas.** Avec
-`krb5.Principal("nfs/host.example.org")`, un keytab qui détient plusieurs services
+`krb5.Principal("nfs/files.example.org")`, un keytab qui détient plusieurs services
 ne répond que pour celui-là.
 
 **Un message dont la signature ne correspond pas** est `ErrBadMIC`, quel que soit, de la

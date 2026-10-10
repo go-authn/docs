@@ -128,9 +128,9 @@ secreto, así que la configuración nombra un **archivo** que la contiene
 
 Se sortea un defecto de `x/crypto/acme` ([golang/go#77704](https://github.com/golang/go/issues/77704)):
 tras finalizar un pedido que la CA todavía está procesando, el cliente consulta
-una cabecera `Location` que el RFC 8555 no pone en la respuesta de finalización.
-El transporte del cliente ACME la proporciona a partir de la URL del pedido vista
-antes.
+la URL de la cabecera `Location` de la respuesta de finalización, que el RFC 8555
+no pone ahí. servercert da al cliente ACME un transporte que añade esa cabecera,
+con la URL del pedido tomada de la respuesta newOrder recibida antes.
 
 ## Qué rechaza, y por qué {#what-it-refuses-and-why}
 

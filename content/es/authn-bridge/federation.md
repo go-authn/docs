@@ -221,8 +221,9 @@ rechazos propios de este proveedor:
 
 - una respuesta del IdP entregada **en otro navegador**: el inicio de sesión se
   encuentra mediante su propia cookie sellada, nunca mediante el `RelayState` que
-  lleva la respuesta, o cualquiera podría hacer que otra persona iniciara sesión
-  con la identidad de quien lo intenta;
+  lleva la respuesta; si no, cualquiera podría enviar su propia respuesta del IdP al
+  navegador de otra persona y hacer que esta iniciara sesión con la identidad de
+  quien la envía;
 - un IdP que la configuración ya no permite, o que la API de administración ha
   desactivado;
 - una persona o una institución [desactivada aquí]({{< relref "/authn-bridge/admin.md" >}}),

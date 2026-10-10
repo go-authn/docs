@@ -16,7 +16,9 @@ services a keytab holds. It runs under
 go get github.com/go-authn/kdc@v0.4.2
 ```
 
-At v0.4.2 it requires `go-authn/directory` v0.11.1 and gokrb5 v8.4.4. The
+At v0.4.2 its `go.mod` requires at least `go-authn/directory` v0.11.1 and
+gokrb5 v8.4.4: minimums, so a program that requires directory v0.11.2, the
+version these pages describe, builds with v0.11.2. The
 accepting half is [krb5]({{< relref "/libraries/krb5.md" >}}), and a service
 that only verifies tickets needs this module not at all.
 

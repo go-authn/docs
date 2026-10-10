@@ -216,7 +216,8 @@ eigenen Ablehnungen dieses Anbieters:
 
 - eine IdP-Antwort, die **in einen anderen Browser** zugestellt wird: Die Anmeldung wird
   über ihr eigenes versiegeltes Cookie gefunden, nie über den `RelayState`, den die Antwort
-  trägt, sonst könnte jeder eine andere Person unter der eigenen Identität anmelden;
+  trägt; sonst könnte jeder die eigene IdP-Antwort an den Browser einer anderen Person
+  schicken und diese Person unter der Identität des Absenders anmelden;
 - ein IdP, den die Konfiguration nicht mehr zulässt oder den die Admin-API
   deaktiviert hat;
 - eine Person oder eine Einrichtung, die [hier deaktiviert]({{< relref "/authn-bridge/admin.md" >}}) ist,

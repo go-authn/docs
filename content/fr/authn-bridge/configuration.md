@@ -167,7 +167,11 @@ le fournisseur refuse de démarrer sur un répertoire qu'un autre utilisateur po
 ## Ce qui est refusé au démarrage {#what-is-refused-at-startup}
 
 Chacun de ces messages est la sortie de `authn-bridge check` sur une configuration qui
-l'a provoqué. Le serveur refuse les mêmes configurations.
+l'a provoqué. Le serveur refuse les mêmes configurations : chacune se lit dans
+la configuration et dans les fichiers qu'elle nomme. Le seul refus qu'ajoute `check` est
+l'entrée `idps` que la fédération ne liste pas, [plus haut](#check-before-a-restart) :
+le serveur récupère les mêmes métadonnées avant d'écouter, mais n'y confronte
+pas `idps`.
 
 **Un émetteur, une redirection, un secret qui fuient :**
 

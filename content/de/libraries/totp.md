@@ -7,8 +7,9 @@ tags: [libraries, totp, factors]
 ---
 
 **Ist dieser sechsstellige Code richtig – und wurde er schon einmal verwendet?** Zeitbasierte
-Einmalpasswörter (RFC 6238), ein `Verifier`, der sich merkt, was ein Server sich merken muss,
-und der [mfa]({{< relref "/libraries/mfa.md" >}})-Faktor, den eine Richtlinie verlangt.
+Einmalpasswörter (RFC 6238); ein `Verifier`, der sich merkt, was ein Server sich merken muss,
+die schon verwendeten und die falschen Codes; und ein Faktor, den eine
+[mfa]({{< relref "/libraries/mfa.md" >}})-Richtlinie verlangen kann.
 
 ```sh
 go get github.com/go-authn/totp@v0.4.1
@@ -119,7 +120,7 @@ nicht verfügbar gemeldet, sodass eine Richtlinie nicht mit den anderen Faktoren
 
 **Raten, pro Geheimnis.** Ein `Verifier` zählt falsche Codes pro **Zugangsnachweis** –
 dem Geheimnis, nur als sein SHA-256 gehalten –, nicht pro Name, denn der Name ist
-irgendeine Zeichenkette, die der Aufrufer übergibt, und `dora`, `Dora` und `DORA` waren einst
+irgendeine Zeichenkette, die der Aufrufer übergibt, und vor v0.3.0 waren `dora`, `Dora` und `DORA`
 drei Zähler für ein Geheimnis.
 
 | Feld | Standard | |
@@ -131,7 +132,9 @@ drei Zähler für ein Geheimnis.
 Nur ein falscher Code zählt; eine Wiederholung, ein Code der falschen Länge oder ein abgelehnter
 Parameter bringt eine Pause nicht näher. Die gesamte Prüfung erfolgt unter einer
 Sperre, sodass gleichzeitig gesendete Rateversuche einzeln gezählt werden.
-`errors.Is(err, totp.ErrThrottled)` ist für beide Ablehnungen wahr.
+`ErrLockedOut` umhüllt `ErrThrottled`, daher ist `errors.Is(err, totp.ErrThrottled)`
+für beide Ablehnungen wahr und `errors.Is(err, totp.ErrLockedOut)` nur für die
+Sperre.
 
 **Parameter, die nicht richtig sein können:**
 

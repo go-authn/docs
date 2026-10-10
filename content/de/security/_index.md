@@ -17,7 +17,7 @@ eigenen Seiten jedes Programms sagen, was es für sich allein ablehnt.
 | authnd | eine Suche durch jemand anderen als einen deklarierten `reader` | ein Bind belegt, wer jemand ist; er ist keine Erlaubnis, alle aufzulisten |
 | authnd | ein Kerberos-Ticket für eine Person, deren Quelle kein Passwort hält | ein KDC braucht einen aus dem Passwort abgeleiteten Schlüssel; ein NT-Hash oder eine Passwortprüfung kann keinen erzeugen ([warum]({{< relref "/authnd/kerberos.md" >}})) |
 | authnd | ein `kerberos`-Block neben einem `mfa`-Block | ein kinit trägt das Passwort und sonst nichts, also würde der Realm Personen, die laut `mfa`-Block zwei Faktoren brauchen, Tickets auf einen Faktor ausstellen |
-| authn-bridge | eine Assertion, die niemand signiert hat, ein Bezeichner außerhalb des eigenen Bereichs der Einrichtung | eine Föderation ist nur so gut wie das Engste, was jedes Mitglied zusichern darf |
+| authn-bridge | eine Assertion, die niemand signiert hat, ein Bezeichner außerhalb des eigenen Bereichs der Einrichtung | jedem Mitglied einer Föderation wird geglaubt, also muss jedes auf seine eigenen Personen beschränkt sein: sonst könnte jede Einrichtung jeden benennen |
 | authn-revokd | eine Liste, die unsigniert, abgelaufen oder älter als die gehaltene ist | ein Spiegel dazwischen darf eine Liste verzögern, sie aber nie fälschen oder zurücksetzen |
 | authn-revokd | einer verfallenen Liste zu vertrauen | es schreibt eine, die die CA selbst widerruft, sodass sshd ablehnt, statt einer veralteten Liste zu vertrauen |
 | sshcert-authorize | ein Zertifikat, dessen Domain-Grant diesen Host nicht nennt | ein Zertifikat von der CA einer Föderation ist für sich allein keine Erlaubnis für jeden Host, der dieser CA vertraut |

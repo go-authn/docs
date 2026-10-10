@@ -86,7 +86,7 @@ client "efp" {
 | `ssh_principal_claim` | `preferred_username`, `sub`, `voperson_id` o `eduperson_principal_name`. Los dos últimos los entrega el ámbito `eduperson`, que el token debe tener (`authn-bridge ssh-cert --scope eduperson`); si no, o cuando el IdP no entregó ese atributo, la respuesta es `403` indicando cuál |
 | `ssh_extensions` | entre `permit-pty`, `permit-user-rc`, `permit-port-forwarding`, `permit-agent-forwarding`, `permit-X11-forwarding` |
 | `ssh_source_address` | direcciones o prefijos CIDR, escritos en forma canónica en `source-address` |
-| `ssh_validity` | más corta que la `validity` de `ssh_ca`, para este cliente |
+| `ssh_validity` | nunca más larga que la `validity` de `ssh_ca` (igual se acepta), para este cliente |
 | `ssh_domain_grants` | patrones de dominio, comprobados por `ValidatePattern` de [go-authn/sshcert]({{< relref "/sshcert/_index.md" >}}) y codificados por su `EncodeDomainGrant` |
 
 ### Lo que rechaza el perfil {#what-the-profile-refuses}
@@ -138,8 +138,9 @@ que rechaza un certificado cuya concesión no nombra el host, y uno sin ninguna
 concesión. La CA no figura en el documento de descubrimiento de OpenID: ningún
 metadato de OpenID Connect nombra una CA SSH.
 
-Lo que sigue siendo distinto de la CA propia de EFP: el principal es el `subject-id`
-que entregó la institución de la persona, no un identificador de MyAccessID; la
+Lo que sigue siendo distinto de la CA propia de EFP: con `ssh_principal_claim =
+"voperson_id"`, como arriba, el principal es el `subject-id` que entregó la
+institución de la persona, en minúsculas, no un identificador de MyAccessID; la
 extensión de grupos está presente cuando el token lleva grupos; y **hay una KRL**,
 `GET /ssh/krl`, que enumera los certificados de las personas desactivadas aquí.
 

@@ -48,7 +48,11 @@ ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 est seulement `not fetched`, et sa CRL est laissée telle quelle
 ([ce que signale `-once`]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
 `SHA256:2zKz...` est l'AC SSH du bridge. Un certificat qu'elle a signé est désormais
-révoqué pour tout ce qui lit le fichier :
+révoqué pour tout ce qui lit le fichier. Les commandes ci-dessus ont tourné dans le
+répertoire `revokd`, où se trouve `out/` ; celle-ci tourne à côté, dans le répertoire
+qui contient les certificats de test, comme sur
+[la page de sshcert-authorize]({{< relref "/sshcert/authorize.md#krl" >}}) : le même
+fichier y est donc `../revokd/out/sshd.krl` :
 
 ```
 $ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub

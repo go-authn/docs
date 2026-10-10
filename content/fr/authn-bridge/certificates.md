@@ -83,7 +83,7 @@ client "efp" {
 | `ssh_principal_claim` | `preferred_username`, `sub`, `voperson_id` ou `eduperson_principal_name`. Les deux derniers sont communiqués par la portée `eduperson`, que le jeton doit détenir (`authn-bridge ssh-cert --scope eduperson`) ; sinon, ou quand l'IdP n'a communiqué aucun attribut de ce genre, la réponse est un `403` qui dit lequel |
 | `ssh_extensions` | parmi `permit-pty`, `permit-user-rc`, `permit-port-forwarding`, `permit-agent-forwarding`, `permit-X11-forwarding` |
 | `ssh_source_address` | adresses ou préfixes CIDR, écrits sous forme canonique dans `source-address` |
-| `ssh_validity` | plus courte que la `validity` de `ssh_ca`, pour ce client |
+| `ssh_validity` | jamais plus longue que la `validity` de `ssh_ca` (égale est acceptée), pour ce client |
 | `ssh_domain_grants` | motifs de domaine, vérifiés par le `ValidatePattern` de [go-authn/sshcert]({{< relref "/sshcert/_index.md" >}}) et encodés par son `EncodeDomainGrant` |
 
 ### Ce que le profil refuse {#what-the-profile-refuses}
@@ -134,8 +134,9 @@ qui refuse un certificat dont la délégation ne nomme pas l'hôte, et un certif
 aucune délégation. L'AC n'est pas dans le document de découverte OpenID : aucune métadonnée
 OpenID Connect ne nomme une AC SSH.
 
-Ce qui reste différent de l'AC propre d'EFP : le principal est le `subject-id`
-que l'établissement de la personne a communiqué, et non un identifiant MyAccessID ; l'extension
+Ce qui reste différent de l'AC propre d'EFP : avec `ssh_principal_claim =
+"voperson_id"`, comme ci-dessus, le principal est le `subject-id` que l'établissement
+de la personne a communiqué, en minuscules, et non un identifiant MyAccessID ; l'extension
 des groupes est présente quand le jeton porte des groupes ; et **il y a une KRL**,
 `GET /ssh/krl`, qui liste les certificats des personnes désactivées ici.
 

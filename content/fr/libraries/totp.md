@@ -7,8 +7,9 @@ tags: [libraries, totp, factors]
 ---
 
 **Ce code à six chiffres est-il juste — et a-t-il déjà servi ?** Des mots de
-passe à usage unique fondés sur le temps (RFC 6238), un `Verifier` qui retient
-ce qu'un serveur doit retenir, et le facteur [mfa]({{< relref "/libraries/mfa.md" >}}) qu'une politique demande.
+passe à usage unique fondés sur le temps (RFC 6238) ; un `Verifier` qui retient
+ce qu'un serveur doit retenir, les codes déjà utilisés et les codes faux ; et un facteur
+qu'une politique [mfa]({{< relref "/libraries/mfa.md" >}}) peut demander.
 
 ```sh
 go get github.com/go-authn/totp@v0.4.1
@@ -119,7 +120,7 @@ indisponible : une politique ne peut donc pas passer sur les autres facteurs et 
 
 **Les essais, par secret.** Un `Verifier` compte les codes faux par **identifiant** —
 le secret, conservé uniquement sous forme de son SHA-256 — et non par nom, parce que le nom est
-la chaîne quelconque que passe l'appelant, et que `dora`, `Dora` et `DORA` ont un jour été
+la chaîne quelconque que passe l'appelant, et qu'avant la v0.3.0 `dora`, `Dora` et `DORA` étaient
 trois compteurs pour un seul secret.
 
 | champ | défaut | |
@@ -131,7 +132,9 @@ trois compteurs pour un seul secret.
 Seul un code faux compte ; un rejeu, un code de mauvaise longueur ou un paramètre
 refusé ne rapproche pas une pause. Toute la vérification se fait sous un seul
 verrou : des essais envoyés au même instant sont donc comptés un par un.
-`errors.Is(err, totp.ErrThrottled)` est vrai pour les deux refus.
+`ErrLockedOut` enveloppe `ErrThrottled` : `errors.Is(err, totp.ErrThrottled)` est donc
+vrai pour les deux refus, et `errors.Is(err, totp.ErrLockedOut)` seulement pour le
+verrouillage.
 
 **Des paramètres qui ne peuvent pas être justes :**
 

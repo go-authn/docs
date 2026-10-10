@@ -17,7 +17,7 @@ El repositorio incluye en `packaging/` tres unidades y una cuenta:
 | `/usr/lib/sysusers.d/authn-revokd.conf` | la cuenta de sistema `authn-revokd` | root, `0644` |
 | `/etc/systemd/system/authn-revokd.service` | el demonio | root, `0644` |
 | `/etc/authn-revokd/revokd.hcl` | la configuración, el `-config` por defecto | root, `0644` |
-| `/etc/authn-revokd/ca/` | las claves y los certificados de CA con los que deben estar firmadas las listas | root, `0644` |
+| `/etc/authn-revokd/ca/` | las claves y los certificados de CA con los que deben estar firmadas las listas | root, `0755`; los archivos que contiene, `0644` |
 | `/var/lib/authn-revokd/` | `StateDirectory=`, el único lugar con escritura | authn-revokd, `0755` |
 | `/var/lib/authn-revokd/state/` | `state_dir`: las copias verificadas | authn-revokd, `0700` |
 | `/var/lib/authn-revokd/sshd.krl` | una salida: lo que lee `sshd` | authn-revokd, `0644` |
@@ -36,11 +36,16 @@ y arm64, con `SHA256SUMS` y procedencia de compilación
 ([verificar una descarga]({{< relref "/security/verifying-releases.md" >}})). O bien
 `go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.2`.
 
+La cuenta y la unidad vienen del directorio `packaging/` de la etiqueta de la
+versión, la misma versión que el binario: copie ese directorio junto al
+binario, desde una copia de la etiqueta o, para v0.6.2, desde
+<https://github.com/go-authn/revocation/tree/v0.6.2/packaging>.
+
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
-install -m 0644 authn-revokd.conf /usr/lib/sysusers.d/authn-revokd.conf
+install -m 0644 packaging/sysusers.d/authn-revokd.conf /usr/lib/sysusers.d/authn-revokd.conf
 systemd-sysusers /usr/lib/sysusers.d/authn-revokd.conf
-install -m 0644 authn-revokd.service /etc/systemd/system/
+install -m 0644 packaging/systemd/authn-revokd.service /etc/systemd/system/
 systemctl daemon-reload
 ```
 

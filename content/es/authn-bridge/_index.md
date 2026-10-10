@@ -10,9 +10,9 @@ tags: [authn-bridge, oidc, saml]
 Éducation-Recherche de RENATER o de eduGAIN, y las aplicaciones obtienen un token
 OpenID Connect.** El mismo inicio de sesión permite también certificar una clave SSH,
 emitir un certificado de cliente X.509 para NFS sobre TLS, establecer una contraseña
-de aplicación para SMB y S3, o registrar una clave WireGuard. Todo lo que el
-proveedor ha emitido lo puede retirar, y publica listas firmadas de lo que ha
-revocado. Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la
+de aplicación para SMB y S3, o registrar una clave WireGuard. El proveedor puede
+revocar lo que ha emitido, y publica listas firmadas de lo que ha revocado; un
+token de acceso ya entregado sigue siendo válido hasta que caduca. Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la
 v0.20.1.
 
 ```sh

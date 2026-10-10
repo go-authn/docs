@@ -119,8 +119,8 @@ Una contraseña guardada también responde a `Can(Verifier)`: se puede comparar.
 {{< callout type="info" >}}
 **Un grupo vacío, consultado a través de un `Set`, se notifica como inexistente**
 
-`Expand` rechaza un grupo vacío con *has no members*, como muestran las penúltimas
-líneas para el propio `Static`. A través de un `Set`, `Set.Members` devuelve
+`Expand` rechaza un grupo vacío con *has no members*, como muestra la antepenúltima
+línea para el propio `Static`. A través de un `Set`, `Set.Members` devuelve
 `ErrNoSuchGroup` para un grupo que un origen tiene pero en el que no hay nadie
 (`source.go:138`), así que el mensaje nombra la causa equivocada. El grupo se rechaza
 en ambos casos.

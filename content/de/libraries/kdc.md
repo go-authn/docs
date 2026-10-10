@@ -16,7 +16,9 @@ Dienste, die eine Keytab hält. Es läuft unter
 go get github.com/go-authn/kdc@v0.4.2
 ```
 
-In v0.4.2 setzt es `go-authn/directory` v0.11.1 und gokrb5 v8.4.4 voraus. Die
+In v0.4.2 verlangt sein `go.mod` mindestens `go-authn/directory` v0.11.1 und
+gokrb5 v8.4.4: Mindestversionen, sodass ein Programm, das directory v0.11.2 verlangt, die
+Version, die diese Seiten beschreiben, mit v0.11.2 gebaut wird. Die
 annehmende Hälfte ist [krb5]({{< relref "/libraries/krb5.md" >}}), und ein Dienst,
 der Tickets nur prüft, braucht dieses Modul überhaupt nicht.
 

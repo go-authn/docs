@@ -158,7 +158,7 @@ servidor lea la KRL, y por eso ambos son cortos.
 ## Salud y métricas {#health-and-metrics}
 
 Los de go-net-health/endpoint, como en go-fileshare, en la escucha `metrics`, que no
-puede ser la pública:
+debe ser la pública (una configuración que la hace pública se rechaza):
 
 | | |
 |---|---|
@@ -186,9 +186,10 @@ bridge_ssh_certificates_total 0
 bridge_x509_certificates_total 0
 ```
 
-Los inicios de sesión por resultado, los tokens por concesión y las contraseñas de
-aplicación aparecen en cuanto han contado algo. **Ninguna etiqueta nombra a una
+Los contadores de inicios de sesión por resultado (`bridge_logins_total`), de tokens
+por concesión (`bridge_tokens_issued_total`) y de contraseñas de aplicación
+(`bridge_app_passwords_total`) solo aparecen cuando han contado algo. **Ninguna etiqueta nombra a una
 persona ni a una institución**: qué universidades tienen personas que usan el
 servicio, y cuándo, no le corresponde publicarlo al proveedor.
-`bridge_metadata_valid_until_timestamp_seconds` es la métrica sobre la que alertar
-antes de que se alcance: pasado ese momento, nadie puede iniciar sesión.
+Alerte sobre `bridge_metadata_valid_until_timestamp_seconds` antes de que se alcance
+el instante que indica: pasado ese momento, nadie puede iniciar sesión.

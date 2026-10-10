@@ -38,8 +38,8 @@ alice changed their own password
 stopping
 ```
 
-Eso es una sola ejecución: un `kill -HUP`, dos cambios de contraseña, y después un
-`kill -TERM`. El proceso seguía ahí después del `SIGHUP`.
+Eso es una sola ejecución: un `kill -HUP`, dos intentos de cambiar una contraseña
+(el primero rechazado, el segundo aceptado), y después un `kill -TERM`. El proceso seguía ahí después del `SIGHUP`.
 
 Un `SIGHUP` antes **mataba** authnd —lo que hace Go por defecto con una señal que
 nadie maneja—, y systemd cuenta la muerte por `SIGHUP` como una salida limpia, así que

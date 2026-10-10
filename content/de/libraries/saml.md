@@ -185,13 +185,14 @@ Dem Zertifikat eines IdP in den Metadaten wird vertraut, weil die Signatur der F
 es benennt; seine Daten werden nicht angesehen, da IdP-Zertifikate oft
 selbstsigniert und abgelaufen sind.
 
-**Antworten**, bei `Accept` – jeweils ein Fehler an den Aufrufer, für das Log des Servers:
+**Antworten** werden bei `Accept` geprüft. Jede der folgenden Ablehnungen geht als Fehler an
+den Aufrufer, für das Log des Servers:
 
 | | warum |
 |---|---|
 | nichts signiert oder mit SHA-1 signiert | saml-profiles 4.1.4.5: Über POST muss die Assertion signiert sein. Ein Shibboleth-IdP signiert standardmäßig die Response; beides wird akzeptiert |
 | mehr als eine Assertion | so kommen eine signierte und eine unsignierte zusammen an, und die falsche wird gelesen (CVE-2022-41912) |
-| alles außer dem, was die Signatur abgedeckt hat | nur das aus den gehashten Bytes neu aufgebaute Element wird gelesen |
+| alles außerhalb dessen, was die Signatur abgedeckt hat | es wird nie gelesen: gelesen wird nur das Element, das aus den von der Signatur gehashten Bytes neu aufgebaut wird |
 | ein bereichsgebundener Bezeichner außerhalb der `Scopes` des IdP | verworfen: Sonst könnte jeder IdP `alice@another-university.fr` behaupten |
 | AES-CBC-Chiffretext, den keine geprüfte Signatur abdeckt | nicht einmal entschlüsselt: Nicht authentifiziertes CBC ist ein Padding-Orakel. RSA-PKCS#1-v1.5-Schlüsseltransport wird überhaupt nicht akzeptiert; AES-GCM und RSA-OAEP schon |
 | eine andere Audience, ein anderer ACS oder eine andere Anfrage; eine unaufgeforderte Antwort; eine Anfrage, die älter als eine Stunde ist | saml-profiles 4.1.4.3 |

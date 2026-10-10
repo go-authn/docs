@@ -39,8 +39,8 @@ nuevo entre las dos peticiones, así que ambas se descargan una vez más antes d
 informar. Era la primera descarga de ese origen, así que no había ninguna copia buena
 que conservar, y la salida es directamente la
 [lista en modo cerrado]({{< relref "/authn-revokd/lapse.md" >}}). (Antes de la v0.6.2,
-el mismo fallo se notificaba como "the list changed between it and its signature",
-delante de las mismas palabras.)
+el mismo fallo llevaba "the list changed between it and its signature" delante del
+mensaje anterior, como si la lista se hubiera emitido de nuevo.)
 
 La firma se descarga con `If-Match: <the list's ETag>`. Una lista emitida de nuevo
 entre las dos peticiones responde `412`, y ambas se descargan otra vez.

@@ -9,11 +9,11 @@ tags: [security, releases]
 Jedes Release von authnd, authn-bridge, authn-revokd und sshcert veröffentlicht sechs
 statische Binaries (`CGO_ENABLED=0`: linux, darwin und windows, auf amd64 und
 arm64), eine Datei `SHA256SUMS` und eine Build-Provenienz-Attestierung für jedes
-Binary. Die folgenden Beispiele verwenden authnd v0.9.6; die anderen Programme
+Binary. Die folgenden Beispiele verwenden authn-bridge v0.20.1; die anderen Programme
 funktionieren genauso, mit ihrem eigenen Repository und Namen.
 
 ```sh
-gh release download v0.9.6 --repo go-authn/authnd
+gh release download v0.20.1 --repo go-authn/bridge
 ```
 
 ## 1. Die Prüfsumme {#1-the-checksum}
@@ -23,7 +23,12 @@ sha256sum -c SHA256SUMS --ignore-missing      # macOS: shasum -a 256 -c SHA256SU
 ```
 
 ```
-authnd-linux-amd64: OK
+authn-bridge-darwin-amd64: OK
+authn-bridge-darwin-arm64: OK
+authn-bridge-linux-amd64: OK
+authn-bridge-linux-arm64: OK
+authn-bridge-windows-amd64.exe: OK
+authn-bridge-windows-arm64.exe: OK
 ```
 
 Das belegt, dass die Datei diejenige ist, die das Release aufführt, und nichts weiter:
@@ -33,7 +38,7 @@ daneben ersetzen.
 ## 2. Die Provenienz {#2-the-provenance}
 
 ```sh
-gh attestation verify authnd-linux-amd64 --repo go-authn/authnd
+gh attestation verify authn-bridge-linux-amd64 --repo go-authn/bridge
 echo $?
 ```
 
@@ -43,7 +48,7 @@ hat; sie nennt also das Repository und den Workflow, nicht einen Schlüssel, den
 {{< callout type="warning" >}}
 **Lesen Sie den Exit-Status, nicht die Ausgabe.** Ohne Terminal geben manche Versionen
 von `gh` überhaupt nichts aus, wenn die Prüfung gelingt: Gemessen mit gh
-2.65.0 ergab ein echtes Binary den Exit-Status 0 und eine leere Ausgabe. Ein Binary mit
+2.65.0 an authnd ergab ein echtes Binary den Exit-Status 0 und eine leere Ausgabe. Ein Binary mit
 einem angehängten Byte ergab den Exit-Status 1 und
 `Error: failed to fetch attestations from go-authn/authnd: HTTP 404: Not Found`,
 weil für seinen Digest keine Attestierung existiert. Stille ist nicht der Fehlschlag;
@@ -53,32 +58,32 @@ ein Status ungleich null ist es.
 ## 3. Was das Binary über sich selbst sagt {#3-what-the-binary-says-about-itself}
 
 ```sh
-go version -m authnd-linux-amd64
+go version -m authn-bridge-linux-amd64
 ```
 
 ```
-	path	github.com/go-authn/authnd
-	mod	github.com/go-authn/authnd	v0.9.6
+	path	github.com/go-authn/bridge/cmd/authn-bridge
+	mod	github.com/go-authn/bridge	v0.20.1	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=82da8e7ec3dff61e4e883a1bd03600aa550af48a
+	build	vcs.revision=d30d3b52b644c7db74c431c2a07b8d1aaeb1c0ff
 	build	vcs.modified=false
 ```
 
 (auf die Zeilen gekürzt, auf die es ankommt). Die `mod`-Zeile muss genau der Tag sein,
 und `vcs.modified` muss `false` sein: Ein Build aus einem Baum mit nicht committeten
-Änderungen sagt `true`, und seine Version lautet `v0.9.6+dirty`. Der
+Änderungen sagt `true`, und seine Version lautet `v0.20.1+dirty`. Der
 Release-Workflow verweigert die Veröffentlichung, sofern nicht **jedes einzelne** der
 sechs Binaries beide Prüfungen besteht und das Programm den Tag als letztes Wort seiner
 Versionszeile ausgibt:
 
 ```
 $ authnd --version
-authnd version v0.9.6
+authnd version v0.10.1
 $ authn-bridge --version
-authn-bridge version v0.20.0
+authn-bridge version v0.20.1
 $ authn-revokd -version
-authn-revokd v0.6.1
+authn-revokd v0.6.2
 ```
 
 authnd und authn-bridge nehmen `--version`; authn-revokd nimmt `-version`, die
@@ -91,5 +96,7 @@ Binaries, Prüfsummen und Attestierungen werden ab authnd v0.9.2, authn-bridge
 v0.19.3, authn-revokd v0.5.0 und sshcert v0.1.2 veröffentlicht. Das erste Release
 jedes Programms baute seine Binaries innerhalb des Checkouts und meldete `+dirty`; das
 wurde im nächsten behoben, und die Prüfung pro Binary kam danach. Frühere Tags
-gibt es nur als Quellcode: Bauen Sie sie mit `go install …@<tag>`, das die Version
-auf dieselbe Weise festhält.
+gibt es nur als Quellcode: Bauen Sie sie mit `go install …@<tag>`, das den Tag
+in den Build-Informationen festhält, die `go version -m` liest. Was das Programm ausgibt, ist
+nicht immer dasselbe: sshcert-authorize gab für einen `go install`-Build bis v0.1.5 `dev` aus,
+und revokd hat vor v0.5.0 kein `-version`.

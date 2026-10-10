@@ -37,8 +37,8 @@ diesen Schlüssel. Eine Signatur, die die Prüfung nicht besteht, kann auch von 
 zwischen den beiden Anfragen neu ausgestellt wurde; daher werden beide noch einmal abgerufen, bevor sie gemeldet wird.
 Dies war der erste Abruf dieser Quelle, es gab also keine gute Kopie zu behalten, und
 die Ausgabe ist sofort die [geschlossen fehlschlagende Liste (fail closed)]({{< relref "/authn-revokd/lapse.md" >}}).
-(Vor v0.6.2 wurde derselbe Fehler als „the list changed between
-it and its signature“ gemeldet, vor denselben Worten.)
+(Vor v0.6.2 stand bei demselben Fehler „the list changed between it and its
+signature“ vor der obigen Meldung, als sei die Liste erneut ausgestellt worden.)
 
 Die Signatur wird mit `If-Match: <the list's ETag>` abgerufen. Eine zwischen den beiden Anfragen
 neu ausgestellte Liste antwortet `412`, und beide werden erneut abgerufen.
