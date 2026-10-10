@@ -1,0 +1,117 @@
+{{- /* Navbar version selector, as in claimward/docs.
+
+  Each documentation version is a separate build published under
+  <docs root>/<version>/, where <version> is the documentation version
+  (params.authn.version in hugo.yaml, as MAJOR.MINOR: 0.1, ...), and its
+  baseURL ends with that version. A build cannot know the versions published after it, so the server renders only the
+  current one; in the browser the list is filled from <docs root>/versions.json,
+  which the deploy job rewrites in the format mike writes (version, title,
+  aliases), the format go-fileshare's selector reads too.
+
+  The site is ready for several languages: English at the root of a version,
+  the others under their code (<version>/fr/...). Each option opens, in that
+  version, the first of these that exists: the current page in the current
+  language; the same page in English; the home in the current language; the version's home. A page that a
+  version does not have therefore never ends on a 404. The language prefix is
+  read from the home's permalink, not guessed from the URL.
+
+  Built on Hextra's own navbar dropdown (assets/js/core/nav-menu.js), so its
+  keyboard handling applies. */ -}}
+{{- $page := . -}}
+{{- $basePath := strings.TrimSuffix "/" (urls.Parse site.BaseURL).Path -}}
+{{- $current := path.Base $basePath -}}
+{{- $docsRoot := printf "%s/" (strings.TrimSuffix "/" (path.Dir $basePath)) -}}
+{{- $versionRoot := printf "%s%s/" $docsRoot $current -}}
+{{- $rest := strings.TrimPrefix $versionRoot $page.RelPermalink -}}
+{{- /* "fr/" in French, "" in English (the default language, at the root). */ -}}
+{{- $langPrefix := strings.TrimPrefix $versionRoot site.Home.RelPermalink -}}
+{{- /* The same page in the default language: same file names in every content/<lang>/. */ -}}
+{{- $restDefault := cond (ne $langPrefix "") (strings.TrimPrefix $langPrefix $rest) $rest -}}
+{{- $dev := site.Params.versions.development | default "dev" -}}
+{{- $itemClass := "hx:text-gray-600 hx:hover:text-gray-800 hx:dark:text-gray-400 hx:dark:hover:text-gray-200 hx:relative hx:cursor-pointer hx:whitespace-nowrap hx:rounded-sm hx:py-1.5 hx:transition-colors hx:ltr:pl-3 hx:ltr:pr-9 hx:rtl:pr-3 hx:rtl:pl-9 hx:flex hx:items-center hx:gap-1 hx:hover:bg-gray-100 hx:dark:hover:bg-neutral-800" -}}
+{{- $iconAttrs := `height="1em" class="hx:inline-block"` -}}
+<div class="fs-version-select hx:relative"
+     data-docs-root="{{ $docsRoot }}" data-current="{{ $current }}"
+     data-rest="{{ $rest }}" data-rest-default="{{ $restDefault }}"
+     data-lang-prefix="{{ $langPrefix }}" data-dev="{{ $dev }}">
+  <button type="button" data-state="closed" aria-expanded="false" aria-haspopup="menu"
+          title="{{ T "version" }}" aria-label="{{ T "version" }}: {{ $current }}"
+          class="hextra-nav-menu-toggle fs-version-toggle hx:cursor-pointer hx:text-sm hx:relative hx:whitespace-nowrap hx:p-2 hx:flex hx:items-center hx:gap-1 hx:text-gray-600 hx:hover:text-gray-800 hx:dark:text-gray-400 hx:dark:hover:text-gray-200">
+    {{- partial "utils/icon.html" (dict "name" (cond (eq $current $dev) "beaker" "tag") "attributes" $iconAttrs) -}}
+    <span>{{ $current }}</span>
+    {{- partial "utils/icon.html" (dict "name" "chevron-down" "attributes" `height=12 class="hx:transition-transform hx:duration-200 hx:ease-in-out"`) -}}
+  </button>
+  <ul class="hextra-nav-menu-items hx:hidden hx:z-20 hx:max-h-64 hx:overflow-auto hx:rounded-lg hx:border hx:border-gray-200 hx:bg-white hx:p-1 hx:text-sm hx:shadow-lg hx:dark:border-neutral-700 hx:dark:bg-neutral-900"
+      style="min-width: 100%;" role="menu">
+    <li role="none" class="hextra-nav-menu-item hx:flex hx:flex-col">
+      <a href="{{ $page.RelPermalink }}" role="menuitem" aria-current="true" class="{{ $itemClass }}">
+        {{- partial "utils/icon.html" (dict "name" (cond (eq $current $dev) "beaker" "tag") "attributes" $iconAttrs) -}}
+        <span>{{ $current }}</span>
+        <span class="hx:absolute hx:inset-y-0 hx:flex hx:items-center hx:ltr:right-3 hx:rtl:left-3">
+          {{- partial "utils/icon" (dict "name" "check" "attributes" "height=1em width=1em") -}}
+        </span>
+      </a>
+    </li>
+  </ul>
+  <template data-icon="development">{{ partial "utils/icon.html" (dict "name" "beaker" "attributes" $iconAttrs) }}</template>
+  <template data-icon="release">{{ partial "utils/icon.html" (dict "name" "tag" "attributes" $iconAttrs) }}</template>
+  <template data-icon="check">{{ partial "utils/icon" (dict "name" "check" "attributes" "height=1em width=1em") }}</template>
+</div>
+<script>
+  (function () {
+    var box = document.currentScript.previousElementSibling;
+    var d = box.dataset;
+    var list = box.querySelector("ul");
+    var itemClass = list.querySelector("a").className;
+    var icon = function (name) { return box.querySelector('template[data-icon="' + name + '"]').innerHTML; };
+    var isDev = function (v) { return v.version === d.dev || !!(v.properties && v.properties.development); };
+
+    fetch(d.docsRoot + "versions.json", { cache: "no-cache" })
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(function (versions) {
+        if (!Array.isArray(versions) || versions.length === 0) return;
+        list.innerHTML = "";
+        versions.forEach(function (v) {
+          if (!v || typeof v.version !== "string" || (v.properties && v.properties.hidden)) return;
+          var li = document.createElement("li");
+          li.setAttribute("role", "none");
+          li.className = "hextra-nav-menu-item hx:flex hx:flex-col";
+          var a = document.createElement("a");
+          a.setAttribute("role", "menuitem");
+          a.className = itemClass;
+          a.href = d.docsRoot + v.version + "/" + d.rest;
+          a.innerHTML = icon(isDev(v) ? "development" : "release");
+          var label = document.createElement("span");
+          var aliases = Array.isArray(v.aliases) && v.aliases.length ? " (" + v.aliases.join(", ") + ")" : "";
+          label.textContent = (v.title || v.version) + aliases;
+          a.appendChild(label);
+          if (v.version === d.current) {
+            a.setAttribute("aria-current", "true");
+            var check = document.createElement("span");
+            check.className = "hx:absolute hx:inset-y-0 hx:flex hx:items-center hx:ltr:right-3 hx:rtl:left-3";
+            check.innerHTML = icon("check");
+            a.appendChild(check);
+          } else {
+            // The page may not exist in that version, or not in this language:
+            // try the candidates in order, the version's home last.
+            var root = d.docsRoot + v.version + "/";
+            var tries = [d.rest, d.restDefault, d.langPrefix].map(function (p) { return root + p; })
+              .filter(function (u, i, all) { return u !== root && all.indexOf(u) === i; });
+            a.addEventListener("click", function (e) {
+              e.preventDefault();
+              var next = function (i) {
+                if (i >= tries.length) { window.location.href = root; return; }
+                fetch(tries[i], { method: "HEAD" })
+                  .then(function (r) { if (r.ok) { window.location.href = tries[i]; } else { next(i + 1); } })
+                  .catch(function () { next(i + 1); });
+              };
+              next(0);
+            });
+          }
+          li.appendChild(a);
+          list.appendChild(li);
+        });
+      })
+      .catch(function () { /* no versions.json (local build): only the current version is listed */ });
+  })();
+</script>

@@ -1,0 +1,195 @@
+name: docs
+
+# Every documentation version is a separate Hugo build, published under
+# https://go-authn.github.io/docs/<version>/ on the gh-pages branch, where
+# <version> is the documentation version the pages describe
+# (params.authn.version in hugo.yaml: v0.1.0 -> 0.1). main is that
+# version's source: each push to main replaces /docs/<version>/, and
+# /docs/latest/ follows the newest. Pull requests build and check, and publish
+# nothing.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# The build needs nothing beyond the source. Write access to the repository
+# is granted to the deploy job alone, below, so a pull request build cannot
+# push to gh-pages.
+permissions:
+  contents: read
+
+env:
+  HUGO_VERSION: "0.167.0"
+  # sha256 of hugo_${HUGO_VERSION}_linux-amd64.tar.gz, from the release's checksums.txt.
+  HUGO_SHA256: "4d84519b9f619e6d4c3fb45a50157abeabeb724f859c60605f44c23def6e1169"
+  DOCS_URL: "https://go-authn.github.io/docs"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          # themes/hextra (the tannevaled/hextra fork, pinned to a release tag)
+          # and branding (go-authn/brand) are submodules.
+          submodules: recursive
+          # The whole history: each page's creation and modification come from git.
+          fetch-depth: 0
+
+      - name: Install Hugo ${{ env.HUGO_VERSION }}
+        run: |
+          curl -fsSL -o /tmp/hugo.tar.gz \
+            "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_linux-amd64.tar.gz"
+          echo "${HUGO_SHA256}  /tmp/hugo.tar.gz" | sha256sum -c -
+          sudo tar -xzf /tmp/hugo.tar.gz -C /usr/local/bin hugo
+          hugo version
+
+      # The version label is the documentation version's MAJOR.MINOR, from hugo.yaml,
+      # and it is the last segment of baseURL: the version selector reads it there.
+      - name: Version
+        id: version
+        run: |
+          release=$(hugo config --format json | jq -r '.params.authn.version')
+          version=$(printf '%s\n' "${release}" | sed -nE 's/^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/\1.\2/p')
+          if [ -z "${version}" ]; then
+            echo "::error::params.authn.version in hugo.yaml is \"${release}\", not vMAJOR.MINOR.PATCH"
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "release ${release}: documentation version ${version}"
+
+      # Each page's creation (first commit, followed across renames) and its
+      # author, for the page history at its foot (params.page.history).
+      - name: Page history
+        run: |
+          mkdir -p data
+          sh themes/hextra/scripts/page-history.sh > data/pagehistory.json
+
+      # --panicOnWarning: a deprecated setting or a template warning fails the
+      # build rather than scrolling by. A broken {{< relref >}} is an error.
+      - name: Build
+        env:
+          HUGO_ENVIRONMENT: production
+        run: >-
+          hugo --gc --minify --panicOnWarning --printPathWarnings
+          --baseURL "${DOCS_URL}/${{ steps.version.outputs.version }}/"
+
+      # Internal links and anchors, offline, with the site laid out under
+      # /docs/<version>/ as it is served.
+      - name: Lay out the site for the link check
+        run: |
+          mkdir -p _check/docs
+          cp -R public "_check/docs/${{ steps.version.outputs.version }}"
+
+      - name: Check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --offline --no-progress --include-fragments
+            --index-files index.html
+            --root-dir ${{ github.workspace }}/_check
+            '_check/docs/**/*.html'
+          fail: true
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: site
+          path: public
+          retention-days: 7
+
+  # The offline check above proves the site's own links and anchors. An
+  # https:// URL is text to it: this job fetches each one the pages name.
+  links:
+    name: every external link resolves
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check
+        run: |
+          set -uo pipefail
+          # The character class matters: an extractor stopping only at ) and "
+          # carries a closing > or < into the request.
+          urls=$(grep -rhoE 'https?://[^)">< [:space:]]+' content/ README.md | sed -E 's/[.,`]+$//' | sort -u)
+          test -n "$urls" || { echo "::error::no links found; are the pages still there?"; exit 1; }
+          echo "checking $(printf '%s\n' "$urls" | wc -l) distinct URLs"
+          fail=0
+          while read -r u; do
+            case "$u" in
+              # Renders whatever it is asked for; proves nothing.
+              *img.shields.io*) continue ;;
+              # Documented placeholders, not hosts.
+              *example.com*|*example.org*|*example.net*|*localhost*|*127.0.0.1*|*.invalid*) continue ;;
+              # A per-account ACME directory: the path holds the account's
+              # <uuid>, which the extractor stops at, so what is left is a
+              # prefix no server answers. The host is real; the URL is a
+              # template, like the placeholders above.
+              https://acme-v02.harica.gr/acme/) continue ;;
+            esac
+            # Three attempts: one is a flake detector rather than a link
+            # checker, and a lane that fails at random gets ignored.
+            code=000
+            for _ in 1 2 3; do
+              code=$(curl -sS -o /dev/null -w '%{http_code}' -L --max-time 25 "$u" 2>/dev/null) || true
+              code=${code:-000}
+              case "$code" in 2*|3*) break ;; esac
+              sleep 3
+            done
+            case "$code" in
+              2*|3*) printf '  ok   %s  %s\n' "$code" "$u" ;;
+              *)     printf '  FAIL %s  %s\n' "$code" "$u"; fail=1 ;;
+            esac
+          done <<< "$urls"
+          test "$fail" -eq 0 || { echo "::error::at least one link does not resolve"; exit 1; }
+
+  deploy:
+    # Only main publishes. A pull request stops after build above: it has no
+    # business pushing to gh-pages.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    # Never two deploys at once: both would push gh-pages and the second would
+    # be rejected. cancel-in-progress stays false -- killing a publish half way
+    # through is worse than making it wait.
+    concurrency:
+      group: gh-pages-deploy
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # The publishing script, from the commit being published.
+      - uses: actions/checkout@v7
+        with:
+          path: source
+
+      # The published site. Only the version being built is replaced; every
+      # other version stays as it is.
+      - uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: site
+          path: site
+
+      - name: Publish ${{ needs.build.outputs.version }}
+        run: source/scripts/publish-version.sh "${{ needs.build.outputs.version }}" site gh-pages
+
+      - name: Push gh-pages
+        working-directory: gh-pages
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "nothing changed"
+            exit 0
+          fi
+          git commit -q -m "Deployed ${GITHUB_SHA::7} to ${{ needs.build.outputs.version }} with Hugo ${HUGO_VERSION}"
+          git push origin HEAD:gh-pages
