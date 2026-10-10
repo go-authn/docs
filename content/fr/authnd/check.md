@@ -1,0 +1,145 @@
+---
+title: "check, avant de redémarrer ce par quoi des gens se connectent"
+linkTitle: "check"
+weight: 30
+description: "Ce qu'authnd check ouvre, ce qu'il affiche sur une configuration avant qu'elle ne soit servie, comment le lire, et la seule défaillance qu'il ne peut pas voir."
+tags: [authnd, check, configuration]
+---
+
+```
+authnd check /etc/authnd
+authnd check --config a.hcl --config b.hcl
+```
+
+`check` lit la configuration exactement comme le serveur, **ouvre
+tout ce que le serveur ouvre avant d'écouter** — les fichiers, la base de données,
+l'annuaire derrière celui-ci, le document de découverte du fournisseur d'identité,
+le certificat et la clé TLS, le keytab — et affiche ce qui serait publié
+et à qui, **sans écouter**. Il affiche d'où vient chaque identifiant
+et jamais ce qu'il contient. Il sort avec 0 et termine par *this configuration
+can be served*, ou sort avec 1 et la phrase qui arrête le serveur.
+
+## Une configuration qui peut être servie {#a-configuration-that-can-be-served}
+
+Deux blocs `user`, un reader et une base de données SQLite, dans un répertoire de deux
+fichiers (`authnd.hcl` et `people.hcl`) :
+
+```
+$ authnd check etc/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+
+USER   FROM                    CAN PROVE   PUBLISHED AS
+alice  the configuration file  a password  uid and cn
+bob    the configuration file  an NT hash  uid and cn
+dora   a sqlite database       a password  uid and cn
+eli    a sqlite database       an NT hash  uid and cn
+
+GROUP      MEMBERS
+engineers  dora and eli
+staff      alice, bob and dora
+
+a bind carries a password
+bob and eli cannot bind with a password: their sources hold only what an SMB server needs (an NT hash), which a bind cannot be checked against
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+
+this configuration can be served
+```
+
+## Le lire {#reading-it}
+
+La première ligne donne le schéma, l'adresse et la base : `ldap://`,
+`ldaps://` ou `ldap+starttls://` — voir [TLS]({{< relref "/authnd/tls.md" >}}).
+
+| colonne | |
+|---|---|
+| `FROM` | la source qui possède le nom : *the configuration file*, *a sqlite database* (ou postgres, mysql), ou l'url d'un annuaire derrière celui-ci |
+| `CAN PROVE` | *a password* (détenu, donc il peut être comparé et des clés peuvent en être dérivées), *a password check* (un autre annuaire répond oui ou non), *an NT hash*, *N keys*, *a one-time-code secret*, ou *nothing* |
+| `PUBLISHED AS` | les attributs que porte l'entrée : toujours `uid` et `cn` ; `sambaNTPassword` quand `publish_nt_hash` est activé et que la personne en a une ou a un mot de passe dont elle peut être dérivée ; `sshPublicKey` quand il y a des clés |
+
+Les lignes après les tableaux disent ce qu'une personne doit savoir avant de se fier à
+la configuration :
+
+- **ce que porte une liaison** : *a password*, ou, avec un [bloc `mfa`]({{< relref "/authnd/mfa.md" >}}),
+  *a password with a 6-digit code after it* ; avec un [bloc `oidc`]({{< relref "/authnd/tokens.md" >}}),
+  d'où viennent les jetons et par quoi ;
+- **qui ne peut pas du tout se lier avec un mot de passe** : les personnes connues seulement par une
+  empreinte NT — voir [personnes]({{< relref "/authnd/people.md#written-in-the-configuration" >}}) ;
+- **qui peut chercher** : les readers, ou *no reader is declared: nothing may
+  search, and binds are not affected* ;
+- **si `sambaNTPassword` est publié**, et par quoi — voir
+  [`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) ;
+- avec un [bloc `kerberos`]({{< relref "/authnd/kerberos.md" >}}), le royaume et
+  **qui peut et qui ne peut pas recevoir un ticket**, avec la raison ;
+- avec un bloc `mfa`, **qui n'a pas de second facteur**, et ne peut donc pas se lier avec
+  un mot de passe ; avec un bloc `oidc` à côté, la ligne ajoute qu'un jeton dont
+  l'`amr` nomme deux sortes le peut encore ;
+- un **groupe qui nomme quelqu'un qu'aucune source ne connaît**.
+
+Ce dernier est publié tel quel — `memberUid` est une chaîne, et une
+façade pour un système porte légitimement des noms qu'un autre possède — mais c'est
+dit, parce que l'autre lecture est une faute de frappe. Ici la table
+`team_members` de la base de données a une ligne pour `zoe`, qui n'est personne ici :
+
+```
+GROUP      MEMBERS
+engineers  dora, eli and zoe
+staff      alice, bob and dora
+engineers names zoe, who has no entry here: the group is published as it stands, and nothing here can prove them
+```
+
+(Un *bloc* `group` qui nomme un inconnu est refusé d'emblée ; voir
+[personnes]({{< relref "/authnd/people.md#written-in-the-configuration" >}}).)
+
+## Ce qu'il refuse {#what-it-refuses}
+
+Chacun de ces cas arrête `check` comme le serveur, avec le code de sortie 1. Ils
+figurent sur les pages auxquelles ils appartiennent ; quelques-uns, tels qu'affichés :
+
+```
+$ authnd check cases/nobody.hcl
+authnd: there is nobody here: name a user, or a users block reading a database or a directory
+
+$ authnd check cases/nthash-clear.hcl
+authnd: publish_nt_hash needs cert_file and key_file: an NT hash IS the credential, and 0.0.0.0:3893 is not loopback, so it would cross a network in the clear
+
+$ authnd check cases/krb-mfa.hcl
+authnd: kerberos and mfa together: the mfa block asks every bind for a password AND a code, and a kinit carries only the password -- this KDC has no second-factor pre-authentication, so a realm here would accept one factor where the mfa block demands two. Remove one of the blocks
+
+$ authnd check empty
+authnd: empty has no .hcl files in it
+
+$ authnd
+authnd: no configuration: give a .hcl file or a directory of them
+```
+
+## Le certificat, le keytab, et la seule chose qu'il ne peut pas voir {#the-certificate-the-keytab-and-the-one-thing-it-cannot-see}
+
+Un certificat qui ne se charge pas et un keytab sans `krbtgt/REALM` sont
+refusés par `check`, dans les termes qu'emploierait le serveur :
+
+```
+$ authnd check cases/badcert
+authnd: the certificate: open tls/missing.pem: no such file or directory
+
+$ authnd check cases/nokrbtgt
+authnd: kdc: the keytab has no krbtgt key for this realm: matching key not found in keytab. Looking for "krbtgt/EXAMPLE.ORG" realm: EXAMPLE.ORG kvno: 0 etype: 18
+```
+
+Ce que `check` ne peut pas savoir sans écouter, c'est **si les ports sont
+libres**. Un second serveur sur la même adresse Kerberos passe `check` et est
+refusé au démarrage :
+
+```
+$ authnd --config cases/realm2
+authnd: kerberos udp 127.0.0.1:18388: listen udp 127.0.0.1:18388: bind: address already in use
+```
+
+## Le lancer sous le compte de service {#run-it-as-the-service-account}
+
+```sh
+sudo -u authnd authnd check /etc/authnd
+```
+
+pour qu'un fichier que seul root peut lire échoue ici, et non au redémarrage. Lancez-le
+avec le **nouveau** binaire avant une mise à niveau ; voir [installation]({{< relref "/authnd/install.md#upgrade-roll-back-remove" >}}).

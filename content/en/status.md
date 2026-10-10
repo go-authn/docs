@@ -107,5 +107,3 @@ dependencies are left out.
 - **RC4-HMAC**: the realm issues aes256-cts-hmac-sha1-96 only, so a person
   known only by an NT hash cannot be issued a ticket. This is a choice (RC4 is
   deprecated by RFC 8429), not a gap waiting to be filled.
-- **Translations** of these pages: go-fileshare's documentation is in English,
-  French, Spanish and German; this site starts in English.
