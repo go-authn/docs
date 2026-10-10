@@ -48,7 +48,7 @@ with an `admin` block rather than start without it.
 | `RefreshMetadata` | fetch the federation's metadata now, and say how it went |
 | `ListIdPs` | the federation's IdPs, as the institution list shows them (`query`, `limit`, 100 by default) |
 | `ListClients` | the configured relying parties |
-| `RevokePerson` | end their refresh token families, the access tokens those bought, their logins and device grants in progress, their application password and their certificates |
+| `RevokePerson` | end their refresh token families, the access tokens those bought, their logins and device grants in progress and their application password, and revoke everything the certificate store holds for them: SSH and X.509 certificates (into the next KRL and CRL) and WireGuard keys |
 | `DisablePerson`, `EnablePerson` | refuse somebody here, at login and at every token, whatever their institution says, and revoke what they hold; optionally `until` a time |
 | `DisableIdP`, `EnableIdP` | the same for everybody one institution vouches for; a metadata refresh does not lift it |
 | `ListDisabled` | who is disabled, why, by whom, since and until when |
@@ -58,15 +58,15 @@ With `reflection = true`, against a test provider:
 ```
 $ grpcurl -plaintext -unix $PWD/run/admin.sock bridge.admin.v1.AdminService/Status
 {
-  "version": "v0.20.0",
+  "version": "v0.20.1",
   "issuer": "http://127.0.0.1:28473",
-  "started": "2026-10-10T19:47:42.490870Z",
+  "started": "2026-10-10T20:54:06.593823Z",
   "federation": {
-    "metadataUrl": "file:///tmp/authn-lab/fed/metadata.xml",
+    "metadataUrl": "file:///tmp/docs-patch-a2daf7c8/fed/metadata.xml",
     "idps": 1,
     "usable": 1,
-    "validUntil": "2026-10-17T19:16:33Z",
-    "lastRefresh": "2026-10-10T19:47:42.494805Z"
+    "validUntil": "2026-10-17T20:53:09Z",
+    "lastRefresh": "2026-10-10T20:54:06.594642Z"
   },
   "counts": {}
 }
@@ -164,12 +164,12 @@ may not be the public one:
 
 ```
 $ curl -s http://127.0.0.1:28475/metrics | grep "^bridge_"
-bridge_build_info{version="v0.20.0",goversion="go1.27.1",revision=""} 1
-bridge_start_time_seconds 1791660083
+bridge_build_info{version="v0.20.1",goversion="go1.27.2",revision="d30d3b52b644c7db74c431c2a07b8d1aaeb1c0ff"} 1
+bridge_start_time_seconds 1791665646
 bridge_ready 1
-bridge_metadata_valid_until_timestamp_seconds 1792264593
+bridge_metadata_valid_until_timestamp_seconds 1792270389
 bridge_metadata_idps 1
-bridge_metadata_last_refresh_timestamp_seconds 1791660083
+bridge_metadata_last_refresh_timestamp_seconds 1791665646
 bridge_metadata_refreshes_total{result="failed"} 0
 bridge_metadata_refreshes_total{result="ok"} 1
 bridge_logins_in_progress 0

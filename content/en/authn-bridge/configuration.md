@@ -189,7 +189,7 @@ authn-bridge: claims: groups = "affiliation" carries no institution, so any IdP 
 
 ```
 authn-bridge: ssh_ca: certificates_file is required with ssh_ca or x509_ca: a certificate that is not recorded can never be revoked
-authn-bridge: ssh_ca: validity = 200h0m0s: a certificate nobody can revoke, for more than a week
+authn-bridge: ssh_ca: validity = 200h0m0s: more than a week, and a certificate lives that long on every server its revocation has not reached
 authn-bridge: ssf: needs a state block: a queue a restart empties loses revocations
 ```
 

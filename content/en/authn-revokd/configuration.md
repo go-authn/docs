@@ -131,6 +131,16 @@ authn-revokd: v/krl-format.hcl: output "sshd": format is for CRL outputs; a KRL 
 authn-revokd: v/revoke-keys-crl.hcl: source "bridge-x509": revoke_keys is for a KRL source (ssh_ca): a CRL revokes its own CA's certificates only
 ```
 
+So does a configuration that is not there:
+
+```
+$ authn-revokd -config nowhere.hcl -once
+authn-revokd: nowhere.hcl: no such file or directory
+```
+
+Before v0.6.2 it was the HCL parser's message:
+`nowhere.hcl: <nil>: Failed to read file; The configuration file "nowhere.hcl" could not be read.`
+
 A CRL output also takes one source (a TLS server reads one CRL per issuer), and
 a CRL source with `max_age` is refused, because nothing could enforce it:
 
@@ -148,6 +158,6 @@ group or others, or owned by anybody but authn-revokd's user or root. These exit
 `1`:
 
 ```
-authn-revokd: state_dir /tmp/authn-lab/revokd/state-wide is writable by its group or by others (mode -rwxrwxrwx): whoever can write there decides which list comes next
-authn-revokd: state_dir /tmp/authn-lab/revokd/state-link is a symbolic link (L---------): whoever owns it decides where the state is; name the directory itself
+authn-revokd: state_dir /tmp/docs-patch-a2daf7c8/revokd/state-wide is writable by its group or by others (mode -rwxrwxrwx): whoever can write there decides which list comes next
+authn-revokd: state_dir /tmp/docs-patch-a2daf7c8/revokd/state-link is a symbolic link (L---------): whoever owns it decides where the state is; name the directory itself
 ```

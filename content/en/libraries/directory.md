@@ -11,7 +11,7 @@ memory, a SQL database, an LDAP server, or `user` and `group` blocks in a
 configuration file — and the point of it is the second half of the question.
 
 ```sh
-go get github.com/go-authn/directory@v0.11.1
+go get github.com/go-authn/directory@v0.11.2
 ```
 
 ## What proves somebody is not one thing
@@ -141,6 +141,13 @@ either way.
 - **An empty password at an LDAP bind.** In LDAP it is an *unauthenticated
   bind*, which most directories answer with success; `ldapdir` answers
   `ErrWrongPassword` without dialling.
+- **Any other failed bind taken for a wrong password.** Only LDAP result 49,
+  *invalidCredentials*, is `ErrWrongPassword`. A connection dropped during the
+  bind, a directory answering busy (51) or unavailable (52), is returned as
+  `ldapdir: the directory did not answer the bind: …`, wrapping the LDAP error.
+  The password is refused either way; what changes is that a server's log no
+  longer says *wrong password* to somebody who typed it right. Before v0.11.2
+  every failed bind was `ErrWrongPassword`.
 - **Credentials in an LDAP URL** — a URL is printed; `BindDN` and
   `BindPassword` are fields.
 - **An NT hash that is not 16 bytes** (`ParseNTHash`), rather than padding it
@@ -174,4 +181,4 @@ The coverage lane fails below 85% (its stated standard is 100%), and the
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/directory@v0.11.1](https://pkg.go.dev/github.com/go-authn/directory@v0.11.1)
+[pkg.go.dev/github.com/go-authn/directory@v0.11.2](https://pkg.go.dev/github.com/go-authn/directory@v0.11.2)

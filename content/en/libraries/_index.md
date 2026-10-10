@@ -19,7 +19,7 @@ All of them are pure Go and build with `CGO_ENABLED=0`.
 | [totp]({{< relref "/libraries/totp.md" >}}) | is this six-digit code right, and has it been used before? | v0.4.1 | `github.com/go-authn/totp` |
 | [fido]({{< relref "/libraries/fido.md" >}}) | how is a security key spoken to, over 64-byte reports? | v0.6.1 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | did *the registered* key answer, and did a person touch it? | v0.4.1 | `github.com/go-authn/keyfactor` |
-| [directory]({{< relref "/libraries/directory.md" >}}) | who is somebody, and what can prove them? | v0.11.1 | `github.com/go-authn/directory` |
+| [directory]({{< relref "/libraries/directory.md" >}}) | who is somebody, and what can prove them? | v0.11.2 | `github.com/go-authn/directory` |
 | [ldap]({{< relref "/libraries/ldap.md" >}}) | what are the bytes of an LDAP server? | v0.7.1 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | is this Kerberos ticket good for this service? | v0.3.0 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | how does a realm issue tickets from a directory? | v0.4.2 | `github.com/go-authn/kdc` |

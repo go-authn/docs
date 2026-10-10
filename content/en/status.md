@@ -10,9 +10,9 @@ These pages are documentation version **0.1**, and describe:
 | program | release | module |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.20.0** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.1** | `github.com/go-authn/revocation` |
-| sshcert-authorize | **v0.1.4** | `github.com/go-authn/sshcert` |
+| authn-bridge | **v0.20.1** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.2** | `github.com/go-authn/revocation` |
+| sshcert-authorize | **v0.1.5** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}}).
 A new minor version of any program above is a new documentation version, so
@@ -68,6 +68,7 @@ dependencies are left out.
 | v0.19.0 | the EuroHPC SSH CA profile, opt-in per client |
 | v0.19.3 | release binaries, `SHA256SUMS` and build provenance on every tag |
 | v0.20.0 | the command is `authn-bridge`; a hardened systemd unit and an install guide |
+| v0.20.1 | comments and a refusal message that were no longer true; the README says all `RevokePerson` revokes |
 
 ### authn-revokd
 
@@ -80,6 +81,7 @@ dependencies are left out.
 | v0.5.0 | release binaries, `SHA256SUMS` and build provenance on every tag |
 | v0.6.0 | the command is `authn-revokd`; systemd units and an install guide; `SIGHUP` syncs at once |
 | v0.6.1 | `-version` prints on standard output |
+| v0.6.2 | `-once` says a failed fetch apart from a lapsed list; a list signed by another key is no longer called a race; `-help` exits 0 |
 
 ### sshcert
 
@@ -88,6 +90,7 @@ dependencies are left out.
 | v0.1.0 | the domain-grant extension, and a fail-closed `sshcert-authorize` |
 | v0.1.2 | release binaries, `SHA256SUMS` and build provenance on every tag |
 | v0.1.4 | the release checks every binary's build information |
+| v0.1.5 | `-version` prints the module version of a `go install` build, not `dev` |
 
 ## Not implemented yet
 
