@@ -3,8 +3,9 @@
 Éducation-Recherche de RENATER ou par eduGAIN, et les applications obtiennent un jeton OpenID Connect.&lt;/strong&gt;
 La même connexion peut aussi faire certifier une clé SSH, faire émettre un certificat
 client X.509 pour NFS sur TLS, définir un mot de passe d&amp;rsquo;application pour SMB et S3, ou
-enregistrer une clé WireGuard. Tout ce que le fournisseur a émis, il peut le reprendre, et il
-publie des listes signées de ce qu&amp;rsquo;il a révoqué. Pur Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un seul
+enregistrer une clé WireGuard. Le fournisseur peut révoquer ce qu&amp;rsquo;il a émis, et il
+publie des listes signées de ce qu&amp;rsquo;il a révoqué ; un jeton d&amp;rsquo;accès déjà remis reste
+valide jusqu&amp;rsquo;à son expiration. Pur Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un seul
 binaire. Ces pages décrivent la v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -649,8 +650,9 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;13 est &lt;code&gt;confidentialityRequired&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;et ce que le serveur a écrit :&lt;/p&gt;
+&lt;p&gt;13 est &lt;code&gt;confidentialityRequired&lt;/code&gt; : un jeton n&amp;rsquo;est pas accepté sur une connexion
+qui n&amp;rsquo;est pas chiffrée.&lt;/p&gt;
+&lt;p&gt;Ce que le serveur a écrit pour les quatre liaisons refusées sur &lt;code&gt;ldaps://&lt;/code&gt; :&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
 alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
@@ -667,6 +669,7 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;p&gt;et pour celle en clair :&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
@@ -887,14 +890,14 @@ une clé RSA ou refusé.&lt;/p&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;une clé RSA de moins de 2048 bits, ou dont &lt;code&gt;n&lt;/code&gt; ou &lt;code&gt;e&lt;/code&gt; n&amp;rsquo;est pas sous sa forme la plus courte ; un point EC qui n&amp;rsquo;est pas sur sa courbe&lt;/td&gt;
-&lt;td&gt;une clé courte est une signature que quelqu&amp;rsquo;un d&amp;rsquo;autre peut produire ; un module complété de zéros passait autrefois pour 2048 bits&lt;/td&gt;
+&lt;td&gt;les signatures d&amp;rsquo;une clé courte peuvent être contrefaites ; avant la v0.2.2, un module de 1024 bits complété d&amp;rsquo;octets nuls passait pour 2048 bits&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;une clé publiée avec un &lt;code&gt;use&lt;/code&gt; autre que &lt;code&gt;sig&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;un jeu de clés contient légitimement aussi des clés de chiffrement&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;avec &lt;code&gt;Type&lt;/code&gt; défini, un jeton d&amp;rsquo;un autre &lt;code&gt;typ&lt;/code&gt; ; non défini, tout &lt;code&gt;typ&lt;/code&gt; sauf aucun, &lt;code&gt;JWT&lt;/code&gt; ou &lt;code&gt;at+jwt&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;avec &lt;code&gt;Type&lt;/code&gt; défini, un jeton d&amp;rsquo;un autre &lt;code&gt;typ&lt;/code&gt; ; sans lui, un &lt;code&gt;typ&lt;/code&gt; autre que &lt;code&gt;JWT&lt;/code&gt; ou &lt;code&gt;at+jwt&lt;/code&gt; (un jeton sans en-tête &lt;code&gt;typ&lt;/code&gt; passe)&lt;/td&gt;
 &lt;td&gt;RFC 9068 §4 : un serveur de ressources vérifie &lt;code&gt;typ: at+jwt&lt;/code&gt;, sinon il prend un jeton d&amp;rsquo;identité (ID token) pour un jeton d&amp;rsquo;accès dès que les audiences concordent&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;

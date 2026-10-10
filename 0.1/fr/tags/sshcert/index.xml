@@ -40,8 +40,8 @@ dans &lt;code&gt;/etc/ssh/auth_principals/&amp;lt;account&amp;gt;&lt;/code&gt;. 
 appartenant à root et que personne d&amp;rsquo;autre ne peut modifier.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;%u&lt;/code&gt; est le compte auquel on se connecte. &lt;code&gt;%k&lt;/code&gt; est le certificat, en base64 ; une ligne entière
 &lt;code&gt;ssh-...-cert-v01@openssh.com BASE64&lt;/code&gt; est lue aussi, et quand l&amp;rsquo;argument est
-absent le certificat est lu sur l&amp;rsquo;entrée standard. Un troisième argument, &lt;code&gt;%t&lt;/code&gt;, doit
-alors être le type du certificat.&lt;/p&gt;
+absent le certificat est lu sur l&amp;rsquo;entrée standard. Un troisième argument, quand il y en a un
+(le &lt;code&gt;%t&lt;/code&gt; de sshd), doit être le type du certificat, sinon le certificat est refusé.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -202,9 +202,10 @@ KRL OpenSSH dans la commande, et ajoute ce que sshd ne fait pas : elle refuse
 &lt;strong&gt;tous&lt;/strong&gt; les certificats une fois la liste expirée (son extension &lt;code&gt;expires@go-authn.github.io&lt;/code&gt;,
 que sshd ignore), et tous les certificats quand la liste ne peut pas être
 lue. Une liste sans expiration est utilisée sans expiration.&lt;/p&gt;
-&lt;p&gt;Avec la KRL qu&amp;rsquo;écrit &lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/"&gt;authn-revokd&lt;/a&gt;, une
-liste à jour, puis celle qui refuse en cas de doute, qu&amp;rsquo;il écrit quand la liste de l&amp;rsquo;émetteur
-&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/lapse/"&gt;expire&lt;/a&gt; :&lt;/p&gt;
+&lt;p&gt;Trois exécutions : avec la KRL qu&amp;rsquo;écrit &lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/"&gt;authn-revokd&lt;/a&gt;,
+d&amp;rsquo;abord une liste à jour, puis celle qui refuse en cas de doute, qu&amp;rsquo;il écrit quand la liste de l&amp;rsquo;émetteur
+&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/lapse/"&gt;expire&lt;/a&gt; ; et enfin avec &lt;code&gt;--krl&lt;/code&gt; qui nomme un fichier
+qui n&amp;rsquo;existe pas :&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
 INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.fr granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
@@ -227,9 +228,10 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;La deuxième exécution est refusée parce que la liste révoque la &lt;strong&gt;clé de l&amp;rsquo;AC&lt;/strong&gt;
+&lt;p&gt;La deuxième exécution est refusée parce que la liste qui refuse en cas de doute révoque la &lt;strong&gt;clé de l&amp;rsquo;AC&lt;/strong&gt;
 du certificat : la vérification couvre la clé propre du certificat, son numéro de série et son identifiant de clé, et
-la clé qui l&amp;rsquo;a signé.&lt;/p&gt;
+la clé qui l&amp;rsquo;a signé. La troisième est refusée parce que la liste ne peut pas être lue : l&amp;rsquo;absence
+de liste n&amp;rsquo;est pas prise pour « rien de révoqué ».&lt;/p&gt;
 &lt;h2 data-hextra-search-id="flags"&gt;Drapeaux&lt;span class="hx:absolute hx:-mt-20" id="flags"&gt;&lt;/span&gt;
 &lt;a href="#flags" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize -help

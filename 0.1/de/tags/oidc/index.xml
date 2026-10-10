@@ -3,8 +3,9 @@
 Éducation-Recherche von RENATER oder über eduGAIN, und Anwendungen erhalten ein OpenID-Connect-Token.&lt;/strong&gt;
 Dieselbe Anmeldung kann außerdem einen SSH-Schlüssel zertifizieren lassen, ein
 X.509-Client-Zertifikat für NFS über TLS ausstellen lassen, ein Anwendungspasswort für SMB und S3
-setzen oder einen WireGuard-Schlüssel registrieren. Was auch immer der Anbieter ausgestellt hat, kann er
-zurücknehmen, und er veröffentlicht signierte Listen dessen, was er widerrufen hat. Reines Go,
+setzen oder einen WireGuard-Schlüssel registrieren. Der Anbieter kann widerrufen, was er
+ausgestellt hat, und er veröffentlicht signierte Listen dessen, was er widerrufen hat; ein bereits
+ausgegebenes Zugriffstoken bleibt gültig, bis es abläuft. Reines Go,
 &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, ein Binary. Diese Seiten beschreiben v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -648,8 +649,9 @@ data-copied-label="Kopiert!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;13 ist &lt;code&gt;confidentialityRequired&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;und was der Server geschrieben hat:&lt;/p&gt;
+&lt;p&gt;13 ist &lt;code&gt;confidentialityRequired&lt;/code&gt;: Über eine unverschlüsselte Verbindung wird kein
+Token angenommen.&lt;/p&gt;
+&lt;p&gt;Was der Server für die vier abgelehnten Binds über &lt;code&gt;ldaps://&lt;/code&gt; geschrieben hat:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
 alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
@@ -666,6 +668,7 @@ data-copied-label="Kopiert!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;p&gt;und für den im Klartext:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
@@ -886,14 +889,14 @@ einem RSA-Schlüssel geprüft oder abgelehnt.&lt;/p&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;ein RSA-Schlüssel unter 2048 Bit oder mit &lt;code&gt;n&lt;/code&gt; oder &lt;code&gt;e&lt;/code&gt; nicht in kürzester Form; ein EC-Punkt, der nicht auf seiner Kurve liegt&lt;/td&gt;
-&lt;td&gt;ein kurzer Schlüssel ist eine Signatur, die jemand anderes erzeugen kann; ein aufgefüllter Modulus ging einst als 2048 Bit durch&lt;/td&gt;
+&lt;td&gt;Signaturen unter einem kurzen Schlüssel lassen sich fälschen; vor v0.2.2 ging ein mit Null-Bytes aufgefüllter 1024-Bit-Modulus als 2048 Bit durch&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;ein Schlüssel, der mit einem anderen &lt;code&gt;use&lt;/code&gt; als &lt;code&gt;sig&lt;/code&gt; veröffentlicht ist&lt;/td&gt;
 &lt;td&gt;eine Schlüsselmenge enthält legitimerweise auch Verschlüsselungsschlüssel&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;bei gesetztem &lt;code&gt;Type&lt;/code&gt; ein Token mit anderem &lt;code&gt;typ&lt;/code&gt;; ohne, jedes &lt;code&gt;typ&lt;/code&gt; außer keinem, &lt;code&gt;JWT&lt;/code&gt; oder &lt;code&gt;at+jwt&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;bei gesetztem &lt;code&gt;Type&lt;/code&gt; ein Token mit anderem &lt;code&gt;typ&lt;/code&gt;; ohne ihn ein &lt;code&gt;typ&lt;/code&gt; außer &lt;code&gt;JWT&lt;/code&gt; oder &lt;code&gt;at+jwt&lt;/code&gt; (ein Token ohne &lt;code&gt;typ&lt;/code&gt;-Header geht durch)&lt;/td&gt;
 &lt;td&gt;RFC 9068 §4: Ein Resource Server prüft &lt;code&gt;typ: at+jwt&lt;/code&gt;, sonst hält er ein ID-Token für ein Access-Token, sobald die Audiences übereinstimmen&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;

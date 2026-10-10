@@ -156,8 +156,12 @@ name rather than half-decoded.&lt;/p&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;A wrong PIN costs a retry&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;An authenticator that runs out locks until it is unplugged, then
-permanently. Ask &lt;code&gt;Key.PINRetries&lt;/code&gt; before prompting anybody.&lt;/p&gt;
+&lt;p&gt;CTAP gives an authenticator a counter of PIN retries, eight at most, and each
+wrong PIN spends one. Three wrong PINs in a row block the PIN until the key is
+unplugged and plugged back in. A counter that reaches zero blocks it for good:
+only a reset lifts that, and a reset erases every credential on the key. Ask
+&lt;code&gt;Key.PINRetries&lt;/code&gt; before prompting anybody: it says how many retries are left,
+and whether the key is waiting to be unplugged.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -196,7 +200,9 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;At v0.4.1 it requires &lt;code&gt;go-authn/fido&lt;/code&gt; v0.6.0 and &lt;code&gt;go-authn/mfa&lt;/code&gt; v0.5.0.&lt;/p&gt;
+&lt;p&gt;At v0.4.1 its &lt;code&gt;go.mod&lt;/code&gt; requires at least &lt;code&gt;go-authn/fido&lt;/code&gt; v0.6.0 and
+&lt;code&gt;go-authn/mfa&lt;/code&gt; v0.5.0: minimums, so a program that requires fido v0.6.1, the
+version these pages describe, builds with v0.6.1.&lt;/p&gt;
 &lt;p&gt;The platform supplies an &lt;code&gt;Opener&lt;/code&gt; — how a key is found on this system — and
 keeps only that. Everything else is the same wherever CTAP is: the assertion,
 the checks, the refusal to spend somebody&amp;rsquo;s last PIN attempt.&lt;/p&gt;
@@ -304,8 +310,9 @@ the registration:&lt;/p&gt;
 &lt;/table&gt;
 &lt;p&gt;&lt;strong&gt;The last PIN attempt is not spent on a guess.&lt;/strong&gt; &lt;code&gt;PINRetries&lt;/code&gt; is asked first;
 a key that will take no more PINs until it is unplugged is refused, and so is
-one with &lt;strong&gt;one attempt or fewer&lt;/strong&gt; left. A key that runs out locks, then
-permanently, taking every credential on it.&lt;/p&gt;
+one with &lt;strong&gt;one attempt or fewer&lt;/strong&gt; left. Under CTAP, three wrong PINs in a row
+block a key&amp;rsquo;s PIN until it is unplugged, and a retry counter that reaches zero
+blocks it for good: only a reset lifts that, erasing every credential on it.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;A PIN is not a second factor.&lt;/strong&gt; The kind stays &lt;code&gt;mfa.Possession&lt;/code&gt;: a PIN
 entered into the key protects the key, and identifies nobody to this machine.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;An empty port is not a refusal.&lt;/strong&gt; An &lt;code&gt;Opener&lt;/code&gt; that finds nothing wraps its

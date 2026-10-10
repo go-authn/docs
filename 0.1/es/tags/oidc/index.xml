@@ -3,9 +3,9 @@
 Éducation-Recherche de RENATER o de eduGAIN, y las aplicaciones obtienen un token
 OpenID Connect.&lt;/strong&gt; El mismo inicio de sesión permite también certificar una clave SSH,
 emitir un certificado de cliente X.509 para NFS sobre TLS, establecer una contraseña
-de aplicación para SMB y S3, o registrar una clave WireGuard. Todo lo que el
-proveedor ha emitido lo puede retirar, y publica listas firmadas de lo que ha
-revocado. Go puro, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un solo binario. Estas páginas describen la
+de aplicación para SMB y S3, o registrar una clave WireGuard. El proveedor puede
+revocar lo que ha emitido, y publica listas firmadas de lo que ha revocado; un
+token de acceso ya entregado sigue siendo válido hasta que caduca. Go puro, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un solo binario. Estas páginas describen la
 v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -661,8 +661,9 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;13 es &lt;code&gt;confidentialityRequired&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;y lo que escribió el servidor:&lt;/p&gt;
+&lt;p&gt;13 es &lt;code&gt;confidentialityRequired&lt;/code&gt;: un token no se acepta por una conexión que no
+está cifrada.&lt;/p&gt;
+&lt;p&gt;Lo que escribió el servidor para los cuatro binds rechazados sobre &lt;code&gt;ldaps://&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
 alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
@@ -679,6 +680,7 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;p&gt;y para el que va sin cifrar:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
@@ -899,14 +901,14 @@ algoritmo: un token que declara &lt;code&gt;RS256&lt;/code&gt; se comprueba con 
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;una clave RSA de menos de 2048 bits, o con &lt;code&gt;n&lt;/code&gt; o &lt;code&gt;e&lt;/code&gt; que no están en su forma más corta; un punto EC que no está en su curva&lt;/td&gt;
-&lt;td&gt;una clave corta es una firma que otra persona puede producir; un módulo con relleno llegó a pasar por 2048 bits&lt;/td&gt;
+&lt;td&gt;las firmas de una clave corta se pueden falsificar; antes de la v0.2.2, un módulo de 1024 bits rellenado con bytes a cero pasaba por 2048 bits&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;una clave publicada con un &lt;code&gt;use&lt;/code&gt; distinto de &lt;code&gt;sig&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;un conjunto de claves contiene legítimamente también claves de cifrado&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;con &lt;code&gt;Type&lt;/code&gt; fijado, un token de otro &lt;code&gt;typ&lt;/code&gt;; sin fijar, cualquier &lt;code&gt;typ&lt;/code&gt; salvo ninguno, &lt;code&gt;JWT&lt;/code&gt; o &lt;code&gt;at+jwt&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;con &lt;code&gt;Type&lt;/code&gt; fijado, un token de otro &lt;code&gt;typ&lt;/code&gt;; sin fijarlo, un &lt;code&gt;typ&lt;/code&gt; distinto de &lt;code&gt;JWT&lt;/code&gt; o &lt;code&gt;at+jwt&lt;/code&gt; (un token sin cabecera &lt;code&gt;typ&lt;/code&gt; pasa)&lt;/td&gt;
 &lt;td&gt;RFC 9068 §4: un servidor de recursos comprueba &lt;code&gt;typ: at+jwt&lt;/code&gt;, o toma un token de ID por un token de acceso siempre que las audiencias coincidan&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;

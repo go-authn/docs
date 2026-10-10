@@ -41,7 +41,8 @@ aus, der root gehört und für niemanden sonst beschreibbar ist.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;%u&lt;/code&gt; ist das Konto, an dem die Anmeldung erfolgt. &lt;code&gt;%k&lt;/code&gt; ist das Zertifikat, base64; eine
 ganze Zeile &lt;code&gt;ssh-...-cert-v01@openssh.com BASE64&lt;/code&gt; wird ebenfalls gelesen, und fehlt das
 Argument, wird das Zertifikat von der Standardeingabe gelesen. Ein drittes Argument,
-&lt;code&gt;%t&lt;/code&gt;, muss dann der Typ des Zertifikats sein.&lt;/p&gt;
+wenn es angegeben ist (das &lt;code&gt;%t&lt;/code&gt; von sshd), muss der Typ des Zertifikats sein, sonst wird das
+Zertifikat abgelehnt.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -202,9 +203,10 @@ und jedes Zertifikat, und sie widerruft auch einen CA-Schlüssel; bevorzugen Sie
 tut: Es lehnt &lt;strong&gt;jedes&lt;/strong&gt; Zertifikat ab, sobald die Liste abgelaufen ist (ihre Erweiterung
 &lt;code&gt;expires@go-authn.github.io&lt;/code&gt;, die sshd ignoriert), und jedes Zertifikat, wenn die Liste
 nicht gelesen werden kann. Eine Liste ohne Ablaufdatum wird ohne eines verwendet.&lt;/p&gt;
-&lt;p&gt;Mit der KRL, die &lt;a href="https://go-authn.github.io/docs/0.1/de/authn-revokd/"&gt;authn-revokd&lt;/a&gt; schreibt: eine
-aktuelle und dann die fail-closed Liste, die es schreibt, wenn die Liste des Ausstellers
-&lt;a href="https://go-authn.github.io/docs/0.1/de/authn-revokd/lapse/"&gt;verfällt&lt;/a&gt;:&lt;/p&gt;
+&lt;p&gt;Drei Aufrufe: mit der KRL, die &lt;a href="https://go-authn.github.io/docs/0.1/de/authn-revokd/"&gt;authn-revokd&lt;/a&gt; schreibt,
+zuerst eine aktuelle, dann die fail-closed Liste, die es schreibt, wenn die Liste des Ausstellers
+&lt;a href="https://go-authn.github.io/docs/0.1/de/authn-revokd/lapse/"&gt;verfällt&lt;/a&gt;; und zuletzt mit &lt;code&gt;--krl&lt;/code&gt; auf eine Datei, die
+es nicht gibt:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
 INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.fr granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
@@ -227,9 +229,10 @@ data-copied-label="Kopiert!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Der zweite Aufruf wird abgelehnt, weil die Liste den &lt;strong&gt;CA-Schlüssel&lt;/strong&gt; des Zertifikats
+&lt;p&gt;Der zweite Aufruf wird abgelehnt, weil die fail-closed Liste den &lt;strong&gt;CA-Schlüssel&lt;/strong&gt; des Zertifikats
 widerruft: Die Prüfung umfasst den eigenen Schlüssel des Zertifikats, seine Seriennummer
-und Key-ID sowie den Schlüssel, der es signiert hat.&lt;/p&gt;
+und Key-ID sowie den Schlüssel, der es signiert hat. Der dritte wird abgelehnt, weil die Liste
+nicht gelesen werden kann: Keine Liste gilt nicht als „nichts widerrufen“.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="flags"&gt;Flags&lt;span class="hx:absolute hx:-mt-20" id="flags"&gt;&lt;/span&gt;
 &lt;a href="#flags" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize -help

@@ -127,7 +127,7 @@ for a security key.&lt;/p&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;strong&gt;the same factor twice&lt;/strong&gt;&lt;/td&gt;
-&lt;td&gt;one passphrase passed twice satisfied &lt;code&gt;Count: 2&lt;/code&gt;. &amp;ldquo;The same&amp;rdquo; is the same type holding the same values, functions included: a function is the same function when it runs the same code&lt;/td&gt;
+&lt;td&gt;before v0.3.0, one passphrase passed twice satisfied &lt;code&gt;Count: 2&lt;/code&gt;, and before v0.4.0 so did any factor holding a function. &amp;ldquo;The same&amp;rdquo; is the same type holding the same values, functions included: a function is the same function when it runs the same code&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
@@ -153,8 +153,9 @@ detector, and runs the tests on amd64, arm64, riscv64, loong64, ppc64le, s390x,
 &lt;h2 data-hextra-search-id="reference"&gt;Reference&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
 &lt;a href="#reference" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/mfa@v0.5.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/mfa@v0.5.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>totp — a code, once, and not a million guesses</title><link>https://go-authn.github.io/docs/0.1/libraries/totp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/libraries/totp/</guid><description>
 &lt;p&gt;&lt;strong&gt;Is this six-digit code right — and has it been used before?&lt;/strong&gt; Time-based
-one-time passwords (RFC 6238), a &lt;code&gt;Verifier&lt;/code&gt; that remembers what a server must,
-and the &lt;a href="https://go-authn.github.io/docs/0.1/libraries/mfa/"&gt;mfa&lt;/a&gt; factor a policy asks.&lt;/p&gt;
+one-time passwords (RFC 6238); a &lt;code&gt;Verifier&lt;/code&gt; that remembers what a server has
+to, the codes already used and the wrong ones; and a factor that an
+&lt;a href="https://go-authn.github.io/docs/0.1/libraries/mfa/"&gt;mfa&lt;/a&gt; policy can ask for.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/totp@v0.4.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
@@ -301,8 +302,8 @@ refuses every code, saying a Verifier is missing. It is not reported as
 unavailable, so a policy cannot pass on the other factors and hide the mistake.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Guessing, per secret.&lt;/strong&gt; A &lt;code&gt;Verifier&lt;/code&gt; counts wrong codes per &lt;strong&gt;credential&lt;/strong&gt; —
 the secret, held only as its SHA-256 — not per name, because the name is
-whatever string the caller passes, and &lt;code&gt;dora&lt;/code&gt;, &lt;code&gt;Dora&lt;/code&gt; and &lt;code&gt;DORA&lt;/code&gt; were once
-three counters for one secret.&lt;/p&gt;
+whatever string the caller passes, and before v0.3.0 &lt;code&gt;dora&lt;/code&gt;, &lt;code&gt;Dora&lt;/code&gt; and &lt;code&gt;DORA&lt;/code&gt;
+were three counters for one secret.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -332,7 +333,9 @@ three counters for one secret.&lt;/p&gt;
 &lt;p&gt;Only a wrong code counts; a replay, a code of the wrong length or a refused
 parameter does not bring a pause nearer. The whole check is made under one
 lock, so guesses sent at the same moment are counted one by one.
-&lt;code&gt;errors.Is(err, totp.ErrThrottled)&lt;/code&gt; is true for both refusals.&lt;/p&gt;
+&lt;code&gt;ErrLockedOut&lt;/code&gt; wraps &lt;code&gt;ErrThrottled&lt;/code&gt;, so &lt;code&gt;errors.Is(err, totp.ErrThrottled)&lt;/code&gt; is
+true for both refusals, and &lt;code&gt;errors.Is(err, totp.ErrLockedOut)&lt;/code&gt; only for the
+lockout.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Parameters that cannot be right:&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;a secret under 128 bits (&lt;code&gt;MinSecret&lt;/code&gt; = 16 bytes, RFC 4226 R6), in
@@ -532,8 +535,12 @@ name rather than half-decoded.&lt;/p&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;A wrong PIN costs a retry&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;An authenticator that runs out locks until it is unplugged, then
-permanently. Ask &lt;code&gt;Key.PINRetries&lt;/code&gt; before prompting anybody.&lt;/p&gt;
+&lt;p&gt;CTAP gives an authenticator a counter of PIN retries, eight at most, and each
+wrong PIN spends one. Three wrong PINs in a row block the PIN until the key is
+unplugged and plugged back in. A counter that reaches zero blocks it for good:
+only a reset lifts that, and a reset erases every credential on the key. Ask
+&lt;code&gt;Key.PINRetries&lt;/code&gt; before prompting anybody: it says how many retries are left,
+and whether the key is waiting to be unplugged.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -572,7 +579,9 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;At v0.4.1 it requires &lt;code&gt;go-authn/fido&lt;/code&gt; v0.6.0 and &lt;code&gt;go-authn/mfa&lt;/code&gt; v0.5.0.&lt;/p&gt;
+&lt;p&gt;At v0.4.1 its &lt;code&gt;go.mod&lt;/code&gt; requires at least &lt;code&gt;go-authn/fido&lt;/code&gt; v0.6.0 and
+&lt;code&gt;go-authn/mfa&lt;/code&gt; v0.5.0: minimums, so a program that requires fido v0.6.1, the
+version these pages describe, builds with v0.6.1.&lt;/p&gt;
 &lt;p&gt;The platform supplies an &lt;code&gt;Opener&lt;/code&gt; — how a key is found on this system — and
 keeps only that. Everything else is the same wherever CTAP is: the assertion,
 the checks, the refusal to spend somebody&amp;rsquo;s last PIN attempt.&lt;/p&gt;
@@ -680,8 +689,9 @@ the registration:&lt;/p&gt;
 &lt;/table&gt;
 &lt;p&gt;&lt;strong&gt;The last PIN attempt is not spent on a guess.&lt;/strong&gt; &lt;code&gt;PINRetries&lt;/code&gt; is asked first;
 a key that will take no more PINs until it is unplugged is refused, and so is
-one with &lt;strong&gt;one attempt or fewer&lt;/strong&gt; left. A key that runs out locks, then
-permanently, taking every credential on it.&lt;/p&gt;
+one with &lt;strong&gt;one attempt or fewer&lt;/strong&gt; left. Under CTAP, three wrong PINs in a row
+block a key&amp;rsquo;s PIN until it is unplugged, and a retry counter that reaches zero
+blocks it for good: only a reset lifts that, erasing every credential on it.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;A PIN is not a second factor.&lt;/strong&gt; The kind stays &lt;code&gt;mfa.Possession&lt;/code&gt;: a PIN
 entered into the key protects the key, and identifies nobody to this machine.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;An empty port is not a refusal.&lt;/strong&gt; An &lt;code&gt;Opener&lt;/code&gt; that finds nothing wraps its
@@ -899,8 +909,8 @@ data-copied-label="Copied!"
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;An empty group, asked through a &lt;code&gt;Set&lt;/code&gt;, is reported as missing&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;Expand&lt;/code&gt; refuses an empty group with &lt;em&gt;has no members&lt;/em&gt;, as the second-to-last
-lines show for the &lt;code&gt;Static&lt;/code&gt; itself. Through a &lt;code&gt;Set&lt;/code&gt;, &lt;code&gt;Set.Members&lt;/code&gt; returns
+&lt;p&gt;&lt;code&gt;Expand&lt;/code&gt; refuses an empty group with &lt;em&gt;has no members&lt;/em&gt;, as the third line from
+the end shows for the &lt;code&gt;Static&lt;/code&gt; itself. Through a &lt;code&gt;Set&lt;/code&gt;, &lt;code&gt;Set.Members&lt;/code&gt; returns
 &lt;code&gt;ErrNoSuchGroup&lt;/code&gt; for a group that a source has but that has nobody in it
 (&lt;code&gt;source.go:138&lt;/code&gt;), so the message names the wrong cause. The group is refused
 either way.&lt;/p&gt;
@@ -1090,8 +1100,8 @@ gateway turns into peers.&lt;/p&gt;
 &lt;a href="#why-they-are-separate-modules" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;A service that only accepts tickets never links a KDC.&lt;/strong&gt; An NFS server
 verifies the tickets a client presents; it has a keytab and nothing else to do
 with a realm. If accepting and issuing were one module, every such server
-would carry a ticket-issuing code path, and the directory a KDC reads people
-from, that it never runs.&lt;/p&gt;
+would carry a ticket-issuing code path it never runs, and the directory module
+a KDC reads people from, which it never uses.&lt;/p&gt;
 &lt;p&gt;This is measured, not intended. In a scratch module that imports only
 &lt;code&gt;github.com/go-authn/krb5@v0.3.0&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -1266,15 +1276,16 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;&lt;code&gt;(uid=svc-*-prod)&lt;/code&gt; returns &lt;code&gt;svc-web-prod&lt;/code&gt; and not &lt;code&gt;svc-web-stage&lt;/code&gt;: that is the
-defect, in the library this replaces, that decided it should be written. The
+&lt;p&gt;&lt;code&gt;(uid=svc-*-prod)&lt;/code&gt; returns &lt;code&gt;svc-web-prod&lt;/code&gt; and not &lt;code&gt;svc-web-stage&lt;/code&gt;. The library
+this one replaces evaluated that filter as &lt;code&gt;(uid=svc-*)&lt;/code&gt; and returned
+&lt;code&gt;svc-web-stage&lt;/code&gt; as well; that defect is why this library was written. The
 root DSE does not list StartTLS, because no &lt;code&gt;TLSConfig&lt;/code&gt; was given.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;What it refuses, and why&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;A filter means one thing.&lt;/strong&gt; It is parsed or decoded once into a tree, and
 &lt;code&gt;String&lt;/code&gt;, &lt;code&gt;EncodeFilter&lt;/code&gt; and &lt;code&gt;Matches&lt;/code&gt; all read that tree. An attribute that is
 not an RFC 4512 §2.5 attribute description, or a matching rule that is not an
-OID, is refused by both &lt;code&gt;ParseFilter&lt;/code&gt; and &lt;code&gt;DecodeFilter&lt;/code&gt;: printed back, a
-&amp;ldquo;present&amp;rdquo; filter on the attribute &lt;code&gt;!x&lt;/code&gt; read as a NOT.&lt;/p&gt;
+OID, is refused by both &lt;code&gt;ParseFilter&lt;/code&gt; and &lt;code&gt;DecodeFilter&lt;/code&gt;: before v0.6.1, printed
+back, a &amp;ldquo;present&amp;rdquo; filter on the attribute &lt;code&gt;!x&lt;/code&gt; read as a NOT.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Plaintext, when it was promised otherwise.&lt;/strong&gt; StartTLS is asked for by the
 &lt;em&gt;client&lt;/em&gt;, so a server that merely offers it has promised nothing.
 &lt;code&gt;RequireTLS&lt;/code&gt; refuses every operation on a connection that is not protected,
@@ -1319,7 +1330,7 @@ aliases or referrals, so a critical ManageDsaIT is refused with
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;MaxMessageElements&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;16384&lt;/td&gt;
-&lt;td&gt;BER elements counted before decoding: 4 MiB of empty strings once held 373 MiB before any bind&lt;/td&gt;
+&lt;td&gt;BER elements counted before decoding: before v0.5.0, 4 MiB of empty strings held 373 MiB before any bind&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;IdleTimeout&lt;/code&gt;&lt;/td&gt;
@@ -1329,7 +1340,7 @@ aliases or referrals, so a critical ManageDsaIT is refused with
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;MaxPending&lt;/code&gt;, &lt;code&gt;MaxPendingAuth&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;100, 1000&lt;/td&gt;
-&lt;td&gt;operations in flight before and after a bind, as slapd&amp;rsquo;s &lt;code&gt;conn_max_pending&lt;/code&gt;; one more is a notice of disconnection&lt;/td&gt;
+&lt;td&gt;operations one connection may have in flight before it has bound (&lt;code&gt;MaxPending&lt;/code&gt;) and after (&lt;code&gt;MaxPendingAuth&lt;/code&gt;), as slapd&amp;rsquo;s &lt;code&gt;conn_max_pending&lt;/code&gt; and &lt;code&gt;conn_max_pending_auth&lt;/code&gt;; a connection that goes over is sent a notice of disconnection and closed&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;MaxPagedSearches&lt;/code&gt;&lt;/td&gt;
@@ -1463,7 +1474,7 @@ are deliberately coarse: a client learns that its ticket was refused, never
 which check refused it. An error means no context, and the returned token is
 empty.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;A principal the acceptor does not answer for.&lt;/strong&gt; With
-&lt;code&gt;krb5.Principal(&amp;quot;nfs/host.example.org&amp;quot;)&lt;/code&gt;, a keytab holding several services
+&lt;code&gt;krb5.Principal(&amp;quot;nfs/files.example.org&amp;quot;)&lt;/code&gt;, a keytab holding several services
 answers for that one only.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;A message whose signature does not match&lt;/strong&gt; is &lt;code&gt;ErrBadMIC&lt;/code&gt;, whichever of the
 length, the header, the sequence or the checksum disagreed. The acceptor signs
@@ -1518,7 +1529,9 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;At v0.4.2 it requires &lt;code&gt;go-authn/directory&lt;/code&gt; v0.11.1 and gokrb5 v8.4.4. The
+&lt;p&gt;At v0.4.2 its &lt;code&gt;go.mod&lt;/code&gt; requires at least &lt;code&gt;go-authn/directory&lt;/code&gt; v0.11.1 and
+gokrb5 v8.4.4: minimums, so a program that requires directory v0.11.2, the
+version these pages describe, builds with v0.11.2. The
 accepting half is &lt;a href="https://go-authn.github.io/docs/0.1/libraries/krb5/"&gt;krb5&lt;/a&gt;, and a service
 that only verifies tickets needs this module not at all.&lt;/p&gt;
 &lt;p&gt;Not implemented: cross-realm referrals, PKINIT, FAST, renewable or postdated
@@ -1895,14 +1908,14 @@ an RSA key or refused.&lt;/p&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;an RSA key under 2048 bits, or with &lt;code&gt;n&lt;/code&gt; or &lt;code&gt;e&lt;/code&gt; not in shortest form; an EC point not on its curve&lt;/td&gt;
-&lt;td&gt;a short key is a signature somebody else can produce; a padded modulus once passed as 2048 bits&lt;/td&gt;
+&lt;td&gt;signatures under a short key can be forged; before v0.2.2, a 1024-bit modulus padded with zero bytes passed as 2048 bits&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;a key published with &lt;code&gt;use&lt;/code&gt; other than &lt;code&gt;sig&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;a key set legitimately holds encryption keys too&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;with &lt;code&gt;Type&lt;/code&gt; set, a token of another &lt;code&gt;typ&lt;/code&gt;; unset, any &lt;code&gt;typ&lt;/code&gt; but none, &lt;code&gt;JWT&lt;/code&gt; or &lt;code&gt;at+jwt&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;with &lt;code&gt;Type&lt;/code&gt; set, a token of another &lt;code&gt;typ&lt;/code&gt;; with it unset, a &lt;code&gt;typ&lt;/code&gt; other than &lt;code&gt;JWT&lt;/code&gt; or &lt;code&gt;at+jwt&lt;/code&gt; (a token with no &lt;code&gt;typ&lt;/code&gt; header passes)&lt;/td&gt;
 &lt;td&gt;RFC 9068 §4: a resource server checks &lt;code&gt;typ: at+jwt&lt;/code&gt;, or it takes an ID token for an access token whenever the audiences agree&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -2191,7 +2204,8 @@ data-copied-label="Copied!"
 &lt;p&gt;An IdP&amp;rsquo;s certificate in metadata is trusted because the federation&amp;rsquo;s signature
 names it; its dates are not looked at, since IdP certificates are often
 self-signed and expired.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Responses&lt;/strong&gt;, at &lt;code&gt;Accept&lt;/code&gt; — each one error to the caller, for the server&amp;rsquo;s log:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Responses&lt;/strong&gt; are checked at &lt;code&gt;Accept&lt;/code&gt;. Each refusal below is returned to the
+caller as an error, for the server&amp;rsquo;s log:&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -2209,8 +2223,8 @@ self-signed and expired.&lt;/p&gt;
 &lt;td&gt;how a signed one and an unsigned one arrive together and the wrong one is read (CVE-2022-41912)&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;anything but what the signature covered&lt;/td&gt;
-&lt;td&gt;only the element rebuilt from the digested bytes is read&lt;/td&gt;
+&lt;td&gt;anything outside what the signature covered&lt;/td&gt;
+&lt;td&gt;it is never read: only the element rebuilt from the bytes the signature digested is&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;a scoped identifier outside the IdP&amp;rsquo;s &lt;code&gt;Scopes&lt;/code&gt;&lt;/td&gt;
@@ -2598,17 +2612,18 @@ reachable on neither port 80 nor 443 from the Internet can still get a publicly
 trusted certificate. The EAB HMAC key is a secret, so the configuration names
 a &lt;strong&gt;file&lt;/strong&gt; holding it (&lt;code&gt;EABHMACKeyFile&lt;/code&gt;), never the key.&lt;/p&gt;
 &lt;p&gt;One defect of &lt;code&gt;x/crypto/acme&lt;/code&gt; is worked around (&lt;a href="https://github.com/golang/go/issues/77704" target="_blank" rel="noopener"&gt;golang/go#77704&lt;/a&gt;):
-after finalizing an order the CA is still processing, the client polls a
-&lt;code&gt;Location&lt;/code&gt; header RFC 8555 does not put on the finalize response. The ACME
-client&amp;rsquo;s transport supplies it from the order URL seen earlier.&lt;/p&gt;
+after finalizing an order the CA is still processing, the client polls the URL
+in the finalize response&amp;rsquo;s &lt;code&gt;Location&lt;/code&gt; header, which RFC 8555 does not put
+there. servercert gives the ACME client a transport that adds that header, with
+the order&amp;rsquo;s URL from the earlier newOrder response.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;What it refuses, and why&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Check&lt;/code&gt; refuses: neither or both sources; half a file pair; ACME without
 domains or cache directory; a relative path; half an EAB; a domain that is an
 IP address, a wildcard, a single label, ends with a dot, or is not a valid host
 name; a directory URL that is not https (RFC 8555 §6.1).&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;New&lt;/code&gt; also refuses a cache directory — it holds private keys — that is a
-symbolic link, is accessible by group or others, is owned by another user than
-the process&amp;rsquo;s effective one, or cannot be written; a missing one is created
+symbolic link, is accessible by group or others, is owned by a user other than
+the process&amp;rsquo;s effective user, or cannot be written; a missing one is created
 &lt;code&gt;0700&lt;/code&gt; and checked after. Every directory above it must be changeable only by
 root or the effective user, as sshd&amp;rsquo;s &lt;code&gt;StrictModes&lt;/code&gt; asks of the path to
 &lt;code&gt;authorized_keys&lt;/code&gt;, and a symbolic link above it is refused unless root owns it.

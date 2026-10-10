@@ -281,8 +281,9 @@ cached.&lt;/p&gt;</description></item><item><title>authn-bridge</title><link>htt
 Éducation-Recherche or eduGAIN, and applications get an OpenID Connect token.&lt;/strong&gt;
 The same login can also have an SSH key certified, an X.509 client certificate
 issued for NFS over TLS, an application password set for SMB and S3, or a
-WireGuard key registered. Whatever the provider issued, it can take back, and it
-publishes signed lists of what it has revoked. Pure Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, one
+WireGuard key registered. The provider can revoke what it issued, and it
+publishes signed lists of what it has revoked; an access token already handed
+out stays valid until it expires. Pure Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, one
 binary. These pages describe v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -745,7 +746,11 @@ data-copied-label="Copied!"
 the provider refuses to start on one another user could reach or re-point.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;What is refused at startup&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Each of these is the output of &lt;code&gt;authn-bridge check&lt;/code&gt; on a configuration that
-asked for it. The server refuses the same configurations.&lt;/p&gt;
+asked for it. The server refuses the same configurations: each is read from
+the configuration and the files it names. The one refusal &lt;code&gt;check&lt;/code&gt; adds is the
+&lt;code&gt;idps&lt;/code&gt; entry the federation does not list, &lt;a href="#check-before-a-restart"&gt;above&lt;/a&gt;:
+the server fetches the same metadata before it listens, but does not hold
+&lt;code&gt;idps&lt;/code&gt; to it.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;An issuer, a redirect, a secret that leak:&lt;/strong&gt;&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: issuer &amp;#34;http://login.example.org&amp;#34;: an issuer is https (http only on loopback, for testing)
@@ -1142,7 +1147,8 @@ provider&amp;rsquo;s own refusals:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;an IdP response delivered &lt;strong&gt;into another browser&lt;/strong&gt;: the login is found
 through its own sealed cookie, never through the &lt;code&gt;RelayState&lt;/code&gt; the response
-carries, or anybody could log somebody else in as themselves;&lt;/li&gt;
+carries; otherwise anybody could send their own IdP response to somebody
+else&amp;rsquo;s browser and log that person in under the sender&amp;rsquo;s identity;&lt;/li&gt;
 &lt;li&gt;an IdP that the configuration no longer allows, or that the admin API has
 disabled;&lt;/li&gt;
 &lt;li&gt;a person or an institution &lt;a href="https://go-authn.github.io/docs/0.1/authn-bridge/admin/"&gt;disabled here&lt;/a&gt;,
@@ -1594,7 +1600,7 @@ data-copied-label="Copied!"
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;ssh_validity&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;shorter than &lt;code&gt;ssh_ca&lt;/code&gt;&amp;rsquo;s &lt;code&gt;validity&lt;/code&gt;, for this client&lt;/td&gt;
+&lt;td&gt;never longer than &lt;code&gt;ssh_ca&lt;/code&gt;&amp;rsquo;s &lt;code&gt;validity&lt;/code&gt; (equal is accepted), for this client&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;ssh_domain_grants&lt;/code&gt;&lt;/td&gt;
@@ -1679,8 +1685,8 @@ data-copied-label="Copied!"
 which refuses a certificate whose grant does not name the host, and one with no
 grant at all. The CA is not in the OpenID discovery document: no OpenID Connect
 metadata names an SSH CA.&lt;/p&gt;
-&lt;p&gt;What remains different from EFP&amp;rsquo;s own CA: the principal is the &lt;code&gt;subject-id&lt;/code&gt;
-the person&amp;rsquo;s institution released, not a MyAccessID identifier; the groups
+&lt;p&gt;What remains different from EFP&amp;rsquo;s own CA: with &lt;code&gt;ssh_principal_claim = &amp;quot;voperson_id&amp;quot;&lt;/code&gt;, as above, the principal is the &lt;code&gt;subject-id&lt;/code&gt; the person&amp;rsquo;s
+institution released, in lower case, not a MyAccessID identifier; the groups
 extension is there when the token carries groups; and &lt;strong&gt;there is a KRL&lt;/strong&gt;,
 &lt;code&gt;GET /ssh/krl&lt;/code&gt;, listing the certificates of people disabled here.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="x509-client-certificates-for-nfs-over-tls"&gt;X.509 client certificates, for NFS over TLS&lt;span class="hx:absolute hx:-mt-20" id="x509-client-certificates-for-nfs-over-tls"&gt;&lt;/span&gt;
@@ -1751,7 +1757,7 @@ sees the revocation.&lt;/p&gt;</description></item><item><title>What it revokes,
 &lt;p&gt;Disabling a person or an institution (&lt;a href="https://go-authn.github.io/docs/0.1/authn-bridge/admin/"&gt;the admin API&lt;/a&gt;)
 ends everything that comes back to the provider: refresh tokens, &lt;code&gt;/userinfo&lt;/code&gt;,
 new certificates, application passwords. What it has already handed out is
-checked elsewhere, against keys, and two mechanisms reach it:&lt;/p&gt;
+checked elsewhere, against keys, and three mechanisms reach it:&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -1896,7 +1902,7 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;p&gt;where &lt;code&gt;allowed&lt;/code&gt; is the line
 &lt;code&gt;bridge namespaces=&amp;quot;krl@go-authn.github.io&amp;quot; &amp;lt;the CA key from /ssh/config&amp;gt;&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;The CRL, issued at the same moment:&lt;/p&gt;
+&lt;p&gt;The CRL, issued eight seconds later:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ openssl crl -inform DER -in var/bridge.crl -noout -text
 Certificate Revocation List (CRL):
@@ -2248,7 +2254,7 @@ the KRL, which is why both are short.&lt;/p&gt;
 &lt;/div&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;Health and metrics&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;go-net-health/endpoint&amp;rsquo;s, as in go-fileshare, on the &lt;code&gt;metrics&lt;/code&gt; listener, which
-may not be the public one:&lt;/p&gt;
+must not be the public one (a configuration that makes it so is refused):&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -2300,8 +2306,9 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Logins by outcome, tokens by grant and application passwords appear once they
-have counted something. &lt;strong&gt;No label names a person or an institution&lt;/strong&gt;: which
+&lt;p&gt;The counters of logins by outcome (&lt;code&gt;bridge_logins_total&lt;/code&gt;), of tokens by grant
+(&lt;code&gt;bridge_tokens_issued_total&lt;/code&gt;) and of application passwords
+(&lt;code&gt;bridge_app_passwords_total&lt;/code&gt;) appear only once they have counted something. &lt;strong&gt;No label names a person or an institution&lt;/strong&gt;: which
 universities&amp;rsquo; people use the service, and when, is not the provider&amp;rsquo;s to
-publish. &lt;code&gt;bridge_metadata_valid_until_timestamp_seconds&lt;/code&gt; is the one to alert
-on before it is reached: past it, nobody can log in.&lt;/p&gt;</description></item></channel></rss>
+publish. Alert on &lt;code&gt;bridge_metadata_valid_until_timestamp_seconds&lt;/code&gt; before the
+time it gives is reached: past it, nobody can log in.&lt;/p&gt;</description></item></channel></rss>

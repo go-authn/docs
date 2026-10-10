@@ -3,9 +3,9 @@
 Éducation-Recherche de RENATER o de eduGAIN, y las aplicaciones obtienen un token
 OpenID Connect.&lt;/strong&gt; El mismo inicio de sesión permite también certificar una clave SSH,
 emitir un certificado de cliente X.509 para NFS sobre TLS, establecer una contraseña
-de aplicación para SMB y S3, o registrar una clave WireGuard. Todo lo que el
-proveedor ha emitido lo puede retirar, y publica listas firmadas de lo que ha
-revocado. Go puro, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un solo binario. Estas páginas describen la
+de aplicación para SMB y S3, o registrar una clave WireGuard. El proveedor puede
+revocar lo que ha emitido, y publica listas firmadas de lo que ha revocado; un
+token de acceso ya entregado sigue siendo válido hasta que caduca. Go puro, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un solo binario. Estas páginas describen la
 v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -441,8 +441,9 @@ rechazos propios de este proveedor:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;una respuesta del IdP entregada &lt;strong&gt;en otro navegador&lt;/strong&gt;: el inicio de sesión se
 encuentra mediante su propia cookie sellada, nunca mediante el &lt;code&gt;RelayState&lt;/code&gt; que
-lleva la respuesta, o cualquiera podría hacer que otra persona iniciara sesión
-con la identidad de quien lo intenta;&lt;/li&gt;
+lleva la respuesta; si no, cualquiera podría enviar su propia respuesta del IdP al
+navegador de otra persona y hacer que esta iniciara sesión con la identidad de
+quien la envía;&lt;/li&gt;
 &lt;li&gt;un IdP que la configuración ya no permite, o que la API de administración ha
 desactivado;&lt;/li&gt;
 &lt;li&gt;una persona o una institución &lt;a href="https://go-authn.github.io/docs/0.1/es/authn-bridge/admin/"&gt;desactivada aquí&lt;/a&gt;,
@@ -720,8 +721,8 @@ data-copied-label="¡Copiado!"
 &lt;p&gt;El certificado de un IdP en los metadatos es de confianza porque la firma de la
 federación lo nombra; sus fechas no se miran, ya que los certificados de IdP
 suelen ser autofirmados y estar caducados.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Respuestas&lt;/strong&gt;, en &lt;code&gt;Accept&lt;/code&gt; — cada una, un error para quien llama, destinado al
-registro del servidor:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Las respuestas&lt;/strong&gt; se comprueban en &lt;code&gt;Accept&lt;/code&gt;. Cada rechazo de abajo se devuelve a
+quien llama como un error, destinado al registro del servidor:&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -739,8 +740,8 @@ registro del servidor:&lt;/p&gt;
 &lt;td&gt;así llegan juntas una firmada y otra sin firmar y se lee la que no es (CVE-2022-41912)&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;cualquier cosa que no sea lo que cubrió la firma&lt;/td&gt;
-&lt;td&gt;solo se lee el elemento reconstruido a partir de los bytes resumidos&lt;/td&gt;
+&lt;td&gt;cualquier cosa fuera de lo que cubrió la firma&lt;/td&gt;
+&lt;td&gt;nunca se lee: solo se lee el elemento reconstruido a partir de los bytes que resumió la firma&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;un identificador con ámbito fuera de los &lt;code&gt;Scopes&lt;/code&gt; del IdP&lt;/td&gt;

@@ -188,8 +188,8 @@ data-copied-label="Copied!"
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;An empty group, asked through a &lt;code&gt;Set&lt;/code&gt;, is reported as missing&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;Expand&lt;/code&gt; refuses an empty group with &lt;em&gt;has no members&lt;/em&gt;, as the second-to-last
-lines show for the &lt;code&gt;Static&lt;/code&gt; itself. Through a &lt;code&gt;Set&lt;/code&gt;, &lt;code&gt;Set.Members&lt;/code&gt; returns
+&lt;p&gt;&lt;code&gt;Expand&lt;/code&gt; refuses an empty group with &lt;em&gt;has no members&lt;/em&gt;, as the third line from
+the end shows for the &lt;code&gt;Static&lt;/code&gt; itself. Through a &lt;code&gt;Set&lt;/code&gt;, &lt;code&gt;Set.Members&lt;/code&gt; returns
 &lt;code&gt;ErrNoSuchGroup&lt;/code&gt; for a group that a source has but that has nobody in it
 (&lt;code&gt;source.go:138&lt;/code&gt;), so the message names the wrong cause. The group is refused
 either way.&lt;/p&gt;
@@ -391,15 +391,16 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;&lt;code&gt;(uid=svc-*-prod)&lt;/code&gt; returns &lt;code&gt;svc-web-prod&lt;/code&gt; and not &lt;code&gt;svc-web-stage&lt;/code&gt;: that is the
-defect, in the library this replaces, that decided it should be written. The
+&lt;p&gt;&lt;code&gt;(uid=svc-*-prod)&lt;/code&gt; returns &lt;code&gt;svc-web-prod&lt;/code&gt; and not &lt;code&gt;svc-web-stage&lt;/code&gt;. The library
+this one replaces evaluated that filter as &lt;code&gt;(uid=svc-*)&lt;/code&gt; and returned
+&lt;code&gt;svc-web-stage&lt;/code&gt; as well; that defect is why this library was written. The
 root DSE does not list StartTLS, because no &lt;code&gt;TLSConfig&lt;/code&gt; was given.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;What it refuses, and why&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;A filter means one thing.&lt;/strong&gt; It is parsed or decoded once into a tree, and
 &lt;code&gt;String&lt;/code&gt;, &lt;code&gt;EncodeFilter&lt;/code&gt; and &lt;code&gt;Matches&lt;/code&gt; all read that tree. An attribute that is
 not an RFC 4512 §2.5 attribute description, or a matching rule that is not an
-OID, is refused by both &lt;code&gt;ParseFilter&lt;/code&gt; and &lt;code&gt;DecodeFilter&lt;/code&gt;: printed back, a
-&amp;ldquo;present&amp;rdquo; filter on the attribute &lt;code&gt;!x&lt;/code&gt; read as a NOT.&lt;/p&gt;
+OID, is refused by both &lt;code&gt;ParseFilter&lt;/code&gt; and &lt;code&gt;DecodeFilter&lt;/code&gt;: before v0.6.1, printed
+back, a &amp;ldquo;present&amp;rdquo; filter on the attribute &lt;code&gt;!x&lt;/code&gt; read as a NOT.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Plaintext, when it was promised otherwise.&lt;/strong&gt; StartTLS is asked for by the
 &lt;em&gt;client&lt;/em&gt;, so a server that merely offers it has promised nothing.
 &lt;code&gt;RequireTLS&lt;/code&gt; refuses every operation on a connection that is not protected,
@@ -444,7 +445,7 @@ aliases or referrals, so a critical ManageDsaIT is refused with
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;MaxMessageElements&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;16384&lt;/td&gt;
-&lt;td&gt;BER elements counted before decoding: 4 MiB of empty strings once held 373 MiB before any bind&lt;/td&gt;
+&lt;td&gt;BER elements counted before decoding: before v0.5.0, 4 MiB of empty strings held 373 MiB before any bind&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;IdleTimeout&lt;/code&gt;&lt;/td&gt;
@@ -454,7 +455,7 @@ aliases or referrals, so a critical ManageDsaIT is refused with
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;MaxPending&lt;/code&gt;, &lt;code&gt;MaxPendingAuth&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;100, 1000&lt;/td&gt;
-&lt;td&gt;operations in flight before and after a bind, as slapd&amp;rsquo;s &lt;code&gt;conn_max_pending&lt;/code&gt;; one more is a notice of disconnection&lt;/td&gt;
+&lt;td&gt;operations one connection may have in flight before it has bound (&lt;code&gt;MaxPending&lt;/code&gt;) and after (&lt;code&gt;MaxPendingAuth&lt;/code&gt;), as slapd&amp;rsquo;s &lt;code&gt;conn_max_pending&lt;/code&gt; and &lt;code&gt;conn_max_pending_auth&lt;/code&gt;; a connection that goes over is sent a notice of disconnection and closed&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;MaxPagedSearches&lt;/code&gt;&lt;/td&gt;
@@ -498,7 +499,9 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;At v0.4.2 it requires &lt;code&gt;go-authn/directory&lt;/code&gt; v0.11.1 and gokrb5 v8.4.4. The
+&lt;p&gt;At v0.4.2 its &lt;code&gt;go.mod&lt;/code&gt; requires at least &lt;code&gt;go-authn/directory&lt;/code&gt; v0.11.1 and
+gokrb5 v8.4.4: minimums, so a program that requires directory v0.11.2, the
+version these pages describe, builds with v0.11.2. The
 accepting half is &lt;a href="https://go-authn.github.io/docs/0.1/libraries/krb5/"&gt;krb5&lt;/a&gt;, and a service
 that only verifies tickets needs this module not at all.&lt;/p&gt;
 &lt;p&gt;Not implemented: cross-realm referrals, PKINIT, FAST, renewable or postdated

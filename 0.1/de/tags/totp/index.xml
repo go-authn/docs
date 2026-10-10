@@ -1,7 +1,8 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Totp</title><link>https://go-authn.github.io/docs/0.1/de/tags/totp/</link><description>Recent content in Totp on go-authn</description><generator>Hugo -- gohugo.io</generator><language>de</language><atom:link href="https://go-authn.github.io/docs/0.1/de/tags/totp/index.xml" rel="self" type="application/rss+xml"/><item><title>totp – ein Code, einmal, und nicht eine Million Rateversuche</title><link>https://go-authn.github.io/docs/0.1/de/libraries/totp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/de/libraries/totp/</guid><description>
 &lt;p&gt;&lt;strong&gt;Ist dieser sechsstellige Code richtig – und wurde er schon einmal verwendet?&lt;/strong&gt; Zeitbasierte
-Einmalpasswörter (RFC 6238), ein &lt;code&gt;Verifier&lt;/code&gt;, der sich merkt, was ein Server sich merken muss,
-und der &lt;a href="https://go-authn.github.io/docs/0.1/de/libraries/mfa/"&gt;mfa&lt;/a&gt;-Faktor, den eine Richtlinie verlangt.&lt;/p&gt;
+Einmalpasswörter (RFC 6238); ein &lt;code&gt;Verifier&lt;/code&gt;, der sich merkt, was ein Server sich merken muss,
+die schon verwendeten und die falschen Codes; und ein Faktor, den eine
+&lt;a href="https://go-authn.github.io/docs/0.1/de/libraries/mfa/"&gt;mfa&lt;/a&gt;-Richtlinie verlangen kann.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/totp@v0.4.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
@@ -148,7 +149,7 @@ lehnt jeden Code ab und meldet, dass ein Verifier fehlt. Das wird nicht als
 nicht verfügbar gemeldet, sodass eine Richtlinie nicht mit den anderen Faktoren durchkommen und den Fehler verbergen kann.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Raten, pro Geheimnis.&lt;/strong&gt; Ein &lt;code&gt;Verifier&lt;/code&gt; zählt falsche Codes pro &lt;strong&gt;Zugangsnachweis&lt;/strong&gt; –
 dem Geheimnis, nur als sein SHA-256 gehalten –, nicht pro Name, denn der Name ist
-irgendeine Zeichenkette, die der Aufrufer übergibt, und &lt;code&gt;dora&lt;/code&gt;, &lt;code&gt;Dora&lt;/code&gt; und &lt;code&gt;DORA&lt;/code&gt; waren einst
+irgendeine Zeichenkette, die der Aufrufer übergibt, und vor v0.3.0 waren &lt;code&gt;dora&lt;/code&gt;, &lt;code&gt;Dora&lt;/code&gt; und &lt;code&gt;DORA&lt;/code&gt;
 drei Zähler für ein Geheimnis.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
@@ -179,7 +180,9 @@ drei Zähler für ein Geheimnis.&lt;/p&gt;
 &lt;p&gt;Nur ein falscher Code zählt; eine Wiederholung, ein Code der falschen Länge oder ein abgelehnter
 Parameter bringt eine Pause nicht näher. Die gesamte Prüfung erfolgt unter einer
 Sperre, sodass gleichzeitig gesendete Rateversuche einzeln gezählt werden.
-&lt;code&gt;errors.Is(err, totp.ErrThrottled)&lt;/code&gt; ist für beide Ablehnungen wahr.&lt;/p&gt;
+&lt;code&gt;ErrLockedOut&lt;/code&gt; umhüllt &lt;code&gt;ErrThrottled&lt;/code&gt;, daher ist &lt;code&gt;errors.Is(err, totp.ErrThrottled)&lt;/code&gt;
+für beide Ablehnungen wahr und &lt;code&gt;errors.Is(err, totp.ErrLockedOut)&lt;/code&gt; nur für die
+Sperre.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Parameter, die nicht richtig sein können:&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;ein Geheimnis unter 128 Bit (&lt;code&gt;MinSecret&lt;/code&gt; = 16 Bytes, RFC 4226 R6), in

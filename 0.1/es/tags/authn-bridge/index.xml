@@ -286,9 +286,9 @@ de configuración del usuario, &lt;code&gt;~/.config&lt;/code&gt; en Linux) no c
 Éducation-Recherche de RENATER o de eduGAIN, y las aplicaciones obtienen un token
 OpenID Connect.&lt;/strong&gt; El mismo inicio de sesión permite también certificar una clave SSH,
 emitir un certificado de cliente X.509 para NFS sobre TLS, establecer una contraseña
-de aplicación para SMB y S3, o registrar una clave WireGuard. Todo lo que el
-proveedor ha emitido lo puede retirar, y publica listas firmadas de lo que ha
-revocado. Go puro, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un solo binario. Estas páginas describen la
+de aplicación para SMB y S3, o registrar una clave WireGuard. El proveedor puede
+revocar lo que ha emitido, y publica listas firmadas de lo que ha revocado; un
+token de acceso ya entregado sigue siendo válido hasta que caduca. Go puro, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un solo binario. Estas páginas describen la
 v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -758,7 +758,11 @@ el proveedor se niega a arrancar sobre uno que otro usuario pudiera alcanzar o
 redirigir.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;Lo que se rechaza al arrancar&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Cada uno de estos es la salida de &lt;code&gt;authn-bridge check&lt;/code&gt; sobre una configuración que
-lo pedía. El servidor rechaza las mismas configuraciones.&lt;/p&gt;
+lo pedía. El servidor rechaza las mismas configuraciones: cada una se lee de la
+configuración y de los archivos que nombra. El único rechazo que añade &lt;code&gt;check&lt;/code&gt; es la
+entrada de &lt;code&gt;idps&lt;/code&gt; que la federación no enumera, &lt;a href="#check-before-a-restart"&gt;más arriba&lt;/a&gt;:
+el servidor obtiene los mismos metadatos antes de escuchar, pero no contrasta
+&lt;code&gt;idps&lt;/code&gt; con ellos.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Un emisor, una redirección, un secreto que se filtran:&lt;/strong&gt;&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: issuer &amp;#34;http://login.example.org&amp;#34;: an issuer is https (http only on loopback, for testing)
@@ -1160,8 +1164,9 @@ rechazos propios de este proveedor:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;una respuesta del IdP entregada &lt;strong&gt;en otro navegador&lt;/strong&gt;: el inicio de sesión se
 encuentra mediante su propia cookie sellada, nunca mediante el &lt;code&gt;RelayState&lt;/code&gt; que
-lleva la respuesta, o cualquiera podría hacer que otra persona iniciara sesión
-con la identidad de quien lo intenta;&lt;/li&gt;
+lleva la respuesta; si no, cualquiera podría enviar su propia respuesta del IdP al
+navegador de otra persona y hacer que esta iniciara sesión con la identidad de
+quien la envía;&lt;/li&gt;
 &lt;li&gt;un IdP que la configuración ya no permite, o que la API de administración ha
 desactivado;&lt;/li&gt;
 &lt;li&gt;una persona o una institución &lt;a href="https://go-authn.github.io/docs/0.1/es/authn-bridge/admin/"&gt;desactivada aquí&lt;/a&gt;,
@@ -1622,7 +1627,7 @@ data-copied-label="¡Copiado!"
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;ssh_validity&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;más corta que la &lt;code&gt;validity&lt;/code&gt; de &lt;code&gt;ssh_ca&lt;/code&gt;, para este cliente&lt;/td&gt;
+&lt;td&gt;nunca más larga que la &lt;code&gt;validity&lt;/code&gt; de &lt;code&gt;ssh_ca&lt;/code&gt; (igual se acepta), para este cliente&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;ssh_domain_grants&lt;/code&gt;&lt;/td&gt;
@@ -1708,8 +1713,8 @@ data-copied-label="¡Copiado!"
 que rechaza un certificado cuya concesión no nombra el host, y uno sin ninguna
 concesión. La CA no figura en el documento de descubrimiento de OpenID: ningún
 metadato de OpenID Connect nombra una CA SSH.&lt;/p&gt;
-&lt;p&gt;Lo que sigue siendo distinto de la CA propia de EFP: el principal es el &lt;code&gt;subject-id&lt;/code&gt;
-que entregó la institución de la persona, no un identificador de MyAccessID; la
+&lt;p&gt;Lo que sigue siendo distinto de la CA propia de EFP: con &lt;code&gt;ssh_principal_claim = &amp;quot;voperson_id&amp;quot;&lt;/code&gt;, como arriba, el principal es el &lt;code&gt;subject-id&lt;/code&gt; que entregó la
+institución de la persona, en minúsculas, no un identificador de MyAccessID; la
 extensión de grupos está presente cuando el token lleva grupos; y &lt;strong&gt;hay una KRL&lt;/strong&gt;,
 &lt;code&gt;GET /ssh/krl&lt;/code&gt;, que enumera los certificados de las personas desactivadas aquí.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="x509-client-certificates-for-nfs-over-tls"&gt;Certificados de cliente X.509, para NFS sobre TLS&lt;span class="hx:absolute hx:-mt-20" id="x509-client-certificates-for-nfs-over-tls"&gt;&lt;/span&gt;
@@ -1781,7 +1786,7 @@ revocación.&lt;/p&gt;</description></item><item><title>Lo que revoca, y cómo s
 &lt;p&gt;Desactivar a una persona o una institución (&lt;a href="https://go-authn.github.io/docs/0.1/es/authn-bridge/admin/"&gt;la API de administración&lt;/a&gt;)
 pone fin a todo lo que vuelve al proveedor: los tokens de actualización,
 &lt;code&gt;/userinfo&lt;/code&gt;, los certificados nuevos, las contraseñas de aplicación. Lo que ya ha
-entregado se comprueba en otro lugar, contra claves, y dos mecanismos llegan a
+entregado se comprueba en otro lugar, contra claves, y tres mecanismos llegan a
 ello:&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
@@ -1929,7 +1934,7 @@ data-copied-label="¡Copiado!"
 &lt;/div&gt;
 &lt;p&gt;donde &lt;code&gt;allowed&lt;/code&gt; es la línea
 &lt;code&gt;bridge namespaces=&amp;quot;krl@go-authn.github.io&amp;quot; &amp;lt;the CA key from /ssh/config&amp;gt;&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;La CRL, emitida en el mismo momento:&lt;/p&gt;
+&lt;p&gt;La CRL, emitida ocho segundos después:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ openssl crl -inform DER -in var/bridge.crl -noout -text
 Certificate Revocation List (CRL):
@@ -2288,7 +2293,7 @@ servidor lea la KRL, y por eso ambos son cortos.&lt;/p&gt;
 &lt;/div&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;Salud y métricas&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Los de go-net-health/endpoint, como en go-fileshare, en la escucha &lt;code&gt;metrics&lt;/code&gt;, que no
-puede ser la pública:&lt;/p&gt;
+debe ser la pública (una configuración que la hace pública se rechaza):&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -2340,9 +2345,10 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Los inicios de sesión por resultado, los tokens por concesión y las contraseñas de
-aplicación aparecen en cuanto han contado algo. &lt;strong&gt;Ninguna etiqueta nombra a una
+&lt;p&gt;Los contadores de inicios de sesión por resultado (&lt;code&gt;bridge_logins_total&lt;/code&gt;), de tokens
+por concesión (&lt;code&gt;bridge_tokens_issued_total&lt;/code&gt;) y de contraseñas de aplicación
+(&lt;code&gt;bridge_app_passwords_total&lt;/code&gt;) solo aparecen cuando han contado algo. &lt;strong&gt;Ninguna etiqueta nombra a una
 persona ni a una institución&lt;/strong&gt;: qué universidades tienen personas que usan el
 servicio, y cuándo, no le corresponde publicarlo al proveedor.
-&lt;code&gt;bridge_metadata_valid_until_timestamp_seconds&lt;/code&gt; es la métrica sobre la que alertar
-antes de que se alcance: pasado ese momento, nadie puede iniciar sesión.&lt;/p&gt;</description></item></channel></rss>
+Alerte sobre &lt;code&gt;bridge_metadata_valid_until_timestamp_seconds&lt;/code&gt; antes de que se alcance
+el instante que indica: pasado ese momento, nadie puede iniciar sesión.&lt;/p&gt;</description></item></channel></rss>

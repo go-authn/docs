@@ -3,8 +3,9 @@
 Éducation-Recherche von RENATER oder über eduGAIN, und Anwendungen erhalten ein OpenID-Connect-Token.&lt;/strong&gt;
 Dieselbe Anmeldung kann außerdem einen SSH-Schlüssel zertifizieren lassen, ein
 X.509-Client-Zertifikat für NFS über TLS ausstellen lassen, ein Anwendungspasswort für SMB und S3
-setzen oder einen WireGuard-Schlüssel registrieren. Was auch immer der Anbieter ausgestellt hat, kann er
-zurücknehmen, und er veröffentlicht signierte Listen dessen, was er widerrufen hat. Reines Go,
+setzen oder einen WireGuard-Schlüssel registrieren. Der Anbieter kann widerrufen, was er
+ausgestellt hat, und er veröffentlicht signierte Listen dessen, was er widerrufen hat; ein bereits
+ausgegebenes Zugriffstoken bleibt gültig, bis es abläuft. Reines Go,
 &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, ein Binary. Diese Seiten beschreiben v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -430,7 +431,8 @@ eigenen Ablehnungen dieses Anbieters:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;eine IdP-Antwort, die &lt;strong&gt;in einen anderen Browser&lt;/strong&gt; zugestellt wird: Die Anmeldung wird
 über ihr eigenes versiegeltes Cookie gefunden, nie über den &lt;code&gt;RelayState&lt;/code&gt;, den die Antwort
-trägt, sonst könnte jeder eine andere Person unter der eigenen Identität anmelden;&lt;/li&gt;
+trägt; sonst könnte jeder die eigene IdP-Antwort an den Browser einer anderen Person
+schicken und diese Person unter der Identität des Absenders anmelden;&lt;/li&gt;
 &lt;li&gt;ein IdP, den die Konfiguration nicht mehr zulässt oder den die Admin-API
 deaktiviert hat;&lt;/li&gt;
 &lt;li&gt;eine Person oder eine Einrichtung, die &lt;a href="https://go-authn.github.io/docs/0.1/de/authn-bridge/admin/"&gt;hier deaktiviert&lt;/a&gt; ist,
@@ -708,7 +710,8 @@ data-copied-label="Kopiert!"
 &lt;p&gt;Dem Zertifikat eines IdP in den Metadaten wird vertraut, weil die Signatur der Föderation
 es benennt; seine Daten werden nicht angesehen, da IdP-Zertifikate oft
 selbstsigniert und abgelaufen sind.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Antworten&lt;/strong&gt;, bei &lt;code&gt;Accept&lt;/code&gt; – jeweils ein Fehler an den Aufrufer, für das Log des Servers:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Antworten&lt;/strong&gt; werden bei &lt;code&gt;Accept&lt;/code&gt; geprüft. Jede der folgenden Ablehnungen geht als Fehler an
+den Aufrufer, für das Log des Servers:&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -726,8 +729,8 @@ selbstsigniert und abgelaufen sind.&lt;/p&gt;
 &lt;td&gt;so kommen eine signierte und eine unsignierte zusammen an, und die falsche wird gelesen (CVE-2022-41912)&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;alles außer dem, was die Signatur abgedeckt hat&lt;/td&gt;
-&lt;td&gt;nur das aus den gehashten Bytes neu aufgebaute Element wird gelesen&lt;/td&gt;
+&lt;td&gt;alles außerhalb dessen, was die Signatur abgedeckt hat&lt;/td&gt;
+&lt;td&gt;es wird nie gelesen: gelesen wird nur das Element, das aus den von der Signatur gehashten Bytes neu aufgebaut wird&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;ein bereichsgebundener Bezeichner außerhalb der &lt;code&gt;Scopes&lt;/code&gt; des IdP&lt;/td&gt;

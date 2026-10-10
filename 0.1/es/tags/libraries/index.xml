@@ -127,7 +127,7 @@ para una llave de seguridad.&lt;/p&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;strong&gt;el mismo factor dos veces&lt;/strong&gt;&lt;/td&gt;
-&lt;td&gt;una frase de contraseña pasada dos veces satisfacía &lt;code&gt;Count: 2&lt;/code&gt;. «El mismo» es el mismo tipo con los mismos valores, funciones incluidas: una función es la misma función cuando ejecuta el mismo código&lt;/td&gt;
+&lt;td&gt;antes de la v0.3.0, una frase de contraseña pasada dos veces satisfacía &lt;code&gt;Count: 2&lt;/code&gt;, y antes de la v0.4.0 también cualquier factor que contuviera una función. «El mismo» es el mismo tipo con los mismos valores, funciones incluidas: una función es la misma función cuando ejecuta el mismo código&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
@@ -153,9 +153,9 @@ ppc64le, s390x, 386 y arm.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Referencia&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
 &lt;a href="#reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/mfa@v0.5.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/mfa@v0.5.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>totp — un código, una vez, y no un millón de intentos</title><link>https://go-authn.github.io/docs/0.1/es/libraries/totp/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/es/libraries/totp/</guid><description>
 &lt;p&gt;&lt;strong&gt;¿Es correcto este código de seis cifras, y se ha usado antes?&lt;/strong&gt; Contraseñas de
-un solo uso basadas en el tiempo (RFC 6238), un &lt;code&gt;Verifier&lt;/code&gt; que recuerda lo que un
-servidor debe recordar, y el factor de &lt;a href="https://go-authn.github.io/docs/0.1/es/libraries/mfa/"&gt;mfa&lt;/a&gt;
-que pide una política.&lt;/p&gt;
+un solo uso basadas en el tiempo (RFC 6238); un &lt;code&gt;Verifier&lt;/code&gt; que recuerda lo que un
+servidor debe recordar, los códigos ya usados y los erróneos; y un factor que una
+política de &lt;a href="https://go-authn.github.io/docs/0.1/es/libraries/mfa/"&gt;mfa&lt;/a&gt; puede pedir.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/totp@v0.4.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
@@ -304,8 +304,8 @@ disponible, para que una política no pueda aprobar con los demás factores y
 ocultar el error.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Intentos, por secreto.&lt;/strong&gt; Un &lt;code&gt;Verifier&lt;/code&gt; cuenta los códigos incorrectos por
 &lt;strong&gt;credencial&lt;/strong&gt; — el secreto, guardado solo como su SHA-256 —, no por nombre,
-porque el nombre es la cadena que pase quien llama, y &lt;code&gt;dora&lt;/code&gt;, &lt;code&gt;Dora&lt;/code&gt; y &lt;code&gt;DORA&lt;/code&gt;
-fueron en su día tres contadores para un mismo secreto.&lt;/p&gt;
+porque el nombre es la cadena que pase quien llama, y antes de la v0.3.0 &lt;code&gt;dora&lt;/code&gt;,
+&lt;code&gt;Dora&lt;/code&gt; y &lt;code&gt;DORA&lt;/code&gt; eran tres contadores para un mismo secreto.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -335,8 +335,9 @@ fueron en su día tres contadores para un mismo secreto.&lt;/p&gt;
 &lt;p&gt;Solo cuenta un código incorrecto; una reproducción, un código de longitud
 incorrecta o un parámetro rechazado no acercan la pausa. Toda la comprobación se
 hace bajo un mismo bloqueo, así que los intentos enviados en el mismo instante se
-cuentan uno por uno. &lt;code&gt;errors.Is(err, totp.ErrThrottled)&lt;/code&gt; es verdadero para ambos
-rechazos.&lt;/p&gt;
+cuentan uno por uno. &lt;code&gt;ErrLockedOut&lt;/code&gt; envuelve &lt;code&gt;ErrThrottled&lt;/code&gt;, así que
+&lt;code&gt;errors.Is(err, totp.ErrThrottled)&lt;/code&gt; es verdadero para ambos rechazos, y
+&lt;code&gt;errors.Is(err, totp.ErrLockedOut)&lt;/code&gt; solo para el bloqueo.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Parámetros que no pueden ser correctos:&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;un secreto de menos de 128 bits (&lt;code&gt;MinSecret&lt;/code&gt; = 16 bytes, RFC 4226 R6), en
@@ -536,8 +537,12 @@ rechazados por su nombre en lugar de decodificados a medias.&lt;/p&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Un PIN incorrecto cuesta un reintento&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Un autenticador que agota los suyos se bloquea hasta que se desconecta, y después
-de forma permanente. Consulte &lt;code&gt;Key.PINRetries&lt;/code&gt; antes de pedírselo a nadie.&lt;/p&gt;
+&lt;p&gt;CTAP da a un autenticador un contador de reintentos de PIN, ocho como máximo, y cada
+PIN incorrecto gasta uno. Tres PIN incorrectos seguidos bloquean el PIN hasta que la
+llave se desconecta y se vuelve a conectar. Un contador que llega a cero lo bloquea
+para siempre: solo un reinicio lo levanta, y un reinicio borra todas las credenciales
+de la llave. Consulte &lt;code&gt;Key.PINRetries&lt;/code&gt; antes de pedírselo a nadie: dice cuántos
+reintentos quedan y si la llave espera a que la desconecten.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -576,7 +581,9 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;En la v0.4.1 requiere &lt;code&gt;go-authn/fido&lt;/code&gt; v0.6.0 y &lt;code&gt;go-authn/mfa&lt;/code&gt; v0.5.0.&lt;/p&gt;
+&lt;p&gt;En la v0.4.1 su &lt;code&gt;go.mod&lt;/code&gt; requiere como mínimo &lt;code&gt;go-authn/fido&lt;/code&gt; v0.6.0 y
+&lt;code&gt;go-authn/mfa&lt;/code&gt; v0.5.0: son mínimos, así que un programa que requiere fido v0.6.1, la
+versión que describen estas páginas, se compila con la v0.6.1.&lt;/p&gt;
 &lt;p&gt;La plataforma aporta un &lt;code&gt;Opener&lt;/code&gt; —cómo se encuentra una llave en este sistema— y solo
 conserva eso. Todo lo demás es igual allí donde haya CTAP: la aserción, las
 comprobaciones, la negativa a gastar el último intento de PIN de alguien.&lt;/p&gt;
@@ -684,8 +691,10 @@ comprueba contra el registro:&lt;/p&gt;
 &lt;/table&gt;
 &lt;p&gt;&lt;strong&gt;El último intento de PIN no se gasta en una suposición.&lt;/strong&gt; Primero se consulta
 &lt;code&gt;PINRetries&lt;/code&gt;; una llave que no aceptará más PIN hasta que se desconecte se rechaza, y
-también una a la que le queda &lt;strong&gt;un intento o menos&lt;/strong&gt;. Una llave que los agota se
-bloquea, y después de forma permanente, llevándose consigo todas sus credenciales.&lt;/p&gt;
+también una a la que le queda &lt;strong&gt;un intento o menos&lt;/strong&gt;. Según CTAP, tres PIN incorrectos
+seguidos bloquean el PIN de una llave hasta que se desconecta, y un contador de
+reintentos que llega a cero lo bloquea para siempre: solo un reinicio lo levanta, y
+borra todas sus credenciales.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Un PIN no es un segundo factor.&lt;/strong&gt; El tipo sigue siendo &lt;code&gt;mfa.Possession&lt;/code&gt;: un PIN
 introducido en la llave protege la llave, y no identifica a nadie ante esta máquina.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Un puerto vacío no es un rechazo.&lt;/strong&gt; Un &lt;code&gt;Opener&lt;/code&gt; que no encuentra nada envuelve su
@@ -842,8 +851,8 @@ una pasarela convierte en pares.&lt;/p&gt;
 &lt;a href="#why-they-are-separate-modules" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Un servicio que solo acepta tickets nunca enlaza un KDC.&lt;/strong&gt; Un servidor NFS verifica
 los tickets que presenta un cliente; tiene una keytab y nada más que ver con un reino.
 Si aceptar y emitir fueran un solo módulo, cada uno de esos servidores llevaría una
-ruta de código de emisión de tickets, y el directorio del que un KDC lee las personas,
-que nunca ejecuta.&lt;/p&gt;
+ruta de código de emisión de tickets que nunca ejecuta, y el módulo de directorio del
+que un KDC lee las personas, que nunca usa.&lt;/p&gt;
 &lt;p&gt;Esto está medido, no es una intención. En un módulo temporal que solo importa
 &lt;code&gt;github.com/go-authn/krb5@v0.3.0&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -1065,8 +1074,8 @@ data-copied-label="¡Copiado!"
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Un grupo vacío, consultado a través de un &lt;code&gt;Set&lt;/code&gt;, se notifica como inexistente&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;&lt;code&gt;Expand&lt;/code&gt; rechaza un grupo vacío con &lt;em&gt;has no members&lt;/em&gt;, como muestran las penúltimas
-líneas para el propio &lt;code&gt;Static&lt;/code&gt;. A través de un &lt;code&gt;Set&lt;/code&gt;, &lt;code&gt;Set.Members&lt;/code&gt; devuelve
+&lt;p&gt;&lt;code&gt;Expand&lt;/code&gt; rechaza un grupo vacío con &lt;em&gt;has no members&lt;/em&gt;, como muestra la antepenúltima
+línea para el propio &lt;code&gt;Static&lt;/code&gt;. A través de un &lt;code&gt;Set&lt;/code&gt;, &lt;code&gt;Set.Members&lt;/code&gt; devuelve
 &lt;code&gt;ErrNoSuchGroup&lt;/code&gt; para un grupo que un origen tiene pero en el que no hay nadie
 (&lt;code&gt;source.go:138&lt;/code&gt;), así que el mensaje nombra la causa equivocada. El grupo se rechaza
 en ambos casos.&lt;/p&gt;
@@ -1269,15 +1278,17 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;&lt;code&gt;(uid=svc-*-prod)&lt;/code&gt; devuelve &lt;code&gt;svc-web-prod&lt;/code&gt; y no &lt;code&gt;svc-web-stage&lt;/code&gt;: ese es el defecto,
-en la biblioteca a la que esta sustituye, que decidió que había que escribirla. El
+&lt;p&gt;&lt;code&gt;(uid=svc-*-prod)&lt;/code&gt; devuelve &lt;code&gt;svc-web-prod&lt;/code&gt; y no &lt;code&gt;svc-web-stage&lt;/code&gt;. La biblioteca a la
+que esta sustituye evaluaba ese filtro como &lt;code&gt;(uid=svc-*)&lt;/code&gt; y devolvía también
+&lt;code&gt;svc-web-stage&lt;/code&gt;; ese defecto es la razón por la que se escribió esta biblioteca. El
 root DSE no anuncia StartTLS, porque no se indicó ningún &lt;code&gt;TLSConfig&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;Lo que rechaza, y por qué&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Un filtro significa una sola cosa.&lt;/strong&gt; Se analiza o se decodifica una sola vez en un
 árbol, y &lt;code&gt;String&lt;/code&gt;, &lt;code&gt;EncodeFilter&lt;/code&gt; y &lt;code&gt;Matches&lt;/code&gt; leen todos ese árbol. Un atributo que
 no es una descripción de atributo según el RFC 4512 §2.5, o una regla de coincidencia
-que no es un OID, lo rechazan tanto &lt;code&gt;ParseFilter&lt;/code&gt; como &lt;code&gt;DecodeFilter&lt;/code&gt;: al volver a
-imprimirlo, un filtro «present» sobre el atributo &lt;code&gt;!x&lt;/code&gt; se leía como un NOT.&lt;/p&gt;
+que no es un OID, lo rechazan tanto &lt;code&gt;ParseFilter&lt;/code&gt; como &lt;code&gt;DecodeFilter&lt;/code&gt;: antes de la
+v0.6.1, al volver a imprimirlo, un filtro «present» sobre el atributo &lt;code&gt;!x&lt;/code&gt; se leía
+como un NOT.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Texto en claro, cuando se había prometido lo contrario.&lt;/strong&gt; StartTLS lo pide el
 &lt;em&gt;cliente&lt;/em&gt;, así que un servidor que solo lo ofrece no ha prometido nada.
 &lt;code&gt;RequireTLS&lt;/code&gt; rechaza cada operación en una conexión que no está protegida, con
@@ -1321,7 +1332,7 @@ ManageDsaIT crítico se rechaza con &lt;code&gt;unavailableCriticalExtension&lt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;MaxMessageElements&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;16384&lt;/td&gt;
-&lt;td&gt;elementos BER contados antes de decodificar: 4 MiB de cadenas vacías llegaron a retener 373 MiB antes de cualquier bind&lt;/td&gt;
+&lt;td&gt;elementos BER contados antes de decodificar: antes de la v0.5.0, 4 MiB de cadenas vacías retenían 373 MiB antes de cualquier bind&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;IdleTimeout&lt;/code&gt;&lt;/td&gt;
@@ -1331,7 +1342,7 @@ ManageDsaIT crítico se rechaza con &lt;code&gt;unavailableCriticalExtension&lt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;MaxPending&lt;/code&gt;, &lt;code&gt;MaxPendingAuth&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;100, 1000&lt;/td&gt;
-&lt;td&gt;operaciones en curso antes y después de un bind, como el &lt;code&gt;conn_max_pending&lt;/code&gt; de slapd; una más provoca un aviso de desconexión&lt;/td&gt;
+&lt;td&gt;operaciones que una conexión puede tener en curso antes de su bind (&lt;code&gt;MaxPending&lt;/code&gt;) y después (&lt;code&gt;MaxPendingAuth&lt;/code&gt;), como &lt;code&gt;conn_max_pending&lt;/code&gt; y &lt;code&gt;conn_max_pending_auth&lt;/code&gt; de slapd; una conexión que se pasa recibe un aviso de desconexión y se cierra&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;MaxPagedSearches&lt;/code&gt;&lt;/td&gt;
@@ -1465,7 +1476,7 @@ deliberadamente gruesos: un cliente sabe que su ticket se rechazó, nunca qué
 comprobación lo rechazó. Un error significa que no hay contexto, y el token devuelto
 está vacío.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Un principal por el que el aceptante no responde.&lt;/strong&gt; Con
-&lt;code&gt;krb5.Principal(&amp;quot;nfs/host.example.org&amp;quot;)&lt;/code&gt;, una keytab que guarda varios servicios solo
+&lt;code&gt;krb5.Principal(&amp;quot;nfs/files.example.org&amp;quot;)&lt;/code&gt;, una keytab que guarda varios servicios solo
 responde por ese.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Un mensaje cuya firma no coincide&lt;/strong&gt; es &lt;code&gt;ErrBadMIC&lt;/code&gt;, sea la longitud, la cabecera, la
 secuencia o la suma de comprobación lo que no cuadrara. El aceptante firma con el uso
@@ -1520,7 +1531,9 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;En la v0.4.2 requiere &lt;code&gt;go-authn/directory&lt;/code&gt; v0.11.1 y gokrb5 v8.4.4. La mitad que
+&lt;p&gt;En la v0.4.2 su &lt;code&gt;go.mod&lt;/code&gt; requiere como mínimo &lt;code&gt;go-authn/directory&lt;/code&gt; v0.11.1 y
+gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.11.2, la
+versión que describen estas páginas, se compila con la v0.11.2. La mitad que
 acepta es &lt;a href="https://go-authn.github.io/docs/0.1/es/libraries/krb5/"&gt;krb5&lt;/a&gt;, y un servicio que solo
 verifica tickets no necesita este módulo en absoluto.&lt;/p&gt;
 &lt;p&gt;No implementado: referencias entre reinos, PKINIT, FAST, tickets renovables o
@@ -1899,14 +1912,14 @@ algoritmo: un token que declara &lt;code&gt;RS256&lt;/code&gt; se comprueba con 
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;una clave RSA de menos de 2048 bits, o con &lt;code&gt;n&lt;/code&gt; o &lt;code&gt;e&lt;/code&gt; que no están en su forma más corta; un punto EC que no está en su curva&lt;/td&gt;
-&lt;td&gt;una clave corta es una firma que otra persona puede producir; un módulo con relleno llegó a pasar por 2048 bits&lt;/td&gt;
+&lt;td&gt;las firmas de una clave corta se pueden falsificar; antes de la v0.2.2, un módulo de 1024 bits rellenado con bytes a cero pasaba por 2048 bits&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;una clave publicada con un &lt;code&gt;use&lt;/code&gt; distinto de &lt;code&gt;sig&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;un conjunto de claves contiene legítimamente también claves de cifrado&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;con &lt;code&gt;Type&lt;/code&gt; fijado, un token de otro &lt;code&gt;typ&lt;/code&gt;; sin fijar, cualquier &lt;code&gt;typ&lt;/code&gt; salvo ninguno, &lt;code&gt;JWT&lt;/code&gt; o &lt;code&gt;at+jwt&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;con &lt;code&gt;Type&lt;/code&gt; fijado, un token de otro &lt;code&gt;typ&lt;/code&gt;; sin fijarlo, un &lt;code&gt;typ&lt;/code&gt; distinto de &lt;code&gt;JWT&lt;/code&gt; o &lt;code&gt;at+jwt&lt;/code&gt; (un token sin cabecera &lt;code&gt;typ&lt;/code&gt; pasa)&lt;/td&gt;
 &lt;td&gt;RFC 9068 §4: un servidor de recursos comprueba &lt;code&gt;typ: at+jwt&lt;/code&gt;, o toma un token de ID por un token de acceso siempre que las audiencias coincidan&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -2197,8 +2210,8 @@ data-copied-label="¡Copiado!"
 &lt;p&gt;El certificado de un IdP en los metadatos es de confianza porque la firma de la
 federación lo nombra; sus fechas no se miran, ya que los certificados de IdP
 suelen ser autofirmados y estar caducados.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Respuestas&lt;/strong&gt;, en &lt;code&gt;Accept&lt;/code&gt; — cada una, un error para quien llama, destinado al
-registro del servidor:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Las respuestas&lt;/strong&gt; se comprueban en &lt;code&gt;Accept&lt;/code&gt;. Cada rechazo de abajo se devuelve a
+quien llama como un error, destinado al registro del servidor:&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -2216,8 +2229,8 @@ registro del servidor:&lt;/p&gt;
 &lt;td&gt;así llegan juntas una firmada y otra sin firmar y se lee la que no es (CVE-2022-41912)&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;cualquier cosa que no sea lo que cubrió la firma&lt;/td&gt;
-&lt;td&gt;solo se lee el elemento reconstruido a partir de los bytes resumidos&lt;/td&gt;
+&lt;td&gt;cualquier cosa fuera de lo que cubrió la firma&lt;/td&gt;
+&lt;td&gt;nunca se lee: solo se lee el elemento reconstruido a partir de los bytes que resumió la firma&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;un identificador con ámbito fuera de los &lt;code&gt;Scopes&lt;/code&gt; del IdP&lt;/td&gt;
@@ -2612,9 +2625,9 @@ secreto, así que la configuración nombra un &lt;strong&gt;archivo&lt;/strong&g
 (&lt;code&gt;EABHMACKeyFile&lt;/code&gt;), nunca la clave.&lt;/p&gt;
 &lt;p&gt;Se sortea un defecto de &lt;code&gt;x/crypto/acme&lt;/code&gt; (&lt;a href="https://github.com/golang/go/issues/77704" target="_blank" rel="noopener"&gt;golang/go#77704&lt;/a&gt;):
 tras finalizar un pedido que la CA todavía está procesando, el cliente consulta
-una cabecera &lt;code&gt;Location&lt;/code&gt; que el RFC 8555 no pone en la respuesta de finalización.
-El transporte del cliente ACME la proporciona a partir de la URL del pedido vista
-antes.&lt;/p&gt;
+la URL de la cabecera &lt;code&gt;Location&lt;/code&gt; de la respuesta de finalización, que el RFC 8555
+no pone ahí. servercert da al cliente ACME un transporte que añade esa cabecera,
+con la URL del pedido tomada de la respuesta newOrder recibida antes.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;Qué rechaza, y por qué&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Check&lt;/code&gt; rechaza: ningún origen o ambos; medio par de archivos; ACME sin dominios
 o sin directorio de caché; una ruta relativa; media EAB; un dominio que es una

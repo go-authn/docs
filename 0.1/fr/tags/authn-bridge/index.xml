@@ -281,8 +281,9 @@ avait mises en cache.&lt;/p&gt;</description></item><item><title>authn-bridge</t
 Éducation-Recherche de RENATER ou par eduGAIN, et les applications obtiennent un jeton OpenID Connect.&lt;/strong&gt;
 La même connexion peut aussi faire certifier une clé SSH, faire émettre un certificat
 client X.509 pour NFS sur TLS, définir un mot de passe d&amp;rsquo;application pour SMB et S3, ou
-enregistrer une clé WireGuard. Tout ce que le fournisseur a émis, il peut le reprendre, et il
-publie des listes signées de ce qu&amp;rsquo;il a révoqué. Pur Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un seul
+enregistrer une clé WireGuard. Le fournisseur peut révoquer ce qu&amp;rsquo;il a émis, et il
+publie des listes signées de ce qu&amp;rsquo;il a révoqué ; un jeton d&amp;rsquo;accès déjà remis reste
+valide jusqu&amp;rsquo;à son expiration. Pur Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un seul
 binaire. Ces pages décrivent la v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -745,7 +746,11 @@ data-copied-label="Copié !"
 le fournisseur refuse de démarrer sur un répertoire qu&amp;rsquo;un autre utilisateur pourrait atteindre ou faire pointer ailleurs.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;Ce qui est refusé au démarrage&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Chacun de ces messages est la sortie de &lt;code&gt;authn-bridge check&lt;/code&gt; sur une configuration qui
-l&amp;rsquo;a provoqué. Le serveur refuse les mêmes configurations.&lt;/p&gt;
+l&amp;rsquo;a provoqué. Le serveur refuse les mêmes configurations : chacune se lit dans
+la configuration et dans les fichiers qu&amp;rsquo;elle nomme. Le seul refus qu&amp;rsquo;ajoute &lt;code&gt;check&lt;/code&gt; est
+l&amp;rsquo;entrée &lt;code&gt;idps&lt;/code&gt; que la fédération ne liste pas, &lt;a href="#check-before-a-restart"&gt;plus haut&lt;/a&gt; :
+le serveur récupère les mêmes métadonnées avant d&amp;rsquo;écouter, mais n&amp;rsquo;y confronte
+pas &lt;code&gt;idps&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Un émetteur, une redirection, un secret qui fuient :&lt;/strong&gt;&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: issuer &amp;#34;http://login.example.org&amp;#34;: an issuer is https (http only on loopback, for testing)
@@ -1142,7 +1147,8 @@ refus propres à ce fournisseur :&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;une réponse d&amp;rsquo;IdP remise &lt;strong&gt;dans un autre navigateur&lt;/strong&gt; : la connexion est retrouvée
 par son propre cookie scellé, jamais par le &lt;code&gt;RelayState&lt;/code&gt; que porte la réponse,
-sans quoi n&amp;rsquo;importe qui pourrait connecter quelqu&amp;rsquo;un d&amp;rsquo;autre sous sa propre identité ;&lt;/li&gt;
+sans quoi n&amp;rsquo;importe qui pourrait envoyer sa propre réponse d&amp;rsquo;IdP au navigateur de quelqu&amp;rsquo;un
+d&amp;rsquo;autre et connecter cette personne sous l&amp;rsquo;identité de l&amp;rsquo;expéditeur ;&lt;/li&gt;
 &lt;li&gt;un IdP que la configuration n&amp;rsquo;autorise plus, ou que l&amp;rsquo;API d&amp;rsquo;administration a
 désactivé ;&lt;/li&gt;
 &lt;li&gt;une personne ou un établissement &lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-bridge/admin/"&gt;désactivé ici&lt;/a&gt;,
@@ -1594,7 +1600,7 @@ data-copied-label="Copié !"
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;ssh_validity&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;plus courte que la &lt;code&gt;validity&lt;/code&gt; de &lt;code&gt;ssh_ca&lt;/code&gt;, pour ce client&lt;/td&gt;
+&lt;td&gt;jamais plus longue que la &lt;code&gt;validity&lt;/code&gt; de &lt;code&gt;ssh_ca&lt;/code&gt; (égale est acceptée), pour ce client&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;ssh_domain_grants&lt;/code&gt;&lt;/td&gt;
@@ -1679,8 +1685,8 @@ data-copied-label="Copié !"
 qui refuse un certificat dont la délégation ne nomme pas l&amp;rsquo;hôte, et un certificat sans
 aucune délégation. L&amp;rsquo;AC n&amp;rsquo;est pas dans le document de découverte OpenID : aucune métadonnée
 OpenID Connect ne nomme une AC SSH.&lt;/p&gt;
-&lt;p&gt;Ce qui reste différent de l&amp;rsquo;AC propre d&amp;rsquo;EFP : le principal est le &lt;code&gt;subject-id&lt;/code&gt;
-que l&amp;rsquo;établissement de la personne a communiqué, et non un identifiant MyAccessID ; l&amp;rsquo;extension
+&lt;p&gt;Ce qui reste différent de l&amp;rsquo;AC propre d&amp;rsquo;EFP : avec &lt;code&gt;ssh_principal_claim = &amp;quot;voperson_id&amp;quot;&lt;/code&gt;, comme ci-dessus, le principal est le &lt;code&gt;subject-id&lt;/code&gt; que l&amp;rsquo;établissement
+de la personne a communiqué, en minuscules, et non un identifiant MyAccessID ; l&amp;rsquo;extension
 des groupes est présente quand le jeton porte des groupes ; et &lt;strong&gt;il y a une KRL&lt;/strong&gt;,
 &lt;code&gt;GET /ssh/krl&lt;/code&gt;, qui liste les certificats des personnes désactivées ici.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="x509-client-certificates-for-nfs-over-tls"&gt;Certificats clients X.509, pour NFS sur TLS&lt;span class="hx:absolute hx:-mt-20" id="x509-client-certificates-for-nfs-over-tls"&gt;&lt;/span&gt;
@@ -1751,7 +1757,7 @@ voit la révocation.&lt;/p&gt;</description></item><item><title>Ce qu'il révoqu
 &lt;p&gt;Désactiver une personne ou un établissement (&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-bridge/admin/"&gt;l&amp;rsquo;API d&amp;rsquo;administration&lt;/a&gt;)
 met fin à tout ce qui revient vers le fournisseur : jetons de rafraîchissement, &lt;code&gt;/userinfo&lt;/code&gt;,
 nouveaux certificats, mots de passe d&amp;rsquo;application. Ce qu&amp;rsquo;il a déjà distribué est
-vérifié ailleurs, par rapport à des clés, et deux mécanismes l&amp;rsquo;atteignent :&lt;/p&gt;
+vérifié ailleurs, par rapport à des clés, et trois mécanismes l&amp;rsquo;atteignent :&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -1896,7 +1902,7 @@ data-copied-label="Copié !"
 &lt;/div&gt;
 &lt;p&gt;où &lt;code&gt;allowed&lt;/code&gt; est la ligne
 &lt;code&gt;bridge namespaces=&amp;quot;krl@go-authn.github.io&amp;quot; &amp;lt;the CA key from /ssh/config&amp;gt;&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;La CRL, émise au même moment :&lt;/p&gt;
+&lt;p&gt;La CRL, émise huit secondes plus tard :&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ openssl crl -inform DER -in var/bridge.crl -noout -text
 Certificate Revocation List (CRL):
@@ -2248,7 +2254,7 @@ la KRL, ce qui explique que les deux soient courts.&lt;/p&gt;
 &lt;/div&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;Santé et métriques&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Ceux de go-net-health/endpoint, comme dans go-fileshare, sur l&amp;rsquo;écouteur &lt;code&gt;metrics&lt;/code&gt;, qui
-ne peut pas être l&amp;rsquo;écouteur public :&lt;/p&gt;
+ne doit pas être l&amp;rsquo;écouteur public (une configuration qui le fait est refusée) :&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -2300,8 +2306,9 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Les connexions par issue, les jetons par type d&amp;rsquo;autorisation et les mots de passe d&amp;rsquo;application apparaissent dès qu&amp;rsquo;ils
-ont compté quelque chose. &lt;strong&gt;Aucune étiquette ne nomme une personne ou un établissement&lt;/strong&gt; : quelles
+&lt;p&gt;Les compteurs des connexions par issue (&lt;code&gt;bridge_logins_total&lt;/code&gt;), des jetons par type d&amp;rsquo;autorisation
+(&lt;code&gt;bridge_tokens_issued_total&lt;/code&gt;) et des mots de passe d&amp;rsquo;application (&lt;code&gt;bridge_app_passwords_total&lt;/code&gt;)
+n&amp;rsquo;apparaissent qu&amp;rsquo;une fois qu&amp;rsquo;ils ont compté quelque chose. &lt;strong&gt;Aucune étiquette ne nomme une personne ou un établissement&lt;/strong&gt; : quelles
 universités ont des personnes qui utilisent le service, et quand, ce n&amp;rsquo;est pas au fournisseur de le
-publier. &lt;code&gt;bridge_metadata_valid_until_timestamp_seconds&lt;/code&gt; est celle sur laquelle alerter
-avant qu&amp;rsquo;elle soit atteinte : au-delà, personne ne peut se connecter.&lt;/p&gt;</description></item></channel></rss>
+publier. Alertez sur &lt;code&gt;bridge_metadata_valid_until_timestamp_seconds&lt;/code&gt; avant que l&amp;rsquo;instant
+qu&amp;rsquo;elle donne soit atteint : au-delà, personne ne peut se connecter.&lt;/p&gt;</description></item></channel></rss>

@@ -3,8 +3,9 @@
 Éducation-Recherche or eduGAIN, and applications get an OpenID Connect token.&lt;/strong&gt;
 The same login can also have an SSH key certified, an X.509 client certificate
 issued for NFS over TLS, an application password set for SMB and S3, or a
-WireGuard key registered. Whatever the provider issued, it can take back, and it
-publishes signed lists of what it has revoked. Pure Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, one
+WireGuard key registered. The provider can revoke what it issued, and it
+publishes signed lists of what it has revoked; an access token already handed
+out stays valid until it expires. Pure Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, one
 binary. These pages describe v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -649,8 +650,9 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;13 is &lt;code&gt;confidentialityRequired&lt;/code&gt;.&lt;/p&gt;
-&lt;p&gt;and what the server wrote:&lt;/p&gt;
+&lt;p&gt;13 is &lt;code&gt;confidentialityRequired&lt;/code&gt;: a token is not taken over a connection that
+is not encrypted.&lt;/p&gt;
+&lt;p&gt;What the server wrote for the four binds over &lt;code&gt;ldaps://&lt;/code&gt; that were refused:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
 alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
@@ -667,6 +669,7 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;p&gt;and for the plaintext one:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
@@ -887,14 +890,14 @@ an RSA key or refused.&lt;/p&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;an RSA key under 2048 bits, or with &lt;code&gt;n&lt;/code&gt; or &lt;code&gt;e&lt;/code&gt; not in shortest form; an EC point not on its curve&lt;/td&gt;
-&lt;td&gt;a short key is a signature somebody else can produce; a padded modulus once passed as 2048 bits&lt;/td&gt;
+&lt;td&gt;signatures under a short key can be forged; before v0.2.2, a 1024-bit modulus padded with zero bytes passed as 2048 bits&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;a key published with &lt;code&gt;use&lt;/code&gt; other than &lt;code&gt;sig&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;a key set legitimately holds encryption keys too&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;with &lt;code&gt;Type&lt;/code&gt; set, a token of another &lt;code&gt;typ&lt;/code&gt;; unset, any &lt;code&gt;typ&lt;/code&gt; but none, &lt;code&gt;JWT&lt;/code&gt; or &lt;code&gt;at+jwt&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;with &lt;code&gt;Type&lt;/code&gt; set, a token of another &lt;code&gt;typ&lt;/code&gt;; with it unset, a &lt;code&gt;typ&lt;/code&gt; other than &lt;code&gt;JWT&lt;/code&gt; or &lt;code&gt;at+jwt&lt;/code&gt; (a token with no &lt;code&gt;typ&lt;/code&gt; header passes)&lt;/td&gt;
 &lt;td&gt;RFC 9068 §4: a resource server checks &lt;code&gt;typ: at+jwt&lt;/code&gt;, or it takes an ID token for an access token whenever the audiences agree&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;

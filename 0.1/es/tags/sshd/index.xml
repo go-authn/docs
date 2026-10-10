@@ -42,7 +42,8 @@ una ruta cuyo propietario es root y en la que nadie más puede escribir.&lt;/p&g
 &lt;p&gt;&lt;code&gt;%u&lt;/code&gt; es la cuenta en la que se inicia sesión. &lt;code&gt;%k&lt;/code&gt; es el certificado, en base64;
 también se lee una línea completa &lt;code&gt;ssh-...-cert-v01@openssh.com BASE64&lt;/code&gt;, y cuando
 falta el argumento el certificado se lee de la entrada estándar. Un tercer
-argumento, &lt;code&gt;%t&lt;/code&gt;, debe ser entonces el tipo del certificado.&lt;/p&gt;
+argumento, cuando lo hay (el &lt;code&gt;%t&lt;/code&gt; de sshd), debe ser el tipo del certificado; si no,
+el certificado se rechaza.&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -205,9 +206,10 @@ que sshd no hace: rechaza &lt;strong&gt;todos&lt;/strong&gt; los certificados en
 (su extensión &lt;code&gt;expires@go-authn.github.io&lt;/code&gt;, que sshd ignora), y todos los
 certificados cuando la lista no se puede leer. Una lista sin caducidad se usa sin
 ella.&lt;/p&gt;
-&lt;p&gt;Con la KRL que escribe &lt;a href="https://go-authn.github.io/docs/0.1/es/authn-revokd/"&gt;authn-revokd&lt;/a&gt;, una
-vigente y después la de modo cerrado que escribe cuando la lista del emisor
-&lt;a href="https://go-authn.github.io/docs/0.1/es/authn-revokd/lapse/"&gt;caduca&lt;/a&gt;:&lt;/p&gt;
+&lt;p&gt;Tres ejecuciones: con la KRL que escribe &lt;a href="https://go-authn.github.io/docs/0.1/es/authn-revokd/"&gt;authn-revokd&lt;/a&gt;,
+primero una vigente y después la de modo cerrado que escribe cuando la lista del emisor
+&lt;a href="https://go-authn.github.io/docs/0.1/es/authn-revokd/lapse/"&gt;caduca&lt;/a&gt;; y por último con &lt;code&gt;--krl&lt;/code&gt; apuntando a un
+archivo que no existe:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
 INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.fr granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
@@ -230,9 +232,10 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;La segunda ejecución se rechaza porque la lista revoca la &lt;strong&gt;clave de la CA&lt;/strong&gt; del
+&lt;p&gt;La segunda ejecución se rechaza porque la lista de modo cerrado revoca la &lt;strong&gt;clave de la CA&lt;/strong&gt; del
 certificado: la comprobación abarca la propia clave del certificado, su número de
-serie y su ID de clave, y la clave que lo firmó.&lt;/p&gt;
+serie y su ID de clave, y la clave que lo firmó. La tercera se rechaza porque la lista
+no se puede leer: la falta de lista no se toma por «nada revocado».&lt;/p&gt;
 &lt;h2 data-hextra-search-id="flags"&gt;Opciones&lt;span class="hx:absolute hx:-mt-20" id="flags"&gt;&lt;/span&gt;
 &lt;a href="#flags" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize -help
@@ -354,7 +357,11 @@ data-copied-label="¡Copiado!"
 está &lt;code&gt;not fetched&lt;/code&gt;, y su CRL se deja como estaba
 (&lt;a href="https://go-authn.github.io/docs/0.1/es/authn-revokd/verification/#what--once-reports"&gt;lo que informa &lt;code&gt;-once&lt;/code&gt;&lt;/a&gt;).
 &lt;code&gt;SHA256:2zKz...&lt;/code&gt; es la CA SSH del bridge. Un certificado firmado por ella queda ahora
-revocado para todo lo que lea el archivo:&lt;/p&gt;
+revocado para todo lo que lea el archivo. Las órdenes anteriores se ejecutaron en el
+directorio &lt;code&gt;revokd&lt;/code&gt;, donde está &lt;code&gt;out/&lt;/code&gt;; esta se ejecuta a su lado, en el directorio
+que contiene los certificados de prueba, como en
+&lt;a href="https://go-authn.github.io/docs/0.1/es/sshcert/authorize/#krl"&gt;la página de sshcert-authorize&lt;/a&gt;, así que
+el mismo archivo es &lt;code&gt;../revokd/out/sshd.krl&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
 alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;

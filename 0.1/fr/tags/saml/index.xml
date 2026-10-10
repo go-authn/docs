@@ -3,8 +3,9 @@
 Éducation-Recherche de RENATER ou par eduGAIN, et les applications obtiennent un jeton OpenID Connect.&lt;/strong&gt;
 La même connexion peut aussi faire certifier une clé SSH, faire émettre un certificat
 client X.509 pour NFS sur TLS, définir un mot de passe d&amp;rsquo;application pour SMB et S3, ou
-enregistrer une clé WireGuard. Tout ce que le fournisseur a émis, il peut le reprendre, et il
-publie des listes signées de ce qu&amp;rsquo;il a révoqué. Pur Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un seul
+enregistrer une clé WireGuard. Le fournisseur peut révoquer ce qu&amp;rsquo;il a émis, et il
+publie des listes signées de ce qu&amp;rsquo;il a révoqué ; un jeton d&amp;rsquo;accès déjà remis reste
+valide jusqu&amp;rsquo;à son expiration. Pur Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un seul
 binaire. Ces pages décrivent la v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -430,7 +431,8 @@ refus propres à ce fournisseur :&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;une réponse d&amp;rsquo;IdP remise &lt;strong&gt;dans un autre navigateur&lt;/strong&gt; : la connexion est retrouvée
 par son propre cookie scellé, jamais par le &lt;code&gt;RelayState&lt;/code&gt; que porte la réponse,
-sans quoi n&amp;rsquo;importe qui pourrait connecter quelqu&amp;rsquo;un d&amp;rsquo;autre sous sa propre identité ;&lt;/li&gt;
+sans quoi n&amp;rsquo;importe qui pourrait envoyer sa propre réponse d&amp;rsquo;IdP au navigateur de quelqu&amp;rsquo;un
+d&amp;rsquo;autre et connecter cette personne sous l&amp;rsquo;identité de l&amp;rsquo;expéditeur ;&lt;/li&gt;
 &lt;li&gt;un IdP que la configuration n&amp;rsquo;autorise plus, ou que l&amp;rsquo;API d&amp;rsquo;administration a
 désactivé ;&lt;/li&gt;
 &lt;li&gt;une personne ou un établissement &lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-bridge/admin/"&gt;désactivé ici&lt;/a&gt;,
@@ -708,7 +710,8 @@ data-copied-label="Copié !"
 &lt;p&gt;Le certificat d&amp;rsquo;un IdP dans les métadonnées est digne de confiance parce que la
 signature de la fédération le nomme ; ses dates ne sont pas examinées, puisque
 les certificats d&amp;rsquo;IdP sont souvent autosignés et expirés.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Réponses&lt;/strong&gt;, à &lt;code&gt;Accept&lt;/code&gt; — chacune une erreur pour l&amp;rsquo;appelant, destinée au journal du serveur :&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Les réponses&lt;/strong&gt; sont vérifiées à &lt;code&gt;Accept&lt;/code&gt;. Chaque refus ci-dessous est renvoyé à
+l&amp;rsquo;appelant sous forme d&amp;rsquo;erreur, destinée au journal du serveur :&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -727,7 +730,7 @@ les certificats d&amp;rsquo;IdP sont souvent autosignés et expirés.&lt;/p&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;tout ce que la signature ne couvrait pas&lt;/td&gt;
-&lt;td&gt;seul l&amp;rsquo;élément reconstruit à partir des octets condensés est lu&lt;/td&gt;
+&lt;td&gt;ce n&amp;rsquo;est jamais lu : seul l&amp;rsquo;est l&amp;rsquo;élément reconstruit à partir des octets que la signature a condensés&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;un identifiant à portée hors des &lt;code&gt;Scopes&lt;/code&gt; de l&amp;rsquo;IdP&lt;/td&gt;

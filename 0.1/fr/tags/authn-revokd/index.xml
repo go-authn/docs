@@ -35,7 +35,7 @@
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;/etc/authn-revokd/ca/&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;les clés et certificats d&amp;rsquo;AC par lesquels les listes doivent être signées&lt;/td&gt;
-&lt;td&gt;root, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0755&lt;/code&gt; ; les fichiers qu&amp;rsquo;il contient &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/&lt;/code&gt;&lt;/td&gt;
@@ -65,11 +65,15 @@ propre utilisateur puissent les lire ; l&amp;rsquo;état reste en &lt;code&gt;07
 amd64 et arm64, avec &lt;code&gt;SHA256SUMS&lt;/code&gt; et la provenance de compilation
 (&lt;a href="https://go-authn.github.io/docs/0.1/fr/security/verifying-releases/"&gt;vérifier un téléchargement&lt;/a&gt;). Ou
 &lt;code&gt;go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.2&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Le compte et l&amp;rsquo;unité viennent du répertoire &lt;code&gt;packaging/&lt;/code&gt; de l&amp;rsquo;étiquette de la
+version, la même version que le binaire : copiez ce répertoire à côté du
+binaire, depuis une extraction de l&amp;rsquo;étiquette ou, pour v0.6.2, depuis
+&lt;a href="https://github.com/go-authn/revocation/tree/v0.6.2/packaging" target="_blank" rel="noopener"&gt;https://github.com/go-authn/revocation/tree/v0.6.2/packaging&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0755&lt;/span&gt; authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; authn-revokd.conf /usr/lib/sysusers.d/authn-revokd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/sysusers.d/authn-revokd.conf /usr/lib/sysusers.d/authn-revokd.conf
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemd-sysusers /usr/lib/sysusers.d/authn-revokd.conf
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; authn-revokd.service /etc/systemd/system/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/systemd/authn-revokd.service /etc/systemd/system/
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl daemon-reload&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
@@ -713,8 +717,8 @@ cette clé. Une signature qui ne se vérifie pas peut aussi être une liste émi
 entre les deux requêtes, les deux sont donc récupérées une fois de plus avant que ce ne soit signalé.
 C&amp;rsquo;était la première récupération de cette source, il n&amp;rsquo;y avait donc aucune bonne copie à garder, et
 la sortie est d&amp;rsquo;emblée la &lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/lapse/"&gt;liste qui refuse en cas de doute&lt;/a&gt;.
-(Avant la v0.6.2, le même échec était signalé comme « the list changed between
-it and its signature », devant les mêmes mots.)&lt;/p&gt;
+(Avant la v0.6.2, le même échec portait « the list changed between it and its
+signature » devant le message ci-dessus, comme si la liste avait été émise de nouveau.)&lt;/p&gt;
 &lt;p&gt;La signature est récupérée avec &lt;code&gt;If-Match: &amp;lt;the list's ETag&amp;gt;&lt;/code&gt;. Une liste émise
 de nouveau entre les deux requêtes répond &lt;code&gt;412&lt;/code&gt;, et les deux sont récupérées de nouveau.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Une CRL&lt;/strong&gt; est vérifiée par rapport au certificat d&amp;rsquo;AC configuré comme &lt;code&gt;x509_ca&lt;/code&gt; : sa
@@ -892,7 +896,11 @@ data-copied-label="Copié !"
 est seulement &lt;code&gt;not fetched&lt;/code&gt;, et sa CRL est laissée telle quelle
 (&lt;a href="https://go-authn.github.io/docs/0.1/fr/authn-revokd/verification/#what--once-reports"&gt;ce que signale &lt;code&gt;-once&lt;/code&gt;&lt;/a&gt;).
 &lt;code&gt;SHA256:2zKz...&lt;/code&gt; est l&amp;rsquo;AC SSH du bridge. Un certificat qu&amp;rsquo;elle a signé est désormais
-révoqué pour tout ce qui lit le fichier :&lt;/p&gt;
+révoqué pour tout ce qui lit le fichier. Les commandes ci-dessus ont tourné dans le
+répertoire &lt;code&gt;revokd&lt;/code&gt;, où se trouve &lt;code&gt;out/&lt;/code&gt; ; celle-ci tourne à côté, dans le répertoire
+qui contient les certificats de test, comme sur
+&lt;a href="https://go-authn.github.io/docs/0.1/fr/sshcert/authorize/#krl"&gt;la page de sshcert-authorize&lt;/a&gt; : le même
+fichier y est donc &lt;code&gt;../revokd/out/sshd.krl&lt;/code&gt; :&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
 alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;

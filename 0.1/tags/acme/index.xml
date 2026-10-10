@@ -145,17 +145,18 @@ reachable on neither port 80 nor 443 from the Internet can still get a publicly
 trusted certificate. The EAB HMAC key is a secret, so the configuration names
 a &lt;strong&gt;file&lt;/strong&gt; holding it (&lt;code&gt;EABHMACKeyFile&lt;/code&gt;), never the key.&lt;/p&gt;
 &lt;p&gt;One defect of &lt;code&gt;x/crypto/acme&lt;/code&gt; is worked around (&lt;a href="https://github.com/golang/go/issues/77704" target="_blank" rel="noopener"&gt;golang/go#77704&lt;/a&gt;):
-after finalizing an order the CA is still processing, the client polls a
-&lt;code&gt;Location&lt;/code&gt; header RFC 8555 does not put on the finalize response. The ACME
-client&amp;rsquo;s transport supplies it from the order URL seen earlier.&lt;/p&gt;
+after finalizing an order the CA is still processing, the client polls the URL
+in the finalize response&amp;rsquo;s &lt;code&gt;Location&lt;/code&gt; header, which RFC 8555 does not put
+there. servercert gives the ACME client a transport that adds that header, with
+the order&amp;rsquo;s URL from the earlier newOrder response.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;What it refuses, and why&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Check&lt;/code&gt; refuses: neither or both sources; half a file pair; ACME without
 domains or cache directory; a relative path; half an EAB; a domain that is an
 IP address, a wildcard, a single label, ends with a dot, or is not a valid host
 name; a directory URL that is not https (RFC 8555 §6.1).&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;New&lt;/code&gt; also refuses a cache directory — it holds private keys — that is a
-symbolic link, is accessible by group or others, is owned by another user than
-the process&amp;rsquo;s effective one, or cannot be written; a missing one is created
+symbolic link, is accessible by group or others, is owned by a user other than
+the process&amp;rsquo;s effective user, or cannot be written; a missing one is created
 &lt;code&gt;0700&lt;/code&gt; and checked after. Every directory above it must be changeable only by
 root or the effective user, as sshd&amp;rsquo;s &lt;code&gt;StrictModes&lt;/code&gt; asks of the path to
 &lt;code&gt;authorized_keys&lt;/code&gt;, and a symbolic link above it is refused unless root owns it.

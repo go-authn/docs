@@ -3,8 +3,9 @@
 Éducation-Recherche or eduGAIN, and applications get an OpenID Connect token.&lt;/strong&gt;
 The same login can also have an SSH key certified, an X.509 client certificate
 issued for NFS over TLS, an application password set for SMB and S3, or a
-WireGuard key registered. Whatever the provider issued, it can take back, and it
-publishes signed lists of what it has revoked. Pure Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, one
+WireGuard key registered. The provider can revoke what it issued, and it
+publishes signed lists of what it has revoked; an access token already handed
+out stays valid until it expires. Pure Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, one
 binary. These pages describe v0.20.1.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
@@ -430,7 +431,8 @@ provider&amp;rsquo;s own refusals:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;an IdP response delivered &lt;strong&gt;into another browser&lt;/strong&gt;: the login is found
 through its own sealed cookie, never through the &lt;code&gt;RelayState&lt;/code&gt; the response
-carries, or anybody could log somebody else in as themselves;&lt;/li&gt;
+carries; otherwise anybody could send their own IdP response to somebody
+else&amp;rsquo;s browser and log that person in under the sender&amp;rsquo;s identity;&lt;/li&gt;
 &lt;li&gt;an IdP that the configuration no longer allows, or that the admin API has
 disabled;&lt;/li&gt;
 &lt;li&gt;a person or an institution &lt;a href="https://go-authn.github.io/docs/0.1/authn-bridge/admin/"&gt;disabled here&lt;/a&gt;,
@@ -708,7 +710,8 @@ data-copied-label="Copied!"
 &lt;p&gt;An IdP&amp;rsquo;s certificate in metadata is trusted because the federation&amp;rsquo;s signature
 names it; its dates are not looked at, since IdP certificates are often
 self-signed and expired.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Responses&lt;/strong&gt;, at &lt;code&gt;Accept&lt;/code&gt; — each one error to the caller, for the server&amp;rsquo;s log:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Responses&lt;/strong&gt; are checked at &lt;code&gt;Accept&lt;/code&gt;. Each refusal below is returned to the
+caller as an error, for the server&amp;rsquo;s log:&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -726,8 +729,8 @@ self-signed and expired.&lt;/p&gt;
 &lt;td&gt;how a signed one and an unsigned one arrive together and the wrong one is read (CVE-2022-41912)&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;anything but what the signature covered&lt;/td&gt;
-&lt;td&gt;only the element rebuilt from the digested bytes is read&lt;/td&gt;
+&lt;td&gt;anything outside what the signature covered&lt;/td&gt;
+&lt;td&gt;it is never read: only the element rebuilt from the bytes the signature digested is&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;a scoped identifier outside the IdP&amp;rsquo;s &lt;code&gt;Scopes&lt;/code&gt;&lt;/td&gt;
