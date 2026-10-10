@@ -125,9 +125,9 @@ einem RSA-Schlüssel geprüft oder abgelehnt.
 | eine fehlende oder falsche **Audience** | ein für einen anderen Dienst ausgestelltes Token ist gültig; es ist nicht an diesen adressiert |
 | ein Token **ohne Ablauf** | es ist ein Passwort, das jemand einmal kopieren kann |
 | ein Aussteller, eine Schlüsselmenge oder eine Weiterleitung **über Klartext-HTTP**, außer zu Loopback | die Schlüsselmenge entscheidet über jede Signatur |
-| ein RSA-Schlüssel unter 2048 Bit oder mit `n` oder `e` nicht in kürzester Form; ein EC-Punkt, der nicht auf seiner Kurve liegt | ein kurzer Schlüssel ist eine Signatur, die jemand anderes erzeugen kann; ein aufgefüllter Modulus ging einst als 2048 Bit durch |
+| ein RSA-Schlüssel unter 2048 Bit oder mit `n` oder `e` nicht in kürzester Form; ein EC-Punkt, der nicht auf seiner Kurve liegt | Signaturen unter einem kurzen Schlüssel lassen sich fälschen; vor v0.2.2 ging ein mit Null-Bytes aufgefüllter 1024-Bit-Modulus als 2048 Bit durch |
 | ein Schlüssel, der mit einem anderen `use` als `sig` veröffentlicht ist | eine Schlüsselmenge enthält legitimerweise auch Verschlüsselungsschlüssel |
-| bei gesetztem `Type` ein Token mit anderem `typ`; ohne, jedes `typ` außer keinem, `JWT` oder `at+jwt` | RFC 9068 §4: Ein Resource Server prüft `typ: at+jwt`, sonst hält er ein ID-Token für ein Access-Token, sobald die Audiences übereinstimmen |
+| bei gesetztem `Type` ein Token mit anderem `typ`; ohne ihn ein `typ` außer `JWT` oder `at+jwt` (ein Token ohne `typ`-Header geht durch) | RFC 9068 §4: Ein Resource Server prüft `typ: at+jwt`, sonst hält er ein ID-Token für ein Access-Token, sobald die Audiences übereinstimmen |
 | ein Teil, der kein kanonisches base64url ist | ein Token wird als eine Zeichenkette geprüft |
 
 Bei ECDSA werden sowohl `s` als auch `n − s` verifiziert, wie es der Algorithmus erlaubt. Daher verwendet eine Denylist oder

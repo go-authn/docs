@@ -185,14 +185,14 @@ El certificado de un IdP en los metadatos es de confianza porque la firma de la
 federación lo nombra; sus fechas no se miran, ya que los certificados de IdP
 suelen ser autofirmados y estar caducados.
 
-**Respuestas**, en `Accept` — cada una, un error para quien llama, destinado al
-registro del servidor:
+**Las respuestas** se comprueban en `Accept`. Cada rechazo de abajo se devuelve a
+quien llama como un error, destinado al registro del servidor:
 
 | | por qué |
 |---|---|
 | nada firmado, o firmado con SHA-1 | saml-profiles 4.1.4.5: por POST la aserción debe estar firmada. Un IdP Shibboleth firma la Response por defecto; se acepta cualquiera de las dos |
 | más de una aserción | así llegan juntas una firmada y otra sin firmar y se lee la que no es (CVE-2022-41912) |
-| cualquier cosa que no sea lo que cubrió la firma | solo se lee el elemento reconstruido a partir de los bytes resumidos |
+| cualquier cosa fuera de lo que cubrió la firma | nunca se lee: solo se lee el elemento reconstruido a partir de los bytes que resumió la firma |
 | un identificador con ámbito fuera de los `Scopes` del IdP | se descarta: de lo contrario cualquier IdP podría afirmar `alice@another-university.fr` |
 | texto cifrado AES-CBC que no cubre ninguna firma verificada | ni siquiera se descifra: CBC sin autenticar es un oráculo de relleno. El transporte de clave RSA PKCS#1 v1.5 no se acepta en absoluto; AES-GCM y RSA-OAEP sí |
 | otra audiencia, otro ACS u otra solicitud; una respuesta no solicitada; una solicitud de más de una hora | saml-profiles 4.1.4.3 |

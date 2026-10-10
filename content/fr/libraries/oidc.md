@@ -125,9 +125,9 @@ une clé RSA ou refusé.
 | une **audience** absente ou erronée | un jeton fabriqué pour un autre service est valide ; il n'est pas adressé à celui-ci |
 | un jeton **sans expiration** | c'est un mot de passe que quelqu'un peut copier une fois |
 | un émetteur, un jeu de clés ou une redirection **en HTTP en clair**, sauf vers le loopback | le jeu de clés décide de chaque signature |
-| une clé RSA de moins de 2048 bits, ou dont `n` ou `e` n'est pas sous sa forme la plus courte ; un point EC qui n'est pas sur sa courbe | une clé courte est une signature que quelqu'un d'autre peut produire ; un module complété de zéros passait autrefois pour 2048 bits |
+| une clé RSA de moins de 2048 bits, ou dont `n` ou `e` n'est pas sous sa forme la plus courte ; un point EC qui n'est pas sur sa courbe | les signatures d'une clé courte peuvent être contrefaites ; avant la v0.2.2, un module de 1024 bits complété d'octets nuls passait pour 2048 bits |
 | une clé publiée avec un `use` autre que `sig` | un jeu de clés contient légitimement aussi des clés de chiffrement |
-| avec `Type` défini, un jeton d'un autre `typ` ; non défini, tout `typ` sauf aucun, `JWT` ou `at+jwt` | RFC 9068 §4 : un serveur de ressources vérifie `typ: at+jwt`, sinon il prend un jeton d'identité (ID token) pour un jeton d'accès dès que les audiences concordent |
+| avec `Type` défini, un jeton d'un autre `typ` ; sans lui, un `typ` autre que `JWT` ou `at+jwt` (un jeton sans en-tête `typ` passe) | RFC 9068 §4 : un serveur de ressources vérifie `typ: at+jwt`, sinon il prend un jeton d'identité (ID token) pour un jeton d'accès dès que les audiences concordent |
 | une partie qui n'est pas en base64url canonique | un jeton se vérifie comme une seule chaîne |
 
 Le `s` et le `n − s` d'ECDSA se vérifient tous les deux, comme l'algorithme le permet. Une liste de refus ou

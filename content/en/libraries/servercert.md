@@ -126,9 +126,10 @@ trusted certificate. The EAB HMAC key is a secret, so the configuration names
 a **file** holding it (`EABHMACKeyFile`), never the key.
 
 One defect of `x/crypto/acme` is worked around ([golang/go#77704](https://github.com/golang/go/issues/77704)):
-after finalizing an order the CA is still processing, the client polls a
-`Location` header RFC 8555 does not put on the finalize response. The ACME
-client's transport supplies it from the order URL seen earlier.
+after finalizing an order the CA is still processing, the client polls the URL
+in the finalize response's `Location` header, which RFC 8555 does not put
+there. servercert gives the ACME client a transport that adds that header, with
+the order's URL from the earlier newOrder response.
 
 ## What it refuses, and why
 
@@ -138,8 +139,8 @@ IP address, a wildcard, a single label, ends with a dot, or is not a valid host
 name; a directory URL that is not https (RFC 8555 §6.1).
 
 `New` also refuses a cache directory — it holds private keys — that is a
-symbolic link, is accessible by group or others, is owned by another user than
-the process's effective one, or cannot be written; a missing one is created
+symbolic link, is accessible by group or others, is owned by a user other than
+the process's effective user, or cannot be written; a missing one is created
 `0700` and checked after. Every directory above it must be changeable only by
 root or the effective user, as sshd's `StrictModes` asks of the path to
 `authorized_keys`, and a symbolic link above it is refused unless root owns it.

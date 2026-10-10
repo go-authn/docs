@@ -19,7 +19,7 @@ y arm64 (`.exe` en windows), compilado con `CGO_ENABLED=0`, un manifiesto
 `SHA256SUMS`, y una atestación de procedencia de compilación para cada binario.
 
 ```sh
-version=v0.10.0
+version=v0.10.1
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ con la que se publica, así que la versión es algo que se puede comparar:
 
 ```
 $ authnd --version
-authnd version v0.10.0
+authnd version v0.10.1
 ```
 
 ### Compilar solo lo que quiere {#building-only-what-you-want}
@@ -64,11 +64,16 @@ se entregan de antemano al grupo `authnd`, y un
 ellos. Un uid dinámico no existe hasta que arranca el servicio, y un archivo que
 escribiera pertenecería a un número que más tarde designa a otra persona.
 
+Los dos archivos vienen del directorio `packaging/` de la etiqueta de la versión,
+la misma versión que el binario: copie ese directorio junto al binario, desde una
+copia de la etiqueta o, para v0.10.1, desde
+<https://github.com/go-authn/authnd/tree/v0.10.1/packaging>.
+
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
-sudo install -m 0644 authnd.conf    /usr/lib/sysusers.d/authnd.conf
+sudo install -m 0644 packaging/sysusers.d/authnd.conf  /usr/lib/sysusers.d/authnd.conf
 sudo systemd-sysusers /usr/lib/sysusers.d/authnd.conf
-sudo install -m 0644 authnd.service /etc/systemd/system/authnd.service
+sudo install -m 0644 packaging/systemd/authnd.service /etc/systemd/system/authnd.service
 sudo systemd-analyze verify /etc/systemd/system/authnd.service
 sudo systemctl daemon-reload
 ```
@@ -183,12 +188,15 @@ ejecutarlo como `authnd` prueba además que la cuenta puede leer todos los archi
 ## Actualizar, volver atrás, desinstalar {#upgrade-roll-back-remove}
 
 Compruebe la configuración con el binario **nuevo** antes de que sustituya al
-anterior, y conserve el anterior:
+anterior, y conserve el anterior. El binario nuevo se instala primero junto al
+anterior: eso lo hace ejecutable y lo deja donde la cuenta `authnd` puede
+ejecutarlo.
 
 ```sh
-sudo -u authnd ./authnd-linux-$arch check /etc/authnd
+sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd.new
+sudo -u authnd /usr/local/bin/authnd.new check /etc/authnd
 sudo cp /usr/local/bin/authnd /usr/local/bin/authnd.previous
-sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
+sudo mv /usr/local/bin/authnd.new /usr/local/bin/authnd
 sudo systemctl restart authnd
 authnd --version
 ```

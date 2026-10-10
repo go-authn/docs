@@ -19,7 +19,7 @@ et arm64 (`.exe` sous windows), compilé avec `CGO_ENABLED=0`, un manifeste `SHA
 et une attestation de provenance de compilation pour chaque binaire.
 
 ```sh
-version=v0.10.0
+version=v0.10.1
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ quelque chose à comparer :
 
 ```
 $ authnd --version
-authnd version v0.10.0
+authnd version v0.10.1
 ```
 
 ### Ne compiler que ce que vous voulez {#building-only-what-you-want}
@@ -62,11 +62,16 @@ groupe `authnd` à l'avance, et un [changement de mot de passe]({{< relref "/aut
 y réécrit. Un uid dynamique n'existe pas avant que le service démarre,
 et un fichier qu'il a écrit appartiendrait à un numéro qui désignera plus tard quelqu'un d'autre.
 
+Les deux fichiers viennent du répertoire `packaging/` de l'étiquette de la version,
+la même version que le binaire : copiez ce répertoire à côté du binaire, depuis
+une extraction de l'étiquette ou, pour v0.10.1, depuis
+<https://github.com/go-authn/authnd/tree/v0.10.1/packaging>.
+
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
-sudo install -m 0644 authnd.conf    /usr/lib/sysusers.d/authnd.conf
+sudo install -m 0644 packaging/sysusers.d/authnd.conf  /usr/lib/sysusers.d/authnd.conf
 sudo systemd-sysusers /usr/lib/sysusers.d/authnd.conf
-sudo install -m 0644 authnd.service /etc/systemd/system/authnd.service
+sudo install -m 0644 packaging/systemd/authnd.service /etc/systemd/system/authnd.service
 sudo systemd-analyze verify /etc/systemd/system/authnd.service
 sudo systemctl daemon-reload
 ```
@@ -180,12 +185,14 @@ le lancer sous `authnd` prouve aussi que le compte peut lire chaque fichier.
 ## Mettre à niveau, revenir en arrière, désinstaller {#upgrade-roll-back-remove}
 
 Vérifiez la configuration avec le **nouveau** binaire avant qu'il ne remplace l'ancien,
-et gardez l'ancien :
+et gardez l'ancien. Le nouveau binaire est d'abord installé à côté de l'ancien :
+cela le rend exécutable, et le place là où le compte `authnd` peut le lancer.
 
 ```sh
-sudo -u authnd ./authnd-linux-$arch check /etc/authnd
+sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd.new
+sudo -u authnd /usr/local/bin/authnd.new check /etc/authnd
 sudo cp /usr/local/bin/authnd /usr/local/bin/authnd.previous
-sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
+sudo mv /usr/local/bin/authnd.new /usr/local/bin/authnd
 sudo systemctl restart authnd
 authnd --version
 ```

@@ -121,8 +121,12 @@ rechazados por su nombre en lugar de decodificados a medias.
 {{< callout type="warning" >}}
 **Un PIN incorrecto cuesta un reintento**
 
-Un autenticador que agota los suyos se bloquea hasta que se desconecta, y después
-de forma permanente. Consulte `Key.PINRetries` antes de pedírselo a nadie.
+CTAP da a un autenticador un contador de reintentos de PIN, ocho como máximo, y cada
+PIN incorrecto gasta uno. Tres PIN incorrectos seguidos bloquean el PIN hasta que la
+llave se desconecta y se vuelve a conectar. Un contador que llega a cero lo bloquea
+para siempre: solo un reinicio lo levanta, y un reinicio borra todas las credenciales
+de la llave. Consulte `Key.PINRetries` antes de pedírselo a nadie: dice cuántos
+reintentos quedan y si la llave espera a que la desconecten.
 {{< /callout >}}
 
 ## Contra qué se comprueba {#what-it-is-checked-against}

@@ -126,9 +126,10 @@ vertrauenswürdiges Zertifikat erhalten. Der EAB-HMAC-Schlüssel ist ein Geheimn
 eine **Datei**, die ihn enthält (`EABHMACKeyFile`), nie den Schlüssel selbst.
 
 Ein Defekt von `x/crypto/acme` wird umgangen ([golang/go#77704](https://github.com/golang/go/issues/77704)):
-Nach dem Abschließen einer Bestellung, die die CA noch bearbeitet, fragt der Client einen
-`Location`-Header ab, den RFC 8555 nicht in die Antwort auf das Abschließen setzt. Der Transport des ACME-Clients
-liefert ihn aus der zuvor gesehenen Bestell-URL.
+Nach dem Abschließen einer Bestellung, die die CA noch bearbeitet, fragt der Client die URL
+im `Location`-Header der Antwort auf das Abschließen ab, den RFC 8555 dort nicht setzt.
+servercert gibt dem ACME-Client einen Transport, der diesen Header hinzufügt, mit der
+Bestell-URL aus der früheren newOrder-Antwort.
 
 ## Was es ablehnt und warum {#what-it-refuses-and-why}
 

@@ -99,7 +99,7 @@ para una llave de seguridad.
 | una `Policy` cuyo `Count` es menor que uno | *a policy that requires 0 factors accepts anyone*. No hay política por defecto: cuánta prueba basta le corresponde a quien protege la cosa |
 | menos factores ofrecidos que `Count` | la política no se puede cumplir, respondan lo que respondan |
 | un factor cuyo `Kind()` está fuera de la enumeración | contado como una clase distinta, `Kind(42)` junto a una frase de contraseña pasaría por doble factor |
-| **el mismo factor dos veces** | una frase de contraseña pasada dos veces satisfacía `Count: 2`. «El mismo» es el mismo tipo con los mismos valores, funciones incluidas: una función es la misma función cuando ejecuta el mismo código |
+| **el mismo factor dos veces** | antes de la v0.3.0, una frase de contraseña pasada dos veces satisfacía `Count: 2`, y antes de la v0.4.0 también cualquier factor que contuviera una función. «El mismo» es el mismo tipo con los mismos valores, funciones incluidas: una función es la misma función cuando ejecuta el mismo código |
 
 Y mantiene separadas tres cosas mientras pregunta:
 

@@ -16,7 +16,9 @@ enough and knows about no device. Neither imports the other; this imports both.
 go get github.com/go-authn/keyfactor@v0.4.1
 ```
 
-At v0.4.1 it requires `go-authn/fido` v0.6.0 and `go-authn/mfa` v0.5.0.
+At v0.4.1 its `go.mod` requires at least `go-authn/fido` v0.6.0 and
+`go-authn/mfa` v0.5.0: minimums, so a program that requires fido v0.6.1, the
+version these pages describe, builds with v0.6.1.
 
 The platform supplies an `Opener` — how a key is found on this system — and
 keeps only that. Everything else is the same wherever CTAP is: the assertion,
@@ -87,8 +89,9 @@ the registration:
 
 **The last PIN attempt is not spent on a guess.** `PINRetries` is asked first;
 a key that will take no more PINs until it is unplugged is refused, and so is
-one with **one attempt or fewer** left. A key that runs out locks, then
-permanently, taking every credential on it.
+one with **one attempt or fewer** left. Under CTAP, three wrong PINs in a row
+block a key's PIN until it is unplugged, and a retry counter that reaches zero
+blocks it for good: only a reset lifts that, erasing every credential on it.
 
 **A PIN is not a second factor.** The kind stays `mfa.Possession`: a PIN
 entered into the key protects the key, and identifies nobody to this machine.

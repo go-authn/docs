@@ -123,8 +123,12 @@ name rather than half-decoded.
 {{< callout type="warning" >}}
 **A wrong PIN costs a retry**
 
-An authenticator that runs out locks until it is unplugged, then
-permanently. Ask `Key.PINRetries` before prompting anybody.
+CTAP gives an authenticator a counter of PIN retries, eight at most, and each
+wrong PIN spends one. Three wrong PINs in a row block the PIN until the key is
+unplugged and plugged back in. A counter that reaches zero blocks it for good:
+only a reset lifts that, and a reset erases every credential on the key. Ask
+`Key.PINRetries` before prompting anybody: it says how many retries are left,
+and whether the key is waiting to be unplugged.
 {{< /callout >}}
 
 ## What it is checked against

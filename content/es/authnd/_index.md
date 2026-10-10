@@ -122,7 +122,8 @@ vendorVersion: v0.10.0
 
 Cada bloque de salida de estas páginas lo imprimió el binario de la versión v0.10.0
 (`authnd-darwin-arm64`) —la v0.10.1 imprimió el mismo `check`, byte a byte, con las dos
-configuraciones comparadas—, junto con los clientes OpenLDAP y Heimdal que incluye
+configuraciones comparadas, y la línea `--version` de la página de instalación es la de la
+v0.10.1—, junto con los clientes OpenLDAP y Heimdal que incluye
 macOS, ejecutados en 127.0.0.1 en puertos sin privilegios, en un directorio temporal
 bajo `/tmp`. Por eso las configuraciones que hay detrás nombran los archivos con rutas
 relativas como `etc/authnd/passwords/alice.pw`, y por eso los archivos de contraseña

@@ -70,8 +70,8 @@ qu'une passerelle transforme en pairs.
 **Un service qui ne fait qu'accepter des tickets ne lie jamais de KDC.** Un serveur NFS
 vérifie les tickets qu'un client présente ; il a un keytab et rien d'autre à faire
 avec un royaume. Si accepter et délivrer formaient un seul module, chacun de ces serveurs
-emporterait un chemin de code de délivrance de tickets, et l'annuaire dans lequel un KDC
-lit les personnes, qu'il n'exécute jamais.
+emporterait un chemin de code de délivrance de tickets qu'il n'exécute jamais, et le module
+d'annuaire dans lequel un KDC lit les personnes, dont il ne se sert jamais.
 
 C'est mesuré, pas voulu. Dans un module jetable qui n'importe que
 `github.com/go-authn/krb5@v0.3.0` :

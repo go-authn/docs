@@ -70,8 +70,8 @@ una pasarela convierte en pares.
 **Un servicio que solo acepta tickets nunca enlaza un KDC.** Un servidor NFS verifica
 los tickets que presenta un cliente; tiene una keytab y nada más que ver con un reino.
 Si aceptar y emitir fueran un solo módulo, cada uno de esos servidores llevaría una
-ruta de código de emisión de tickets, y el directorio del que un KDC lee las personas,
-que nunca ejecuta.
+ruta de código de emisión de tickets que nunca ejecuta, y el módulo de directorio del
+que un KDC lee las personas, que nunca usa.
 
 Esto está medido, no es una intención. En un módulo temporal que solo importa
 `github.com/go-authn/krb5@v0.3.0`:

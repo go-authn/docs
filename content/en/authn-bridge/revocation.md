@@ -9,7 +9,7 @@ tags: [authn-bridge, revocation, krl, crl, shared signals]
 Disabling a person or an institution ([the admin API]({{< relref "/authn-bridge/admin.md" >}}))
 ends everything that comes back to the provider: refresh tokens, `/userinfo`,
 new certificates, application passwords. What it has already handed out is
-checked elsewhere, against keys, and two mechanisms reach it:
+checked elsewhere, against keys, and three mechanisms reach it:
 
 | credential | taken back by |
 |---|---|
@@ -89,7 +89,7 @@ Good "krl@go-authn.github.io" signature for bridge with ED25519 key SHA256:6gbNj
 where `allowed` is the line
 `bridge namespaces="krl@go-authn.github.io" <the CA key from /ssh/config>`.
 
-The CRL, issued at the same moment:
+The CRL, issued eight seconds later:
 
 ```
 $ openssl crl -inform DER -in var/bridge.crl -noout -text

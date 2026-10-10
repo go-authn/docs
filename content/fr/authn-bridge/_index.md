@@ -10,8 +10,9 @@ tags: [authn-bridge, oidc, saml]
 Éducation-Recherche de RENATER ou par eduGAIN, et les applications obtiennent un jeton OpenID Connect.**
 La même connexion peut aussi faire certifier une clé SSH, faire émettre un certificat
 client X.509 pour NFS sur TLS, définir un mot de passe d'application pour SMB et S3, ou
-enregistrer une clé WireGuard. Tout ce que le fournisseur a émis, il peut le reprendre, et il
-publie des listes signées de ce qu'il a révoqué. Pur Go, `CGO_ENABLED=0`, un seul
+enregistrer une clé WireGuard. Le fournisseur peut révoquer ce qu'il a émis, et il
+publie des listes signées de ce qu'il a révoqué ; un jeton d'accès déjà remis reste
+valide jusqu'à son expiration. Pur Go, `CGO_ENABLED=0`, un seul
 binaire. Ces pages décrivent la v0.20.1.
 
 ```sh

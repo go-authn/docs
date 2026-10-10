@@ -145,9 +145,10 @@ $ ./oidctool alice '["pwd","otp"]' 127.0.0.1:3893 clear
 bind result 13
 ```
 
-13 is `confidentialityRequired`.
+13 is `confidentialityRequired`: a token is not taken over a connection that
+is not encrypted.
 
-and what the server wrote:
+What the server wrote for the four binds over `ldaps://` that were refused:
 
 ```
 alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
@@ -155,6 +156,8 @@ alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
 alice was refused: the token is for "alice" and asks to act as "tess"; this server does not delegate
 zed was refused: the token verified, and no source here publishes anybody by that name
 ```
+
+and for the plaintext one:
 
 ```
 a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set

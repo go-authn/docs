@@ -120,7 +120,8 @@ vendorVersion: v0.10.0
 
 Jeder Ausgabeblock auf diesen Seiten wurde vom Release-Binary v0.10.0
 (`authnd-darwin-arm64`) ausgegeben – v0.10.1 gab für die beiden verglichenen Konfigurationen
-byte für byte dasselbe `check` aus – sowie von den OpenLDAP- und Heimdal-Clients, die mit
+byte für byte dasselbe `check` aus, und die `--version`-Zeile auf der Installationsseite stammt
+von v0.10.1 – sowie von den OpenLDAP- und Heimdal-Clients, die mit
 macOS ausgeliefert werden, ausgeführt auf 127.0.0.1 an nicht privilegierten Ports, in einem
 Arbeitsverzeichnis unter `/tmp`. Deshalb nennen die zugrunde liegenden Konfigurationen Dateien
 über relative Pfade wie `etc/authnd/passwords/alice.pw`, und deshalb haben die Passwortdateien

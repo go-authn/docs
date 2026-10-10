@@ -125,9 +125,9 @@ algoritmo: un token que declara `RS256` se comprueba con una clave RSA o se rech
 | una **audiencia** ausente o errónea | un token acuñado para otro servicio es válido; no va dirigido a este |
 | un token **sin caducidad** | es una contraseña que alguien puede copiar una vez |
 | un emisor, un conjunto de claves o una redirección **por HTTP sin cifrar**, salvo hacia loopback | el conjunto de claves decide cada firma |
-| una clave RSA de menos de 2048 bits, o con `n` o `e` que no están en su forma más corta; un punto EC que no está en su curva | una clave corta es una firma que otra persona puede producir; un módulo con relleno llegó a pasar por 2048 bits |
+| una clave RSA de menos de 2048 bits, o con `n` o `e` que no están en su forma más corta; un punto EC que no está en su curva | las firmas de una clave corta se pueden falsificar; antes de la v0.2.2, un módulo de 1024 bits rellenado con bytes a cero pasaba por 2048 bits |
 | una clave publicada con un `use` distinto de `sig` | un conjunto de claves contiene legítimamente también claves de cifrado |
-| con `Type` fijado, un token de otro `typ`; sin fijar, cualquier `typ` salvo ninguno, `JWT` o `at+jwt` | RFC 9068 §4: un servidor de recursos comprueba `typ: at+jwt`, o toma un token de ID por un token de acceso siempre que las audiencias coincidan |
+| con `Type` fijado, un token de otro `typ`; sin fijarlo, un `typ` distinto de `JWT` o `at+jwt` (un token sin cabecera `typ` pasa) | RFC 9068 §4: un servidor de recursos comprueba `typ: at+jwt`, o toma un token de ID por un token de acceso siempre que las audiencias coincidan |
 | una parte que no está en base64url canónico | un token se verifica como una sola cadena |
 
 En ECDSA, `s` y `n − s` verifican ambos, como permite el algoritmo. Así que una lista

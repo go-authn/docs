@@ -70,8 +70,8 @@ Gateway in Peers umwandelt.
 **Ein Dienst, der nur Tickets annimmt, bindet nie einen KDC ein.** Ein NFS-Server
 prüft die Tickets, die ein Client vorlegt; er hat eine Keytab und sonst nichts mit
 einem Realm zu tun. Wären Annehmen und Ausstellen ein Modul, trüge jeder solche Server
-einen Codepfad zum Ausstellen von Tickets mit sich und das Verzeichnis, aus dem ein KDC Personen
-liest – Code, den er nie ausführt.
+einen Codepfad zum Ausstellen von Tickets mit sich, den er nie ausführt, und das Verzeichnismodul,
+aus dem ein KDC Personen liest und das er nie benutzt.
 
 Das ist gemessen, nicht beabsichtigt. In einem Wegwerfmodul, das nur
 `github.com/go-authn/krb5@v0.3.0` importiert:

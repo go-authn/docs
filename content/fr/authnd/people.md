@@ -190,8 +190,9 @@ ni pour SMB.
 Les sources sont interrogées **dans l'ordre où elles sont écrites**, et la première qui
 connaît un nom le possède. Les blocs `user` viennent toujours en premier, si bien qu'un compte
 de service écrit localement n'est pas supplanté par quelqu'un du même nom
-dans la base de données. **L'appartenance aux groupes est l'union** de toutes les sources : `staff`
-ci-dessus a alice et bob depuis un fichier et dora depuis une base de données.
+dans la base de données. **L'appartenance aux groupes est l'union** de toutes les sources : un groupe
+que nomment à la fois un bloc `group` et la requête `groups` d'une base de données a les
+membres des deux.
 
 {{< callout type="warning" >}}
 **Deux noms qui ne diffèrent que par la casse sont refusés**

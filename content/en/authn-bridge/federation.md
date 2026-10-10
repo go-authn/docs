@@ -216,7 +216,8 @@ provider's own refusals:
 
 - an IdP response delivered **into another browser**: the login is found
   through its own sealed cookie, never through the `RelayState` the response
-  carries, or anybody could log somebody else in as themselves;
+  carries; otherwise anybody could send their own IdP response to somebody
+  else's browser and log that person in under the sender's identity;
 - an IdP that the configuration no longer allows, or that the admin API has
   disabled;
 - a person or an institution [disabled here]({{< relref "/authn-bridge/admin.md" >}}),

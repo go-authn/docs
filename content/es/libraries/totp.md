@@ -7,9 +7,9 @@ tags: [libraries, totp, factors]
 ---
 
 **¿Es correcto este código de seis cifras, y se ha usado antes?** Contraseñas de
-un solo uso basadas en el tiempo (RFC 6238), un `Verifier` que recuerda lo que un
-servidor debe recordar, y el factor de [mfa]({{< relref "/libraries/mfa.md" >}})
-que pide una política.
+un solo uso basadas en el tiempo (RFC 6238); un `Verifier` que recuerda lo que un
+servidor debe recordar, los códigos ya usados y los erróneos; y un factor que una
+política de [mfa]({{< relref "/libraries/mfa.md" >}}) puede pedir.
 
 ```sh
 go get github.com/go-authn/totp@v0.4.1
@@ -122,8 +122,8 @@ ocultar el error.
 
 **Intentos, por secreto.** Un `Verifier` cuenta los códigos incorrectos por
 **credencial** — el secreto, guardado solo como su SHA-256 —, no por nombre,
-porque el nombre es la cadena que pase quien llama, y `dora`, `Dora` y `DORA`
-fueron en su día tres contadores para un mismo secreto.
+porque el nombre es la cadena que pase quien llama, y antes de la v0.3.0 `dora`,
+`Dora` y `DORA` eran tres contadores para un mismo secreto.
 
 | campo | por defecto | |
 |---|---|---|
@@ -134,8 +134,9 @@ fueron en su día tres contadores para un mismo secreto.
 Solo cuenta un código incorrecto; una reproducción, un código de longitud
 incorrecta o un parámetro rechazado no acercan la pausa. Toda la comprobación se
 hace bajo un mismo bloqueo, así que los intentos enviados en el mismo instante se
-cuentan uno por uno. `errors.Is(err, totp.ErrThrottled)` es verdadero para ambos
-rechazos.
+cuentan uno por uno. `ErrLockedOut` envuelve `ErrThrottled`, así que
+`errors.Is(err, totp.ErrThrottled)` es verdadero para ambos rechazos, y
+`errors.Is(err, totp.ErrLockedOut)` solo para el bloqueo.
 
 **Parámetros que no pueden ser correctos:**
 

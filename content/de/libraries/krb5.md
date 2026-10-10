@@ -96,7 +96,7 @@ welche Prüfung es abgelehnt hat. Ein Fehler bedeutet keinen Kontext, und das zu
 leer.
 
 **Ein Principal, für den der Acceptor nicht antwortet.** Mit
-`krb5.Principal("nfs/host.example.org")` antwortet eine Keytab, die mehrere Dienste hält,
+`krb5.Principal("nfs/files.example.org")` antwortet eine Keytab, die mehrere Dienste hält,
 nur für diesen einen.
 
 **Eine Nachricht, deren Signatur nicht passt**, ist `ErrBadMIC`, ganz gleich, ob die

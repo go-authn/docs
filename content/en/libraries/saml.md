@@ -185,13 +185,14 @@ An IdP's certificate in metadata is trusted because the federation's signature
 names it; its dates are not looked at, since IdP certificates are often
 self-signed and expired.
 
-**Responses**, at `Accept` — each one error to the caller, for the server's log:
+**Responses** are checked at `Accept`. Each refusal below is returned to the
+caller as an error, for the server's log:
 
 | | why |
 |---|---|
 | nothing signed, or signed with SHA-1 | saml-profiles 4.1.4.5: over POST the assertion must be signed. A Shibboleth IdP signs the Response by default; either is accepted |
 | more than one assertion | how a signed one and an unsigned one arrive together and the wrong one is read (CVE-2022-41912) |
-| anything but what the signature covered | only the element rebuilt from the digested bytes is read |
+| anything outside what the signature covered | it is never read: only the element rebuilt from the bytes the signature digested is |
 | a scoped identifier outside the IdP's `Scopes` | dropped: otherwise any IdP could assert `alice@another-university.fr` |
 | AES-CBC ciphertext no verified signature covers | not even decrypted: unauthenticated CBC is a padding oracle. RSA PKCS#1 v1.5 key transport is not accepted at all; AES-GCM and RSA-OAEP are |
 | another audience, ACS or request; an unsolicited response; a request more than an hour old | saml-profiles 4.1.4.3 |

@@ -127,9 +127,10 @@ un certificat reconnu publiquement. La clé HMAC de l'EAB est un secret : la
 configuration nomme donc un **fichier** qui la contient (`EABHMACKeyFile`), jamais la clé.
 
 Un défaut de `x/crypto/acme` est contourné ([golang/go#77704](https://github.com/golang/go/issues/77704)) :
-après la finalisation d'une commande que l'AC traite encore, le client interroge un
-en-tête `Location` que RFC 8555 ne place pas sur la réponse de finalisation. Le
-transport du client ACME le fournit à partir de l'URL de commande vue plus tôt.
+après la finalisation d'une commande que l'AC traite encore, le client interroge l'URL
+de l'en-tête `Location` de la réponse de finalisation, que RFC 8555 n'y place pas.
+servercert donne au client ACME un transport qui ajoute cet en-tête, avec l'URL de la
+commande tirée de la réponse newOrder reçue plus tôt.
 
 ## Ce qu'elle refuse, et pourquoi {#what-it-refuses-and-why}
 

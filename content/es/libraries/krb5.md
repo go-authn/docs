@@ -96,7 +96,7 @@ comprobación lo rechazó. Un error significa que no hay contexto, y el token de
 está vacío.
 
 **Un principal por el que el aceptante no responde.** Con
-`krb5.Principal("nfs/host.example.org")`, una keytab que guarda varios servicios solo
+`krb5.Principal("nfs/files.example.org")`, una keytab que guarda varios servicios solo
 responde por ese.
 
 **Un mensaje cuya firma no coincide** es `ErrBadMIC`, sea la longitud, la cabecera, la

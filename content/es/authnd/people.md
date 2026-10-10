@@ -190,7 +190,8 @@ Los orígenes se consultan **en el orden en que están escritos**, y el primero 
 conoce un nombre se queda con él. Los bloques `user` siempre van primero, de modo que
 una cuenta de servicio escrita localmente no la anula alguien con el mismo nombre en
 la base de datos. **La pertenencia a grupos es la unión** de todos los orígenes:
-`staff`, más arriba, tiene a alice y bob de un archivo y a dora de una base de datos.
+un grupo que nombran a la vez un bloque `group` y la consulta `groups` de una base de
+datos tiene los miembros de ambos.
 
 {{< callout type="warning" >}}
 **Dos nombres que solo difieren en mayúsculas y minúsculas se rechazan**

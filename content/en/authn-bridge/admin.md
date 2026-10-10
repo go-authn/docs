@@ -154,7 +154,7 @@ the KRL, which is why both are short.
 ## Health and metrics
 
 go-net-health/endpoint's, as in go-fileshare, on the `metrics` listener, which
-may not be the public one:
+must not be the public one (a configuration that makes it so is refused):
 
 | | |
 |---|---|
@@ -182,8 +182,9 @@ bridge_ssh_certificates_total 0
 bridge_x509_certificates_total 0
 ```
 
-Logins by outcome, tokens by grant and application passwords appear once they
-have counted something. **No label names a person or an institution**: which
+The counters of logins by outcome (`bridge_logins_total`), of tokens by grant
+(`bridge_tokens_issued_total`) and of application passwords
+(`bridge_app_passwords_total`) appear only once they have counted something. **No label names a person or an institution**: which
 universities' people use the service, and when, is not the provider's to
-publish. `bridge_metadata_valid_until_timestamp_seconds` is the one to alert
-on before it is reached: past it, nobody can log in.
+publish. Alert on `bridge_metadata_valid_until_timestamp_seconds` before the
+time it gives is reached: past it, nobody can log in.

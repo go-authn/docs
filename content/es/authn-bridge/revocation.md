@@ -9,7 +9,7 @@ tags: [authn-bridge, revocation, krl, crl, shared signals]
 Desactivar a una persona o una institución ([la API de administración]({{< relref "/authn-bridge/admin.md" >}}))
 pone fin a todo lo que vuelve al proveedor: los tokens de actualización,
 `/userinfo`, los certificados nuevos, las contraseñas de aplicación. Lo que ya ha
-entregado se comprueba en otro lugar, contra claves, y dos mecanismos llegan a
+entregado se comprueba en otro lugar, contra claves, y tres mecanismos llegan a
 ello:
 
 | credencial | se retira mediante |
@@ -92,7 +92,7 @@ Good "krl@go-authn.github.io" signature for bridge with ED25519 key SHA256:6gbNj
 donde `allowed` es la línea
 `bridge namespaces="krl@go-authn.github.io" <the CA key from /ssh/config>`.
 
-La CRL, emitida en el mismo momento:
+La CRL, emitida ocho segundos después:
 
 ```
 $ openssl crl -inform DER -in var/bridge.crl -noout -text

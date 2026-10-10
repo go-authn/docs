@@ -216,7 +216,8 @@ refus propres à ce fournisseur :
 
 - une réponse d'IdP remise **dans un autre navigateur** : la connexion est retrouvée
   par son propre cookie scellé, jamais par le `RelayState` que porte la réponse,
-  sans quoi n'importe qui pourrait connecter quelqu'un d'autre sous sa propre identité ;
+  sans quoi n'importe qui pourrait envoyer sa propre réponse d'IdP au navigateur de quelqu'un
+  d'autre et connecter cette personne sous l'identité de l'expéditeur ;
 - un IdP que la configuration n'autorise plus, ou que l'API d'administration a
   désactivé ;
 - une personne ou un établissement [désactivé ici]({{< relref "/authn-bridge/admin.md" >}}),

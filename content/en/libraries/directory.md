@@ -120,8 +120,8 @@ A held password also answers `Can(Verifier)`: it can be compared.
 {{< callout type="info" >}}
 **An empty group, asked through a `Set`, is reported as missing**
 
-`Expand` refuses an empty group with *has no members*, as the second-to-last
-lines show for the `Static` itself. Through a `Set`, `Set.Members` returns
+`Expand` refuses an empty group with *has no members*, as the third line from
+the end shows for the `Static` itself. Through a `Set`, `Set.Members` returns
 `ErrNoSuchGroup` for a group that a source has but that has nobody in it
 (`source.go:138`), so the message names the wrong cause. The group is refused
 either way.

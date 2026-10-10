@@ -33,7 +33,8 @@ aus, der root gehört und für niemanden sonst beschreibbar ist.
 `%u` ist das Konto, an dem die Anmeldung erfolgt. `%k` ist das Zertifikat, base64; eine
 ganze Zeile `ssh-...-cert-v01@openssh.com BASE64` wird ebenfalls gelesen, und fehlt das
 Argument, wird das Zertifikat von der Standardeingabe gelesen. Ein drittes Argument,
-`%t`, muss dann der Typ des Zertifikats sein.
+wenn es angegeben ist (das `%t` von sshd), muss der Typ des Zertifikats sein, sonst wird das
+Zertifikat abgelehnt.
 
 | Exit | gibt aus | sshd |
 |---|---|---|
@@ -141,9 +142,10 @@ tut: Es lehnt **jedes** Zertifikat ab, sobald die Liste abgelaufen ist (ihre Erw
 `expires@go-authn.github.io`, die sshd ignoriert), und jedes Zertifikat, wenn die Liste
 nicht gelesen werden kann. Eine Liste ohne Ablaufdatum wird ohne eines verwendet.
 
-Mit der KRL, die [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) schreibt: eine
-aktuelle und dann die fail-closed Liste, die es schreibt, wenn die Liste des Ausstellers
-[verfällt]({{< relref "/authn-revokd/lapse.md" >}}):
+Drei Aufrufe: mit der KRL, die [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) schreibt,
+zuerst eine aktuelle, dann die fail-closed Liste, die es schreibt, wenn die Liste des Ausstellers
+[verfällt]({{< relref "/authn-revokd/lapse.md" >}}); und zuletzt mit `--krl` auf eine Datei, die
+es nicht gibt:
 
 ```
 $ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-cert.pub)"
@@ -158,9 +160,10 @@ INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.fr granted" 
 WARNING: action=denied user=alice domain=login.hpc.example.org reason="KRL unreadable: open missing.krl: no such file or directory" serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
 ```
 
-Der zweite Aufruf wird abgelehnt, weil die Liste den **CA-Schlüssel** des Zertifikats
+Der zweite Aufruf wird abgelehnt, weil die fail-closed Liste den **CA-Schlüssel** des Zertifikats
 widerruft: Die Prüfung umfasst den eigenen Schlüssel des Zertifikats, seine Seriennummer
-und Key-ID sowie den Schlüssel, der es signiert hat.
+und Key-ID sowie den Schlüssel, der es signiert hat. Der dritte wird abgelehnt, weil die Liste
+nicht gelesen werden kann: Keine Liste gilt nicht als „nichts widerrufen“.
 
 ## Flags {#flags}
 

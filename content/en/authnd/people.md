@@ -190,8 +190,9 @@ or for SMB.
 Sources are asked **in the order they are written**, and the first one that
 knows a name owns it. The `user` blocks always come first, so a service
 account written down locally is not overridden by somebody with the same name
-in the database. **Group membership is the union** of every source: `staff`
-above has alice and bob from one file and dora from a database.
+in the database. **Group membership is the union** of every source: a group
+that a `group` block and a database's `groups` query both name has the
+members of both.
 
 {{< callout type="warning" >}}
 **Two names that differ only by case are refused**

@@ -14,9 +14,9 @@ key_file  = "/etc/authnd/key.pem"
 
 `cert_file` and `key_file` together turn TLS on; one without the other is
 refused (*one without the other serves nothing*). TLS 1.2 is the minimum.
-authnd has no ACME client: whatever writes the two files —
-[go-authn/servercert]({{< relref "/libraries/_index.md" >}}), certbot, a
-site's own CA — writes them, and authnd is **restarted** after each renewal,
+authnd has no ACME client: the two files are written by something else —
+[go-authn/servercert]({{< relref "/libraries/servercert.md" >}}), certbot, a
+site's own CA — and authnd is **restarted** after each renewal,
 because the certificate is read once, when the listener opens.
 
 ## Two ways, one listener each
@@ -128,8 +128,8 @@ this configuration can be served
 ```
 
 and, for the StartTLS listener, *sambaNTPassword is published over TLS, once
-StartTLS has been asked for*. alice has no NT hash written down; hers is
-derived from the password she has. bob's hash is published for an SMB
+StartTLS has been asked for*. alice has no NT hash written down; theirs is
+derived from the password they have. bob's hash is published for an SMB
 server to use, and `check` says, too, that bob cannot bind to authnd itself.
 
 Only a [reader]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})

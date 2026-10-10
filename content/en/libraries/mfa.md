@@ -99,7 +99,7 @@ for a security key.
 | a `Policy` whose `Count` is below one | *a policy that requires 0 factors accepts anyone*. There is no default policy: how much proof is enough belongs to whoever protects the thing |
 | fewer factors offered than `Count` | the policy cannot be met, whatever they answer |
 | a factor whose `Kind()` is outside the enumeration | counted as a distinct kind, `Kind(42)` beside a passphrase would pass as two-factor |
-| **the same factor twice** | one passphrase passed twice satisfied `Count: 2`. "The same" is the same type holding the same values, functions included: a function is the same function when it runs the same code |
+| **the same factor twice** | before v0.3.0, one passphrase passed twice satisfied `Count: 2`, and before v0.4.0 so did any factor holding a function. "The same" is the same type holding the same values, functions included: a function is the same function when it runs the same code |
 
 And it keeps three things apart while it asks:
 

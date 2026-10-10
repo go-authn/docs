@@ -38,7 +38,8 @@ alice changed their own password
 stopping
 ```
 
-Das ist ein einziger Lauf: ein `kill -HUP`, zwei Passwortänderungen, dann ein `kill -TERM`.
+Das ist ein einziger Lauf: ein `kill -HUP`, zwei Versuche, ein Passwort zu ändern (der erste
+abgelehnt, der zweite angenommen), dann ein `kill -TERM`.
 Der Prozess war nach dem `SIGHUP` noch da.
 
 Ein `SIGHUP` hat authnd früher **beendet** – Gos Standardverhalten für ein Signal, das

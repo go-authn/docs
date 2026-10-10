@@ -125,9 +125,9 @@ an RSA key or refused.
 | a missing or wrong **audience** | a token minted for another service is valid; it is not addressed to this one |
 | a token with **no expiry** | it is a password somebody can copy once |
 | an issuer, a key set, or a redirect **over cleartext HTTP**, except to loopback | the key set decides every signature |
-| an RSA key under 2048 bits, or with `n` or `e` not in shortest form; an EC point not on its curve | a short key is a signature somebody else can produce; a padded modulus once passed as 2048 bits |
+| an RSA key under 2048 bits, or with `n` or `e` not in shortest form; an EC point not on its curve | signatures under a short key can be forged; before v0.2.2, a 1024-bit modulus padded with zero bytes passed as 2048 bits |
 | a key published with `use` other than `sig` | a key set legitimately holds encryption keys too |
-| with `Type` set, a token of another `typ`; unset, any `typ` but none, `JWT` or `at+jwt` | RFC 9068 §4: a resource server checks `typ: at+jwt`, or it takes an ID token for an access token whenever the audiences agree |
+| with `Type` set, a token of another `typ`; with it unset, a `typ` other than `JWT` or `at+jwt` (a token with no `typ` header passes) | RFC 9068 §4: a resource server checks `typ: at+jwt`, or it takes an ID token for an access token whenever the audiences agree |
 | a part that is not canonical base64url | a token verifies as one string |
 
 ECDSA's `s` and `n − s` both verify, as the algorithm allows. So a denylist or

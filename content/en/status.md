@@ -68,7 +68,7 @@ dependencies are left out.
 | v0.19.0 | the EuroHPC SSH CA profile, opt-in per client |
 | v0.19.3 | release binaries, `SHA256SUMS` and build provenance on every tag |
 | v0.20.0 | the command is `authn-bridge`; a hardened systemd unit and an install guide |
-| v0.20.1 | comments and a refusal message that were no longer true; the README says all `RevokePerson` revokes |
+| v0.20.1 | comments and a refusal message that were no longer true; the README lists everything `RevokePerson` revokes |
 
 ### authn-revokd
 
@@ -81,7 +81,7 @@ dependencies are left out.
 | v0.5.0 | release binaries, `SHA256SUMS` and build provenance on every tag |
 | v0.6.0 | the command is `authn-revokd`; systemd units and an install guide; `SIGHUP` syncs at once |
 | v0.6.1 | `-version` prints on standard output |
-| v0.6.2 | `-once` says a failed fetch apart from a lapsed list; a list signed by another key is no longer called a race; `-help` exits 0 |
+| v0.6.2 | `-once` tells a failed fetch apart from a lapsed list; a list signed by another key is no longer called a race; `-help` exits 0 |
 
 ### sshcert
 

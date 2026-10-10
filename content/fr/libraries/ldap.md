@@ -128,8 +128,9 @@ ldap_modify: Server is unwilling to perform (53)
 modifying entry "uid=dora,ou=people,dc=example,dc=org"
 ```
 
-`(uid=svc-*-prod)` renvoie `svc-web-prod` et pas `svc-web-stage` : c'est ce
-défaut, dans la bibliothèque que celle-ci remplace, qui a décidé de son écriture. Le
+`(uid=svc-*-prod)` renvoie `svc-web-prod` et pas `svc-web-stage`. La bibliothèque
+que celle-ci remplace évaluait ce filtre comme `(uid=svc-*)` et renvoyait aussi
+`svc-web-stage` ; c'est à cause de ce défaut que cette bibliothèque a été écrite. Le
 root DSE ne mentionne pas StartTLS, parce qu'aucun `TLSConfig` n'a été donné.
 
 ## Ce qu'elle refuse, et pourquoi {#what-it-refuses-and-why}
@@ -137,7 +138,7 @@ root DSE ne mentionne pas StartTLS, parce qu'aucun `TLSConfig` n'a été donné.
 **Un filtre veut dire une seule chose.** Il est analysé ou décodé une seule fois en un arbre, et
 `String`, `EncodeFilter` et `Matches` lisent tous cet arbre. Un attribut qui n'est
 pas une description d'attribut au sens de la RFC 4512 §2.5, ou une règle de correspondance qui n'est pas un
-OID, est refusé à la fois par `ParseFilter` et par `DecodeFilter` : réimprimé, un
+OID, est refusé à la fois par `ParseFilter` et par `DecodeFilter` : avant la v0.6.1, réimprimé, un
 filtre « présent » sur l'attribut `!x` se lisait comme un NOT.
 
 **Du texte en clair, alors qu'autre chose était promis.** StartTLS est demandé par le
@@ -172,9 +173,9 @@ les alias ni les renvois (referrals), si bien qu'un ManageDsaIT critique est ref
 | | par défaut | |
 |---|---|---|
 | `MaxMessageSize` | 4 Mio | un en-tête de cinq octets annonçant quatre gigaoctets est refusé avant que quoi que ce soit ne soit réservé |
-| `MaxMessageElements` | 16384 | éléments BER comptés avant décodage : 4 Mio de chaînes vides retenaient autrefois 373 Mio avant toute liaison |
+| `MaxMessageElements` | 16384 | éléments BER comptés avant décodage : avant la v0.5.0, 4 Mio de chaînes vides retenaient 373 Mio avant toute liaison |
 | `IdleTimeout` | 5 minutes | le message entier doit arriver à temps, pas son premier octet ; une valeur négative signifie jamais |
-| `MaxPending`, `MaxPendingAuth` | 100, 1000 | opérations en cours avant et après une liaison, comme le `conn_max_pending` de slapd ; une de plus vaut un avis de déconnexion |
+| `MaxPending`, `MaxPendingAuth` | 100, 1000 | opérations qu'une connexion peut avoir en cours avant sa liaison (`MaxPending`) et après (`MaxPendingAuth`), comme les `conn_max_pending` et `conn_max_pending_auth` de slapd ; une connexion qui dépasse reçoit un avis de déconnexion et est fermée |
 | `MaxPagedSearches` | 4 | recherches paginées ouvertes par connexion, chacune une goroutine en attente de son entrée suivante |
 
 La profondeur d'imbrication des filtres est bornée elle aussi : un débordement de pile en Go tue le processus.

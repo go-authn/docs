@@ -120,8 +120,8 @@ Un mot de passe détenu répond aussi à `Can(Verifier)` : il peut être compar�
 {{< callout type="info" >}}
 **Un groupe vide, demandé à travers un `Set`, est signalé comme manquant**
 
-`Expand` refuse un groupe vide avec *has no members*, comme le montrent les avant-dernières
-lignes pour le `Static` lui-même. À travers un `Set`, `Set.Members` renvoie
+`Expand` refuse un groupe vide avec *has no members*, comme le montre l'antépénultième
+ligne pour le `Static` lui-même. À travers un `Set`, `Set.Members` renvoie
 `ErrNoSuchGroup` pour un groupe qu'une source possède mais où il n'y a personne
 (`source.go:138`), si bien que le message nomme la mauvaise cause. Le groupe est refusé
 dans les deux cas.

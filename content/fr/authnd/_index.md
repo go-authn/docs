@@ -119,8 +119,9 @@ vendorVersion: v0.10.0
 **À propos des transcriptions**
 
 Chaque bloc de sortie de ces pages a été affiché par le binaire de la version v0.10.0
-(`authnd-darwin-arm64`) -- la v0.10.1 a affiché le même `check`, octet pour octet, sur les deux
-configurations comparées -- et par les clients OpenLDAP et Heimdal livrés avec
+(`authnd-darwin-arm64`) — la v0.10.1 a affiché le même `check`, octet pour octet, sur les deux
+configurations comparées, et la ligne `--version` de la page d'installation est celle de la
+v0.10.1 — et par les clients OpenLDAP et Heimdal livrés avec
 macOS, exécutés sur 127.0.0.1 sur des ports non privilégiés, dans un répertoire de travail sous
 `/tmp`. C'est
 pourquoi les configurations derrière elles nomment des fichiers par des chemins relatifs comme

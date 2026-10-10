@@ -128,8 +128,9 @@ ldap_modify: Server is unwilling to perform (53)
 modifying entry "uid=dora,ou=people,dc=example,dc=org"
 ```
 
-`(uid=svc-*-prod)` liefert `svc-web-prod` und nicht `svc-web-stage`: Das ist der
-Defekt in der von dieser ersetzten Bibliothek, der den Ausschlag gab, diese zu schreiben. Das
+`(uid=svc-*-prod)` liefert `svc-web-prod` und nicht `svc-web-stage`. Die Bibliothek,
+die diese ersetzt, wertete diesen Filter als `(uid=svc-*)` aus und lieferte auch
+`svc-web-stage`; dieser Defekt ist der Grund, warum diese Bibliothek geschrieben wurde. Das
 Root-DSE führt StartTLS nicht auf, weil keine `TLSConfig` angegeben wurde.
 
 ## Was es ablehnt und warum {#what-it-refuses-and-why}
@@ -137,7 +138,7 @@ Root-DSE führt StartTLS nicht auf, weil keine `TLSConfig` angegeben wurde.
 **Ein Filter bedeutet eine Sache.** Er wird einmal in einen Baum geparst oder dekodiert, und
 `String`, `EncodeFilter` und `Matches` lesen alle diesen Baum. Ein Attribut, das
 keine Attributbeschreibung nach RFC 4512 §2.5 ist, oder eine Matching Rule, die keine
-OID ist, wird sowohl von `ParseFilter` als auch von `DecodeFilter` abgelehnt: Zurückgeschrieben las sich
+OID ist, wird sowohl von `ParseFilter` als auch von `DecodeFilter` abgelehnt: Vor v0.6.1 las sich zurückgeschrieben
 ein „present“-Filter auf dem Attribut `!x` als NOT.
 
 **Klartext, wenn etwas anderes versprochen wurde.** StartTLS wird vom
@@ -172,9 +173,9 @@ Aliasen oder Referrals, daher wird ein kritisches ManageDsaIT mit
 | | Standard | |
 |---|---|---|
 | `MaxMessageSize` | 4 MiB | ein Fünf-Byte-Header, der vier Gigabyte ankündigt, wird abgelehnt, bevor irgendetwas reserviert wird |
-| `MaxMessageElements` | 16384 | BER-Elemente, gezählt vor dem Dekodieren: 4 MiB leerer Strings belegten einmal 373 MiB vor jedem Bind |
+| `MaxMessageElements` | 16384 | BER-Elemente, gezählt vor dem Dekodieren: vor v0.5.0 belegten 4 MiB leerer Strings 373 MiB vor jedem Bind |
 | `IdleTimeout` | 5 Minuten | die ganze Nachricht muss rechtzeitig ankommen, nicht ihr erstes Byte; negativ bedeutet nie |
-| `MaxPending`, `MaxPendingAuth` | 100, 1000 | laufende Operationen vor und nach einem Bind, wie `conn_max_pending` von slapd; eine mehr führt zu einer Notice of Disconnection |
+| `MaxPending`, `MaxPendingAuth` | 100, 1000 | Operationen, die eine Verbindung vor ihrem Bind (`MaxPending`) und danach (`MaxPendingAuth`) gleichzeitig laufen haben darf, wie `conn_max_pending` und `conn_max_pending_auth` von slapd; eine Verbindung, die darüber geht, erhält eine Notice of Disconnection und wird geschlossen |
 | `MaxPagedSearches` | 4 | offene seitenweise Suchen pro Verbindung, jede eine Goroutine, die auf ihren nächsten Eintrag wartet |
 
 Auch die Verschachtelung von Filtern ist begrenzt: Ein Stack-Überlauf in Go beendet den Prozess.

@@ -169,7 +169,11 @@ redirigir.
 ## Lo que se rechaza al arrancar {#what-is-refused-at-startup}
 
 Cada uno de estos es la salida de `authn-bridge check` sobre una configuración que
-lo pedía. El servidor rechaza las mismas configuraciones.
+lo pedía. El servidor rechaza las mismas configuraciones: cada una se lee de la
+configuración y de los archivos que nombra. El único rechazo que añade `check` es la
+entrada de `idps` que la federación no enumera, [más arriba](#check-before-a-restart):
+el servidor obtiene los mismos metadatos antes de escuchar, pero no contrasta
+`idps` con ellos.
 
 **Un emisor, una redirección, un secreto que se filtran:**
 

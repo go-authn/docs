@@ -37,8 +37,9 @@ that key. A signature that does not verify may also be a list issued again
 between the two requests, so both are fetched once more before it is reported.
 This was the first fetch of that source, so there was no good copy to keep, and
 the output is the [fail-closed list]({{< relref "/authn-revokd/lapse.md" >}}) at
-once. (Before v0.6.2 the same failure was reported as "the list changed between
-it and its signature", ahead of the same words.)
+once. (Before v0.6.2 the same failure carried "the list changed between it and
+its signature" in front of the message above, as if the list had been issued
+again.)
 
 The signature is fetched with `If-Match: <the list's ETag>`. A list issued
 again between the two requests answers `412`, and both are fetched again.

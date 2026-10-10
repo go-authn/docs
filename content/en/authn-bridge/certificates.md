@@ -83,7 +83,7 @@ client "efp" {
 | `ssh_principal_claim` | `preferred_username`, `sub`, `voperson_id` or `eduperson_principal_name`. The last two are released by the `eduperson` scope, which the token must hold (`authn-bridge ssh-cert --scope eduperson`); otherwise, or when the IdP released no such attribute, the answer is `403` saying which |
 | `ssh_extensions` | among `permit-pty`, `permit-user-rc`, `permit-port-forwarding`, `permit-agent-forwarding`, `permit-X11-forwarding` |
 | `ssh_source_address` | addresses or CIDR prefixes, written canonically into `source-address` |
-| `ssh_validity` | shorter than `ssh_ca`'s `validity`, for this client |
+| `ssh_validity` | never longer than `ssh_ca`'s `validity` (equal is accepted), for this client |
 | `ssh_domain_grants` | domain patterns, checked by [go-authn/sshcert]({{< relref "/sshcert/_index.md" >}})'s `ValidatePattern` and encoded by its `EncodeDomainGrant` |
 
 ### What the profile refuses
@@ -134,8 +134,9 @@ which refuses a certificate whose grant does not name the host, and one with no
 grant at all. The CA is not in the OpenID discovery document: no OpenID Connect
 metadata names an SSH CA.
 
-What remains different from EFP's own CA: the principal is the `subject-id`
-the person's institution released, not a MyAccessID identifier; the groups
+What remains different from EFP's own CA: with `ssh_principal_claim =
+"voperson_id"`, as above, the principal is the `subject-id` the person's
+institution released, in lower case, not a MyAccessID identifier; the groups
 extension is there when the token carries groups; and **there is a KRL**,
 `GET /ssh/krl`, listing the certificates of people disabled here.
 

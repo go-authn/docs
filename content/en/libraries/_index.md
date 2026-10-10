@@ -70,8 +70,8 @@ gateway turns into peers.
 **A service that only accepts tickets never links a KDC.** An NFS server
 verifies the tickets a client presents; it has a keytab and nothing else to do
 with a realm. If accepting and issuing were one module, every such server
-would carry a ticket-issuing code path, and the directory a KDC reads people
-from, that it never runs.
+would carry a ticket-issuing code path it never runs, and the directory module
+a KDC reads people from, which it never uses.
 
 This is measured, not intended. In a scratch module that imports only
 `github.com/go-authn/krb5@v0.3.0`:

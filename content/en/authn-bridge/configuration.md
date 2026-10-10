@@ -167,7 +167,11 @@ the provider refuses to start on one another user could reach or re-point.
 ## What is refused at startup
 
 Each of these is the output of `authn-bridge check` on a configuration that
-asked for it. The server refuses the same configurations.
+asked for it. The server refuses the same configurations: each is read from
+the configuration and the files it names. The one refusal `check` adds is the
+`idps` entry the federation does not list, [above](#check-before-a-restart):
+the server fetches the same metadata before it listens, but does not hold
+`idps` to it.
 
 **An issuer, a redirect, a secret that leak:**
 

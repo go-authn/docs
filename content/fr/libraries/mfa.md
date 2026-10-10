@@ -99,7 +99,7 @@ pour une clé de sécurité.
 | une `Policy` dont le `Count` est inférieur à un | *a policy that requires 0 factors accepts anyone*. Il n'y a pas de politique par défaut : la quantité de preuve suffisante appartient à qui protège la chose |
 | moins de facteurs proposés que `Count` | la politique ne peut pas être satisfaite, quoi qu'ils répondent |
 | un facteur dont le `Kind()` est hors de l'énumération | compté comme une sorte distincte, `Kind(42)` à côté d'une phrase de passe passerait pour deux facteurs |
-| **le même facteur deux fois** | une phrase de passe passée deux fois satisfaisait `Count: 2`. « Le même » signifie le même type contenant les mêmes valeurs, fonctions comprises : une fonction est la même fonction quand elle exécute le même code |
+| **le même facteur deux fois** | avant la v0.3.0, une phrase de passe passée deux fois satisfaisait `Count: 2`, et avant la v0.4.0 tout facteur contenant une fonction aussi. « Le même » signifie le même type contenant les mêmes valeurs, fonctions comprises : une fonction est la même fonction quand elle exécute le même code |
 
 Et il tient trois choses à part pendant qu'il demande :
 

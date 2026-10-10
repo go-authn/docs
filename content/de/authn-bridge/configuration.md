@@ -167,7 +167,11 @@ der Anbieter verweigert den Start auf einem Verzeichnis, das ein anderer Benutze
 ## Was beim Start abgelehnt wird {#what-is-refused-at-startup}
 
 Jedes davon ist die Ausgabe von `authn-bridge check` für eine Konfiguration, die
-danach verlangt hat. Der Server lehnt dieselben Konfigurationen ab.
+danach verlangt hat. Der Server lehnt dieselben Konfigurationen ab: Jede ergibt sich aus der
+Konfiguration und den Dateien, die sie nennt. Die einzige Ablehnung, die `check` hinzufügt, ist
+der `idps`-Eintrag, den die Föderation nicht aufführt, [weiter oben](#check-before-a-restart):
+Der Server ruft dieselben Metadaten ab, bevor er lauscht, gleicht `idps` aber nicht
+mit ihnen ab.
 
 **Ein Aussteller, eine Umleitung, ein Geheimnis, die etwas preisgeben:**
 

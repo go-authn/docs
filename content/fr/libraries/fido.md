@@ -123,8 +123,12 @@ nommément plutôt qu'à moitié décodés.
 {{< callout type="warning" >}}
 **Un mauvais PIN coûte une tentative**
 
-Un authentificateur qui les a toutes épuisées se verrouille jusqu'à ce qu'on le débranche, puis
-définitivement. Interrogez `Key.PINRetries` avant de solliciter qui que ce soit.
+CTAP donne à un authentificateur un compteur de tentatives de PIN, huit au plus, et chaque
+mauvais PIN en consomme une. Trois mauvais PIN de suite bloquent le PIN jusqu'à ce que la clé
+soit débranchée puis rebranchée. Un compteur qui atteint zéro le bloque définitivement :
+seule une réinitialisation lève ce blocage, et elle efface tous les identifiants de la clé.
+Interrogez `Key.PINRetries` avant de solliciter qui que ce soit : il dit combien de tentatives
+il reste, et si la clé attend d'être débranchée.
 {{< /callout >}}
 
 ## Ce contre quoi il est vérifié {#what-it-is-checked-against}

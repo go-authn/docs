@@ -10,8 +10,9 @@ tags: [authn-bridge, oidc, saml]
 Éducation-Recherche von RENATER oder über eduGAIN, und Anwendungen erhalten ein OpenID-Connect-Token.**
 Dieselbe Anmeldung kann außerdem einen SSH-Schlüssel zertifizieren lassen, ein
 X.509-Client-Zertifikat für NFS über TLS ausstellen lassen, ein Anwendungspasswort für SMB und S3
-setzen oder einen WireGuard-Schlüssel registrieren. Was auch immer der Anbieter ausgestellt hat, kann er
-zurücknehmen, und er veröffentlicht signierte Listen dessen, was er widerrufen hat. Reines Go,
+setzen oder einen WireGuard-Schlüssel registrieren. Der Anbieter kann widerrufen, was er
+ausgestellt hat, und er veröffentlicht signierte Listen dessen, was er widerrufen hat; ein bereits
+ausgegebenes Zugriffstoken bleibt gültig, bis es abläuft. Reines Go,
 `CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.20.1.
 
 ```sh
