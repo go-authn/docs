@@ -113,8 +113,10 @@ jobs:
         run: |
           set -uo pipefail
           # The character class matters: an extractor stopping only at ) and "
-          # carries a closing > or < into the request.
-          urls=$(grep -rhoE 'https?://[^)">< [:space:]]+' content/ README.md | sed -E 's/[.,`]+$//' | sort -u)
+          # carries a closing > or < into the request. A backtick is in it too:
+          # never valid in a URL, and German writes "`http://`-Aussteller", a
+          # compound the extractor read as the URL "http://`-Aussteller".
+          urls=$(grep -rhoE 'https?://[^)"><` [:space:]]+' content/ README.md | sed -E 's/[.,`]+$//' | sort -u)
           test -n "$urls" || { echo "::error::no links found; are the pages still there?"; exit 1; }
           echo "checking $(printf '%s\n' "$urls" | wc -l) distinct URLs"
           fail=0
