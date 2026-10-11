@@ -17,8 +17,8 @@ go get github.com/go-authn/keyfactor@v0.4.1
 ```
 
 In v0.4.1 verlangt sein `go.mod` mindestens `go-authn/fido` v0.6.0 und
-`go-authn/mfa` v0.5.0: Mindestversionen, sodass ein Programm, das fido v0.6.1 verlangt, die
-Version, die diese Seiten beschreiben, mit v0.6.1 gebaut wird.
+`go-authn/mfa` v0.5.0: Mindestversionen, sodass ein Programm, das fido v0.6.2 verlangt, die
+Version, die diese Seiten beschreiben, mit v0.6.2 gebaut wird.
 
 Die Plattform liefert einen `Opener` – wie ein Schlüssel auf diesem System gefunden wird – und
 behält nur diesen. Alles andere ist überall gleich, wo es CTAP gibt: die Assertion,
@@ -92,6 +92,13 @@ ein Schlüssel, der bis zum Abziehen keine PINs mehr annimmt, wird abgelehnt, eb
 einer, dem **ein Versuch oder weniger** bleibt. Nach CTAP sperren drei falsche PINs hintereinander
 die PIN eines Schlüssels, bis er abgezogen wird, und ein Versuchszähler, der null erreicht, sperrt
 sie endgültig: Nur ein Reset hebt das auf und löscht dabei jedes Credential auf ihm.
+
+Lehnt der Schlüssel selbst eine PIN ab, ist der Fehler der von fido, und ab
+fido v0.6.2 nennt er den richtigen der beiden Fälle:
+`too many wrong PINs in a row; unplug the key and plug it in again (0x34)`,
+wenn das Abziehen die Sperre aufhebt, und
+`the PIN is blocked: no tries are left, and only a reset, which erases the credentials, unblocks it (0x32)`,
+wenn nur ein Reset sie aufhebt. Vor fido v0.6.2 waren die beiden Sätze vertauscht.
 
 **Eine PIN ist kein zweiter Faktor.** Die Art bleibt `mfa.Possession`: Eine in den Schlüssel
 eingegebene PIN schützt den Schlüssel und identifiziert gegenüber dieser Maschine niemanden.

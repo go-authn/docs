@@ -5,19 +5,19 @@ description: "Which releases these pages describe, what each release added, and 
 tags: [status, releases]
 ---
 
-These pages are documentation version **0.1**, and describe:
+These pages are documentation version **0.2**, and describe:
 
 | program | release | module |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.20.1** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.2** | `github.com/go-authn/revocation` |
-| sshcert-authorize | **v0.1.5** | `github.com/go-authn/sshcert` |
+| authn-bridge | **v0.22.0** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
+| sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}}).
 A new minor version of any program above is a new documentation version, so
-the pages a reader finds under `/docs/0.1/` keep describing what they
-installed.
+the pages a reader finds under `/docs/0.2/` keep describing what they
+installed; those of the previous releases stay under `/docs/0.1/`.
 
 ## What each release added
 
@@ -69,6 +69,9 @@ dependencies are left out.
 | v0.19.3 | release binaries, `SHA256SUMS` and build provenance on every tag |
 | v0.20.0 | the command is `authn-bridge`; a hardened systemd unit and an install guide |
 | v0.20.1 | comments and a refusal message that were no longer true; the README lists everything `RevokePerson` revokes |
+| v0.21.0 | RFC 8707 resource indicators: a client whose `audience` names several resource servers can ask for a token addressed to one. Tagged an hour before v0.20.1, which has them too, and without v0.20.1's corrections |
+| v0.21.1 | golang.org/x/net v0.60.0, for its HTTP/2 advisories, and Go 1.27.2; v0.20.1's corrections again; placeholder domains in RFC 2606 names |
+| v0.22.0 | the access token no longer carries `auth_time` or `acr` (the ID token still does), so that an ES256 token fits OpenSSH's 1023 characters up to the 99th percentile of RENATER's scopes |
 
 ### authn-revokd
 
@@ -82,6 +85,7 @@ dependencies are left out.
 | v0.6.0 | the command is `authn-revokd`; systemd units and an install guide; `SIGHUP` syncs at once |
 | v0.6.1 | `-version` prints on standard output |
 | v0.6.2 | `-once` tells a failed fetch apart from a lapsed list; a list signed by another key is no longer called a race; `-help` exits 0 |
+| v0.6.3 | placeholder domains in RFC 2606 names, in the examples and the documentation; no change in behaviour |
 
 ### sshcert
 
@@ -91,6 +95,7 @@ dependencies are left out.
 | v0.1.2 | release binaries, `SHA256SUMS` and build provenance on every tag |
 | v0.1.4 | the release checks every binary's build information |
 | v0.1.5 | `-version` prints the module version of a `go install` build, not `dev` |
+| v0.1.6 | placeholder domains in RFC 2606 names, in the documentation; no change in behaviour |
 
 ## Not implemented yet
 

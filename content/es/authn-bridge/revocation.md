@@ -50,13 +50,13 @@ $ curl -s -D - -o var/bridge.krl http://127.0.0.1:28473/ssh/krl
 HTTP/1.1 200 OK
 Cache-Control: max-age=60
 Content-Type: application/octet-stream
-Etag: "c3e6cb39788fe31df282c784e49f1ba9"
-Date: Sat, 10 Oct 2026 19:17:54 GMT
+Etag: "db5b4e920d2da3911da51a8f70db8c4f"
+Date: Sun, 11 Oct 2026 09:48:14 GMT
 Content-Length: 130
 
 $ ssh-keygen -Q -l -f var/bridge.krl
 # KRL version 0
-# Generated at 20261010T211754
+# Generated at 20261011T114814
 # Comment: go-authn/bridge http://127.0.0.1:28473
 ```
 
@@ -66,7 +66,7 @@ cambia al menos cada media hora, un lector que sondea nunca conserva una copia m
 allá de su caducidad:
 
 ```
-$ curl -s -o /dev/null -H 'If-None-Match: "c3e6cb39788fe31df282c784e49f1ba9"' -w '%{http_code}\n' http://127.0.0.1:28473/ssh/krl
+$ curl -s -o /dev/null -H 'If-None-Match: "db5b4e920d2da3911da51a8f70db8c4f"' -w '%{http_code}\n' http://127.0.0.1:28473/ssh/krl
 304
 ```
 
@@ -75,7 +75,7 @@ ha vuelto a emitir entretanto, la respuesta es `412`, en lugar de una firma que 
 le corresponde:
 
 ```
-$ curl -s -o var/bridge.krl.sig -H 'If-Match: "c3e6cb39788fe31df282c784e49f1ba9"' -w '%{http_code}\n' http://127.0.0.1:28473/ssh/krl.sig
+$ curl -s -o var/bridge.krl.sig -H 'If-Match: "db5b4e920d2da3911da51a8f70db8c4f"' -w '%{http_code}\n' http://127.0.0.1:28473/ssh/krl.sig
 200
 $ curl -s -o /dev/null -H 'If-Match: "stale"' -w '%{http_code}\n' http://127.0.0.1:28473/ssh/krl.sig
 412
@@ -86,13 +86,13 @@ nombres:
 
 ```
 $ ssh-keygen -Y verify -f allowed -I bridge -n krl@go-authn.github.io -s bridge.krl.sig < bridge.krl
-Good "krl@go-authn.github.io" signature for bridge with ED25519 key SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+Good "krl@go-authn.github.io" signature for bridge with ED25519 key SHA256:Fpa/Ku2Wv1EDCR+KSsqZ2eECTM1zftiBWj01Lr+NO2Q
 ```
 
 donde `allowed` es la línea
 `bridge namespaces="krl@go-authn.github.io" <the CA key from /ssh/config>`.
 
-La CRL, emitida ocho segundos después:
+La CRL, emitida quince segundos después:
 
 ```
 $ openssl crl -inform DER -in var/bridge.crl -noout -text
@@ -100,20 +100,20 @@ Certificate Revocation List (CRL):
     Version 2 (0x1)
     Signature Algorithm: ecdsa-with-SHA256
     Issuer: CN=go-authn bridge NFS client CA
-    Last Update: Oct 10 19:18:02 2026 GMT
-    Next Update: Oct 10 20:18:02 2026 GMT
+    Last Update: Oct 11 09:48:29 2026 GMT
+    Next Update: Oct 11 10:48:29 2026 GMT
     CRL extensions:
         X509v3 Authority Key Identifier: 
-            70:62:92:19:7D:D4:26:45:97:9B:32:20:0C:D4:67:02:45:6C:55:B9
+            2A:90:7A:50:FF:65:52:BA:70:4E:E1:F8:70:EE:7A:FC:B1:8B:FE:4E
         X509v3 CRL Number: 
-            1791659882080
+            1791712109993
 No Revoked Certificates.
     Signature Algorithm: ecdsa-with-SHA256
     Signature Value:
-        30:45:02:20:50:1e:bd:e3:7b:39:32:6c:7b:d9:91:bd:bb:78:
-        f2:74:ed:ca:da:74:77:e0:0f:39:e0:63:4c:45:91:47:ba:98:
-        02:21:00:a0:1f:54:40:3f:75:66:af:f5:a9:a8:86:f3:2d:a9:
-        d7:60:15:24:43:b6:80:a5:bb:45:49:9d:89:56:89:e0:68
+        30:44:02:20:37:90:14:6f:c1:f2:ea:98:29:04:61:88:a8:17:
+        88:e3:f6:84:9d:46:a7:fc:2b:ac:81:26:47:9d:ac:84:23:38:
+        02:20:0a:a6:93:cb:7d:2d:81:e4:59:d4:0d:a0:fd:f4:6e:75:
+        c9:0d:53:e7:92:49:ac:a1:31:a8:90:09:91:d1:87:b6
 ```
 
 Un certificado permanece en su lista hasta que caduca: un certificado caducado se

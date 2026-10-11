@@ -5,19 +5,19 @@ description: "Welche Releases diese Seiten beschreiben, was jedes Release hinzug
 tags: [stand, releases]
 ---
 
-Diese Seiten sind die Dokumentationsversion **0.1** und beschreiben:
+Diese Seiten sind die Dokumentationsversion **0.2** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.20.1** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.2** | `github.com/go-authn/revocation` |
-| sshcert-authorize | **v0.1.5** | `github.com/go-authn/sshcert` |
+| authn-bridge | **v0.22.0** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
+| sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}}).
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
-sodass die Seiten, die jemand unter `/docs/0.1/` findet, weiterhin beschreiben, was
-installiert wurde.
+sodass die Seiten, die jemand unter `/docs/0.2/` findet, weiterhin beschreiben, was
+installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`.
 
 ## Was jedes Release hinzugefügt hat {#what-each-release-added}
 
@@ -69,6 +69,9 @@ Abhängigkeiten aktualisiert haben, sind weggelassen.
 | v0.19.3 | Release-Binaries, `SHA256SUMS` und Build-Provenienz bei jedem Tag |
 | v0.20.0 | der Befehl heißt `authn-bridge`; eine gehärtete systemd-Unit und eine Installationsanleitung |
 | v0.20.1 | Kommentare und eine Ablehnungsmeldung, die nicht mehr zutrafen; das README nennt alles, was `RevokePerson` widerruft |
+| v0.21.0 | Resource Indicators nach RFC 8707: Ein Client, dessen `audience` mehrere Ressourcenserver nennt, kann ein Token anfordern, das an nur einen adressiert ist. Eine Stunde vor v0.20.1 getaggt, die sie ebenfalls enthält, und ohne die Korrekturen von v0.20.1 |
+| v0.21.1 | golang.org/x/net v0.60.0 wegen seiner HTTP/2-Sicherheitshinweise, und Go 1.27.2; wieder die Korrekturen von v0.20.1; Platzhalter-Domains mit Namen nach RFC 2606 |
+| v0.22.0 | das Access-Token trägt kein `auth_time` und kein `acr` mehr (das ID-Token schon), damit ein ES256-Token bis zum 99. Perzentil der RENATER-Scopes in die 1023 Zeichen von OpenSSH passt |
 
 ### authn-revokd {#authn-revokd}
 
@@ -82,6 +85,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen.
 | v0.6.0 | der Befehl heißt `authn-revokd`; systemd-Units und eine Installationsanleitung; `SIGHUP` synchronisiert sofort |
 | v0.6.1 | `-version` gibt auf der Standardausgabe aus |
 | v0.6.2 | `-once` unterscheidet einen fehlgeschlagenen Abruf von einer verfallenen Liste; eine von einem anderen Schlüssel signierte Liste wird nicht mehr als Race bezeichnet; `-help` endet mit 0 |
+| v0.6.3 | Platzhalter-Domains mit Namen nach RFC 2606, in den Beispielen und der Dokumentation; keine Verhaltensänderung |
 
 ### sshcert {#sshcert}
 
@@ -91,6 +95,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen.
 | v0.1.2 | Release-Binaries, `SHA256SUMS` und Build-Provenienz bei jedem Tag |
 | v0.1.4 | das Release prüft die Build-Informationen jedes Binarys |
 | v0.1.5 | `-version` gibt die Modulversion eines mit `go install` erstellten Builds aus, nicht `dev` |
+| v0.1.6 | Platzhalter-Domains mit Namen nach RFC 2606, in der Dokumentation; keine Verhaltensänderung |
 
 ## Noch nicht implementiert {#not-implemented-yet}
 

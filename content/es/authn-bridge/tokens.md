@@ -118,8 +118,41 @@ RFC 9068: firmado con `signing_key_file` (RS256) o `access_token_key_file`
 (ES256), `typ: at+jwt`, válido durante `token_lifetime` (una hora por defecto).
 Lleva lo que un servidor de recursos necesita para decidir sin preguntar a nadie:
 `preferred_username`, `groups`, `idp` (el entity ID del IdP que lo avaló),
-`scope`, `client_id`, `auth_time`, y `session_end` cuando el IdP indicó cuándo
-termina su sesión.
+`scope`, `client_id`, y `session_end` cuando el IdP indicó cuándo termina su
+sesión.
+
+### Lo que deja fuera, y por qué {#what-it-leaves-out}
+
+**Ni `auth_time` ni `acr`**, aunque el RFC 9068 permite ambos. Siguen en el
+token de ID, donde los pone OIDC Core. Nada los lee de un token de acceso: ni
+este proveedor, que busca un token por su `jti`, ni go-fileshare. En cambio, un
+token de acceso también se pega como respuesta SSH keyboard-interactive (mccli
+de ssh-oidc, que motley-cue comprueba en `/userinfo`), y OpenSSH lee 1023
+caracteres de ella; solo el `acr` de un IdP,
+`urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport`, ocupa unos
+90. Antes de la v0.22.0, el token de acceso llevaba ambos.
+
+La longitud de un token de acceso ES256 (`access_token_key_file`) para un eppn
+largo y tres entitlements AARC, medida por `TestES256AccessTokens` de
+authn-bridge con un emisor de longitud real, frente a las longitudes de los
+`shibmd:Scope` de los metadatos de RENATER (743 scopes):
+
+| longitud del scope | | caracteres |
+|---|---|---|
+| 13 | mediana | 885 |
+| 22 | percentil 95 | 945 |
+| 29 | percentil 99 | 992 |
+| 44 | el más largo | **1092: se pasa** |
+
+Antes de la v0.22.0, el mismo token tenía 1014 / 1074 / 1121 / 1221 caracteres:
+se pasaba desde el percentil 95. Lo que sigue sin caber son los scopes más
+largos y, sobre todo, muchos grupos: cada entitlement añade su URN entera, y
+nada limita cuántos envía un IdP. Un token de acceso RS256, firmado con una
+clave de 3072 bits, tiene unos 1150 caracteres antes de cualquier grupo, así
+que un token destinado a SSH se firma con ES256. Por encima de 1023 caracteres,
+mccli pide a motley-cue una contraseña de un solo uso en su lugar, algo que
+motley-cue permite por defecto; un token pegado en un `ssh` normal tiene que
+caber.
 
 Un token que tiene uno de los scopes propios del proveedor (`ssh`, `nfs`,
 `app_password`, `wireguard`, `wireguard_peers`) va dirigido **solo al
@@ -132,7 +165,7 @@ HTTP/1.1 401 Unauthorized
 Content-Type: text/plain; charset=utf-8
 Www-Authenticate: Bearer error="invalid_token"
 X-Content-Type-Options: nosniff
-Date: Sat, 10 Oct 2026 19:18:09 GMT
+Date: Sun, 11 Oct 2026 09:48:07 GMT
 Content-Length: 23
 
 the token is not valid

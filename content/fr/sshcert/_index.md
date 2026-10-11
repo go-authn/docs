@@ -12,12 +12,12 @@ hôtes auxquels un certificat est destiné dans une extension,
 `ssh-domain-grant@core.aai.geant.org`, et `sshd` l'ignore. go-authn/sshcert
 lit et écrit cette extension, et sa commande, `sshcert-authorize`, est ce que
 `sshd` exécute pour la faire respecter. Go pur, `CGO_ENABLED=0`. Ces pages décrivent
-la v0.1.5.
+la v0.1.6.
 
 ```
-$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.5
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.6
 $ sshcert-authorize -version
-sshcert-authorize v0.1.5
+sshcert-authorize v0.1.6
 ```
 
 | | |

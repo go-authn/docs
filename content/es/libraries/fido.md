@@ -12,7 +12,7 @@ registran una credencial, piden una firma e intercambian un PIN por un token— 
 puro, en cualquier sistema operativo.
 
 ```sh
-go get github.com/go-authn/fido@v0.6.1
+go get github.com/go-authn/fido@v0.6.2
 ```
 
 Nada aquí depende de la plataforma. Un `Transport` lleva informes de 64 bytes hacia
@@ -127,6 +127,15 @@ llave se desconecta y se vuelve a conectar. Un contador que llega a cero lo bloq
 para siempre: solo un reinicio lo levanta, y un reinicio borra todas las credenciales
 de la llave. Consulte `Key.PINRetries` antes de pedírselo a nadie: dice cuántos
 reintentos quedan y si la llave espera a que la desconecten.
+
+Cuando una llave rechaza un PIN, el error dice cuál de los dos casos es.
+CTAP2_ERR_PIN_AUTH_BLOCKED (`0x34`), que se levanta desconectándola, dice
+`too many wrong PINs in a row; unplug the key and plug it in again (0x34)`;
+CTAP2_ERR_PIN_BLOCKED (`0x32`), que solo levanta un reinicio, dice
+`the PIN is blocked: no tries are left, and only a reset, which erases the credentials, unblocks it (0x32)`.
+Antes de la v0.6.2 las dos frases estaban intercambiadas: una llave que solo había
+que desconectar se daba por bloqueada, y la persona a la que se le decía podía
+reiniciarla y perder todas sus credenciales.
 {{< /callout >}}
 
 ## Contra qué se comprueba {#what-it-is-checked-against}
@@ -148,4 +157,4 @@ verificada contra la clave pública que entregó; esa ejecución no forma parte 
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.1](https://pkg.go.dev/github.com/go-authn/fido@v0.6.1)
+[pkg.go.dev/github.com/go-authn/fido@v0.6.2](https://pkg.go.dev/github.com/go-authn/fido@v0.6.2)

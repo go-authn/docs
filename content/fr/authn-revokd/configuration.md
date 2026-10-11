@@ -105,8 +105,8 @@ $ curl -s -D - -o /dev/null http://127.0.0.1:28474/bridge-ssh
 HTTP/1.1 200 OK
 Cache-Control: max-age=30
 Content-Type: application/octet-stream
-Etag: "5b1194d230399c2d1c5b0d904aa91101"
-Date: Sat, 10 Oct 2026 19:19:20 GMT
+Etag: "83278365ecb0f44b05170bb12f151756"
+Date: Sun, 11 Oct 2026 09:51:05 GMT
 Content-Length: 130
 
 $ curl -s -o /dev/null -w "%{http_code}\n" -H 'If-Match: "stale"' http://127.0.0.1:28474/bridge-ssh.sig
@@ -158,6 +158,6 @@ par le groupe ou les autres, ni appartenir à quiconque d'autre que l'utilisateu
 avec `1` :
 
 ```
-authn-revokd: state_dir /tmp/docs-patch-a2daf7c8/revokd/state-wide is writable by its group or by others (mode -rwxrwxrwx): whoever can write there decides which list comes next
-authn-revokd: state_dir /tmp/docs-patch-a2daf7c8/revokd/state-link is a symbolic link (L---------): whoever owns it decides where the state is; name the directory itself
+authn-revokd: state_dir /tmp/authn/revokd/state-wide is writable by its group or by others (mode -rwxrwxrwx): whoever can write there decides which list comes next
+authn-revokd: state_dir /tmp/authn/revokd/state-link is a symbolic link (L---------): whoever owns it decides where the state is; name the directory itself
 ```

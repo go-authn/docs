@@ -116,8 +116,40 @@ Für die Ressourcenserver in der `audience` des Clients, wie RFC 9068 es beschre
 signiert mit `signing_key_file` (RS256) oder `access_token_key_file` (ES256),
 `typ: at+jwt`, gültig für `token_lifetime` (standardmäßig eine Stunde). Es trägt, was ein
 Ressourcenserver braucht, um zu entscheiden, ohne jemanden zu fragen: `preferred_username`,
-`groups`, `idp` (die Entity-ID des IdP, der gebürgt hat), `scope`, `client_id`,
-`auth_time` und `session_end`, wenn der IdP angegeben hat, wann seine Sitzung endet.
+`groups`, `idp` (die Entity-ID des IdP, der gebürgt hat), `scope`, `client_id`
+und `session_end`, wenn der IdP angegeben hat, wann seine Sitzung endet.
+
+### Was es weglässt, und warum {#what-it-leaves-out}
+
+**Kein `auth_time` und kein `acr`**, obwohl RFC 9068 beides erlaubt. Beide
+bleiben im ID-Token, wo OIDC Core sie vorsieht. Nichts liest sie aus einem
+Access-Token: weder dieser Anbieter, der ein Token über seine `jti` nachschlägt,
+noch go-fileshare. Ein Access-Token wird aber auch als SSH-Antwort im
+keyboard-interactive-Verfahren eingefügt (mccli von ssh-oidc, von motley-cue an
+`/userinfo` geprüft), und OpenSSH liest davon 1023 Zeichen; allein das `acr`
+eines IdP, `urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport`,
+belegt etwa 90 davon. Vor v0.22.0 trug das Access-Token beide.
+
+Die Länge eines ES256-Access-Tokens (`access_token_key_file`) für einen langen
+eppn und drei AARC-Entitlements, gemessen von `TestES256AccessTokens` in
+authn-bridge mit einem Aussteller realer Länge, gegen die Längen der
+`shibmd:Scope`-Einträge in den Metadaten von RENATER (743 Scopes):
+
+| Scope-Länge | | Zeichen |
+|---|---|---|
+| 13 | Median | 885 |
+| 22 | 95. Perzentil | 945 |
+| 29 | 99. Perzentil | 992 |
+| 44 | der längste | **1092: zu lang** |
+
+Vor v0.22.0 war dasselbe Token 1014 / 1074 / 1121 / 1221 Zeichen lang: zu lang
+ab dem 95. Perzentil. Was weiterhin nicht passt, sind die längsten Scopes und
+vor allem viele Gruppen: Jedes Entitlement fügt seine ganze URN hinzu, und
+nichts begrenzt, wie viele ein IdP schickt. Ein RS256-Access-Token, signiert mit
+einem 3072-Bit-Schlüssel, ist schon vor jeder Gruppe etwa 1150 Zeichen lang;
+ein Token für SSH wird daher mit ES256 signiert. Ab 1023 Zeichen fragt mccli
+motley-cue stattdessen nach einem Einmalpasswort, was motley-cue standardmäßig
+erlaubt; ein Token, das in ein gewöhnliches `ssh` eingefügt wird, muss passen.
 
 Ein Token mit einem der eigenen Scopes des Anbieters (`ssh`, `nfs`,
 `app_password`, `wireguard`, `wireguard_peers`) ist **allein an den Anbieter**
@@ -130,7 +162,7 @@ HTTP/1.1 401 Unauthorized
 Content-Type: text/plain; charset=utf-8
 Www-Authenticate: Bearer error="invalid_token"
 X-Content-Type-Options: nosniff
-Date: Sat, 10 Oct 2026 19:18:09 GMT
+Date: Sun, 11 Oct 2026 09:48:07 GMT
 Content-Length: 23
 
 the token is not valid

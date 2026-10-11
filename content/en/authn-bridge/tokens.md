@@ -117,7 +117,39 @@ signed with `signing_key_file` (RS256) or `access_token_key_file` (ES256),
 `typ: at+jwt`, valid `token_lifetime` (an hour by default). It carries what a
 resource server needs to decide without asking anybody: `preferred_username`,
 `groups`, `idp` (the entity ID of the IdP that vouched), `scope`, `client_id`,
-`auth_time`, and `session_end` when the IdP said when its session ends.
+and `session_end` when the IdP said when its session ends.
+
+### What it leaves out, and why {#what-it-leaves-out}
+
+**No `auth_time` and no `acr`**, although RFC 9068 allows both. They stay in
+the ID token, where OIDC Core puts them. Nothing reads them from an access
+token: not this provider, which looks a token up by its `jti`, and not
+go-fileshare. An access token, however, is also pasted as an SSH
+keyboard-interactive answer (ssh-oidc's mccli, checked by motley-cue at
+`/userinfo`), and OpenSSH reads 1023 characters of one; an IdP's `acr` alone,
+`urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport`, is about
+90 of them. Before v0.22.0 the access token carried both.
+
+The length of an ES256 access token (`access_token_key_file`) for a long eppn
+and three AARC entitlements, measured by authn-bridge's `TestES256AccessTokens`
+with an issuer of a real length, against the `shibmd:Scope` lengths of
+RENATER's metadata (743 scopes):
+
+| scope length | | characters |
+|---|---|---|
+| 13 | median | 885 |
+| 22 | 95th percentile | 945 |
+| 29 | 99th percentile | 992 |
+| 44 | the longest | **1092: over** |
+
+Before v0.22.0 the same token was 1014 / 1074 / 1121 / 1221 characters: over
+from the 95th percentile on. What still does not fit is the longest scopes
+and, above all, many groups: every entitlement adds its whole URN, and nothing
+bounds how many an IdP sends. An RS256 access token, signed with a 3072-bit
+key, is about 1150 characters before any group, so a token meant for SSH is
+signed ES256. Past 1023 characters, mccli asks motley-cue for a one-time
+password instead, which motley-cue allows by default; a token pasted into plain
+`ssh` has to fit.
 
 A token holding one of the provider's own scopes (`ssh`, `nfs`,
 `app_password`, `wireguard`, `wireguard_peers`) is addressed to **the provider
@@ -130,7 +162,7 @@ HTTP/1.1 401 Unauthorized
 Content-Type: text/plain; charset=utf-8
 Www-Authenticate: Bearer error="invalid_token"
 X-Content-Type-Options: nosniff
-Date: Sat, 10 Oct 2026 19:18:09 GMT
+Date: Sun, 11 Oct 2026 09:48:07 GMT
 Content-Length: 23
 
 the token is not valid

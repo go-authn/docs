@@ -13,7 +13,7 @@ signées de la fédération, envoie les personnes vers le fournisseur d'identit�
 de leur propre établissement, et relit ce que ce fournisseur affirme.
 
 ```sh
-go get github.com/go-authn/saml@v0.4.0
+go get github.com/go-authn/saml@v0.4.1
 ```
 
 C'est la moitié d'[authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -230,4 +230,4 @@ Le plancher de la voie de couverture est de 92 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/saml@v0.4.0](https://pkg.go.dev/github.com/go-authn/saml@v0.4.0)
+[pkg.go.dev/github.com/go-authn/saml@v0.4.1](https://pkg.go.dev/github.com/go-authn/saml@v0.4.1)
