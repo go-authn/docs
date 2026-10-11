@@ -1,0 +1,180 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Signaux</title><link>https://go-authn.github.io/docs/0.1/fr/tags/signaux/</link><description>Recent content in Signaux on go-authn</description><generator>Hugo -- gohugo.io</generator><language>fr</language><atom:link href="https://go-authn.github.io/docs/0.1/fr/tags/signaux/index.xml" rel="self" type="application/rss+xml"/><item><title>L'exploiter : signaux, redémarrages et ce qu'il dit</title><link>https://go-authn.github.io/docs/0.1/fr/authnd/operations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.1/fr/authnd/operations/</guid><description>
+&lt;h2 data-hextra-search-id="it-reads-everything-once"&gt;Il lit tout une seule fois&lt;span class="hx:absolute hx:-mt-20" id="it-reads-everything-once"&gt;&lt;/span&gt;
+&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Les fichiers de configuration, chaque source derrière eux, le certificat TLS et
+le keytab sont lus &lt;strong&gt;au démarrage&lt;/strong&gt;. Il n&amp;rsquo;y a pas de rechargement, et l&amp;rsquo;unité fournie
+n&amp;rsquo;a pas d&amp;rsquo;&lt;code&gt;ExecReload=&lt;/code&gt;. Après avoir modifié l&amp;rsquo;un d&amp;rsquo;eux :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl restart authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La seule chose appliquée pendant qu&amp;rsquo;il tourne est un
+&lt;a href="https://go-authn.github.io/docs/0.1/fr/authnd/passwords/"&gt;mot de passe qu&amp;rsquo;une personne change via authnd&lt;/a&gt;,
+qui relit les blocs &lt;code&gt;user&lt;/code&gt; et rien d&amp;rsquo;autre.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="signals"&gt;Signaux&lt;span class="hx:absolute hx:-mt-20" id="signals"&gt;&lt;/span&gt;
+&lt;a href="#signals" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;signal&lt;/th&gt;
+&lt;th&gt;ce qui se passe&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;SIGTERM&lt;/code&gt;, &lt;code&gt;SIGINT&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;il affiche &lt;code&gt;stopping&lt;/code&gt;, ferme les écouteurs &lt;strong&gt;et chaque connexion établie&lt;/strong&gt;, arrête le royaume, ferme les sources, et sort avec 0 une fois que le serveur a réellement terminé&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;SIGHUP&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;il est intercepté et journalisé, et authnd &lt;strong&gt;reste en marche&lt;/strong&gt; sans rien recharger&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd
+ldap on 127.0.0.1:3893, serving 4 people from the configuration file, then a sqlite database
+hangup: authnd does not reload; restart it to apply a changed configuration, certificate or keytab
+alice&amp;#39;s password change was refused: the old password did not verify: directory: wrong password
+alice changed their own password
+stopping&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;C&amp;rsquo;est une seule exécution : un &lt;code&gt;kill -HUP&lt;/code&gt;, deux tentatives de changement de mot de passe (la première
+refusée, la seconde acceptée), puis un &lt;code&gt;kill -TERM&lt;/code&gt;.
+Le processus était toujours là après le &lt;code&gt;SIGHUP&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Un &lt;code&gt;SIGHUP&lt;/code&gt; &lt;strong&gt;tuait&lt;/strong&gt; autrefois authnd — le comportement par défaut de Go pour un signal que personne ne gère
+— et systemd compte une mort par &lt;code&gt;SIGHUP&lt;/code&gt; comme une sortie propre, si bien que
+&lt;code&gt;Restart=on-failure&lt;/code&gt; ne le relançait pas : un seul &lt;code&gt;kill -HUP&lt;/code&gt; ou un seul &lt;code&gt;postrotate&lt;/code&gt;
+de logrotate mettait un annuaire hors service pour de bon. Il est désormais intercepté pour que
+l&amp;rsquo;habitude soit sans danger, et la ligne dit quoi faire à la place.&lt;/p&gt;
+&lt;p&gt;Fermer les connexions établies, et pas seulement l&amp;rsquo;écouteur, est délibéré : un
+serveur qui cesserait d&amp;rsquo;accepter en laissant ses connexions ouvertes répondre
+paraîtrait arrêté sans l&amp;rsquo;être, et c&amp;rsquo;est le redémarrage qui ne prend pas.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-writes"&gt;Ce qu&amp;rsquo;il écrit&lt;span class="hx:absolute hx:-mt-20" id="what-it-writes"&gt;&lt;/span&gt;
+&lt;a href="#what-it-writes" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Tout va sur la sortie standard, qui sous systemd est le journal
+(&lt;code&gt;journalctl -u authnd&lt;/code&gt;) :&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;au démarrage, où il écoute et qui il sert — &lt;code&gt;ldap on …&lt;/code&gt;, &lt;code&gt;ldaps on …&lt;/code&gt;
+ou &lt;code&gt;ldap+starttls on …&lt;/code&gt;, puis &lt;code&gt;realm EXAMPLE.ORG on … (udp and tcp)&lt;/code&gt; avec un
+bloc &lt;code&gt;kerberos&lt;/code&gt; ;&lt;/li&gt;
+&lt;li&gt;chaque liaison refusée sous un bloc &lt;code&gt;mfa&lt;/code&gt;, chaque jeton refusé, chaque
+changement de mot de passe refusé ou effectué, &lt;strong&gt;avec la raison&lt;/strong&gt; — que le
+client n&amp;rsquo;apprend jamais ; voir &lt;a href="https://go-authn.github.io/docs/0.1/fr/authnd/mfa/#what-the-binds-look-like"&gt;le second facteur&lt;/a&gt;
+et &lt;a href="https://go-authn.github.io/docs/0.1/fr/authnd/tokens/#what-the-binds-look-like"&gt;les jetons&lt;/a&gt; ;&lt;/li&gt;
+&lt;li&gt;chaque requête que le KDC refuse, préfixée par &lt;code&gt;kerberos:&lt;/code&gt;, avec le code d&amp;rsquo;erreur
+Kerberos ; voir &lt;a href="https://go-authn.github.io/docs/0.1/fr/authnd/kerberos/#kinit-against-it"&gt;le royaume&lt;/a&gt; ;&lt;/li&gt;
+&lt;li&gt;le journal propre de la bibliothèque LDAP, au format texte de &lt;code&gt;slog&lt;/code&gt;, au niveau info.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Un simple mauvais mot de passe sur une liaison simple, sans bloc &lt;code&gt;mfa&lt;/code&gt;, reçoit la réponse
+&lt;code&gt;invalidCredentials&lt;/code&gt; et n&amp;rsquo;est pas journalisé par authnd lui-même.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="when-it-does-not-start"&gt;Quand il ne démarre pas&lt;span class="hx:absolute hx:-mt-20" id="when-it-does-not-start"&gt;&lt;/span&gt;
+&lt;a href="#when-it-does-not-start" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un refus, c&amp;rsquo;est une ligne sur la sortie d&amp;rsquo;erreur standard, préfixée par &lt;code&gt;authnd:&lt;/code&gt;, et le code
+de sortie 1 ; sous l&amp;rsquo;unité, &lt;code&gt;Restart=on-failure&lt;/code&gt; réessaie alors toutes les cinq
+secondes et la ligne figure chaque fois dans le journal. Tout ce que &lt;code&gt;check&lt;/code&gt; refuse
+est refusé ici aussi, et la seule chose que seul le serveur découvre est une adresse
+sur laquelle il ne peut pas écouter — voir
+&lt;a href="https://go-authn.github.io/docs/0.1/fr/authnd/check/#the-certificate-the-keytab-and-the-one-thing-it-cannot-see"&gt;&lt;code&gt;check&lt;/code&gt;&lt;/a&gt;.
+L&amp;rsquo;écouteur LDAP, le certificat et le royaume sont tous ouverts avant que la
+première ligne soit affichée : un serveur qui ne peut pas démarrer n&amp;rsquo;affiche donc que le
+refus. Ici, une seconde instance se heurte au port Kerberos de la première :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config cases/realm2
+authnd: kerberos udp 127.0.0.1:18388: listen udp 127.0.0.1:18388: bind: address already in use&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La ligne &lt;code&gt;ldap on …&lt;/code&gt;, et &lt;code&gt;realm … on …&lt;/code&gt; après elle, signifient que les deux moitiés
+écoutent.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="telling-that-it-is-up"&gt;Savoir qu&amp;rsquo;il tourne&lt;span class="hx:absolute hx:-mt-20" id="telling-that-it-is-up"&gt;&lt;/span&gt;
+&lt;a href="#telling-that-it-is-up" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Il n&amp;rsquo;y a ni point de terminaison de santé ni métriques. Ce qu&amp;rsquo;il y a :&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;le processus et son code de sortie&lt;/strong&gt; — sous systemd, &lt;code&gt;systemctl is-active authnd&lt;/code&gt;. Si l&amp;rsquo;écouteur LDAP ou le royaume s&amp;rsquo;arrête de lui-même, le
+processus entier se termine avec cette erreur : un processus vivant est donc un processus dont les deux
+moitiés répondent ;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;le DSE racine&lt;/strong&gt;, qui répond à un client anonyme et dit à quelle version
+on parle :&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; &amp;#39;&amp;#43;&amp;#39; &amp;#39;*&amp;#39;
+dn:
+objectClass: top
+objectClass: OpenLDAProotDSE
+supportedLDAPVersion: 3
+namingContexts: dc=example,dc=org
+supportedExtension: 1.3.6.1.4.1.4203.1.11.3
+supportedExtension: 1.3.6.1.4.1.4203.1.11.1
+supportedControl: 1.2.840.113556.1.4.319
+supportedControl: 1.3.6.1.1.13.1
+supportedControl: 1.3.6.1.1.13.2
+supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
+supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
+vendorName: go-authn/authnd
+vendorVersion: v0.10.0&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Sur un &lt;a href="https://go-authn.github.io/docs/0.1/fr/authnd/tls/#starttls-which-refuses-until-it-is-asked-for"&gt;écouteur StartTLS&lt;/a&gt;,
+cette requête demande &lt;code&gt;-ZZ&lt;/code&gt;. Une sonde qui prouve davantage — qu&amp;rsquo;une source répond
+encore — est une liaison en tant que personne ou en tant que reader gardé à cet effet ; avec un
+bloc &lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt;, cette liaison atteint l&amp;rsquo;annuaire derrière celui-ci.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-lives-where-and-what-a-restart-loses"&gt;Ce qui vit où, et ce qu&amp;rsquo;un redémarrage perd&lt;span class="hx:absolute hx:-mt-20" id="what-lives-where-and-what-a-restart-loses"&gt;&lt;/span&gt;
+&lt;a href="#what-lives-where-and-what-a-restart-loses" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;configuration, mots de passe, DSN, certificat, keytab&lt;/td&gt;
+&lt;td&gt;les fichiers que nomme la configuration ; rien n&amp;rsquo;est copié&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;une base de données SQLite&lt;/td&gt;
+&lt;td&gt;là où le dit son DSN ; &lt;code&gt;/var/lib/authnd&lt;/code&gt; sous l&amp;rsquo;unité&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;compteurs et verrouillages du second facteur&lt;/td&gt;
+&lt;td&gt;en mémoire seulement : &lt;strong&gt;un redémarrage les oublie&lt;/strong&gt;, y compris une personne verrouillée après cent codes faux&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;codes à usage unique déjà utilisés&lt;/td&gt;
+&lt;td&gt;en mémoire seulement&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;</description></item></channel></rss>
