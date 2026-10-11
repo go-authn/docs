@@ -119,6 +119,10 @@ serveur de ressources a besoin pour décider sans demander à personne : `prefer
 `groups`, `idp` (l'entity ID de l'IdP qui s'est porté garant), `scope`, `client_id`,
 et `session_end` quand l'IdP a dit quand sa session prend fin.
 
+Un client dont l'`audience` nomme plusieurs serveurs de ressources peut demander
+un jeton adressé à l'un d'eux, avec le `resource` de la RFC 8707 : voir
+[plusieurs serveurs de ressources]({{< relref "/authn-bridge/resources.md" >}}).
+
 ### Ce qu'il ne contient pas, et pourquoi {#what-it-leaves-out}
 
 **Ni `auth_time` ni `acr`**, bien que la RFC 9068 autorise les deux. Ils restent

@@ -110,7 +110,7 @@ Les blocs :
 |---|---|---|
 | `secret_file` | | le secret du client, au moins 16 caractères ; absent, un client **public** |
 | `redirect_uris` | | comparées exactement, sauf qu'une URI de bouclage peut changer de port (RFC 8252) ; `http` seulement sur l'interface de bouclage |
-| `audience` | l'ID du client | à qui ses jetons d'accès sont adressés |
+| `audience` | l'ID du client | à qui ses jetons d'accès sont adressés ; s'il y en a plusieurs, un jeton pour l'un d'eux peut être demandé ([RFC 8707]({{< relref "/authn-bridge/resources.md" >}})) |
 | `subject` | `public` | ou `pairwise` : un `sub` différent pour ce client (OIDC Core 8.1) |
 | `name` | l'ID du client | affiché sur la page de confirmation d'appareil |
 | `device` | `false` | l'autorisation d'appareil (RFC 8628) ; un tel client n'a besoin d'aucune URI de redirection |

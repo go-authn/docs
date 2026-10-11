@@ -64,6 +64,7 @@ sans les métadonnées, il s'arrête plutôt que de démarrer.
 | [La configuration]({{< relref "/authn-bridge/configuration.md" >}}) | chaque bloc, `check`, et ce qui est refusé au démarrage |
 | [Le côté fédération]({{< relref "/authn-bridge/federation.md" >}}) | les métadonnées, l'empreinte de leur signataire, les portées, et ce qu'un IdP peut affirmer |
 | [Jetons]({{< relref "/authn-bridge/tokens.md" >}}) | jetons d'identité (ID tokens), jetons d'accès, l'autorisation d'appareil, mots de passe d'application, clés WireGuard |
+| [Indicateurs de ressource]({{< relref "/authn-bridge/resources.md" >}}) | un jeton pour un seul des serveurs de ressources d'un client à la fois (RFC 8707) |
 | [Certificats]({{< relref "/authn-bridge/certificates.md" >}}) | certificats SSH, le profil EuroHPC, certificats clients X.509 pour NFS |
 | [Révocation]({{< relref "/authn-bridge/revocation.md" >}}) | la KRL et la CRL signées, et l'émetteur de signaux partagés (Shared Signals) |
 | [L'API d'administration]({{< relref "/authn-bridge/admin.md" >}}) | désactiver une personne ou un établissement, santé et métriques |

@@ -64,6 +64,7 @@ ohne die Metadaten beendet er sich daher, statt zu starten.
 | [Die Konfiguration]({{< relref "/authn-bridge/configuration.md" >}}) | jeder Block, `check` und was beim Start abgelehnt wird |
 | [Die Seite der Föderation]({{< relref "/authn-bridge/federation.md" >}}) | Metadaten, der Fingerabdruck ihres Signierers, Scopes und was ein IdP behaupten darf |
 | [Tokens]({{< relref "/authn-bridge/tokens.md" >}}) | ID-Tokens, Access-Tokens, der Device Grant, Anwendungspasswörter, WireGuard-Schlüssel |
+| [Resource Indicators]({{< relref "/authn-bridge/resources.md" >}}) | ein Token für jeweils nur einen der Ressourcenserver eines Clients (RFC 8707) |
 | [Zertifikate]({{< relref "/authn-bridge/certificates.md" >}}) | SSH-Zertifikate, das EuroHPC-Profil, X.509-Client-Zertifikate für NFS |
 | [Widerruf]({{< relref "/authn-bridge/revocation.md" >}}) | die signierte KRL und CRL und der Shared-Signals-Sender |
 | [Die Admin-API]({{< relref "/authn-bridge/admin.md" >}}) | eine Person oder eine Einrichtung deaktivieren, Health und Metriken |

@@ -64,6 +64,7 @@ so without the metadata it exits rather than starts.
 | [The configuration]({{< relref "/authn-bridge/configuration.md" >}}) | every block, `check`, and what is refused at startup |
 | [The federation side]({{< relref "/authn-bridge/federation.md" >}}) | metadata, its signer's fingerprint, scopes, and what an IdP may assert |
 | [Tokens]({{< relref "/authn-bridge/tokens.md" >}}) | ID tokens, access tokens, the device grant, application passwords, WireGuard keys |
+| [Resource indicators]({{< relref "/authn-bridge/resources.md" >}}) | a token for one of a client's resource servers at a time (RFC 8707) |
 | [Certificates]({{< relref "/authn-bridge/certificates.md" >}}) | SSH certificates, the EuroHPC profile, X.509 client certificates for NFS |
 | [Revocation]({{< relref "/authn-bridge/revocation.md" >}}) | the signed KRL and CRL, and the Shared Signals transmitter |
 | [The admin API]({{< relref "/authn-bridge/admin.md" >}}) | disabling a person or an institution, health and metrics |

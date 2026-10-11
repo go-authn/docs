@@ -119,6 +119,10 @@ resource server needs to decide without asking anybody: `preferred_username`,
 `groups`, `idp` (the entity ID of the IdP that vouched), `scope`, `client_id`,
 and `session_end` when the IdP said when its session ends.
 
+A client whose `audience` names several resource servers can ask for a token
+addressed to one of them, with RFC 8707's `resource`: see
+[several resource servers]({{< relref "/authn-bridge/resources.md" >}}).
+
 ### What it leaves out, and why {#what-it-leaves-out}
 
 **No `auth_time` and no `acr`**, although RFC 9068 allows both. They stay in

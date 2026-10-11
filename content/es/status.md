@@ -70,7 +70,7 @@ que solo actualizaron dependencias.
 | v0.19.3 | binarios de versión, `SHA256SUMS` y procedencia de compilación en cada etiqueta |
 | v0.20.0 | el comando es `authn-bridge`; una unidad systemd endurecida y una guía de instalación |
 | v0.20.1 | comentarios y un mensaje de rechazo que ya no eran ciertos; el README dice todo lo que revoca `RevokePerson` |
-| v0.21.0 | los indicadores de recurso del RFC 8707: un cliente cuya `audience` nombra varios servidores de recursos puede pedir un token dirigido a uno solo. Etiquetada una hora antes que la v0.20.1, que también los tiene, y sin las correcciones de la v0.20.1 |
+| v0.21.0 | [los indicadores de recurso del RFC 8707]({{< relref "/authn-bridge/resources.md" >}}): un cliente cuya `audience` nombra varios servidores de recursos puede pedir un token dirigido a uno solo. Etiquetada una hora antes que la v0.20.1, que también los tiene, y sin las correcciones de la v0.20.1 |
 | v0.21.1 | golang.org/x/net v0.60.0, por sus avisos de seguridad de HTTP/2, y Go 1.27.2; de nuevo las correcciones de la v0.20.1; dominios de ejemplo con nombres del RFC 2606 |
 | v0.22.0 | el token de acceso ya no lleva `auth_time` ni `acr` (el token de ID sí), para que un token ES256 quepa en los 1023 caracteres de OpenSSH hasta el percentil 99 de los scopes de RENATER |
 

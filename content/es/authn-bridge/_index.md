@@ -68,6 +68,7 @@ arrancar.
 | [La configuración]({{< relref "/authn-bridge/configuration.md" >}}) | cada bloque, `check`, y lo que se rechaza al arrancar |
 | [El lado de la federación]({{< relref "/authn-bridge/federation.md" >}}) | los metadatos, la huella de su firmante, los ámbitos, y lo que un IdP puede afirmar |
 | [Tokens]({{< relref "/authn-bridge/tokens.md" >}}) | tokens de ID, tokens de acceso, la concesión de dispositivo, contraseñas de aplicación, claves WireGuard |
+| [Indicadores de recurso]({{< relref "/authn-bridge/resources.md" >}}) | un token para uno solo de los servidores de recursos de un cliente a la vez (RFC 8707) |
 | [Certificados]({{< relref "/authn-bridge/certificates.md" >}}) | certificados SSH, el perfil EuroHPC, certificados de cliente X.509 para NFS |
 | [Revocación]({{< relref "/authn-bridge/revocation.md" >}}) | la KRL y la CRL firmadas, y el transmisor Shared Signals |
 | [La API de administración]({{< relref "/authn-bridge/admin.md" >}}) | desactivar a una persona o una institución, salud y métricas |
