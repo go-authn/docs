@@ -14,7 +14,7 @@ state_dir = "/var/lib/authn-revokd/state"   # the verified copies: what orders t
 refresh   = "1m"
 
 source "univ-a-ssh" {
-  url    = "https://login.univ-a.fr/ssh/krl"         # and .../ssh/krl.sig beside it
+  url    = "https://login.univ-a.example/ssh/krl"    # and .../ssh/krl.sig beside it
   ssh_ca = "/etc/authn-revokd/ca/univ-a-ssh.pub"     # what the list must be signed by
 }
 source "univ-b-ssh" {
@@ -22,7 +22,7 @@ source "univ-b-ssh" {
   ssh_ca = "/etc/authn-revokd/ca/univ-b-ssh.pub"
 }
 source "univ-a-x509" {
-  url     = "https://login.univ-a.fr/x509/crl"
+  url     = "https://login.univ-a.example/x509/crl"
   x509_ca = "/etc/authn-revokd/ca/univ-a-x509.pem"
 }
 

@@ -76,24 +76,24 @@ $ grpcurl -plaintext -unix $PWD/run/admin.sock bridge.admin.v1.AdminService/Stat
 ## Desactivar {#disabling}
 
 ```
-$ grpcurl -plaintext -unix -d '{"username":"alice@univ-example.fr","reason":"left the lab"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisablePerson
+$ grpcurl -plaintext -unix -d '{"username":"alice@univ-example.example","reason":"left the lab"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisablePerson
 {
   "disabled": {
-    "username": "alice@univ-example.fr",
+    "username": "alice@univ-example.example",
     "reason": "left the lab",
     "by": "uid=501",
-    "since": "2026-10-10T19:23:33.341944Z"
+    "since": "2026-10-11T09:01:18.445930Z"
   },
   "revoked": {}
 }
-$ grpcurl -plaintext -unix -d '{"entity_id":"https://idp.univ-example.fr/idp/shibboleth","reason":"compromised","until":"2026-10-11T08:00:00Z"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisableIdP
+$ grpcurl -plaintext -unix -d '{"entity_id":"https://idp.univ-example.example/idp/shibboleth","reason":"compromised","until":"2026-10-12T08:00:00Z"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisableIdP
 {
   "disabled": {
-    "entityId": "https://idp.univ-example.fr/idp/shibboleth",
+    "entityId": "https://idp.univ-example.example/idp/shibboleth",
     "reason": "compromised",
     "by": "uid=501",
-    "since": "2026-10-10T19:23:33.363575Z",
-    "until": "2026-10-11T08:00:00Z"
+    "since": "2026-10-11T09:01:18.498410Z",
+    "until": "2026-10-12T08:00:00Z"
   },
   "revoked": {}
 }
@@ -105,17 +105,17 @@ nada vivo. Cada llamada que cambia algo se registra junto con quién la hizo: el
 `uid=` del par en el socket o el `cn=` del certificado de cliente sobre TLS:
 
 ```
-disabled alice@univ-example.fr (0 known identities) by uid=501 until enabled again: left the lab
-revoked alice@univ-example.fr: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
-disabled IdP https://idp.univ-example.fr/idp/shibboleth by uid=501 until 2026-10-11T08:00:00Z: compromised
-revoked IdP https://idp.univ-example.fr/idp/shibboleth: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
-enabled alice@univ-example.fr by uid=501
+disabled alice@univ-example.example (0 known identities) by uid=501 until enabled again: left the lab
+revoked alice@univ-example.example: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
+disabled IdP https://idp.univ-example.example/idp/shibboleth by uid=501 until 2026-10-12T08:00:00Z: compromised
+revoked IdP https://idp.univ-example.example/idp/shibboleth: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
+enabled alice@univ-example.example by uid=501
 ```
 
 **Se desactiva a una persona por quien es.** Los nombres de usuario se comparan sin
 distinguir mayúsculas, como hacen eppn, uid, mail y subject-id, así que la misma
-llamada con `"Alice@Univ-Example.fr"` levanta lo que se estableció para
-`alice@univ-example.fr` (`{"wasDisabled": true}`). La entrada registra también la
+llamada con `"Alice@Univ-Example.example"` levanta lo que se estableció para
+`alice@univ-example.example` (`{"wasDisabled": true}`). La entrada registra también la
 identidad estable de todas las personas conocidas con ese nombre, de modo que otra
 grafía procedente de su IdP no le permite volver a entrar. Un nombre sin `@` se
 compara también como un `sub`, para una persona cuyo IdP no entrega ningún nombre de
@@ -129,7 +129,7 @@ desactivado hasta el próximo reinicio lo dejaría volver a entrar el próximo
 despliegue:
 
 ```
-$ grpcurl -plaintext -unix -d '{"username":"alice@univ-example.fr"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisablePerson
+$ grpcurl -plaintext -unix -d '{"username":"alice@univ-example.example"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisablePerson
 ERROR:
   Code: FailedPrecondition
   Message: disabling needs disabled_file in the configuration: without it, a restart would forget who is disabled

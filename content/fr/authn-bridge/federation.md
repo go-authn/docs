@@ -22,7 +22,7 @@ saml {
   metadata_fingerprint = "68:2F:20:58:41:9E:D0:79:EB:FE:3C:27:D6:A4:A4:09:39:6F:AE:3F:10:5F:22:EA:04:0F:04:F3:78:2D:5C:C0"
 
   discovery = "https://discovery.renater.fr/renater"   # or leave it out for this provider's own list
-  # idps    = ["https://idp.univ-example.fr/idp/shibboleth"]   # restrict; one entry skips the choice
+  # idps    = ["https://idp.univ-example.example/idp/shibboleth"]   # restrict; one entry skips the choice
 
   names             = { fr = "Passerelle OIDC", en = "OIDC gateway" }
   technical_contact = "admin@example.org"
@@ -98,7 +98,7 @@ d'un membre exclut ce membre, pas la fédération.
 ## Ce que chaque IdP peut dire {#what-each-idp-may-say}
 
 Une fédération compte des centaines de membres, et n'importe lequel pourrait sinon dire que c'est
-`alice@another-university.fr`. Les métadonnées de chaque membre listent ses
+`alice@another-university.example`. Les métadonnées de chaque membre listent ses
 `shibmd:Scope`, les domaines dont il peut se porter garant ; une portée en expression régulière est
 ignorée, pas honorée.
 

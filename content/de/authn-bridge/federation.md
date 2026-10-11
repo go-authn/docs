@@ -22,7 +22,7 @@ saml {
   metadata_fingerprint = "68:2F:20:58:41:9E:D0:79:EB:FE:3C:27:D6:A4:A4:09:39:6F:AE:3F:10:5F:22:EA:04:0F:04:F3:78:2D:5C:C0"
 
   discovery = "https://discovery.renater.fr/renater"   # or leave it out for this provider's own list
-  # idps    = ["https://idp.univ-example.fr/idp/shibboleth"]   # restrict; one entry skips the choice
+  # idps    = ["https://idp.univ-example.example/idp/shibboleth"]   # restrict; one entry skips the choice
 
   names             = { fr = "Passerelle OIDC", en = "OIDC gateway" }
   technical_contact = "admin@example.org"
@@ -98,7 +98,7 @@ eines Mitglieds lässt dieses Mitglied aus, nicht die Föderation.
 ## Was jeder IdP sagen darf {#what-each-idp-may-say}
 
 Eine Föderation hat Hunderte von Mitgliedern, und jedes von ihnen könnte sonst behaupten, es sei
-`alice@another-university.fr`. Die Metadaten jedes Mitglieds listen dessen
+`alice@another-university.example`. Die Metadaten jedes Mitglieds listen dessen
 `shibmd:Scope`s auf, die Domains, für die es bürgen darf; ein Scope als regulärer Ausdruck wird
 ignoriert, nicht beachtet.
 

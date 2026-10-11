@@ -75,24 +75,24 @@ $ grpcurl -plaintext -unix $PWD/run/admin.sock bridge.admin.v1.AdminService/Stat
 ## Disabling
 
 ```
-$ grpcurl -plaintext -unix -d '{"username":"alice@univ-example.fr","reason":"left the lab"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisablePerson
+$ grpcurl -plaintext -unix -d '{"username":"alice@univ-example.example","reason":"left the lab"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisablePerson
 {
   "disabled": {
-    "username": "alice@univ-example.fr",
+    "username": "alice@univ-example.example",
     "reason": "left the lab",
     "by": "uid=501",
-    "since": "2026-10-10T19:23:33.341944Z"
+    "since": "2026-10-11T09:01:18.445930Z"
   },
   "revoked": {}
 }
-$ grpcurl -plaintext -unix -d '{"entity_id":"https://idp.univ-example.fr/idp/shibboleth","reason":"compromised","until":"2026-10-11T08:00:00Z"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisableIdP
+$ grpcurl -plaintext -unix -d '{"entity_id":"https://idp.univ-example.example/idp/shibboleth","reason":"compromised","until":"2026-10-12T08:00:00Z"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisableIdP
 {
   "disabled": {
-    "entityId": "https://idp.univ-example.fr/idp/shibboleth",
+    "entityId": "https://idp.univ-example.example/idp/shibboleth",
     "reason": "compromised",
     "by": "uid=501",
-    "since": "2026-10-10T19:23:33.363575Z",
-    "until": "2026-10-11T08:00:00Z"
+    "since": "2026-10-11T09:01:18.498410Z",
+    "until": "2026-10-12T08:00:00Z"
   },
   "revoked": {}
 }
@@ -104,16 +104,16 @@ changes something is logged with who made it, the peer's `uid=` on the socket
 or the client certificate's `cn=` over TLS:
 
 ```
-disabled alice@univ-example.fr (0 known identities) by uid=501 until enabled again: left the lab
-revoked alice@univ-example.fr: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
-disabled IdP https://idp.univ-example.fr/idp/shibboleth by uid=501 until 2026-10-11T08:00:00Z: compromised
-revoked IdP https://idp.univ-example.fr/idp/shibboleth: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
-enabled alice@univ-example.fr by uid=501
+disabled alice@univ-example.example (0 known identities) by uid=501 until enabled again: left the lab
+revoked alice@univ-example.example: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
+disabled IdP https://idp.univ-example.example/idp/shibboleth by uid=501 until 2026-10-12T08:00:00Z: compromised
+revoked IdP https://idp.univ-example.example/idp/shibboleth: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
+enabled alice@univ-example.example by uid=501
 ```
 
 **A person is disabled as who they are.** Usernames compare without case, as
 eppn, uid, mail and subject-id all do, so the same call with
-`"Alice@Univ-Example.fr"` lifts what was set for `alice@univ-example.fr`
+`"Alice@Univ-Example.example"` lifts what was set for `alice@univ-example.example`
 (`{"wasDisabled": true}`). The entry also records the stable identity of
 everybody known under that name, so another spelling from their IdP does not let
 them back in. A name with no `@` is also matched as a `sub`, for a person whose
@@ -126,7 +126,7 @@ revocation meets the entry.
 disabled until the next restart would be let back in by the next deployment:
 
 ```
-$ grpcurl -plaintext -unix -d '{"username":"alice@univ-example.fr"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisablePerson
+$ grpcurl -plaintext -unix -d '{"username":"alice@univ-example.example"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisablePerson
 ERROR:
   Code: FailedPrecondition
   Message: disabling needs disabled_file in the configuration: without it, a restart would forget who is disabled
