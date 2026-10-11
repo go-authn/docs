@@ -117,7 +117,7 @@ supportedControl: 1.3.6.1.1.13.2
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 vendorName: go-authn/authnd
-vendorVersion: v0.10.0
+vendorVersion: v0.10.2
 ```
 
 On a [StartTLS listener]({{< relref "/authnd/tls.md#starttls-which-refuses-until-it-is-asked-for" >}})

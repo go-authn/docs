@@ -16,8 +16,8 @@ go get github.com/go-authn/kdc@v0.4.2
 ```
 
 En la v0.4.2 su `go.mod` requiere como mínimo `go-authn/directory` v0.11.1 y
-gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.11.2, la
-versión que describen estas páginas, se compila con la v0.11.2. La mitad que
+gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.12.0, la
+versión que describen estas páginas, se compila con la v0.12.0. La mitad que
 acepta es [krb5]({{< relref "/libraries/krb5.md" >}}), y un servicio que solo
 verifica tickets no necesita este módulo en absoluto.
 

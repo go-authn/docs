@@ -11,8 +11,9 @@ things that want to authenticate them speak LDAP.** authnd is the front: it
 binds and searches over [go-authn/directory]({{< relref "/libraries/_index.md" >}})'s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe
-v0.10.1, which differs from v0.10.0 only by the KDC it embeds (go-authn/kdc
-v0.4.2); what is verified and what is not is on the [status]({{< relref "/status.md" >}}) page.
+v0.10.2, which differs from v0.10.0 only by the libraries it embeds:
+go-authn/kdc v0.4.2 (from v0.10.1) and go-authn/directory v0.12.0 (from
+v0.10.2); what is verified and what is not is on the [status]({{< relref "/status.md" >}}) page.
 
 ```sh
 authnd --config /etc/authnd      # serve
@@ -34,6 +35,8 @@ group "staff" { members = ["alice"] }
 
 People are published as `uid=<name>,ou=people,<base_dn>` (`posixAccount`),
 groups as `cn=<name>,ou=groups,<base_dn>` (`posixGroup`, with `memberUid`).
+A group a source lists with nobody in it is published without `memberUid`,
+since an LDAP attribute has at least one value; before v0.10.2 it was left out.
 Every entry carries `uid` and `cn`; `sambaNTPassword` and `sshPublicKey` are
 added when the person has them and, for the first, when
 [`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) says so.
@@ -94,7 +97,7 @@ supportedControl: 1.3.6.1.1.13.2
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 vendorName: go-authn/authnd
-vendorVersion: v0.10.0
+vendorVersion: v0.10.2
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` is the RFC 3062 password modify operation.
@@ -120,8 +123,8 @@ vendorVersion: v0.10.0
 
 Every block of output on these pages was printed by the v0.10.0 release binary
 (`authnd-darwin-arm64`) — v0.10.1 printed the same `check`, byte for byte, on the two
-configurations compared, and the `--version` line on the install page is
-v0.10.1's — and by the OpenLDAP and Heimdal clients that ship with
+configurations compared; the `--version` lines and the root DSE's
+`vendorVersion` are v0.10.2's, whose root DSE is otherwise the same — and by the OpenLDAP and Heimdal clients that ship with
 macOS, run on 127.0.0.1 on unprivileged ports, in a scratch directory under
 `/tmp`. That
 is why the configurations behind them name files by relative paths such as

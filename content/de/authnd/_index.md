@@ -11,8 +11,9 @@ anderen Verzeichnis. Was sie authentifizieren will, spricht LDAP.** authnd ist d
 davor: Es führt Binds und Suchen über die Quellen von
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) aus, sodass das, was eine
 Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,
-`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.10.1, das sich von v0.10.0 nur durch
-den eingebetteten KDC (go-authn/kdc v0.4.2) unterscheidet; was geprüft ist und was nicht, steht
+`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.10.2, das sich von v0.10.0 nur durch
+die eingebetteten Bibliotheken unterscheidet: go-authn/kdc v0.4.2 (seit v0.10.1) und
+go-authn/directory v0.12.0 (seit v0.10.2); was geprüft ist und was nicht, steht
 auf der Seite [Stand]({{< relref "/status.md" >}}).
 
 ```sh
@@ -35,6 +36,9 @@ group "staff" { members = ["alice"] }
 
 Personen werden als `uid=<name>,ou=people,<base_dn>` (`posixAccount`) veröffentlicht,
 Gruppen als `cn=<name>,ou=groups,<base_dn>` (`posixGroup`, mit `memberUid`).
+Eine Gruppe, die eine Quelle auflistet, in der aber niemand ist, wird ohne
+`memberUid` veröffentlicht, da ein LDAP-Attribut mindestens einen Wert hat;
+vor v0.10.2 wurde sie weggelassen.
 Jeder Eintrag trägt `uid` und `cn`; `sambaNTPassword` und `sshPublicKey` kommen hinzu,
 wenn die Person sie hat, und beim ersten nur, wenn
 [`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) es vorsieht.
@@ -94,7 +98,7 @@ supportedControl: 1.3.6.1.1.13.2
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 vendorName: go-authn/authnd
-vendorVersion: v0.10.0
+vendorVersion: v0.10.2
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` ist die Password-Modify-Operation aus RFC 3062.
@@ -120,8 +124,8 @@ vendorVersion: v0.10.0
 
 Jeder Ausgabeblock auf diesen Seiten wurde vom Release-Binary v0.10.0
 (`authnd-darwin-arm64`) ausgegeben – v0.10.1 gab für die beiden verglichenen Konfigurationen
-byte für byte dasselbe `check` aus, und die `--version`-Zeile auf der Installationsseite stammt
-von v0.10.1 – sowie von den OpenLDAP- und Heimdal-Clients, die mit
+byte für byte dasselbe `check` aus; die `--version`-Zeilen und das `vendorVersion` des Root-DSE
+stammen von v0.10.2, dessen Root-DSE ansonsten gleich ist – sowie von den OpenLDAP- und Heimdal-Clients, die mit
 macOS ausgeliefert werden, ausgeführt auf 127.0.0.1 an nicht privilegierten Ports, in einem
 Arbeitsverzeichnis unter `/tmp`. Deshalb nennen die zugrunde liegenden Konfigurationen Dateien
 über relative Pfade wie `etc/authnd/passwords/alice.pw`, und deshalb haben die Passwortdateien

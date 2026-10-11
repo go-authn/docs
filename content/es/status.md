@@ -9,12 +9,14 @@ Estas páginas son la versión **0.3** de la documentación, y describen:
 
 | programa | versión | módulo |
 |---|---|---|
-| authnd | **v0.10.1** | `github.com/go-authn/authnd` |
+| authnd | **v0.10.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
-Las versiones de las bibliotecas están en [su propia página]({{< relref "/libraries/_index.md" >}}).
+Las versiones de las bibliotecas están en [su propia página]({{< relref "/libraries/_index.md" >}});
+directory está en la **v0.12.0**: `Members` responde `[]` para un grupo vacío;
+`Expand` lo rechaza con `ErrEmptyGroup`.
 Una nueva versión menor de cualquiera de los programas anteriores es una nueva
 versión de la documentación, de modo que las páginas que alguien encuentra bajo
 `/docs/0.3/` siguen describiendo lo que instaló; las de las versiones anteriores
@@ -43,6 +45,7 @@ que solo actualizaron dependencias.
 | v0.9.6 | `check` dice por qué no se le puede emitir un ticket a cada persona |
 | v0.10.0 | `check` abre el certificado y el keytab, como hace el servidor; nombra a quién no puede hacer un bind con contraseña y a quién sigue admitiendo un token; la línea de escucha llega después de que se abre el reino |
 | v0.10.1 | go-authn/kdc v0.4.2: un `till` de 19700101000000Z obtiene el ticket más largo, no uno caducado en 1970 |
+| v0.10.2 | go-authn/directory v0.12.0: un grupo vacío se publica como `posixGroup` sin `memberUid` |
 
 ### authn-bridge {#authn-bridge}
 

@@ -11,7 +11,7 @@ tenue en mémoire, une base de données SQL, un serveur LDAP, ou des blocs `user
 fichier de configuration — et ce qui compte, c'est la seconde moitié de la question.
 
 ```sh
-go get github.com/go-authn/directory@v0.11.2
+go get github.com/go-authn/directory@v0.12.0
 ```
 
 ## Ce qui prouve quelqu'un n'est pas une seule chose {#what-proves-somebody-is-not-one-thing}
@@ -95,11 +95,17 @@ func main() {
 		fmt.Println(id.Name(), "SMB:", err == nil, errors.Is(err, directory.ErrNoCredential))
 	}
 
-	// @group is expanded; an empty group, or one nobody has, is an error.
+	// An empty group is an empty answer; a group nobody has is an error.
+	fmt.Println(people.Members("nobody"))
+	fmt.Println(people.Members("admins"))
+
+	// @group is expanded; an empty group, or one nobody has, is refused.
 	fmt.Println(directory.Expand([]string{"@staff", "svc-backup"}, people))
 	fmt.Println(directory.Expand([]string{"@nobody"}, local))
-	fmt.Println(directory.Expand([]string{"@nobody"}, people))
-	fmt.Println(directory.Expand([]string{"@admins"}, people))
+	_, err := directory.Expand([]string{"@nobody"}, people)
+	fmt.Println(err, errors.Is(err, directory.ErrEmptyGroup), errors.Is(err, directory.ErrNoSuchGroup))
+	_, err = directory.Expand([]string{"@admins"}, people)
+	fmt.Println(err, errors.Is(err, directory.ErrEmptyGroup), errors.Is(err, directory.ErrNoSuchGroup))
 }
 ```
 
@@ -109,30 +115,40 @@ eli password: false verifier: true keys: false from the configuration file
 svc-backup password: false verifier: false keys: true from the configuration file
 dora SMB: true false
 eli SMB: false true
-[dora eli svc-backup] <nil>
-[] directory: group "nobody" has no members: nobody would be allowed
-[] directory: no such group: "nobody"
+[] <nil>
 [] directory: no such group: "admins", in the configuration file
+[dora eli svc-backup] <nil>
+[] directory: the group has no members: "nobody": nobody would be allowed
+directory: the group has no members: "nobody": nobody would be allowed true false
+directory: no such group: "admins", in the configuration file false true
 ```
 
 Un mot de passe détenu répond aussi à `Can(Verifier)` : il peut être comparé.
 
 {{< callout type="info" >}}
-**Un groupe vide, demandé à travers un `Set`, est signalé comme manquant**
+**Un groupe vide est un groupe : `Members` y répond, `Expand` le refuse**
 
-`Expand` refuse un groupe vide avec *has no members*, comme le montre l'antépénultième
-ligne pour le `Static` lui-même. À travers un `Set`, `Set.Members` renvoie
-`ErrNoSuchGroup` pour un groupe qu'une source possède mais où il n'y a personne
-(`source.go:138`), si bien que le message nomme la mauvaise cause. Le groupe est refusé
-dans les deux cas.
+Depuis la v0.12.0, `Set.Members` renvoie une liste vide et aucune erreur pour
+un groupe qu'une source possède mais où il n'y a personne, si bien qu'un
+serveur qui liste les groupes peut le publier. `Expand` le refuse toujours,
+avec `ErrEmptyGroup`, qui n'est pas `ErrNoSuchGroup` : un groupe que personne
+n'a est une faute de frappe ou un groupe supprimé, un groupe vide est un groupe
+à remplir. Un appelant qui tolère un groupe n'accordant rien teste les deux.
+En v0.11.x, `Set.Members` renvoyait `ErrNoSuchGroup` pour un groupe vide, et
+`Expand` de `@nobody` à travers le `Set` affichait
+`[] directory: no such group: "nobody"`.
 {{< /callout >}}
 
 ## Ce qu'il refuse, et pourquoi {#what-it-refuses-and-why}
 
-- **Un groupe où il n'y a personne**, et **un groupe qu'aucune source n'a** — des erreurs, pas
-  des listes vides : une configuration qui n'accorde rien à personne se lit exactement comme
-  une qui fonctionne. Une source *en panne* est signalée à part d'une source à qui
-  le groupe manque.
+- **Un groupe où il n'y a personne**, et **un groupe qu'aucune source n'a**,
+  quand `Expand` transforme `@groupe` en personnes — des erreurs, pas des
+  listes vides : une configuration qui n'accorde rien à personne se lit
+  exactement comme une qui fonctionne. Le premier est `ErrEmptyGroup`, le
+  second `ErrNoSuchGroup`, et `errors.Is` les distingue. `Set.Members` répond à
+  un groupe vide par une liste vide ; un groupe qu'aucune source n'a y est
+  aussi `ErrNoSuchGroup`. Une source *en panne* est signalée à part d'une
+  source à qui le groupe manque, et l'emporte sur une réponse vide.
 - **Un annuaire LDAP atteint en clair.** Une liaison simple transporte le
   mot de passe lui-même (RFC 4513), donc `ldapdir.New` et un bloc `users "ldap"`
   refusent `ldap://` vers une autre machine sauf si `StartTLS` est positionné. `ldaps://`,
@@ -181,4 +197,4 @@ compilations `nosql` et `noldap` sont vérifiées en CI.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.11.2](https://pkg.go.dev/github.com/go-authn/directory@v0.11.2)
+[pkg.go.dev/github.com/go-authn/directory@v0.12.0](https://pkg.go.dev/github.com/go-authn/directory@v0.12.0)

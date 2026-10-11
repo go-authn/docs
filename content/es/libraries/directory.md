@@ -11,7 +11,7 @@ en memoria, una base de datos SQL, un servidor LDAP, o bloques `user` y `group` 
 archivo de configuración; y lo que importa es la segunda mitad de la pregunta.
 
 ```sh
-go get github.com/go-authn/directory@v0.11.2
+go get github.com/go-authn/directory@v0.12.0
 ```
 
 ## Lo que prueba a alguien no es una sola cosa {#what-proves-somebody-is-not-one-thing}
@@ -94,11 +94,17 @@ func main() {
 		fmt.Println(id.Name(), "SMB:", err == nil, errors.Is(err, directory.ErrNoCredential))
 	}
 
-	// @group is expanded; an empty group, or one nobody has, is an error.
+	// An empty group is an empty answer; a group nobody has is an error.
+	fmt.Println(people.Members("nobody"))
+	fmt.Println(people.Members("admins"))
+
+	// @group is expanded; an empty group, or one nobody has, is refused.
 	fmt.Println(directory.Expand([]string{"@staff", "svc-backup"}, people))
 	fmt.Println(directory.Expand([]string{"@nobody"}, local))
-	fmt.Println(directory.Expand([]string{"@nobody"}, people))
-	fmt.Println(directory.Expand([]string{"@admins"}, people))
+	_, err := directory.Expand([]string{"@nobody"}, people)
+	fmt.Println(err, errors.Is(err, directory.ErrEmptyGroup), errors.Is(err, directory.ErrNoSuchGroup))
+	_, err = directory.Expand([]string{"@admins"}, people)
+	fmt.Println(err, errors.Is(err, directory.ErrEmptyGroup), errors.Is(err, directory.ErrNoSuchGroup))
 }
 ```
 
@@ -108,30 +114,39 @@ eli password: false verifier: true keys: false from the configuration file
 svc-backup password: false verifier: false keys: true from the configuration file
 dora SMB: true false
 eli SMB: false true
-[dora eli svc-backup] <nil>
-[] directory: group "nobody" has no members: nobody would be allowed
-[] directory: no such group: "nobody"
+[] <nil>
 [] directory: no such group: "admins", in the configuration file
+[dora eli svc-backup] <nil>
+[] directory: the group has no members: "nobody": nobody would be allowed
+directory: the group has no members: "nobody": nobody would be allowed true false
+directory: no such group: "admins", in the configuration file false true
 ```
 
 Una contraseña guardada también responde a `Can(Verifier)`: se puede comparar.
 
 {{< callout type="info" >}}
-**Un grupo vacío, consultado a través de un `Set`, se notifica como inexistente**
+**Un grupo vacío es un grupo: `Members` lo responde, `Expand` lo rechaza**
 
-`Expand` rechaza un grupo vacío con *has no members*, como muestra la antepenúltima
-línea para el propio `Static`. A través de un `Set`, `Set.Members` devuelve
-`ErrNoSuchGroup` para un grupo que un origen tiene pero en el que no hay nadie
-(`source.go:138`), así que el mensaje nombra la causa equivocada. El grupo se rechaza
-en ambos casos.
+Desde la v0.12.0, `Set.Members` devuelve una lista vacía y ningún error para
+un grupo que un origen tiene pero en el que no hay nadie, así que un servidor
+que lista los grupos puede publicarlo. `Expand` lo sigue rechazando, con
+`ErrEmptyGroup`, que no es `ErrNoSuchGroup`: un grupo que nadie tiene es una
+errata o un grupo borrado; uno vacío es un grupo por llenar. Quien llama y
+tolera un grupo que no concede nada comprueba los dos. En la v0.11.x,
+`Set.Members` devolvía `ErrNoSuchGroup` para un grupo vacío, y `Expand` de `@nobody`
+a través del `Set` imprimía `[] directory: no such group: "nobody"`.
 {{< /callout >}}
 
 ## Lo que rechaza, y por qué {#what-it-refuses-and-why}
 
-- **Un grupo en el que no hay nadie**, y **un grupo que ningún origen tiene**: errores,
-  no listas vacías: una configuración que no concede nada a nadie se lee exactamente
-  igual que una que funciona. Un origen que está *averiado* se notifica aparte de uno
-  al que le falta el grupo.
+- **Un grupo en el que no hay nadie**, y **un grupo que ningún origen tiene**,
+  cuando `Expand` convierte `@grupo` en personas: errores, no listas vacías:
+  una configuración que no concede nada a nadie se lee exactamente igual que
+  una que funciona. El primero es `ErrEmptyGroup`, el segundo
+  `ErrNoSuchGroup`, y `errors.Is` los distingue. `Set.Members` responde a un
+  grupo vacío con una lista vacía; un grupo que ningún origen tiene también es
+  `ErrNoSuchGroup` ahí. Un origen que está *averiado* se notifica aparte de uno
+  al que le falta el grupo, y prevalece sobre una respuesta vacía.
 - **Un directorio LDAP al que se llega sin cifrar.** Un bind simple lleva la propia
   contraseña (RFC 4513), así que `ldapdir.New` y un bloque `users "ldap"` rechazan
   `ldap://` hacia otra máquina salvo que se fije `StartTLS`. Se aceptan `ldaps://`,
@@ -180,4 +195,4 @@ compilaciones `nosql` y `noldap` se comprueban en la CI.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.11.2](https://pkg.go.dev/github.com/go-authn/directory@v0.11.2)
+[pkg.go.dev/github.com/go-authn/directory@v0.12.0](https://pkg.go.dev/github.com/go-authn/directory@v0.12.0)
