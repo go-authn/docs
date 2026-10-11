@@ -3,7 +3,7 @@ title: "fido — parler à une clé de sécurité"
 linkTitle: "fido"
 weight: 30
 description: "go-authn/fido parle CTAPHID et CTAP2 à une clé de sécurité sur n'importe quel transport de 64 octets : poignée de main, enregistrement, assertion et PIN, en pur Go."
-tags: [libraries, fido, factors]
+tags: [bibliothèques, fido, facteurs]
 ---
 
 **Comment parle-t-on à une clé de sécurité ?** Le protocole client-authentificateur

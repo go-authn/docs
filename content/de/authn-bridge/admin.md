@@ -3,7 +3,7 @@ title: "Die Admin-API, Health und Metriken"
 linkTitle: "Admin-API"
 weight: 70
 description: "Eine Person oder eine Einrichtung über die gRPC-Admin-API von authn-bridge deaktivieren, und die Health- und Metrik-Endpunkte daneben."
-tags: [authn-bridge, administration, grpc, metrics]
+tags: [authn-bridge, administration, grpc, metriken]
 ---
 
 Beide sind aus, solange die Konfiguration sie nicht verlangt, und keiner von beiden liegt je auf dem

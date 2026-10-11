@@ -3,7 +3,7 @@ title: "oidc — vérifier un jeton porteur"
 linkTitle: "oidc"
 weight: 90
 description: "go-authn/oidc vérifie un jeton OpenID Connect pour en tirer une identité : la découverte, le jeu de clés, une liste d'algorithmes autorisés, et les refus qui comptent. Aucune dépendance."
-tags: [libraries, oidc, tokens]
+tags: [bibliothèques, oidc, jetons]
 ---
 
 **Qui ce jeton porteur dit-il être à l'origine de la demande, et faut-il le croire ?**

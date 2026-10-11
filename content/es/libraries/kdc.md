@@ -3,7 +3,7 @@ title: "kdc: emitir tickets Kerberos a partir de un directorio"
 linkTitle: "kdc"
 weight: 80
 description: "go-authn/kdc es la mitad emisora de Kerberos: AS y TGS por UDP y TCP, preautenticación obligatoria, un solo tipo de cifrado, personas de un directorio go-authn."
-tags: [libraries, kerberos, directory]
+tags: [bibliotecas, kerberos, directorio]
 ---
 
 **¿Cómo emite un reino tickets a partir de un directorio?** AS-REQ y TGS-REQ, por UDP

@@ -3,7 +3,7 @@ title: "Seguridad"
 linkTitle: "Seguridad"
 weight: 55
 description: "Qué rechazan los programas, cómo viaja una revocación desde el proveedor hasta cada servidor y cómo distinguir un binario auténtico de cualquier otro."
-tags: [security]
+tags: [seguridad]
 ---
 
 A go-authn se le pide que pruebe a las personas, así que sus rechazos son el diseño

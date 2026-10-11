@@ -3,7 +3,7 @@ title: "Instalar authnd"
 linkTitle: "Instalación"
 weight: 10
 description: "El binario de la versión y cómo comprobarlo, la cuenta authnd, la unidad systemd y lo que concede, y cómo actualizarlo, volver atrás y desinstalarlo."
-tags: [authnd, install, systemd]
+tags: [authnd, instalación, systemd]
 ---
 
 El repositorio incluye los dos archivos que necesita un host con systemd:

@@ -2,7 +2,7 @@
 title: "Stand"
 weight: 60
 description: "Welche Releases diese Seiten beschreiben, was jedes Release hinzugefügt hat und was noch nicht implementiert ist."
-tags: [status, releases]
+tags: [stand, releases]
 ---
 
 Diese Seiten sind die Dokumentationsversion **0.1** und beschreiben:

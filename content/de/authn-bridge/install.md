@@ -3,7 +3,7 @@ title: "authn-bridge installieren"
 linkTitle: "Installation"
 weight: 10
 description: "Ein statischer Benutzer, drei Verzeichnisse und eine gehärtete systemd-Unit: authn-bridge vom Release-Binary zum laufenden Dienst."
-tags: [authn-bridge, install, systemd]
+tags: [authn-bridge, installation, systemd]
 ---
 
 Das Repository liefert die Unit und den Benutzer, unter dem sie läuft:

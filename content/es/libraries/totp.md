@@ -3,7 +3,7 @@ title: "totp — un código, una vez, y no un millón de intentos"
 linkTitle: "totp"
 weight: 20
 description: "go-authn/totp comprueba códigos de un solo uso RFC 6238, rechaza un código ya usado, limita los intentos por secreto, y ofrece el resultado como factor de mfa."
-tags: [libraries, totp, factors]
+tags: [bibliotecas, totp, factores]
 ---
 
 **¿Es correcto este código de seis cifras, y se ha usado antes?** Contraseñas de

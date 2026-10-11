@@ -3,7 +3,7 @@ title: "servercert — d'où vient le certificat TLS d'un démon"
 linkTitle: "servercert"
 weight: 120
 description: "go-authn/servercert sert un certificat de serveur TLS issu de fichiers relus quand ils changent, ou d'une AC ACME via autocert, External Account Binding compris."
-tags: [libraries, tls, acme, certificates]
+tags: [bibliothèques, tls, acme, certificats]
 ---
 
 **D'où vient le certificat de serveur TLS d'un démon ?** Un certificat et une

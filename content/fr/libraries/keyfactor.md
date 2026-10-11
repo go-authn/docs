@@ -3,7 +3,7 @@ title: "keyfactor — la clé enregistrée, touchée"
 linkTitle: "keyfactor"
 weight: 40
 description: "go-authn/keyfactor fait d'une clé de sécurité un facteur mfa, en vérifiant la réponse contre l'enregistrement plutôt qu'en faisant confiance à n'importe quel périphérique qui parle CTAP."
-tags: [libraries, fido, mfa, factors]
+tags: [bibliothèques, fido, mfa, facteurs]
 ---
 
 **Est-ce la clé enregistrée qui a répondu, et une personne l'a-t-elle touchée ?**

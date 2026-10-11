@@ -3,7 +3,7 @@ title: "Cómo se verifica una lista"
 linkTitle: "Verificación"
 weight: 30
 description: "Lo que comprueba authn-revokd antes de conservar una lista: la firma, las fechas, y que nunca sea más antigua que la lista que tiene, también entre reinicios."
-tags: [authn-revokd, revocation, security]
+tags: [authn-revokd, revocación, seguridad]
 ---
 
 Una lista que no se verifica nunca se escribe, se sirve ni se usa. La última copia

@@ -2,7 +2,7 @@
 title: "État"
 weight: 60
 description: "Les versions que décrivent ces pages, ce que chaque version a ajouté, et ce qui n'est pas encore implémenté."
-tags: [status, releases]
+tags: [état, versions]
 ---
 
 Ces pages sont la version **0.1** de la documentation, et décrivent :

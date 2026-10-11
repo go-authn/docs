@@ -3,7 +3,7 @@ title: "Ce qu'il révoque, et comment les serveurs l'apprennent"
 linkTitle: "Révocation"
 weight: 60
 description: "La KRL et la CRL signées et datées qu'authn-bridge publie pour les certificats qu'il a révoqués, et le transmetteur Shared Signals qui atteint ce qu'aucune liste ne peut nommer."
-tags: [authn-bridge, revocation, krl, crl, shared signals]
+tags: [authn-bridge, révocation, krl, crl, signaux partagés]
 ---
 
 Désactiver une personne ou un établissement ([l'API d'administration]({{< relref "/authn-bridge/admin.md" >}}))

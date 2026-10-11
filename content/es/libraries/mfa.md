@@ -3,7 +3,7 @@ title: "mfa — suficientes factores, y cuáles"
 linkTitle: "mfa"
 weight: 10
 description: "go-authn/mfa decide si respondieron suficientes factores, de suficientes clases distintas, y dice cuáles lo hicieron, sin ningún dispositivo y sin criptografía."
-tags: [libraries, mfa, factors]
+tags: [bibliotecas, mfa, factores]
 ---
 
 **¿Respondieron suficientes factores, de suficientes clases, y cuáles?** Aquí nada

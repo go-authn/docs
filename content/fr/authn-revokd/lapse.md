@@ -3,7 +3,7 @@ title: "Quand une liste expire"
 linkTitle: "Quand une liste expire"
 weight: 40
 description: "Ce qu'authn-revokd écrit pour sshd quand il ne détient aucune liste en vigueur d'une AC : une KRL qui révoque la clé de l'AC elle-même, de sorte que chaque certificat de cette AC est refusé."
-tags: [authn-revokd, revocation, fail closed, sshd]
+tags: [authn-revokd, révocation, refus en cas de doute, sshd]
 ---
 
 Une vérification de révocation qui laisse tout passer quand la liste ne peut pas être obtenue est

@@ -3,7 +3,7 @@ title: "Sicherheit"
 linkTitle: "Sicherheit"
 weight: 55
 description: "Was die Programme ablehnen, wie ein Widerruf vom Anbieter zu jedem Server gelangt und wie sich ein echtes Binary von allem anderen unterscheiden lässt."
-tags: [security]
+tags: [sicherheit]
 ---
 
 go-authn soll Personen belegen, daher sind seine Ablehnungen das Design und nicht die

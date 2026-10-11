@@ -3,7 +3,7 @@ title: "wireguard — ¿de quién es esta clave, y puede conectarse?"
 linkTitle: "wireguard"
 weight: 130
 description: "go-authn/wireguard define estrictamente una clave pública de WireGuard y transporta la lista, firmada por el proveedor, de las claves registradas que un gateway convierte en peers."
-tags: [libraries, wireguard, tokens]
+tags: [bibliotecas, wireguard, tokens]
 ---
 
 **¿Puede conectarse esta clave de WireGuard, y de quién es?** WireGuard autentica

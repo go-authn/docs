@@ -3,7 +3,7 @@ title: "Die Konfiguration"
 linkTitle: "Konfiguration"
 weight: 20
 description: "Die revokd.hcl von authn-revokd: woher die Listen kommen, von wem sie signiert sein müssen, in welche Dateien sie geschrieben werden, und der Spiegel."
-tags: [authn-revokd, configuration]
+tags: [authn-revokd, konfiguration]
 ---
 
 Eine Datei, standardmäßig `/etc/authn-revokd/revokd.hcl` (`-config` nennt eine andere).

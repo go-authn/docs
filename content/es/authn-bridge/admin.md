@@ -3,7 +3,7 @@ title: "La API de administración, salud y métricas"
 linkTitle: "API de administración"
 weight: 70
 description: "Desactivar a una persona o una institución mediante la API de administración gRPC de authn-bridge, y los endpoints de salud y métricas que la acompañan."
-tags: [authn-bridge, administration, grpc, metrics]
+tags: [authn-bridge, administración, grpc, métricas]
 ---
 
 Ambas están desactivadas salvo que la configuración las pida, y ninguna está nunca

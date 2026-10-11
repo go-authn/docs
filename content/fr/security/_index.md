@@ -3,7 +3,7 @@ title: "Sécurité"
 linkTitle: "Sécurité"
 weight: 55
 description: "Ce que les programmes refusent, comment une révocation voyage du fournisseur jusqu'à chaque serveur, et comment distinguer un binaire authentique de tout le reste."
-tags: [security]
+tags: [sécurité]
 ---
 
 On demande à go-authn de prouver des personnes, si bien que ses refus sont la conception plutôt que

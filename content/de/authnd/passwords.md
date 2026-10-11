@@ -3,7 +3,7 @@ title: "Eine Person ändert ihr eigenes Passwort"
 linkTitle: "Passwort ändern"
 weight: 50
 description: "Der eine Schreibvorgang, den authnd annimmt: das eigene Passwort einer Person, über RFC 3062 oder ein RFC-4511-Modify, immer mit dem alten Passwort, zurückgeschrieben in die Datei, die die Person deklariert."
-tags: [authnd, passwords, ldappasswd]
+tags: [authnd, passwörter, ldappasswd]
 ---
 
 Eine Person darf **ihr eigenes** Passwort ändern, und das niemand anderes, über die

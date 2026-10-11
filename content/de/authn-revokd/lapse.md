@@ -3,7 +3,7 @@ title: "Wenn eine Liste verfällt"
 linkTitle: "Wenn eine Liste verfällt"
 weight: 40
 description: "Was authn-revokd für sshd schreibt, wenn es keine aktuelle Liste einer CA hält: eine KRL, die den CA-Schlüssel selbst widerruft, sodass jedes Zertifikat dieser CA abgelehnt wird."
-tags: [authn-revokd, revocation, fail closed, sshd]
+tags: [authn-revokd, widerruf, fail closed, sshd]
 ---
 
 Eine Widerrufsprüfung, die alles durchlässt, wenn die Liste nicht zu bekommen ist, ist

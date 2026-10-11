@@ -3,7 +3,7 @@ title: "fido – mit einem Sicherheitsschlüssel sprechen"
 linkTitle: "fido"
 weight: 30
 description: "go-authn/fido spricht CTAPHID und CTAP2 mit einem Sicherheitsschlüssel über jeden 64-Byte-Transport: Handshake, Registrierung, Assertion und PIN, in reinem Go."
-tags: [libraries, fido, factors]
+tags: [bibliotheken, fido, faktoren]
 ---
 
 **Wie spricht man mit einem Sicherheitsschlüssel?** Das FIDO-Protokoll zwischen Client und Authenticator

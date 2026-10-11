@@ -3,7 +3,7 @@ title: "Installer authnd"
 linkTitle: "Installation"
 weight: 10
 description: "Le binaire de la version et comment le vérifier, le compte authnd, l'unité systemd et ce qu'elle accorde, et la mise à niveau, le retour arrière et la désinstallation."
-tags: [authnd, install, systemd]
+tags: [authnd, installation, systemd]
 ---
 
 Le dépôt contient les deux fichiers dont un hôte systemd a besoin :

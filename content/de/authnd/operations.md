@@ -3,7 +3,7 @@ title: "Betrieb: Signale, Neustarts und was es ausgibt"
 linkTitle: "Betrieb"
 weight: 80
 description: "Was authnd einmal liest, warum SIGHUP es nicht neu lädt, wie es anhält, was es in seine Ausgabe schreibt und wie man erkennt, dass es läuft."
-tags: [authnd, operations, signals, systemd]
+tags: [authnd, betrieb, signale, systemd]
 ---
 
 ## Es liest alles einmal {#it-reads-everything-once}

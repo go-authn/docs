@@ -3,7 +3,7 @@ title: "keyfactor: la llave registrada, tocada"
 linkTitle: "keyfactor"
 weight: 40
 description: "go-authn/keyfactor convierte una llave de seguridad en un factor mfa, verificando la respuesta contra el registro en lugar de confiar en cualquier dispositivo que hable CTAP."
-tags: [libraries, fido, mfa, factors]
+tags: [bibliotecas, fido, mfa, factores]
 ---
 
 **¿Respondió la llave que se registró, y la tocó una persona?** `keyfactor` es la

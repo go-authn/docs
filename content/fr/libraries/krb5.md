@@ -3,7 +3,7 @@ title: "krb5 — accepter un ticket Kerberos"
 linkTitle: "krb5"
 weight: 70
 description: "go-authn/krb5 est la moitié de Kerberos qui accepte : un keytab, un AP-REQ vérifié, l'AP-REP dont l'authentification mutuelle a besoin, et des messages signés et scellés sous la clé de session."
-tags: [libraries, kerberos]
+tags: [bibliothèques, kerberos]
 ---
 
 **Ce ticket Kerberos est-il bon pour ce service ?** La moitié **accepteur** de

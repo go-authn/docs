@@ -3,7 +3,7 @@ title: "mfa — assez de facteurs, et lesquels"
 linkTitle: "mfa"
 weight: 10
 description: "go-authn/mfa décide si assez de facteurs ont répondu, de suffisamment de sortes différentes, et dit lesquels — sans périphérique et sans cryptographie."
-tags: [libraries, mfa, factors]
+tags: [bibliothèques, mfa, facteurs]
 ---
 
 **Assez de facteurs ont-ils répondu, de suffisamment de sortes — et lesquels ?** Rien ici

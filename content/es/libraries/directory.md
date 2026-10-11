@@ -3,7 +3,7 @@ title: "directory: quién es alguien, y qué lo prueba"
 linkTitle: "directory"
 weight: 50
 description: "go-authn/directory: un solo modelo de una persona y de las credenciales que un origen guarda para ella, sobre una lista en memoria, una base de datos SQL, un servidor LDAP o una configuración HCL."
-tags: [libraries, directory, ldap, sql]
+tags: [bibliotecas, directorio, ldap, sql]
 ---
 
 **¿Quién es alguien, y qué puede probarlo?** Un solo modelo sobre una lista guardada

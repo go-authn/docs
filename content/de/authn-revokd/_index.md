@@ -3,7 +3,7 @@ title: "authn-revokd"
 linkTitle: "authn-revokd"
 weight: 30
 description: "Ein Agent, der signierte KRLs und CRLs abruft, nur die Listen behält, die die Prüfung bestehen, sie dorthin schreibt, wo sshd und TLS-Server sie lesen, und geschlossen fehlschlägt, wenn eine verfällt."
-tags: [authn-revokd, revocation, krl, crl]
+tags: [authn-revokd, widerruf, krl, crl]
 ---
 
 **OpenSSH hat keine Möglichkeit, eine KRL zu verteilen, und nichts in einer KRL sagt, dass sie

@@ -3,7 +3,7 @@ title: "oidc — verificar un token bearer"
 linkTitle: "oidc"
 weight: 90
 description: "go-authn/oidc verifica un token de OpenID Connect y lo convierte en una identidad: descubrimiento, el conjunto de claves, una lista de algoritmos permitidos y los rechazos que importan. Sin dependencias."
-tags: [libraries, oidc, tokens]
+tags: [bibliotecas, oidc, tokens]
 ---
 
 **¿Quién dice este token bearer que está preguntando, y hay que creerlo?** El

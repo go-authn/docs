@@ -3,7 +3,7 @@ title: "check, bevor Sie etwas neu starten, über das sich Personen anmelden"
 linkTitle: "check"
 weight: 30
 description: "Was authnd check öffnet, was es über eine Konfiguration ausgibt, bevor sie bereitgestellt wird, wie man es liest, und der eine Fehler, den es nicht sehen kann."
-tags: [authnd, check, configuration]
+tags: [authnd, check, konfiguration]
 ---
 
 ```

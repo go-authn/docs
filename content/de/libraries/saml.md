@@ -3,7 +3,7 @@ title: "saml – ein Service Provider vor einer Föderation"
 linkTitle: "saml"
 weight: 100
 description: "go-authn/saml ist ein SAML-2.0-Service-Provider für eine Forschungsföderation wie RENATER oder eduGAIN: signierte Metadaten, der AuthnRequest und eine Assertion, die erst nach jeder Prüfung gelesen wird."
-tags: [libraries, saml, federation]
+tags: [bibliotheken, saml, föderation]
 ---
 
 **Was hat der Identitätsanbieter dieser Person über sie gesagt?** Ein SAML-2.0-Service-Provider
