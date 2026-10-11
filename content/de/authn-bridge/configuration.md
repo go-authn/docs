@@ -117,6 +117,7 @@ Die Blöcke:
 | `refresh_lifetime` | aus | Refresh-Tokens, und wie lange nach der **Anmeldung** sie enden |
 | `pkce` | `required` | oder `or_nonce`, nur für einen vertraulichen Client: eine `nonce` statt PKCE |
 | `id_token_claims` | `false` | die freigegebenen Claims auch ins ID-Token kopieren (opkssh braucht das) |
+| `access_token_groups` | `true` | `false` lässt die Gruppen der Person aus den Access-Tokens weg, für Tokens, die in ssh eingefügt werden ([Tokens]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})); abgelehnt zusammen mit `ssh_certificates` oder `x509_certificates` |
 | `ssh_certificates`, `ssh_*` | | [SSH-Zertifikate]({{< relref "/authn-bridge/certificates.md#ssh-certificates" >}}) |
 | `x509_certificates` | | [NFS-Client-Zertifikate]({{< relref "/authn-bridge/certificates.md#x509-client-certificates-for-nfs-over-tls" >}}) |
 | `app_passwords` | | darf das [Anwendungspasswort]({{< relref "/authn-bridge/tokens.md#application-passwords" >}}) der Person setzen |

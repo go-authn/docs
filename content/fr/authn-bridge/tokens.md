@@ -118,6 +118,7 @@ signé avec `signing_key_file` (RS256) ou `access_token_key_file` (ES256),
 serveur de ressources a besoin pour décider sans demander à personne : `preferred_username`,
 `groups`, `idp` (l'entity ID de l'IdP qui s'est porté garant), `scope`, `client_id`,
 et `session_end` quand l'IdP a dit quand sa session prend fin.
+Les groupes peuvent être omis, client par client : [plus bas](#what-it-leaves-out).
 
 Un client dont l'`audience` nomme plusieurs serveurs de ressources peut demander
 un jeton adressé à l'un d'eux, avec le `resource` de la RFC 8707 : voir
@@ -155,6 +156,112 @@ groupe : un jeton destiné à SSH est donc signé en ES256. Au-delà de 1023
 caractères, mccli demande à motley-cue un mot de passe à usage unique à la
 place, ce que motley-cue autorise par défaut ; un jeton collé dans un `ssh`
 ordinaire doit tenir.
+
+**Aucun groupe, pour un client qui le demande** (v0.23.0). Chaque groupe
+ajoute son URN entière, et rien ne borne le nombre qu'un IdP en envoie : aucune
+clé ni aucun algorithme de signature ne garantit qu'un jeton portant des groupes
+tienne. Un client configuré avec `access_token_groups = false` reçoit des jetons
+d'accès sans les `groups` de la personne :
+
+```hcl
+client "oidc-agent" {
+  device              = true
+  audience            = ["ssh"]
+  access_token_groups = false
+}
+```
+
+Il est fait pour ssh-oidc : oidc-agent obtient le jeton, mccli le colle comme
+réponse keyboard-interactive, et motley-cue le vérifie sur `/userinfo` et y lit
+les groupes. Mesuré par `TestAccessTokenWithoutGroups` d'authn-bridge, un jeton
+ES256 pour une personne membre de 50 groupes, avec le scope le plus long de
+RENATER (44) et un émetteur de longueur réelle, fait 732 caractères.
+
+Face à une fédération de test, une personne membre de trois groupes se connecte
+par ce client, avec le device grant :
+
+```
+$ authn-bridge token --issuer http://127.0.0.1:28473 --client oidc-agent --scope "openid eduperson groups" --cache var/tokens.json > at
+To log in, open http://127.0.0.1:28473/device
+and enter the code DHBT-DBZD
+(or open http://127.0.0.1:28473/device?user_code=DHBT-DBZD)
+$ tr -d '\n' < at | wc -c
+     625
+```
+
+Le jeton nomme la personne et son IdP, et aucun groupe :
+
+```
+$ cut -d. -f2 at | tr "_-" "/+" | jq -R "@base64d | fromjson"
+{
+  "aud": "ssh",
+  "client_id": "oidc-agent",
+  "exp": 1791741018,
+  "iat": 1791737418,
+  "idp": "https://idp.univ-example.example/idp/shibboleth",
+  "iss": "http://127.0.0.1:28473",
+  "jti": "0zVsbDeAwcubhCCFXtj9Dh0u-93sDBza5sti7EmcSL8",
+  "preferred_username": "alice@univ-example.example",
+  "scope": "openid eduperson groups",
+  "sub": "KEQ1dJYNUw8TtXF5HNbuy3EYZ3rmFMKiqaVY8RH7eLE"
+}
+```
+
+`/userinfo` les sert toujours, sous `groups` (portée `groups`) et sous
+`eduperson_entitlement` (portée `eduperson`) :
+
+```
+$ { printf 'Authorization: Bearer '; cat at; } > auth.hdr
+$ curl -s -H @auth.hdr http://127.0.0.1:28473/userinfo | jq .
+{
+  "eduperson_entitlement": [
+    "urn:geant:univ-example.example:group:physique#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example"
+  ],
+  "eduperson_principal_name": "alice@univ-example.example",
+  "entitlements": [
+    "urn:geant:univ-example.example:group:physique#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example"
+  ],
+  "groups": [
+    "urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example"
+  ],
+  "sub": "KEQ1dJYNUw8TtXF5HNbuy3EYZ3rmFMKiqaVY8RH7eLE"
+}
+```
+
+**La valeur par défaut reste `true`.** go-fileshare, comme tout serveur de
+ressources qui décide sur le seul jeton, a besoin des groupes dedans : on ne les
+omet que pour un client dont les jetons vont à un serveur qui lit `/userinfo`.
+
+**Refusé avec les certificats.** Les certificats SSH et X.509 prennent les
+groupes de la personne dans le jeton d'accès : un client avec
+`access_token_groups = false` et `ssh_certificates` ou `x509_certificates`
+émettrait des certificats qui n'en portent aucun, et un serveur qui autorise par
+groupe refuserait la personne sans que rien nulle part ne dise pourquoi. `check`,
+comme le serveur au démarrage, refuse la combinaison :
+
+```hcl
+client "oidc-agent" {
+  device              = true
+  audience            = ["ssh"]
+  access_token_groups = false
+  ssh_certificates    = true
+}
+```
+
+```
+$ authn-bridge check --config etc/bridge.hcl
+authn-bridge: client "oidc-agent": access_token_groups = false with ssh_certificates or x509_certificates: the certificates take the groups from the access token, and would carry none -- use one client for the certificates and another for tokens pasted into ssh
+$ echo $?
+1
+```
+
+Les certificats ont alors leur propre client, et les jetons collés dans ssh un autre.
 
 Un jeton portant l'une des portées propres au fournisseur (`ssh`, `nfs`,
 `app_password`, `wireguard`, `wireguard_peers`) est adressé **au seul

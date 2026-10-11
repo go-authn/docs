@@ -117,6 +117,7 @@ Los bloques:
 | `refresh_lifetime` | desactivado | tokens de actualización, y cuánto tiempo después del **inicio de sesión** terminan |
 | `pkce` | `required` | o `or_nonce`, solo para un cliente confidencial: un `nonce` en lugar de PKCE |
 | `id_token_claims` | `false` | copiar también los claims entregados en el token de ID (opkssh lo necesita) |
+| `access_token_groups` | `true` | `false` deja fuera de los tokens de acceso los grupos de la persona, para tokens que se pegan en ssh ([tokens]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})); se rechaza junto con `ssh_certificates` o `x509_certificates` |
 | `ssh_certificates`, `ssh_*` | | [certificados SSH]({{< relref "/authn-bridge/certificates.md#ssh-certificates" >}}) |
 | `x509_certificates` | | [certificados de cliente NFS]({{< relref "/authn-bridge/certificates.md#x509-client-certificates-for-nfs-over-tls" >}}) |
 | `app_passwords` | | puede establecer la [contraseña de aplicación]({{< relref "/authn-bridge/tokens.md#application-passwords" >}}) de la persona |

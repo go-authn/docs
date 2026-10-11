@@ -5,19 +5,20 @@ description: "Which releases these pages describe, what each release added, and 
 tags: [status, releases]
 ---
 
-These pages are documentation version **0.2**, and describe:
+These pages are documentation version **0.3**, and describe:
 
 | program | release | module |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.22.1** | `github.com/go-authn/bridge` |
+| authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}}).
 A new minor version of any program above is a new documentation version, so
-the pages a reader finds under `/docs/0.2/` keep describing what they
-installed; those of the previous releases stay under `/docs/0.1/`.
+the pages a reader finds under `/docs/0.3/` keep describing what they
+installed; those of the previous releases stay under `/docs/0.1/` and
+`/docs/0.2/`.
 
 ## What each release added
 
@@ -73,6 +74,7 @@ dependencies are left out.
 | v0.21.1 | golang.org/x/net v0.60.0, for its HTTP/2 advisories, and Go 1.27.2; v0.20.1's corrections again; placeholder domains in RFC 2606 names |
 | v0.22.0 | the access token no longer carries `auth_time` or `acr` (the ID token still does), so that an ES256 token fits OpenSSH's 1023 characters up to the 99th percentile of RENATER's scopes |
 | v0.22.1 | `resource` may be repeated at the authorization endpoint, for a grant bounded to several servers; refused at `device_authorization` rather than ignored ([resource indicators]({{< relref "/authn-bridge/resources.md" >}})) |
+| v0.23.0 | `access_token_groups = false`: a client whose tokens are pasted into ssh carries no groups ([tokens]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
 
 ### authn-revokd
 

@@ -5,19 +5,20 @@ description: "Les versions que décrivent ces pages, ce que chaque version a ajo
 tags: [état, versions]
 ---
 
-Ces pages sont la version **0.2** de la documentation, et décrivent :
+Ces pages sont la version **0.3** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.22.1** | `github.com/go-authn/bridge` |
+| authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 Les versions des bibliothèques sont sur [leur propre page]({{< relref "/libraries/_index.md" >}}).
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
-de sorte que les pages qu'une personne trouve sous `/docs/0.2/` continuent de décrire ce
-qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`.
+de sorte que les pages qu'une personne trouve sous `/docs/0.3/` continuent de décrire ce
+qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/` et
+`/docs/0.2/`.
 
 ## Ce que chaque version a ajouté {#what-each-release-added}
 
@@ -73,6 +74,7 @@ des dépendances sont omises.
 | v0.21.1 | golang.org/x/net v0.60.0, pour ses avis de sécurité HTTP/2, et Go 1.27.2 ; de nouveau les corrections de la v0.20.1 ; des domaines d'exemple aux noms de la RFC 2606 |
 | v0.22.0 | le jeton d'accès ne porte plus `auth_time` ni `acr` (le jeton d'identité, si), pour qu'un jeton ES256 tienne dans les 1023 caractères d'OpenSSH jusqu'au 99e centile des scopes de RENATER |
 | v0.22.1 | `resource` peut être répété au point de terminaison d'autorisation, pour une autorisation bornée à plusieurs serveurs ; refusé à `device_authorization` au lieu d'être ignoré ([indicateurs de ressource]({{< relref "/authn-bridge/resources.md" >}})) |
+| v0.23.0 | `access_token_groups = false` : un client dont les jetons sont collés dans ssh ne porte aucun groupe ([jetons]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
 
 ### authn-revokd {#authn-revokd}
 

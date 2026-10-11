@@ -58,15 +58,15 @@ Avec `reflection = true`, sur un fournisseur de test :
 ```
 $ grpcurl -plaintext -unix $PWD/run/admin.sock bridge.admin.v1.AdminService/Status
 {
-  "version": "v0.22.1",
+  "version": "v0.23.0",
   "issuer": "http://127.0.0.1:28473",
-  "started": "2026-10-11T15:51:45.057815Z",
+  "started": "2026-10-11T16:50:39.955689Z",
   "federation": {
     "metadataUrl": "file:///tmp/authn/fed/metadata.xml",
     "idps": 1,
     "usable": 1,
-    "validUntil": "2026-10-18T15:51:34Z",
-    "lastRefresh": "2026-10-11T15:51:45.058828Z"
+    "validUntil": "2026-10-18T16:49:48Z",
+    "lastRefresh": "2026-10-11T16:50:39.956938Z"
   },
   "counts": {}
 }
@@ -164,12 +164,12 @@ ne doit pas être l'écouteur public (une configuration qui le fait est refusée
 
 ```
 $ curl -s http://127.0.0.1:28475/metrics | grep "^bridge_"
-bridge_build_info{version="v0.22.1",goversion="go1.27.2",revision="66a968ad29116232e7a3b454f09a72fefe5e4764"} 1
-bridge_start_time_seconds 1791733905
+bridge_build_info{version="v0.23.0",goversion="go1.27.2",revision="bd63c1f29a7d6897bb05dcbbf6539455cd989958"} 1
+bridge_start_time_seconds 1791737439
 bridge_ready 1
-bridge_metadata_valid_until_timestamp_seconds 1792338694
+bridge_metadata_valid_until_timestamp_seconds 1792342188
 bridge_metadata_idps 1
-bridge_metadata_last_refresh_timestamp_seconds 1791733905
+bridge_metadata_last_refresh_timestamp_seconds 1791737439
 bridge_metadata_refreshes_total{result="failed"} 0
 bridge_metadata_refreshes_total{result="ok"} 1
 bridge_logins_in_progress 0
