@@ -26,9 +26,9 @@ Binary; [einen Download prüfen]({{< relref "/security/verifying-releases.md" >}
 beschreibt, wie beides geprüft wird. Oder bauen Sie es selbst, was die Version im Binary festhält:
 
 ```
-$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.22.1
+$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.0
 $ authn-bridge --version
-authn-bridge version v0.22.1
+authn-bridge version v0.23.0
 ```
 
 Der Pfad ist wichtig: Ab v0.20.0 liegt das Programm in `internal/app` und der

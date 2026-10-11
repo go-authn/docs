@@ -118,6 +118,7 @@ signiert mit `signing_key_file` (RS256) oder `access_token_key_file` (ES256),
 Ressourcenserver braucht, um zu entscheiden, ohne jemanden zu fragen: `preferred_username`,
 `groups`, `idp` (die Entity-ID des IdP, der gebürgt hat), `scope`, `client_id`
 und `session_end`, wenn der IdP angegeben hat, wann seine Sitzung endet.
+Die Gruppen lassen sich pro Client weglassen: [weiter unten](#what-it-leaves-out).
 
 Ein Client, dessen `audience` mehrere Ressourcenserver nennt, kann mit `resource`
 aus RFC 8707 ein Token anfordern, das an einen von ihnen adressiert ist: siehe
@@ -154,6 +155,113 @@ einem 3072-Bit-Schlüssel, ist schon vor jeder Gruppe etwa 1150 Zeichen lang;
 ein Token für SSH wird daher mit ES256 signiert. Ab 1023 Zeichen fragt mccli
 motley-cue stattdessen nach einem Einmalpasswort, was motley-cue standardmäßig
 erlaubt; ein Token, das in ein gewöhnliches `ssh` eingefügt wird, muss passen.
+
+**Keine Gruppen, für einen Client, der das verlangt** (v0.23.0). Jede Gruppe
+fügt ihre ganze URN hinzu, und nichts begrenzt, wie viele ein IdP schickt; kein
+Schlüssel und kein Signaturverfahren sorgt also sicher dafür, dass ein Token mit
+Gruppen passt. Ein Client mit `access_token_groups = false` erhält
+Access-Tokens ohne die `groups` der Person:
+
+```hcl
+client "oidc-agent" {
+  device              = true
+  audience            = ["ssh"]
+  access_token_groups = false
+}
+```
+
+Gedacht ist das für ssh-oidc: oidc-agent holt das Token, mccli fügt es als
+keyboard-interactive-Antwort ein, und motley-cue prüft es an `/userinfo` und
+liest dort die Gruppen. Gemessen von `TestAccessTokenWithoutGroups` in
+authn-bridge ist ein ES256-Token für jemanden in 50 Gruppen, mit dem längsten
+RENATER-Scope (44) und einem Aussteller realer Länge, 732 Zeichen lang.
+
+Gegen eine Testföderation meldet sich eine Person in drei Gruppen über diesen
+Client an, mit dem Device Grant:
+
+```
+$ authn-bridge token --issuer http://127.0.0.1:28473 --client oidc-agent --scope "openid eduperson groups" --cache var/tokens.json > at
+To log in, open http://127.0.0.1:28473/device
+and enter the code DHBT-DBZD
+(or open http://127.0.0.1:28473/device?user_code=DHBT-DBZD)
+$ tr -d '\n' < at | wc -c
+     625
+```
+
+Das Token nennt die Person und ihren IdP, aber keine Gruppe:
+
+```
+$ cut -d. -f2 at | tr "_-" "/+" | jq -R "@base64d | fromjson"
+{
+  "aud": "ssh",
+  "client_id": "oidc-agent",
+  "exp": 1791741018,
+  "iat": 1791737418,
+  "idp": "https://idp.univ-example.example/idp/shibboleth",
+  "iss": "http://127.0.0.1:28473",
+  "jti": "0zVsbDeAwcubhCCFXtj9Dh0u-93sDBza5sti7EmcSL8",
+  "preferred_username": "alice@univ-example.example",
+  "scope": "openid eduperson groups",
+  "sub": "KEQ1dJYNUw8TtXF5HNbuy3EYZ3rmFMKiqaVY8RH7eLE"
+}
+```
+
+`/userinfo` liefert sie weiterhin, als `groups` (Scope `groups`) und als
+`eduperson_entitlement` (Scope `eduperson`):
+
+```
+$ { printf 'Authorization: Bearer '; cat at; } > auth.hdr
+$ curl -s -H @auth.hdr http://127.0.0.1:28473/userinfo | jq .
+{
+  "eduperson_entitlement": [
+    "urn:geant:univ-example.example:group:physique#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example"
+  ],
+  "eduperson_principal_name": "alice@univ-example.example",
+  "entitlements": [
+    "urn:geant:univ-example.example:group:physique#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example"
+  ],
+  "groups": [
+    "urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example"
+  ],
+  "sub": "KEQ1dJYNUw8TtXF5HNbuy3EYZ3rmFMKiqaVY8RH7eLE"
+}
+```
+
+**Der Standard bleibt `true`.** go-fileshare braucht, wie jeder
+Ressourcenserver, der allein anhand des Tokens entscheidet, die Gruppen darin:
+Weggelassen werden sie nur für einen Client, dessen Tokens an einen Server
+gehen, der `/userinfo` liest.
+
+**Abgelehnt zusammen mit Zertifikaten.** SSH- und X.509-Zertifikate übernehmen
+die Gruppen der Person aus dem Access-Token; ein Client mit
+`access_token_groups = false` und `ssh_certificates` oder `x509_certificates`
+würde also Zertifikate ohne Gruppen ausstellen, und ein Server, der nach Gruppen
+autorisiert, würde die Person abweisen, ohne dass irgendwo stünde, warum.
+`check` lehnt die Kombination ab, wie der Server beim Start:
+
+```hcl
+client "oidc-agent" {
+  device              = true
+  audience            = ["ssh"]
+  access_token_groups = false
+  ssh_certificates    = true
+}
+```
+
+```
+$ authn-bridge check --config etc/bridge.hcl
+authn-bridge: client "oidc-agent": access_token_groups = false with ssh_certificates or x509_certificates: the certificates take the groups from the access token, and would carry none -- use one client for the certificates and another for tokens pasted into ssh
+$ echo $?
+1
+```
+
+Die Zertifikate bekommen dann einen eigenen Client, die in ssh eingefügten Tokens einen anderen.
 
 Ein Token mit einem der eigenen Scopes des Anbieters (`ssh`, `nfs`,
 `app_password`, `wireguard`, `wireguard_peers`) ist **allein an den Anbieter**

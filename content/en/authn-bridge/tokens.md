@@ -118,6 +118,7 @@ signed with `signing_key_file` (RS256) or `access_token_key_file` (ES256),
 resource server needs to decide without asking anybody: `preferred_username`,
 `groups`, `idp` (the entity ID of the IdP that vouched), `scope`, `client_id`,
 and `session_end` when the IdP said when its session ends.
+The groups can be left out, per client: [below](#what-it-leaves-out).
 
 A client whose `audience` names several resource servers can ask for a token
 addressed to one of them, with RFC 8707's `resource`: see
@@ -154,6 +155,111 @@ key, is about 1150 characters before any group, so a token meant for SSH is
 signed ES256. Past 1023 characters, mccli asks motley-cue for a one-time
 password instead, which motley-cue allows by default; a token pasted into plain
 `ssh` has to fit.
+
+**No groups, for a client that asks** (v0.23.0). Every group adds its whole
+URN, and nothing bounds how many an IdP sends, so no key and no signature
+algorithm makes a token that carries groups fit for certain. A client with
+`access_token_groups = false` gets access tokens without the person's `groups`:
+
+```hcl
+client "oidc-agent" {
+  device              = true
+  audience            = ["ssh"]
+  access_token_groups = false
+}
+```
+
+It is meant for ssh-oidc: oidc-agent gets the token, mccli pastes it as the
+keyboard-interactive answer, and motley-cue checks it at `/userinfo` and reads
+the groups there. Measured by authn-bridge's `TestAccessTokenWithoutGroups`, an
+ES256 token for somebody in 50 groups, with the longest RENATER scope (44) and
+an issuer of a real length, is 732 characters.
+
+Against a test federation, a person in three groups logs in through that
+client, with the device grant:
+
+```
+$ authn-bridge token --issuer http://127.0.0.1:28473 --client oidc-agent --scope "openid eduperson groups" --cache var/tokens.json > at
+To log in, open http://127.0.0.1:28473/device
+and enter the code DHBT-DBZD
+(or open http://127.0.0.1:28473/device?user_code=DHBT-DBZD)
+$ tr -d '\n' < at | wc -c
+     625
+```
+
+The token names the person and their IdP, and no group:
+
+```
+$ cut -d. -f2 at | tr "_-" "/+" | jq -R "@base64d | fromjson"
+{
+  "aud": "ssh",
+  "client_id": "oidc-agent",
+  "exp": 1791741018,
+  "iat": 1791737418,
+  "idp": "https://idp.univ-example.example/idp/shibboleth",
+  "iss": "http://127.0.0.1:28473",
+  "jti": "0zVsbDeAwcubhCCFXtj9Dh0u-93sDBza5sti7EmcSL8",
+  "preferred_username": "alice@univ-example.example",
+  "scope": "openid eduperson groups",
+  "sub": "KEQ1dJYNUw8TtXF5HNbuy3EYZ3rmFMKiqaVY8RH7eLE"
+}
+```
+
+`/userinfo` still serves them, as `groups` (scope `groups`) and as
+`eduperson_entitlement` (scope `eduperson`):
+
+```
+$ { printf 'Authorization: Bearer '; cat at; } > auth.hdr
+$ curl -s -H @auth.hdr http://127.0.0.1:28473/userinfo | jq .
+{
+  "eduperson_entitlement": [
+    "urn:geant:univ-example.example:group:physique#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example"
+  ],
+  "eduperson_principal_name": "alice@univ-example.example",
+  "entitlements": [
+    "urn:geant:univ-example.example:group:physique#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example"
+  ],
+  "groups": [
+    "urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique#idp.univ-example.example",
+    "urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example"
+  ],
+  "sub": "KEQ1dJYNUw8TtXF5HNbuy3EYZ3rmFMKiqaVY8RH7eLE"
+}
+```
+
+**The default stays `true`.** go-fileshare, like any resource server that
+decides from the token alone, needs the groups in it: leave them out only for a
+client whose tokens go to a server that reads `/userinfo`.
+
+**Refused with certificates.** SSH and X.509 certificates take the person's
+groups from the access token, so a client with `access_token_groups = false`
+and `ssh_certificates` or `x509_certificates` would issue certificates that
+carry none, and a server that authorizes by group would refuse the person with
+nothing anywhere saying why. `check`, like the server at startup, refuses the
+pair:
+
+```hcl
+client "oidc-agent" {
+  device              = true
+  audience            = ["ssh"]
+  access_token_groups = false
+  ssh_certificates    = true
+}
+```
+
+```
+$ authn-bridge check --config etc/bridge.hcl
+authn-bridge: client "oidc-agent": access_token_groups = false with ssh_certificates or x509_certificates: the certificates take the groups from the access token, and would carry none -- use one client for the certificates and another for tokens pasted into ssh
+$ echo $?
+1
+```
+
+Give the certificates one client, and the tokens pasted into ssh another.
 
 A token holding one of the provider's own scopes (`ssh`, `nfs`,
 `app_password`, `wireguard`, `wireguard_peers`) is addressed to **the provider

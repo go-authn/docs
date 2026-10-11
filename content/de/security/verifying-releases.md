@@ -9,11 +9,11 @@ tags: [sicherheit, releases]
 Jedes Release von authnd, authn-bridge, authn-revokd und sshcert veröffentlicht sechs
 statische Binaries (`CGO_ENABLED=0`: linux, darwin und windows, auf amd64 und
 arm64), eine Datei `SHA256SUMS` und eine Build-Provenienz-Attestierung für jedes
-Binary. Die folgenden Beispiele verwenden authn-bridge v0.22.1; die anderen Programme
+Binary. Die folgenden Beispiele verwenden authn-bridge v0.23.0; die anderen Programme
 funktionieren genauso, mit ihrem eigenen Repository und Namen.
 
 ```sh
-gh release download v0.22.1 --repo go-authn/bridge
+gh release download v0.23.0 --repo go-authn/bridge
 ```
 
 ## 1. Die Prüfsumme {#1-the-checksum}
@@ -63,16 +63,16 @@ go version -m authn-bridge-linux-amd64
 
 ```
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.22.1	
+	mod	github.com/go-authn/bridge	v0.23.0	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=66a968ad29116232e7a3b454f09a72fefe5e4764
+	build	vcs.revision=bd63c1f29a7d6897bb05dcbbf6539455cd989958
 	build	vcs.modified=false
 ```
 
 (auf die Zeilen gekürzt, auf die es ankommt). Die `mod`-Zeile muss genau der Tag sein,
 und `vcs.modified` muss `false` sein: Ein Build aus einem Baum mit nicht committeten
-Änderungen sagt `true`, und seine Version lautet `v0.22.1+dirty`. Der
+Änderungen sagt `true`, und seine Version lautet `v0.23.0+dirty`. Der
 Release-Workflow verweigert die Veröffentlichung, sofern nicht **jedes einzelne** der
 sechs Binaries beide Prüfungen besteht und das Programm den Tag als letztes Wort seiner
 Versionszeile ausgibt:
@@ -81,7 +81,7 @@ Versionszeile ausgibt:
 $ authnd --version
 authnd version v0.10.1
 $ authn-bridge --version
-authn-bridge version v0.22.1
+authn-bridge version v0.23.0
 $ authn-revokd -version
 authn-revokd v0.6.3
 ```

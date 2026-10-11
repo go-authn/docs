@@ -26,9 +26,9 @@ binaire ; [vérifier un téléchargement]({{< relref "/security/verifying-releas
 explique comment contrôler les deux. Ou bien compilez-le, ce qui inscrit la version dans le binaire :
 
 ```
-$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.22.1
+$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.0
 $ authn-bridge --version
-authn-bridge version v0.22.1
+authn-bridge version v0.23.0
 ```
 
 Le chemin compte : depuis v0.20.0 le programme se trouve dans `internal/app` et la

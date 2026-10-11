@@ -5,20 +5,20 @@ description: "Qué versiones describen estas páginas, qué añadió cada versi�
 tags: [estado, versiones]
 ---
 
-Estas páginas son la versión **0.2** de la documentación, y describen:
+Estas páginas son la versión **0.3** de la documentación, y describen:
 
 | programa | versión | módulo |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.22.1** | `github.com/go-authn/bridge` |
+| authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 Las versiones de las bibliotecas están en [su propia página]({{< relref "/libraries/_index.md" >}}).
 Una nueva versión menor de cualquiera de los programas anteriores es una nueva
 versión de la documentación, de modo que las páginas que alguien encuentra bajo
-`/docs/0.2/` siguen describiendo lo que instaló; las de las versiones anteriores
-siguen bajo `/docs/0.1/`.
+`/docs/0.3/` siguen describiendo lo que instaló; las de las versiones anteriores
+siguen bajo `/docs/0.1/` y `/docs/0.2/`.
 
 ## Qué añadió cada versión {#what-each-release-added}
 
@@ -74,6 +74,7 @@ que solo actualizaron dependencias.
 | v0.21.1 | golang.org/x/net v0.60.0, por sus avisos de seguridad de HTTP/2, y Go 1.27.2; de nuevo las correcciones de la v0.20.1; dominios de ejemplo con nombres del RFC 2606 |
 | v0.22.0 | el token de acceso ya no lleva `auth_time` ni `acr` (el token de ID sí), para que un token ES256 quepa en los 1023 caracteres de OpenSSH hasta el percentil 99 de los scopes de RENATER |
 | v0.22.1 | `resource` puede repetirse en el endpoint de autorización, para una concesión acotada a varios servidores; se rechaza en `device_authorization` en vez de ignorarse ([indicadores de recurso]({{< relref "/authn-bridge/resources.md" >}})) |
+| v0.23.0 | `access_token_groups = false`: un cliente cuyos tokens se pegan en ssh no lleva grupos ([tokens]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
 
 ### authn-revokd {#authn-revokd}
 

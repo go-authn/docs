@@ -117,6 +117,7 @@ Les blocs :
 | `refresh_lifetime` | désactivé | jetons de rafraîchissement, et combien de temps après la **connexion** ils prennent fin |
 | `pkce` | `required` | ou `or_nonce`, pour un client confidentiel seulement : un `nonce` au lieu de PKCE |
 | `id_token_claims` | `false` | copier aussi les revendications communiquées dans le jeton d'identité (opkssh en a besoin) |
+| `access_token_groups` | `true` | `false` retire les groupes de la personne des jetons d'accès, pour des jetons collés dans ssh ([jetons]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) ; refusé avec `ssh_certificates` ou `x509_certificates` |
 | `ssh_certificates`, `ssh_*` | | [certificats SSH]({{< relref "/authn-bridge/certificates.md#ssh-certificates" >}}) |
 | `x509_certificates` | | [certificats clients NFS]({{< relref "/authn-bridge/certificates.md#x509-client-certificates-for-nfs-over-tls" >}}) |
 | `app_passwords` | | peut définir le [mot de passe d'application]({{< relref "/authn-bridge/tokens.md#application-passwords" >}}) de la personne |

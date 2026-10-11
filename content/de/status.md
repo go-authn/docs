@@ -5,19 +5,20 @@ description: "Welche Releases diese Seiten beschreiben, was jedes Release hinzug
 tags: [stand, releases]
 ---
 
-Diese Seiten sind die Dokumentationsversion **0.2** und beschreiben:
+Diese Seiten sind die Dokumentationsversion **0.3** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.22.1** | `github.com/go-authn/bridge` |
+| authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}}).
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
-sodass die Seiten, die jemand unter `/docs/0.2/` findet, weiterhin beschreiben, was
-installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`.
+sodass die Seiten, die jemand unter `/docs/0.3/` findet, weiterhin beschreiben, was
+installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/` und
+`/docs/0.2/`.
 
 ## Was jedes Release hinzugefügt hat {#what-each-release-added}
 
@@ -73,6 +74,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen.
 | v0.21.1 | golang.org/x/net v0.60.0 wegen seiner HTTP/2-Sicherheitshinweise, und Go 1.27.2; wieder die Korrekturen von v0.20.1; Platzhalter-Domains mit Namen nach RFC 2606 |
 | v0.22.0 | das Access-Token trägt kein `auth_time` und kein `acr` mehr (das ID-Token schon), damit ein ES256-Token bis zum 99. Perzentil der RENATER-Scopes in die 1023 Zeichen von OpenSSH passt |
 | v0.22.1 | `resource` darf am Autorisierungs-Endpunkt wiederholt werden, für einen auf mehrere Server begrenzten Grant; an `device_authorization` abgelehnt statt ignoriert ([Resource Indicators]({{< relref "/authn-bridge/resources.md" >}})) |
+| v0.23.0 | `access_token_groups = false`: ein Client, dessen Tokens in ssh eingefügt werden, trägt keine Gruppen ([Tokens]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
 
 ### authn-revokd {#authn-revokd}
 
