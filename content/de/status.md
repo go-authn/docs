@@ -9,12 +9,14 @@ Diese Seiten sind die Dokumentationsversion **0.3** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
-| authnd | **v0.10.1** | `github.com/go-authn/authnd` |
+| authnd | **v0.10.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
-Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}}).
+Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}});
+directory ist bei **v0.12.0**: `Members` antwortet `[]` für eine leere Gruppe;
+`Expand` lehnt sie mit `ErrEmptyGroup` ab.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
 sodass die Seiten, die jemand unter `/docs/0.3/` findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/` und
@@ -43,6 +45,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen.
 | v0.9.6 | `check` sagt, warum einer Person kein Ticket ausgestellt werden kann |
 | v0.10.0 | `check` öffnet das Zertifikat und die Keytab, wie es der Server tut; es nennt, wer sich nicht mit einem Passwort binden kann und wen ein Token noch zulässt; die Zeile zum Lauschen kommt, nachdem der Realm geöffnet ist |
 | v0.10.1 | go-authn/kdc v0.4.2: ein `till` von 19700101000000Z erhält das längste Ticket, nicht eines, das 1970 abgelaufen ist |
+| v0.10.2 | go-authn/directory v0.12.0: Eine leere Gruppe wird als `posixGroup` ohne `memberUid` veröffentlicht |
 
 ### authn-bridge {#authn-bridge}
 

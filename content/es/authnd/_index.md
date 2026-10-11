@@ -11,8 +11,9 @@ directorio. Lo que quiere autenticarlas habla LDAP.** authnd es la fachada:
 hace binds y búsquedas sobre los orígenes de
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}), así que lo que guarda
 una base de datos puede leerlo cualquier cosa que sepa consultar un directorio.
-Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.10.1, que
-solo se diferencia de la v0.10.0 por el KDC que incorpora (go-authn/kdc v0.4.2);
+Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.10.2, que
+solo se diferencia de la v0.10.0 por las bibliotecas que incorpora: go-authn/kdc
+v0.4.2 (desde la v0.10.1) y go-authn/directory v0.12.0 (desde la v0.10.2);
 lo que está verificado y lo que no figura en la página de [estado]({{< relref "/status.md" >}}).
 
 ```sh
@@ -35,6 +36,9 @@ group "staff" { members = ["alice"] }
 
 Las personas se publican como `uid=<name>,ou=people,<base_dn>` (`posixAccount`),
 y los grupos como `cn=<name>,ou=groups,<base_dn>` (`posixGroup`, con `memberUid`).
+Un grupo que un origen lista pero en el que no hay nadie se publica sin
+`memberUid`, ya que un atributo LDAP tiene al menos un valor; antes de la
+v0.10.2 se omitía.
 Cada entrada lleva `uid` y `cn`; `sambaNTPassword` y `sshPublicKey` se añaden
 cuando la persona los tiene y, para el primero, cuando
 [`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) lo indica.
@@ -96,7 +100,7 @@ supportedControl: 1.3.6.1.1.13.2
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 vendorName: go-authn/authnd
-vendorVersion: v0.10.0
+vendorVersion: v0.10.2
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` es la operación de modificación de contraseña del RFC 3062.
@@ -122,8 +126,8 @@ vendorVersion: v0.10.0
 
 Cada bloque de salida de estas páginas lo imprimió el binario de la versión v0.10.0
 (`authnd-darwin-arm64`) —la v0.10.1 imprimió el mismo `check`, byte a byte, con las dos
-configuraciones comparadas, y la línea `--version` de la página de instalación es la de la
-v0.10.1—, junto con los clientes OpenLDAP y Heimdal que incluye
+configuraciones comparadas; las líneas `--version` y el `vendorVersion` del root DSE son
+los de la v0.10.2, cuyo root DSE es por lo demás idéntico—, junto con los clientes OpenLDAP y Heimdal que incluye
 macOS, ejecutados en 127.0.0.1 en puertos sin privilegios, en un directorio temporal
 bajo `/tmp`. Por eso las configuraciones que hay detrás nombran los archivos con rutas
 relativas como `etc/authnd/passwords/alice.pw`, y por eso los archivos de contraseña

@@ -9,12 +9,14 @@ These pages are documentation version **0.3**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.10.1** | `github.com/go-authn/authnd` |
+| authnd | **v0.10.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
-The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}}).
+The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
+directory is **v0.12.0**: `Members` answers `[]` for an empty group;
+`Expand` refuses it with `ErrEmptyGroup`.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.3/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/` and
@@ -43,6 +45,7 @@ dependencies are left out.
 | v0.9.6 | `check` says why each person cannot be issued a ticket |
 | v0.10.0 | `check` opens the certificate and the keytab, as the server does; it names who cannot bind with a password, and who a token still admits; the listening line comes after the realm opens |
 | v0.10.1 | go-authn/kdc v0.4.2: a `till` of 19700101000000Z gets the longest ticket, not one expired in 1970 |
+| v0.10.2 | go-authn/directory v0.12.0: an empty group is published as a `posixGroup` without `memberUid` |
 
 ### authn-bridge
 

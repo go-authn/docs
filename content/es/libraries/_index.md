@@ -19,7 +19,7 @@ Todos son Go puro y se compilan con `CGO_ENABLED=0`.
 | [totp]({{< relref "/libraries/totp.md" >}}) | ¿es correcto este código de seis dígitos, y se ha usado antes? | v0.4.1 | `github.com/go-authn/totp` |
 | [fido]({{< relref "/libraries/fido.md" >}}) | ¿cómo se habla con una llave de seguridad, mediante informes de 64 bytes? | v0.6.2 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | ¿respondió *la* llave registrada, y la tocó una persona? | v0.4.1 | `github.com/go-authn/keyfactor` |
-| [directory]({{< relref "/libraries/directory.md" >}}) | ¿quién es alguien, y qué puede probarlo? | v0.11.2 | `github.com/go-authn/directory` |
+| [directory]({{< relref "/libraries/directory.md" >}}) | ¿quién es alguien, y qué puede probarlo? | v0.12.0 | `github.com/go-authn/directory` |
 | [ldap]({{< relref "/libraries/ldap.md" >}}) | ¿cuáles son los bytes de un servidor LDAP? | v0.7.1 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | ¿es válido este ticket Kerberos para este servicio? | v0.3.0 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | ¿cómo emite un reino tickets a partir de un directorio? | v0.4.2 | `github.com/go-authn/kdc` |

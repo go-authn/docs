@@ -11,7 +11,7 @@ memory, a SQL database, an LDAP server, or `user` and `group` blocks in a
 configuration file — and the point of it is the second half of the question.
 
 ```sh
-go get github.com/go-authn/directory@v0.11.2
+go get github.com/go-authn/directory@v0.12.0
 ```
 
 ## What proves somebody is not one thing
@@ -95,11 +95,17 @@ func main() {
 		fmt.Println(id.Name(), "SMB:", err == nil, errors.Is(err, directory.ErrNoCredential))
 	}
 
-	// @group is expanded; an empty group, or one nobody has, is an error.
+	// An empty group is an empty answer; a group nobody has is an error.
+	fmt.Println(people.Members("nobody"))
+	fmt.Println(people.Members("admins"))
+
+	// @group is expanded; an empty group, or one nobody has, is refused.
 	fmt.Println(directory.Expand([]string{"@staff", "svc-backup"}, people))
 	fmt.Println(directory.Expand([]string{"@nobody"}, local))
-	fmt.Println(directory.Expand([]string{"@nobody"}, people))
-	fmt.Println(directory.Expand([]string{"@admins"}, people))
+	_, err := directory.Expand([]string{"@nobody"}, people)
+	fmt.Println(err, errors.Is(err, directory.ErrEmptyGroup), errors.Is(err, directory.ErrNoSuchGroup))
+	_, err = directory.Expand([]string{"@admins"}, people)
+	fmt.Println(err, errors.Is(err, directory.ErrEmptyGroup), errors.Is(err, directory.ErrNoSuchGroup))
 }
 ```
 
@@ -109,30 +115,38 @@ eli password: false verifier: true keys: false from the configuration file
 svc-backup password: false verifier: false keys: true from the configuration file
 dora SMB: true false
 eli SMB: false true
-[dora eli svc-backup] <nil>
-[] directory: group "nobody" has no members: nobody would be allowed
-[] directory: no such group: "nobody"
+[] <nil>
 [] directory: no such group: "admins", in the configuration file
+[dora eli svc-backup] <nil>
+[] directory: the group has no members: "nobody": nobody would be allowed
+directory: the group has no members: "nobody": nobody would be allowed true false
+directory: no such group: "admins", in the configuration file false true
 ```
 
 A held password also answers `Can(Verifier)`: it can be compared.
 
 {{< callout type="info" >}}
-**An empty group, asked through a `Set`, is reported as missing**
+**An empty group is a group: `Members` answers it, `Expand` refuses it**
 
-`Expand` refuses an empty group with *has no members*, as the third line from
-the end shows for the `Static` itself. Through a `Set`, `Set.Members` returns
-`ErrNoSuchGroup` for a group that a source has but that has nobody in it
-(`source.go:138`), so the message names the wrong cause. The group is refused
-either way.
+From v0.12.0, `Set.Members` returns an empty list and no error for a group a
+source has with nobody in it, so a server that lists groups can publish it.
+`Expand` still refuses it, with `ErrEmptyGroup`, which is not
+`ErrNoSuchGroup`: a group nobody has is a typo or a deleted group, an empty
+one is a group to fill. A caller that tolerates a group granting nothing tests
+for both. In v0.11.x, `Set.Members` returned `ErrNoSuchGroup` for an empty
+group, and `Expand` of `@nobody` through the `Set` printed
+`[] directory: no such group: "nobody"`.
 {{< /callout >}}
 
 ## What it refuses, and why
 
-- **A group with nobody in it**, and **a group no source has** — errors, not
-  empty lists: a configuration that grants nothing to nobody reads exactly like
-  one that works. A source that is *broken* is reported apart from one that
-  lacks the group.
+- **A group with nobody in it**, and **a group no source has**, when `Expand`
+  turns `@group` into people — errors, not empty lists: a configuration that
+  grants nothing to nobody reads exactly like one that works. The first is
+  `ErrEmptyGroup`, the second `ErrNoSuchGroup`, and `errors.Is` tells them
+  apart. `Set.Members` answers an empty group with an empty list; a group no
+  source has is `ErrNoSuchGroup` there too. A source that is *broken* is
+  reported apart from one that lacks the group, and wins over an empty answer.
 - **An LDAP directory reached in the clear.** A simple bind carries the
   password itself (RFC 4513), so `ldapdir.New` and a `users "ldap"` block
   refuse `ldap://` to another machine unless `StartTLS` is set. `ldaps://`,
@@ -181,4 +195,4 @@ The coverage lane fails below 85% (its stated standard is 100%), and the
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/directory@v0.11.2](https://pkg.go.dev/github.com/go-authn/directory@v0.11.2)
+[pkg.go.dev/github.com/go-authn/directory@v0.12.0](https://pkg.go.dev/github.com/go-authn/directory@v0.12.0)

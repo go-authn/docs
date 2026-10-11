@@ -11,8 +11,9 @@ qui veut les authentifier parle LDAP.** authnd est la façade : il
 se lie et cherche sur les sources de [go-authn/directory]({{< relref "/libraries/_index.md" >}}),
 si bien que ce que contient une base de données peut être lu par tout ce qui sait
 interroger un annuaire. Pur Go, `CGO_ENABLED=0`, un seul binaire. Ces pages décrivent
-la v0.10.1, qui ne diffère de la v0.10.0 que par le KDC qu'elle embarque (go-authn/kdc
-v0.4.2) ; ce qui est vérifié et ce qui ne l'est pas figure sur la page [état]({{< relref "/status.md" >}}).
+la v0.10.2, qui ne diffère de la v0.10.0 que par les bibliothèques qu'elle embarque :
+go-authn/kdc v0.4.2 (depuis la v0.10.1) et go-authn/directory v0.12.0 (depuis la
+v0.10.2) ; ce qui est vérifié et ce qui ne l'est pas figure sur la page [état]({{< relref "/status.md" >}}).
 
 ```sh
 authnd --config /etc/authnd      # serve
@@ -34,6 +35,9 @@ group "staff" { members = ["alice"] }
 
 Les personnes sont publiées sous `uid=<name>,ou=people,<base_dn>` (`posixAccount`),
 les groupes sous `cn=<name>,ou=groups,<base_dn>` (`posixGroup`, avec `memberUid`).
+Un groupe qu'une source liste mais où il n'y a personne est publié sans
+`memberUid`, puisqu'un attribut LDAP a au moins une valeur ; avant la v0.10.2,
+il était omis.
 Chaque entrée porte `uid` et `cn` ; `sambaNTPassword` et `sshPublicKey` sont
 ajoutés quand la personne les a et, pour le premier, quand
 [`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) le dit.
@@ -94,7 +98,7 @@ supportedControl: 1.3.6.1.1.13.2
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 vendorName: go-authn/authnd
-vendorVersion: v0.10.0
+vendorVersion: v0.10.2
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` est l'opération de modification de mot de passe de la RFC 3062.
@@ -120,8 +124,8 @@ vendorVersion: v0.10.0
 
 Chaque bloc de sortie de ces pages a été affiché par le binaire de la version v0.10.0
 (`authnd-darwin-arm64`) — la v0.10.1 a affiché le même `check`, octet pour octet, sur les deux
-configurations comparées, et la ligne `--version` de la page d'installation est celle de la
-v0.10.1 — et par les clients OpenLDAP et Heimdal livrés avec
+configurations comparées ; les lignes `--version` et le `vendorVersion` du root DSE sont
+ceux de la v0.10.2, dont le root DSE est par ailleurs identique — et par les clients OpenLDAP et Heimdal livrés avec
 macOS, exécutés sur 127.0.0.1 sur des ports non privilégiés, dans un répertoire de travail sous
 `/tmp`. C'est
 pourquoi les configurations derrière elles nomment des fichiers par des chemins relatifs comme
