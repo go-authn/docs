@@ -12,13 +12,17 @@ delante de varios servidores de ficheros, recibe tokens de acceso dirigidos a
 recibió y presentarlo a los demás: por eso, dice el RFC 8707 §3, conviene
 restringir la audiencia. Desde la v0.21.0, el cliente puede pedir, con el
 parámetro `resource` del RFC 8707, un token dirigido a **uno solo** de ellos.
+Esta página describe la v0.22.1; lo que la v0.22.0 hacía de otro modo está
+[al final](#departures).
 
 Sin `resource`, nada cambia: el token de acceso es para toda la `audience` del
 cliente, como describe [la página de tokens]({{< relref "/authn-bridge/tokens.md#the-access-token" >}}).
 
 ## El cliente {#the-client}
 
-No hay nada que activar. Cada URI de la `audience` del cliente puede pedirse:
+No hay nada que activar. Cada URI de la `audience` del cliente puede pedirse. Los
+ejemplos siguientes usan un cliente confidencial con tokens de actualización, y
+un cliente de dispositivo con la misma audiencia:
 
 ```hcl
 client "portal" {
@@ -27,6 +31,11 @@ client "portal" {
   audience         = ["https://fs-paris.example.org/", "https://fs-lyon.example.org/"]
   refresh_lifetime = "8h"
 }
+
+client "files-cli" {
+  device   = true
+  audience = ["https://fs-paris.example.org/", "https://fs-lyon.example.org/"]
+}
 ```
 
 ```
@@ -34,8 +43,9 @@ $ authn-bridge check --config etc/bridge.hcl
 issuer        http://127.0.0.1:28473
 SAML entity   http://127.0.0.1:28473/saml
 tls           none (a reverse proxy in front)
-federation    1 IdPs, 1 usable here, valid until 2026-10-18T10:46:00Z
+federation    1 IdPs, 1 usable here, valid until 2026-10-18T15:48:27Z
 client        portal (confidential, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
+client        files-cli (public, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
 ```
 
 `check` lista la audiencia y no dice nada más de ella. En particular, no dice qué
@@ -177,36 +187,79 @@ $ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
 400
 ```
 
+La solicitud de autorización puede llevar **varios** valores de `resource`: es el
+único parámetro que puede repetirse en ella. Cada uno se comprueba, un valor dado
+dos veces cuenta una sola, y la concesión es para los servidores nombrados. Tras
+un inicio de sesión cuya solicitud de autorización llevaba
+`resource=https://fs-paris.example.org/` y
+`resource=https://fs-lyon.example.org/`, el código da un token para ambos, y cada
+actualización puede pedir cualquiera de los dos:
+
+```
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+    -d grant_type=authorization_code -d code="$(cat code)" \
+    -d code_verifier="$(cat verifier)" -d redirect_uri=http://127.0.0.1:9/portal \
+    -o tokens.json -w "%{http_code}\n"
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr "_-" "/+" |
+    jq -R "@base64d | fromjson | {aud, client_id, scope}"
+{
+  "aud": [
+    "https://fs-paris.example.org/",
+    "https://fs-lyon.example.org/"
+  ],
+  "client_id": "portal",
+  "scope": "openid profile"
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+    -d grant_type=refresh_token -d refresh_token="$(jq -r .refresh_token tokens.json)" \
+    --data-urlencode resource=https://fs-paris.example.org/ \
+    -o tokens.json -w "%{http_code}\n"
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr "_-" "/+" |
+    jq -R "@base64d | fromjson | {aud, client_id, scope}"
+{
+  "aud": "https://fs-paris.example.org/",
+  "client_id": "portal",
+  "scope": "openid profile"
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+    -d grant_type=refresh_token -d refresh_token="$(jq -r .refresh_token tokens.json)" \
+    --data-urlencode resource=https://fs-lyon.example.org/ \
+    -o tokens.json -w "%{http_code}\n"
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr "_-" "/+" |
+    jq -R "@base64d | fromjson | {aud, client_id, scope}"
+{
+  "aud": "https://fs-lyon.example.org/",
+  "client_id": "portal",
+  "scope": "openid profile"
+}
+```
+
 Con un bloque `state`, los recursos de la concesión se guardan con el token de
 actualización, así que un reinicio no la amplía.
 
 Un recurso que el cliente no puede tener también se rechaza en el endpoint de
-autorización, como un error enviado a la URI de redirección del cliente:
+autorización, como un error enviado a la URI de redirección del cliente. Uno solo
+de esos valores entre otros correctos hace rechazar toda la solicitud:
 
 ```
 $ curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" -G http://127.0.0.1:28473/authorize \
     -d response_type=code -d client_id=portal -d scope=openid -d state=s1 \
     --data-urlencode redirect_uri=http://127.0.0.1:9/portal \
     -d code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM -d code_challenge_method=S256 \
+    --data-urlencode resource=https://fs-paris.example.org/ \
     --data-urlencode resource=https://fs-nantes.example.org/
 302 http://127.0.0.1:9/portal?error=invalid_target&error_description=resource+%22https%3A%2F%2Ffs-nantes.example.org%2F%22+is+not+one+this+client+may+ask+a+token+for&iss=http%3A%2F%2F127.0.0.1%3A28473&state=s1
 ```
 
-**Un recurso por solicitud, en ambos endpoints.** Todo parámetro enviado dos veces
-se rechaza, `resource` incluido. En el endpoint de token, la respuesta es
-`invalid_request`. En el endpoint de autorización es una página de error, y el
-cliente no es redirigido:
+**En el endpoint de token, un recurso por solicitud.** Un token es para un
+servidor, para los servidores de la concesión o para toda la `audience`; nunca
+para una lista que elija la solicitud de token. Un segundo `resource` se rechaza
+allí como cualquier parámetro repetido:
 
 ```
-$ curl -s -o page.html -w "%{http_code}\n" -G http://127.0.0.1:28473/authorize \
-    -d response_type=code -d client_id=portal -d scope=openid -d state=s1 \
-    --data-urlencode redirect_uri=http://127.0.0.1:9/portal \
-    -d code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM -d code_challenge_method=S256 \
-    --data-urlencode resource=https://fs-paris.example.org/ \
-    --data-urlencode resource=https://fs-lyon.example.org/
-400
-$ grep -o "<p>.*</p>" page.html
-<p>The parameter resource appears more than once.</p>
 $ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
     -d grant_type=refresh_token -d refresh_token="$(jq -r .refresh_token tokens.json)" \
     --data-urlencode resource=https://fs-paris.example.org/ \
@@ -218,24 +271,21 @@ $ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
 400
 ```
 
-Por tanto, no puede pedirse una concesión para dos de los servidores del cliente
-sin incluirlos todos. Un token para más de un servidor es toda la `audience`, y se
-pide sin nombrar ningún recurso.
-
 ## Las reglas {#the-rules}
 
 | | |
 |---|---|
 | **dónde** | `resource` lo acepta el endpoint de autorización, y el endpoint de token con las concesiones `authorization_code` y `refresh_token` |
-| **cuántos** | uno por solicitud. Enviado dos veces, se rechaza como cualquier parámetro repetido |
+| **cuántos** | en el endpoint de autorización, varios: cada uno se comprueba, y uno rechazado hace rechazar la solicitud. En el endpoint de token, uno: un segundo es `invalid_request` |
 | **qué puede nombrarse** | una URI absoluta sin fragmento que sea, carácter por carácter, una entrada de la `audience` del cliente |
-| **el `aud` del token** | el recurso nombrado en el endpoint de token; si no hay ninguno, el que nombró la solicitud de autorización; si no hay ninguno de los dos, toda la `audience` del cliente |
-| **una actualización** | puede nombrar el recurso que nombró la solicitud de autorización o, si no nombró ninguno, cualquier URI de la `audience` del cliente. El nuevo token de actualización conserva la concesión entera |
+| **el `aud` del token** | el recurso nombrado en el endpoint de token; si no hay ninguno, los recursos que nombró la solicitud de autorización, en el orden dado; si no hay ninguno de los dos, toda la `audience` del cliente |
+| **una actualización** | puede nombrar uno de los recursos que nombró la solicitud de autorización o, si no nombró ninguno, cualquier URI de la `audience` del cliente. El nuevo token de actualización conserva la concesión entera |
 | **rechazado** | `invalid_target`, enviado a la URI de redirección en el endpoint de autorización y devuelto como error `400` por el endpoint de token. Una actualización rechazada no gasta el token de actualización |
-| **otras concesiones** | `resource` con `client_credentials` o con la concesión de dispositivo se rechaza con `invalid_target`, no se ignora: un cliente que pidió un token para un servidor no debe recibir uno para otro. La solicitud de autorización de dispositivo no lee `resource`, así que un token de dispositivo es siempre para toda la `audience` |
+| **otras concesiones** | `resource` con `client_credentials`, en la solicitud de autorización de dispositivo o al sondear un token de dispositivo se rechaza con `invalid_target`, no se ignora: un cliente que pidió un token para un servidor no debe recibir uno para otro. Un token de dispositivo es siempre para toda la `audience` |
 | **los scopes propios del proveedor** | un token con `ssh`, `nfs`, `app_password`, `wireguard` o `wireguard_peers` es solo para el proveedor, y solo puede nombrarse el propio emisor |
 
-El rechazo de las otras concesiones, en el endpoint de token:
+El rechazo de las otras concesiones, en el endpoint de token y en la solicitud de
+autorización de dispositivo:
 
 ```
 $ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
@@ -248,15 +298,30 @@ $ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
 400
 ```
 
+```
+$ curl -s http://127.0.0.1:28473/device_authorization -d client_id=files-cli \
+    --data-urlencode resource=https://fs-paris.example.org/ -w "\n%{http_code}\n" | jq .
+{
+  "error": "invalid_target",
+  "error_description": "resource indicators are taken with the authorization_code and refresh_token grants"
+}
+400
+```
+
 ## Dónde se aparta del RFC 8707 {#departures}
 
-| RFC 8707 | authn-bridge v0.22.0 |
+| RFC 8707 | authn-bridge v0.22.1 |
 |---|---|
-| §2: «Multiple `resource` parameters MAY be used», y la figura 2 envía dos en una misma solicitud de autorización | uno por solicitud. El endpoint de autorización rechaza todo parámetro repetido, citando el RFC 6749 §3.1, `resource` incluido, y responde con una página de error. Una concesión no puede nombrar un subconjunto de dos servidores o más. El README de la v0.22.0 dice que `resource` «may be repeated» en el endpoint de autorización; el código lo rechaza |
-| §3: un servidor de autorización «may be unwilling or unable to fulfill a token request with multiple resources» | permitido, y así es: en el endpoint de token, un segundo `resource` es `invalid_request` |
-| §2.2: el parámetro se aplica «for all grant types» | solo `authorization_code` y `refresh_token`. Con `client_credentials` o con la concesión de dispositivo se rechaza con `invalid_target`, y la solicitud de autorización de dispositivo no lo lee |
+| §2: «Multiple `resource` parameters MAY be used» | en el endpoint de autorización, tal cual. En el endpoint de token, uno: un segundo `resource` es `invalid_request`, lo que permite el §3 («an authorization server may be unwilling or unable to fulfill a token request with multiple resources») |
+| §2.2: el parámetro se aplica «for all grant types» | solo `authorization_code` y `refresh_token`. Con `client_credentials` o con la concesión de dispositivo se rechaza con `invalid_target`, tanto en la solicitud de autorización de dispositivo como al sondear |
 | §2: el valor «SHOULD NOT include a query component» | no se comprueba. Lo que se comprueba es que el valor sea absoluto, no tenga fragmento y esté en la `audience` del cliente |
 | §2: el servidor «may map from that value to a more general URI or abstract identifier» | ninguna correspondencia: el `aud` es el valor pedido, comparado con `audience` como cadena |
 | §2.2: «the authorization server should downscope the scope value» para cada recurso | no se hace: el valor de `scope` es el de la concesión, sea cual sea el servidor nombrado |
 | §2.1: una solicitud sin `resource` MAY procesarse «by using a predefined default resource value» | el valor por defecto es toda la `audience` del cliente |
 | §2.2: una actualización puede limitarse «to those [resources] that were originally granted», y el token de actualización «is bound to the full original grant» | tal cual |
+
+**Antes de la v0.22.1**, la v0.22.0 rechazaba un `resource` repetido en el
+endpoint de autorización con una página de error, como cualquier otro parámetro
+repetido, así que una concesión no podía nombrar dos servidores; y su solicitud
+de autorización de dispositivo no leía `resource`, así que un dispositivo que
+pedía un solo servidor recibía un token para toda la `audience`.
