@@ -119,6 +119,10 @@ Ressourcenserver braucht, um zu entscheiden, ohne jemanden zu fragen: `preferred
 `groups`, `idp` (die Entity-ID des IdP, der gebürgt hat), `scope`, `client_id`
 und `session_end`, wenn der IdP angegeben hat, wann seine Sitzung endet.
 
+Ein Client, dessen `audience` mehrere Ressourcenserver nennt, kann mit `resource`
+aus RFC 8707 ein Token anfordern, das an einen von ihnen adressiert ist: siehe
+[mehrere Ressourcenserver]({{< relref "/authn-bridge/resources.md" >}}).
+
 ### Was es weglässt, und warum {#what-it-leaves-out}
 
 **Kein `auth_time` und kein `acr`**, obwohl RFC 9068 beides erlaubt. Beide

@@ -110,7 +110,7 @@ Los bloques:
 |---|---|---|
 | `secret_file` | | el secreto del cliente, de al menos 16 caracteres; si falta, un cliente **público** |
 | `redirect_uris` | | se comparan exactamente, salvo que una URI de loopback puede cambiar de puerto (RFC 8252); `http` solo en loopback |
-| `audience` | el ID del cliente | a quién se dirigen sus tokens de acceso |
+| `audience` | el ID del cliente | a quién se dirigen sus tokens de acceso; si son varios, puede pedirse un token para uno ([RFC 8707]({{< relref "/authn-bridge/resources.md" >}})) |
 | `subject` | `public` | o `pairwise`: un `sub` distinto para este cliente (OIDC Core 8.1) |
 | `name` | el ID del cliente | se muestra en la página de confirmación del dispositivo |
 | `device` | `false` | la concesión de dispositivo (RFC 8628); un cliente así no necesita URI de redirección |

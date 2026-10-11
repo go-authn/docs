@@ -110,7 +110,7 @@ Die Blöcke:
 |---|---|---|
 | `secret_file` | | das Client-Geheimnis, mindestens 16 Zeichen; fehlt es, ein **öffentlicher** Client |
 | `redirect_uris` | | exakt verglichen, außer dass eine Loopback-URI den Port wechseln darf (RFC 8252); `http` nur auf Loopback |
-| `audience` | die Client-ID | an wen seine Access-Tokens adressiert sind |
+| `audience` | die Client-ID | an wen seine Access-Tokens adressiert sind; bei mehreren kann ein Token für einen angefordert werden ([RFC 8707]({{< relref "/authn-bridge/resources.md" >}})) |
 | `subject` | `public` | oder `pairwise`: ein anderes `sub` für diesen Client (OIDC Core 8.1) |
 | `name` | die Client-ID | auf der Bestätigungsseite für Geräte angezeigt |
 | `device` | `false` | der Device Grant (RFC 8628); ein solcher Client braucht keine Redirect-URI |

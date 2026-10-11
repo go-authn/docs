@@ -10,7 +10,7 @@ Diese Seiten sind die Dokumentationsversion **0.2** und beschreiben:
 | Programm | Release | Modul |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.22.0** | `github.com/go-authn/bridge` |
+| authn-bridge | **v0.22.1** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
@@ -69,9 +69,10 @@ Abhängigkeiten aktualisiert haben, sind weggelassen.
 | v0.19.3 | Release-Binaries, `SHA256SUMS` und Build-Provenienz bei jedem Tag |
 | v0.20.0 | der Befehl heißt `authn-bridge`; eine gehärtete systemd-Unit und eine Installationsanleitung |
 | v0.20.1 | Kommentare und eine Ablehnungsmeldung, die nicht mehr zutrafen; das README nennt alles, was `RevokePerson` widerruft |
-| v0.21.0 | Resource Indicators nach RFC 8707: Ein Client, dessen `audience` mehrere Ressourcenserver nennt, kann ein Token anfordern, das an nur einen adressiert ist. Eine Stunde vor v0.20.1 getaggt, die sie ebenfalls enthält, und ohne die Korrekturen von v0.20.1 |
+| v0.21.0 | [Resource Indicators nach RFC 8707]({{< relref "/authn-bridge/resources.md" >}}): Ein Client, dessen `audience` mehrere Ressourcenserver nennt, kann ein Token anfordern, das an nur einen adressiert ist. Eine Stunde vor v0.20.1 getaggt, die sie ebenfalls enthält, und ohne die Korrekturen von v0.20.1 |
 | v0.21.1 | golang.org/x/net v0.60.0 wegen seiner HTTP/2-Sicherheitshinweise, und Go 1.27.2; wieder die Korrekturen von v0.20.1; Platzhalter-Domains mit Namen nach RFC 2606 |
 | v0.22.0 | das Access-Token trägt kein `auth_time` und kein `acr` mehr (das ID-Token schon), damit ein ES256-Token bis zum 99. Perzentil der RENATER-Scopes in die 1023 Zeichen von OpenSSH passt |
+| v0.22.1 | `resource` darf am Autorisierungs-Endpunkt wiederholt werden, für einen auf mehrere Server begrenzten Grant; an `device_authorization` abgelehnt statt ignoriert ([Resource Indicators]({{< relref "/authn-bridge/resources.md" >}})) |
 
 ### authn-revokd {#authn-revokd}
 

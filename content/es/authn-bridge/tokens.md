@@ -121,6 +121,10 @@ Lleva lo que un servidor de recursos necesita para decidir sin preguntar a nadie
 `scope`, `client_id`, y `session_end` cuando el IdP indicó cuándo termina su
 sesión.
 
+Un cliente cuya `audience` nombra varios servidores de recursos puede pedir un
+token dirigido a uno de ellos, con el `resource` del RFC 8707: véase
+[varios servidores de recursos]({{< relref "/authn-bridge/resources.md" >}}).
+
 ### Lo que deja fuera, y por qué {#what-it-leaves-out}
 
 **Ni `auth_time` ni `acr`**, aunque el RFC 9068 permite ambos. Siguen en el

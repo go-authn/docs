@@ -10,7 +10,7 @@ These pages are documentation version **0.2**, and describe:
 | program | release | module |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.22.0** | `github.com/go-authn/bridge` |
+| authn-bridge | **v0.22.1** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
@@ -69,9 +69,10 @@ dependencies are left out.
 | v0.19.3 | release binaries, `SHA256SUMS` and build provenance on every tag |
 | v0.20.0 | the command is `authn-bridge`; a hardened systemd unit and an install guide |
 | v0.20.1 | comments and a refusal message that were no longer true; the README lists everything `RevokePerson` revokes |
-| v0.21.0 | RFC 8707 resource indicators: a client whose `audience` names several resource servers can ask for a token addressed to one. Tagged an hour before v0.20.1, which has them too, and without v0.20.1's corrections |
+| v0.21.0 | [RFC 8707 resource indicators]({{< relref "/authn-bridge/resources.md" >}}): a client whose `audience` names several resource servers can ask for a token addressed to one. Tagged an hour before v0.20.1, which has them too, and without v0.20.1's corrections |
 | v0.21.1 | golang.org/x/net v0.60.0, for its HTTP/2 advisories, and Go 1.27.2; v0.20.1's corrections again; placeholder domains in RFC 2606 names |
 | v0.22.0 | the access token no longer carries `auth_time` or `acr` (the ID token still does), so that an ES256 token fits OpenSSH's 1023 characters up to the 99th percentile of RENATER's scopes |
+| v0.22.1 | `resource` may be repeated at the authorization endpoint, for a grant bounded to several servers; refused at `device_authorization` rather than ignored ([resource indicators]({{< relref "/authn-bridge/resources.md" >}})) |
 
 ### authn-revokd
 

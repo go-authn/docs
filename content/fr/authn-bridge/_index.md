@@ -13,10 +13,10 @@ client X.509 pour NFS sur TLS, définir un mot de passe d'application pour SMB e
 enregistrer une clé WireGuard. Le fournisseur peut révoquer ce qu'il a émis, et il
 publie des listes signées de ce qu'il a révoqué ; un jeton d'accès déjà remis reste
 valide jusqu'à son expiration. Pur Go, `CGO_ENABLED=0`, un seul
-binaire. Ces pages décrivent la v0.22.0.
+binaire. Ces pages décrivent la v0.22.1.
 
 ```sh
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.22.0
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.22.1
 
 authn-bridge keygen   --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 authn-bridge metadata --config /etc/authn-bridge > sp.xml   # register this with the federation
@@ -46,9 +46,9 @@ Une configuration qui ne peut pas être servie en sécurité ne démarre pas.
 
 ```
 $ authn-bridge --config etc/bridge-admin.hcl
-authn-bridge v0.22.0: http://127.0.0.1:28473 on 127.0.0.1:28473
-metrics on 127.0.0.1:28475
+authn-bridge v0.22.1: http://127.0.0.1:28473 on 127.0.0.1:28473
 admin API on unix:///tmp/authn/run/admin.sock
+metrics on 127.0.0.1:28475
 ```
 
 Il s'agit d'un fournisseur de test sur l'interface de bouclage (un émetteur `http://` n'est accepté que sur un
@@ -64,6 +64,7 @@ sans les métadonnées, il s'arrête plutôt que de démarrer.
 | [La configuration]({{< relref "/authn-bridge/configuration.md" >}}) | chaque bloc, `check`, et ce qui est refusé au démarrage |
 | [Le côté fédération]({{< relref "/authn-bridge/federation.md" >}}) | les métadonnées, l'empreinte de leur signataire, les portées, et ce qu'un IdP peut affirmer |
 | [Jetons]({{< relref "/authn-bridge/tokens.md" >}}) | jetons d'identité (ID tokens), jetons d'accès, l'autorisation d'appareil, mots de passe d'application, clés WireGuard |
+| [Indicateurs de ressource]({{< relref "/authn-bridge/resources.md" >}}) | un jeton pour un seul des serveurs de ressources d'un client à la fois (RFC 8707) |
 | [Certificats]({{< relref "/authn-bridge/certificates.md" >}}) | certificats SSH, le profil EuroHPC, certificats clients X.509 pour NFS |
 | [Révocation]({{< relref "/authn-bridge/revocation.md" >}}) | la KRL et la CRL signées, et l'émetteur de signaux partagés (Shared Signals) |
 | [L'API d'administration]({{< relref "/authn-bridge/admin.md" >}}) | désactiver une personne ou un établissement, santé et métriques |

@@ -13,10 +13,10 @@ X.509-Client-Zertifikat für NFS über TLS ausstellen lassen, ein Anwendungspass
 setzen oder einen WireGuard-Schlüssel registrieren. Der Anbieter kann widerrufen, was er
 ausgestellt hat, und er veröffentlicht signierte Listen dessen, was er widerrufen hat; ein bereits
 ausgegebenes Zugriffstoken bleibt gültig, bis es abläuft. Reines Go,
-`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.22.0.
+`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.22.1.
 
 ```sh
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.22.0
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.22.1
 
 authn-bridge keygen   --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 authn-bridge metadata --config /etc/authn-bridge > sp.xml   # register this with the federation
@@ -46,9 +46,9 @@ Eine Konfiguration, die sich nicht sicher bedienen lässt, startet nicht.
 
 ```
 $ authn-bridge --config etc/bridge-admin.hcl
-authn-bridge v0.22.0: http://127.0.0.1:28473 on 127.0.0.1:28473
-metrics on 127.0.0.1:28475
+authn-bridge v0.22.1: http://127.0.0.1:28473 on 127.0.0.1:28473
 admin API on unix:///tmp/authn/run/admin.sock
+metrics on 127.0.0.1:28475
 ```
 
 Das ist ein Testanbieter auf Loopback (ein `http://`-Aussteller wird nur auf einem
@@ -64,6 +64,7 @@ ohne die Metadaten beendet er sich daher, statt zu starten.
 | [Die Konfiguration]({{< relref "/authn-bridge/configuration.md" >}}) | jeder Block, `check` und was beim Start abgelehnt wird |
 | [Die Seite der Föderation]({{< relref "/authn-bridge/federation.md" >}}) | Metadaten, der Fingerabdruck ihres Signierers, Scopes und was ein IdP behaupten darf |
 | [Tokens]({{< relref "/authn-bridge/tokens.md" >}}) | ID-Tokens, Access-Tokens, der Device Grant, Anwendungspasswörter, WireGuard-Schlüssel |
+| [Resource Indicators]({{< relref "/authn-bridge/resources.md" >}}) | ein Token für jeweils nur einen der Ressourcenserver eines Clients (RFC 8707) |
 | [Zertifikate]({{< relref "/authn-bridge/certificates.md" >}}) | SSH-Zertifikate, das EuroHPC-Profil, X.509-Client-Zertifikate für NFS |
 | [Widerruf]({{< relref "/authn-bridge/revocation.md" >}}) | die signierte KRL und CRL und der Shared-Signals-Sender |
 | [Die Admin-API]({{< relref "/authn-bridge/admin.md" >}}) | eine Person oder eine Einrichtung deaktivieren, Health und Metriken |

@@ -10,7 +10,7 @@ Ces pages sont la version **0.2** de la documentation, et décrivent :
 | programme | version | module |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.22.0** | `github.com/go-authn/bridge` |
+| authn-bridge | **v0.22.1** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
@@ -69,9 +69,10 @@ des dépendances sont omises.
 | v0.19.3 | binaires de version, `SHA256SUMS` et provenance de compilation à chaque étiquette |
 | v0.20.0 | la commande s'appelle `authn-bridge` ; une unité systemd durcie et un guide d'installation |
 | v0.20.1 | des commentaires et un message de refus qui n'étaient plus vrais ; le README dit tout ce que `RevokePerson` révoque |
-| v0.21.0 | les indicateurs de ressource de la RFC 8707 : un client dont l'`audience` nomme plusieurs serveurs de ressources peut demander un jeton adressé à un seul. Étiquetée une heure avant la v0.20.1, qui les contient aussi, et sans les corrections de la v0.20.1 |
+| v0.21.0 | [les indicateurs de ressource de la RFC 8707]({{< relref "/authn-bridge/resources.md" >}}) : un client dont l'`audience` nomme plusieurs serveurs de ressources peut demander un jeton adressé à un seul. Étiquetée une heure avant la v0.20.1, qui les contient aussi, et sans les corrections de la v0.20.1 |
 | v0.21.1 | golang.org/x/net v0.60.0, pour ses avis de sécurité HTTP/2, et Go 1.27.2 ; de nouveau les corrections de la v0.20.1 ; des domaines d'exemple aux noms de la RFC 2606 |
 | v0.22.0 | le jeton d'accès ne porte plus `auth_time` ni `acr` (le jeton d'identité, si), pour qu'un jeton ES256 tienne dans les 1023 caractères d'OpenSSH jusqu'au 99e centile des scopes de RENATER |
+| v0.22.1 | `resource` peut être répété au point de terminaison d'autorisation, pour une autorisation bornée à plusieurs serveurs ; refusé à `device_authorization` au lieu d'être ignoré ([indicateurs de ressource]({{< relref "/authn-bridge/resources.md" >}})) |
 
 ### authn-revokd {#authn-revokd}
 

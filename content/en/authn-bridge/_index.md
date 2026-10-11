@@ -13,10 +13,10 @@ issued for NFS over TLS, an application password set for SMB and S3, or a
 WireGuard key registered. The provider can revoke what it issued, and it
 publishes signed lists of what it has revoked; an access token already handed
 out stays valid until it expires. Pure Go, `CGO_ENABLED=0`, one
-binary. These pages describe v0.22.0.
+binary. These pages describe v0.22.1.
 
 ```sh
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.22.0
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.22.1
 
 authn-bridge keygen   --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 authn-bridge metadata --config /etc/authn-bridge > sp.xml   # register this with the federation
@@ -46,9 +46,9 @@ A configuration that cannot be served safely does not start.
 
 ```
 $ authn-bridge --config etc/bridge-admin.hcl
-authn-bridge v0.22.0: http://127.0.0.1:28473 on 127.0.0.1:28473
-metrics on 127.0.0.1:28475
+authn-bridge v0.22.1: http://127.0.0.1:28473 on 127.0.0.1:28473
 admin API on unix:///tmp/authn/run/admin.sock
+metrics on 127.0.0.1:28475
 ```
 
 This is a test provider on loopback (an `http://` issuer is accepted only on a
@@ -64,6 +64,7 @@ so without the metadata it exits rather than starts.
 | [The configuration]({{< relref "/authn-bridge/configuration.md" >}}) | every block, `check`, and what is refused at startup |
 | [The federation side]({{< relref "/authn-bridge/federation.md" >}}) | metadata, its signer's fingerprint, scopes, and what an IdP may assert |
 | [Tokens]({{< relref "/authn-bridge/tokens.md" >}}) | ID tokens, access tokens, the device grant, application passwords, WireGuard keys |
+| [Resource indicators]({{< relref "/authn-bridge/resources.md" >}}) | a token for one of a client's resource servers at a time (RFC 8707) |
 | [Certificates]({{< relref "/authn-bridge/certificates.md" >}}) | SSH certificates, the EuroHPC profile, X.509 client certificates for NFS |
 | [Revocation]({{< relref "/authn-bridge/revocation.md" >}}) | the signed KRL and CRL, and the Shared Signals transmitter |
 | [The admin API]({{< relref "/authn-bridge/admin.md" >}}) | disabling a person or an institution, health and metrics |
