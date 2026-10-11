@@ -1,0 +1,954 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Authn-Revokd</title><link>https://go-authn.github.io/docs/0.3/de/tags/authn-revokd/</link><description>Recent content in Authn-Revokd on go-authn</description><generator>Hugo -- gohugo.io</generator><language>de</language><atom:link href="https://go-authn.github.io/docs/0.3/de/tags/authn-revokd/index.xml" rel="self" type="application/rss+xml"/><item><title>authn-revokd installieren</title><link>https://go-authn.github.io/docs/0.3/de/authn-revokd/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.3/de/authn-revokd/install/</guid><description>
+&lt;p&gt;Das Repository liefert in &lt;code&gt;packaging/&lt;/code&gt; drei Units und ein Konto mit:
+&lt;code&gt;authn-revokd.service&lt;/code&gt; (der Daemon), &lt;code&gt;authn-revokd-once.service&lt;/code&gt; mit
+&lt;code&gt;authn-revokd-once.timer&lt;/code&gt; (die Alternative) und
+&lt;code&gt;sysusers.d/authn-revokd.conf&lt;/code&gt;.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Pfad&lt;/th&gt;
+&lt;th&gt;was&lt;/th&gt;
+&lt;th&gt;Eigentümer, Modus&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/usr/local/bin/authn-revokd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;das Binary&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0755&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/usr/lib/sysusers.d/authn-revokd.conf&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;das Systemkonto &lt;code&gt;authn-revokd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/systemd/system/authn-revokd.service&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;der Daemon&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/authn-revokd/revokd.hcl&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;die Konfiguration, das Standard-&lt;code&gt;-config&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/authn-revokd/ca/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;die CA-Schlüssel und -Zertifikate, von denen die Listen signiert sein müssen&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0755&lt;/code&gt;; die Dateien darin &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;StateDirectory=&lt;/code&gt;, der einzige beschreibbare Ort&lt;/td&gt;
+&lt;td&gt;authn-revokd, &lt;code&gt;0755&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/state/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;state_dir&lt;/code&gt;: die geprüften Kopien&lt;/td&gt;
+&lt;td&gt;authn-revokd, &lt;code&gt;0700&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/sshd.krl&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;eine Ausgabe: was &lt;code&gt;sshd&lt;/code&gt; liest&lt;/td&gt;
+&lt;td&gt;authn-revokd, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;Schreiben Sie die Ausgaben nach &lt;code&gt;/var/lib/authn-revokd&lt;/code&gt; und lassen Sie die Server dorthin zeigen.&lt;/strong&gt;
+Eine Ausgabe wird neben ihrem endgültigen Namen geschrieben und darüber umbenannt, daher muss ihr
+&lt;em&gt;Verzeichnis&lt;/em&gt; beschreibbar sein. &lt;code&gt;/etc/ssh&lt;/code&gt; beschreibbar zu machen, würde dem
+Konto &lt;code&gt;authn-revokd&lt;/code&gt; erlauben, &lt;code&gt;sshd_config&lt;/code&gt; zu ersetzen. Ausgaben haben &lt;code&gt;0644&lt;/code&gt;, trotz
+&lt;code&gt;UMask=0077&lt;/code&gt; ausdrücklich per chmod gesetzt, damit &lt;code&gt;sshd&lt;/code&gt; und ein TLS-Server, der unter seinem
+eigenen Benutzer läuft, sie lesen können; der Zustand bleibt &lt;code&gt;0700&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-binary-the-account-the-unit"&gt;Das Binary, das Konto, die Unit&lt;span class="hx:absolute hx:-mt-20" id="the-binary-the-account-the-unit"&gt;&lt;/span&gt;
+&lt;a href="#the-binary-the-account-the-unit" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Ein Release enthält &lt;code&gt;authn-revokd-&amp;lt;os&amp;gt;-&amp;lt;arch&amp;gt;&lt;/code&gt; für Linux, macOS und Windows auf
+amd64 und arm64, mit &lt;code&gt;SHA256SUMS&lt;/code&gt; und Build-Provenienz
+(&lt;a href="https://go-authn.github.io/docs/0.3/de/security/verifying-releases/"&gt;einen Download prüfen&lt;/a&gt;). Oder
+&lt;code&gt;go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.3&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Das Konto und die Unit stammen aus dem Verzeichnis &lt;code&gt;packaging/&lt;/code&gt; des
+Release-Tags, derselben Version wie das Binary: Kopieren Sie dieses Verzeichnis
+neben das Binary, aus einem Checkout des Tags oder, für v0.6.3, von
+&lt;a href="https://github.com/go-authn/revocation/tree/v0.6.3/packaging" target="_blank" rel="noopener"&gt;https://github.com/go-authn/revocation/tree/v0.6.3/packaging&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0755&lt;/span&gt; authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/sysusers.d/authn-revokd.conf /usr/lib/sysusers.d/authn-revokd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemd-sysusers /usr/lib/sysusers.d/authn-revokd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/systemd/authn-revokd.service /etc/systemd/system/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl daemon-reload&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Das Konto ist statisch, nicht &lt;code&gt;DynamicUser=&lt;/code&gt;. authn-revokd lehnt ein Zustandsverzeichnis
+ab, das jemand anderem gehört als seiner eigenen UID oder root, und der Zustand muss die
+nächste Liste über Neustarts und Aktualisierungen hinweg weiter ordnen. Mit einem dynamischen Benutzer lägen die
+Dateien unter &lt;code&gt;/var/lib/private&lt;/code&gt;, &lt;code&gt;0700&lt;/code&gt; root, und ein TLS-Server, der unter seinem eigenen
+Benutzer läuft, könnte die CRL nicht lesen.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-daemon"&gt;Der Daemon&lt;span class="hx:absolute hx:-mt-20" id="the-daemon"&gt;&lt;/span&gt;
+&lt;a href="#the-daemon" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;exec&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecReload&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/bin/kill -HUP $MAINPID&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Restart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;always&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;und darum herum: &lt;code&gt;User=authn-revokd&lt;/code&gt;, überhaupt keine Capability, &lt;code&gt;NoNewPrivileges=&lt;/code&gt;,
+&lt;code&gt;ProtectSystem=strict&lt;/code&gt; mit &lt;code&gt;StateDirectory=authn-revokd&lt;/code&gt; (&lt;code&gt;0755&lt;/code&gt;) als einzigem
+beschreibbarem Ort, &lt;code&gt;PrivateUsers=&lt;/code&gt;, &lt;code&gt;PrivateTmp=&lt;/code&gt;, &lt;code&gt;PrivateDevices=&lt;/code&gt;,
+&lt;code&gt;PrivateIPC=&lt;/code&gt;, nur &lt;code&gt;AF_INET AF_INET6 AF_UNIX&lt;/code&gt;, die Systemaufrufe von &lt;code&gt;@system-service&lt;/code&gt;
+abzüglich &lt;code&gt;@privileged @resources&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;Restart=always&lt;/code&gt;, weil sshd den Ablauf in der KRL ignoriert.&lt;/strong&gt; Dass die Datei
+geschlossen fehlschlägt (fail closed), wenn eine Liste verfällt, besorgt &lt;em&gt;dieser Prozess&lt;/em&gt;. Solange er gestoppt ist, liest sshd
+weiter die letzte Datei, die er geschrieben hat, und ein zwischenzeitlich ausgesprochener Widerruf kommt nie
+an. Überwachen Sie die Unit oder &lt;code&gt;/healthz&lt;/code&gt;, wenn der Spiegel aktiv ist.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;systemctl reload&lt;/code&gt; synchronisiert sofort.&lt;/strong&gt; Es sendet &lt;code&gt;SIGHUP&lt;/code&gt;, und der Agent ruft jede
+Quelle sofort ab statt beim nächsten &lt;code&gt;refresh&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;hangup: syncing now&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Die Konfiguration wird dabei nicht neu gelesen; sie wird einmal gelesen, beim Start: Nach einer
+Änderung an &lt;code&gt;revokd.hcl&lt;/code&gt; &lt;code&gt;systemctl restart authn-revokd&lt;/code&gt;. (Vor v0.6.0 beendete ein
+nicht abgefangenes &lt;code&gt;SIGHUP&lt;/code&gt; den Prozess, und systemd wertet das als sauberes Ende.)&lt;/p&gt;
+&lt;h3 data-hextra-search-id="enable-it-before-wiring-sshd"&gt;Aktivieren Sie es, BEVOR Sie sshd anbinden&lt;span class="hx:absolute hx:-mt-20" id="enable-it-before-wiring-sshd"&gt;&lt;/span&gt;
+&lt;a href="#enable-it-before-wiring-sshd" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;sshd lehnt jedes Zertifikat ab, wenn &lt;code&gt;RevokedKeys&lt;/code&gt; eine Datei nennt, die nicht existiert&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Starten Sie daher zuerst authn-revokd und warten Sie, bis die Ausgabe vorhanden ist:
+&lt;code&gt;ssh-keygen -Q -l -f /var/lib/authn-revokd/sshd.krl&lt;/code&gt; gibt ihren Kommentar aus,
+&lt;code&gt;authn-revokd sshd&lt;/code&gt;, solange jede Quelle aktuell ist.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; --now authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;journalctl -u authn-revokd -n &lt;span class="m"&gt;20&lt;/span&gt; &lt;span class="c1"&gt;# &amp;#34;&amp;lt;source&amp;gt;: version N, issued ..., expires ...&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="c1"&gt;# &amp;#34;output sshd: wrote /var/lib/authn-revokd/sshd.krl&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Dann in &lt;code&gt;/etc/ssh/sshd_config&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;TrustedUserCAKeys /etc/ssh/ca/univ-a-ssh.pub
+RevokedKeys /var/lib/authn-revokd/sshd.krl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;und &lt;code&gt;sshd -t &amp;amp;&amp;amp; systemctl reload ssh&lt;/code&gt;. sshd liest &lt;code&gt;RevokedKeys&lt;/code&gt; bei jeder
+Authentifizierung, braucht also kein Neuladen, wenn authn-revokd die Datei neu schreibt: Die
+atomare Umbenennung genügt.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="a-tls-servers-crl"&gt;Die CRL eines TLS-Servers&lt;span class="hx:absolute hx:-mt-20" id="a-tls-servers-crl"&gt;&lt;/span&gt;
+&lt;a href="#a-tls-servers-crl" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-nginx" data-lang="nginx"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_client_certificate&lt;/span&gt; &lt;span class="s"&gt;/etc/authn-revokd/ca/univ-a-x509.pem&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_verify_client&lt;/span&gt; &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_crl&lt;/span&gt; &lt;span class="s"&gt;/var/lib/authn-revokd/univ-a.crl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;format&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#34;pem&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Ein TLS-Server liest seine CRL, wenn er seine Konfiguration lädt, daher muss er
+neu geladen werden, wenn sich die Datei ändert. Ein &lt;code&gt;on_change&lt;/code&gt;-Befehl läuft unter dem
+Konto &lt;code&gt;authn-revokd&lt;/code&gt;, das kein &lt;code&gt;systemctl reload nginx&lt;/code&gt; ausführen kann: Lassen Sie stattdessen systemd
+die Datei überwachen, als root, mit einer Path-Unit (&lt;code&gt;PathChanged=&lt;/code&gt; auf die Ausgabe), die
+einen &lt;code&gt;oneshot&lt;/code&gt; startet, der &lt;code&gt;systemctl reload nginx&lt;/code&gt; ausführt.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="or--once-on-a-timer"&gt;Oder: &lt;code&gt;-once&lt;/code&gt;, mit einem Timer&lt;span class="hx:absolute hx:-mt-20" id="or--once-on-a-timer"&gt;&lt;/span&gt;
+&lt;a href="#or--once-on-a-timer" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;authn-revokd -once&lt;/code&gt; synchronisiert einmal und endet, mit &lt;code&gt;1&lt;/code&gt;, wenn eine Liste nicht aktuell ist oder
+nicht abgerufen werden konnte (&lt;a href="https://go-authn.github.io/docs/0.3/de/authn-revokd/verification/#what--once-reports"&gt;was &lt;code&gt;-once&lt;/code&gt; meldet&lt;/a&gt;).
+Die Ausgaben werden in jedem Fall geschrieben, und für sshd fail-closed, sobald eine Liste
+verfällt.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# authn-revokd-once.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Conflicts&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authn-revokd.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;oneshot&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;TimeoutStartSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;5min&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# authn-revokd-once.timer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Conflicts&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authn-revokd.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Timer]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;OnBootSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;30s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;OnUnitActiveSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;1min&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;AccuracySec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;5s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;RandomizedDelaySec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;10s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Install]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;WantedBy&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;timers.target&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Der einmalige Lauf hat das Konto und die Härtung des Daemons. &lt;code&gt;TimeoutStartSec=5min&lt;/code&gt;
+verhindert, dass eine Synchronisierung, die an einer Quelle hängt, den nächsten Takt überdauert, und
+&lt;code&gt;RandomizedDelaySec=10s&lt;/code&gt; verhindert, dass eine gemeinsam gestartete Flotte ihren
+Aussteller im Gleichschritt abfragt.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; authn-revokd-once.service authn-revokd-once.timer /etc/systemd/system/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl daemon-reload
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl disable --now authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; --now authn-revokd-once.timer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;Aktivieren Sie nie beide&lt;/strong&gt;: Die Units stehen in Konflikt, sodass das Starten der einen die andere stoppt.
+Der Daemon bleibt die bessere Wahl. Er lässt eine verfallene Liste bei seinem nächsten
+&lt;code&gt;refresh&lt;/code&gt; geschlossen fehlschlagen, wo der Timer auf seinen nächsten Takt wartet, und nur der Daemon dient als
+Spiegel: &lt;code&gt;listen&lt;/code&gt; wird mit &lt;code&gt;-once&lt;/code&gt; ignoriert. Ein Timer, der nicht mehr auslöst, ist ein Daemon,
+der angehalten hat; überwachen Sie also &lt;code&gt;systemctl status authn-revokd-once&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="upgrading-and-going-back"&gt;Aktualisieren und zurückgehen&lt;span class="hx:absolute hx:-mt-20" id="upgrading-and-going-back"&gt;&lt;/span&gt;
+&lt;a href="#upgrading-and-going-back" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Installieren Sie das neue Binary neben dem alten, tauschen Sie, starten Sie neu. Der Zustand bleibt erhalten:
+Die geprüften Kopien ordnen weiterhin die nächsten Listen, sodass weder eine Aktualisierung noch ein
+Zurückgehen auf ein älteres Binary eine ältere Liste hereinlässt.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="uninstalling"&gt;Deinstallieren&lt;span class="hx:absolute hx:-mt-20" id="uninstalling"&gt;&lt;/span&gt;
+&lt;a href="#uninstalling" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Entfernen Sie &lt;strong&gt;zuerst&lt;/strong&gt; &lt;code&gt;RevokedKeys&lt;/code&gt; und &lt;code&gt;ssl_crl&lt;/code&gt; aus der Konfiguration der Server
+und laden Sie sie neu: sshd lehnt jedes Zertifikat ab, sobald die Datei fehlt.&lt;/p&gt;</description></item><item><title>Die Konfiguration</title><link>https://go-authn.github.io/docs/0.3/de/authn-revokd/configuration/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.3/de/authn-revokd/configuration/</guid><description>
+&lt;p&gt;Eine Datei, standardmäßig &lt;code&gt;/etc/authn-revokd/revokd.hcl&lt;/code&gt; (&lt;code&gt;-config&lt;/code&gt; nennt eine andere).
+Sie wird einmal gelesen, beim Start.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;state_dir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-revokd/state&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the verified copies: what orders the next list
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;refresh&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1m&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;source&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;univ-a-ssh&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.univ-a.example/ssh/krl&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # and .../ssh/krl.sig beside it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_ca&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-revokd/ca/univ-a-ssh.pub&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # what the list must be signed by
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;source&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;univ-b-ssh&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;http://mirror.cluster.local:8080/univ-b-ssh&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # a mirror: plain http is fine
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_ca&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-revokd/ca/univ-b-ssh.pub&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;source&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;univ-a-x509&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.univ-a.example/x509/crl&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; x509_ca&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-revokd/ca/univ-a-x509.pem&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;output&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sshd&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # sshd_config: RevokedKeys /var/lib/authn-revokd/sshd.krl
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; path&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-revokd/sshd.krl&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sources&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;univ-a-ssh&amp;#34;, &amp;#34;univ-b-ssh&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # merged into one file
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;output&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # nginx: ssl_crl /var/lib/authn-revokd/univ-a.crl
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; path&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-revokd/univ-a.crl&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sources&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;univ-a-x509&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; format&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;pem&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;# listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:8080&amp;#34;&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;serve&lt;/span&gt; &lt;span class="k"&gt;the&lt;/span&gt; &lt;span class="k"&gt;verified&lt;/span&gt; &lt;span class="k"&gt;lists&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt; &lt;span class="k"&gt;a&lt;/span&gt; &lt;span class="k"&gt;mirror&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-keys"&gt;Die Schlüssel&lt;span class="hx:absolute hx:-mt-20" id="the-keys"&gt;&lt;/span&gt;
+&lt;a href="#the-keys" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Schlüssel&lt;/th&gt;
+&lt;th&gt;Standard&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;state_dir&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;erforderlich, absolut; das Verzeichnis wird mit &lt;code&gt;0700&lt;/code&gt; angelegt, falls es fehlt&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;refresh&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;1m&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;wie oft jede Quelle abgerufen wird, eine Sekunde oder mehr; jede Wartezeit schwankt um ein Zehntel nach oben oder unten, damit eine Flotte nicht im Gleichschritt bleibt&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;listen&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;host:port&lt;/code&gt;: die geprüften Listen bereitstellen, ein Spiegel; mit &lt;code&gt;-once&lt;/code&gt; ignoriert&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;source &amp;quot;&amp;lt;name&amp;gt;&amp;quot;&lt;/code&gt;&lt;/strong&gt;: eine Liste. Der Name besteht aus Buchstaben, Ziffern, &lt;code&gt;.&lt;/code&gt;, &lt;code&gt;_&lt;/code&gt; und
+&lt;code&gt;-&lt;/code&gt;, beginnt nicht mit einem Punkt, höchstens 64 Zeichen: Er benennt eine Datei im
+Zustandsverzeichnis und einen Pfad des Spiegels.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Schlüssel&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;url&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;https://&lt;/code&gt;, &lt;code&gt;http://&lt;/code&gt; oder &lt;code&gt;file://&lt;/code&gt;; die Signatur einer KRL wird von derselben URL mit angehängtem &lt;code&gt;.sig&lt;/code&gt; abgerufen&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ssh_ca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;der öffentliche Schlüssel der SSH-CA, eine &lt;code&gt;authorized_keys&lt;/code&gt;-Zeile: eine KRL-Quelle. Ein Zertifikat wird hier abgelehnt&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;x509_ca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;das PEM-Zertifikat der CA: eine CRL-Quelle&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;max_age&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;lehnt zusätzlich zu ihrem eigenen Ablauf eine Liste ab, die vor längerer Zeit als dieser ausgestellt wurde; abgelehnt bei einer Quelle, die eine CRL-Ausgabe speist&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;revoke_keys&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;erlaubt der Liste dieser Quelle, in einer mit anderen Quellen geteilten Ausgabe &lt;strong&gt;einfache Schlüssel&lt;/strong&gt; zu widerrufen; nur KRL-Quellen&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;output &amp;quot;&amp;lt;name&amp;gt;&amp;quot;&lt;/code&gt;&lt;/strong&gt;: eine Datei, die ein Server liest.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Schlüssel&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;path&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;absolut; neben sich selbst geschrieben und darüber umbenannt&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sources&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;KRL-Quellen, zu einer Datei zusammengeführt; oder genau eine CRL-Quelle&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;format&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;der&lt;/code&gt; (der Standard) oder &lt;code&gt;pem&lt;/code&gt;; nur CRL-Ausgaben&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;on_change&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;ein Befehl und seine Argumente, ausgeführt, nachdem sich die Datei geändert hat, und erneut bei jeder Synchronisierung, bis er gelingt&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="one-krl-for-several-cas"&gt;Eine KRL für mehrere CAs&lt;span class="hx:absolute hx:-mt-20" id="one-krl-for-several-cas"&gt;&lt;/span&gt;
+&lt;a href="#one-krl-for-several-cas" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;RevokedKeys&lt;/code&gt; nimmt vor OpenSSH 10.3 eine einzige Datei, daher werden die KRL-Quellen einer
+Ausgabe zusammengeführt, und &lt;strong&gt;jede Liste behält ihre volle Wirkung auf ihre eigene CA und
+keine auf eine andere&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Behalten:&lt;/strong&gt; ihre Seriennummern und Schlüssel-IDs, ihre Abschnitte, die keine CA nennen (auf ihre
+eigene beschränkt), und ihr eigener CA-Schlüssel, der alle ihre Zertifikate widerruft.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Weggelassen und protokolliert:&lt;/strong&gt; der Abschnitt einer anderen CA und der Schlüssel einer anderen CA.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Einfache Benutzerschlüssel&lt;/strong&gt; werden weggelassen, wenn die Ausgabe mehr als eine Quelle hat,
+es sei denn, die Quelle hat &lt;code&gt;revoke_keys = true&lt;/code&gt;. Eine KRL kann einen Schlüssel nicht auf eine
+CA beschränken: sshd prüft den eigenen Schlüssel eines Zertifikats gegen die Datei, gleich wer es signiert hat;
+ein Schlüssel, den eine CA nennt, würde die Person, die ihn hält, also unter jeder CA der Datei aussperren.
+Eine Ausgabe mit einer Quelle behält sie.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Jede Liste wird zuerst allein zusammengeführt. Eine, die sich nicht zusammenführen lässt, schlägt &lt;strong&gt;nur für
+ihre eigene CA&lt;/strong&gt; geschlossen fehl (fail closed); die zusammengeführte Datei läuft mit der ersten ihrer aktuellen
+Eingaben ab, sodass ein Leser, der den Ablauf prüft, sieht, wenn authn-revokd anhält.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-mirror"&gt;Der Spiegel&lt;span class="hx:absolute hx:-mt-20" id="the-mirror"&gt;&lt;/span&gt;
+&lt;a href="#the-mirror" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Mit &lt;code&gt;listen&lt;/code&gt; stellt authn-revokd bereit, was es hält, aus dem Speicher, nie aus den
+Dateien, deren Schreiben gerade halb fertig sein kann:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /&amp;lt;source&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;die Liste, mit einem &lt;code&gt;ETag&lt;/code&gt;; &lt;code&gt;If-None-Match&lt;/code&gt; antwortet &lt;code&gt;304&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /&amp;lt;source&amp;gt;.sig&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;die Signatur einer KRL; &lt;code&gt;If-Match&lt;/code&gt; auf ein anderes ETag antwortet &lt;code&gt;412&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /healthz&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;200 ok&lt;/code&gt; oder &lt;code&gt;503&lt;/code&gt;, mit Nennung jeder Quelle ohne aktuelle Liste und jeder fehlgeschlagenen Ausgabe&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28474/healthz
+ok
+$ curl -s -D - -o /dev/null http://127.0.0.1:28474/bridge-ssh
+HTTP/1.1 200 OK
+Cache-Control: max-age=30
+Content-Type: application/octet-stream
+Etag: &amp;#34;83278365ecb0f44b05170bb12f151756&amp;#34;
+Date: Sun, 11 Oct 2026 09:51:05 GMT
+Content-Length: 130
+$ curl -s -o /dev/null -w &amp;#34;%{http_code}\n&amp;#34; -H &amp;#39;If-Match: &amp;#34;stale&amp;#34;&amp;#39; http://127.0.0.1:28474/bridge-ssh.sig
+412&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Eine CRL-Quelle hat kein &lt;code&gt;.sig&lt;/code&gt; (&lt;code&gt;404&lt;/code&gt;). Spiegel lassen sich verketten: Die Quelle eines Spiegels kann
+ein anderer Spiegel sein, da jede Liste sich selbst prüft. Ein langsamer Upstream blockiert
+die Antworten des Spiegels nie.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-is-refused-at-start"&gt;Was beim Start abgelehnt wird&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-start"&gt;&lt;/span&gt;
+&lt;a href="#what-is-refused-at-start" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Jeder dieser Fälle endet mit &lt;code&gt;2&lt;/code&gt;, bevor etwas abgerufen wird:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-revokd: v/relative-state.hcl: state_dir &amp;#34;state&amp;#34;: an absolute path
+authn-revokd: v/refresh.hcl: refresh &amp;#34;500ms&amp;#34;: a duration of a second or more
+authn-revokd: v/both-ca.hcl: source &amp;#34;bridge-ssh&amp;#34;: ssh_ca and x509_ca together: one source is one list
+authn-revokd: v/sig-name.hcl: source &amp;#34;bridge-ssh.sig&amp;#34;: a name that ends in .sig, or healthz, is a path the mirror already serves
+authn-revokd: v/mixed.hcl: output &amp;#34;sshd&amp;#34; mixes KRL and CRL sources
+authn-revokd: v/krl-format.hcl: output &amp;#34;sshd&amp;#34;: format is for CRL outputs; a KRL is what sshd reads
+authn-revokd: v/revoke-keys-crl.hcl: source &amp;#34;bridge-x509&amp;#34;: revoke_keys is for a KRL source (ssh_ca): a CRL revokes its own CA&amp;#39;s certificates only&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Ebenso eine Konfiguration, die nicht vorhanden ist:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config nowhere.hcl -once
+authn-revokd: nowhere.hcl: no such file or directory&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Vor v0.6.2 war es die Meldung des HCL-Parsers:
+&lt;code&gt;nowhere.hcl: &amp;lt;nil&amp;gt;: Failed to read file; The configuration file &amp;quot;nowhere.hcl&amp;quot; could not be read.&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Eine CRL-Ausgabe nimmt außerdem eine einzige Quelle (ein TLS-Server liest eine CRL pro Aussteller), und
+eine CRL-Quelle mit &lt;code&gt;max_age&lt;/code&gt; wird abgelehnt, weil nichts es durchsetzen könnte:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-revokd: v/crl-maxage.hcl: output &amp;#34;tls&amp;#34;: source &amp;#34;bridge-x509&amp;#34; has a max_age, which a CRL output cannot enforce: the TLS server judges a CRL by its nextUpdate alone. Remove max_age, or ask the CA for a closer nextUpdate&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Ein TLS-Server, der eine CRL geladen hat, hält sie bis zu ihrem &lt;code&gt;nextUpdate&lt;/code&gt; im Speicher,
+was auch immer authn-revokd schreibt.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Das Zustandsverzeichnis&lt;/strong&gt; unterliegt der StrictModes-Regel von sshd. Wer seine Dateien
+ersetzen oder entfernen kann, entscheidet, welche Liste als nächste kommt, und ein geleerter Zustand
+lässt eine wieder eingespielte ältere Liste herein. Es darf daher kein symbolischer Link sein, nicht für
+Gruppe oder andere beschreibbar und niemandem gehören außer dem Benutzer von authn-revokd oder root. Diese Fälle enden
+mit &lt;code&gt;1&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-revokd: state_dir /tmp/authn/revokd/state-wide is writable by its group or by others (mode -rwxrwxrwx): whoever can write there decides which list comes next
+authn-revokd: state_dir /tmp/authn/revokd/state-link is a symbolic link (L---------): whoever owns it decides where the state is; name the directory itself&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>authn-revokd</title><link>https://go-authn.github.io/docs/0.3/de/authn-revokd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.3/de/authn-revokd/</guid><description>
+&lt;p&gt;&lt;strong&gt;OpenSSH hat keine Möglichkeit, eine KRL zu verteilen, und nichts in einer KRL sagt, dass sie
+veraltet ist.&lt;/strong&gt; &lt;code&gt;sshd&lt;/code&gt; liest eine Datei, die seit Monaten nicht mehr aktualisiert wurde, als die
+aktuelle Liste. authn-revokd schließt beide Lücken für die Listen, die
+&lt;a href="https://go-authn.github.io/docs/0.3/de/authn-bridge/revocation/"&gt;authn-bridge&lt;/a&gt; veröffentlicht: Es
+ruft jede Liste ab, behält sie nur, wenn sie die Prüfung besteht, schreibt sie dorthin, wo &lt;code&gt;sshd&lt;/code&gt; oder ein
+TLS-Server sie liest, und schreibt, wenn eine Liste verfällt, eine, die &lt;strong&gt;die CA selbst
+widerruft&lt;/strong&gt;. Reines Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, ein Binary. Diese Seiten beschreiben v0.6.3.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.3
+$ authn-revokd -version
+authn-revokd v0.6.3
+$ authn-revokd -help
+Usage of authn-revokd:
+-config string
+the configuration file (default &amp;#34;/etc/authn-revokd/revokd.hcl&amp;#34;)
+-once
+sync once and exit: 1 when a list is not current, or could not be fetched
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;-help&lt;/code&gt; endet mit 0; vor v0.6.2 endete es mit 2.&lt;/p&gt;
+&lt;p&gt;Vor v0.6.0 hieß der Befehl &lt;code&gt;revokd&lt;/code&gt; und las standardmäßig &lt;code&gt;/etc/revokd.hcl&lt;/code&gt;.
+Nichts liest diese Datei mehr; wenn sie vorhanden ist und der neue Standard nicht,
+nennt die Fehlermeldung beide Pfade.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-does-in-one-run"&gt;Was es tut, in einem Durchlauf&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-in-one-run"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-in-one-run" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Gegen eine Test-authn-bridge auf Loopback, mit einer KRL-Quelle und einer CRL-Quelle:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+output tls: wrote /tmp/authn/revokd/out/bridge.crl
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261011T115024
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Ein zweiter Durchlauf ohne Neues gibt nichts aus und endet mit 0: Eine Ausgabe wird
+nur neu geschrieben, wenn sich ihr Inhalt ändert.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-the-transport-does-not-matter"&gt;Warum der Transport keine Rolle spielt&lt;span class="hx:absolute hx:-mt-20" id="why-the-transport-does-not-matter"&gt;&lt;/span&gt;
+&lt;a href="#why-the-transport-does-not-matter" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Jede Liste authentifiziert sich selbst: eine KRL durch eine abgetrennte SSHSIG-Signatur mit dem
+eigenen Schlüssel der CA, eine CRL durch die Signatur ihrer CA. Jede Liste sagt, wann sie aufhört,
+aktuell zu sein. Eine Liste darf also über HTTPS kommen, über einfaches HTTP innerhalb eines Clusters, über einen Spiegel
+oder aus einer Datei. Der Transport entscheidet, wie schnell eine Änderung ankommt, nie, ob eine
+gefälschte oder veraltete Liste übernommen wird.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;authentisch&lt;/td&gt;
+&lt;td&gt;SSHSIG mit dem Schlüssel der SSH-CA, Namensraum &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;von ihrer CA signiert&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;aktuell&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;expires@go-authn.github.io&lt;/code&gt;, das sshd ignoriert&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;nie rückwärts&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;krl_version&lt;/code&gt;, dann Erstellungsdatum&lt;/td&gt;
+&lt;td&gt;CRL Number, dann &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;geschlossen fehlschlagen&lt;/td&gt;
+&lt;td&gt;authn-revokd schreibt eine KRL, die den CA-Schlüssel widerruft&lt;/td&gt;
+&lt;td&gt;OpenSSL lehnt eine abgelaufene CRL von sich aus ab&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="where-to-go-next"&gt;Wie es weitergeht&lt;span class="hx:absolute hx:-mt-20" id="where-to-go-next"&gt;&lt;/span&gt;
+&lt;a href="#where-to-go-next" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.3/de/authn-revokd/install/"&gt;Die Installation&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;der Daemon oder &lt;code&gt;-once&lt;/code&gt; mit einem Timer; sshd und nginx anbinden&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.3/de/authn-revokd/configuration/"&gt;Die Konfiguration&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;Quellen, Ausgaben, der Spiegel und was abgelehnt wird&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.3/de/authn-revokd/verification/"&gt;Wie eine Liste geprüft wird&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;Signatur, Daten und nie älter als die gehaltene Liste, auch über Neustarts hinweg&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.3/de/authn-revokd/lapse/"&gt;Wenn eine Liste verfällt&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;die KRL, die die CA selbst widerruft&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="what-it-does-not-do"&gt;Was es nicht tut&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-not-do"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-not-do" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Ein Widerruf erreicht einen Server nicht schneller, als authn-revokd abfragt (&lt;code&gt;refresh&lt;/code&gt;),
+zuzüglich der Verzögerung, mit der der Aussteller neu ausstellt. Solange der Aussteller ausgefallen ist, werden seine
+Zertifikate ab dem Ablauf der Liste abgelehnt. Wer den Schlüssel einer CA hält, kann
+jede Liste signieren, so wie jedes Zertifikat.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;Lizenz&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause.&lt;/p&gt;</description></item><item><title>Wie eine Liste geprüft wird</title><link>https://go-authn.github.io/docs/0.3/de/authn-revokd/verification/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.3/de/authn-revokd/verification/</guid><description>
+&lt;p&gt;Eine Liste, die die Prüfung nicht besteht, wird nie geschrieben, bereitgestellt oder verwendet. Die letzte gute
+Kopie bleibt. Ein Abruf, der fehlschlägt, aus welchem Grund auch immer, ersetzt sie nie durch eine leere
+Antwort, die nichts widerrufen würde.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-signature"&gt;Die Signatur&lt;span class="hx:absolute hx:-mt-20" id="the-signature"&gt;&lt;/span&gt;
+&lt;a href="#the-signature" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Eine KRL&lt;/strong&gt; wird mit ihrer Signatur abgerufen, &lt;code&gt;&amp;lt;url&amp;gt;.sig&lt;/code&gt;: eine ASCII-armierte SSHSIG über
+die ganze Datei, mit dem als &lt;code&gt;ssh_ca&lt;/code&gt; konfigurierten &lt;strong&gt;SSH-CA-Schlüssel&lt;/strong&gt;, im Namensraum
+&lt;code&gt;krl@go-authn.github.io&lt;/code&gt;. Der Namensraum verhindert, dass die Signatur für etwas anderes
+gehalten wird. Wer signiert, hasht mit SHA-512; SHA-256 wird ebenfalls akzeptiert. Eine RSA-Signatur
+in der SHA-1-Form, die PROTOCOL.sshsig verbietet, wird abgelehnt.&lt;/p&gt;
+&lt;p&gt;Die KRL selbst muss sich so parsen lassen, wie &lt;code&gt;sshd&lt;/code&gt; sie parst, und darf nicht den eigenen
+Signaturabschnitt von OpenSSH enthalten, den OpenSSH nie prüft.&lt;/p&gt;
+&lt;p&gt;Eine von einem anderen Schlüssel signierte Liste wird abgelehnt:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-other.hcl -once
+bridge-ssh: revocation: the KRL&amp;#39;s signature does not verify by SHA256:xm8VDcZUh44N&amp;#43;RQSiPbroPInzkMhN/KCWI/TC&amp;#43;9HPNQ: public key does not match
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/other.krl
+output tls: wrote /tmp/authn/revokd/out/other.crl
+authn-revokd: not current: bridge-ssh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Hier nannte &lt;code&gt;ssh_ca&lt;/code&gt; einen Schlüssel, der die Liste der Bridge nicht signiert hat, und die Fehlermeldung nennt
+diesen Schlüssel. Eine Signatur, die die Prüfung nicht besteht, kann auch von einer Liste stammen, die
+zwischen den beiden Anfragen neu ausgestellt wurde; daher werden beide noch einmal abgerufen, bevor sie gemeldet wird.
+Dies war der erste Abruf dieser Quelle, es gab also keine gute Kopie zu behalten, und
+die Ausgabe ist sofort die &lt;a href="https://go-authn.github.io/docs/0.3/de/authn-revokd/lapse/"&gt;geschlossen fehlschlagende Liste (fail closed)&lt;/a&gt;.
+(Vor v0.6.2 stand bei demselben Fehler „the list changed between it and its
+signature“ vor der obigen Meldung, als sei die Liste erneut ausgestellt worden.)&lt;/p&gt;
+&lt;p&gt;Die Signatur wird mit &lt;code&gt;If-Match: &amp;lt;the list's ETag&amp;gt;&lt;/code&gt; abgerufen. Eine zwischen den beiden Anfragen
+neu ausgestellte Liste antwortet &lt;code&gt;412&lt;/code&gt;, und beide werden erneut abgerufen.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Eine CRL&lt;/strong&gt; wird gegen das als &lt;code&gt;x509_ca&lt;/code&gt; konfigurierte CA-Zertifikat geprüft: zuerst ihre
+Signatur, auf den Rohbytes, &lt;strong&gt;bevor&lt;/strong&gt; der Rest geparst wird, sodass eine große,
+von irgendjemandem signierte CRL eine Signaturprüfung kostet statt eines Parsens. Dann muss ihr
+Aussteller das Subject dieses Zertifikats sein; sie muss eine CRL Number und ein
+&lt;code&gt;nextUpdate&lt;/code&gt; nach ihrem &lt;code&gt;thisUpdate&lt;/code&gt; haben; und sie darf keine Delta-CRL sein, keine
+kritische Erweiterung außer der CRL Number und dem Authority Key Identifier tragen
+und keine kritische Eintragserweiterung.&lt;/p&gt;
+&lt;p&gt;Eine KRL muss außerdem &lt;strong&gt;angeben, wann sie abläuft&lt;/strong&gt;, in der Erweiterung
+&lt;code&gt;expires@go-authn.github.io&lt;/code&gt;: Eine, die das nicht tut, ließe sich nie von einer veralteten unterscheiden.&lt;/p&gt;
+&lt;p&gt;Die Größe ist begrenzt: eine KRL auf 32 MiB, ihre Signatur auf 64 KiB, eine CRL auf 64 MiB.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-dates"&gt;Die Daten&lt;span class="hx:absolute hx:-mt-20" id="the-dates"&gt;&lt;/span&gt;
+&lt;a href="#the-dates" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Eine Liste ist aktuell, wenn:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;jetzt vor ihrem Ablauf liegt (die Erweiterung der KRL, das &lt;code&gt;nextUpdate&lt;/code&gt; der CRL);&lt;/li&gt;
+&lt;li&gt;sie nicht mehr als fünf Minuten in der Zukunft ausgestellt wurde: Ein Aussteller, dessen Uhr
+um mehr als das vorgeht, schreibt Listen, deren Alter sich nicht feststellen lässt;&lt;/li&gt;
+&lt;li&gt;sie mit &lt;code&gt;max_age&lt;/code&gt; vor nicht längerer Zeit als dieser ausgestellt wurde.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Eine Liste, die nicht aktuell ist, wird beim Abruf abgelehnt. Ein &lt;code&gt;304 Not Modified&lt;/code&gt; ist keine
+Neuigkeit: Die gehaltene Kopie kann inzwischen abgelaufen sein, und sie wird bei jeder
+Synchronisierung erneut beurteilt.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="never-older-than-the-list-held"&gt;Nie älter als die gehaltene Liste&lt;span class="hx:absolute hx:-mt-20" id="never-older-than-the-list-held"&gt;&lt;/span&gt;
+&lt;a href="#never-older-than-the-list-held" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Die Position einer Liste ist ihre &lt;strong&gt;Version&lt;/strong&gt; (die &lt;code&gt;krl_version&lt;/code&gt; der KRL, die CRL
+Number), dann ihre &lt;strong&gt;Ausstellungszeit&lt;/strong&gt; (das Erstellungsdatum der KRL, das &lt;code&gt;thisUpdate&lt;/code&gt;
+der CRL). Eine Liste darf die gehaltene nur ersetzen, wenn sie eine höhere
+Version hat oder dieselbe Version später ausgestellt wurde: dieselben Widerrufe, neu ausgestellt
+mit einem neuen Ablauf. Alles andere ist ein Rollback: eine wieder eingespielte oder wiederhergestellte ältere
+Liste, noch signiert und nicht abgelaufen, die zurücknehmen würde, was die neuere
+widerrufen hat.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="across-restarts-too"&gt;Auch über Neustarts hinweg&lt;span class="hx:absolute hx:-mt-20" id="across-restarts-too"&gt;&lt;/span&gt;
+&lt;a href="#across-restarts-too" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Die gehaltene Liste wird in &lt;code&gt;state_dir&lt;/code&gt; aufbewahrt, eine Datei pro Quelle, die die Liste und
+ihre Signatur zusammen enthält, geschrieben durch eine einzige Umbenennung mit synchronisiertem Verzeichnis.
+Beim Start wird jede Kopie &lt;strong&gt;erneut geprüft&lt;/strong&gt; (abgelaufen oder nicht, sie ordnet, was als
+Nächstes kommt), und einer Kopie, die die Prüfung nicht mehr besteht, wird nicht vertraut, nicht einmal, um die
+nächste zu ordnen, und das Log sagt es.&lt;/p&gt;
+&lt;p&gt;Hier wird eine Quelle nach einem Neustart auf eine Liste gerichtet, die ein früherer Bridge-Prozess
+neunzehn Sekunden zuvor bereitgestellt hat, noch signiert und noch nicht abgelaufen:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+$ authn-revokd -config revokd-old.hcl -once
+bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-11T09:50:05Z, the copy held at 2026-10-11T09:50:24Z
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261011T115024
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Der erste Lauf hat keine Ausgabe geschrieben: Die Dateien enthielten diese Listen bereits.
+Die ältere Liste wird abgelehnt, und die Ausgabe behält die neuere. Der Prozess, der
+sie abgelehnt hat, hatte die neuere Liste nie gesehen: Er hat sie aus &lt;code&gt;state_dir&lt;/code&gt; zurückgelesen.&lt;/p&gt;
+&lt;p&gt;Da der Zustand das ist, was einen Rollback erkennbar macht, unterliegt das Verzeichnis der
+StrictModes-Regel von sshd (&lt;a href="https://go-authn.github.io/docs/0.3/de/authn-revokd/configuration/#what-is-refused-at-start"&gt;die Konfiguration&lt;/a&gt;).
+Ein Absturz zwischen zwei Schreibvorgängen kann kein Paar hinterlassen, das die Prüfung nicht besteht, was
+den Rollback-Schutz mitnehmen würde: Die Liste und ihre Signatur sind eine Datei.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what--once-reports"&gt;Was &lt;code&gt;-once&lt;/code&gt; meldet&lt;span class="hx:absolute hx:-mt-20" id="what--once-reports"&gt;&lt;/span&gt;
+&lt;a href="#what--once-reports" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-once&lt;/code&gt; endet mit &lt;code&gt;1&lt;/code&gt;, wenn eine Quelle keine aktuelle Liste hat, wenn ihr &lt;strong&gt;letzter Abruf
+fehlgeschlagen ist&lt;/strong&gt; oder wenn eine Ausgabe nicht geschrieben werden konnte, und seine letzte Zeile sagt, welcher
+der ersten beiden Fälle es ist:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;letzte Zeile&lt;/th&gt;
+&lt;th&gt;die Quelle&lt;/th&gt;
+&lt;th&gt;ihre Ausgaben&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not current: &amp;lt;source&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;hält keine aktuelle Liste: nie abgerufen, abgelaufen oder über &lt;code&gt;max_age&lt;/code&gt; hinaus&lt;/td&gt;
+&lt;td&gt;für sshd fail-closed&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not fetched: &amp;lt;source&amp;gt; (the list held is current until &amp;lt;T&amp;gt;)&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;ihr Abruf ist fehlgeschlagen, aber die gehaltene Kopie ist noch aktuell&lt;/td&gt;
+&lt;td&gt;aus dieser Kopie geschrieben, unverändert, bis &lt;code&gt;T&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Hier ist der Aussteller gestoppt, während beide gehaltenen Listen noch aktuell sind:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z), bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Dieser Durchlauf ließ &lt;code&gt;sshd.krl&lt;/code&gt;, wie es war. Sobald eine gehaltene Liste verfällt, wird dieselbe Quelle
+als &lt;code&gt;not current&lt;/code&gt; gemeldet, und beide Arten können sich die Zeile teilen, wie unter
+&lt;a href="https://go-authn.github.io/docs/0.3/de/authn-revokd/lapse/"&gt;Wenn eine Liste verfällt&lt;/a&gt;. Vor v0.6.2
+wurden beide Fälle als &lt;code&gt;not current&lt;/code&gt; gemeldet, was besagte, eine Liste sei verfallen, obwohl nur
+ihr Abruf fehlgeschlagen war; der Exit-Status war auch damals &lt;code&gt;1&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Das &lt;code&gt;/healthz&lt;/code&gt; des Spiegels urteilt stattdessen nach der gehaltenen Kopie und antwortete &lt;code&gt;ok&lt;/code&gt;, während
+der Aussteller ausgefallen war und die Kopien noch aktuell waren.&lt;/p&gt;</description></item><item><title>Wenn eine Liste verfällt</title><link>https://go-authn.github.io/docs/0.3/de/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.3/de/authn-revokd/lapse/</guid><description>
+&lt;p&gt;Eine Widerrufsprüfung, die alles durchlässt, wenn die Liste nicht zu bekommen ist, ist
+genau die, die ein Angreifer aushebelt, der die Liste blockieren kann. Wenn authn-revokd also
+keine aktuelle Liste einer Quelle hält, wird das, was die Liste dieser Quelle schützt,
+&lt;strong&gt;abgelehnt&lt;/strong&gt;, bis wieder eine aktuelle Liste eintrifft.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Ausgabe&lt;/th&gt;
+&lt;th&gt;solange eine Quelle keine aktuelle Liste hat&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;eine KRL, für &lt;code&gt;sshd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;authn-revokd schreibt eine KRL, die &lt;strong&gt;den CA-Schlüssel der Quelle widerruft&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;eine CRL, für einen TLS-Server&lt;/td&gt;
+&lt;td&gt;die abgelaufene CRL bleibt an ihrem Platz; OpenSSL lehnt eine abgelaufene CRL von sich aus ab&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;Für sshd: die CA selbst widerrufen&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; kennt keinen Ablauf einer Liste: Es würde die zuletzt geschriebene Datei für immer
+weiterlesen. Es prüft aber den &lt;strong&gt;CA-Schlüssel&lt;/strong&gt; jedes Zertifikats gegen
+&lt;code&gt;RevokedKeys&lt;/code&gt;. Anstelle der Liste, für die es nicht bürgen kann, setzt authn-revokd daher
+den eigenen Schlüssel der CA in die Ausgabe, und jedes Zertifikat, das diese CA signiert hat, wird
+abgelehnt, und nichts sonst.&lt;/p&gt;
+&lt;p&gt;Hier ist der Aussteller gestoppt, und die KRL-Quelle hat &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;, sodass die
+gehaltene Kopie innerhalb einer Minute statt einer Stunde verfällt. Die CRL-Quelle hat kein
+&lt;code&gt;max_age&lt;/code&gt;, und ihre Kopie ist noch aktuell:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt; ist &lt;code&gt;not current&lt;/code&gt;, und seine Ausgabe schlägt geschlossen fehl (fail closed); &lt;code&gt;bridge-x509&lt;/code&gt;
+ist nur &lt;code&gt;not fetched&lt;/code&gt;, und seine CRL bleibt, wie sie war
+(&lt;a href="https://go-authn.github.io/docs/0.3/de/authn-revokd/verification/#what--once-reports"&gt;was &lt;code&gt;-once&lt;/code&gt; meldet&lt;/a&gt;).
+&lt;code&gt;SHA256:Fpa/...&lt;/code&gt; ist die SSH-CA der Bridge. Ein Zertifikat, das sie signiert hat, ist nun
+für alles, was die Datei liest, widerrufen. Die Befehle oben liefen im Verzeichnis &lt;code&gt;revokd&lt;/code&gt;,
+in dem &lt;code&gt;out/&lt;/code&gt; liegt; dieser läuft daneben, im Verzeichnis mit den Testzertifikaten, wie auf
+&lt;a href="https://go-authn.github.io/docs/0.3/de/sshcert/authorize/#krl"&gt;der Seite von sshcert-authorize&lt;/a&gt;, daher ist
+dieselbe Datei &lt;code&gt;../revokd/out/sshd.krl&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Der Kommentar sagt &lt;code&gt;FAIL CLOSED&lt;/code&gt; und nennt die Quelle, sodass eine Person, die
+&lt;code&gt;ssh-keygen -Q -l&lt;/code&gt; liest, sieht, warum. Das Datum der Datei ist 1970, wenn jede Quelle
+verfallen ist. Die Ausgabe wird geschrieben, &lt;strong&gt;sobald eine Synchronisierung es bemerkt&lt;/strong&gt;, was für den Daemon
+sein nächster &lt;code&gt;refresh&lt;/code&gt; ist und für den Timer sein nächster Takt. Wenn wieder eine aktuelle Liste
+eintrifft, schreibt die nächste Synchronisierung sie anstelle des CA-Schlüssels, und die Zertifikate der CA
+werden wieder angenommen.&lt;/p&gt;
+&lt;p&gt;Dasselbe geschieht &lt;strong&gt;vor der ersten Liste&lt;/strong&gt;: Eine nie abgerufene Quelle hat nichts
+Aktuelles, und ihre CA ist ab dem ersten Schreiben widerrufen. Eine neue Installation lehnt
+die Zertifikate der CA ab, bis ihre erste Liste die Prüfung besteht, statt sie
+ungeprüft anzunehmen.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;Jede CA für sich&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;In einer Ausgabe, die mehrere Quellen zusammenführt, wird nur die CA der verfallenen Quelle
+widerrufen. Die anderen behalten ihre Listen. Eine Liste, die sich nicht zusammenführen lässt (jenseits der
+Seriennummernbereiche, die go-authn/krl behält), schlägt nur für ihre eigene CA geschlossen fehl, und
+&lt;code&gt;/healthz&lt;/code&gt; nennt sie. Nur wenn sich die Listen einzeln, aber nicht gemeinsam zusammenführen lassen, wird jede CA
+der Ausgabe widerrufen, und der Kommentar sagt es
+(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;). Stattdessen die alte Datei zu behalten,
+würde einen späteren Verfall unbemerkt lassen.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;Für einen TLS-Server: die CRL selbst&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Eine CRL sagt bereits, wann sie aufhört, aktuell zu sein, und OpenSSL lehnt eine ab, die
+ihr &lt;code&gt;nextUpdate&lt;/code&gt; überschritten hat („CRL has expired“). authn-revokd lässt daher die letzte geprüfte
+CRL an ihrem Platz, und der TLS-Server schlägt von sich aus geschlossen fehl. Deshalb wird auch
+&lt;code&gt;max_age&lt;/code&gt; bei einer Quelle abgelehnt, die eine CRL-Ausgabe speist: Ein Server, der
+die CRL geladen hat, behält sie bis zu ihrem &lt;code&gt;nextUpdate&lt;/code&gt;, was auch immer authn-revokd schreibt.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;Leser, die den Ablauf selbst prüfen&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Die zusammengeführte KRL trägt einen Ablauf, den ersten ihrer aktuellen Eingaben. Ein Leser,
+der ihn prüft, etwa &lt;code&gt;ssh_krl_file&lt;/code&gt; von go-fileshare oder
+&lt;a href="https://go-authn.github.io/docs/0.3/de/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;,
+sieht authn-revokd anhalten, wie er den Aussteller anhalten sähe.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Das funktioniert nur, solange authn-revokd läuft&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Dass die Datei geschlossen fehlschlägt, besorgt authn-revokd. Solange es gestoppt ist, liest sshd
+weiter die zuletzt geschriebene Datei, aktuell oder nicht. Daher &lt;code&gt;Restart=always&lt;/code&gt; beim
+Daemon und die Überwachung der Unit, des Timers oder von &lt;code&gt;/healthz&lt;/code&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

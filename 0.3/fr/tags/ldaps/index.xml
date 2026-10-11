@@ -1,0 +1,211 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Ldaps</title><link>https://go-authn.github.io/docs/0.3/fr/tags/ldaps/</link><description>Recent content in Ldaps on go-authn</description><generator>Hugo -- gohugo.io</generator><language>fr</language><atom:link href="https://go-authn.github.io/docs/0.3/fr/tags/ldaps/index.xml" rel="self" type="application/rss+xml"/><item><title>TLS : ldaps:// ou StartTLS, et pas les deux à la fois</title><link>https://go-authn.github.io/docs/0.3/fr/authnd/tls/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.3/fr/authnd/tls/</guid><description>
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;0.0.0.0:636&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;cert_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/cert.pem&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the chain, leaf first
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/key.pem&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;cert_file&lt;/code&gt; et &lt;code&gt;key_file&lt;/code&gt; ensemble activent TLS ; l&amp;rsquo;un sans l&amp;rsquo;autre est
+refusé (&lt;em&gt;one without the other serves nothing&lt;/em&gt;). TLS 1.2 est le minimum.
+authnd n&amp;rsquo;a pas de client ACME : les deux fichiers sont écrits par autre chose —
+&lt;a href="https://go-authn.github.io/docs/0.3/fr/libraries/servercert/"&gt;go-authn/servercert&lt;/a&gt;, certbot, l&amp;rsquo;AC
+(autorité de certification) propre d&amp;rsquo;un site — et authnd est &lt;strong&gt;redémarré&lt;/strong&gt; après chaque renouvellement,
+car le certificat est lu une seule fois, à l&amp;rsquo;ouverture de l&amp;rsquo;écouteur.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="two-ways-one-listener-each"&gt;Deux façons, un écouteur chacune&lt;span class="hx:absolute hx:-mt-20" id="two-ways-one-listener-each"&gt;&lt;/span&gt;
+&lt;a href="#two-ways-one-listener-each" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;starttls&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;l&amp;rsquo;écouteur&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;check&lt;/code&gt; dit&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;ldaps://&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;non défini&lt;/td&gt;
+&lt;td&gt;la poignée de main TLS a lieu avant qu&amp;rsquo;un seul octet de LDAP soit échangé&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;ldaps://…&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;StartTLS&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;starttls = true&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;en clair, mis à niveau quand le client le demande (RFC 4511 §4.14)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;ldap+starttls://…&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;C&amp;rsquo;est l&amp;rsquo;un ou l&amp;rsquo;autre, et cela doit l&amp;rsquo;être : un écouteur ne peut pas à la fois exiger une
+poignée de main et attendre de voir si on en demande une. Le choix d&amp;rsquo;un site dépend
+de ses &lt;strong&gt;clients&lt;/strong&gt; : &lt;code&gt;ldaps://&lt;/code&gt; sur le 636 est ce pour quoi la plupart sont configurés,
+et StartTLS est ce que demandera un client pointé sur le 389 avec « utiliser TLS » coché.
+Un site qui a besoin des deux fait tourner deux instances, chacune avec son propre
+&lt;code&gt;--config&lt;/code&gt;. &lt;code&gt;starttls = true&lt;/code&gt; sans certificat est refusé :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/starttls-nocert.hcl
+authnd: starttls needs cert_file and key_file: there is nothing to upgrade a connection WITH&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="ldaps"&gt;ldaps://&lt;span class="hx:absolute hx:-mt-20" id="ldaps"&gt;&lt;/span&gt;
+&lt;a href="#ldaps" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Le serveur, un certificat signé par une AC pour &lt;code&gt;127.0.0.1&lt;/code&gt;, et la chaîne vérifiée
+par un client qui n&amp;rsquo;est pas ce programme :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config ldaps
+ldaps on 127.0.0.1:3636, serving 2 people from the configuration file
+$ openssl s_client -connect 127.0.0.1:3636 -CAfile tls/ca.pem -verify_return_error -verify_ip 127.0.0.1 &amp;lt;/dev/null 2&amp;gt;&amp;amp;1 | grep -E &amp;#39;Verify return|Protocol|subject=|issuer=&amp;#39;
+subject=CN=localhost
+issuer=CN=docs test CA
+Protocol: TLSv1.3
+Verify return code: 0 (ok)
+Protocol : TLSv1.3
+Verify return code: 0 (ok)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="starttls-which-refuses-until-it-is-asked-for"&gt;StartTLS, qui refuse tant qu&amp;rsquo;on ne l&amp;rsquo;a pas demandé&lt;span class="hx:absolute hx:-mt-20" id="starttls-which-refuses-until-it-is-asked-for"&gt;&lt;/span&gt;
+&lt;a href="#starttls-which-refuses-until-it-is-asked-for" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;StartTLS est demandé par le &lt;strong&gt;client&lt;/strong&gt;, donc le simple fait de le proposer ne promet
+rien : un client qui ne le demande jamais se lierait en clair. Un écouteur avec
+&lt;code&gt;starttls = true&lt;/code&gt; refuse donc chaque liaison et chaque recherche tant que la
+connexion n&amp;rsquo;a pas été mise à niveau, avec &lt;code&gt;confidentialityRequired&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3389 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org &amp;#39;(uid=bob)&amp;#39;
+ldap_bind: Confidentiality required (13)
+additional info: this listener requires TLS, and nothing asked for it
+$ LDAPTLS_REQCERT=never ldapsearch -ZZ -x -LLL -H ldap://127.0.0.1:3389 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org &amp;#39;(uid=bob)&amp;#39;
+dn: uid=bob,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: posixAccount
+uid: bob
+cn: bob
+sambaNTPassword: 8846F7EAEE8FB117AD06BDD830B7586C&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;(&lt;code&gt;-ZZ&lt;/code&gt; signifie « StartTLS, et échouer s&amp;rsquo;il échoue ». &lt;code&gt;LDAPTLS_REQCERT=never&lt;/code&gt; est là
+parce que le &lt;code&gt;ldapsearch&lt;/code&gt; livré avec macOS fait confiance au magasin du système et qu&amp;rsquo;on n&amp;rsquo;a pas pu
+lui faire accepter cette AC de test ; la chaîne a été vérifiée séparément avec
+&lt;code&gt;openssl s_client -starttls ldap -CAfile tls/ca.pem -verify_return_error&lt;/code&gt;,
+qui a répondu &lt;code&gt;Verify return code: 0 (ok)&lt;/code&gt;.)&lt;/p&gt;
+&lt;p&gt;C&amp;rsquo;est ce refus qui fait de &lt;code&gt;cert_file&lt;/code&gt; une garantie plutôt qu&amp;rsquo;une offre — et
+c&amp;rsquo;est sur lui que s&amp;rsquo;appuie &lt;code&gt;publish_nt_hash&lt;/code&gt;. Il inclut la liaison anonyme
+qu&amp;rsquo;envoie &lt;code&gt;ldapsearch -x&lt;/code&gt; avant de lire le root DSE, si bien que sur un écouteur StartTLS
+cette requête de découverte, elle aussi, a besoin de &lt;code&gt;-ZZ&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="publish_nt_hash"&gt;&lt;code&gt;publish_nt_hash&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="publish_nt_hash"&gt;&lt;/span&gt;
+&lt;a href="#publish_nt_hash" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sambaNTPassword&lt;/code&gt; est ce qui permet à Samba ou à un autre serveur SMB d&amp;rsquo;authentifier
+des personnes par cet annuaire, et ce n&amp;rsquo;est &lt;strong&gt;pas&lt;/strong&gt; une empreinte de mot de passe au
+sens où l&amp;rsquo;entend un formulaire de connexion : quiconque détient &lt;code&gt;MD4(UTF16LE(password))&lt;/code&gt;
+s&amp;rsquo;authentifie comme cette personne en NTLMv2 sans jamais connaître le
+mot de passe. Elle n&amp;rsquo;est donc publiée que sur demande :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;publish_nt_hash&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;et cette demande est refusée sauf si l&amp;rsquo;écouteur a TLS, ou est en bouclage
+(&lt;code&gt;127.0.0.0/8&lt;/code&gt;, &lt;code&gt;::1&lt;/code&gt;, &lt;code&gt;localhost&lt;/code&gt;) et donc sur aucun réseau :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/nthash-clear.hcl
+authnd: publish_nt_hash needs cert_file and key_file: an NT hash IS the credential, and 0.0.0.0:3893 is not loopback, so it would cross a network in the clear&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Avec elle, &lt;code&gt;check&lt;/code&gt; nomme l&amp;rsquo;attribut par personne et dit ce qui le protège :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check ldaps
+ldaps://127.0.0.1:3636, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS
+alice the configuration file a password uid, cn and sambaNTPassword
+bob the configuration file an NT hash uid, cn and sambaNTPassword
+a bind carries a password
+bob cannot bind with a password: the source holds only what an SMB server needs (an NT hash), which a bind cannot be checked against
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is published over TLS: it IS the credential, and whoever reads it authenticates as that person over NTLMv2
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;et, pour l&amp;rsquo;écouteur StartTLS, &lt;em&gt;sambaNTPassword is published over TLS, once
+StartTLS has been asked for&lt;/em&gt;. alice n&amp;rsquo;a pas d&amp;rsquo;empreinte NT écrite ; la sienne est
+dérivée du mot de passe qu&amp;rsquo;elle a. L&amp;rsquo;empreinte de bob est publiée pour qu&amp;rsquo;un serveur SMB
+s&amp;rsquo;en serve, et &lt;code&gt;check&lt;/code&gt; dit aussi que bob ne peut pas se lier à authnd lui-même.&lt;/p&gt;
+&lt;p&gt;Seul un &lt;a href="https://go-authn.github.io/docs/0.3/fr/authnd/#who-may-bind-and-who-may-read"&gt;lecteur&lt;/a&gt;
+peut chercher, donc seul un lecteur voit jamais l&amp;rsquo;attribut. Qui peut le lire est
+donc la même question que qui détient le mot de passe d&amp;rsquo;un lecteur.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;NTLMv2 a besoin du mot de passe ou de son MD4, et de rien d&amp;rsquo;autre&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Un serveur de fichiers qui interroge authnd au sujet de quelqu&amp;rsquo;un ne peut servir cette personne en SMB que si
+la &lt;em&gt;source&lt;/em&gt; détenait assez pour cela : un mot de passe, ou l&amp;rsquo;empreinte. Une personne qui
+vient d&amp;rsquo;un annuaire qui ne fait que vérifier les mots de passe — &lt;em&gt;a password check&lt;/em&gt; dans
+&lt;code&gt;check&lt;/code&gt; — ne peut jamais recevoir de &lt;code&gt;sambaNTPassword&lt;/code&gt;, quoi que fasse authnd
+entre les deux. Sans &lt;code&gt;publish_nt_hash&lt;/code&gt;, personne ne le peut : &lt;code&gt;check&lt;/code&gt; dit alors
+&lt;em&gt;sambaNTPassword is not published, so nothing here can authenticate an SMB
+session&lt;/em&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="tokens-need-it-too"&gt;Les jetons en ont besoin aussi&lt;span class="hx:absolute hx:-mt-20" id="tokens-need-it-too"&gt;&lt;/span&gt;
+&lt;a href="#tokens-need-it-too" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un &lt;a href="https://go-authn.github.io/docs/0.3/fr/authnd/tokens/"&gt;bloc &lt;code&gt;oidc&lt;/code&gt;&lt;/a&gt; refuse un jeton sur une
+connexion qui n&amp;rsquo;est pas chiffrée, sauf si &lt;code&gt;allow_plaintext = true&lt;/code&gt; dit que
+TLS est terminé devant ce processus.&lt;/p&gt;</description></item></channel></rss>

@@ -1,0 +1,228 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Passwords</title><link>https://go-authn.github.io/docs/0.3/tags/passwords/</link><description>Recent content in Passwords on go-authn</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://go-authn.github.io/docs/0.3/tags/passwords/index.xml" rel="self" type="application/rss+xml"/><item><title>A person changing their own password</title><link>https://go-authn.github.io/docs/0.3/authnd/passwords/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.3/authnd/passwords/</guid><description>
+&lt;p&gt;A person may change &lt;strong&gt;their own&lt;/strong&gt; password, and nobody else&amp;rsquo;s, through the
+RFC 3062 password modify operation (what &lt;code&gt;ldappasswd&lt;/code&gt; sends) or an RFC 4511
+modify. In both, &lt;strong&gt;the current password must be sent with the new one,
+whatever the connection bound with&lt;/strong&gt;. A session bound with an
+&lt;a href="https://go-authn.github.io/docs/0.3/authnd/tokens/"&gt;OAUTHBEARER token&lt;/a&gt; — short-lived, and
+possibly one factor — could otherwise turn it into a permanent password that
+also works for &lt;code&gt;kinit&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;This is OpenLDAP&amp;rsquo;s ppolicy behaviour with &lt;code&gt;pwdSafeModify&lt;/code&gt; set, with the
+result codes its &lt;code&gt;ppolicy.c&lt;/code&gt; returns. RFC 3062 §3 allows it: &amp;ldquo;If oldPasswd is
+not present, the server MAY use other policy to determine whether or not to
+change the password.&amp;rdquo;&lt;/p&gt;
+&lt;h2 data-hextra-search-id="with-ldappasswd"&gt;With &lt;code&gt;ldappasswd&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="with-ldappasswd"&gt;&lt;/span&gt;
+&lt;a href="#with-ldappasswd" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-t&lt;/code&gt; is a file holding the old password, &lt;code&gt;-T&lt;/code&gt; one holding the new; &lt;code&gt;-A&lt;/code&gt; and
+&lt;code&gt;-S&lt;/code&gt; prompt for them instead.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -T alice.new
+Result: Insufficient access (50)
+Additional info: a password change must send the old password with the new one
+$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -t wrong.pwin -T alice.new
+Result: Server is unwilling to perform (53)
+Additional info: the old password sent is not the current one
+$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -t alice.pwin -T alice.new
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
+ldap_bind: Invalid credentials (49)
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.new
+dn:uid=alice,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The old password stops working at once, for a bind and — with a
+&lt;a href="https://go-authn.github.io/docs/0.3/authnd/kerberos/#a-password-changed-over-ldap"&gt;realm&lt;/a&gt; —
+for &lt;code&gt;kinit&lt;/code&gt;. The server says so in its output:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;alice&amp;#39;s password change was refused: the old password did not verify: directory: wrong password
+alice changed their own password&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;authnd does not generate a password: a request without a new one is refused
+with &lt;code&gt;unwillingToPerform&lt;/code&gt; (&lt;em&gt;this server does not generate passwords: send the
+one you want&lt;/em&gt;). A password it invented would have to be sent back over the
+connection, and the one place it is certain to end up is a terminal&amp;rsquo;s
+scrollback.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="with-ldapmodify"&gt;With &lt;code&gt;ldapmodify&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="with-ldapmodify"&gt;&lt;/span&gt;
+&lt;a href="#with-ldapmodify" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The change is a &lt;strong&gt;delete of the old value followed by an add of the new
+one, in one request&lt;/strong&gt;. RFC 4511 §4.6 applies a modify&amp;rsquo;s changes in order and
+atomically, so the delete — and the whole request with it — fails unless the
+value deleted is the one held:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;dn: uid=alice,ou=people,dc=example,dc=org
+changetype: modify
+delete: userPassword
+userPassword: alice-test-pw
+-
+add: userPassword
+userPassword: alice-new-pw
+-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;A bare &lt;code&gt;replace&lt;/code&gt; proves nothing, and anything but &lt;code&gt;userPassword&lt;/code&gt; is not
+something this server changes:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f replace.ldif
+ldap_modify: Insufficient access (50)
+additional info: a password change must send the old password with the new one
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;
+$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f other.ldif
+ldap_modify: Server is unwilling to perform (53)
+additional info: this server changes userPassword and nothing else, not cn
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;A modify that asks for a password &lt;strong&gt;and&lt;/strong&gt; something else is refused whole:
+a modify is atomic, and honouring half of it would report success for
+something nobody asked for.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="who-can-change-what"&gt;Who can change what&lt;span class="hx:absolute hx:-mt-20" id="who-can-change-what"&gt;&lt;/span&gt;
+&lt;a href="#who-can-change-what" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;request&lt;/th&gt;
+&lt;th&gt;answer&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;no old password, or a bare &lt;code&gt;replace: userPassword&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;an old password that is not the current one&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;somebody else&amp;rsquo;s entry&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;, &lt;em&gt;a password may be changed only by the person it belongs to&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;an anonymous connection&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;, &lt;em&gt;an anonymous connection has not said who it is&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;somebody with no password at all — they can only have bound with a token&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;: a bearer token is not a password, and does not set the first one. An administrator sets it in the configuration&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;somebody served from a &lt;code&gt;users&lt;/code&gt; block&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;: authnd reads those sources and does not write them&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;the file cannot be written&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;other&lt;/code&gt; (80), &lt;em&gt;the password could not be written&lt;/em&gt;; the reason is in the server&amp;rsquo;s output&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;The second-to-last, from the release binary, for dora, who comes from a
+SQLite database:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=dora,ou=people,dc=example,dc=org -y dora.pwin -t dora.pwin -T dora.new
+Result: Server is unwilling to perform (53)
+Additional info: dora is served from a sqlite database, which this server reads and does not write&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The person is matched &lt;strong&gt;by identity, not by DN&lt;/strong&gt;: the session&amp;rsquo;s own name must
+be exactly the target&amp;rsquo;s, byte for byte, so a session bound as &lt;code&gt;uid=Backup&lt;/code&gt;
+cannot change &lt;code&gt;backup&lt;/code&gt;&amp;rsquo;s password even though the two DNs compare equal. That
+and the &lt;a href="https://go-authn.github.io/docs/0.3/authnd/people/#order-and-the-one-exception"&gt;refusal of names that differ only by case&lt;/a&gt;
+are two controls that do not depend on each other.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="where-the-new-password-is-written"&gt;Where the new password is written&lt;span class="hx:absolute hx:-mt-20" id="where-the-new-password-is-written"&gt;&lt;/span&gt;
+&lt;a href="#where-the-new-password-is-written" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Back into &lt;strong&gt;the file that declares the person&lt;/strong&gt;, and nowhere else:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;a &lt;code&gt;user&lt;/code&gt; block with &lt;code&gt;password_file&lt;/code&gt; has &lt;strong&gt;that file&lt;/strong&gt; rewritten, keeping
+its owner and group where the process may, and its mode narrowed to at
+most 0600 — never widened;&lt;/li&gt;
+&lt;li&gt;a &lt;code&gt;user&lt;/code&gt; block with &lt;code&gt;password&lt;/code&gt; inline has the configuration file rewritten
+with the new value, keeping its comments, order and mode;&lt;/li&gt;
+&lt;li&gt;a &lt;code&gt;user&lt;/code&gt; block with only an &lt;code&gt;nt_hash&lt;/code&gt; is not given a password: that would
+change what can prove them, which is a change to the configuration.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Every write goes to a temporary file &lt;strong&gt;in the same directory&lt;/strong&gt;, then a
+rename — so a full disk or a crash leaves the old password, not an empty
+file. That needs write access to the directory. Under the packaged unit,
+&lt;code&gt;ProtectSystem=strict&lt;/code&gt; takes it away, and a change is refused like this:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f safe.ldif
+ldap_modify: Other (e.g., implementation specific) error (80)
+additional info: the password could not be written
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;with the reason in the server&amp;rsquo;s output:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-863420940: permission denied&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;So keep the passwords in a directory of their own, writable by the service,
+and the configuration read-only to it — the
+&lt;a href="https://go-authn.github.io/docs/0.3/authnd/install/#the-configuration-directory"&gt;&lt;code&gt;ReadWritePaths=&lt;/code&gt; drop-in&lt;/a&gt;.
+A person whose password is written inline would need &lt;code&gt;/etc/authnd&lt;/code&gt; itself
+writable, which would also let the service rewrite its own configuration.&lt;/p&gt;
+&lt;p&gt;After a successful write, the configuration files are read again &lt;strong&gt;for the
+&lt;code&gt;user&lt;/code&gt; blocks only&lt;/strong&gt;: an unrelated edit waiting on disk does not take effect
+halfway because somebody changed a password. Everything else still waits for
+a restart. The files are still read whole, though, so if one of them no
+longer loads, the password is written and the client is told &lt;em&gt;the password
+was written but this server did not reload it&lt;/em&gt; — the running server keeps
+the old one until it is restarted.&lt;/p&gt;</description></item></channel></rss>

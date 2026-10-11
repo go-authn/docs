@@ -1,0 +1,289 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Kdc</title><link>https://go-authn.github.io/docs/0.3/es/tags/kdc/</link><description>Recent content in Kdc on go-authn</description><generator>Hugo -- gohugo.io</generator><language>es</language><atom:link href="https://go-authn.github.io/docs/0.3/es/tags/kdc/index.xml" rel="self" type="application/rss+xml"/><item><title>Un reino Kerberos para las mismas personas</title><link>https://go-authn.github.io/docs/0.3/es/authnd/kerberos/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.3/es/authnd/kerberos/</guid><description>
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;kerberos&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; realm&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;EXAMPLE.ORG&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # required, upper case
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; keytab&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/krb5.keytab&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # required; must hold krbtgt/EXAMPLE.ORG
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:88&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default; UDP and TCP both
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; lifetime&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;10h&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default, MIT&amp;#39;s
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un bloque &lt;code&gt;kerberos&lt;/code&gt; convierte authnd en un KDC además de un directorio, mediante
+&lt;a href="https://go-authn.github.io/docs/0.3/es/libraries/"&gt;go-authn/kdc&lt;/a&gt;: a las mismas personas se les
+emiten tickets en lugar de solo buscarlas. Responde por UDP y TCP en la misma
+dirección, exige la preautenticación por marca de tiempo cifrada, y solo emite
+tickets &lt;code&gt;aes256-cts-hmac-sha1-96&lt;/code&gt;. &lt;code&gt;lifetime&lt;/code&gt; es una duración de Go (&lt;code&gt;&amp;quot;10h&amp;quot;&lt;/code&gt;,
+&lt;code&gt;&amp;quot;90m&amp;quot;&lt;/code&gt;). El directorio y el reino están al mismo nivel: si uno de los dos se
+detiene, el proceso se detiene, porque un servidor que siguiera respondiendo LDAP
+después de que muriera su KDC parecería sano a todo lo que no habla Kerberos.&lt;/p&gt;
+&lt;p&gt;Se rechaza al arrancar:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/realm-lower.hcl
+authnd: kerberos: realm &amp;#34;example.org&amp;#34; is not upper case: clients uppercase the realm they derive from a domain, and would then ask for a realm this server does not answer for&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;e igualmente un reino sin nombre, sin keytab, una dirección que no se puede
+analizar, un &lt;code&gt;lifetime&lt;/code&gt; que Go no sabe leer, y un bloque &lt;code&gt;kerberos&lt;/code&gt; junto a un
+bloque &lt;code&gt;mfa&lt;/code&gt; (más abajo).&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-keytab"&gt;La keytab&lt;span class="hx:absolute hx:-mt-20" id="the-keytab"&gt;&lt;/span&gt;
+&lt;a href="#the-keytab" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;La keytab guarda la clave con la que authnd firma sus propios tickets
+—&lt;code&gt;krbtgt/REALM@REALM&lt;/code&gt;— y una clave por cada servicio al que emite tickets. Es el
+mismo archivo que leen esos servicios. La contraseña de krbtgt no se vuelve a
+escribir nunca, así que hágala aleatoria. Con el &lt;code&gt;ktutil&lt;/code&gt; de MIT (paquete
+&lt;code&gt;krb5-user&lt;/code&gt; en Debian y Ubuntu; esta receta es la que da &lt;code&gt;docs/install.md&lt;/code&gt;, y no se
+ejecutó para estas páginas):&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;addent -password -p krbtgt/EXAMPLE.ORG@EXAMPLE.ORG -k 1 -e aes256-cts-hmac-sha1-96\n%s\nwkt /tmp/krb5.keytab\nquit\n&amp;#39;&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;&lt;span class="k"&gt;$(&lt;/span&gt;head -c &lt;span class="m"&gt;32&lt;/span&gt; /dev/urandom &lt;span class="p"&gt;|&lt;/span&gt; base64&lt;span class="k"&gt;)&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; ktutil
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo install -o root -g authnd -m &lt;span class="m"&gt;0640&lt;/span&gt; /tmp/krb5.keytab /etc/authnd/krb5.keytab
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;rm /tmp/krb5.keytab&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Añada la clave de un servicio del mismo modo (&lt;code&gt;-p nfs/files.example.org@EXAMPLE.ORG&lt;/code&gt;),
+y dé a ese servicio la misma clave en su propia keytab. En macOS, el
+&lt;code&gt;ktutil -k &amp;lt;file&amp;gt; add -r -p &amp;lt;principal&amp;gt; -V 1 -e aes256-cts-hmac-sha1-96&lt;/code&gt; de Heimdal
+escribe una clave aleatoria sin contraseña alguna. En ambos casos, relea la keytab
+antes de arrancar (&lt;code&gt;klist -k&lt;/code&gt; con MIT, &lt;code&gt;ktutil -k &amp;lt;file&amp;gt; list&lt;/code&gt; con Heimdal):&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ktutil -k etc/authnd/krb5.keytab list
+etc/authnd/krb5.keytab:
+Vno Type Principal Aliases
+1 aes256-cts-hmac-sha1-96 krbtgt/EXAMPLE.ORG@EXAMPLE.ORG &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Una keytab sin &lt;code&gt;krbtgt/REALM&lt;/code&gt; la rechaza &lt;code&gt;check&lt;/code&gt;, y también el arranque; consulte
+&lt;a href="https://go-authn.github.io/docs/0.3/es/authnd/check/#the-certificate-the-keytab-and-the-one-thing-it-cannot-see"&gt;&lt;code&gt;check&lt;/code&gt;&lt;/a&gt;.
+La keytab se lee una sola vez, al arrancar: sustituirla requiere un reinicio.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="who-can-be-issued-a-ticket"&gt;A quién se le puede emitir un ticket&lt;span class="hx:absolute hx:-mt-20" id="who-can-be-issued-a-ticket"&gt;&lt;/span&gt;
+&lt;a href="#who-can-be-issued-a-ticket" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un KDC debe &lt;strong&gt;descifrar&lt;/strong&gt; la preautenticación del cliente con la clave de larga
+duración de esa persona, así que necesita la &lt;strong&gt;contraseña&lt;/strong&gt; de la persona, no solo
+una forma de comprobarla. &lt;code&gt;check&lt;/code&gt; dice a quién se le puede y a quién no, con el
+motivo:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check realm
+ldap://127.0.0.1:3893, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS
+alice the configuration file a password uid and cn
+bob the configuration file an NT hash uid and cn
+dora a sqlite database a password uid and cn
+eli a sqlite database an NT hash uid and cn
+realm EXAMPLE.ORG on 127.0.0.1:18388 (udp and tcp), keytab etc/authnd/krb5.keytab
+can be issued a ticket: alice and dora
+CANNOT, whatever they type: bob and eli
+a KDC must decrypt the pre-authentication with the person&amp;#39;s key
+bob and eli: an NT hash is only the RC4-HMAC key (RFC 4757), and this realm issues aes256-cts-hmac-sha1-96 alone, whose key is derived from the password itself
+a bind carries a password
+bob and eli cannot bind with a password: their sources hold only what an SMB server needs (an NT hash), which a bind cannot be checked against
+no reader is declared: nothing may search, and binds are not affected
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;el origen tiene&lt;/th&gt;
+&lt;th&gt;un ticket&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;una contraseña (&lt;code&gt;password&lt;/code&gt;, &lt;code&gt;password_file&lt;/code&gt;, una columna de contraseña SQL)&lt;/td&gt;
+&lt;td&gt;sí&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;solo un hash NT&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;no&lt;/strong&gt;: es la clave RC4-HMAC, y este reino solo emite AES&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;solo una comprobación de contraseña (un directorio &lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt; detrás de este)&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;no&lt;/strong&gt;: un origen que solo verifica una contraseña no puede producir ninguna clave&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Para un directorio detrás de este, la última línea de la parte del reino dice
+&lt;em&gt;alice, bob, dora and eli: the source only verifies a password, so it cannot
+produce any key&lt;/em&gt;. Eso es estructural, no una cuestión de configuración, y
+descubrirlo en &lt;code&gt;check&lt;/code&gt; es mejor que descubrirlo por alguien cuyo &lt;code&gt;kinit&lt;/code&gt; dice que
+su contraseña correcta es incorrecta.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="kinit-against-it"&gt;kinit contra él&lt;span class="hx:absolute hx:-mt-20" id="kinit-against-it"&gt;&lt;/span&gt;
+&lt;a href="#kinit-against-it" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un &lt;code&gt;krb5.conf&lt;/code&gt; que nombra este KDC. ⛔ Para MIT Kerberos, las llaves van en líneas
+propias: su analizador ignora en silencio un reino escrito en una sola línea.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[libdefaults]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="na"&gt;default_realm&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;EXAMPLE.ORG
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="s"&gt; dns_lookup_kdc = false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[realms]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="na"&gt;EXAMPLE.ORG&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;{
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="s"&gt; kdc = 127.0.0.1:18388
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="s"&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La misma configuración, servida y consultada con el &lt;code&gt;kinit&lt;/code&gt; de Heimdal de macOS
+(&lt;code&gt;--password-file&lt;/code&gt; lee la contraseña de un archivo):&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config realm
+ldap on 127.0.0.1:3893, serving 4 people from the configuration file, then a sqlite database
+realm EXAMPLE.ORG on 127.0.0.1:18388 (udp and tcp)
+$ kinit --password-file=alice.pwin alice@EXAMPLE.ORG
+$ klist
+Credentials cache: FILE:ccache
+Principal: alice@EXAMPLE.ORG
+Issued Expires Principal
+Oct 10 21:48:29 2026 Oct 11 07:48:29 2026 krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
+$ kinit --password-file=wrong.pwin alice@EXAMPLE.ORG
+kinit: Password incorrect
+$ kinit --password-file=bob.pwin bob@EXAMPLE.ORG
+kinit: krb5_get_init_creds: Error from KDC: this realm holds no Kerberos key for that principal
+$ kinit --password-file=dora.pwin zed@EXAMPLE.ORG
+kinit: krb5_get_init_creds: Error from KDC: no such principal in this realm&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;El ticket dura las diez horas por defecto. bob escribió la contraseña a partir de la
+cual se calculó su hash NT, y aun así se rechaza: el reino no tiene ninguna clave
+para esa persona. El KDC escribe en su salida lo que ha rechazado, con el código de
+error de Kerberos:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;kerberos: refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
+kerberos: refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
+kerberos: the timestamp does not decrypt (client etype 18, our key type 18): error decrypting: integrity verification failed
+kerberos: refused krbtgt/EXAMPLE.ORG: pre-authentication does not decrypt (code 24)
+kerberos: refused krbtgt/EXAMPLE.ORG: this realm holds no Kerberos key for that principal (code 9)
+kerberos: refused krbtgt/EXAMPLE.ORG: no such principal in this realm (code 6)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;em&gt;Pre-authentication required&lt;/em&gt; es la primera ronda normal de un &lt;code&gt;kinit&lt;/code&gt;: el cliente
+pregunta sin preautenticación, se le dice que es obligatoria, y vuelve a preguntar
+con ella. El &lt;code&gt;kinit&lt;/code&gt; correcto de alice solo deja esa línea.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;El reino dice qué nombres existen; el directorio no&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Un bind LDAP para un nombre que nadie tiene se responde con &lt;code&gt;invalidCredentials&lt;/code&gt;,
+igual que una contraseña incorrecta. El KDC responde &lt;em&gt;no such principal in this
+realm&lt;/em&gt; (&lt;code&gt;KDC_ERR_C_PRINCIPAL_UNKNOWN&lt;/code&gt;, código 6), como hacen los KDC de Kerberos.
+Con un bloque &lt;code&gt;kerberos&lt;/code&gt; en una dirección que otros pueden alcanzar, la lista de
+nombres es por tanto tan adivinable como en cualquier KDC; &lt;code&gt;listen&lt;/code&gt; queda por
+defecto en loopback.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="a-password-changed-over-ldap"&gt;Una contraseña cambiada por LDAP&lt;span class="hx:absolute hx:-mt-20" id="a-password-changed-over-ldap"&gt;&lt;/span&gt;
+&lt;a href="#a-password-changed-over-ldap" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;El KDC lee las mismas personas que sirve el directorio, así que una
+&lt;a href="https://go-authn.github.io/docs/0.3/es/authnd/passwords/"&gt;contraseña cambiada por LDAP&lt;/a&gt; llega al reino
+de inmediato: la anterior deja de funcionar para &lt;code&gt;kinit&lt;/code&gt; en el momento en que deja
+de funcionar para un bind:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -t alice.pwin -T alice.new
+$ kinit --password-file=alice.pwin alice@EXAMPLE.ORG
+kinit: Password incorrect
+$ kinit --password-file=alice.new alice@EXAMPLE.ORG
+$&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="not-beside-an-mfa-block"&gt;No junto a un bloque &lt;code&gt;mfa&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="not-beside-an-mfa-block"&gt;&lt;/span&gt;
+&lt;a href="#not-beside-an-mfa-block" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/krb-mfa.hcl
+authnd: kerberos and mfa together: the mfa block asks every bind for a password AND a code, and a kinit carries only the password -- this KDC has no second-factor pre-authentication, so a realm here would accept one factor where the mfa block demands two. Remove one of the blocks&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La preautenticación por marca de tiempo cifrada del RFC 4120 se basa solo en la
+contraseña. Un segundo factor necesita la preautenticación OTP (RFC 6560) dentro de
+FAST (RFC 6113), que este KDC no implementa. Un reino aquí entregaría tickets con un
+solo factor a las personas que según el &lt;a href="https://go-authn.github.io/docs/0.3/es/authnd/mfa/"&gt;bloque &lt;code&gt;mfa&lt;/code&gt;&lt;/a&gt;
+necesitan dos, y un ticket abre todo lo que abre un bind; así que la elección se
+hace en modo cerrado: uno u otro.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="ports"&gt;Puertos&lt;span class="hx:absolute hx:-mt-20" id="ports"&gt;&lt;/span&gt;
+&lt;a href="#ports" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;El 88 es privilegiado. Con la unidad empaquetada, &lt;code&gt;CAP_NET_BIND_SERVICE&lt;/code&gt; lo cubre;
+un servidor ejecutado como usuario normal necesita un puerto alto, como arriba, y
+un &lt;code&gt;krb5.conf&lt;/code&gt; que lo nombre.&lt;/p&gt;</description></item></channel></rss>

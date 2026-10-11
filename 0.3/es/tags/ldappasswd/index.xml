@@ -1,0 +1,232 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Ldappasswd</title><link>https://go-authn.github.io/docs/0.3/es/tags/ldappasswd/</link><description>Recent content in Ldappasswd on go-authn</description><generator>Hugo -- gohugo.io</generator><language>es</language><atom:link href="https://go-authn.github.io/docs/0.3/es/tags/ldappasswd/index.xml" rel="self" type="application/rss+xml"/><item><title>Una persona que cambia su propia contraseña</title><link>https://go-authn.github.io/docs/0.3/es/authnd/passwords/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.3/es/authnd/passwords/</guid><description>
+&lt;p&gt;Una persona puede cambiar &lt;strong&gt;su propia&lt;/strong&gt; contraseña, y la de nadie más, mediante la
+operación de modificación de contraseña del RFC 3062 (lo que envía &lt;code&gt;ldappasswd&lt;/code&gt;) o
+un modify del RFC 4511. En ambos casos, &lt;strong&gt;la contraseña actual debe enviarse junto
+con la nueva, sea cual sea el medio con el que hizo el bind la conexión&lt;/strong&gt;. De lo
+contrario, una sesión con un bind hecho mediante un
+&lt;a href="https://go-authn.github.io/docs/0.3/es/authnd/tokens/"&gt;token OAUTHBEARER&lt;/a&gt; —de vida corta, y
+posiblemente de un solo factor— podría convertirlo en una contraseña permanente que
+además sirve para &lt;code&gt;kinit&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Es el comportamiento de ppolicy de OpenLDAP con &lt;code&gt;pwdSafeModify&lt;/code&gt; activado, con los
+códigos de resultado que devuelve su &lt;code&gt;ppolicy.c&lt;/code&gt;. El RFC 3062 §3 lo permite: &amp;ldquo;If
+oldPasswd is not present, the server MAY use other policy to determine whether or
+not to change the password.&amp;rdquo;&lt;/p&gt;
+&lt;h2 data-hextra-search-id="with-ldappasswd"&gt;Con &lt;code&gt;ldappasswd&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="with-ldappasswd"&gt;&lt;/span&gt;
+&lt;a href="#with-ldappasswd" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-t&lt;/code&gt; es un archivo que contiene la contraseña anterior, &lt;code&gt;-T&lt;/code&gt; uno que contiene la
+nueva; &lt;code&gt;-A&lt;/code&gt; y &lt;code&gt;-S&lt;/code&gt; las piden por teclado en su lugar.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -T alice.new
+Result: Insufficient access (50)
+Additional info: a password change must send the old password with the new one
+$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -t wrong.pwin -T alice.new
+Result: Server is unwilling to perform (53)
+Additional info: the old password sent is not the current one
+$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -t alice.pwin -T alice.new
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
+ldap_bind: Invalid credentials (49)
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.new
+dn:uid=alice,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La contraseña anterior deja de funcionar al instante, para un bind y —con un
+&lt;a href="https://go-authn.github.io/docs/0.3/es/authnd/kerberos/#a-password-changed-over-ldap"&gt;reino&lt;/a&gt;— para
+&lt;code&gt;kinit&lt;/code&gt;. El servidor lo indica en su salida:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;alice&amp;#39;s password change was refused: the old password did not verify: directory: wrong password
+alice changed their own password&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;authnd no genera contraseñas: una petición sin contraseña nueva se rechaza con
+&lt;code&gt;unwillingToPerform&lt;/code&gt; (&lt;em&gt;this server does not generate passwords: send the one you
+want&lt;/em&gt;). Una contraseña inventada por el servidor tendría que devolverse por la
+conexión, y el único lugar donde con seguridad acabaría es el historial de
+desplazamiento de un terminal.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="with-ldapmodify"&gt;Con &lt;code&gt;ldapmodify&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="with-ldapmodify"&gt;&lt;/span&gt;
+&lt;a href="#with-ldapmodify" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;El cambio es &lt;strong&gt;un delete del valor anterior seguido de un add del nuevo, en una
+sola petición&lt;/strong&gt;. El RFC 4511 §4.6 aplica los cambios de un modify en orden y de
+forma atómica, así que el delete —y con él toda la petición— falla a menos que el
+valor eliminado sea el que está guardado:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;dn: uid=alice,ou=people,dc=example,dc=org
+changetype: modify
+delete: userPassword
+userPassword: alice-test-pw
+-
+add: userPassword
+userPassword: alice-new-pw
+-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un &lt;code&gt;replace&lt;/code&gt; a secas no prueba nada, y cualquier cosa que no sea &lt;code&gt;userPassword&lt;/code&gt; no
+es algo que este servidor cambie:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f replace.ldif
+ldap_modify: Insufficient access (50)
+additional info: a password change must send the old password with the new one
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;
+$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f other.ldif
+ldap_modify: Server is unwilling to perform (53)
+additional info: this server changes userPassword and nothing else, not cn
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un modify que pide una contraseña &lt;strong&gt;y&lt;/strong&gt; alguna otra cosa se rechaza entero: un
+modify es atómico, y atender la mitad informaría de un éxito sobre algo que nadie
+pidió.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="who-can-change-what"&gt;Quién puede cambiar qué&lt;span class="hx:absolute hx:-mt-20" id="who-can-change-what"&gt;&lt;/span&gt;
+&lt;a href="#who-can-change-what" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;petición&lt;/th&gt;
+&lt;th&gt;respuesta&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;sin contraseña anterior, o un &lt;code&gt;replace: userPassword&lt;/code&gt; a secas&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;una contraseña anterior que no es la actual&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;la entrada de otra persona&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;, &lt;em&gt;a password may be changed only by the person it belongs to&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;una conexión anónima&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;, &lt;em&gt;an anonymous connection has not said who it is&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;alguien sin ninguna contraseña —solo puede haber hecho el bind con un token—&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;: un token bearer no es una contraseña, y no fija la primera. La fija un administrador en la configuración&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;alguien servido desde un bloque &lt;code&gt;users&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;: authnd lee esos orígenes y no escribe en ellos&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;el archivo no se puede escribir&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;other&lt;/code&gt; (80), &lt;em&gt;the password could not be written&lt;/em&gt;; el motivo figura en la salida del servidor&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;La penúltima, con el binario de la versión, para dora, que procede de una base de
+datos SQLite:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=dora,ou=people,dc=example,dc=org -y dora.pwin -t dora.pwin -T dora.new
+Result: Server is unwilling to perform (53)
+Additional info: dora is served from a sqlite database, which this server reads and does not write&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La persona se identifica &lt;strong&gt;por identidad, no por DN&lt;/strong&gt;: el nombre propio de la sesión
+debe ser exactamente el del destino, byte a byte, así que una sesión con un bind
+como &lt;code&gt;uid=Backup&lt;/code&gt; no puede cambiar la contraseña de &lt;code&gt;backup&lt;/code&gt; aunque los dos DN se
+consideren iguales al compararlos. Eso y el
+&lt;a href="https://go-authn.github.io/docs/0.3/es/authnd/people/#order-and-the-one-exception"&gt;rechazo de nombres que solo difieren en mayúsculas y minúsculas&lt;/a&gt;
+son dos controles que no dependen el uno del otro.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="where-the-new-password-is-written"&gt;Dónde se escribe la contraseña nueva&lt;span class="hx:absolute hx:-mt-20" id="where-the-new-password-is-written"&gt;&lt;/span&gt;
+&lt;a href="#where-the-new-password-is-written" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;De vuelta en &lt;strong&gt;el archivo que declara a la persona&lt;/strong&gt;, y en ningún otro sitio:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;un bloque &lt;code&gt;user&lt;/code&gt; con &lt;code&gt;password_file&lt;/code&gt; reescribe &lt;strong&gt;ese archivo&lt;/strong&gt;, conservando su
+propietario y su grupo cuando el proceso puede, y con su modo restringido a 0600
+como máximo, nunca ampliado;&lt;/li&gt;
+&lt;li&gt;un bloque &lt;code&gt;user&lt;/code&gt; con &lt;code&gt;password&lt;/code&gt; en línea reescribe el archivo de configuración
+con el nuevo valor, conservando sus comentarios, su orden y su modo;&lt;/li&gt;
+&lt;li&gt;a un bloque &lt;code&gt;user&lt;/code&gt; con solo un &lt;code&gt;nt_hash&lt;/code&gt; no se le da una contraseña: eso cambiaría
+con qué puede probar quién es la persona, lo cual es un cambio de la
+configuración.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Cada escritura va a un archivo temporal &lt;strong&gt;en el mismo directorio&lt;/strong&gt; y después se
+renombra, de modo que un disco lleno o un fallo dejan la contraseña anterior, no un
+archivo vacío. Eso requiere acceso de escritura al directorio. Con la unidad
+empaquetada, &lt;code&gt;ProtectSystem=strict&lt;/code&gt; lo retira, y un cambio se rechaza así:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f safe.ldif
+ldap_modify: Other (e.g., implementation specific) error (80)
+additional info: the password could not be written
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;con el motivo en la salida del servidor:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-863420940: permission denied&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Así que guarde las contraseñas en un directorio propio, en el que el servicio pueda
+escribir, y la configuración en solo lectura para él: el
+&lt;a href="https://go-authn.github.io/docs/0.3/es/authnd/install/#the-configuration-directory"&gt;drop-in &lt;code&gt;ReadWritePaths=&lt;/code&gt;&lt;/a&gt;.
+Una persona cuya contraseña está escrita en línea necesitaría que el propio
+&lt;code&gt;/etc/authnd&lt;/code&gt; fuera escribible, lo que además permitiría al servicio reescribir su
+propia configuración.&lt;/p&gt;
+&lt;p&gt;Tras una escritura correcta, los archivos de configuración se vuelven a leer &lt;strong&gt;solo
+para los bloques &lt;code&gt;user&lt;/code&gt;&lt;/strong&gt;: una modificación ajena que espera en el disco no entra en
+vigor a medias porque alguien haya cambiado una contraseña. Todo lo demás sigue
+esperando a un reinicio. Aun así, los archivos se leen enteros, de modo que si uno
+de ellos ya no carga, la contraseña se escribe y al cliente se le dice &lt;em&gt;the password
+was written but this server did not reload it&lt;/em&gt;: el servidor en ejecución conserva la
+anterior hasta que se reinicia.&lt;/p&gt;</description></item></channel></rss>

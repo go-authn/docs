@@ -1,0 +1,118 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Refus en Cas De Doute</title><link>https://go-authn.github.io/docs/0.3/fr/tags/refus-en-cas-de-doute/</link><description>Recent content in Refus en Cas De Doute on go-authn</description><generator>Hugo -- gohugo.io</generator><language>fr</language><atom:link href="https://go-authn.github.io/docs/0.3/fr/tags/refus-en-cas-de-doute/index.xml" rel="self" type="application/rss+xml"/><item><title>Quand une liste expire</title><link>https://go-authn.github.io/docs/0.3/fr/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.3/fr/authn-revokd/lapse/</guid><description>
+&lt;p&gt;Une vérification de révocation qui laisse tout passer quand la liste ne peut pas être obtenue est
+celle que déjoue un attaquant capable de bloquer la liste. Donc quand authn-revokd ne détient
+aucune liste en vigueur d&amp;rsquo;une source, ce que protège la liste de cette source est
+&lt;strong&gt;refusé&lt;/strong&gt;, jusqu&amp;rsquo;à ce qu&amp;rsquo;une liste en vigueur arrive de nouveau.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;sortie&lt;/th&gt;
+&lt;th&gt;tant qu&amp;rsquo;une source n&amp;rsquo;a aucune liste en vigueur&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;une KRL, pour &lt;code&gt;sshd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;authn-revokd écrit une KRL qui &lt;strong&gt;révoque la clé de l&amp;rsquo;AC de la source&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;une CRL, pour un serveur TLS&lt;/td&gt;
+&lt;td&gt;la CRL expirée est laissée en place ; OpenSSL refuse de lui-même une CRL expirée&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;Pour sshd : révoquer l&amp;rsquo;AC elle-même&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; n&amp;rsquo;a aucune notion de l&amp;rsquo;expiration d&amp;rsquo;une liste : il continuerait indéfiniment à lire le dernier fichier
+écrit. Mais il vérifie la &lt;strong&gt;clé de l&amp;rsquo;AC&lt;/strong&gt; de chaque certificat par rapport à
+&lt;code&gt;RevokedKeys&lt;/code&gt;. Donc, à la place de la liste dont il ne peut pas se porter garant, authn-revokd
+met la propre clé de l&amp;rsquo;AC dans la sortie, et chaque certificat que cette AC a signé est
+refusé, et rien d&amp;rsquo;autre.&lt;/p&gt;
+&lt;p&gt;Ici, l&amp;rsquo;émetteur est arrêté, et la source KRL a &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;, si bien que la
+copie détenue expire en moins d&amp;rsquo;une minute au lieu d&amp;rsquo;une heure. La source CRL n&amp;rsquo;a pas de
+&lt;code&gt;max_age&lt;/code&gt;, et sa copie est toujours en vigueur :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt; est &lt;code&gt;not current&lt;/code&gt;, et sa sortie refuse en cas de doute ; &lt;code&gt;bridge-x509&lt;/code&gt;
+est seulement &lt;code&gt;not fetched&lt;/code&gt;, et sa CRL est laissée telle quelle
+(&lt;a href="https://go-authn.github.io/docs/0.3/fr/authn-revokd/verification/#what--once-reports"&gt;ce que signale &lt;code&gt;-once&lt;/code&gt;&lt;/a&gt;).
+&lt;code&gt;SHA256:Fpa/...&lt;/code&gt; est l&amp;rsquo;AC SSH du bridge. Un certificat qu&amp;rsquo;elle a signé est désormais
+révoqué pour tout ce qui lit le fichier. Les commandes ci-dessus ont tourné dans le
+répertoire &lt;code&gt;revokd&lt;/code&gt;, où se trouve &lt;code&gt;out/&lt;/code&gt; ; celle-ci tourne à côté, dans le répertoire
+qui contient les certificats de test, comme sur
+&lt;a href="https://go-authn.github.io/docs/0.3/fr/sshcert/authorize/#krl"&gt;la page de sshcert-authorize&lt;/a&gt; : le même
+fichier y est donc &lt;code&gt;../revokd/out/sshd.krl&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Le commentaire dit &lt;code&gt;FAIL CLOSED&lt;/code&gt; et nomme la source, si bien qu&amp;rsquo;une personne qui lit
+&lt;code&gt;ssh-keygen -Q -l&lt;/code&gt; voit pourquoi. La date du fichier est 1970 quand toutes les sources ont
+expiré. La sortie est écrite &lt;strong&gt;dès qu&amp;rsquo;une synchronisation s&amp;rsquo;en aperçoit&lt;/strong&gt;, c&amp;rsquo;est-à-dire, pour le démon,
+à son prochain &lt;code&gt;refresh&lt;/code&gt;, et pour le minuteur, à son prochain déclenchement. Quand une liste en vigueur
+arrive de nouveau, la synchronisation suivante l&amp;rsquo;écrit à la place de la clé de l&amp;rsquo;AC, et les
+certificats de l&amp;rsquo;AC sont de nouveau acceptés.&lt;/p&gt;
+&lt;p&gt;La même chose se produit &lt;strong&gt;avant la première liste&lt;/strong&gt; : une source jamais récupérée n&amp;rsquo;a rien
+d&amp;rsquo;en vigueur, et son AC est révoquée dès la première écriture. Une nouvelle installation refuse
+les certificats de l&amp;rsquo;AC jusqu&amp;rsquo;à ce que sa première liste se vérifie, plutôt que de les accepter
+sans contrôle.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;Chaque AC pour elle-même&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Dans une sortie qui fusionne plusieurs sources, seule l&amp;rsquo;AC de la source expirée est
+révoquée. Les autres gardent leurs listes. Une liste qui ne peut pas être fusionnée (au-delà des
+plages de numéros de série que conserve go-authn/krl) refuse en cas de doute pour sa propre AC seulement, et
+&lt;code&gt;/healthz&lt;/code&gt; la nomme. Ce n&amp;rsquo;est que si les listes fusionnent chacune seule mais pas ensemble que toutes les AC
+de la sortie sont révoquées, et le commentaire le dit
+(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;). Garder l&amp;rsquo;ancien fichier à la place
+laisserait passer inaperçue une expiration ultérieure.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;Pour un serveur TLS : la CRL elle-même&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Une CRL dit déjà quand elle cesse d&amp;rsquo;être en vigueur, et OpenSSL en refuse une qui a dépassé
+son &lt;code&gt;nextUpdate&lt;/code&gt; (« CRL has expired »). authn-revokd laisse donc la dernière CRL vérifiée
+en place, et le serveur TLS refuse de lui-même en cas de doute. C&amp;rsquo;est aussi pourquoi
+&lt;code&gt;max_age&lt;/code&gt; est refusé sur une source qui alimente une sortie CRL : un serveur qui a chargé
+la CRL la garde jusqu&amp;rsquo;à son &lt;code&gt;nextUpdate&lt;/code&gt;, quoi qu&amp;rsquo;authn-revokd écrive.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;Les lecteurs qui vérifient eux-mêmes l&amp;rsquo;expiration&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;La KRL fusionnée porte une expiration, la première de celles de ses entrées en vigueur. Un lecteur
+qui la vérifie, comme &lt;code&gt;ssh_krl_file&lt;/code&gt; de go-fileshare ou
+&lt;a href="https://go-authn.github.io/docs/0.3/fr/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;,
+voit l&amp;rsquo;arrêt d&amp;rsquo;authn-revokd comme il verrait l&amp;rsquo;arrêt de l&amp;rsquo;émetteur.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Cela ne fonctionne que tant qu&amp;rsquo;authn-revokd tourne&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;C&amp;rsquo;est authn-revokd qui fait refuser le fichier en cas de doute. Tant qu&amp;rsquo;il est arrêté, sshd continue de
+lire le dernier fichier écrit, en vigueur ou non. D&amp;rsquo;où &lt;code&gt;Restart=always&lt;/code&gt; sur
+le démon, et la surveillance de l&amp;rsquo;unité, ou du minuteur, ou de &lt;code&gt;/healthz&lt;/code&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>
