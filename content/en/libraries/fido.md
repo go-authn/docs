@@ -12,7 +12,7 @@ register a credential, ask for a signature and exchange a PIN for a token — in
 pure Go, on any operating system.
 
 ```sh
-go get github.com/go-authn/fido@v0.6.1
+go get github.com/go-authn/fido@v0.6.2
 ```
 
 Nothing here is platform-specific. A `Transport` moves 64-byte reports to and
@@ -129,6 +129,15 @@ unplugged and plugged back in. A counter that reaches zero blocks it for good:
 only a reset lifts that, and a reset erases every credential on the key. Ask
 `Key.PINRetries` before prompting anybody: it says how many retries are left,
 and whether the key is waiting to be unplugged.
+
+When a key refuses a PIN, the error says which of the two it is.
+CTAP2_ERR_PIN_AUTH_BLOCKED (`0x34`), which unplugging lifts, reads
+`too many wrong PINs in a row; unplug the key and plug it in again (0x34)`;
+CTAP2_ERR_PIN_BLOCKED (`0x32`), which only a reset lifts, reads
+`the PIN is blocked: no tries are left, and only a reset, which erases the credentials, unblocks it (0x32)`.
+Before v0.6.2 the two sentences were swapped: a key that only had to be
+unplugged was called locked, and somebody told that might reset it and lose
+every credential on it.
 {{< /callout >}}
 
 ## What it is checked against
@@ -150,4 +159,4 @@ verified against the public key it handed out; that run is not part of CI.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.1](https://pkg.go.dev/github.com/go-authn/fido@v0.6.1)
+[pkg.go.dev/github.com/go-authn/fido@v0.6.2](https://pkg.go.dev/github.com/go-authn/fido@v0.6.2)

@@ -9,11 +9,11 @@ tags: [sécurité, versions]
 Chaque version d'authnd, authn-bridge, authn-revokd et sshcert publie six
 binaires statiques (`CGO_ENABLED=0` : linux, darwin et windows, sur amd64 et
 arm64), un fichier `SHA256SUMS`, et une attestation de provenance de compilation pour chaque
-binaire. Les exemples ci-dessous utilisent authn-bridge v0.20.1 ; les autres programmes fonctionnent de la même
+binaire. Les exemples ci-dessous utilisent authn-bridge v0.22.0 ; les autres programmes fonctionnent de la même
 façon avec leur propre dépôt et leur propre nom.
 
 ```sh
-gh release download v0.20.1 --repo go-authn/bridge
+gh release download v0.22.0 --repo go-authn/bridge
 ```
 
 ## 1. La somme de contrôle {#1-the-checksum}
@@ -63,16 +63,16 @@ go version -m authn-bridge-linux-amd64
 
 ```
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.20.1	
+	mod	github.com/go-authn/bridge	v0.22.0	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=d30d3b52b644c7db74c431c2a07b8d1aaeb1c0ff
+	build	vcs.revision=e1c4fdc3ae1cdddf2ccb4e64bda4317b5bf4f3a8
 	build	vcs.modified=false
 ```
 
 (lignes réduites à celles qui comptent). La ligne `mod` doit être exactement l'étiquette,
 et `vcs.modified` doit valoir `false` : une compilation depuis un arbre avec des
-changements non commités indique `true`, et sa version se lit `v0.20.1+dirty`. Le
+changements non commités indique `true`, et sa version se lit `v0.22.0+dirty`. Le
 workflow de publication refuse de publier à moins que **chacun** des six binaires
 ne passe les deux vérifications, et à moins que le programme n'affiche l'étiquette comme dernier mot de
 sa ligne de version :
@@ -81,9 +81,9 @@ sa ligne de version :
 $ authnd --version
 authnd version v0.10.1
 $ authn-bridge --version
-authn-bridge version v0.20.1
+authn-bridge version v0.22.0
 $ authn-revokd -version
-authn-revokd v0.6.2
+authn-revokd v0.6.3
 ```
 
 authnd et authn-bridge prennent `--version` ; authn-revokd prend `-version`, la

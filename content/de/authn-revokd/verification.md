@@ -25,10 +25,10 @@ Eine von einem anderen Schlüssel signierte Liste wird abgelehnt:
 
 ```
 $ authn-revokd -config revokd-other.hcl -once
-bridge-ssh: revocation: the KRL's signature does not verify by SHA256:SLbG7N+YZ/TQ6B3I1DQLYo2/6In4OWx5GYkRfKIxpxo: public key does not match
-bridge-x509: version 1791665695047, issued 2026-10-10T20:54:55Z, expires 2026-10-10T21:54:55Z
-output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/other.krl
-output tls: wrote /tmp/docs-patch-a2daf7c8/revokd/out/other.crl
+bridge-ssh: revocation: the KRL's signature does not verify by SHA256:xm8VDcZUh44N+RQSiPbroPInzkMhN/KCWI/TC+9HPNQ: public key does not match
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/other.krl
+output tls: wrote /tmp/authn/revokd/out/other.crl
 authn-revokd: not current: bridge-ssh
 ```
 
@@ -88,23 +88,22 @@ Nächstes kommt), und einer Kopie, die die Prüfung nicht mehr besteht, wird nic
 nächste zu ordnen, und das Log sagt es.
 
 Hier wird eine Quelle nach einem Neustart auf eine Liste gerichtet, die ein früherer Bridge-Prozess
-vierzehn Sekunden zuvor bereitgestellt hat, noch signiert und noch nicht abgelaufen:
+neunzehn Sekunden zuvor bereitgestellt hat, noch signiert und noch nicht abgelaufen:
 
 ```
 $ authn-revokd -config revokd.hcl -once
-bridge-ssh: version 0, issued 2026-10-10T20:54:50Z, expires 2026-10-10T21:54:50Z
-bridge-x509: version 1791665695047, issued 2026-10-10T20:54:55Z, expires 2026-10-10T21:54:55Z
-output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
-output tls: wrote /tmp/docs-patch-a2daf7c8/revokd/out/bridge.crl
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
 $ authn-revokd -config revokd-old.hcl -once
-bridge-ssh: file:///tmp/docs-patch-a2daf7c8/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-10T20:54:36Z, the copy held at 2026-10-10T20:54:50Z
-authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-10T21:54:50Z)
+bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-11T09:50:05Z, the copy held at 2026-10-11T09:50:24Z
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
-# Generated at 20261010T225450
+# Generated at 20261011T115024
 # Comment: authn-revokd sshd
 ```
 
+Der erste Lauf hat keine Ausgabe geschrieben: Die Dateien enthielten diese Listen bereits.
 Die ältere Liste wird abgelehnt, und die Ausgabe behält die neuere. Der Prozess, der
 sie abgelehnt hat, hatte die neuere Liste nie gesehen: Er hat sie aus `state_dir` zurückgelesen.
 
@@ -130,7 +129,7 @@ Hier ist der Aussteller gestoppt, während beide gehaltenen Listen noch aktuell 
 $ authn-revokd -config revokd.hcl -once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
-authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-10T21:54:50Z), bridge-x509 (the list held is current until 2026-10-10T21:54:55Z)
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z), bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
 ```
 
 Dieser Durchlauf ließ `sshd.krl`, wie es war. Sobald eine gehaltene Liste verfällt, wird dieselbe Quelle

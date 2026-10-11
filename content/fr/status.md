@@ -5,19 +5,19 @@ description: "Les versions que décrivent ces pages, ce que chaque version a ajo
 tags: [état, versions]
 ---
 
-Ces pages sont la version **0.1** de la documentation, et décrivent :
+Ces pages sont la version **0.2** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
 | authnd | **v0.10.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.20.1** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.2** | `github.com/go-authn/revocation` |
-| sshcert-authorize | **v0.1.5** | `github.com/go-authn/sshcert` |
+| authn-bridge | **v0.22.0** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
+| sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 Les versions des bibliothèques sont sur [leur propre page]({{< relref "/libraries/_index.md" >}}).
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
-de sorte que les pages qu'une personne trouve sous `/docs/0.1/` continuent de décrire ce
-qu'elle a installé.
+de sorte que les pages qu'une personne trouve sous `/docs/0.2/` continuent de décrire ce
+qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`.
 
 ## Ce que chaque version a ajouté {#what-each-release-added}
 
@@ -69,6 +69,9 @@ des dépendances sont omises.
 | v0.19.3 | binaires de version, `SHA256SUMS` et provenance de compilation à chaque étiquette |
 | v0.20.0 | la commande s'appelle `authn-bridge` ; une unité systemd durcie et un guide d'installation |
 | v0.20.1 | des commentaires et un message de refus qui n'étaient plus vrais ; le README dit tout ce que `RevokePerson` révoque |
+| v0.21.0 | les indicateurs de ressource de la RFC 8707 : un client dont l'`audience` nomme plusieurs serveurs de ressources peut demander un jeton adressé à un seul. Étiquetée une heure avant la v0.20.1, qui les contient aussi, et sans les corrections de la v0.20.1 |
+| v0.21.1 | golang.org/x/net v0.60.0, pour ses avis de sécurité HTTP/2, et Go 1.27.2 ; de nouveau les corrections de la v0.20.1 ; des domaines d'exemple aux noms de la RFC 2606 |
+| v0.22.0 | le jeton d'accès ne porte plus `auth_time` ni `acr` (le jeton d'identité, si), pour qu'un jeton ES256 tienne dans les 1023 caractères d'OpenSSH jusqu'au 99e centile des scopes de RENATER |
 
 ### authn-revokd {#authn-revokd}
 
@@ -82,6 +85,7 @@ des dépendances sont omises.
 | v0.6.0 | la commande s'appelle `authn-revokd` ; des unités systemd et un guide d'installation ; `SIGHUP` synchronise immédiatement |
 | v0.6.1 | `-version` écrit sur la sortie standard |
 | v0.6.2 | `-once` distingue une récupération échouée d'une liste expirée ; une liste signée par une autre clé n'est plus appelée une concurrence ; `-help` sort avec 0 |
+| v0.6.3 | des domaines d'exemple aux noms de la RFC 2606, dans les exemples et la documentation ; aucun changement de comportement |
 
 ### sshcert {#sshcert}
 
@@ -91,6 +95,7 @@ des dépendances sont omises.
 | v0.1.2 | binaires de version, `SHA256SUMS` et provenance de compilation à chaque étiquette |
 | v0.1.4 | la publication vérifie les informations de compilation de chaque binaire |
 | v0.1.5 | `-version` affiche la version du module d'une compilation `go install`, et non `dev` |
+| v0.1.6 | des domaines d'exemple aux noms de la RFC 2606, dans la documentation ; aucun changement de comportement |
 
 ## Pas encore implémenté {#not-implemented-yet}
 

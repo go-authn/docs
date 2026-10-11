@@ -13,7 +13,7 @@ sends people to their own institution's identity provider, and reads back what
 that provider says.
 
 ```sh
-go get github.com/go-authn/saml@v0.4.0
+go get github.com/go-authn/saml@v0.4.1
 ```
 
 It is the half of [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -230,4 +230,4 @@ The coverage lane's floor is 92%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/saml@v0.4.0](https://pkg.go.dev/github.com/go-authn/saml@v0.4.0)
+[pkg.go.dev/github.com/go-authn/saml@v0.4.1](https://pkg.go.dev/github.com/go-authn/saml@v0.4.1)

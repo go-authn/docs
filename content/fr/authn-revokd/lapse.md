@@ -32,14 +32,14 @@ copie détenue expire en moins d'une minute au lieu d'une heure. La source CRL n
 $ authn-revokd -config revokd-maxage.hcl -once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
-output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
-authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-10T21:54:55Z)
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
 # Generated at 19700101T010000
 # Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
 
-hash: SHA256:2zKzlmqkMRAvBYIAisepe9ulFWDmDbTVCjcfCylTkOo # ssh-ed25519
+hash: SHA256:Fpa/Ku2Wv1EDCR+KSsqZ2eECTM1zftiBWj01Lr+NO2Q # ssh-ed25519
 $ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
 ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 ```
@@ -47,7 +47,7 @@ ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 `bridge-ssh` est `not current`, et sa sortie refuse en cas de doute ; `bridge-x509`
 est seulement `not fetched`, et sa CRL est laissée telle quelle
 ([ce que signale `-once`]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
-`SHA256:2zKz...` est l'AC SSH du bridge. Un certificat qu'elle a signé est désormais
+`SHA256:Fpa/...` est l'AC SSH du bridge. Un certificat qu'elle a signé est désormais
 révoqué pour tout ce qui lit le fichier. Les commandes ci-dessus ont tourné dans le
 répertoire `revokd`, où se trouve `out/` ; celle-ci tourne à côté, dans le répertoire
 qui contient les certificats de test, comme sur

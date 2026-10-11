@@ -12,12 +12,12 @@ hosts a certificate is meant for into an extension,
 `ssh-domain-grant@core.aai.geant.org`, and `sshd` ignores it. go-authn/sshcert
 reads and writes that extension, and its command, `sshcert-authorize`, is what
 `sshd` runs to enforce it. Pure Go, `CGO_ENABLED=0`. These pages describe
-v0.1.5.
+v0.1.6.
 
 ```
-$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.5
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.6
 $ sshcert-authorize -version
-sshcert-authorize v0.1.5
+sshcert-authorize v0.1.6
 ```
 
 | | |

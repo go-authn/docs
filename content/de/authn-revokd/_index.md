@@ -12,12 +12,12 @@ aktuelle Liste. authn-revokd schließt beide Lücken für die Listen, die
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}}) veröffentlicht: Es
 ruft jede Liste ab, behält sie nur, wenn sie die Prüfung besteht, schreibt sie dorthin, wo `sshd` oder ein
 TLS-Server sie liest, und schreibt, wenn eine Liste verfällt, eine, die **die CA selbst
-widerruft**. Reines Go, `CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.6.2.
+widerruft**. Reines Go, `CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.6.3.
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.2
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.3
 $ authn-revokd -version
-authn-revokd v0.6.2
+authn-revokd v0.6.3
 $ authn-revokd -help
 Usage of authn-revokd:
   -config string
@@ -40,13 +40,13 @@ Gegen eine Test-authn-bridge auf Loopback, mit einer KRL-Quelle und einer CRL-Qu
 
 ```
 $ authn-revokd -config revokd.hcl -once
-bridge-ssh: version 0, issued 2026-10-10T20:57:59Z, expires 2026-10-10T21:57:59Z
-bridge-x509: version 1791665879411, issued 2026-10-10T20:57:59Z, expires 2026-10-10T21:57:59Z
-output sshd: wrote /tmp/docs-patch-a2daf7c8/revokd/out/sshd.krl
-output tls: wrote /tmp/docs-patch-a2daf7c8/revokd/out/bridge.crl
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+output tls: wrote /tmp/authn/revokd/out/bridge.crl
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
-# Generated at 20261010T225759
+# Generated at 20261011T115024
 # Comment: authn-revokd sshd
 ```
 

@@ -117,7 +117,40 @@ signé avec `signing_key_file` (RS256) ou `access_token_key_file` (ES256),
 `typ: at+jwt`, valide `token_lifetime` (une heure par défaut). Il porte ce dont un
 serveur de ressources a besoin pour décider sans demander à personne : `preferred_username`,
 `groups`, `idp` (l'entity ID de l'IdP qui s'est porté garant), `scope`, `client_id`,
-`auth_time`, et `session_end` quand l'IdP a dit quand sa session prend fin.
+et `session_end` quand l'IdP a dit quand sa session prend fin.
+
+### Ce qu'il ne contient pas, et pourquoi {#what-it-leaves-out}
+
+**Ni `auth_time` ni `acr`**, bien que la RFC 9068 autorise les deux. Ils restent
+dans le jeton d'identité, où OIDC Core les place. Rien ne les lit dans un jeton
+d'accès : ni ce fournisseur, qui retrouve un jeton par son `jti`, ni
+go-fileshare. Or un jeton d'accès est aussi collé comme réponse SSH
+keyboard-interactive (mccli de ssh-oidc, vérifié par motley-cue sur
+`/userinfo`), et OpenSSH en lit 1023 caractères ; l'`acr` d'un IdP à lui seul,
+`urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport`, en occupe
+environ 90. Avant la v0.22.0, le jeton d'accès portait les deux.
+
+La longueur d'un jeton d'accès ES256 (`access_token_key_file`) pour un eppn long
+et trois entitlements AARC, mesurée par `TestES256AccessTokens` d'authn-bridge
+avec un émetteur de longueur réelle, face aux longueurs des `shibmd:Scope` des
+métadonnées de RENATER (743 scopes) :
+
+| longueur du scope | | caractères |
+|---|---|---|
+| 13 | médiane | 885 |
+| 22 | 95e centile | 945 |
+| 29 | 99e centile | 992 |
+| 44 | le plus long | **1092 : au-delà** |
+
+Avant la v0.22.0, le même jeton faisait 1014 / 1074 / 1121 / 1221 caractères :
+au-delà dès le 95e centile. Ce qui ne tient toujours pas, ce sont les scopes les
+plus longs et surtout les groupes nombreux : chaque entitlement ajoute son URN
+entière, et rien ne borne le nombre qu'un IdP en envoie. Un jeton d'accès RS256,
+signé avec une clé de 3072 bits, fait environ 1150 caractères avant le moindre
+groupe : un jeton destiné à SSH est donc signé en ES256. Au-delà de 1023
+caractères, mccli demande à motley-cue un mot de passe à usage unique à la
+place, ce que motley-cue autorise par défaut ; un jeton collé dans un `ssh`
+ordinaire doit tenir.
 
 Un jeton portant l'une des portées propres au fournisseur (`ssh`, `nfs`,
 `app_password`, `wireguard`, `wireguard_peers`) est adressé **au seul
@@ -130,7 +163,7 @@ HTTP/1.1 401 Unauthorized
 Content-Type: text/plain; charset=utf-8
 Www-Authenticate: Bearer error="invalid_token"
 X-Content-Type-Options: nosniff
-Date: Sat, 10 Oct 2026 19:18:09 GMT
+Date: Sun, 11 Oct 2026 09:48:07 GMT
 Content-Length: 23
 
 the token is not valid

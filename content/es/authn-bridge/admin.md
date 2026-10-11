@@ -59,15 +59,15 @@ Con `reflection = true`, contra un proveedor de prueba:
 ```
 $ grpcurl -plaintext -unix $PWD/run/admin.sock bridge.admin.v1.AdminService/Status
 {
-  "version": "v0.20.1",
+  "version": "v0.22.0",
   "issuer": "http://127.0.0.1:28473",
-  "started": "2026-10-10T20:54:06.593823Z",
+  "started": "2026-10-11T09:48:00.318671Z",
   "federation": {
-    "metadataUrl": "file:///tmp/docs-patch-a2daf7c8/fed/metadata.xml",
+    "metadataUrl": "file:///tmp/authn/fed/metadata.xml",
     "idps": 1,
     "usable": 1,
-    "validUntil": "2026-10-17T20:53:09Z",
-    "lastRefresh": "2026-10-10T20:54:06.594642Z"
+    "validUntil": "2026-10-18T09:46:24Z",
+    "lastRefresh": "2026-10-11T09:48:00.319741Z"
   },
   "counts": {}
 }
@@ -82,7 +82,7 @@ $ grpcurl -plaintext -unix -d '{"username":"alice@univ-example.example","reason"
     "username": "alice@univ-example.example",
     "reason": "left the lab",
     "by": "uid=501",
-    "since": "2026-10-11T09:01:18.445930Z"
+    "since": "2026-10-11T09:48:39.136975Z"
   },
   "revoked": {}
 }
@@ -92,7 +92,7 @@ $ grpcurl -plaintext -unix -d '{"entity_id":"https://idp.univ-example.example/id
     "entityId": "https://idp.univ-example.example/idp/shibboleth",
     "reason": "compromised",
     "by": "uid=501",
-    "since": "2026-10-11T09:01:18.498410Z",
+    "since": "2026-10-11T09:48:39.192047Z",
     "until": "2026-10-12T08:00:00Z"
   },
   "revoked": {}
@@ -168,12 +168,12 @@ debe ser la pública (una configuración que la hace pública se rechaza):
 
 ```
 $ curl -s http://127.0.0.1:28475/metrics | grep "^bridge_"
-bridge_build_info{version="v0.20.1",goversion="go1.27.2",revision="d30d3b52b644c7db74c431c2a07b8d1aaeb1c0ff"} 1
-bridge_start_time_seconds 1791665646
+bridge_build_info{version="v0.22.0",goversion="go1.27.2",revision="e1c4fdc3ae1cdddf2ccb4e64bda4317b5bf4f3a8"} 1
+bridge_start_time_seconds 1791712080
 bridge_ready 1
-bridge_metadata_valid_until_timestamp_seconds 1792270389
+bridge_metadata_valid_until_timestamp_seconds 1792316784
 bridge_metadata_idps 1
-bridge_metadata_last_refresh_timestamp_seconds 1791665646
+bridge_metadata_last_refresh_timestamp_seconds 1791712080
 bridge_metadata_refreshes_total{result="failed"} 0
 bridge_metadata_refreshes_total{result="ok"} 1
 bridge_logins_in_progress 0

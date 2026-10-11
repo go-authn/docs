@@ -27,9 +27,9 @@ explica cómo comprobar ambos. O compílelo, lo que registra la versión en el
 binario:
 
 ```
-$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.20.1
+$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.22.0
 $ authn-bridge --version
-authn-bridge version v0.20.1
+authn-bridge version v0.22.0
 ```
 
 La ruta importa: desde la v0.20.0 el programa está en `internal/app` y el
@@ -61,9 +61,10 @@ Ejecute `keygen` como el usuario del servicio, para que sea propietario de lo qu
 escribe. Se niega a sobrescribir un archivo que ya existe:
 
 ```
+$ mkdir var/nfs-ca
 $ authn-bridge keygen --key var/oidc.key --salt var/salt --ssh-ca var/ssh-ca --x509-ca var/nfs-ca
 wrote var/ssh-ca; its public half, for go-fileshare's trusted_user_ca_file:
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHFRUBlwxcGmmqW2lBI9bJyN4LL0/4U0NZwOOwBFPWw9 go-authn-bridge-ca
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBNOYvUrAPdRTB+38aml+twPN+2k1shD3l62v8NxrIje go-authn-bridge-ca
 wrote var/oidc.key
 wrote var/nfs-ca/ca.crt and its key; the certificate is what go-fileshare trusts for NFS over TLS
 wrote var/salt -- keep it: a new salt is a new subject for everybody

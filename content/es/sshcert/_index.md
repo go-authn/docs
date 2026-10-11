@@ -11,12 +11,12 @@ los hosts que confían en esa CA.** La CA SSH de la EuroHPC Federation Platform
 escribe en una extensión, `ssh-domain-grant@core.aai.geant.org`, los hosts a los que
 está destinado un certificado, y `sshd` la ignora. go-authn/sshcert lee y escribe esa
 extensión, y su comando, `sshcert-authorize`, es lo que `sshd` ejecuta para hacerla
-cumplir. Go puro, `CGO_ENABLED=0`. Estas páginas describen la v0.1.5.
+cumplir. Go puro, `CGO_ENABLED=0`. Estas páginas describen la v0.1.6.
 
 ```
-$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.5
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.6
 $ sshcert-authorize -version
-sshcert-authorize v0.1.5
+sshcert-authorize v0.1.6
 ```
 
 | | |

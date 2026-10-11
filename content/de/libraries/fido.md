@@ -12,7 +12,7 @@ ein Credential registrieren, eine Signatur anfordern und eine PIN gegen ein Toke
 reinem Go, auf jedem Betriebssystem.
 
 ```sh
-go get github.com/go-authn/fido@v0.6.1
+go get github.com/go-authn/fido@v0.6.2
 ```
 
 Nichts hier ist plattformspezifisch. Ein `Transport` bewegt 64-Byte-Reports zu und
@@ -129,6 +129,15 @@ Schlüssel abgezogen und wieder eingesteckt wird. Ein Zähler, der null erreicht
 endgültig: Nur ein Reset hebt das auf, und ein Reset löscht jedes Credential auf dem
 Schlüssel. Fragen Sie `Key.PINRetries` ab, bevor Sie jemanden zur Eingabe auffordern: Es
 sagt, wie viele Versuche bleiben und ob der Schlüssel darauf wartet, abgezogen zu werden.
+
+Lehnt ein Schlüssel eine PIN ab, sagt der Fehler, welcher der beiden Fälle vorliegt.
+CTAP2_ERR_PIN_AUTH_BLOCKED (`0x34`), den das Abziehen aufhebt, lautet
+`too many wrong PINs in a row; unplug the key and plug it in again (0x34)`;
+CTAP2_ERR_PIN_BLOCKED (`0x32`), den nur ein Reset aufhebt, lautet
+`the PIN is blocked: no tries are left, and only a reset, which erases the credentials, unblocks it (0x32)`.
+Vor v0.6.2 waren die beiden Sätze vertauscht: Ein Schlüssel, der nur abgezogen
+werden musste, galt als gesperrt, und wer das las, setzte ihn womöglich zurück und
+verlor jedes Credential darauf.
 {{< /callout >}}
 
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
@@ -150,4 +159,4 @@ gegen den öffentlichen Schlüssel geprüft wurde, den er herausgegeben hat; die
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.1](https://pkg.go.dev/github.com/go-authn/fido@v0.6.1)
+[pkg.go.dev/github.com/go-authn/fido@v0.6.2](https://pkg.go.dev/github.com/go-authn/fido@v0.6.2)
