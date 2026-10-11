@@ -3,7 +3,7 @@ title: "Tokens, Passwörter und Schlüssel"
 linkTitle: "Tokens"
 weight: 40
 description: "Was eine Anwendung von authn-bridge erhält: ID-Tokens und Access-Tokens, den Device Grant, Anwendungspasswörter für SMB und S3 sowie WireGuard-Schlüssel."
-tags: [authn-bridge, oidc, tokens, wireguard]
+tags: [authn-bridge, oidc, token, wireguard]
 ---
 
 Alle Zugangsdaten hier beginnen mit derselben Anmeldung bei der Einrichtung der Person.

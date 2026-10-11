@@ -3,7 +3,7 @@ title: "Wie eine Liste geprüft wird"
 linkTitle: "Prüfung"
 weight: 30
 description: "Was authn-revokd prüft, bevor es eine Liste behält: die Signatur, die Daten und dass sie nie älter ist als die Liste, die es hält, auch über Neustarts hinweg."
-tags: [authn-revokd, revocation, security]
+tags: [authn-revokd, widerruf, sicherheit]
 ---
 
 Eine Liste, die die Prüfung nicht besteht, wird nie geschrieben, bereitgestellt oder verwendet. Die letzte gute

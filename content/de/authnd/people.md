@@ -3,7 +3,7 @@ title: "Woher die Personen kommen"
 linkTitle: "Personen"
 weight: 20
 description: "user- und group-Blöcke, eine SQL-Datenbank, ein anderes LDAP-Verzeichnis: wie jede Quelle geschrieben wird, in welcher Reihenfolge sie gefragt werden und was jede einer Person erlaubt."
-tags: [authnd, configuration, sql, ldap]
+tags: [authnd, konfiguration, sql, ldap]
 ---
 
 Ein `user`-Block ist das ganze Verzeichnis für eine kleine Installation oder die Dienstkonten,

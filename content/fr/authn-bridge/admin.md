@@ -3,7 +3,7 @@ title: "L'API d'administration, la santé et les métriques"
 linkTitle: "API d'administration"
 weight: 70
 description: "Désactiver une personne ou un établissement par l'API d'administration gRPC d'authn-bridge, et les points d'accès de santé et de métriques à côté."
-tags: [authn-bridge, administration, grpc, metrics]
+tags: [authn-bridge, administration, grpc, métriques]
 ---
 
 Les deux sont désactivées sauf si la configuration les demande, et aucune n'est jamais sur

@@ -3,7 +3,7 @@ title: "Cuando una lista caduca"
 linkTitle: "Cuando una lista caduca"
 weight: 40
 description: "Lo que authn-revokd escribe para sshd cuando no tiene ninguna lista vigente de una CA: una KRL que revoca la propia clave de la CA, de modo que se rechaza cada certificado de esa CA."
-tags: [authn-revokd, revocation, fail closed, sshd]
+tags: [authn-revokd, revocación, denegación por defecto, sshd]
 ---
 
 Una comprobación de revocación que deja pasar todo cuando no se puede obtener la

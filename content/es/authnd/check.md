@@ -3,7 +3,7 @@ title: "check, antes de reiniciar algo a través de lo cual inician sesión las 
 linkTitle: "check"
 weight: 30
 description: "Qué abre authnd check, qué imprime sobre una configuración antes de servirla, cómo leerlo, y el único fallo que no puede ver."
-tags: [authnd, check, configuration]
+tags: [authnd, check, configuración]
 ---
 
 ```

@@ -3,7 +3,7 @@ title: "ldap — les octets d'un serveur LDAP"
 linkTitle: "ldap"
 weight: 60
 description: "go-authn/ldap est le protocole LDAP sous forme de bibliothèque serveur : le réseau, le filtre, les opérations et leurs limites, avec des gestionnaires qui décident de ce qui est répondu."
-tags: [libraries, ldap, directory]
+tags: [bibliothèques, ldap, annuaire]
 ---
 
 **Quels sont les octets d'un serveur LDAP ?** Une bibliothèque, pas un démon : le réseau,

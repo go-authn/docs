@@ -3,7 +3,7 @@ title: "Installer authn-bridge"
 linkTitle: "Installation"
 weight: 10
 description: "Un utilisateur statique, trois répertoires et une unité systemd durcie : authn-bridge, d'un binaire de version à un service en marche."
-tags: [authn-bridge, install, systemd]
+tags: [authn-bridge, installation, systemd]
 ---
 
 Le dépôt fournit l'unité et l'utilisateur sous lequel elle s'exécute :

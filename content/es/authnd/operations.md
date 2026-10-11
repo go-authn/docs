@@ -3,7 +3,7 @@ title: "Ejecutarlo: señales, reinicios y lo que dice"
 linkTitle: "Operación"
 weight: 80
 description: "Qué lee authnd una sola vez, por qué SIGHUP no lo recarga, cómo se detiene, qué escribe en su salida, y cómo saber que está en marcha."
-tags: [authnd, operations, signals, systemd]
+tags: [authnd, operación, señales, systemd]
 ---
 
 ## Lo lee todo una sola vez {#it-reads-everything-once}

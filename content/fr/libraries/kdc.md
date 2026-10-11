@@ -3,7 +3,7 @@ title: "kdc — délivrer des tickets Kerberos à partir d'un annuaire"
 linkTitle: "kdc"
 weight: 80
 description: "go-authn/kdc est la moitié de Kerberos qui délivre : AS et TGS sur UDP et TCP, pré-authentification exigée, un seul type de chiffrement, des personnes issues d'un annuaire go-authn."
-tags: [libraries, kerberos, directory]
+tags: [bibliothèques, kerberos, annuaire]
 ---
 
 **Comment un royaume délivre-t-il des tickets à partir d'un annuaire ?** AS-REQ et TGS-REQ, sur

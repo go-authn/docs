@@ -3,7 +3,7 @@ title: "Was es widerruft, und wie Server davon erfahren"
 linkTitle: "Widerruf"
 weight: 60
 description: "Die signierte, datierte KRL und CRL, die authn-bridge für die widerrufenen Zertifikate veröffentlicht, und der Shared-Signals-Sender, der erreicht, was keine Liste benennen kann."
-tags: [authn-bridge, revocation, krl, crl, shared signals]
+tags: [authn-bridge, widerruf, krl, crl, shared signals]
 ---
 
 Eine Person oder eine Einrichtung zu deaktivieren ([die Admin-API]({{< relref "/authn-bridge/admin.md" >}}))

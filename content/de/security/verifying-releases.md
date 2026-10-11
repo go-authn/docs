@@ -3,7 +3,7 @@ title: "Einen Download prüfen"
 linkTitle: "Einen Download prüfen"
 weight: 10
 description: "Was jedes Release veröffentlicht, und die drei Prüfungen, die ein vom Release-Workflow gebautes Binary von allem anderen unterscheiden."
-tags: [security, releases]
+tags: [sicherheit, releases]
 ---
 
 Jedes Release von authnd, authn-bridge, authn-revokd und sshcert veröffentlicht sechs

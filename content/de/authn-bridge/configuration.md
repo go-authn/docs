@@ -3,7 +3,7 @@ title: "Die Konfiguration"
 linkTitle: "Konfiguration"
 weight: 20
 description: "Wie die HCL-Konfiguration von authn-bridge aufgebaut ist, was check ausgibt und was abgelehnt wird, bevor sich jemand anmelden kann."
-tags: [authn-bridge, configuration]
+tags: [authn-bridge, konfiguration]
 ---
 
 Eine HCL-Datei oder ein Verzeichnis davon: `--config /etc/authn-bridge` liest jede

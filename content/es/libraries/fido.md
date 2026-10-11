@@ -3,7 +3,7 @@ title: "fido: hablar con una llave de seguridad"
 linkTitle: "fido"
 weight: 30
 description: "go-authn/fido habla CTAPHID y CTAP2 con una llave de seguridad sobre cualquier transporte de 64 bytes: handshake, registro, aserción y PIN, en Go puro."
-tags: [libraries, fido, factors]
+tags: [bibliotecas, fido, factores]
 ---
 
 **¿Cómo se habla con una llave de seguridad?** El protocolo FIDO de cliente a

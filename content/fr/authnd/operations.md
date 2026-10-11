@@ -3,7 +3,7 @@ title: "L'exploiter : signaux, redémarrages et ce qu'il dit"
 linkTitle: "Exploitation"
 weight: 80
 description: "Ce qu'authnd lit une seule fois, pourquoi SIGHUP ne le recharge pas, comment il s'arrête, ce qu'il écrit sur sa sortie, et comment savoir qu'il tourne."
-tags: [authnd, operations, signals, systemd]
+tags: [authnd, exploitation, signaux, systemd]
 ---
 
 ## Il lit tout une seule fois {#it-reads-everything-once}

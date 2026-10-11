@@ -3,7 +3,7 @@ title: "totp – ein Code, einmal, und nicht eine Million Rateversuche"
 linkTitle: "totp"
 weight: 20
 description: "go-authn/totp prüft Einmalcodes nach RFC 6238, lehnt einen bereits verwendeten Code ab, begrenzt das Raten pro Geheimnis und bietet das Ergebnis als mfa-Faktor an."
-tags: [libraries, totp, factors]
+tags: [bibliotheken, totp, faktoren]
 ---
 
 **Ist dieser sechsstellige Code richtig – und wurde er schon einmal verwendet?** Zeitbasierte

@@ -3,7 +3,7 @@ title: "authnd installieren"
 linkTitle: "Installation"
 weight: 10
 description: "Das Release-Binary und wie man es prüft, das Konto authnd, die systemd-Unit und was sie gewährt, sowie Upgrade, Rollback und Entfernen."
-tags: [authnd, install, systemd]
+tags: [authnd, installation, systemd]
 ---
 
 Das Repository enthält die beiden Dateien, die ein systemd-Host braucht:

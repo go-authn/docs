@@ -3,7 +3,7 @@ title: "mfa – genug Faktoren, und welche"
 linkTitle: "mfa"
 weight: 10
 description: "go-authn/mfa entscheidet, ob genug Faktoren geantwortet haben, von genug verschiedenen Arten, und sagt, welche – ohne Gerät und ohne Kryptografie."
-tags: [libraries, mfa, factors]
+tags: [bibliotheken, mfa, faktoren]
 ---
 
 **Haben genug Faktoren geantwortet, von genug Arten – und welche?** Nichts hier

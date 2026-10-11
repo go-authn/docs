@@ -3,7 +3,7 @@ title: "Jetons, mots de passe et clés"
 linkTitle: "Jetons"
 weight: 40
 description: "Ce qu'une application obtient d'authn-bridge : jetons d'identité et jetons d'accès, l'octroi par appareil, des mots de passe d'application pour SMB et S3, et des clés WireGuard."
-tags: [authn-bridge, oidc, tokens, wireguard]
+tags: [authn-bridge, oidc, jetons, wireguard]
 ---
 
 Chaque identifiant ici commence par la même connexion auprès de l'établissement de la personne.

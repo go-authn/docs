@@ -3,7 +3,7 @@ title: "Las bibliotecas, una pregunta cada una"
 linkTitle: "Bibliotecas"
 weight: 50
 description: "Los trece módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
-tags: [libraries]
+tags: [bibliotecas]
 ---
 
 Programas como [authnd]({{< relref "/authnd/_index.md" >}}) y

@@ -3,7 +3,7 @@ title: "ldap – die Bytes eines LDAP-Servers"
 linkTitle: "ldap"
 weight: 60
 description: "go-authn/ldap ist das LDAP-Protokoll als Server-Bibliothek: die Leitung, der Filter, die Operationen und ihre Grenzen, mit Handlern, die entscheiden, was beantwortet wird."
-tags: [libraries, ldap, directory]
+tags: [bibliotheken, ldap, verzeichnis]
 ---
 
 **Was sind die Bytes eines LDAP-Servers?** Eine Bibliothek, kein Daemon: die Leitung,

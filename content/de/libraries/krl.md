@@ -3,7 +3,7 @@ title: "krl – OpenSSH-Sperrlisten für Schlüssel"
 linkTitle: "krl"
 weight: 110
 description: "go-authn/krl parst, baut, führt zusammen und prüft OpenSSH-KRLs so, wie sshd sie liest, mit einer Ablauf-Erweiterung, beurteilt von ssh-keygen."
-tags: [libraries, revocation, ssh]
+tags: [bibliotheken, widerruf, ssh]
 ---
 
 **Ist dieses SSH-Zertifikat oder dieser Schlüssel widerrufen – so, wie sshd antworten würde?** Das

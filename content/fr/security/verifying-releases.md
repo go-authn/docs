@@ -3,7 +3,7 @@ title: "Vérifier un téléchargement"
 linkTitle: "Vérifier un téléchargement"
 weight: 10
 description: "Ce que publie chaque version, et les trois vérifications qui distinguent un binaire compilé par le workflow de publication de tout le reste."
-tags: [security, releases]
+tags: [sécurité, versions]
 ---
 
 Chaque version d'authnd, authn-bridge, authn-revokd et sshcert publie six

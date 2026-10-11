@@ -3,7 +3,7 @@ title: "kdc – Kerberos-Tickets aus einem Verzeichnis ausstellen"
 linkTitle: "kdc"
 weight: 80
 description: "go-authn/kdc ist die ausstellende Hälfte von Kerberos: AS und TGS über UDP und TCP, Pre-Authentication verpflichtend, ein Verschlüsselungstyp, Personen aus einem go-authn-Verzeichnis."
-tags: [libraries, kerberos, directory]
+tags: [bibliotheken, kerberos, verzeichnis]
 ---
 
 **Wie stellt ein Realm Tickets aus einem Verzeichnis aus?** AS-REQ und TGS-REQ, über

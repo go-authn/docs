@@ -3,7 +3,7 @@ title: "Une personne qui change son propre mot de passe"
 linkTitle: "Changer un mot de passe"
 weight: 50
 description: "La seule écriture qu'accepte authnd : le mot de passe d'une personne, par elle-même, en RFC 3062 ou par un modify RFC 4511, toujours avec l'ancien mot de passe, réécrit dans le fichier qui la déclare."
-tags: [authnd, passwords, ldappasswd]
+tags: [authnd, mots de passe, ldappasswd]
 ---
 
 Une personne peut changer **son propre** mot de passe, et celui de personne d'autre, par

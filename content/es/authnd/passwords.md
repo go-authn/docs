@@ -3,7 +3,7 @@ title: "Una persona que cambia su propia contraseña"
 linkTitle: "Cambiar una contraseña"
 weight: 50
 description: "La única escritura que acepta authnd: la contraseña de la propia persona, mediante el RFC 3062 o un modify del RFC 4511, siempre con la contraseña anterior, escrita de vuelta en el archivo que declara a la persona."
-tags: [authnd, passwords, ldappasswd]
+tags: [authnd, contraseñas, ldappasswd]
 ---
 
 Una persona puede cambiar **su propia** contraseña, y la de nadie más, mediante la

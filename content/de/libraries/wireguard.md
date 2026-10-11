@@ -3,7 +3,7 @@ title: "wireguard – wessen Schlüssel ist das, und darf er sich verbinden?"
 linkTitle: "wireguard"
 weight: 130
 description: "go-authn/wireguard definiert einen öffentlichen WireGuard-Schlüssel streng und überträgt die vom Anbieter signierte Liste registrierter Schlüssel, die ein Gateway in Peers umsetzt."
-tags: [libraries, wireguard, tokens]
+tags: [bibliotheken, wireguard, token]
 ---
 
 **Darf sich dieser WireGuard-Schlüssel verbinden, und wem gehört er?** WireGuard authentifiziert einen

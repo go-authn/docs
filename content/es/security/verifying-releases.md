@@ -3,7 +3,7 @@ title: "Verificar una descarga"
 linkTitle: "Verificar una descarga"
 weight: 10
 description: "Qué publica cada versión, y las tres comprobaciones que distinguen un binario compilado por el flujo de publicación de cualquier otro."
-tags: [security, releases]
+tags: [seguridad, versiones]
 ---
 
 Cada versión de authnd, authn-bridge, authn-revokd y sshcert publica seis

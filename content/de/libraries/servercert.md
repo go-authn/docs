@@ -3,7 +3,7 @@ title: "servercert – woher das TLS-Zertifikat eines Daemons kommt"
 linkTitle: "servercert"
 weight: 120
 description: "go-authn/servercert stellt ein TLS-Serverzertifikat aus Dateien bereit, die bei Änderung neu gelesen werden, oder von einer ACME-CA über autocert, External Account Binding eingeschlossen."
-tags: [libraries, tls, acme, certificates]
+tags: [bibliotheken, tls, acme, zertifikate]
 ---
 
 **Woher kommt das TLS-Serverzertifikat eines Daemons?** Ein Zertifikat und ein

@@ -3,7 +3,7 @@ title: "Comment une liste est vérifiée"
 linkTitle: "Vérification"
 weight: 30
 description: "Ce qu'authn-revokd vérifie avant de garder une liste : la signature, les dates, et qu'elle n'est jamais plus ancienne que la liste qu'il détient, même après un redémarrage."
-tags: [authn-revokd, revocation, security]
+tags: [authn-revokd, révocation, sécurité]
 ---
 
 Une liste qui ne se vérifie pas n'est jamais écrite, servie ni utilisée. La dernière bonne

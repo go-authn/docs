@@ -3,7 +3,7 @@ title: "krl — listas de revocación de claves de OpenSSH"
 linkTitle: "krl"
 weight: 110
 description: "go-authn/krl analiza, construye, fusiona y comprueba KRL de OpenSSH tal como las lee sshd, con una extensión de caducidad, y ssh-keygen hace de juez."
-tags: [libraries, revocation, ssh]
+tags: [bibliotecas, revocación, ssh]
 ---
 
 **¿Está revocado este certificado o esta clave SSH, tal como respondería sshd?** El

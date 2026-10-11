@@ -3,7 +3,7 @@ title: "directory — qui est quelqu'un, et ce qui le prouve"
 linkTitle: "directory"
 weight: 50
 description: "go-authn/directory : un seul modèle d'une personne et des identifiants qu'une source détient pour elle, sur une liste en mémoire, une base de données SQL, un serveur LDAP ou une configuration HCL."
-tags: [libraries, directory, ldap, sql]
+tags: [bibliothèques, annuaire, ldap, sql]
 ---
 
 **Qui est quelqu'un, et qu'est-ce qui peut le prouver ?** Un seul modèle sur une liste

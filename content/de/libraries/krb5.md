@@ -3,7 +3,7 @@ title: "krb5 – ein Kerberos-Ticket annehmen"
 linkTitle: "krb5"
 weight: 70
 description: "go-authn/krb5 ist die annehmende Hälfte von Kerberos: eine Keytab, ein geprüfter AP-REQ, der AP-REP, den gegenseitige Authentifizierung braucht, und Nachrichten, die mit dem Sitzungsschlüssel signiert und versiegelt werden."
-tags: [libraries, kerberos]
+tags: [bibliotheken, kerberos]
 ---
 
 **Taugt dieses Kerberos-Ticket für diesen Dienst?** Die **annehmende** Hälfte von

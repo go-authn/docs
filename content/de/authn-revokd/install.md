@@ -3,7 +3,7 @@ title: "authn-revokd installieren"
 linkTitle: "Installation"
 weight: 10
 description: "authn-revokd als gehärteter systemd-Dienst oder als einmaliger Lauf mit einem Timer, und wie sshd und ein TLS-Server an das angebunden werden, was es schreibt."
-tags: [authn-revokd, install, systemd]
+tags: [authn-revokd, installation, systemd]
 ---
 
 Das Repository liefert in `packaging/` drei Units und ein Konto mit:

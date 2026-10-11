@@ -3,7 +3,7 @@ title: "De dónde proceden las personas"
 linkTitle: "Personas"
 weight: 20
 description: "Bloques user y group, una base de datos SQL, otro directorio LDAP: cómo se escribe cada uno, en qué orden se consultan y qué permite hacer cada uno a una persona."
-tags: [authnd, configuration, sql, ldap]
+tags: [authnd, configuración, sql, ldap]
 ---
 
 Un bloque `user` es el directorio entero de un sitio pequeño, o las cuentas de

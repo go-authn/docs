@@ -3,7 +3,7 @@ title: "keyfactor – der registrierte Schlüssel, berührt"
 linkTitle: "keyfactor"
 weight: 40
 description: "go-authn/keyfactor macht aus einem Sicherheitsschlüssel einen mfa-Faktor und prüft die Antwort gegen die Registrierung, statt jedem Gerät zu vertrauen, das CTAP spricht."
-tags: [libraries, fido, mfa, factors]
+tags: [bibliotheken, fido, mfa, faktoren]
 ---
 
 **Hat der Schlüssel geantwortet, der registriert wurde, und hat eine Person ihn berührt?**

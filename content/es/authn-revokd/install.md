@@ -3,7 +3,7 @@ title: "Instalar authn-revokd"
 linkTitle: "Instalación"
 weight: 10
 description: "authn-revokd como servicio systemd endurecido, o como ejecución única con un temporizador, y cómo conectar sshd y un servidor TLS a lo que escribe."
-tags: [authn-revokd, install, systemd]
+tags: [authn-revokd, instalación, systemd]
 ---
 
 El repositorio incluye en `packaging/` tres unidades y una cuenta:
