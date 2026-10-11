@@ -48,9 +48,9 @@ import (
 func main() {
 	// One IdP, as a federation's metadata would describe it.
 	idp := &saml.IdP{
-		EntityID: "https://idp.univ-example.fr/idp/shibboleth",
-		SSO:      "https://idp.univ-example.fr/idp/profile/SAML2/Redirect/SSO",
-		Scopes:   []string{"univ-example.fr"},
+		EntityID: "https://idp.univ-example.example/idp/shibboleth",
+		SSO:      "https://idp.univ-example.example/idp/profile/SAML2/Redirect/SSO",
+		Scopes:   []string{"univ-example.example"},
 	}
 	md := &saml.Metadata{IdPs: map[string]*saml.IdP{idp.EntityID: idp}}
 
@@ -86,7 +86,7 @@ func main() {
 ```
 https://discovery.renater.fr/renater?entityID=https%3A%2F%2Fapp.example.org%2Fsaml&return=https%3A%2F%2Fapp.example.org%2Fsaml%2Fchosen&returnIDParam=entityID
 the chosen identity provider is not in the federation
-idp.univ-example.fr true s1 https://idp.univ-example.fr/idp/shibboleth [https://refeds.org/profile/mfa]
+idp.univ-example.example true s1 https://idp.univ-example.example/idp/shibboleth [https://refeds.org/profile/mfa]
 RelayState is limited to 80 bytes
 ```
 
@@ -193,7 +193,7 @@ quien llama como un error, destinado al registro del servidor:
 | nada firmado, o firmado con SHA-1 | saml-profiles 4.1.4.5: por POST la aserción debe estar firmada. Un IdP Shibboleth firma la Response por defecto; se acepta cualquiera de las dos |
 | más de una aserción | así llegan juntas una firmada y otra sin firmar y se lee la que no es (CVE-2022-41912) |
 | cualquier cosa fuera de lo que cubrió la firma | nunca se lee: solo se lee el elemento reconstruido a partir de los bytes que resumió la firma |
-| un identificador con ámbito fuera de los `Scopes` del IdP | se descarta: de lo contrario cualquier IdP podría afirmar `alice@another-university.fr` |
+| un identificador con ámbito fuera de los `Scopes` del IdP | se descarta: de lo contrario cualquier IdP podría afirmar `alice@another-university.example` |
 | texto cifrado AES-CBC que no cubre ninguna firma verificada | ni siquiera se descifra: CBC sin autenticar es un oráculo de relleno. El transporte de clave RSA PKCS#1 v1.5 no se acepta en absoluto; AES-GCM y RSA-OAEP sí |
 | otra audiencia, otro ACS u otra solicitud; una respuesta no solicitada; una solicitud de más de una hora | saml-profiles 4.1.4.3 |
 | una aserción ya usada | una aserción bearer es de quien la tenga |

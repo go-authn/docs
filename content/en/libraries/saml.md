@@ -48,9 +48,9 @@ import (
 func main() {
 	// One IdP, as a federation's metadata would describe it.
 	idp := &saml.IdP{
-		EntityID: "https://idp.univ-example.fr/idp/shibboleth",
-		SSO:      "https://idp.univ-example.fr/idp/profile/SAML2/Redirect/SSO",
-		Scopes:   []string{"univ-example.fr"},
+		EntityID: "https://idp.univ-example.example/idp/shibboleth",
+		SSO:      "https://idp.univ-example.example/idp/profile/SAML2/Redirect/SSO",
+		Scopes:   []string{"univ-example.example"},
 	}
 	md := &saml.Metadata{IdPs: map[string]*saml.IdP{idp.EntityID: idp}}
 
@@ -86,7 +86,7 @@ func main() {
 ```
 https://discovery.renater.fr/renater?entityID=https%3A%2F%2Fapp.example.org%2Fsaml&return=https%3A%2F%2Fapp.example.org%2Fsaml%2Fchosen&returnIDParam=entityID
 the chosen identity provider is not in the federation
-idp.univ-example.fr true s1 https://idp.univ-example.fr/idp/shibboleth [https://refeds.org/profile/mfa]
+idp.univ-example.example true s1 https://idp.univ-example.example/idp/shibboleth [https://refeds.org/profile/mfa]
 RelayState is limited to 80 bytes
 ```
 
@@ -193,7 +193,7 @@ caller as an error, for the server's log:
 | nothing signed, or signed with SHA-1 | saml-profiles 4.1.4.5: over POST the assertion must be signed. A Shibboleth IdP signs the Response by default; either is accepted |
 | more than one assertion | how a signed one and an unsigned one arrive together and the wrong one is read (CVE-2022-41912) |
 | anything outside what the signature covered | it is never read: only the element rebuilt from the bytes the signature digested is |
-| a scoped identifier outside the IdP's `Scopes` | dropped: otherwise any IdP could assert `alice@another-university.fr` |
+| a scoped identifier outside the IdP's `Scopes` | dropped: otherwise any IdP could assert `alice@another-university.example` |
 | AES-CBC ciphertext no verified signature covers | not even decrypted: unauthenticated CBC is a padding oracle. RSA PKCS#1 v1.5 key transport is not accepted at all; AES-GCM and RSA-OAEP are |
 | another audience, ACS or request; an unsolicited response; a request more than an hour old | saml-profiles 4.1.4.3 |
 | an assertion already used | a bearer assertion is whoever holds it |

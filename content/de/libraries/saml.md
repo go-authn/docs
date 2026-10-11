@@ -48,9 +48,9 @@ import (
 func main() {
 	// One IdP, as a federation's metadata would describe it.
 	idp := &saml.IdP{
-		EntityID: "https://idp.univ-example.fr/idp/shibboleth",
-		SSO:      "https://idp.univ-example.fr/idp/profile/SAML2/Redirect/SSO",
-		Scopes:   []string{"univ-example.fr"},
+		EntityID: "https://idp.univ-example.example/idp/shibboleth",
+		SSO:      "https://idp.univ-example.example/idp/profile/SAML2/Redirect/SSO",
+		Scopes:   []string{"univ-example.example"},
 	}
 	md := &saml.Metadata{IdPs: map[string]*saml.IdP{idp.EntityID: idp}}
 
@@ -86,7 +86,7 @@ func main() {
 ```
 https://discovery.renater.fr/renater?entityID=https%3A%2F%2Fapp.example.org%2Fsaml&return=https%3A%2F%2Fapp.example.org%2Fsaml%2Fchosen&returnIDParam=entityID
 the chosen identity provider is not in the federation
-idp.univ-example.fr true s1 https://idp.univ-example.fr/idp/shibboleth [https://refeds.org/profile/mfa]
+idp.univ-example.example true s1 https://idp.univ-example.example/idp/shibboleth [https://refeds.org/profile/mfa]
 RelayState is limited to 80 bytes
 ```
 
@@ -193,7 +193,7 @@ den Aufrufer, für das Log des Servers:
 | nichts signiert oder mit SHA-1 signiert | saml-profiles 4.1.4.5: Über POST muss die Assertion signiert sein. Ein Shibboleth-IdP signiert standardmäßig die Response; beides wird akzeptiert |
 | mehr als eine Assertion | so kommen eine signierte und eine unsignierte zusammen an, und die falsche wird gelesen (CVE-2022-41912) |
 | alles außerhalb dessen, was die Signatur abgedeckt hat | es wird nie gelesen: gelesen wird nur das Element, das aus den von der Signatur gehashten Bytes neu aufgebaut wird |
-| ein bereichsgebundener Bezeichner außerhalb der `Scopes` des IdP | verworfen: Sonst könnte jeder IdP `alice@another-university.fr` behaupten |
+| ein bereichsgebundener Bezeichner außerhalb der `Scopes` des IdP | verworfen: Sonst könnte jeder IdP `alice@another-university.example` behaupten |
 | AES-CBC-Chiffretext, den keine geprüfte Signatur abdeckt | nicht einmal entschlüsselt: Nicht authentifiziertes CBC ist ein Padding-Orakel. RSA-PKCS#1-v1.5-Schlüsseltransport wird überhaupt nicht akzeptiert; AES-GCM und RSA-OAEP schon |
 | eine andere Audience, ein anderer ACS oder eine andere Anfrage; eine unaufgeforderte Antwort; eine Anfrage, die älter als eine Stunde ist | saml-profiles 4.1.4.3 |
 | eine bereits verwendete Assertion | eine Bearer-Assertion ist, wer auch immer sie hält |

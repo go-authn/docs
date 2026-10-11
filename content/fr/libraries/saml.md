@@ -48,9 +48,9 @@ import (
 func main() {
 	// One IdP, as a federation's metadata would describe it.
 	idp := &saml.IdP{
-		EntityID: "https://idp.univ-example.fr/idp/shibboleth",
-		SSO:      "https://idp.univ-example.fr/idp/profile/SAML2/Redirect/SSO",
-		Scopes:   []string{"univ-example.fr"},
+		EntityID: "https://idp.univ-example.example/idp/shibboleth",
+		SSO:      "https://idp.univ-example.example/idp/profile/SAML2/Redirect/SSO",
+		Scopes:   []string{"univ-example.example"},
 	}
 	md := &saml.Metadata{IdPs: map[string]*saml.IdP{idp.EntityID: idp}}
 
@@ -86,7 +86,7 @@ func main() {
 ```
 https://discovery.renater.fr/renater?entityID=https%3A%2F%2Fapp.example.org%2Fsaml&return=https%3A%2F%2Fapp.example.org%2Fsaml%2Fchosen&returnIDParam=entityID
 the chosen identity provider is not in the federation
-idp.univ-example.fr true s1 https://idp.univ-example.fr/idp/shibboleth [https://refeds.org/profile/mfa]
+idp.univ-example.example true s1 https://idp.univ-example.example/idp/shibboleth [https://refeds.org/profile/mfa]
 RelayState is limited to 80 bytes
 ```
 
@@ -193,7 +193,7 @@ l'appelant sous forme d'erreur, destinée au journal du serveur :
 | rien de signé, ou signé avec SHA-1 | saml-profiles 4.1.4.5 : en POST, l'assertion doit être signée. Un IdP Shibboleth signe la Response par défaut ; l'une ou l'autre est acceptée |
 | plus d'une assertion | c'est ainsi qu'une assertion signée et une non signée arrivent ensemble et que la mauvaise est lue (CVE-2022-41912) |
 | tout ce que la signature ne couvrait pas | ce n'est jamais lu : seul l'est l'élément reconstruit à partir des octets que la signature a condensés |
-| un identifiant à portée hors des `Scopes` de l'IdP | écarté : sinon n'importe quel IdP pourrait affirmer `alice@another-university.fr` |
+| un identifiant à portée hors des `Scopes` de l'IdP | écarté : sinon n'importe quel IdP pourrait affirmer `alice@another-university.example` |
 | un chiffré AES-CBC qu'aucune signature vérifiée ne couvre | pas même déchiffré : CBC non authentifié est un oracle de remplissage. Le transport de clé RSA PKCS#1 v1.5 n'est pas accepté du tout ; AES-GCM et RSA-OAEP le sont |
 | une autre audience, un autre ACS ou une autre requête ; une réponse non sollicitée ; une requête vieille de plus d'une heure | saml-profiles 4.1.4.3 |
 | une assertion déjà utilisée | une assertion porteuse appartient à qui la détient |

@@ -70,14 +70,14 @@ lignes de `--domain-file` (lignes vides et commentaires `#` ignorés ; plusieurs
 plusieurs noms, dont n'importe lequel peut correspondre).
 
 Avec des certificats signés par une AC de test pour le compte `alice`, dont le
-fichier de principals liste `a1b2c3@univ-example.fr`, sur un hôte appelé
+fichier de principals liste `a1b2c3@univ-example.example`, sur un hôte appelé
 `login.hpc.example.org` :
 
 ```
 $ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-cert.pub)"
-INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.fr granted" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-INFO: action=authorized user=alice cert_principals=["a1b2c3@univ-example.fr"] server_principals=["a1b2c3@univ-example.fr"] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-a1b2c3@univ-example.fr
+INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.example granted" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+INFO: action=authorized user=alice cert_principals=["a1b2c3@univ-example.example"] server_principals=["a1b2c3@univ-example.example"] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+a1b2c3@univ-example.example
 ```
 
 La dernière ligne est la réponse que lit sshd ; les lignes qui la précèdent sont le journal, ici sur
@@ -85,24 +85,24 @@ l'erreur standard. Un certificat qui délègue d'autres hôtes :
 
 ```
 $ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-other-cert.pub)"
-INFO: action=cert_processed serial=1003 key_id="a1b2c3@univ-example.fr other host" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-WARNING: action=denied user=alice domain=login.hpc.example.org reason="domain not granted" grant=["*.elsewhere.example.net"] serial=1003 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+INFO: action=cert_processed serial=1003 key_id="a1b2c3@univ-example.example other host" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+WARNING: action=denied user=alice domain=login.hpc.example.org reason="domain not granted" grant=["*.elsewhere.example.net"] serial=1003 ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
 ```
 
 Un certificat sans délégation :
 
 ```
 $ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-nogrant-cert.pub)"
-INFO: action=cert_processed serial=1002 key_id="a1b2c3@univ-example.fr no grant" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-WARNING: action=denied user=alice domain=login.hpc.example.org reason="no domain grant" serial=1002 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+INFO: action=cert_processed serial=1002 key_id="a1b2c3@univ-example.example no grant" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+WARNING: action=denied user=alice domain=login.hpc.example.org reason="no domain grant" serial=1002 ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
 ```
 
 Un compte sans fichier de principals, et une clé ordinaire :
 
 ```
 $ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals bob "$(cut -d' ' -f2 alice-cert.pub)"
-INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.fr granted" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-WARNING: action=denied user=bob domain=login.hpc.example.org reason="no principals file for the user" serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.example granted" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+WARNING: action=denied user=bob domain=login.hpc.example.org reason="no principals file for the user" serial=1001 ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
 $ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice.pub)"
 WARNING: action=denied user=alice domain=login.hpc.example.org reason="a ssh-ed25519 key, not a certificate"
 ```
@@ -124,10 +124,10 @@ fois qu'elle l'applique :
 
 ```
 $ sshcert-authorize --syslog=false --allow-no-grant --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-nogrant-cert.pub)"
-INFO: action=cert_processed serial=1002 key_id="a1b2c3@univ-example.fr no grant" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-WARNING: action=no_grant_allowed user=alice domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-INFO: action=authorized user=alice cert_principals=["a1b2c3@univ-example.fr"] server_principals=["a1b2c3@univ-example.fr"] domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-a1b2c3@univ-example.fr
+INFO: action=cert_processed serial=1002 key_id="a1b2c3@univ-example.example no grant" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+WARNING: action=no_grant_allowed user=alice domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+INFO: action=authorized user=alice cert_principals=["a1b2c3@univ-example.example"] server_principals=["a1b2c3@univ-example.example"] domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+a1b2c3@univ-example.example
 ```
 
 Même alors, une délégation présente mais malformée est refusée.
@@ -148,15 +148,15 @@ qui n'existe pas :
 
 ```
 $ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-cert.pub)"
-INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.fr granted" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-INFO: action=authorized user=alice cert_principals=["a1b2c3@univ-example.fr"] server_principals=["a1b2c3@univ-example.fr"] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-a1b2c3@univ-example.fr
+INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.example granted" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+INFO: action=authorized user=alice cert_principals=["a1b2c3@univ-example.example"] server_principals=["a1b2c3@univ-example.example"] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+a1b2c3@univ-example.example
 $ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-cert.pub)"
-INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.fr granted" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-WARNING: action=denied user=alice domain=login.hpc.example.org reason="certificate revoked" serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.example granted" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+WARNING: action=denied user=alice domain=login.hpc.example.org reason="certificate revoked" serial=1001 ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
 $ sshcert-authorize --syslog=false --krl missing.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice "$(cut -d' ' -f2 alice-cert.pub)"
-INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.fr granted" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
-WARNING: action=denied user=alice domain=login.hpc.example.org reason="KRL unreadable: open missing.krl: no such file or directory" serial=1001 ca_fingerprint=SHA256:6gbNjRq4BYFximPaiHg3L5G01DO7ycES/Bx2Hg4Qkvg
+INFO: action=cert_processed serial=1001 key_id="a1b2c3@univ-example.example granted" extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
+WARNING: action=denied user=alice domain=login.hpc.example.org reason="KRL unreadable: open missing.krl: no such file or directory" serial=1001 ca_fingerprint=SHA256:7GyzrO0VHgZU9+qMOkMF94eTVc9IXbMBal/1TyL1BGk
 ```
 
 La deuxième exécution est refusée parce que la liste qui refuse en cas de doute révoque la **clé de l'AC**
