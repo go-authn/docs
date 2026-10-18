@@ -11,10 +11,26 @@ directorio. Lo que quiere autenticarlas habla LDAP.** authnd es la fachada:
 hace binds y búsquedas sobre los orígenes de
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}), así que lo que guarda
 una base de datos puede leerlo cualquier cosa que sepa consultar un directorio.
-Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.10.2, que
-solo se diferencia de la v0.10.0 por las bibliotecas que incorpora: go-authn/kdc
-v0.4.2 (desde la v0.10.1) y go-authn/directory v0.12.0 (desde la v0.10.2);
-lo que está verificado y lo que no figura en la página de [estado]({{< relref "/status.md" >}}).
+Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.11.0,
+cuyas entradas siguen los esquemas estándar y superan el esquema que sirve en
+`cn=Subschema`, con go-authn/ldap v0.8.0 y go-authn/directory v0.14.0 por
+debajo; lo que está verificado y lo que no figura en la página de
+[estado]({{< relref "/status.md" >}}).
+
+{{< callout type="warning" >}}
+**Actualizar desde la v0.10.x**
+
+- `publish_nt_hash = true` necesita ahora un [bloque `samba`]({{< relref "/authnd/tls.md#the-samba-block" >}}),
+  o authnd no arranca.
+- Una persona sin `uidNumber`, `gidNumber` y `homeDirectory` ya no es un
+  `posixAccount`, y un grupo sin `gidNumber` ya no es un `posixGroup`, así
+  que un consumidor que filtra por esas clases ve menos entradas: consulte
+  [las entradas]({{< relref "/authnd/entries.md" >}}).
+- Un bloque `users "ldap"` lee por defecto más del directorio que tiene
+  detrás: consulte [personas]({{< relref "/authnd/people.md#in-another-ldap-directory" >}}).
+
+`authnd check` con el nuevo binario dice las tres cosas antes del reinicio.
+{{< /callout >}}
 
 ```sh
 authnd --config /etc/authnd      # serve
@@ -34,14 +50,20 @@ user "alice" { password_file = "/etc/authnd/passwords/alice.pw" }
 group "staff" { members = ["alice"] }
 ```
 
-Las personas se publican como `uid=<name>,ou=people,<base_dn>` (`posixAccount`),
-y los grupos como `cn=<name>,ou=groups,<base_dn>` (`posixGroup`, con `memberUid`).
-Un grupo que un origen lista pero en el que no hay nadie se publica sin
-`memberUid`, ya que un atributo LDAP tiene al menos un valor; antes de la
-v0.10.2 se omitía.
-Cada entrada lleva `uid` y `cn`; `sambaNTPassword` y `sshPublicKey` se añaden
-cuando la persona los tiene y, para el primero, cuando
-[`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) lo indica.
+Las personas se publican como `uid=<name>,ou=people,<base_dn>`, y los grupos
+como `cn=<name>,ou=groups,<base_dn>`. Lo que *es* cada entrada se deduce de
+lo que dio su origen: una persona es un `account`, o un `inetOrgPerson`
+cuando hay un `sn`, y un `posixAccount` solo con `uidNumber`, `gidNumber` y
+`homeDirectory`; toda persona es un `uidObject`. Un grupo es un `posixGroup`
+(con `memberUid`) cuando tiene un `gidNumber`, si no un `groupOfNames` (con
+DN en `member`), o un `organizationalRole` cuando además está vacío.
+`sshPublicKey` se añade cuando la persona tiene claves, y `sambaNTPassword`
+cuando [`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}})
+lo indica y se puede dar un SID. Cada entrada supera el esquema servido en
+`cn=Subschema` antes de publicarse: consulte
+[las entradas y el esquema]({{< relref "/authnd/entries.md" >}}). Hasta la
+v0.10.2, toda persona era un `posixAccount` y todo grupo un `posixGroup`,
+tuvieran lo que tuvieran.
 
 `--config` (`-c`) admite un archivo o un directorio y puede repetirse; un directorio
 equivale a todos los archivos `.hcl` que contiene, leídos por orden de nombre y
@@ -99,11 +121,14 @@ supportedControl: 1.3.6.1.1.13.1
 supportedControl: 1.3.6.1.1.13.2
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
+subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.10.2
+vendorVersion: v0.11.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` es la operación de modificación de contraseña del RFC 3062.
+`subschemaSubentry` nombra el [esquema]({{< relref "/authnd/entries.md#the-schema-it-serves" >}}),
+que también se responde a un cliente anónimo.
 `supportedSASLMechanisms: OAUTHBEARER` solo aparece con un
 [bloque `oidc`]({{< relref "/authnd/tokens.md" >}}).
 
@@ -113,6 +138,7 @@ vendorVersion: v0.10.2
 |---|---|
 | [Instalarlo]({{< relref "/authnd/install.md" >}}) | el binario de la versión, la cuenta `authnd`, la unidad systemd, las actualizaciones |
 | [De dónde proceden las personas]({{< relref "/authnd/people.md" >}}) | bloques `user` y `group`, una base de datos SQL, otro directorio LDAP |
+| [Las entradas y el esquema]({{< relref "/authnd/entries.md" >}}) | como qué se publica cada persona y cada grupo, `cn=Subschema`, los atributos, lo que se descarta o se retiene |
 | [`check`]({{< relref "/authnd/check.md" >}}) | releer la configuración antes de reiniciar |
 | [TLS]({{< relref "/authnd/tls.md" >}}) | `ldaps://` o StartTLS, y `publish_nt_hash` |
 | [Cambiar una contraseña]({{< relref "/authnd/passwords.md" >}}) | `ldappasswd`, `ldapmodify`, y por qué siempre se pide la contraseña anterior |
@@ -124,12 +150,17 @@ vendorVersion: v0.10.2
 {{< callout type="info" >}}
 **Sobre las transcripciones**
 
-Cada bloque de salida de estas páginas lo imprimió el binario de la versión v0.10.0
-(`authnd-darwin-arm64`) —la v0.10.1 imprimió el mismo `check`, byte a byte, con las dos
-configuraciones comparadas; las líneas `--version` y el `vendorVersion` del root DSE son
-los de la v0.10.2, cuyo root DSE es por lo demás idéntico—, junto con los clientes OpenLDAP y Heimdal que incluye
-macOS, ejecutados en 127.0.0.1 en puertos sin privilegios, en un directorio temporal
-bajo `/tmp`. Por eso las configuraciones que hay detrás nombran los archivos con rutas
+Cada tabla de `check`, cada línea de arranque, las entradas releídas con
+`ldapsearch`, el root DSE y `cn=Subschema`, los rechazos de `samba` y las
+líneas `--version` los imprimió el binario de la versión v0.11.0
+(`authnd-darwin-arm64`, `go version -m`: `mod github.com/go-authn/authnd v0.11.0`,
+`vcs.modified=false`). También los rechazos de configuración de estas páginas,
+que la v0.11.0 imprimió byte a byte como lo había hecho la v0.10.0. Los binds,
+los `kinit`, los cambios de contraseña y los intercambios de tokens los
+imprimió el binario de la versión v0.10.0 y no se volvieron a ejecutar para la
+v0.11.0, cuyas notas de versión no cambian ninguno de ellos. Todos los
+pidieron los clientes OpenLDAP y Heimdal que incluye macOS, en 127.0.0.1 en
+puertos sin privilegios, en un directorio temporal bajo `/tmp`. Por eso las configuraciones que hay detrás nombran los archivos con rutas
 relativas como `etc/authnd/passwords/alice.pw`, y por eso los archivos de contraseña
 tienen nombres como `alice.pwin`. Las rutas `/etc/authnd` de los ejemplos son las que
 usa un servidor instalado.

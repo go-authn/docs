@@ -35,6 +35,7 @@ group "staff" { members = ["alice", "carol"] }
 | `totp_secret` | a base32 one-time-code secret, at least 128 bits; see [a second factor]({{< relref "/authnd/mfa.md" >}}) |
 | `authorized_keys` | `authorized_keys` lines, published as `sshPublicKey` |
 | `authorized_keys_file` | the same, from a file |
+| `attributes` | from v0.11.0, what describes the person and proves nothing — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — as a map of strings or lists of strings; a `group` block takes it too. They decide what the entry is published as: see [the entries]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 
 Refused at startup, naming the person:
 
@@ -94,6 +95,11 @@ credential that person does not have. A password column is compared as it is
 stored: authnd has no setting for a hashed column. The `groups` query returns
 a group name and a member, one row per membership.
 
+Two more queries, optional, read attributes **by column alias** rather than
+by position: `users_attributes` (a name, then one column per attribute) and
+`groups_attributes` (a group, then the same). An unquoted alias is lower-cased
+by PostgreSQL. See [the entries]({{< relref "/authnd/entries.md#in-a-sql-database" >}}).
+
 `driver` accepts `postgres` (or `postgresql`, `pgx`), `mysql` (or `mariadb`)
 and `sqlite` (or `sqlite3`). The database is reached at startup, before
 anything listens, so one that is not answering stops the server where
@@ -133,17 +139,44 @@ attributes name them:
 
 | key | default |
 |---|---|
-| `user_filter` | `(objectClass=posixAccount)` |
+| `user_filter` | `(\|(objectClass=posixAccount)(objectClass=account)(objectClass=uidObject))` |
 | `user_attribute` | `uid` |
 | `group_base_dn` | `base_dn` |
-| `group_filter` | `(objectClass=posixGroup)` |
+| `group_filter` | `(\|(objectClass=posixGroup)(objectClass=groupOfNames))` |
 | `group_attribute` | `cn` |
-| `group_member_attribute` | `memberUid` |
+| `group_member_attribute` | none: `memberUid` (names) **and** `member` (DNs); set, it is the one attribute read |
 | `totp_attribute` | none: there is no standard attribute, and a guess would read nothing while looking like it had looked |
+| `attributes`, `group_attributes` | none: the attributes to copy from each person's entry and each group's, such as `["mail", "uidNumber", "homeDirectory"]` and `["gidNumber"]` ([the entries]({{< relref "/authnd/entries.md#adding-attributes" >}})) |
 | `start_tls` | `false` |
 
-`sambaNTPassword` and `sshPublicKey` are read under those names. Two things
-are refused before anything is opened:
+A `member` DN counts only when it is the DN of an entry the people search
+returned: a DN outside them, or naming nobody, maps to nobody, and the name
+is never read out of the DN. `sambaNTPassword` and `sshPublicKey` are read
+under those names.
+
+{{< callout type="warning" >}}
+**From v0.11.0 the defaults read more of an institution's directory**
+
+The block is go-authn/directory's, and directory v0.14.0, which authnd
+v0.11.0 embeds, widened its defaults: up to v0.10.2, `user_filter` was
+`(objectClass=posixAccount)`, `group_filter` `(objectClass=posixGroup)` and
+`group_member_attribute` `memberUid`. A directory holding `account` or
+`uidObject` entries that are not posixAccounts — service accounts, hosts
+named by uid, people imported from elsewhere — now gives them to authnd, and
+each can be checked by a bind; its `groupOfNames` groups become groups here.
+To keep exactly the old set, write the old values:
+
+```hcl
+users "ldap" {
+  # ...
+  user_filter            = "(objectClass=posixAccount)"
+  group_filter           = "(objectClass=posixGroup)"
+  group_member_attribute = "memberUid"
+}
+```
+{{< /callout >}}
+
+Two things are refused before anything is opened:
 
 ```
 $ authnd check cases/ldap-clear.hcl
@@ -157,22 +190,47 @@ authnd: users "ldap" has credentials in its url, and a url is printed: use bind_
 the way.
 
 A directory behind this one **checks** passwords by binding to it; it does
-not hand them over. Here one authnd fronts another, under a different base:
+not hand them over. Here one authnd fronts another, under a different base;
+the one behind is the [`check`]({{< relref "/authnd/check.md#a-configuration-that-can-be-served" >}})
+example, served on 3893:
+
+```hcl
+listen  = "127.0.0.1:3894"
+base_dn = "dc=example,dc=net"
+
+users "ldap" {
+  url                = "ldap://127.0.0.1:3893"
+  base_dn            = "ou=people,dc=example,dc=org"
+  group_base_dn      = "ou=groups,dc=example,dc=org"
+  bind_dn            = "cn=reader,dc=example,dc=org"
+  bind_password_file = "etc/authnd/reader.pw"
+}
+
+user "svc-backup" { password_file = "etc/authnd/svc-backup.pw" }
+```
 
 ```
 $ authnd check front2
 ldap://127.0.0.1:3894, base dc=example,dc=net
 
-USER        FROM                    CAN PROVE         PUBLISHED AS
-alice       ldap://127.0.0.1:3893   a password check  uid and cn
-bob         ldap://127.0.0.1:3893   a password check  uid and cn
-dora        ldap://127.0.0.1:3893   a password check  uid and cn
-eli         ldap://127.0.0.1:3893   a password check  uid and cn
-svc-backup  the configuration file  a password        uid and cn
+USER        FROM                    CAN PROVE         PUBLISHED AS        WITH
+alice       ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+bob         ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+dora        ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+eli         ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+svc-backup  the configuration file  a password        account, uidObject  uid
 
-GROUP      MEMBERS
-engineers  dora and eli
-staff      alice, bob and dora
+GROUP      MEMBERS              PUBLISHED AS
+engineers  dora and eli         groupOfNames
+staff      alice, bob and dora  groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+dora has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+eli has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+svc-backup has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group engineers has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
 
 a bind carries a password
 no reader is declared: nothing may search, and binds are not affected
@@ -180,6 +238,11 @@ sambaNTPassword is not published, so nothing here can authenticate an SMB sessio
 
 this configuration can be served
 ```
+
+Every person the directory behind publishes is an `account` and every group
+a `groupOfNames`, since none has POSIX attributes: the defaults read them,
+and the groups' `member` DNs map to the people imported. With the defaults
+up to v0.10.2, `(objectClass=posixAccount)` would have matched none of them.
 
 *A password check* is enough for a bind, and is never enough for a
 [Kerberos ticket]({{< relref "/authnd/kerberos.md#who-can-be-issued-a-ticket" >}})

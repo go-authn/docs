@@ -5,22 +5,23 @@ description: "Which releases these pages describe, what each release added, and 
 tags: [status, releases]
 ---
 
-These pages are documentation version **0.3**, and describe:
+These pages are documentation version **0.4**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.10.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.11.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
-directory is **v0.12.0**: `Members` answers `[]` for an empty group;
-`Expand` refuses it with `ErrEmptyGroup`.
+ldap is **v0.8.0**, with the directory schema, and directory **v0.14.0**,
+with attributes and wider ldapdir defaults: both are what authnd v0.11.0
+embeds.
 A new minor version of any program above is a new documentation version, so
-the pages a reader finds under `/docs/0.3/` keep describing what they
-installed; those of the previous releases stay under `/docs/0.1/` and
-`/docs/0.2/`.
+the pages a reader finds under `/docs/0.4/` keep describing what they
+installed; those of the previous releases stay under `/docs/0.1/`,
+`/docs/0.2/` and `/docs/0.3/`.
 
 ## What each release added
 
@@ -46,6 +47,7 @@ dependencies are left out.
 | v0.10.0 | `check` opens the certificate and the keytab, as the server does; it names who cannot bind with a password, and who a token still admits; the listening line comes after the realm opens |
 | v0.10.1 | go-authn/kdc v0.4.2: a `till` of 19700101000000Z gets the longest ticket, not one expired in 1970 |
 | v0.10.2 | go-authn/directory v0.12.0: an empty group is published as a `posixGroup` without `memberUid` |
+| v0.11.0 | [standard-schema entries]({{< relref "/authnd/entries.md" >}}), each held to the schema served at `cn=Subschema`; `attributes`, `users_attributes` and `groups_attributes`; `(uidNumber>=1000)` compares integers. ⛔ `publish_nt_hash` needs a [`samba` block]({{< relref "/authnd/tls.md#the-samba-block" >}}), and a consumer filtering on `posixAccount` or `posixGroup` sees fewer entries |
 
 ### authn-bridge
 
@@ -102,6 +104,17 @@ dependencies are left out.
 | v0.1.4 | the release checks every binary's build information |
 | v0.1.5 | `-version` prints the module version of a `go install` build, not `dev` |
 | v0.1.6 | placeholder domains in RFC 2606 names, in the documentation; no change in behaviour |
+
+### The libraries
+
+The library releases this documentation version was made for; each
+library's page says what earlier ones changed.
+
+| | |
+|---|---|
+| directory v0.13.0 | [attributes]({{< relref "/libraries/directory.md#attributes" >}}): what describes somebody and proves nothing, apart from credentials, with the names that can never be one; `attributes` in `user` and `group` blocks, `users_attributes` and `groups_attributes` queries, ldapdir's `attributes` and `group_attributes` |
+| directory v0.14.0 | ⛔ ldapdir's [defaults]({{< relref "/libraries/directory.md#ldapdir-defaults" >}}) read `account` and `uidObject` people and `groupOfNames` groups, which widens what an institution's directory gives; a `member` DN maps only to a person the source imported |
+| ldap v0.8.0 | [package `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) and `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, RFC 4517 matching rules; `uidNumber` and `gidNumber` order as integers; a paged search keeps to the requested attributes |
 
 ## Not implemented yet
 

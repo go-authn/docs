@@ -19,7 +19,7 @@ arm64 (`.exe` unter windows), gebaut mit `CGO_ENABLED=0`, ein `SHA256SUMS`-Manif
 Build-Provenance-Attestierung für jedes Binary.
 
 ```sh
-version=v0.10.2
+version=v0.11.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ daher ist die Version etwas, das sich vergleichen lässt:
 
 ```
 $ authnd --version
-authnd version v0.10.2
+authnd version v0.11.0
 ```
 
 ### Nur bauen, was Sie wollen {#building-only-what-you-want}
@@ -63,8 +63,8 @@ Datei, die sie geschrieben hat, gehörte dann einer Nummer, die später jemand a
 
 Die beiden Dateien stammen aus dem Verzeichnis `packaging/` des Release-Tags, derselben
 Version wie das Binary: Kopieren Sie dieses Verzeichnis neben das Binary, aus einem
-Checkout des Tags oder, für v0.10.2, von
-<https://github.com/go-authn/authnd/tree/v0.10.2/packaging>.
+Checkout des Tags oder, für v0.11.0, von
+<https://github.com/go-authn/authnd/tree/v0.11.0/packaging>.
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
@@ -159,7 +159,7 @@ Warum dieses Verzeichnis und nicht die Datei, erklärt
 | `base_dn` | – (erforderlich) | die Wurzel des Baums, z. B. `dc=example,dc=org`; ein Wert ohne `=` wird abgelehnt |
 | `listen` | `127.0.0.1:3893` | eine Adresse. Standardmäßig Loopback: Ein Verzeichnis, das auf jeder Schnittstelle erscheint, sobald es startet, ist eine Entscheidung, die jemand bewusst treffen sollte. Ein Standort, der LDAP und LDAPS braucht, betreibt zwei Instanzen |
 | `reader "<dn>"` | keiner | ein Dienstkonto, das suchen darf; siehe [wer lesen darf]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
-| `cert_file`, `key_file`, `starttls`, `publish_nt_hash` | aus | [TLS]({{< relref "/authnd/tls.md" >}}) |
+| `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | aus | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | – | [die Personen]({{< relref "/authnd/people.md" >}}); mindestens ein `user`- oder `users`-Block |
 | `kerberos` | keiner | [ein Realm]({{< relref "/authnd/kerberos.md" >}}) |
 | `mfa` | keiner | [ein zweiter Faktor]({{< relref "/authnd/mfa.md" >}}) |
@@ -195,8 +195,16 @@ sudo systemctl restart authnd
 authnd --version
 ```
 
-Vergleichen Sie `packaging/` am neuen Tag mit dem, was installiert ist. Ein Rollback ist
-dieselbe Installation aus `authnd.previous` und ein Neustart.
+Vergleichen Sie `packaging/` am neuen Tag mit dem, was installiert ist (das von v0.11.0 ist
+das von v0.10.2, unverändert). Ein Rollback ist dieselbe Installation aus
+`authnd.previous` und ein Neustart.
+
+Von v0.10.x auf v0.11.0 ist das `check` oben der Schritt, auf den es ankommt: Eine
+Konfiguration mit `publish_nt_hash = true` und ohne
+[`samba`-Block]({{< relref "/authnd/tls.md#the-samba-block" >}}) wird dort abgelehnt
+statt erst beim Neustart, und die Zeilen nach seinen Tabellen sagen, wer kein
+`posixAccount` mehr ist und welche Gruppen keine `posixGroup`s mehr sind
+([die Einträge]({{< relref "/authnd/entries.md" >}})).
 
 Zum Entfernen:
 

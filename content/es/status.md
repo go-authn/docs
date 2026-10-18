@@ -5,22 +5,23 @@ description: "Qué versiones describen estas páginas, qué añadió cada versi�
 tags: [estado, versiones]
 ---
 
-Estas páginas son la versión **0.3** de la documentación, y describen:
+Estas páginas son la versión **0.4** de la documentación, y describen:
 
 | programa | versión | módulo |
 |---|---|---|
-| authnd | **v0.10.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.11.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 Las versiones de las bibliotecas están en [su propia página]({{< relref "/libraries/_index.md" >}});
-directory está en la **v0.12.0**: `Members` responde `[]` para un grupo vacío;
-`Expand` lo rechaza con `ErrEmptyGroup`.
+ldap está en la **v0.8.0**, con el esquema de directorio, y directory en la
+**v0.14.0**, con atributos y valores por defecto de ldapdir más amplios: ambas
+son las que incorpora authnd v0.11.0.
 Una nueva versión menor de cualquiera de los programas anteriores es una nueva
 versión de la documentación, de modo que las páginas que alguien encuentra bajo
-`/docs/0.3/` siguen describiendo lo que instaló; las de las versiones anteriores
-siguen bajo `/docs/0.1/` y `/docs/0.2/`.
+`/docs/0.4/` siguen describiendo lo que instaló; las de las versiones anteriores
+siguen bajo `/docs/0.1/`, `/docs/0.2/` y `/docs/0.3/`.
 
 ## Qué añadió cada versión {#what-each-release-added}
 
@@ -46,6 +47,7 @@ que solo actualizaron dependencias.
 | v0.10.0 | `check` abre el certificado y el keytab, como hace el servidor; nombra a quién no puede hacer un bind con contraseña y a quién sigue admitiendo un token; la línea de escucha llega después de que se abre el reino |
 | v0.10.1 | go-authn/kdc v0.4.2: un `till` de 19700101000000Z obtiene el ticket más largo, no uno caducado en 1970 |
 | v0.10.2 | go-authn/directory v0.12.0: un grupo vacío se publica como `posixGroup` sin `memberUid` |
+| v0.11.0 | [entradas de esquema estándar]({{< relref "/authnd/entries.md" >}}), cada una sometida al esquema servido en `cn=Subschema`; `attributes`, `users_attributes` y `groups_attributes`; `(uidNumber>=1000)` compara enteros. ⛔ `publish_nt_hash` necesita un [bloque `samba`]({{< relref "/authnd/tls.md#the-samba-block" >}}), y un consumidor que filtra por `posixAccount` o `posixGroup` ve menos entradas |
 
 ### authn-bridge {#authn-bridge}
 
@@ -102,6 +104,18 @@ que solo actualizaron dependencias.
 | v0.1.4 | la publicación comprueba la información de compilación de cada binario |
 | v0.1.5 | `-version` muestra la versión del módulo de una compilación con `go install`, no `dev` |
 | v0.1.6 | dominios de ejemplo con nombres del RFC 2606, en la documentación; ningún cambio de comportamiento |
+
+### Las bibliotecas {#the-libraries}
+
+Las versiones de las bibliotecas para las que se hizo esta versión de la
+documentación; la página de cada biblioteca dice lo que cambiaron las
+anteriores.
+
+| | |
+|---|---|
+| directory v0.13.0 | [atributos]({{< relref "/libraries/directory.md#attributes" >}}): lo que describe a alguien y no prueba nada, aparte de las credenciales, con los nombres que nunca pueden serlo; `attributes` en los bloques `user` y `group`, las consultas `users_attributes` y `groups_attributes`, `attributes` y `group_attributes` de ldapdir |
+| directory v0.14.0 | ⛔ los [valores por defecto]({{< relref "/libraries/directory.md#ldapdir-defaults" >}}) de ldapdir leen personas `account` y `uidObject` y grupos `groupOfNames`, lo que amplía lo que entrega el directorio de una institución; un DN en `member` solo corresponde a una persona que el origen importó |
+| ldap v0.8.0 | [el paquete `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) y `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, las reglas de comparación del RFC 4517; `uidNumber` y `gidNumber` se ordenan como enteros; una búsqueda paginada se ciñe a los atributos pedidos |
 
 ## Aún no implementado {#not-implemented-yet}
 

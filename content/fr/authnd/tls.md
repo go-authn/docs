@@ -45,7 +45,8 @@ par un client qui n'est pas ce programme :
 
 ```
 $ authnd --config ldaps
-ldaps on 127.0.0.1:3636, serving 2 people from the configuration file
+ldaps on 127.0.0.1:3636, serving 3 people from the configuration file
+uid=carol,ou=people,dc=example,dc=org is published without sambaNTPassword: no sambaSID and no uidNumber to derive one from
 
 $ openssl s_client -connect 127.0.0.1:3636 -CAfile tls/ca.pem -verify_return_error -verify_ip 127.0.0.1 </dev/null 2>&1 | grep -E 'Verify return|Protocol|subject=|issuer='
 subject=CN=localhost
@@ -71,10 +72,12 @@ ldap_bind: Confidentiality required (13)
 $ LDAPTLS_REQCERT=never ldapsearch -ZZ -x -LLL -H ldap://127.0.0.1:3389 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org '(uid=bob)'
 dn: uid=bob,ou=people,dc=example,dc=org
 objectClass: top
-objectClass: person
-objectClass: posixAccount
+objectClass: account
+objectClass: sambaSamAccount
+objectClass: uidObject
 uid: bob
 cn: bob
+sambaSID: S-1-5-21-1004336348-1177238915-682003330-1104
 sambaNTPassword: 8846F7EAEE8FB117AD06BDD830B7586C
 ```
 
@@ -95,13 +98,17 @@ cette requête de découverte, elle aussi, a besoin de `-ZZ`.
 des personnes par cet annuaire, et ce n'est **pas** une empreinte de mot de passe au
 sens où l'entend un formulaire de connexion : quiconque détient `MD4(UTF16LE(password))`
 s'authentifie comme cette personne en NTLMv2 sans jamais connaître le
-mot de passe. Elle n'est donc publiée que sur demande :
+mot de passe. Elle n'est donc publiée que sur demande et, depuis la v0.11.0,
+avec le domaine auquel appartiennent les SID des personnes :
 
 ```hcl
 publish_nt_hash = true
+samba {
+  domain_sid = "S-1-5-21-1004336348-1177238915-682003330"   # `net getlocalsid` on the SMB server
+}
 ```
 
-et cette demande est refusée sauf si l'écouteur a TLS, ou est en bouclage
+Cette demande est refusée sauf si l'écouteur a TLS, ou est en bouclage
 (`127.0.0.0/8`, `::1`, `localhost`) et donc sur aucun réseau :
 
 ```
@@ -109,20 +116,114 @@ $ authnd check cases/nthash-clear.hcl
 authnd: publish_nt_hash needs cert_file and key_file: an NT hash IS the credential, and 0.0.0.0:3893 is not loopback, so it would cross a network in the clear
 ```
 
-Avec elle, `check` nomme l'attribut par personne et dit ce qui le protège :
+### Le bloc `samba` {#the-samba-block}
+
+`sambaNTPassword` appartient au `sambaSamAccount` de Samba, dont le MUST est
+`uid` et `sambaSID`, et aucune autre classe ne l'autorise. Chaque entrée que
+publie authnd respecte [le schéma qu'il sert]({{< relref "/authnd/entries.md" >}}),
+donc l'attribut n'est publié que sur un `sambaSamAccount`, et cela demande un
+SID :
+
+| clé | |
+|---|---|
+| `domain_sid` | obligatoire : le SID de domaine du serveur SMB, `S-1-5-21-…`, tel que l'affiche `net getlocalsid` |
+| `algorithmic_rid_base` | facultatif, `1000` par défaut, celui de Samba. Un nombre impair, ou inférieur à 1000, est refusé : Samba en utiliserait silencieusement un autre |
+
+Le `sambaSID` d'une personne est son propre attribut `sambaSID` quand une
+source en donne un ([attributs]({{< relref "/authnd/entries.md#adding-attributes" >}})).
+Sinon, c'est `domain_sid-RID`, avec RID = 2 × `uidNumber` +
+`algorithmic_rid_base` : la correspondance algorithmique de Samba
+(smb.conf(5), *algorithmic rid base*). Une personne qui a une clé NT et ni
+l'un ni l'autre est publiée **sans** `sambaNTPassword`, et `check` et le
+journal de démarrage disent qui. Les définitions Samba ne sont ajoutées au
+schéma servi à `cn=Subschema` que lorsque le bloc est présent ; elles ont été
+écrites à partir des OID, des noms et des syntaxes publiés par Samba, et non
+copiées de son `samba.schema` sous GPL-3.0.
+
+{{< callout type="error" >}}
+**Rupture pour les configurations v0.10.x : `publish_nt_hash` sans bloc `samba` ne démarre pas**
+
+La v0.10.x servait `publish_nt_hash = true` seul. Depuis la v0.11.0, cette
+configuration est refusée au démarrage et par `check`, avec ce qu'il faut
+ajouter :
+
+```
+$ authnd check cases/nthash.hcl
+authnd: publish_nt_hash needs a samba block: sambaNTPassword belongs to Samba's sambaSamAccount, whose MUST is uid and sambaSID, and a SID needs the domain's. Add
+
+  samba {
+    domain_sid = "S-1-5-21-..."   # the SMB server's: `net getlocalsid` prints it
+  }
+
+and each person's sambaSID is their own sambaSID attribute, or domain_sid-(2 x uidNumber + 1000), Samba's algorithmic mapping; `authnd check` lists who has neither
+```
+
+Lancez `check` avec le nouveau binaire avant la mise à niveau. Le refus est
+délibéré : l'entrée de la v0.10.x ne peut pas respecter le schéma, et les deux
+solutions silencieuses — écarter l'attribut, ce qui retire SMB à tout le
+monde, ou écarter l'entrée, ce qui retire la personne — se produiraient
+toutes deux sans rien sur la console.
+{{< /callout >}}
+
+Un bloc `samba` sans `publish_nt_hash` est refusé aussi, puisqu'il ne
+publierait rien :
+
+```
+$ authnd check cases/samba-alone.hcl
+authnd: a samba block without publish_nt_hash publishes nothing: it is the domain of the sambaSID that sambaNTPassword needs. Remove it, or set publish_nt_hash = true
+```
+
+### Ce que dit `check` {#what-check-says}
+
+Trois personnes sur un écouteur `ldaps://` : alice a un mot de passe et le
+trio POSIX, donc son SID est dérivé (2 × 1000 + 1000) ; bob n'a qu'une
+empreinte NT et un `sambaSID` propre ; carol a un mot de passe et ni l'un ni
+l'autre.
+
+```hcl
+listen    = "127.0.0.1:3636"
+base_dn   = "dc=example,dc=org"
+cert_file = "tls/cert.pem"
+key_file  = "tls/key.pem"
+
+publish_nt_hash = true
+samba {
+  domain_sid = "S-1-5-21-1004336348-1177238915-682003330"
+}
+
+reader "cn=reader,dc=example,dc=org" { password_file = "etc/authnd/reader.pw" }
+
+user "alice" {
+  password_file = "etc/authnd/alice.pw"
+  attributes    = { uidNumber = "1000", gidNumber = "1000", homeDirectory = "/home/alice" }
+}
+
+user "bob" {
+  nt_hash    = "8846F7EAEE8FB117AD06BDD830B7586C"
+  attributes = { sambaSID = "S-1-5-21-1004336348-1177238915-682003330-1104" }
+}
+
+user "carol" { password = "carol-pw" }
+```
 
 ```
 $ authnd check ldaps
 ldaps://127.0.0.1:3636, base dc=example,dc=org
 
-USER   FROM                    CAN PROVE   PUBLISHED AS
-alice  the configuration file  a password  uid, cn and sambaNTPassword
-bob    the configuration file  an NT hash  uid, cn and sambaNTPassword
+USER   FROM                    CAN PROVE   PUBLISHED AS                                       WITH
+alice  the configuration file  a password  account, posixAccount, sambaSamAccount, uidObject  uid, cn, gidNumber, homeDirectory, uidNumber, sambaSID and sambaNTPassword
+bob    the configuration file  an NT hash  account, sambaSamAccount, uidObject                uid, cn, sambaSID and sambaNTPassword
+carol  the configuration file  a password  account, uidObject                                 uid
+
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, sambaSamAccount, uidObject
+carol has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+carol is published without sambaNTPassword: no sambaSID and no uidNumber to derive one from
 
 a bind carries a password
 bob cannot bind with a password: the source holds only what an SMB server needs (an NT hash), which a bind cannot be checked against
 cn=reader,dc=example,dc=org may search; every other bound client may not
 sambaNTPassword is published over TLS: it IS the credential, and whoever reads it authenticates as that person over NTLMv2
+  in sambaSamAccount, with sambaSIDs in S-1-5-21-1004336348-1177238915-682003330 (a person's own sambaSID, or RID 2 x uidNumber + 1000)
 
 this configuration can be served
 ```
@@ -131,6 +232,28 @@ et, pour l'écouteur StartTLS, *sambaNTPassword is published over TLS, once
 StartTLS has been asked for*. alice n'a pas d'empreinte NT écrite ; la sienne est
 dérivée du mot de passe qu'elle a. L'empreinte de bob est publiée pour qu'un serveur SMB
 s'en serve, et `check` dit aussi que bob ne peut pas se lier à authnd lui-même.
+L'entrée de carol est publiée sans l'attribut, et un serveur SMB ne peut pas
+servir carol tant qu'une source ne lui donne pas de `uidNumber` ou de
+`sambaSID`.
+
+Ce que reçoit un lecteur, sur l'écouteur StartTLS des mêmes personnes :
+
+```
+$ LDAPTLS_REQCERT=never ldapsearch -ZZ -x -LLL -H ldap://127.0.0.1:3389 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org '(uid=alice)'
+dn: uid=alice,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: sambaSamAccount
+objectClass: uidObject
+uid: alice
+cn: alice
+gidNumber: 1000
+homeDirectory: /home/alice
+uidNumber: 1000
+sambaSID: S-1-5-21-1004336348-1177238915-682003330-3000
+sambaNTPassword: D061EF15E9494B458016FA760CECDD63
+```
 
 Seul un [lecteur]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})
 peut chercher, donc seul un lecteur voit jamais l'attribut. Qui peut le lire est

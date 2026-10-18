@@ -19,7 +19,7 @@ y arm64 (`.exe` en windows), compilado con `CGO_ENABLED=0`, un manifiesto
 `SHA256SUMS`, y una atestación de procedencia de compilación para cada binario.
 
 ```sh
-version=v0.10.2
+version=v0.11.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ con la que se publica, así que la versión es algo que se puede comparar:
 
 ```
 $ authnd --version
-authnd version v0.10.2
+authnd version v0.11.0
 ```
 
 ### Compilar solo lo que quiere {#building-only-what-you-want}
@@ -66,8 +66,8 @@ escribiera pertenecería a un número que más tarde designa a otra persona.
 
 Los dos archivos vienen del directorio `packaging/` de la etiqueta de la versión,
 la misma versión que el binario: copie ese directorio junto al binario, desde una
-copia de la etiqueta o, para v0.10.2, desde
-<https://github.com/go-authn/authnd/tree/v0.10.2/packaging>.
+copia de la etiqueta o, para la v0.11.0, desde
+<https://github.com/go-authn/authnd/tree/v0.11.0/packaging>.
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
@@ -164,7 +164,7 @@ Por qué ese directorio y no el archivo se explica en
 | `base_dn` | — (obligatorio) | la raíz del árbol, p. ej. `dc=example,dc=org`; un valor sin `=` se rechaza |
 | `listen` | `127.0.0.1:3893` | una dirección. Loopback por defecto: un directorio que aparece en todas las interfaces en cuanto arranca es una decisión que alguien debería tomar a propósito. Un sitio que necesita LDAP y LDAPS ejecuta dos instancias |
 | `reader "<dn>"` | ninguno | una cuenta de servicio que puede buscar; consulte [quién puede leer]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
-| `cert_file`, `key_file`, `starttls`, `publish_nt_hash` | desactivado | [TLS]({{< relref "/authnd/tls.md" >}}) |
+| `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | desactivado | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [las personas]({{< relref "/authnd/people.md" >}}); al menos un bloque `user` o `users` |
 | `kerberos` | ninguno | [un reino]({{< relref "/authnd/kerberos.md" >}}) |
 | `mfa` | ninguno | [un segundo factor]({{< relref "/authnd/mfa.md" >}}) |
@@ -201,8 +201,16 @@ sudo systemctl restart authnd
 authnd --version
 ```
 
-Compare `packaging/` en la nueva etiqueta con lo que está instalado. Volver atrás es
-la misma instalación a partir de `authnd.previous`, y un reinicio.
+Compare `packaging/` en la nueva etiqueta con lo que está instalado (el de la
+v0.11.0 es el de la v0.10.2, sin cambios). Volver atrás es la misma
+instalación a partir de `authnd.previous`, y un reinicio.
+
+De la v0.10.x a la v0.11.0, el `check` de arriba es el paso que importa: una
+configuración con `publish_nt_hash = true` y sin
+[bloque `samba`]({{< relref "/authnd/tls.md#the-samba-block" >}}) se rechaza
+ahí y no en el reinicio, y las líneas que siguen a sus tablas dicen quién ha
+dejado de ser un `posixAccount` y qué grupos han dejado de ser `posixGroup`
+([las entradas]({{< relref "/authnd/entries.md" >}})).
 
 Para desinstalarlo:
 

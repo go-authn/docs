@@ -35,6 +35,7 @@ group "staff" { members = ["alice", "carol"] }
 | `totp_secret` | un secreto de código de un solo uso en base32, de al menos 128 bits; consulte [un segundo factor]({{< relref "/authnd/mfa.md" >}}) |
 | `authorized_keys` | líneas de `authorized_keys`, publicadas como `sshPublicKey` |
 | `authorized_keys_file` | lo mismo, a partir de un archivo |
+| `attributes` | desde la v0.11.0, lo que describe a la persona y no prueba nada —`sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`…—, como un mapa de cadenas o de listas de cadenas; un bloque `group` también lo admite. Deciden como qué se publica la entrada: consulte [las entradas]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 
 Se rechaza al arrancar, nombrando a la persona:
 
@@ -94,6 +95,12 @@ NULL es una credencial que esa persona no tiene. Una columna de contraseña se c
 tal como está guardada: authnd no tiene ningún ajuste para una columna con hash. La
 consulta `groups` devuelve un nombre de grupo y un miembro, una fila por pertenencia.
 
+Otras dos consultas, opcionales, leen atributos **por alias de columna** en lugar
+de por posición: `users_attributes` (un nombre y después una columna por
+atributo) y `groups_attributes` (un grupo y después lo mismo). PostgreSQL pasa a
+minúsculas un alias sin comillas. Consulte
+[las entradas]({{< relref "/authnd/entries.md#in-a-sql-database" >}}).
+
 `driver` acepta `postgres` (o `postgresql`, `pgx`), `mysql` (o `mariadb`) y `sqlite`
 (o `sqlite3`). La base de datos se contacta al arrancar, antes de que nada escuche,
 así que una que no responde detiene el servidor allí donde alguien está mirando:
@@ -132,17 +139,45 @@ atributos los nombran:
 
 | clave | por defecto |
 |---|---|
-| `user_filter` | `(objectClass=posixAccount)` |
+| `user_filter` | `(\|(objectClass=posixAccount)(objectClass=account)(objectClass=uidObject))` |
 | `user_attribute` | `uid` |
 | `group_base_dn` | `base_dn` |
-| `group_filter` | `(objectClass=posixGroup)` |
+| `group_filter` | `(\|(objectClass=posixGroup)(objectClass=groupOfNames))` |
 | `group_attribute` | `cn` |
-| `group_member_attribute` | `memberUid` |
+| `group_member_attribute` | ninguno: `memberUid` (nombres) **y** `member` (DN); si se define, es el único atributo que se lee |
 | `totp_attribute` | ninguno: no hay ningún atributo estándar, y uno adivinado no leería nada aparentando haber buscado |
+| `attributes`, `group_attributes` | ninguno: los atributos que se copian de la entrada de cada persona y de la de cada grupo, como `["mail", "uidNumber", "homeDirectory"]` y `["gidNumber"]` ([las entradas]({{< relref "/authnd/entries.md#adding-attributes" >}})) |
 | `start_tls` | `false` |
 
-`sambaNTPassword` y `sshPublicKey` se leen con esos nombres. Dos cosas se rechazan
-antes de abrir nada:
+Un DN en `member` solo cuenta cuando es el DN de una entrada que devolvió la
+búsqueda de personas: un DN fuera de ellas, o que no nombra a nadie, no
+corresponde a nadie, y el nombre nunca se extrae del DN. `sambaNTPassword` y
+`sshPublicKey` se leen con esos nombres.
+
+{{< callout type="warning" >}}
+**Desde la v0.11.0, los valores por defecto leen más del directorio de una institución**
+
+El bloque es el de go-authn/directory, y directory v0.14.0, que incorpora authnd
+v0.11.0, amplió sus valores por defecto: hasta la v0.10.2, `user_filter` era
+`(objectClass=posixAccount)`, `group_filter` `(objectClass=posixGroup)` y
+`group_member_attribute` `memberUid`. Un directorio con entradas `account` o
+`uidObject` que no son posixAccount —cuentas de servicio, máquinas nombradas
+por uid, personas importadas de otro lugar— se las entrega ahora a authnd, y
+cada una puede comprobarse con un bind; sus grupos `groupOfNames` pasan a ser
+grupos aquí. Para conservar exactamente el conjunto anterior, escriba los
+valores anteriores:
+
+```hcl
+users "ldap" {
+  # ...
+  user_filter            = "(objectClass=posixAccount)"
+  group_filter           = "(objectClass=posixGroup)"
+  group_member_attribute = "memberUid"
+}
+```
+{{< /callout >}}
+
+Dos cosas se rechazan antes de abrir nada:
 
 ```
 $ authnd check cases/ldap-clear.hcl
@@ -156,22 +191,48 @@ authnd: users "ldap" has credentials in its url, and a url is printed: use bind_
 medio.
 
 Un directorio detrás de este **comprueba** las contraseñas haciendo un bind contra
-él; no las entrega. Aquí un authnd hace de fachada de otro, bajo una base distinta:
+él; no las entrega. Aquí un authnd hace de fachada de otro, bajo una base distinta;
+el que está detrás es el ejemplo de
+[`check`]({{< relref "/authnd/check.md#a-configuration-that-can-be-served" >}}),
+servido en el 3893:
+
+```hcl
+listen  = "127.0.0.1:3894"
+base_dn = "dc=example,dc=net"
+
+users "ldap" {
+  url                = "ldap://127.0.0.1:3893"
+  base_dn            = "ou=people,dc=example,dc=org"
+  group_base_dn      = "ou=groups,dc=example,dc=org"
+  bind_dn            = "cn=reader,dc=example,dc=org"
+  bind_password_file = "etc/authnd/reader.pw"
+}
+
+user "svc-backup" { password_file = "etc/authnd/svc-backup.pw" }
+```
 
 ```
 $ authnd check front2
 ldap://127.0.0.1:3894, base dc=example,dc=net
 
-USER        FROM                    CAN PROVE         PUBLISHED AS
-alice       ldap://127.0.0.1:3893   a password check  uid and cn
-bob         ldap://127.0.0.1:3893   a password check  uid and cn
-dora        ldap://127.0.0.1:3893   a password check  uid and cn
-eli         ldap://127.0.0.1:3893   a password check  uid and cn
-svc-backup  the configuration file  a password        uid and cn
+USER        FROM                    CAN PROVE         PUBLISHED AS        WITH
+alice       ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+bob         ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+dora        ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+eli         ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+svc-backup  the configuration file  a password        account, uidObject  uid
 
-GROUP      MEMBERS
-engineers  dora and eli
-staff      alice, bob and dora
+GROUP      MEMBERS              PUBLISHED AS
+engineers  dora and eli         groupOfNames
+staff      alice, bob and dora  groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+dora has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+eli has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+svc-backup has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group engineers has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
 
 a bind carries a password
 no reader is declared: nothing may search, and binds are not affected
@@ -179,6 +240,12 @@ sambaNTPassword is not published, so nothing here can authenticate an SMB sessio
 
 this configuration can be served
 ```
+
+Cada persona que publica el directorio de detrás es un `account` y cada grupo un
+`groupOfNames`, ya que ninguno tiene atributos POSIX: los valores por defecto
+los leen, y los DN en `member` de los grupos corresponden a las personas
+importadas. Con los valores por defecto de hasta la v0.10.2,
+`(objectClass=posixAccount)` no habría encontrado a ninguna de ellas.
 
 *A password check* basta para un bind, y nunca basta para un
 [ticket Kerberos]({{< relref "/authnd/kerberos.md#who-can-be-issued-a-ticket" >}})

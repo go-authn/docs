@@ -11,9 +11,25 @@ things that want to authenticate them speak LDAP.** authnd is the front: it
 binds and searches over [go-authn/directory]({{< relref "/libraries/_index.md" >}})'s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe
-v0.10.2, which differs from v0.10.0 only by the libraries it embeds:
-go-authn/kdc v0.4.2 (from v0.10.1) and go-authn/directory v0.12.0 (from
-v0.10.2); what is verified and what is not is on the [status]({{< relref "/status.md" >}}) page.
+v0.11.0, whose entries follow the standard schemas and pass the schema it
+serves at `cn=Subschema`, with go-authn/ldap v0.8.0 and go-authn/directory
+v0.14.0 under it; what is verified and what is not is on the
+[status]({{< relref "/status.md" >}}) page.
+
+{{< callout type="warning" >}}
+**Upgrading from v0.10.x**
+
+- `publish_nt_hash = true` now needs a [`samba` block]({{< relref "/authnd/tls.md#the-samba-block" >}}),
+  or authnd does not start.
+- A person without `uidNumber`, `gidNumber` and `homeDirectory` is no longer
+  a `posixAccount`, and a group without a `gidNumber` no longer a
+  `posixGroup`, so a consumer filtering on those classes sees fewer entries:
+  see [the entries]({{< relref "/authnd/entries.md" >}}).
+- A `users "ldap"` block reads more of the directory behind it by default:
+  see [people]({{< relref "/authnd/people.md#in-another-ldap-directory" >}}).
+
+`authnd check` with the new binary says all three before the restart.
+{{< /callout >}}
 
 ```sh
 authnd --config /etc/authnd      # serve
@@ -33,13 +49,20 @@ user "alice" { password_file = "/etc/authnd/passwords/alice.pw" }
 group "staff" { members = ["alice"] }
 ```
 
-People are published as `uid=<name>,ou=people,<base_dn>` (`posixAccount`),
-groups as `cn=<name>,ou=groups,<base_dn>` (`posixGroup`, with `memberUid`).
-A group a source lists with nobody in it is published without `memberUid`,
-since an LDAP attribute has at least one value; before v0.10.2 it was left out.
-Every entry carries `uid` and `cn`; `sambaNTPassword` and `sshPublicKey` are
-added when the person has them and, for the first, when
-[`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) says so.
+People are published as `uid=<name>,ou=people,<base_dn>`, groups as
+`cn=<name>,ou=groups,<base_dn>`. What each entry *is* follows from what its
+source gave: a person is an `account`, or an `inetOrgPerson` when there is
+an `sn`, and a `posixAccount` only with `uidNumber`, `gidNumber` and
+`homeDirectory`; every person is a `uidObject`. A group is a `posixGroup`
+(with `memberUid`) when it has a `gidNumber`, otherwise a `groupOfNames`
+(with `member` DNs), or an `organizationalRole` when it is also empty.
+`sshPublicKey` is added when the person has keys, and `sambaNTPassword` when
+[`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) says
+so and a SID can be given. Every entry passes the schema served at
+`cn=Subschema` before it is published: see
+[the entries and the schema]({{< relref "/authnd/entries.md" >}}). Up to
+v0.10.2 every person was a `posixAccount` and every group a `posixGroup`,
+whatever they had.
 
 `--config` (`-c`) takes a file or a directory and may be repeated; a directory
 is every `.hcl` file in it, read in name order and merged into one
@@ -96,11 +119,14 @@ supportedControl: 1.3.6.1.1.13.1
 supportedControl: 1.3.6.1.1.13.2
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
+subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.10.2
+vendorVersion: v0.11.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` is the RFC 3062 password modify operation.
+`subschemaSubentry` names the [schema]({{< relref "/authnd/entries.md#the-schema-it-serves" >}}),
+which is answered to an anonymous client as well.
 `supportedSASLMechanisms: OAUTHBEARER` appears only with an
 [`oidc` block]({{< relref "/authnd/tokens.md" >}}).
 
@@ -110,6 +136,7 @@ vendorVersion: v0.10.2
 |---|---|
 | [Installing it]({{< relref "/authnd/install.md" >}}) | the release binary, the `authnd` account, the systemd unit, upgrades |
 | [Where the people come from]({{< relref "/authnd/people.md" >}}) | `user` and `group` blocks, a SQL database, another LDAP directory |
+| [The entries and the schema]({{< relref "/authnd/entries.md" >}}) | what each person and group is published as, `cn=Subschema`, attributes, what is dropped or withheld |
 | [`check`]({{< relref "/authnd/check.md" >}}) | read the configuration back before restarting |
 | [TLS]({{< relref "/authnd/tls.md" >}}) | `ldaps://` or StartTLS, and `publish_nt_hash` |
 | [Changing a password]({{< relref "/authnd/passwords.md" >}}) | `ldappasswd`, `ldapmodify`, and why the old password is always asked for |
@@ -121,12 +148,17 @@ vendorVersion: v0.10.2
 {{< callout type="info" >}}
 **About the transcripts**
 
-Every block of output on these pages was printed by the v0.10.0 release binary
-(`authnd-darwin-arm64`) — v0.10.1 printed the same `check`, byte for byte, on the two
-configurations compared; the `--version` lines and the root DSE's
-`vendorVersion` are v0.10.2's, whose root DSE is otherwise the same — and by the OpenLDAP and Heimdal clients that ship with
-macOS, run on 127.0.0.1 on unprivileged ports, in a scratch directory under
-`/tmp`. That
+Every `check` table, every startup line, the entries read back with
+`ldapsearch`, the root DSE and `cn=Subschema`, the `samba` refusals and the
+`--version` lines were printed by the v0.11.0 release binary
+(`authnd-darwin-arm64`, `go version -m`: `mod github.com/go-authn/authnd v0.11.0`,
+`vcs.modified=false`). So were the configuration refusals on these pages,
+which v0.11.0 printed byte for byte as v0.10.0 had. The binds, `kinit`s,
+password changes and token exchanges were printed by the v0.10.0 release
+binary and were not run again for v0.11.0, whose release notes change none
+of them. All of them were asked by the OpenLDAP and
+Heimdal clients that ship with macOS, on 127.0.0.1 on unprivileged ports, in
+a scratch directory under `/tmp`. That
 is why the configurations behind them name files by relative paths such as
 `etc/authnd/passwords/alice.pw`, and why the password files have names like
 `alice.pwin`. The `/etc/authnd` paths in the examples are what an installed

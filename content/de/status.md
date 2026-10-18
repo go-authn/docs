@@ -5,22 +5,23 @@ description: "Welche Releases diese Seiten beschreiben, was jedes Release hinzug
 tags: [stand, releases]
 ---
 
-Diese Seiten sind die Dokumentationsversion **0.3** und beschreiben:
+Diese Seiten sind die Dokumentationsversion **0.4** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
-| authnd | **v0.10.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.11.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}});
-directory ist bei **v0.12.0**: `Members` antwortet `[]` für eine leere Gruppe;
-`Expand` lehnt sie mit `ErrEmptyGroup` ab.
+ldap ist bei **v0.8.0**, mit dem Verzeichnisschema, und directory bei **v0.14.0**,
+mit Attributen und erweiterten ldapdir-Standardwerten: beide sind das, was authnd v0.11.0
+einbettet.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
-sodass die Seiten, die jemand unter `/docs/0.3/` findet, weiterhin beschreiben, was
-installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/` und
-`/docs/0.2/`.
+sodass die Seiten, die jemand unter `/docs/0.4/` findet, weiterhin beschreiben, was
+installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`,
+`/docs/0.2/` und `/docs/0.3/`.
 
 ## Was jedes Release hinzugefügt hat {#what-each-release-added}
 
@@ -46,6 +47,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen.
 | v0.10.0 | `check` öffnet das Zertifikat und die Keytab, wie es der Server tut; es nennt, wer sich nicht mit einem Passwort binden kann und wen ein Token noch zulässt; die Zeile zum Lauschen kommt, nachdem der Realm geöffnet ist |
 | v0.10.1 | go-authn/kdc v0.4.2: ein `till` von 19700101000000Z erhält das längste Ticket, nicht eines, das 1970 abgelaufen ist |
 | v0.10.2 | go-authn/directory v0.12.0: Eine leere Gruppe wird als `posixGroup` ohne `memberUid` veröffentlicht |
+| v0.11.0 | [Einträge nach Standardschema]({{< relref "/authnd/entries.md" >}}), jeder an dem unter `cn=Subschema` bereitgestellten Schema gemessen; `attributes`, `users_attributes` und `groups_attributes`; `(uidNumber>=1000)` vergleicht Ganzzahlen. ⛔ `publish_nt_hash` braucht einen [`samba`-Block]({{< relref "/authnd/tls.md#the-samba-block" >}}), und ein Konsument, der nach `posixAccount` oder `posixGroup` filtert, sieht weniger Einträge |
 
 ### authn-bridge {#authn-bridge}
 
@@ -102,6 +104,17 @@ Abhängigkeiten aktualisiert haben, sind weggelassen.
 | v0.1.4 | das Release prüft die Build-Informationen jedes Binarys |
 | v0.1.5 | `-version` gibt die Modulversion eines mit `go install` erstellten Builds aus, nicht `dev` |
 | v0.1.6 | Platzhalter-Domains mit Namen nach RFC 2606, in der Dokumentation; keine Verhaltensänderung |
+
+### Die Bibliotheken {#the-libraries}
+
+Die Bibliotheks-Releases, für die diese Dokumentationsversion erstellt wurde; die Seite
+jeder Bibliothek sagt, was frühere geändert haben.
+
+| | |
+|---|---|
+| directory v0.13.0 | [Attribute]({{< relref "/libraries/directory.md#attributes" >}}): was jemanden beschreibt und nichts beweist, getrennt von Anmeldedaten, mit den Namen, die nie eines sein können; `attributes` in `user`- und `group`-Blöcken, die Abfragen `users_attributes` und `groups_attributes`, `attributes` und `group_attributes` von ldapdir |
+| directory v0.14.0 | ⛔ die [Standardwerte]({{< relref "/libraries/directory.md#ldapdir-defaults" >}}) von ldapdir lesen Personen mit `account` und `uidObject` und Gruppen mit `groupOfNames`, was erweitert, was das Verzeichnis einer Einrichtung liefert; ein `member`-DN wird nur auf eine Person abgebildet, die die Quelle importiert hat |
+| ldap v0.8.0 | [Paket `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) und `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, Matching-Regeln nach RFC 4517; `uidNumber` und `gidNumber` werden als Ganzzahlen geordnet; eine seitenweise Suche hält sich an die angeforderten Attribute |
 
 ## Noch nicht implementiert {#not-implemented-yet}
 

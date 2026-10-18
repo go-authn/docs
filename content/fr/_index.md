@@ -18,7 +18,7 @@ Ces pages décrivent les versions listées sur la [page d'état]({{< relref "/st
 
 | | ce que c'est | ces pages décrivent |
 |---|---|---|
-| [authnd]({{< relref "/authnd/_index.md" >}}) | un serveur LDAP, et éventuellement un royaume Kerberos, pour des personnes qui vivent ailleurs : un fichier, une base de données SQL, un autre annuaire | v0.10.2 |
+| [authnd]({{< relref "/authnd/_index.md" >}}) | un serveur LDAP, et éventuellement un royaume Kerberos, pour des personnes qui vivent ailleurs : un fichier, une base de données SQL, un autre annuaire | v0.11.0 |
 | [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | un fournisseur OpenID Connect devant une fédération SAML (RENATER, eduGAIN), qui émet aussi des certificats SSH et signe les listes qui les révoquent | v0.23.0 |
 | [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | récupère ces listes, vérifie chacune avant qu'un serveur ne la lise, et refuse en cas de doute quand l'une d'elles expire | v0.6.3 |
 | [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`, à qui sshd demande si la délégation de domaine d'un certificat nomme cet hôte | v0.1.6 |
@@ -28,7 +28,7 @@ publié avec `SHA256SUMS` et une provenance de compilation :
 [vérifier un téléchargement]({{< relref "/security/verifying-releases.md" >}}).
 
 ```sh
-go install github.com/go-authn/authnd@v0.10.2
+go install github.com/go-authn/authnd@v0.11.0
 go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.0
 go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.3
 ```
@@ -55,14 +55,14 @@ que quoi que ce soit ne soit redémarré, qui pourrait recevoir un ticket Kerber
 pourrait jamais :
 
 ```
-realm EXAMPLE.ORG on 127.0.0.1:88 (udp and tcp), keytab krb5.keytab
-  can be issued a ticket: alice
-  CANNOT, whatever they type: bob
+realm EXAMPLE.ORG on 127.0.0.1:18388 (udp and tcp), keytab etc/authnd/krb5.keytab
+  can be issued a ticket: alice and dora
+  CANNOT, whatever they type: bob and eli
   a KDC must decrypt the pre-authentication with the person's key
-  bob: an NT hash is only the RC4-HMAC key (RFC 4757), and this realm issues aes256-cts-hmac-sha1-96 alone, whose key is derived from the password itself
+  bob and eli: an NT hash is only the RC4-HMAC key (RFC 4757), and this realm issues aes256-cts-hmac-sha1-96 alone, whose key is derived from the password itself
 ```
 
-C'est la sortie même d'authnd v0.10.1 : [en entier]({{< relref "/authnd/check.md" >}}).
+C'est la sortie même d'authnd v0.11.0 : [en entier]({{< relref "/authnd/check.md" >}}).
 
 ## Jugé par les outils des autres {#judged-by-other-peoples-tools}
 

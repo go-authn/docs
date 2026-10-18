@@ -19,7 +19,7 @@ and arm64 (`.exe` on windows), built with `CGO_ENABLED=0`, a `SHA256SUMS`
 manifest, and a build provenance attestation for every binary.
 
 ```sh
-version=v0.10.2
+version=v0.11.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ something to compare:
 
 ```
 $ authnd --version
-authnd version v0.10.2
+authnd version v0.11.0
 ```
 
 ### Building only what you want
@@ -64,8 +64,8 @@ and a file it wrote would belong to a number that later means somebody else.
 
 The two files come from the `packaging/` directory of the release tag, the
 same version as the binary: copy that directory beside the binary, from a
-checkout of the tag or, for v0.10.2, from
-<https://github.com/go-authn/authnd/tree/v0.10.2/packaging>.
+checkout of the tag or, for v0.11.0, from
+<https://github.com/go-authn/authnd/tree/v0.11.0/packaging>.
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
@@ -161,7 +161,7 @@ Why that directory and not the file is explained in
 | `base_dn` | — (required) | the root of the tree, e.g. `dc=example,dc=org`; a value with no `=` is refused |
 | `listen` | `127.0.0.1:3893` | one address. Loopback by default: a directory that appears on every interface the moment it starts is a decision somebody should make on purpose. A site that needs LDAP and LDAPS runs two instances |
 | `reader "<dn>"` | none | a service account that may search; see [who may read]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
-| `cert_file`, `key_file`, `starttls`, `publish_nt_hash` | off | [TLS]({{< relref "/authnd/tls.md" >}}) |
+| `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | off | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [the people]({{< relref "/authnd/people.md" >}}); at least one `user` or `users` block |
 | `kerberos` | none | [a realm]({{< relref "/authnd/kerberos.md" >}}) |
 | `mfa` | none | [a second factor]({{< relref "/authnd/mfa.md" >}}) |
@@ -198,8 +198,16 @@ sudo systemctl restart authnd
 authnd --version
 ```
 
-Compare `packaging/` at the new tag with what is installed. Rolling back is
-the same install from `authnd.previous`, and a restart.
+Compare `packaging/` at the new tag with what is installed (v0.11.0's is
+v0.10.2's, unchanged). Rolling back is the same install from
+`authnd.previous`, and a restart.
+
+From v0.10.x to v0.11.0 the `check` above is the step that matters: a
+configuration with `publish_nt_hash = true` and no
+[`samba` block]({{< relref "/authnd/tls.md#the-samba-block" >}}) is refused
+there rather than at the restart, and the lines after its tables say who is
+no longer a `posixAccount` and which groups are no longer `posixGroup`s
+([the entries]({{< relref "/authnd/entries.md" >}})).
 
 To remove it:
 

@@ -28,15 +28,22 @@ files (`authnd.hcl` and `people.hcl`):
 $ authnd check etc/authnd
 ldap://127.0.0.1:3893, base dc=example,dc=org
 
-USER   FROM                    CAN PROVE   PUBLISHED AS
-alice  the configuration file  a password  uid and cn
-bob    the configuration file  an NT hash  uid and cn
-dora   a sqlite database       a password  uid and cn
-eli    a sqlite database       an NT hash  uid and cn
+USER   FROM                    CAN PROVE   PUBLISHED AS        WITH
+alice  the configuration file  a password  account, uidObject  uid
+bob    the configuration file  an NT hash  account, uidObject  uid
+dora   a sqlite database       a password  account, uidObject  uid
+eli    a sqlite database       an NT hash  account, uidObject  uid
 
-GROUP      MEMBERS
-engineers  dora and eli
-staff      alice, bob and dora
+GROUP      MEMBERS              PUBLISHED AS
+engineers  dora and eli         groupOfNames
+staff      alice, bob and dora  groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+dora has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+eli has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group engineers has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
 
 a bind carries a password
 bob and eli cannot bind with a password: their sources hold only what an SMB server needs (an NT hash), which a bind cannot be checked against
@@ -55,10 +62,27 @@ The first line is the scheme, the address and the base: `ldap://`,
 |---|---|
 | `FROM` | the source that owns the name: *the configuration file*, *a sqlite database* (or postgres, mysql), or the url of a directory behind this one |
 | `CAN PROVE` | *a password* (held, so it can be compared and keys derived from it), *a password check* (another directory answers yes or no), *an NT hash*, *N keys*, *a one-time-code secret*, or *nothing* |
-| `PUBLISHED AS` | the attributes the entry carries: always `uid` and `cn`; `sambaNTPassword` when `publish_nt_hash` is on and the person has one or a password it can be derived from; `sshPublicKey` when there are keys |
+| `PUBLISHED AS` | the entry's object classes, without `top`, as [the shapes]({{< relref "/authnd/entries.md#the-shapes" >}}) give them — or *NOT PUBLISHED (see below)* for an entry that fails the schema |
+| `WITH` | the attributes the entry carries, read off the entry a search returns: `uid`; `cn` wherever a class allows it; what the sources gave, less what was dropped; `sshPublicKey` when there are keys; `sambaSID` and `sambaNTPassword` when [`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) is on and the person has an NT key and a SID |
+
+The group table has a `PUBLISHED AS` column too: `posixGroup`,
+`groupOfNames` or `organizationalRole`. Up to v0.10.2, `PUBLISHED AS` was
+the list of attributes, *uid and cn* for nearly everybody, and there was no
+`WITH` column.
 
 The lines after the tables say what a person needs to know before relying on
-the configuration:
+the configuration. First, about [the entries]({{< relref "/authnd/entries.md" >}}):
+
+- **who is not a `posixAccount`**, and which of `uidNumber`, `gidNumber`
+  and `homeDirectory` they lack;
+- **which groups have no `gidNumber`**, and what they are published as
+  instead;
+- **every attribute dropped** because no class of its entry allows it, and
+  which classes would;
+- **every entry not published**, with each problem the schema check found;
+- **who has an NT key and no `sambaSID`**, and so no `sambaNTPassword`.
+
+Then, about binds and searches:
 
 - **what a bind carries**: *a password*, or, with an [`mfa` block]({{< relref "/authnd/mfa.md" >}}),
   *a password with a 6-digit code after it*; with an [`oidc` block]({{< relref "/authnd/tokens.md" >}}),
@@ -76,15 +100,19 @@ the configuration:
   `amr` names two kinds still can;
 - a **group that names somebody no source has**.
 
-That last one is published as it stands — `memberUid` is a string, and a
-front for one system legitimately carries names another one owns — but it is
-said, because the other reading is a typo. Here the database's
-`team_members` table has a row for `zoe`, who is nobody here:
+That last one is published as it stands — a front for one system
+legitimately carries names another one owns — but it is said, because the
+other reading is a typo. In a `posixGroup` the stranger is a `memberUid`; in
+a `groupOfNames` it is a `member` DN that names no entry here,
+`member: uid=zoe,ou=people,dc=example,dc=org` here, which go-authn/directory's
+`ldapdir` from v0.14.0 maps to nobody. Here the database's `team_members`
+table has a row for `zoe`, who is nobody here:
 
 ```
-GROUP      MEMBERS
-engineers  dora, eli and zoe
-staff      alice, bob and dora
+GROUP      MEMBERS              PUBLISHED AS
+engineers  dora, eli and zoe    groupOfNames
+staff      alice, bob and dora  groupOfNames
+[...]
 engineers names zoe, who has no entry here: the group is published as it stands, and nothing here can prove them
 ```
 

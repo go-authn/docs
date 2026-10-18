@@ -12,12 +12,14 @@ server that runs it and owns the configuration, the directory sources and the
 bind policy; this owns the bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.7.1
+go get github.com/go-authn/ldap@v0.8.0
 ```
 
-Written from RFC 4511 (the protocol), 4512 (the root DSE), 4513
-(authentication), 4514 and 4515 (DN and filter string forms), 4526, 2696
-(paged results), 3673, 4527 (read entry controls), 4532 (whoami) and 3045.
+Written from RFC 4511 (the protocol), 4512 (the root DSE and the schema),
+4513 (authentication), 4514 and 4515 (DN and filter string forms), 4517 and
+4518 (syntaxes, matching rules, string preparation), 4526, 2696 (paged
+results), 3672 (subentries), 3673, 4527 (read entry controls), 4532 (whoami)
+and 3045.
 
 A `Server` is a set of handlers, each an optional field: `Bind`, `SASL`,
 `Search`, `Compare`, `Extended`, `Add`, `Modify`, `Delete`, `ModifyDN`,
@@ -182,7 +184,114 @@ Filter nesting is bounded as well: a stack overflow in Go kills the process.
 Nothing logs an assertion *value* — a filter carries what somebody typed — only
 the filter's shape.
 
-There is no schema, so every comparison is case-insensitive on the value.
+**A paged search answers what was asked.** Until v0.8.0 the page reader sent
+each entry as the handler wrote it: a paged search for `cn` alone came back
+with every attribute, operational ones included, and `typesOnly` was
+ignored, while the same search unpaged kept to the selection. `ldapsearch
+-E pr=N` is how a client pages, so the same question got two answers. From
+v0.8.0 both apply the selection, which `ldapsearch` itself checks in CI.
+
+Without a schema — `Server.Schema` nil, the default — every comparison is
+case-insensitive on the value: the safer of the two for reading, since it
+never hides an entry an exact comparison would have found.
+
+## The schema {#the-schema}
+
+From v0.8.0, package `schema` is the directory schema of RFC 4512 §4, and
+`Server.Schema` makes a server use it. Nil keeps a server exactly as it was.
+
+- `schema.Standard()` embeds the definitions of RFC 4512, 4517, 4519, 4524,
+  4523, 2798, 2307, 3672 and 3045, plus openssh-lpk's `ldapPublicKey` and
+  `sshPublicKey` and the two OpenLDAP definitions they need, copied from the
+  RFC text; each file in `schema/defs` names its source and section.
+  `schema.Build(append(schema.StandardFiles(), mine)...)` adds a
+  deployment's own, and refuses one whose SUP, rules, syntaxes, MUST or MAY
+  do not resolve.
+- `(*ldap.Entry).Validate(s)` checks one structural chain with every
+  superclass listed, every MUST, nothing outside MUST and MAY, SINGLE-VALUE,
+  known types, values of their syntax, and the RDN's values in the entry —
+  and names **every** problem, as a `*schema.ValidationError`.
+- With a schema, the root DSE carries `subschemaSubentry: cn=Subschema`, and
+  a base search of `cn=Subschema` (`ldap.SubschemaDN`) is answered by the
+  library, like the root DSE (RFC 4512 §4.2). The definitions come only when
+  asked for by name or with `+`. It is behind the `RequireTLS` gate.
+- Filters are evaluated with the schema's matching rules (RFC 4517 §4.2,
+  with RFC 4518 string preparation) in RFC 4511's three-valued logic: an
+  unknown attribute, a type with no rule for the match asked, or an invalid
+  assertion value is **Undefined**, never an error. The server re-checks
+  every entry a handler sends and drops those the filter does not make
+  TRUE; a handler filters with `req.Matches(e)`, which uses the same schema.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/ldap"
+	"github.com/go-authn/ldap/schema"
+)
+
+func main() {
+	s := schema.Standard() // RFC 4512, 4517, 4519, 4524, 2798, 2307, ... and openssh-lpk
+
+	// An account with posixAccount, and no homeDirectory.
+	eli := &ldap.Entry{DN: "uid=eli,ou=people,dc=example,dc=org", Attributes: []*ldap.Attribute{
+		ldap.StringAttribute("objectClass", "top", "account", "posixAccount"),
+		ldap.StringAttribute("uid", "eli"),
+		ldap.StringAttribute("cn", "eli"),
+		ldap.StringAttribute("uidNumber", "1001"),
+		ldap.StringAttribute("gidNumber", "1001"),
+		ldap.StringAttribute("mail", "eli@example.org"),
+	}}
+	var v *schema.ValidationError
+	if errors.As(eli.Validate(s), &v) {
+		for _, p := range v.Problems {
+			fmt.Println("-", p)
+		}
+	}
+
+	// uidNumber orders as an integer: 1001 >= 999, which as strings it is not.
+	for _, f := range []string{"(uidNumber>=999)", "(uid>=a)"} {
+		filter, _ := ldap.ParseFilter(f)
+		fmt.Println(f, ldap.Evaluate(filter, eli, s))
+	}
+}
+```
+
+```
+- mail is not allowed by any of the entry's object classes
+- homeDirectory is required by posixAccount and is missing
+(uidNumber>=999) TRUE
+(uid>=a) Undefined
+```
+
+`mail` belongs to `inetOrgPerson`, not to `account`. `uid` has no ORDERING
+rule, so a range on it is Undefined.
+
+{{< callout type="info" >}}
+**One departure from RFC 2307: `uidNumber` and `gidNumber` order as integers**
+
+RFC 2307 gives `uidNumber` and `gidNumber` an EQUALITY rule and no ORDERING
+rule, which would make every range filter on them Undefined — including the
+one SSSD builds from `ldap_min_id` and `ldap_max_id`. slapd defines both
+types itself with `ORDERING integerOrderingMatch`
+(`servers/slapd/schema_prep.c`; its `nis.schema` comments them out as
+"builtin"), and so does draft-howard-rfc2307bis-02 §2.1, so the embedded
+definitions follow them. That, and allowing auxiliary classes without DIT
+content rules (RFC 4512 §2.4.3 strictly forbids them; every server in use
+allows them), are said rather than discovered.
+{{< /callout >}}
+
+Not there, deliberately: DIT content rules, DIT structure rules and name
+forms; changing the schema over LDAP; RFC 4523's certificate matching rules
+and `directoryStringFirstComponentMatch`, which are defined and not
+implemented, so assertions using them are Undefined; collective attributes;
+options other than `lang-` and `binary`.
+
+[authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}}) serves
+this schema and holds every entry it publishes to it.
 
 ## What it is checked against
 
@@ -200,4 +309,4 @@ unreached lines named in the workflow.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.7.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.7.1)
+[pkg.go.dev/github.com/go-authn/ldap@v0.8.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.8.0)

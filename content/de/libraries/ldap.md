@@ -12,12 +12,14 @@ Server, der sie ausführt und dem die Konfiguration, die Verzeichnisquellen und 
 Bind-Richtlinie gehören; dieser Bibliothek gehören die Bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.7.1
+go get github.com/go-authn/ldap@v0.8.0
 ```
 
-Geschrieben nach RFC 4511 (das Protokoll), 4512 (das Root-DSE), 4513
-(Authentifizierung), 4514 und 4515 (String-Formen von DN und Filter), 4526, 2696
-(Paged Results), 3673, 4527 (Read-Entry-Controls), 4532 (whoami) und 3045.
+Geschrieben nach RFC 4511 (das Protokoll), 4512 (das Root-DSE und das Schema),
+4513 (Authentifizierung), 4514 und 4515 (String-Formen von DN und Filter), 4517 und
+4518 (Syntaxen, Matching-Regeln, String-Vorbereitung), 4526, 2696 (Paged
+Results), 3672 (Subentries), 3673, 4527 (Read-Entry-Controls), 4532 (whoami)
+und 3045.
 
 Ein `Server` ist eine Menge von Handlern, jeder ein optionales Feld: `Bind`, `SASL`,
 `Search`, `Compare`, `Extended`, `Add`, `Modify`, `Delete`, `ModifyDN`,
@@ -182,7 +184,114 @@ Auch die Verschachtelung von Filtern ist begrenzt: Ein Stack-Überlauf in Go bee
 Nichts loggt einen Assertion-*Wert* – ein Filter trägt, was jemand eingetippt hat –, nur
 die Form des Filters.
 
-Es gibt kein Schema, daher ist jeder Vergleich auf dem Wert unabhängig von Groß- und Kleinschreibung.
+**Eine seitenweise Suche beantwortet, was gefragt wurde.** Bis v0.8.0 sandte der Seitenleser
+jeden Eintrag so, wie der Handler ihn geschrieben hatte: Eine seitenweise Suche nur nach `cn` kam
+mit jedem Attribut zurück, einschließlich der operationalen, und `typesOnly` wurde
+ignoriert, während dieselbe Suche ohne Seiten sich an die Auswahl hielt. `ldapsearch
+-E pr=N` ist die Art, wie ein Client seitenweise liest, also bekam dieselbe Frage zwei Antworten.
+Ab v0.8.0 wenden beide die Auswahl an, was `ldapsearch` selbst in der CI prüft.
+
+Ohne Schema – `Server.Schema` nil, der Standard – ist jeder Vergleich auf dem Wert
+unabhängig von Groß- und Kleinschreibung: die sicherere der beiden Varianten fürs Lesen, da sie
+nie einen Eintrag verbirgt, den ein exakter Vergleich gefunden hätte.
+
+## Das Schema {#the-schema}
+
+Ab v0.8.0 ist das Paket `schema` das Verzeichnisschema aus RFC 4512 §4, und
+`Server.Schema` lässt einen Server es verwenden. Nil lässt einen Server genau so, wie er war.
+
+- `schema.Standard()` bettet die Definitionen aus RFC 4512, 4517, 4519, 4524,
+  4523, 2798, 2307, 3672 und 3045 ein, dazu `ldapPublicKey` und
+  `sshPublicKey` aus openssh-lpk und die beiden OpenLDAP-Definitionen, die sie brauchen, kopiert aus dem
+  RFC-Text; jede Datei in `schema/defs` nennt ihre Quelle und ihren Abschnitt.
+  `schema.Build(append(schema.StandardFiles(), mine)...)` fügt die eigenen Definitionen
+  einer Installation hinzu und lehnt eine ab, deren SUP, Regeln, Syntaxen, MUST oder MAY
+  sich nicht auflösen lassen.
+- `(*ldap.Entry).Validate(s)` prüft eine strukturelle Kette mit jeder aufgeführten
+  Oberklasse, jedes MUST, nichts außerhalb von MUST und MAY, SINGLE-VALUE,
+  bekannte Typen, Werte ihrer Syntax und die Werte des RDN im Eintrag –
+  und nennt **jedes** Problem, als `*schema.ValidationError`.
+- Mit einem Schema trägt das Root-DSE `subschemaSubentry: cn=Subschema`, und
+  eine Basissuche auf `cn=Subschema` (`ldap.SubschemaDN`) wird von der
+  Bibliothek beantwortet, wie das Root-DSE (RFC 4512 §4.2). Die Definitionen kommen nur, wenn
+  sie namentlich oder mit `+` verlangt werden. Sie liegt hinter der `RequireTLS`-Sperre.
+- Filter werden mit den Matching-Regeln des Schemas ausgewertet (RFC 4517 §4.2,
+  mit der String-Vorbereitung aus RFC 4518), in der dreiwertigen Logik von RFC 4511: Ein
+  unbekanntes Attribut, ein Typ ohne Regel für den verlangten Abgleich oder ein ungültiger
+  Assertion-Wert ist **Undefined**, nie ein Fehler. Der Server prüft jeden Eintrag,
+  den ein Handler sendet, erneut und verwirft jene, die der Filter nicht
+  TRUE macht; ein Handler filtert mit `req.Matches(e)`, das dasselbe Schema verwendet.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/ldap"
+	"github.com/go-authn/ldap/schema"
+)
+
+func main() {
+	s := schema.Standard() // RFC 4512, 4517, 4519, 4524, 2798, 2307, ... and openssh-lpk
+
+	// An account with posixAccount, and no homeDirectory.
+	eli := &ldap.Entry{DN: "uid=eli,ou=people,dc=example,dc=org", Attributes: []*ldap.Attribute{
+		ldap.StringAttribute("objectClass", "top", "account", "posixAccount"),
+		ldap.StringAttribute("uid", "eli"),
+		ldap.StringAttribute("cn", "eli"),
+		ldap.StringAttribute("uidNumber", "1001"),
+		ldap.StringAttribute("gidNumber", "1001"),
+		ldap.StringAttribute("mail", "eli@example.org"),
+	}}
+	var v *schema.ValidationError
+	if errors.As(eli.Validate(s), &v) {
+		for _, p := range v.Problems {
+			fmt.Println("-", p)
+		}
+	}
+
+	// uidNumber orders as an integer: 1001 >= 999, which as strings it is not.
+	for _, f := range []string{"(uidNumber>=999)", "(uid>=a)"} {
+		filter, _ := ldap.ParseFilter(f)
+		fmt.Println(f, ldap.Evaluate(filter, eli, s))
+	}
+}
+```
+
+```
+- mail is not allowed by any of the entry's object classes
+- homeDirectory is required by posixAccount and is missing
+(uidNumber>=999) TRUE
+(uid>=a) Undefined
+```
+
+`mail` gehört zu `inetOrgPerson`, nicht zu `account`. `uid` hat keine ORDERING-Regel,
+daher ist ein Bereich darauf Undefined.
+
+{{< callout type="info" >}}
+**Eine Abweichung von RFC 2307: `uidNumber` und `gidNumber` werden als Ganzzahlen geordnet**
+
+RFC 2307 gibt `uidNumber` und `gidNumber` eine EQUALITY-Regel und keine ORDERING-Regel,
+was jeden Bereichsfilter auf ihnen Undefined machen würde – einschließlich
+dessen, den SSSD aus `ldap_min_id` und `ldap_max_id` baut. slapd definiert beide
+Typen selbst mit `ORDERING integerOrderingMatch`
+(`servers/slapd/schema_prep.c`; seine `nis.schema` kommentiert sie als
+„builtin“ aus), ebenso draft-howard-rfc2307bis-02 §2.1, daher folgen die eingebetteten
+Definitionen ihnen. Das, und dass Hilfsklassen ohne DIT-Content-Rules erlaubt sind
+(RFC 4512 §2.4.3 verbietet sie strikt; jeder verwendete Server erlaubt sie), wird
+gesagt, statt entdeckt zu werden.
+{{< /callout >}}
+
+Absichtlich nicht vorhanden: DIT-Content-Rules, DIT-Structure-Rules und Name-Forms;
+das Ändern des Schemas über LDAP; die Zertifikats-Matching-Regeln aus RFC 4523
+und `directoryStringFirstComponentMatch`, die definiert und nicht
+implementiert sind, sodass Assertions, die sie verwenden, Undefined sind; kollektive Attribute;
+andere Optionen als `lang-` und `binary`.
+
+[authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}}) stellt
+dieses Schema bereit und misst jeden Eintrag, den es veröffentlicht, daran.
 
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
 
@@ -200,4 +309,4 @@ nicht erreichten Zeilen im Workflow benannt sind.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.7.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.7.1)
+[pkg.go.dev/github.com/go-authn/ldap@v0.8.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.8.0)

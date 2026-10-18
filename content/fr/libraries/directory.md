@@ -11,7 +11,7 @@ tenue en mémoire, une base de données SQL, un serveur LDAP, ou des blocs `user
 fichier de configuration — et ce qui compte, c'est la seconde moitié de la question.
 
 ```sh
-go get github.com/go-authn/directory@v0.12.0
+go get github.com/go-authn/directory@v0.14.0
 ```
 
 ## Ce qui prouve quelqu'un n'est pas une seule chose {#what-proves-somebody-is-not-one-thing}
@@ -139,6 +139,167 @@ En v0.11.x, `Set.Members` renvoyait `ErrNoSuchGroup` pour un groupe vide, et
 `[] directory: no such group: "nobody"`.
 {{< /callout >}}
 
+## Attributs {#attributes}
+
+Depuis la v0.13.0, une `Identity` peut porter des **attributs** : ce qu'une
+source dit de quelqu'un sans rien prouver — un `uidNumber`, un répertoire
+personnel, une adresse de messagerie. Ils sont tenus à l'écart des
+identifiants à dessein : un identifiant décide de qui peut se connecter, un
+attribut est *publié* à tous ceux qui ont le droit de chercher. Un serveur
+comme [authnd]({{< relref "/authnd/entries.md" >}}) en fait les attributs
+d'une entrée LDAP, et son schéma décide de ce qu'est l'entrée.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/directory"
+)
+
+func main() {
+	a, err := directory.NewAttributes(
+		directory.Attribute{Name: "uidNumber", Values: []string{"1000"}},
+		directory.Attribute{Name: "mail", Values: []string{"dora@example.org"}},
+		directory.Attribute{Name: "MAIL", Values: []string{"d.explorer@example.org", "dora@example.org"}},
+	)
+	fmt.Println(err)
+	dora := directory.NewIdentity("dora", directory.WithPassword("hunter2"), directory.WithAttributes(a))
+	fmt.Println(dora.Attributes().Names(), dora.Attributes().Get("UIDNUMBER"), dora.Attributes().Get("mail"))
+
+	// What is published cannot hold a secret, nor what a server derives or answers itself.
+	for _, name := range []string{"userPassword", "sambaNTPassword", "radiusHash", "cn", "memberUid", "2.5.4.35"} {
+		_, err := directory.NewAttributes(directory.Attribute{Name: name, Values: []string{"x"}})
+		fmt.Println(errors.Is(err, directory.ErrAttributeName), err)
+	}
+}
+```
+
+```
+<nil>
+[uidNumber mail] [1000] [dora@example.org d.explorer@example.org]
+true directory: not an attribute this package carries: "userPassword" holds a secret, and attributes are published: a credential has its own option or none
+true directory: not an attribute this package carries: "sambaNTPassword" holds a secret, and attributes are published: a credential has its own option or none
+true directory: not an attribute this package carries: "radiusHash" looks like it holds a secret (its name contains "hash"), and attributes are published: a credential has its own option or none
+true directory: not an attribute this package carries: "cn" is derived by the server from the name it publishes the entry under
+true directory: not an attribute this package carries: "memberUid" is membership, which Members answers: a second answer would disagree with it
+true directory: not an attribute this package carries: "2.5.4.35" is an OID: name it by its descriptor, so that what is refused by name stays refused
+```
+
+Les noms sont des descriptions d'attributs de la RFC 4512, comparées sans
+tenir compte de la casse ni de l'ordre des options, si bien que `mail` et
+`MAIL` sont un seul attribut, écrit de la première façon dont il a été donné ;
+une répétition exacte d'une valeur est gardée une fois. Les valeurs sont des
+chaînes et ne sont pas interprétées : `"1000"` est un `uidNumber` parce que le
+schéma d'un serveur le dit. Une valeur vide, ou aucune valeur, est refusée.
+
+| refusé | pourquoi |
+|---|---|
+| 56 secrets nommés — `userPassword`, `authPassword`, `userPKCS12`, `sambaNTPassword`, `sambaLMPassword`, `unicodePwd`, `krbPrincipalKey`, `krb5Key`, `ipaNTHash`, `ipatokenOTPkey`, `oathSecret`, `olcRootPW`, … | relevés dans la RFC 4519, la RFC 3112, la RFC 2798 et les schémas de Samba, d'Active Directory, de Kerberos MIT et Heimdal, de FreeIPA, de 389-ds et d'OpenLDAP |
+| tout nom contenant `password`, `passwd`, `pwd`, `secret`, `credential`, `hash` ou `privatekey` | une liste ne connaît que les schémas que quelqu'un a lus ; le seul nom standard que cela attraperait, `secretary` (RFC 4524), est autorisé |
+| `sshPublicKey` | il a son propre chemin, `WithPublicKeys`, pour que `Can(PublicKeys)` reste vrai |
+| `uid`, `userid`, `cn`, `commonName`, `objectClass` | un serveur les dérive du nom sous lequel il publie l'entrée |
+| `member`, `uniqueMember`, `memberUid`, `memberOf` | l'appartenance est ce à quoi répond `Members`, et une seconde réponse serait en désaccord |
+| `createTimestamp`, `modifyTimestamp`, `creatorsName`, `modifiersName`, `structuralObjectClass`, `governingStructureRule`, `subschemaSubentry`, `entryDN`, `entryUUID` | un serveur les maintient ; une configuration ne pourrait que les contrefaire |
+| un nom sous forme numérique | les refus se font par nom, et `2.5.4.35` *est* `userPassword` |
+
+`ReservedAttributes()` renvoie la liste entière, 75 noms avec leurs raisons ;
+`CheckAttributeName` applique la règle seule, si bien qu'une configuration
+peut être refusée avant que quoi que ce soit ne soit lu.
+
+D'où ils viennent :
+
+- **`hcldir`** : `attributes = { … }` dans les blocs `user` et `group`, une
+  chaîne ou une liste de chaînes par nom ; un nombre est refusé avec la
+  correction dans le message (*write it as a string, "1000"*), et `null` omet
+  l'attribut.
+- **`sqldir`** : deux requêtes facultatives, `users_attributes` et
+  `groups_attributes` (`Queries.PeopleAttributes`, `GroupAttributes`), lues
+  **par alias de colonne** : la première colonne est le nom, chaque autre
+  colonne un attribut nommé par son alias. Une colonne dont l'alias n'est pas
+  une description d'attribut, ou nomme un identifiant, est refusée avec son
+  numéro de colonne avant qu'une ligne ne soit lue. `NULL` et `''` valent
+  absence, et plusieurs lignes pour un même nom ajoutent des valeurs. Un
+  groupe nommé seulement là existe, sans personne dedans.
+  ⛔ PostgreSQL met en minuscules un alias sans guillemets (`as uidNumber`
+  revient `uidnumber`) : le même attribut, écrit à la façon de la base.
+  Mettez-le entre guillemets, `as "uidNumber"`, là où la graphie compte.
+- **`ldapdir`** : `Config.Attributes` et `GroupAttributes` (`attributes` et
+  `group_attributes` dans un bloc `users "ldap"`) nomment ce qu'il faut
+  copier depuis l'entrée de chaque personne et celle de chaque groupe,
+  appariés selon l'équivalence de la RFC 4512 et gardés dans la graphie
+  configurée. En plus de la liste ci-dessus, il refuse le `totp_attribute` et
+  les attributs de nommage et de membres du groupe. Un sous-type que
+  l'annuaire renvoie en plus (`description;lang-fr` pour `description`) n'est
+  pas copié : demandez-le par son nom.
+
+Les attributs d'un groupe viennent de `Set.GroupAttributes`, par
+l'interface facultative `GroupAttributer` : **la première source qui donne un
+attribut le possède**, si bien qu'un `gidNumber` dans un fichier local
+l'emporte sur celui de l'annuaire tandis qu'une `description` que seul
+l'annuaire a passe, et une source en panne est une erreur même quand une
+autre a répondu. Les attributs d'une personne viennent avec la personne,
+depuis la source qui possède le nom.
+
+## Les valeurs par défaut de ldapdir {#ldapdir-defaults}
+
+| réglage (`users "ldap"` / `ldapdir.Config`) | défaut depuis la v0.14.0 | jusqu'à la v0.13.0 |
+|---|---|---|
+| `user_filter` / `UserFilter` | `(\|(objectClass=posixAccount)(objectClass=account)(objectClass=uidObject))`, `ldapdir.DefaultUserFilter` | `(objectClass=posixAccount)` |
+| `user_attribute` / `UserAttribute` | `uid` | le même |
+| `group_base_dn` / `GroupBaseDN` | `base_dn` | le même |
+| `group_filter` / `GroupFilter` | `(\|(objectClass=posixGroup)(objectClass=groupOfNames))`, `ldapdir.DefaultGroupFilter` | `(objectClass=posixGroup)` |
+| `group_attribute` / `GroupAttribute` | `cn` | le même |
+| `group_member_attribute` / `MemberAttribute` | aucun : `memberUid` (des noms) **et** `member` (des DN) ; s'il est défini, c'est le seul attribut lu | `memberUid` |
+
+Les trois classes sont les classes standard qui portent un `uid` :
+`posixAccount` (RFC 2307), `account` (RFC 4524 §3.1) et `uidObject` (RFC 4519
+§3.14). go-authn/authnd, depuis la v0.11.0, publie une personne sans les
+attributs POSIX comme un `account` ou un `inetOrgPerson`, met `uidObject` sur
+chaque personne, et publie un groupe sans `gidNumber` comme un
+`groupOfNames`. Avec les anciennes valeurs par défaut, ces personnes et ces
+groupes n'étaient pas lus du tout.
+
+{{< callout type="warning" >}}
+**La v0.14.0 élargit ce que donne l'annuaire d'un établissement**
+
+Un annuaire qui contient des entrées `account` ou `uidObject` qui ne sont pas
+des posixAccounts — comptes de service, hôtes nommés par uid, personnes
+importées d'ailleurs — les donne désormais à tout programme qui a gardé la
+valeur par défaut, et chacune peut alors être vérifiée contre l'annuaire par
+une liaison. Ses groupes `groupOfNames` deviennent des groupes, et une règle
+`@group` qui en nomme un accorde désormais ce qu'elle dit. Un simple
+`inetOrgPerson` sans aucune des trois classes n'est toujours pas lu. Pour
+garder exactement l'ancien ensemble :
+
+```hcl
+users "ldap" {
+  # ...
+  user_filter            = "(objectClass=posixAccount)"
+  group_filter           = "(objectClass=posixGroup)"
+  group_member_attribute = "memberUid"
+}
+```
+{{< /callout >}}
+
+**Un DN `member` n'ajoute aucune personne.** Il ne correspond à quelqu'un que
+lorsqu'il est, selon distinguishedNameMatch (RFC 4517 §4.2.15), le DN d'une
+entrée qu'a renvoyée la recherche des personnes. Un DN en dehors de ces
+entrées, ou qui ne nomme personne, ne correspond à personne, de même que
+`uid=alice,ou=elsewhere,…` quand alice a été importée depuis `ou=people`.
+Jusqu'à la v0.13.0, un DN de l'attribut de membres était réduit à la valeur
+de son premier RDN, à qui qu'il appartienne, si bien que
+`uid=alice,ou=elsewhere,…`, `cn=alice,…` et `uid=zed,…` devenaient des
+membres nommés alice, alice et zed.
+
+`ldaptest`, l'annuaire de test, applique désormais la base et le filtre à
+chaque recherche, donne à chaque personne un `objectClass`
+(`Person.ObjectClasses`, par défaut `top`, `account`, `posixAccount`) et a
+des groupes `groupOfNames` (`GroupsOfNames`), si bien qu'un test des filtres
+d'un client peut échouer.
+
 ## Ce qu'il refuse, et pourquoi {#what-it-refuses-and-why}
 
 - **Un groupe où il n'y a personne**, et **un groupe qu'aucune source n'a**,
@@ -170,6 +331,9 @@ En v0.11.x, `Set.Members` renvoyait `ErrNoSuchGroup` pour un groupe vide, et
   en une empreinte qui fait échouer chaque connexion comme un mauvais mot de passe.
 - **`Derive` ou `KerberosKey` pour une identité sans le mot de passe.** Le
   oui d'un vérificateur n'est pas une clé.
+- **Un attribut qui est un secret, ou auquel un serveur répond lui-même** —
+  [la liste ci-dessus]({{< relref "/libraries/directory.md#attributes" >}}) — où qu'il soit configuré : dans un bloc,
+  comme alias SQL, ou dans la liste de ldapdir à copier.
 
 {{< callout type="warning" >}}
 **L'empreinte NT et le secret TOTP sont des identifiants, pas des empreintes d'identifiant**
@@ -189,7 +353,15 @@ avec le mot de passe ; quiconque détient un secret TOTP produit tous les codes
 - **`ldapdir` contre `glauth/ldap`**, un serveur LDAP indépendant, pas une imitation ;
   le jeu d'essai autorise la liaison non authentifiée, donc le test échoue si `ldapdir`
   cesse de la refuser en premier.
-- **`sqldir` contre une vraie base de données SQLite**, à travers un vrai pilote.
+- **`sqldir` contre une vraie base de données SQLite**, à travers un vrai pilote. Les
+  requêtes d'attributs ont aussi été lancées une fois à la main contre
+  PostgreSQL 18.6 par pgx, pas en CI : un alias sans guillemets est revenu en
+  minuscules et a quand même été trouvé, un alias entre guillemets a gardé sa
+  casse, et un alias nommant `userPassword` a été refusé.
+- **Les filtres de ldapdir** contre `ldaptest`, qui les applique depuis la
+  v0.14.0 : le filtre de personnes par défaut laisse de côté un simple
+  `inetOrgPerson` (`TestTheDefaultUserFilter`), et le filtre de groupes
+  n'ajoute aucune identité (`TestTheGroupFilterAddsNoIdentity`).
 - **MD4** contre les vecteurs de test de la RFC 1320.
 
 La voie de couverture échoue sous 85 % (sa norme déclarée est 100 %), et les
@@ -197,4 +369,4 @@ compilations `nosql` et `noldap` sont vérifiées en CI.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.12.0](https://pkg.go.dev/github.com/go-authn/directory@v0.12.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.14.0](https://pkg.go.dev/github.com/go-authn/directory@v0.14.0)

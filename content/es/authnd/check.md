@@ -28,15 +28,22 @@ archivos (`authnd.hcl` y `people.hcl`):
 $ authnd check etc/authnd
 ldap://127.0.0.1:3893, base dc=example,dc=org
 
-USER   FROM                    CAN PROVE   PUBLISHED AS
-alice  the configuration file  a password  uid and cn
-bob    the configuration file  an NT hash  uid and cn
-dora   a sqlite database       a password  uid and cn
-eli    a sqlite database       an NT hash  uid and cn
+USER   FROM                    CAN PROVE   PUBLISHED AS        WITH
+alice  the configuration file  a password  account, uidObject  uid
+bob    the configuration file  an NT hash  account, uidObject  uid
+dora   a sqlite database       a password  account, uidObject  uid
+eli    a sqlite database       an NT hash  account, uidObject  uid
 
-GROUP      MEMBERS
-engineers  dora and eli
-staff      alice, bob and dora
+GROUP      MEMBERS              PUBLISHED AS
+engineers  dora and eli         groupOfNames
+staff      alice, bob and dora  groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+dora has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+eli has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group engineers has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
 
 a bind carries a password
 bob and eli cannot bind with a password: their sources hold only what an SMB server needs (an NT hash), which a bind cannot be checked against
@@ -55,10 +62,28 @@ La primera línea es el esquema, la dirección y la base: `ldap://`, `ldaps://` 
 |---|---|
 | `FROM` | el origen al que pertenece el nombre: *the configuration file*, *a sqlite database* (o postgres, mysql), o la URL de un directorio que hay detrás de este |
 | `CAN PROVE` | *a password* (guardada, de modo que puede compararse y derivarse claves de ella), *a password check* (otro directorio responde sí o no), *an NT hash*, *N keys*, *a one-time-code secret*, o *nothing* |
-| `PUBLISHED AS` | los atributos que lleva la entrada: siempre `uid` y `cn`; `sambaNTPassword` cuando `publish_nt_hash` está activado y la persona tiene uno o una contraseña de la que puede derivarse; `sshPublicKey` cuando hay claves |
+| `PUBLISHED AS` | las clases de objeto de la entrada, sin `top`, tal como las dan [las formas]({{< relref "/authnd/entries.md#the-shapes" >}}), o *NOT PUBLISHED (see below)* para una entrada que no supera el esquema |
+| `WITH` | los atributos que lleva la entrada, leídos de la entrada que devuelve una búsqueda: `uid`; `cn` allí donde una clase lo permite; lo que dieron los orígenes, menos lo descartado; `sshPublicKey` cuando hay claves; `sambaSID` y `sambaNTPassword` cuando [`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) está activado y la persona tiene una clave NT y un SID |
+
+La tabla de grupos también tiene una columna `PUBLISHED AS`: `posixGroup`,
+`groupOfNames` u `organizationalRole`. Hasta la v0.10.2, `PUBLISHED AS` era la
+lista de atributos, *uid and cn* para casi todo el mundo, y no había columna
+`WITH`.
 
 Las líneas que siguen a las tablas dicen lo que hay que saber antes de confiar en
-la configuración:
+la configuración. Primero, sobre [las entradas]({{< relref "/authnd/entries.md" >}}):
+
+- **quién no es un `posixAccount`**, y cuáles de `uidNumber`, `gidNumber` y
+  `homeDirectory` le faltan;
+- **qué grupos no tienen `gidNumber`**, y como qué se publican en su lugar;
+- **cada atributo descartado** porque ninguna clase de su entrada lo
+  permite, y qué clases lo permitirían;
+- **cada entrada no publicada**, con cada problema que encontró la
+  comprobación del esquema;
+- **quién tiene una clave NT y ningún `sambaSID`**, y por tanto ningún
+  `sambaNTPassword`.
+
+Después, sobre binds y búsquedas:
 
 - **qué lleva un bind**: *a password* o, con un [bloque `mfa`]({{< relref "/authnd/mfa.md" >}}),
   *a password with a 6-digit code after it*; con un [bloque `oidc`]({{< relref "/authnd/tokens.md" >}}),
@@ -76,15 +101,19 @@ la configuración:
   cuyo `amr` nombra dos tipos sí puede;
 - un **grupo que nombra a alguien que ningún origen tiene**.
 
-Este último se publica tal cual —`memberUid` es una cadena, y una fachada de un
-sistema lleva legítimamente nombres que pertenecen a otro—, pero se dice, porque la
-otra lectura es una errata. Aquí la tabla `team_members` de la base de datos tiene una
+Este último se publica tal cual —una fachada de un sistema lleva legítimamente
+nombres que pertenecen a otro—, pero se dice, porque la otra lectura es una
+errata. En un `posixGroup` el desconocido es un `memberUid`; en un
+`groupOfNames` es un DN en `member` que no nombra ninguna entrada de aquí,
+`member: uid=zoe,ou=people,dc=example,dc=org` en este caso, que el `ldapdir`
+de go-authn/directory a partir de la v0.14.0 no asigna a nadie. Aquí la tabla `team_members` de la base de datos tiene una
 fila para `zoe`, que aquí no es nadie:
 
 ```
-GROUP      MEMBERS
-engineers  dora, eli and zoe
-staff      alice, bob and dora
+GROUP      MEMBERS              PUBLISHED AS
+engineers  dora, eli and zoe    groupOfNames
+staff      alice, bob and dora  groupOfNames
+[...]
 engineers names zoe, who has no entry here: the group is published as it stands, and nothing here can prove them
 ```
 
