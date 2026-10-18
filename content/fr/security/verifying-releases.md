@@ -79,7 +79,7 @@ sa ligne de version :
 
 ```
 $ authnd --version
-authnd version v0.10.2
+authnd version v0.11.0
 $ authn-bridge --version
 authn-bridge version v0.23.0
 $ authn-revokd -version

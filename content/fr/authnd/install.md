@@ -19,7 +19,7 @@ et arm64 (`.exe` sous windows), compilé avec `CGO_ENABLED=0`, un manifeste `SHA
 et une attestation de provenance de compilation pour chaque binaire.
 
 ```sh
-version=v0.10.2
+version=v0.11.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ quelque chose à comparer :
 
 ```
 $ authnd --version
-authnd version v0.10.2
+authnd version v0.11.0
 ```
 
 ### Ne compiler que ce que vous voulez {#building-only-what-you-want}
@@ -65,7 +65,7 @@ et un fichier qu'il a écrit appartiendrait à un numéro qui désignera plus ta
 Les deux fichiers viennent du répertoire `packaging/` de l'étiquette de la version,
 la même version que le binaire : copiez ce répertoire à côté du binaire, depuis
 une extraction de l'étiquette ou, pour v0.10.2, depuis
-<https://github.com/go-authn/authnd/tree/v0.10.2/packaging>.
+<https://github.com/go-authn/authnd/tree/v0.11.0/packaging>.
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd

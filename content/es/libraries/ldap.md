@@ -12,7 +12,7 @@ es el servidor que la ejecuta y que es dueño de la configuración, de los oríg
 directorio y de la política de bind; esta es dueña de los bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.7.1
+go get github.com/go-authn/ldap@v0.8.0
 ```
 
 Escrita a partir de los RFC 4511 (el protocolo), 4512 (el root DSE), 4513
@@ -201,4 +201,4 @@ con las tres líneas no alcanzadas nombradas en el workflow.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.7.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.7.1)
+[pkg.go.dev/github.com/go-authn/ldap@v0.8.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.8.0)

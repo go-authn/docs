@@ -11,7 +11,7 @@ en memoria, una base de datos SQL, un servidor LDAP, o bloques `user` y `group` 
 archivo de configuración; y lo que importa es la segunda mitad de la pregunta.
 
 ```sh
-go get github.com/go-authn/directory@v0.12.0
+go get github.com/go-authn/directory@v0.14.0
 ```
 
 ## Lo que prueba a alguien no es una sola cosa {#what-proves-somebody-is-not-one-thing}
@@ -195,4 +195,4 @@ compilaciones `nosql` y `noldap` se comprueban en la CI.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.12.0](https://pkg.go.dev/github.com/go-authn/directory@v0.12.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.14.0](https://pkg.go.dev/github.com/go-authn/directory@v0.14.0)

@@ -80,11 +80,20 @@ motivo:
 $ authnd check realm
 ldap://127.0.0.1:3893, base dc=example,dc=org
 
-USER   FROM                    CAN PROVE   PUBLISHED AS
-alice  the configuration file  a password  uid and cn
-bob    the configuration file  an NT hash  uid and cn
-dora   a sqlite database       a password  uid and cn
-eli    a sqlite database       an NT hash  uid and cn
+USER   FROM                    CAN PROVE   PUBLISHED AS        WITH
+alice  the configuration file  a password  account, uidObject  uid
+bob    the configuration file  an NT hash  account, uidObject  uid
+dora   a sqlite database       a password  account, uidObject  uid
+eli    a sqlite database       an NT hash  account, uidObject  uid
+
+GROUP  MEMBERS        PUBLISHED AS
+staff  alice and bob  groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+dora has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+eli has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
 
 realm EXAMPLE.ORG on 127.0.0.1:18388 (udp and tcp), keytab etc/authnd/krb5.keytab
   can be issued a ticket: alice and dora

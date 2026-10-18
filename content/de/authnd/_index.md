@@ -97,8 +97,9 @@ supportedControl: 1.3.6.1.1.13.1
 supportedControl: 1.3.6.1.1.13.2
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
+subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.10.2
+vendorVersion: v0.11.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` ist die Password-Modify-Operation aus RFC 3062.

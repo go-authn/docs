@@ -57,9 +57,12 @@ authnd: user "alice": totp_secret is 80 bits, and RFC 4226 requires at least 128
 $ authnd check mfa
 ldap://127.0.0.1:3893, base dc=example,dc=org
 
-USER   FROM                    CAN PROVE                              PUBLISHED AS
-alice  the configuration file  a password                             uid and cn
-tess   the configuration file  a password and a one-time-code secret  uid and cn
+USER   FROM                    CAN PROVE                              PUBLISHED AS        WITH
+alice  the configuration file  a password                             account, uidObject  uid
+tess   the configuration file  a password and a one-time-code secret  account, uidObject  uid
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+tess has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
 
 a bind carries a password with a 6-digit code after it, of two different kinds
 alice has no second factor here, and cannot bind while one is required

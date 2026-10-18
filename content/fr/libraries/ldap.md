@@ -12,7 +12,7 @@ serveur qui l'exécute et qui détient la configuration, les sources d'annuaire 
 politique de liaison ; celle-ci détient les octets.
 
 ```sh
-go get github.com/go-authn/ldap@v0.7.1
+go get github.com/go-authn/ldap@v0.8.0
 ```
 
 Écrite d'après les RFC 4511 (le protocole), 4512 (le root DSE), 4513
@@ -200,4 +200,4 @@ lignes non atteintes nommées dans le workflow.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.7.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.7.1)
+[pkg.go.dev/github.com/go-authn/ldap@v0.8.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.8.0)

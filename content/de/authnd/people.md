@@ -163,16 +163,24 @@ gibt sie nicht heraus. Hier steht ein authnd vor einem anderen, unter einer ande
 $ authnd check front2
 ldap://127.0.0.1:3894, base dc=example,dc=net
 
-USER        FROM                    CAN PROVE         PUBLISHED AS
-alice       ldap://127.0.0.1:3893   a password check  uid and cn
-bob         ldap://127.0.0.1:3893   a password check  uid and cn
-dora        ldap://127.0.0.1:3893   a password check  uid and cn
-eli         ldap://127.0.0.1:3893   a password check  uid and cn
-svc-backup  the configuration file  a password        uid and cn
+USER        FROM                    CAN PROVE         PUBLISHED AS        WITH
+alice       ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+bob         ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+dora        ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+eli         ldap://127.0.0.1:3893   a password check  account, uidObject  uid
+svc-backup  the configuration file  a password        account, uidObject  uid
 
-GROUP      MEMBERS
-engineers  dora and eli
-staff      alice, bob and dora
+GROUP      MEMBERS              PUBLISHED AS
+engineers  dora and eli         groupOfNames
+staff      alice, bob and dora  groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+dora has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+eli has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+svc-backup has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group engineers has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
 
 a bind carries a password
 no reader is declared: nothing may search, and binds are not affected

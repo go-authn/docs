@@ -27,15 +27,22 @@ Dateien (`authnd.hcl` und `people.hcl`):
 $ authnd check etc/authnd
 ldap://127.0.0.1:3893, base dc=example,dc=org
 
-USER   FROM                    CAN PROVE   PUBLISHED AS
-alice  the configuration file  a password  uid and cn
-bob    the configuration file  an NT hash  uid and cn
-dora   a sqlite database       a password  uid and cn
-eli    a sqlite database       an NT hash  uid and cn
+USER   FROM                    CAN PROVE   PUBLISHED AS        WITH
+alice  the configuration file  a password  account, uidObject  uid
+bob    the configuration file  an NT hash  account, uidObject  uid
+dora   a sqlite database       a password  account, uidObject  uid
+eli    a sqlite database       an NT hash  account, uidObject  uid
 
-GROUP      MEMBERS
-engineers  dora and eli
-staff      alice, bob and dora
+GROUP      MEMBERS              PUBLISHED AS
+engineers  dora and eli         groupOfNames
+staff      alice, bob and dora  groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+dora has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+eli has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group engineers has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
 
 a bind carries a password
 bob and eli cannot bind with a password: their sources hold only what an SMB server needs (an NT hash), which a bind cannot be checked against
@@ -81,9 +88,10 @@ gesagt, weil die andere Lesart ein Tippfehler ist. Hier hat die Tabelle `team_me
 Datenbank eine Zeile für `zoe`, einen Namen, den hier niemand trägt:
 
 ```
-GROUP      MEMBERS
-engineers  dora, eli and zoe
-staff      alice, bob and dora
+GROUP      MEMBERS              PUBLISHED AS
+engineers  dora, eli and zoe    groupOfNames
+staff      alice, bob and dora  groupOfNames
+[...]
 engineers names zoe, who has no entry here: the group is published as it stands, and nothing here can prove them
 ```
 
