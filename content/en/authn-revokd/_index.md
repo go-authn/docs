@@ -12,12 +12,12 @@ list. authn-revokd closes both gaps for the lists
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}}) publishes: it
 fetches each list, keeps it only if it verifies, writes it where `sshd` or a TLS
 server reads it, and, when a list lapses, writes one that **revokes the CA
-itself**. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe v0.6.3.
+itself**. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe v0.6.4.
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.3
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
 $ authn-revokd -version
-authn-revokd v0.6.3
+authn-revokd v0.6.4
 $ authn-revokd -help
 Usage of authn-revokd:
   -config string

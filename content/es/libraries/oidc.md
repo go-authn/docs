@@ -11,7 +11,7 @@ descubrimiento, el conjunto de claves y las comprobaciones que debe hacer un ser
 de recursos, en Go puro, **sin dependencias** fuera de la biblioteca estándar.
 
 ```sh
-go get github.com/go-authn/oidc@v0.4.0
+go get github.com/go-authn/oidc@v0.4.1
 ```
 
 Aquí no hay flujo de inicio de sesión: ni redirección, ni intercambio de código, ni
@@ -160,4 +160,4 @@ cobertura es del 90 %.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.4.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.4.1](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1)

@@ -12,7 +12,7 @@ cliente, responde con el AP-REP que prueba que el servicio es auténtico, y desp
 firma, verifica, sella y abre mensajes con la clave que estableció ese intercambio.
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.0
+go get github.com/go-authn/krb5@v0.3.1
 ```
 
 Nunca habla con un KDC y nunca emite un ticket, así que de quién acepta tickets es una
@@ -139,4 +139,4 @@ se omite. El mínimo de la línea de cobertura es el 90%.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.0](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.0)
+[pkg.go.dev/github.com/go-authn/krb5@v0.3.1](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.1)

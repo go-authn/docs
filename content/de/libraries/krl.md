@@ -12,7 +12,7 @@ Binärformat von OpenSSHs `PROTOCOL.krl`, die Liste, die `sshd` über
 dafür keine Unterstützung.
 
 ```sh
-go get github.com/go-authn/krl@v0.6.0
+go get github.com/go-authn/krl@v0.6.1
 ```
 
 `IsRevoked` folgt `ssh_krl_check_key` in OpenSSHs `krl.c`: Ein Zertifikat
@@ -172,4 +172,4 @@ vorhanden ist.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/krl@v0.6.0](https://pkg.go.dev/github.com/go-authn/krl@v0.6.0)
+[pkg.go.dev/github.com/go-authn/krl@v0.6.1](https://pkg.go.dev/github.com/go-authn/krl@v0.6.1)

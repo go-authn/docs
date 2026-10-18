@@ -14,7 +14,7 @@ beantwortet, sobald sich die Antwort ändert. Ein Anbieter –
 Modul ist das, worauf sich der Anbieter und ein Gateway einigen.
 
 ```sh
-go get github.com/go-authn/wireguard@v0.1.0
+go get github.com/go-authn/wireguard@v0.1.1
 ```
 
 Seine einzige Abhängigkeit ist [oidc]({{< relref "/libraries/oidc.md" >}}) v0.4.0,
@@ -165,4 +165,4 @@ jeweils mit und ohne höchstes Bit. Die Coverage-Untergrenze liegt bei 100 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/wireguard@v0.1.0](https://pkg.go.dev/github.com/go-authn/wireguard@v0.1.0)
+[pkg.go.dev/github.com/go-authn/wireguard@v0.1.1](https://pkg.go.dev/github.com/go-authn/wireguard@v0.1.1)

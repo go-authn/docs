@@ -12,7 +12,7 @@ delante de varios servidores de ficheros, recibe tokens de acceso dirigidos a
 recibió y presentarlo a los demás: por eso, dice el RFC 8707 §3, conviene
 restringir la audiencia. Desde la v0.21.0, el cliente puede pedir, con el
 parámetro `resource` del RFC 8707, un token dirigido a **uno solo** de ellos.
-Esta página describe la v0.23.0; lo que la v0.22.0 hacía de otro modo está
+Esta página describe la v0.23.1; lo que la v0.22.0 hacía de otro modo está
 [al final](#departures).
 
 Sin `resource`, nada cambia: el token de acceso es para toda la `audience` del
@@ -310,7 +310,7 @@ $ curl -s http://127.0.0.1:28473/device_authorization -d client_id=files-cli \
 
 ## Dónde se aparta del RFC 8707 {#departures}
 
-| RFC 8707 | authn-bridge v0.23.0 |
+| RFC 8707 | authn-bridge v0.23.1 |
 |---|---|
 | §2: «Multiple `resource` parameters MAY be used» | en el endpoint de autorización, tal cual. En el endpoint de token, uno: un segundo `resource` es `invalid_request`, lo que permite el §3 («an authorization server may be unwilling or unable to fulfill a token request with multiple resources») |
 | §2.2: el parámetro se aplica «for all grant types» | solo `authorization_code` y `refresh_token`. Con `client_credentials` o con la concesión de dispositivo se rechaza con `invalid_target`, tanto en la solicitud de autorización de dispositivo como al sondear |

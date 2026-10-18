@@ -206,9 +206,9 @@ espace, un `=`, un guillemet ou un caractère de contrôle, de sorte qu'elle ne 
 binaire compilé par `go install` :
 
 ```
-$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.6
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.7
 $ sshcert-authorize -version
-sshcert-authorize v0.1.6
+sshcert-authorize v0.1.7
 ```
 
 Avant la v0.1.5, un binaire issu de `go install` affichait `sshcert-authorize dev`.

@@ -10,9 +10,9 @@ Estas páginas son la versión **0.4** de la documentación, y describen:
 | programa | versión | módulo |
 |---|---|---|
 | authnd | **v0.11.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
-| sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
+| authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
+| sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 Las versiones de las bibliotecas están en [su propia página]({{< relref "/libraries/_index.md" >}});
 ldap está en la **v0.8.0**, con el esquema de directorio, y directory en la
@@ -26,7 +26,7 @@ siguen bajo `/docs/0.1/`, `/docs/0.2/` y `/docs/0.3/`.
 ## Qué añadió cada versión {#what-each-release-added}
 
 Cada línea es el cambio para el que se publicó una versión. Se omiten las versiones
-que solo actualizaron dependencias.
+que solo actualizaron dependencias, salvo las que describe esta versión de la documentación.
 
 ### authnd {#authnd}
 
@@ -80,6 +80,7 @@ que solo actualizaron dependencias.
 | v0.22.0 | el token de acceso ya no lleva `auth_time` ni `acr` (el token de ID sí), para que un token ES256 quepa en los 1023 caracteres de OpenSSH hasta el percentil 99 de los scopes de RENATER |
 | v0.22.1 | `resource` puede repetirse en el endpoint de autorización, para una concesión acotada a varios servidores; se rechaza en `device_authorization` en vez de ignorarse ([indicadores de recurso]({{< relref "/authn-bridge/resources.md" >}})) |
 | v0.23.0 | `access_token_groups = false`: un cliente cuyos tokens se pegan en ssh no lleva grupos ([tokens]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
+| v0.23.1 | solo dependencias: go-jose/v4 v4.1.6, golang.org/x/crypto v0.58.0, golang.org/x/net v0.61.0; go-authn/directory v0.12.0, revocation v0.6.3, saml v0.4.1, servercert v0.5.1, sshcert v0.1.6 |
 
 ### authn-revokd {#authn-revokd}
 
@@ -94,6 +95,7 @@ que solo actualizaron dependencias.
 | v0.6.1 | `-version` escribe en la salida estándar |
 | v0.6.2 | `-once` distingue una descarga fallida de una lista caducada; una lista firmada por otra clave ya no se califica de condición de carrera; `-help` sale con 0 |
 | v0.6.3 | dominios de ejemplo con nombres del RFC 2606, en los ejemplos y la documentación; ningún cambio de comportamiento |
+| v0.6.4 | solo dependencias: golang.org/x/crypto v0.58.0 |
 
 ### sshcert {#sshcert}
 
@@ -104,6 +106,7 @@ que solo actualizaron dependencias.
 | v0.1.4 | la publicación comprueba la información de compilación de cada binario |
 | v0.1.5 | `-version` muestra la versión del módulo de una compilación con `go install`, no `dev` |
 | v0.1.6 | dominios de ejemplo con nombres del RFC 2606, en la documentación; ningún cambio de comportamiento |
+| v0.1.7 | solo dependencias: golang.org/x/crypto v0.58.0 |
 
 ### Las bibliotecas {#the-libraries}
 
@@ -115,7 +118,15 @@ anteriores.
 |---|---|
 | directory v0.13.0 | [atributos]({{< relref "/libraries/directory.md#attributes" >}}): lo que describe a alguien y no prueba nada, aparte de las credenciales, con los nombres que nunca pueden serlo; `attributes` en los bloques `user` y `group`, las consultas `users_attributes` y `groups_attributes`, `attributes` y `group_attributes` de ldapdir |
 | directory v0.14.0 | ⛔ los [valores por defecto]({{< relref "/libraries/directory.md#ldapdir-defaults" >}}) de ldapdir leen personas `account` y `uidObject` y grupos `groupOfNames`, lo que amplía lo que entrega el directorio de una institución; un DN en `member` solo corresponde a una persona que el origen importó |
+| kdc v0.4.3 | solo dependencias: go-authn/directory v0.12.0 como mínimo |
+| keyfactor v0.4.2 | solo dependencias: go-authn/fido v0.6.2 y golang.org/x/crypto v0.58.0 como mínimos |
+| krb5 v0.3.1 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
+| krl v0.6.1 | solo dependencias: golang.org/x/crypto v0.58.0; probada con Go 1.27.2 |
 | ldap v0.8.0 | [el paquete `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) y `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, las reglas de comparación del RFC 4517; `uidNumber` y `gidNumber` se ordenan como enteros; una búsqueda paginada se ciñe a los atributos pedidos |
+| oidc v0.4.1 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
+| servercert v0.5.2 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
+| totp v0.4.2 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
+| wireguard v0.1.1 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
 
 ## Aún no implementado {#not-implemented-yet}
 

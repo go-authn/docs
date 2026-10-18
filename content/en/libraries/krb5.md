@@ -13,7 +13,7 @@ signs, verifies, seals and opens messages under the key that exchange
 established.
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.0
+go get github.com/go-authn/krb5@v0.3.1
 ```
 
 It never talks to a KDC and never issues a ticket, so whose tickets it accepts
@@ -138,4 +138,4 @@ judge skips. The coverage lane's floor is 90%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.0](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.0)
+[pkg.go.dev/github.com/go-authn/krb5@v0.3.1](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.1)

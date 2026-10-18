@@ -12,7 +12,7 @@ formato binario del `PROTOCOL.krl` de OpenSSH, la lista que `sshd` carga mediant
 admite.
 
 ```sh
-go get github.com/go-authn/krl@v0.6.0
+go get github.com/go-authn/krl@v0.6.1
 ```
 
 `IsRevoked` sigue a `ssh_krl_check_key` del `krl.c` de OpenSSH: un certificado está
@@ -176,4 +176,4 @@ en la CI. El umbral de cobertura es del 100 %, medido en la vía de Linux, donde
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/krl@v0.6.0](https://pkg.go.dev/github.com/go-authn/krl@v0.6.0)
+[pkg.go.dev/github.com/go-authn/krl@v0.6.1](https://pkg.go.dev/github.com/go-authn/krl@v0.6.1)

@@ -9,11 +9,11 @@ tags: [seguridad, versiones]
 Cada versión de authnd, authn-bridge, authn-revokd y sshcert publica seis
 binarios estáticos (`CGO_ENABLED=0`: linux, darwin y windows, en amd64 y arm64),
 un archivo `SHA256SUMS` y una atestación de procedencia de compilación para cada
-binario. Los ejemplos siguientes usan authn-bridge v0.23.0; los demás programas funcionan
+binario. Los ejemplos siguientes usan authn-bridge v0.23.1; los demás programas funcionan
 igual, con su propio repositorio y su propio nombre.
 
 ```sh
-gh release download v0.23.0 --repo go-authn/bridge
+gh release download v0.23.1 --repo go-authn/bridge
 ```
 
 ## 1. La suma de comprobación {#1-the-checksum}
@@ -63,16 +63,16 @@ go version -m authn-bridge-linux-amd64
 
 ```
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.23.0	
+	mod	github.com/go-authn/bridge	v0.23.1	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=bd63c1f29a7d6897bb05dcbbf6539455cd989958
+	build	vcs.revision=9a51e5e9839f879d44c09b8b4e71f823e72ee0aa
 	build	vcs.modified=false
 ```
 
 (líneas reducidas a las que importan). La línea `mod` debe ser exactamente la
 etiqueta, y `vcs.modified` debe ser `false`: una compilación a partir de un árbol con
-cambios sin confirmar indica `true`, y su versión se lee `v0.23.0+dirty`. El flujo de
+cambios sin confirmar indica `true`, y su versión se lee `v0.23.1+dirty`. El flujo de
 publicación se niega a publicar salvo que **todos y cada uno** de los seis binarios
 superen ambas comprobaciones, y salvo que el programa muestre la etiqueta como
 última palabra de su línea de versión:
@@ -81,9 +81,9 @@ superen ambas comprobaciones, y salvo que el programa muestre la etiqueta como
 $ authnd --version
 authnd version v0.11.0
 $ authn-bridge --version
-authn-bridge version v0.23.0
+authn-bridge version v0.23.1
 $ authn-revokd -version
-authn-revokd v0.6.3
+authn-revokd v0.6.4
 ```
 
 authnd y authn-bridge aceptan `--version`; authn-revokd acepta `-version`, la

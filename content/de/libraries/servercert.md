@@ -12,7 +12,7 @@ Schlüssel auf der Festplatte, neu gelesen, wenn sie sich ändern, oder eine ACM
 Account Binding eingeschlossen.
 
 ```sh
-go get github.com/go-authn/servercert@v0.5.1
+go get github.com/go-authn/servercert@v0.5.2
 ```
 
 Eine `Config` nennt genau eine Quelle – `CertFile` und `KeyFile` oder `ACME` –,
@@ -159,4 +159,4 @@ dass sie fehlschlägt. Die Coverage-Untergrenze liegt bei 100 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.5.1](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.1)
+[pkg.go.dev/github.com/go-authn/servercert@v0.5.2](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.2)

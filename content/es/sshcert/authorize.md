@@ -211,9 +211,9 @@ de modo que no puede falsificar un campo del log.
 uno compilado con `go install`:
 
 ```
-$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.6
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.7
 $ sshcert-authorize -version
-sshcert-authorize v0.1.6
+sshcert-authorize v0.1.7
 ```
 
 Antes de la v0.1.5, un binario de `go install` mostraba `sshcert-authorize dev`.

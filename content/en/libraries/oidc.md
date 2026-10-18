@@ -11,7 +11,7 @@ Discovery, the key set, and the checks a resource server must make — in pure
 Go, with **no dependencies** outside the standard library.
 
 ```sh
-go get github.com/go-authn/oidc@v0.4.0
+go get github.com/go-authn/oidc@v0.4.1
 ```
 
 There is no login flow here: no redirect, no code exchange, no client secret,
@@ -158,4 +158,4 @@ turns a test red. The coverage lane's floor is 90%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.4.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.4.1](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1)

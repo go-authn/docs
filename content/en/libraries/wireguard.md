@@ -14,7 +14,7 @@ again whenever the answer changes. A provider —
 module is what the provider and a gateway agree on.
 
 ```sh
-go get github.com/go-authn/wireguard@v0.1.0
+go get github.com/go-authn/wireguard@v0.1.1
 ```
 
 Its one dependency is [oidc]({{< relref "/libraries/oidc.md" >}}) v0.4.0,
@@ -165,4 +165,4 @@ each with and without the top bit. The coverage floor is 100%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/wireguard@v0.1.0](https://pkg.go.dev/github.com/go-authn/wireguard@v0.1.0)
+[pkg.go.dev/github.com/go-authn/wireguard@v0.1.1](https://pkg.go.dev/github.com/go-authn/wireguard@v0.1.1)

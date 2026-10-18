@@ -14,7 +14,7 @@ se vuelve a responder cada vez que cambia la respuesta. Un proveedor —
 módulo es aquello en lo que se ponen de acuerdo el proveedor y un gateway.
 
 ```sh
-go get github.com/go-authn/wireguard@v0.1.0
+go get github.com/go-authn/wireguard@v0.1.1
 ```
 
 Su única dependencia es [oidc]({{< relref "/libraries/oidc.md" >}}) v0.4.0, que
@@ -170,4 +170,4 @@ cobertura es el 100 %.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/wireguard@v0.1.0](https://pkg.go.dev/github.com/go-authn/wireguard@v0.1.0)
+[pkg.go.dev/github.com/go-authn/wireguard@v0.1.1](https://pkg.go.dev/github.com/go-authn/wireguard@v0.1.1)

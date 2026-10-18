@@ -13,12 +13,11 @@ das CTAP spricht und keine Richtlinie kennt, und
 genug ist, und kein Gerät kennt. Keines importiert das andere; dieses importiert beide.
 
 ```sh
-go get github.com/go-authn/keyfactor@v0.4.1
+go get github.com/go-authn/keyfactor@v0.4.2
 ```
 
-In v0.4.1 verlangt sein `go.mod` mindestens `go-authn/fido` v0.6.0 und
-`go-authn/mfa` v0.5.0: Mindestversionen, sodass ein Programm, das fido v0.6.2 verlangt, die
-Version, die diese Seiten beschreiben, mit v0.6.2 gebaut wird.
+In v0.4.2 verlangt sein `go.mod` mindestens `go-authn/fido` v0.6.2 und
+`go-authn/mfa` v0.5.0, die Versionen, die diese Seiten beschreiben.
 
 Die Plattform liefert einen `Opener` – wie ein Schlüssel auf diesem System gefunden wird – und
 behält nur diesen. Alles andere ist überall gleich, wo es CTAP gibt: die Assertion,
@@ -130,4 +129,4 @@ Architekturen.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/keyfactor@v0.4.1](https://pkg.go.dev/github.com/go-authn/keyfactor@v0.4.1)
+[pkg.go.dev/github.com/go-authn/keyfactor@v0.4.2](https://pkg.go.dev/github.com/go-authn/keyfactor@v0.4.2)

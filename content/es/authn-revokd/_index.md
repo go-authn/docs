@@ -12,12 +12,12 @@ meses. authn-revokd cierra ambas brechas para las listas que publica
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}}): descarga cada lista, la
 conserva solo si se verifica, la escribe donde la lee `sshd` o un servidor TLS y,
 cuando una lista caduca, escribe una que **revoca la propia CA**. Go puro,
-`CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.6.3.
+`CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.6.4.
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.3
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
 $ authn-revokd -version
-authn-revokd v0.6.3
+authn-revokd v0.6.4
 $ authn-revokd -help
 Usage of authn-revokd:
   -config string
