@@ -11,7 +11,7 @@ things that want to authenticate them speak LDAP.** authnd is the front: it
 binds and searches over [go-authn/directory]({{< relref "/libraries/_index.md" >}})'s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe
-v0.11.0, whose entries follow the standard schemas and pass the schema it
+v0.11.1, whose entries follow the standard schemas and pass the schema it
 serves at `cn=Subschema`, with go-authn/ldap v0.8.0 and go-authn/directory
 v0.14.0 under it; what is verified and what is not is on the
 [status]({{< relref "/status.md" >}}) page.
@@ -121,7 +121,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.11.0
+vendorVersion: v0.11.1
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` is the RFC 3062 password modify operation.
@@ -148,15 +148,18 @@ which is answered to an anonymous client as well.
 {{< callout type="info" >}}
 **About the transcripts**
 
-Every `check` table, every startup line, the entries read back with
-`ldapsearch`, the root DSE and `cn=Subschema`, the `samba` refusals and the
-`--version` lines were printed by the v0.11.0 release binary
-(`authnd-darwin-arm64`, `go version -m`: `mod github.com/go-authn/authnd v0.11.0`,
+Every startup line, the root DSE and the `--version` lines were printed by
+the v0.11.1 release binary (`authnd-darwin-arm64`, `go version -m`:
+`mod github.com/go-authn/authnd v0.11.1`, `vcs.modified=false`), and so was
+every other command shown in the same transcript as a startup line. v0.11.1
+changes nothing but that line. Every `check` table, the entries read
+back with `ldapsearch`, `cn=Subschema` and the `samba` refusals were printed
+by the v0.11.0 release binary (`mod github.com/go-authn/authnd v0.11.0`,
 `vcs.modified=false`). So were the configuration refusals on these pages,
-which v0.11.0 printed byte for byte as v0.10.0 had. The binds, `kinit`s,
+which v0.11.0 printed byte for byte as v0.10.0 had. The other binds, `kinit`s,
 password changes and token exchanges were printed by the v0.10.0 release
-binary and were not run again for v0.11.0, whose release notes change none
-of them. All of them were asked by the OpenLDAP and
+binary and were not run again, since neither v0.11.0's nor v0.11.1's release
+notes change any of them. All of them were asked by the OpenLDAP and
 Heimdal clients that ship with macOS, on 127.0.0.1 on unprivileged ports, in
 a scratch directory under `/tmp`. That
 is why the configurations behind them name files by relative paths such as

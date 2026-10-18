@@ -236,7 +236,7 @@ detuvo):
 
 ```
 $ authnd --config etc/authnd
-ldap on 127.0.0.1:3893, serving 5 people from the configuration file, then a sqlite database
+ldap on 127.0.0.1:3893, serving 5 people from a sqlite database
 uid=hal,ou=people,dc=example,dc=org is published without uidNumber: no class of the entry allows it; posixAccount would
 uid=hal,ou=people,dc=example,dc=org is published without gidNumber: no class of the entry allows it; posixAccount and posixGroup would
 uid=hal,ou=people,dc=example,dc=org is published without mail: no class of the entry allows it; inetOrgPerson would

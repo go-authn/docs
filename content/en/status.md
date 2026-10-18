@@ -9,14 +9,14 @@ These pages are documentation version **0.4**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.11.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.11.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
 ldap is **v0.8.0**, with the directory schema, and directory **v0.14.0**,
-with attributes and wider ldapdir defaults: both are what authnd v0.11.0
+with attributes and wider ldapdir defaults: both are what authnd v0.11.1
 embeds.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.4/` keep describing what they
@@ -48,6 +48,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.10.1 | go-authn/kdc v0.4.2: a `till` of 19700101000000Z gets the longest ticket, not one expired in 1970 |
 | v0.10.2 | go-authn/directory v0.12.0: an empty group is published as a `posixGroup` without `memberUid` |
 | v0.11.0 | [standard-schema entries]({{< relref "/authnd/entries.md" >}}), each held to the schema served at `cn=Subschema`; `attributes`, `users_attributes` and `groups_attributes`; `(uidNumber>=1000)` compares integers. ⛔ `publish_nt_hash` needs a [`samba` block]({{< relref "/authnd/tls.md#the-samba-block" >}}), and a consumer filtering on `posixAccount` or `posixGroup` sees fewer entries |
+| v0.11.1 | the startup line names only the sources somebody is served from: with no `user` block it no longer names the configuration file |
 
 ### authn-bridge
 

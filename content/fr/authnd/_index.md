@@ -11,7 +11,7 @@ qui veut les authentifier parle LDAP.** authnd est la façade : il
 se lie et cherche sur les sources de [go-authn/directory]({{< relref "/libraries/_index.md" >}}),
 si bien que ce que contient une base de données peut être lu par tout ce qui sait
 interroger un annuaire. Pur Go, `CGO_ENABLED=0`, un seul binaire. Ces pages décrivent
-la v0.11.0, dont les entrées suivent les schémas standard et respectent le schéma
+la v0.11.1, dont les entrées suivent les schémas standard et respectent le schéma
 qu'elle sert à `cn=Subschema`, avec go-authn/ldap v0.8.0 et go-authn/directory
 v0.14.0 en dessous ; ce qui est vérifié et ce qui ne l'est pas figure sur la
 page [état]({{< relref "/status.md" >}}).
@@ -122,7 +122,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.11.0
+vendorVersion: v0.11.1
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` est l'opération de modification de mot de passe de la RFC 3062.
@@ -149,15 +149,20 @@ qui est servi aussi à un client anonyme.
 {{< callout type="info" >}}
 **À propos des transcriptions**
 
-Chaque tableau de `check`, chaque ligne de démarrage, les entrées relues avec
-`ldapsearch`, le root DSE et `cn=Subschema`, les refus liés à `samba` et les
-lignes `--version` ont été affichés par le binaire de la version v0.11.0
-(`authnd-darwin-arm64`, `go version -m` : `mod github.com/go-authn/authnd v0.11.0`,
+Chaque ligne de démarrage, le root DSE et les lignes `--version` ont été
+affichés par le binaire de la version v0.11.1 (`authnd-darwin-arm64`,
+`go version -m` : `mod github.com/go-authn/authnd v0.11.1`, `vcs.modified=false`),
+de même que toute autre commande montrée dans la même transcription qu'une
+ligne de démarrage. La v0.11.1 ne change rien d'autre que cette ligne. Chaque
+tableau de `check`, les entrées relues avec `ldapsearch`,
+`cn=Subschema` et les refus liés à `samba` ont été affichés par le binaire de
+la version v0.11.0 (`mod github.com/go-authn/authnd v0.11.0`,
 `vcs.modified=false`). De même pour les refus de configuration de ces pages,
-que la v0.11.0 a affichés octet pour octet comme la v0.10.0. Les liaisons, les
-`kinit`, les changements de mot de passe et les échanges de jetons ont été
-affichés par le binaire de la version v0.10.0 et n'ont pas été relancés pour la
-v0.11.0, dont les notes de version n'en changent aucun. Tous ont été demandés
+que la v0.11.0 a affichés octet pour octet comme la v0.10.0. Les autres
+liaisons, `kinit`, changements de mot de passe et échanges de jetons ont été
+affichés par le binaire de la version v0.10.0 et n'ont pas été relancés,
+puisque ni les notes de version de la v0.11.0 ni celles de la v0.11.1 n'en
+changent aucun. Tous ont été demandés
 par les clients OpenLDAP et Heimdal livrés avec macOS, sur 127.0.0.1 sur des
 ports non privilégiés, dans un répertoire de travail sous `/tmp`. C'est
 pourquoi les configurations derrière elles nomment des fichiers par des chemins relatifs comme

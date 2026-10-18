@@ -19,7 +19,7 @@ arm64 (`.exe` unter windows), gebaut mit `CGO_ENABLED=0`, ein `SHA256SUMS`-Manif
 Build-Provenance-Attestierung für jedes Binary.
 
 ```sh
-version=v0.11.0
+version=v0.11.1
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ daher ist die Version etwas, das sich vergleichen lässt:
 
 ```
 $ authnd --version
-authnd version v0.11.0
+authnd version v0.11.1
 ```
 
 ### Nur bauen, was Sie wollen {#building-only-what-you-want}
@@ -63,8 +63,8 @@ Datei, die sie geschrieben hat, gehörte dann einer Nummer, die später jemand a
 
 Die beiden Dateien stammen aus dem Verzeichnis `packaging/` des Release-Tags, derselben
 Version wie das Binary: Kopieren Sie dieses Verzeichnis neben das Binary, aus einem
-Checkout des Tags oder, für v0.11.0, von
-<https://github.com/go-authn/authnd/tree/v0.11.0/packaging>.
+Checkout des Tags oder, für v0.11.1, von
+<https://github.com/go-authn/authnd/tree/v0.11.1/packaging>.
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
@@ -195,7 +195,7 @@ sudo systemctl restart authnd
 authnd --version
 ```
 
-Vergleichen Sie `packaging/` am neuen Tag mit dem, was installiert ist (das von v0.11.0 ist
+Vergleichen Sie `packaging/` am neuen Tag mit dem, was installiert ist (das von v0.11.1 ist
 das von v0.10.2, unverändert). Ein Rollback ist dieselbe Installation aus
 `authnd.previous` und ein Neustart.
 

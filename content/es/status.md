@@ -9,7 +9,7 @@ Estas páginas son la versión **0.4** de la documentación, y describen:
 
 | programa | versión | módulo |
 |---|---|---|
-| authnd | **v0.11.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.11.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
@@ -17,7 +17,7 @@ Estas páginas son la versión **0.4** de la documentación, y describen:
 Las versiones de las bibliotecas están en [su propia página]({{< relref "/libraries/_index.md" >}});
 ldap está en la **v0.8.0**, con el esquema de directorio, y directory en la
 **v0.14.0**, con atributos y valores por defecto de ldapdir más amplios: ambas
-son las que incorpora authnd v0.11.0.
+son las que incorpora authnd v0.11.1.
 Una nueva versión menor de cualquiera de los programas anteriores es una nueva
 versión de la documentación, de modo que las páginas que alguien encuentra bajo
 `/docs/0.4/` siguen describiendo lo que instaló; las de las versiones anteriores
@@ -48,6 +48,7 @@ que solo actualizaron dependencias, salvo las que describe esta versión de la d
 | v0.10.1 | go-authn/kdc v0.4.2: un `till` de 19700101000000Z obtiene el ticket más largo, no uno caducado en 1970 |
 | v0.10.2 | go-authn/directory v0.12.0: un grupo vacío se publica como `posixGroup` sin `memberUid` |
 | v0.11.0 | [entradas de esquema estándar]({{< relref "/authnd/entries.md" >}}), cada una sometida al esquema servido en `cn=Subschema`; `attributes`, `users_attributes` y `groups_attributes`; `(uidNumber>=1000)` compara enteros. ⛔ `publish_nt_hash` necesita un [bloque `samba`]({{< relref "/authnd/tls.md#the-samba-block" >}}), y un consumidor que filtra por `posixAccount` o `posixGroup` ve menos entradas |
+| v0.11.1 | la línea de arranque solo nombra las fuentes desde las que se sirve a alguien: sin bloque `user`, ya no nombra el archivo de configuración |
 
 ### authn-bridge {#authn-bridge}
 
