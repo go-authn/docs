@@ -41,10 +41,12 @@ ambos, y convierte una llave en un factor.
 
 **El directorio, y su protocolo.**
 [directory]({{< relref "/libraries/directory.md" >}}) es el modelo: una persona, y qué
-credenciales guarda un origen para ella: una contraseña, un hash NT, un verificador,
-claves SSH, un secreto de código de un solo uso.
+credenciales guarda un origen para ella —una contraseña, un hash NT, un verificador,
+claves SSH, un secreto de código de un solo uso—, y, aparte de ellas, los
+atributos que la describen y no prueban nada.
 [ldap]({{< relref "/libraries/ldap.md" >}}) es el protocolo LDAP en la red, como
-servidor; lo que responde es asunto del manejador.
+servidor, y el esquema de directorio contra el que se puede comprobar una
+entrada; lo que responde es asunto del manejador.
 
 **Kerberos, en dos mitades.** [krb5]({{< relref "/libraries/krb5.md" >}})
 *acepta* tickets: una keytab, un AP-REQ que entra, un AP-REP que sale.

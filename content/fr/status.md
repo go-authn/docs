@@ -5,7 +5,7 @@ description: "Les versions que décrivent ces pages, ce que chaque version a ajo
 tags: [état, versions]
 ---
 
-Ces pages sont la version **0.3** de la documentation, et décrivent :
+Ces pages sont la version **0.4** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
@@ -15,12 +15,13 @@ Ces pages sont la version **0.3** de la documentation, et décrivent :
 | sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
 
 Les versions des bibliothèques sont sur [leur propre page]({{< relref "/libraries/_index.md" >}}) ;
-directory est en **v0.12.0** : `Members` répond `[]` pour un groupe vide ;
-`Expand` le refuse avec `ErrEmptyGroup`.
+ldap est en **v0.8.0**, avec le schéma d'annuaire, et directory en
+**v0.14.0**, avec les attributs et des valeurs par défaut de ldapdir plus
+larges : les deux sont ce qu'embarque authnd v0.11.0.
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
-de sorte que les pages qu'une personne trouve sous `/docs/0.3/` continuent de décrire ce
-qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/` et
-`/docs/0.2/`.
+de sorte que les pages qu'une personne trouve sous `/docs/0.4/` continuent de décrire ce
+qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`,
+`/docs/0.2/` et `/docs/0.3/`.
 
 ## Ce que chaque version a ajouté {#what-each-release-added}
 
@@ -46,6 +47,7 @@ des dépendances sont omises.
 | v0.10.0 | `check` ouvre le certificat et le keytab, comme le fait le serveur ; il nomme qui ne peut pas se lier avec un mot de passe, et qui un jeton admet encore ; la ligne d'écoute vient après l'ouverture du royaume |
 | v0.10.1 | go-authn/kdc v0.4.2 : un `till` de 19700101000000Z obtient le ticket le plus long, et non un ticket expiré en 1970 |
 | v0.10.2 | go-authn/directory v0.12.0 : un groupe vide est publié comme `posixGroup` sans `memberUid` |
+| v0.11.0 | [des entrées des schémas standard]({{< relref "/authnd/entries.md" >}}), chacune soumise au schéma servi à `cn=Subschema` ; `attributes`, `users_attributes` et `groups_attributes` ; `(uidNumber>=1000)` compare des entiers. ⛔ `publish_nt_hash` demande un [bloc `samba`]({{< relref "/authnd/tls.md#the-samba-block" >}}), et un consommateur qui filtre sur `posixAccount` ou `posixGroup` voit moins d'entrées |
 
 ### authn-bridge {#authn-bridge}
 
@@ -102,6 +104,18 @@ des dépendances sont omises.
 | v0.1.4 | la publication vérifie les informations de compilation de chaque binaire |
 | v0.1.5 | `-version` affiche la version du module d'une compilation `go install`, et non `dev` |
 | v0.1.6 | des domaines d'exemple aux noms de la RFC 2606, dans la documentation ; aucun changement de comportement |
+
+### Les bibliothèques {#the-libraries}
+
+Les versions des bibliothèques pour lesquelles cette version de la
+documentation a été faite ; la page de chaque bibliothèque dit ce qu'ont
+changé les précédentes.
+
+| | |
+|---|---|
+| directory v0.13.0 | [les attributs]({{< relref "/libraries/directory.md#attributes" >}}) : ce qui décrit quelqu'un sans rien prouver, à part des identifiants, avec les noms qui ne peuvent jamais en être un ; `attributes` dans les blocs `user` et `group`, les requêtes `users_attributes` et `groups_attributes`, les `attributes` et `group_attributes` de ldapdir |
+| directory v0.14.0 | ⛔ les [valeurs par défaut]({{< relref "/libraries/directory.md#ldapdir-defaults" >}}) de ldapdir lisent les personnes `account` et `uidObject` et les groupes `groupOfNames`, ce qui élargit ce que donne l'annuaire d'un établissement ; un DN `member` ne correspond qu'à une personne que la source a importée |
+| ldap v0.8.0 | [le paquet `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) et `Server.Schema` : `cn=Subschema` (RFC 4512 §4.2), `Validate`, les règles de correspondance de la RFC 4517 ; `uidNumber` et `gidNumber` s'ordonnent comme des entiers ; une recherche paginée s'en tient aux attributs demandés |
 
 ## Pas encore implémenté {#not-implemented-yet}
 

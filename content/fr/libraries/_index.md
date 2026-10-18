@@ -42,9 +42,11 @@ importe les deux, et fait d'une clé un facteur.
 **L'annuaire, et son protocole.**
 [directory]({{< relref "/libraries/directory.md" >}}) est le modèle : une personne,
 et les identifiants qu'une source détient pour elle — un mot de passe, une empreinte NT, un
-vérificateur, des clés SSH, un secret de code à usage unique.
+vérificateur, des clés SSH, un secret de code à usage unique — et, à part
+d'eux, les attributs qui la décrivent sans rien prouver.
 [ldap]({{< relref "/libraries/ldap.md" >}}) est le protocole réseau LDAP, côté
-serveur ; ce qu'il répond est l'affaire du gestionnaire.
+serveur, et le schéma d'annuaire contre lequel une entrée peut être
+vérifiée ; ce qu'il répond est l'affaire du gestionnaire.
 
 **Kerberos, en deux moitiés.** [krb5]({{< relref "/libraries/krb5.md" >}})
 *accepte* les tickets : un keytab, un AP-REQ en entrée, un AP-REP en sortie.

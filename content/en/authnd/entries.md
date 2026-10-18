@@ -170,7 +170,7 @@ person's entry and each group's: `attributes = ["mail", "uidNumber",
 
 ## A configuration, and what it publishes {#a-configuration-and-what-it-publishes}
 
-The SQL block above, with a reader, over a SQLite database of six people and
+The SQL block above, with a reader, over a SQLite database of five people and
 four groups, as the v0.11.0 release binary checks it:
 
 ```hcl

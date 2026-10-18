@@ -62,10 +62,28 @@ La première ligne donne le schéma, l'adresse et la base : `ldap://`,
 |---|---|
 | `FROM` | la source qui possède le nom : *the configuration file*, *a sqlite database* (ou postgres, mysql), ou l'url d'un annuaire derrière celui-ci |
 | `CAN PROVE` | *a password* (détenu, donc il peut être comparé et des clés peuvent en être dérivées), *a password check* (un autre annuaire répond oui ou non), *an NT hash*, *N keys*, *a one-time-code secret*, ou *nothing* |
-| `PUBLISHED AS` | les attributs que porte l'entrée : toujours `uid` et `cn` ; `sambaNTPassword` quand `publish_nt_hash` est activé et que la personne en a une ou a un mot de passe dont elle peut être dérivée ; `sshPublicKey` quand il y a des clés |
+| `PUBLISHED AS` | les classes d'objets de l'entrée, sans `top`, telles que les donnent [les formes]({{< relref "/authnd/entries.md#the-shapes" >}}) — ou *NOT PUBLISHED (see below)* pour une entrée qui ne respecte pas le schéma |
+| `WITH` | les attributs que porte l'entrée, lus sur l'entrée que renvoie une recherche : `uid` ; `cn` partout où une classe l'autorise ; ce qu'ont donné les sources, moins ce qui a été écarté ; `sshPublicKey` quand il y a des clés ; `sambaSID` et `sambaNTPassword` quand [`publish_nt_hash`]({{< relref "/authnd/tls.md#publish_nt_hash" >}}) est activé et que la personne a une clé NT et un SID |
+
+Le tableau des groupes a lui aussi une colonne `PUBLISHED AS` : `posixGroup`,
+`groupOfNames` ou `organizationalRole`. Jusqu'à la v0.10.2, `PUBLISHED AS`
+était la liste des attributs, *uid and cn* pour presque tout le monde, et il
+n'y avait pas de colonne `WITH`.
 
 Les lignes après les tableaux disent ce qu'une personne doit savoir avant de se fier à
-la configuration :
+la configuration. D'abord, au sujet [des entrées]({{< relref "/authnd/entries.md" >}}) :
+
+- **qui n'est pas un `posixAccount`**, et lesquels de `uidNumber`,
+  `gidNumber` et `homeDirectory` lui manquent ;
+- **quels groupes n'ont pas de `gidNumber`**, et ce sous quoi ils sont
+  publiés à la place ;
+- **chaque attribut écarté** parce qu'aucune classe de son entrée ne
+  l'autorise, et quelles classes l'autoriseraient ;
+- **chaque entrée non publiée**, avec chaque problème trouvé par la
+  vérification du schéma ;
+- **qui a une clé NT et pas de `sambaSID`**, et donc pas de `sambaNTPassword`.
+
+Ensuite, au sujet des liaisons et des recherches :
 
 - **ce que porte une liaison** : *a password*, ou, avec un [bloc `mfa`]({{< relref "/authnd/mfa.md" >}}),
   *a password with a 6-digit code after it* ; avec un [bloc `oidc`]({{< relref "/authnd/tokens.md" >}}),
@@ -83,9 +101,13 @@ la configuration :
   l'`amr` nomme deux sortes le peut encore ;
 - un **groupe qui nomme quelqu'un qu'aucune source ne connaît**.
 
-Ce dernier est publié tel quel — `memberUid` est une chaîne, et une
-façade pour un système porte légitimement des noms qu'un autre possède — mais c'est
-dit, parce que l'autre lecture est une faute de frappe. Ici la table
+Ce dernier est publié tel quel — une façade pour un système porte
+légitimement des noms qu'un autre possède — mais c'est dit, parce que l'autre
+lecture est une faute de frappe. Dans un `posixGroup`, l'inconnu est un
+`memberUid` ; dans un `groupOfNames`, c'est un DN `member` qui ne nomme
+aucune entrée d'ici, ici `member: uid=zoe,ou=people,dc=example,dc=org`, que
+le `ldapdir` de go-authn/directory fait correspondre, depuis la v0.14.0, à
+personne. Ici la table
 `team_members` de la base de données a une ligne pour `zoe`, qui n'est personne ici :
 
 ```

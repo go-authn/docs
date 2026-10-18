@@ -35,6 +35,7 @@ group "staff" { members = ["alice", "carol"] }
 | `totp_secret` | un secret de code à usage unique en base32, d'au moins 128 bits ; voir [un second facteur]({{< relref "/authnd/mfa.md" >}}) |
 | `authorized_keys` | des lignes `authorized_keys`, publiées comme `sshPublicKey` |
 | `authorized_keys_file` | les mêmes, depuis un fichier |
+| `attributes` | depuis la v0.11.0, ce qui décrit la personne sans rien prouver — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — sous forme d'une table de chaînes ou de listes de chaînes ; un bloc `group` le prend aussi. Ils décident de ce sous quoi l'entrée est publiée : voir [les entrées]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 
 Refusés au démarrage, en nommant la personne :
 
@@ -94,6 +95,12 @@ identifiant que cette personne n'a pas. Une colonne de mot de passe est comparé
 stockée : authnd n'a pas de réglage pour une colonne d'empreintes. La requête `groups` renvoie
 un nom de groupe et un membre, une ligne par appartenance.
 
+Deux autres requêtes, facultatives, lisent des attributs **par alias de
+colonne** plutôt que par position : `users_attributes` (un nom, puis une
+colonne par attribut) et `groups_attributes` (un groupe, puis de même). Un
+alias sans guillemets est mis en minuscules par PostgreSQL. Voir
+[les entrées]({{< relref "/authnd/entries.md#in-a-sql-database" >}}).
+
 `driver` accepte `postgres` (ou `postgresql`, `pgx`), `mysql` (ou `mariadb`)
 et `sqlite` (ou `sqlite3`). La base de données est contactée au démarrage, avant
 que quoi que ce soit n'écoute, si bien qu'une base qui ne répond pas arrête le serveur là où
@@ -133,17 +140,45 @@ attributs les nomment :
 
 | clé | défaut |
 |---|---|
-| `user_filter` | `(objectClass=posixAccount)` |
+| `user_filter` | `(\|(objectClass=posixAccount)(objectClass=account)(objectClass=uidObject))` |
 | `user_attribute` | `uid` |
 | `group_base_dn` | `base_dn` |
-| `group_filter` | `(objectClass=posixGroup)` |
+| `group_filter` | `(\|(objectClass=posixGroup)(objectClass=groupOfNames))` |
 | `group_attribute` | `cn` |
-| `group_member_attribute` | `memberUid` |
+| `group_member_attribute` | aucun : `memberUid` (des noms) **et** `member` (des DN) ; s'il est défini, c'est le seul attribut lu |
 | `totp_attribute` | aucun : il n'existe pas d'attribut standard, et une supposition ne lirait rien tout en ayant l'air d'avoir cherché |
+| `attributes`, `group_attributes` | aucun : les attributs à copier depuis l'entrée de chaque personne et celle de chaque groupe, comme `["mail", "uidNumber", "homeDirectory"]` et `["gidNumber"]` ([les entrées]({{< relref "/authnd/entries.md#adding-attributes" >}})) |
 | `start_tls` | `false` |
 
-`sambaNTPassword` et `sshPublicKey` sont lus sous ces noms. Deux choses
-sont refusées avant que quoi que ce soit ne soit ouvert :
+Un DN `member` ne compte que lorsqu'il est le DN d'une entrée qu'a renvoyée
+la recherche des personnes : un DN en dehors d'elles, ou qui ne nomme
+personne, ne correspond à personne, et le nom n'est jamais lu dans le DN.
+`sambaNTPassword` et `sshPublicKey` sont lus sous ces noms.
+
+{{< callout type="warning" >}}
+**Depuis la v0.11.0, les valeurs par défaut lisent davantage de l'annuaire d'un établissement**
+
+Le bloc est celui de go-authn/directory, et directory v0.14.0, qu'embarque
+authnd v0.11.0, a élargi ses valeurs par défaut : jusqu'à la v0.10.2,
+`user_filter` valait `(objectClass=posixAccount)`, `group_filter`
+`(objectClass=posixGroup)` et `group_member_attribute` `memberUid`. Un
+annuaire qui contient des entrées `account` ou `uidObject` qui ne sont pas
+des posixAccounts — comptes de service, hôtes nommés par uid, personnes
+importées d'ailleurs — les donne désormais à authnd, et chacune peut être
+vérifiée par une liaison ; ses groupes `groupOfNames` deviennent des groupes
+ici. Pour garder exactement l'ancien ensemble, écrivez les anciennes valeurs :
+
+```hcl
+users "ldap" {
+  # ...
+  user_filter            = "(objectClass=posixAccount)"
+  group_filter           = "(objectClass=posixGroup)"
+  group_member_attribute = "memberUid"
+}
+```
+{{< /callout >}}
+
+Deux choses sont refusées avant que quoi que ce soit ne soit ouvert :
 
 ```
 $ authnd check cases/ldap-clear.hcl
@@ -157,7 +192,24 @@ authnd: users "ldap" has credentials in its url, and a url is printed: use bind_
 sur le chemin.
 
 Un annuaire derrière celui-ci **vérifie** les mots de passe en s'y liant ; il ne
-les transmet pas. Ici, un authnd se place devant un autre, sous une base différente :
+les transmet pas. Ici, un authnd se place devant un autre, sous une base différente ;
+celui de derrière est l'exemple de [`check`]({{< relref "/authnd/check.md#a-configuration-that-can-be-served" >}}),
+servi sur le 3893 :
+
+```hcl
+listen  = "127.0.0.1:3894"
+base_dn = "dc=example,dc=net"
+
+users "ldap" {
+  url                = "ldap://127.0.0.1:3893"
+  base_dn            = "ou=people,dc=example,dc=org"
+  group_base_dn      = "ou=groups,dc=example,dc=org"
+  bind_dn            = "cn=reader,dc=example,dc=org"
+  bind_password_file = "etc/authnd/reader.pw"
+}
+
+user "svc-backup" { password_file = "etc/authnd/svc-backup.pw" }
+```
 
 ```
 $ authnd check front2
@@ -188,6 +240,12 @@ sambaNTPassword is not published, so nothing here can authenticate an SMB sessio
 
 this configuration can be served
 ```
+
+Chaque personne que publie l'annuaire de derrière est un `account` et chaque
+groupe un `groupOfNames`, puisqu'aucun n'a d'attributs POSIX : les valeurs par
+défaut les lisent, et les DN `member` des groupes correspondent aux personnes
+importées. Avec les valeurs par défaut en vigueur jusqu'à la v0.10.2,
+`(objectClass=posixAccount)` n'aurait trouvé aucune d'elles.
 
 *A password check* suffit pour une liaison, et ne suffit jamais pour un
 [ticket Kerberos]({{< relref "/authnd/kerberos.md#who-can-be-issued-a-ticket" >}})

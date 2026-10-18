@@ -64,7 +64,7 @@ et un fichier qu'il a écrit appartiendrait à un numéro qui désignera plus ta
 
 Les deux fichiers viennent du répertoire `packaging/` de l'étiquette de la version,
 la même version que le binaire : copiez ce répertoire à côté du binaire, depuis
-une extraction de l'étiquette ou, pour v0.10.2, depuis
+une extraction de l'étiquette ou, pour v0.11.0, depuis
 <https://github.com/go-authn/authnd/tree/v0.11.0/packaging>.
 
 ```sh
@@ -161,7 +161,7 @@ Pourquoi ce répertoire et pas le fichier est expliqué dans
 | `base_dn` | — (obligatoire) | la racine de l'arbre, par exemple `dc=example,dc=org` ; une valeur sans `=` est refusée |
 | `listen` | `127.0.0.1:3893` | une seule adresse. Boucle locale par défaut : un annuaire qui apparaît sur toutes les interfaces dès qu'il démarre est une décision que quelqu'un devrait prendre exprès. Un site qui a besoin de LDAP et de LDAPS lance deux instances |
 | `reader "<dn>"` | aucun | un compte de service qui peut chercher ; voir [qui peut lire]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
-| `cert_file`, `key_file`, `starttls`, `publish_nt_hash` | désactivé | [TLS]({{< relref "/authnd/tls.md" >}}) |
+| `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | désactivé | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [les personnes]({{< relref "/authnd/people.md" >}}) ; au moins un bloc `user` ou `users` |
 | `kerberos` | aucun | [un royaume]({{< relref "/authnd/kerberos.md" >}}) |
 | `mfa` | aucun | [un second facteur]({{< relref "/authnd/mfa.md" >}}) |
@@ -197,8 +197,16 @@ sudo systemctl restart authnd
 authnd --version
 ```
 
-Comparez `packaging/` à la nouvelle étiquette avec ce qui est installé. Revenir en arrière, c'est
+Comparez `packaging/` à la nouvelle étiquette avec ce qui est installé (celui
+de la v0.11.0 est celui de la v0.10.2, inchangé). Revenir en arrière, c'est
 la même installation depuis `authnd.previous`, et un redémarrage.
+
+De la v0.10.x à la v0.11.0, le `check` ci-dessus est l'étape qui compte : une
+configuration avec `publish_nt_hash = true` et sans
+[bloc `samba`]({{< relref "/authnd/tls.md#the-samba-block" >}}) y est refusée
+plutôt qu'au redémarrage, et les lignes après ses tableaux disent qui n'est
+plus un `posixAccount` et quels groupes ne sont plus des `posixGroup`
+([les entrées]({{< relref "/authnd/entries.md" >}})).
 
 Pour le désinstaller :
 

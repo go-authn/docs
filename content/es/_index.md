@@ -62,7 +62,7 @@ realm EXAMPLE.ORG on 127.0.0.1:18388 (udp and tcp), keytab etc/authnd/krb5.keyta
   bob and eli: an NT hash is only the RC4-HMAC key (RFC 4757), and this realm issues aes256-cts-hmac-sha1-96 alone, whose key is derived from the password itself
 ```
 
-Esa es la salida real de authnd v0.10.1: [completa]({{< relref "/authnd/check.md" >}}).
+Esa es la salida real de authnd v0.11.0: [completa]({{< relref "/authnd/check.md" >}}).
 
 ## Juzgado con herramientas ajenas {#judged-by-other-peoples-tools}
 

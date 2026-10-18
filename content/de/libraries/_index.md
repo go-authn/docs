@@ -42,9 +42,11 @@ beide importiert und aus einem Schlüssel einen Faktor macht.
 **Das Verzeichnis und sein Protokoll.**
 [directory]({{< relref "/libraries/directory.md" >}}) ist das Modell: eine Person
 und welche Anmeldedaten eine Quelle für sie hält – ein Passwort, ein NT-Hash, ein
-Verifier, SSH-Schlüssel, ein Geheimnis für Einmalcodes.
+Verifier, SSH-Schlüssel, ein Geheimnis für Einmalcodes – und, getrennt davon, die
+Attribute, die sie beschreiben und nichts beweisen.
 [ldap]({{< relref "/libraries/ldap.md" >}}) ist das LDAP-Leitungsprotokoll, als
-Server; was es antwortet, ist Sache des Handlers.
+Server, und das Verzeichnisschema, gegen das ein Eintrag geprüft werden kann; was es
+antwortet, ist Sache des Handlers.
 
 **Kerberos, in zwei Hälften.** [krb5]({{< relref "/libraries/krb5.md" >}})
 *nimmt* Tickets *an*: eine Keytab, ein AP-REQ herein, ein AP-REP hinaus.
