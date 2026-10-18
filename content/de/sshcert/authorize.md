@@ -208,9 +208,9 @@ Steuerzeichen enthält, sodass er kein Log-Feld fälschen kann.
 das mit `go install` gebaut wurde:
 
 ```
-$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.6
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.7
 $ sshcert-authorize -version
-sshcert-authorize v0.1.6
+sshcert-authorize v0.1.7
 ```
 
 Vor v0.1.5 gab ein Binary aus `go install` `sshcert-authorize dev` aus.

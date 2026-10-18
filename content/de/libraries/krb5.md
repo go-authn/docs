@@ -13,7 +13,7 @@ signiert, prüft, versiegelt und öffnet dann Nachrichten mit dem Schlüssel, de
 festgelegt hat.
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.0
+go get github.com/go-authn/krb5@v0.3.1
 ```
 
 Es spricht nie mit einem KDC und stellt nie ein Ticket aus, daher entscheidet jemand anderes,
@@ -138,4 +138,4 @@ Prüfstein übersprungen. Die Untergrenze der Coverage-Lane liegt bei 90 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.0](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.0)
+[pkg.go.dev/github.com/go-authn/krb5@v0.3.1](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.1)

@@ -13,7 +13,7 @@ signe, vérifie, scelle et ouvre des messages sous la clé que cet échange
 a établie.
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.0
+go get github.com/go-authn/krb5@v0.3.1
 ```
 
 Il ne parle jamais à un KDC et ne délivre jamais de ticket, donc de qui il accepte les tickets
@@ -138,4 +138,4 @@ juge est sauté. Le plancher de la voie de couverture est de 90 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.0](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.0)
+[pkg.go.dev/github.com/go-authn/krb5@v0.3.1](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.1)

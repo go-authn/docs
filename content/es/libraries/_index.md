@@ -16,18 +16,18 @@ Todos son Go puro y se compilan con `CGO_ENABLED=0`.
 | módulo | la pregunta que responde | estas páginas describen | ruta de importación |
 |---|---|---|---|
 | [mfa]({{< relref "/libraries/mfa.md" >}}) | ¿respondieron suficientes factores, de suficientes tipos, y cuáles? | v0.5.0 | `github.com/go-authn/mfa` |
-| [totp]({{< relref "/libraries/totp.md" >}}) | ¿es correcto este código de seis dígitos, y se ha usado antes? | v0.4.1 | `github.com/go-authn/totp` |
+| [totp]({{< relref "/libraries/totp.md" >}}) | ¿es correcto este código de seis dígitos, y se ha usado antes? | v0.4.2 | `github.com/go-authn/totp` |
 | [fido]({{< relref "/libraries/fido.md" >}}) | ¿cómo se habla con una llave de seguridad, mediante informes de 64 bytes? | v0.6.2 | `github.com/go-authn/fido` |
-| [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | ¿respondió *la* llave registrada, y la tocó una persona? | v0.4.1 | `github.com/go-authn/keyfactor` |
+| [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | ¿respondió *la* llave registrada, y la tocó una persona? | v0.4.2 | `github.com/go-authn/keyfactor` |
 | [directory]({{< relref "/libraries/directory.md" >}}) | ¿quién es alguien, y qué puede probarlo? | v0.14.0 | `github.com/go-authn/directory` |
 | [ldap]({{< relref "/libraries/ldap.md" >}}) | ¿cuáles son los bytes de un servidor LDAP? | v0.8.0 | `github.com/go-authn/ldap` |
-| [krb5]({{< relref "/libraries/krb5.md" >}}) | ¿es válido este ticket Kerberos para este servicio? | v0.3.0 | `github.com/go-authn/krb5` |
-| [kdc]({{< relref "/libraries/kdc.md" >}}) | ¿cómo emite un reino tickets a partir de un directorio? | v0.4.2 | `github.com/go-authn/kdc` |
-| [oidc]({{< relref "/libraries/oidc.md" >}}) | ¿quién dice este token bearer que pregunta, y hay que creerlo? | v0.4.0 | `github.com/go-authn/oidc` |
+| [krb5]({{< relref "/libraries/krb5.md" >}}) | ¿es válido este ticket Kerberos para este servicio? | v0.3.1 | `github.com/go-authn/krb5` |
+| [kdc]({{< relref "/libraries/kdc.md" >}}) | ¿cómo emite un reino tickets a partir de un directorio? | v0.4.3 | `github.com/go-authn/kdc` |
+| [oidc]({{< relref "/libraries/oidc.md" >}}) | ¿quién dice este token bearer que pregunta, y hay que creerlo? | v0.4.1 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | ¿qué dijo de esta persona el proveedor de identidad de una federación? | v0.4.1 | `github.com/go-authn/saml` |
-| [krl]({{< relref "/libraries/krl.md" >}}) | ¿está revocado este certificado o esta clave SSH, tal como respondería sshd? | v0.6.0 | `github.com/go-authn/krl` |
-| [servercert]({{< relref "/libraries/servercert.md" >}}) | ¿de dónde procede el certificado de servidor TLS de un demonio? | v0.5.1 | `github.com/go-authn/servercert` |
-| [wireguard]({{< relref "/libraries/wireguard.md" >}}) | ¿puede conectarse esta clave WireGuard, y de quién es? | v0.1.0 | `github.com/go-authn/wireguard` |
+| [krl]({{< relref "/libraries/krl.md" >}}) | ¿está revocado este certificado o esta clave SSH, tal como respondería sshd? | v0.6.1 | `github.com/go-authn/krl` |
+| [servercert]({{< relref "/libraries/servercert.md" >}}) | ¿de dónde procede el certificado de servidor TLS de un demonio? | v0.5.2 | `github.com/go-authn/servercert` |
+| [wireguard]({{< relref "/libraries/wireguard.md" >}}) | ¿puede conectarse esta clave WireGuard, y de quién es? | v0.1.1 | `github.com/go-authn/wireguard` |
 
 ## Cómo se agrupan {#how-they-group}
 
@@ -76,16 +76,16 @@ ruta de código de emisión de tickets que nunca ejecuta, y el módulo de direct
 que un KDC lee las personas, que nunca usa.
 
 Esto está medido, no es una intención. En un módulo temporal que solo importa
-`github.com/go-authn/krb5@v0.3.0`:
+`github.com/go-authn/krb5@v0.3.1`:
 
 ```sh
 $ GOWORK=off go list -deps . | grep go-authn
 github.com/go-authn/krb5
 $ GOWORK=off go list -m all | grep go-authn
-github.com/go-authn/krb5 v0.3.0
+github.com/go-authn/krb5 v0.3.1
 ```
 
-La misma orden para un módulo que importa `github.com/go-authn/kdc@v0.4.2` lista
+La misma orden para un módulo que importa `github.com/go-authn/kdc@v0.4.3` lista
 `github.com/go-authn/directory` y `github.com/go-authn/kdc`: emitir necesita las
 personas, aceptar no.
 

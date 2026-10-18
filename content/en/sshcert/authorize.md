@@ -207,9 +207,9 @@ space, `=`, a quote or a control character, so it cannot forge a log field.
 built by `go install` alike:
 
 ```
-$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.6
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.7
 $ sshcert-authorize -version
-sshcert-authorize v0.1.6
+sshcert-authorize v0.1.7
 ```
 
 Before v0.1.5, a binary from `go install` printed `sshcert-authorize dev`.

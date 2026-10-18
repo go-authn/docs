@@ -13,12 +13,11 @@ cuánta prueba basta y no sabe nada de ningún dispositivo. Ninguno importa al o
 este importa a los dos.
 
 ```sh
-go get github.com/go-authn/keyfactor@v0.4.1
+go get github.com/go-authn/keyfactor@v0.4.2
 ```
 
-En la v0.4.1 su `go.mod` requiere como mínimo `go-authn/fido` v0.6.0 y
-`go-authn/mfa` v0.5.0: son mínimos, así que un programa que requiere fido v0.6.2, la
-versión que describen estas páginas, se compila con la v0.6.2.
+En la v0.4.2 su `go.mod` requiere como mínimo `go-authn/fido` v0.6.2 y
+`go-authn/mfa` v0.5.0, las versiones que describen estas páginas.
 
 La plataforma aporta un `Opener` —cómo se encuentra una llave en este sistema— y solo
 conserva eso. Todo lo demás es igual allí donde haya CTAP: la aserción, las
@@ -132,4 +131,4 @@ arquitecturas.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/keyfactor@v0.4.1](https://pkg.go.dev/github.com/go-authn/keyfactor@v0.4.1)
+[pkg.go.dev/github.com/go-authn/keyfactor@v0.4.2](https://pkg.go.dev/github.com/go-authn/keyfactor@v0.4.2)

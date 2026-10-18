@@ -26,9 +26,9 @@ binary; [verifying a download]({{< relref "/security/verifying-releases.md" >}})
 says how to check both. Or build it, which records the version in the binary:
 
 ```
-$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.0
+$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.1
 $ authn-bridge --version
-authn-bridge version v0.23.0
+authn-bridge version v0.23.1
 ```
 
 The path matters: from v0.20.0 the program lives in `internal/app` and the

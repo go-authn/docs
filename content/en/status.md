@@ -9,14 +9,14 @@ These pages are documentation version **0.4**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.11.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
-| sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
+| authnd | **v0.11.1** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
+| sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
 ldap is **v0.8.0**, with the directory schema, and directory **v0.14.0**,
-with attributes and wider ldapdir defaults: both are what authnd v0.11.0
+with attributes and wider ldapdir defaults: both are what authnd v0.11.1
 embeds.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.4/` keep describing what they
@@ -26,7 +26,7 @@ installed; those of the previous releases stay under `/docs/0.1/`,
 ## What each release added
 
 Each line is the change a release was cut for. Releases that only updated
-dependencies are left out.
+dependencies are left out, except those this documentation version describes.
 
 ### authnd
 
@@ -48,6 +48,7 @@ dependencies are left out.
 | v0.10.1 | go-authn/kdc v0.4.2: a `till` of 19700101000000Z gets the longest ticket, not one expired in 1970 |
 | v0.10.2 | go-authn/directory v0.12.0: an empty group is published as a `posixGroup` without `memberUid` |
 | v0.11.0 | [standard-schema entries]({{< relref "/authnd/entries.md" >}}), each held to the schema served at `cn=Subschema`; `attributes`, `users_attributes` and `groups_attributes`; `(uidNumber>=1000)` compares integers. ⛔ `publish_nt_hash` needs a [`samba` block]({{< relref "/authnd/tls.md#the-samba-block" >}}), and a consumer filtering on `posixAccount` or `posixGroup` sees fewer entries |
+| v0.11.1 | the startup line names only the sources somebody is served from: with no `user` block it no longer names the configuration file |
 
 ### authn-bridge
 
@@ -80,6 +81,7 @@ dependencies are left out.
 | v0.22.0 | the access token no longer carries `auth_time` or `acr` (the ID token still does), so that an ES256 token fits OpenSSH's 1023 characters up to the 99th percentile of RENATER's scopes |
 | v0.22.1 | `resource` may be repeated at the authorization endpoint, for a grant bounded to several servers; refused at `device_authorization` rather than ignored ([resource indicators]({{< relref "/authn-bridge/resources.md" >}})) |
 | v0.23.0 | `access_token_groups = false`: a client whose tokens are pasted into ssh carries no groups ([tokens]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
+| v0.23.1 | dependencies only: go-jose/v4 v4.1.6, golang.org/x/crypto v0.58.0, golang.org/x/net v0.61.0; go-authn/directory v0.12.0, revocation v0.6.3, saml v0.4.1, servercert v0.5.1, sshcert v0.1.6 |
 
 ### authn-revokd
 
@@ -94,6 +96,7 @@ dependencies are left out.
 | v0.6.1 | `-version` prints on standard output |
 | v0.6.2 | `-once` tells a failed fetch apart from a lapsed list; a list signed by another key is no longer called a race; `-help` exits 0 |
 | v0.6.3 | placeholder domains in RFC 2606 names, in the examples and the documentation; no change in behaviour |
+| v0.6.4 | dependencies only: golang.org/x/crypto v0.58.0 |
 
 ### sshcert
 
@@ -104,6 +107,7 @@ dependencies are left out.
 | v0.1.4 | the release checks every binary's build information |
 | v0.1.5 | `-version` prints the module version of a `go install` build, not `dev` |
 | v0.1.6 | placeholder domains in RFC 2606 names, in the documentation; no change in behaviour |
+| v0.1.7 | dependencies only: golang.org/x/crypto v0.58.0 |
 
 ### The libraries
 
@@ -114,7 +118,15 @@ library's page says what earlier ones changed.
 |---|---|
 | directory v0.13.0 | [attributes]({{< relref "/libraries/directory.md#attributes" >}}): what describes somebody and proves nothing, apart from credentials, with the names that can never be one; `attributes` in `user` and `group` blocks, `users_attributes` and `groups_attributes` queries, ldapdir's `attributes` and `group_attributes` |
 | directory v0.14.0 | ⛔ ldapdir's [defaults]({{< relref "/libraries/directory.md#ldapdir-defaults" >}}) read `account` and `uidObject` people and `groupOfNames` groups, which widens what an institution's directory gives; a `member` DN maps only to a person the source imported |
+| kdc v0.4.3 | dependencies only: go-authn/directory v0.12.0 as its minimum |
+| keyfactor v0.4.2 | dependencies only: go-authn/fido v0.6.2 and golang.org/x/crypto v0.58.0 as its minimums |
+| krb5 v0.3.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
+| krl v0.6.1 | dependencies only: golang.org/x/crypto v0.58.0; tested with Go 1.27.2 |
 | ldap v0.8.0 | [package `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) and `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, RFC 4517 matching rules; `uidNumber` and `gidNumber` order as integers; a paged search keeps to the requested attributes |
+| oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
+| servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
+| totp v0.4.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
+| wireguard v0.1.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 
 ## Not implemented yet
 

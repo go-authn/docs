@@ -14,7 +14,7 @@ chaque fois que la réponse change. Un fournisseur —
 module est ce sur quoi le fournisseur et une passerelle s'accordent.
 
 ```sh
-go get github.com/go-authn/wireguard@v0.1.0
+go get github.com/go-authn/wireguard@v0.1.1
 ```
 
 Sa seule dépendance est [oidc]({{< relref "/libraries/oidc.md" >}}) v0.4.0,
@@ -165,4 +165,4 @@ chacun avec et sans le bit de poids fort. Le plancher de couverture est de 100 %
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/wireguard@v0.1.0](https://pkg.go.dev/github.com/go-authn/wireguard@v0.1.0)
+[pkg.go.dev/github.com/go-authn/wireguard@v0.1.1](https://pkg.go.dev/github.com/go-authn/wireguard@v0.1.1)

@@ -11,7 +11,7 @@ directorio. Lo que quiere autenticarlas habla LDAP.** authnd es la fachada:
 hace binds y búsquedas sobre los orígenes de
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}), así que lo que guarda
 una base de datos puede leerlo cualquier cosa que sepa consultar un directorio.
-Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.11.0,
+Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.11.1,
 cuyas entradas siguen los esquemas estándar y superan el esquema que sirve en
 `cn=Subschema`, con go-authn/ldap v0.8.0 y go-authn/directory v0.14.0 por
 debajo; lo que está verificado y lo que no figura en la página de
@@ -123,7 +123,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.11.0
+vendorVersion: v0.11.1
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` es la operación de modificación de contraseña del RFC 3062.
@@ -150,15 +150,19 @@ que también se responde a un cliente anónimo.
 {{< callout type="info" >}}
 **Sobre las transcripciones**
 
-Cada tabla de `check`, cada línea de arranque, las entradas releídas con
-`ldapsearch`, el root DSE y `cn=Subschema`, los rechazos de `samba` y las
-líneas `--version` los imprimió el binario de la versión v0.11.0
-(`authnd-darwin-arm64`, `go version -m`: `mod github.com/go-authn/authnd v0.11.0`,
-`vcs.modified=false`). También los rechazos de configuración de estas páginas,
-que la v0.11.0 imprimió byte a byte como lo había hecho la v0.10.0. Los binds,
-los `kinit`, los cambios de contraseña y los intercambios de tokens los
-imprimió el binario de la versión v0.10.0 y no se volvieron a ejecutar para la
-v0.11.0, cuyas notas de versión no cambian ninguno de ellos. Todos los
+Cada línea de arranque, el root DSE y las líneas `--version` los imprimió el
+binario de la versión v0.11.1 (`authnd-darwin-arm64`, `go version -m`:
+`mod github.com/go-authn/authnd v0.11.1`, `vcs.modified=false`), igual que
+cualquier otro comando que aparece en la misma transcripción que una línea de
+arranque. La v0.11.1 no cambia nada más que esa línea. Cada tabla de
+`check`, las entradas releídas con `ldapsearch`, `cn=Subschema` y los rechazos
+de `samba` los imprimió el binario de la versión v0.11.0
+(`mod github.com/go-authn/authnd v0.11.0`, `vcs.modified=false`). También los
+rechazos de configuración de estas páginas, que la v0.11.0 imprimió byte a
+byte como lo había hecho la v0.10.0. Los demás binds, `kinit`, cambios de
+contraseña e intercambios de tokens los imprimió el binario de la versión
+v0.10.0 y no se volvieron a ejecutar, porque ni las notas de versión de la
+v0.11.0 ni las de la v0.11.1 cambian ninguno de ellos. Todos los
 pidieron los clientes OpenLDAP y Heimdal que incluye macOS, en 127.0.0.1 en
 puertos sin privilegios, en un directorio temporal bajo `/tmp`. Por eso las configuraciones que hay detrás nombran los archivos con rutas
 relativas como `etc/authnd/passwords/alice.pw`, y por eso los archivos de contraseña

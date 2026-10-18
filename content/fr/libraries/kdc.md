@@ -13,10 +13,10 @@ services qu'un keytab détient. Il fonctionne sous
 [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.2
+go get github.com/go-authn/kdc@v0.4.3
 ```
 
-En v0.4.2, son `go.mod` requiert au moins `go-authn/directory` v0.11.1 et
+En v0.4.3, son `go.mod` requiert au moins `go-authn/directory` v0.12.0 et
 gokrb5 v8.4.4 : des minimums, si bien qu'un programme qui requiert directory v0.14.0, la
 version que décrivent ces pages, est compilé avec la v0.14.0, comme authnd v0.11.0. La
 moitié qui accepte est [krb5]({{< relref "/libraries/krb5.md" >}}), et un service
@@ -213,4 +213,4 @@ Le plancher de la voie de couverture est de 80 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.2](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.2)
+[pkg.go.dev/github.com/go-authn/kdc@v0.4.3](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.3)

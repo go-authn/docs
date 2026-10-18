@@ -12,7 +12,7 @@ binaire du `PROTOCOL.krl` d'OpenSSH, la liste que `sshd` charge par
 prend pas en charge.
 
 ```sh
-go get github.com/go-authn/krl@v0.6.0
+go get github.com/go-authn/krl@v0.6.1
 ```
 
 `IsRevoked` suit `ssh_krl_check_key` dans le `krl.c` d'OpenSSH : un certificat
@@ -172,4 +172,4 @@ présent.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/krl@v0.6.0](https://pkg.go.dev/github.com/go-authn/krl@v0.6.0)
+[pkg.go.dev/github.com/go-authn/krl@v0.6.1](https://pkg.go.dev/github.com/go-authn/krl@v0.6.1)

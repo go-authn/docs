@@ -12,7 +12,7 @@ key on disk, re-read when they change, or an ACME CA through
 Account Binding included.
 
 ```sh
-go get github.com/go-authn/servercert@v0.5.1
+go get github.com/go-authn/servercert@v0.5.2
 ```
 
 A `Config` names exactly one source — `CertFile` and `KeyFile`, or `ACME` —
@@ -159,4 +159,4 @@ it to fail. The coverage floor is 100%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.5.1](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.1)
+[pkg.go.dev/github.com/go-authn/servercert@v0.5.2](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.2)

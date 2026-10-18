@@ -11,7 +11,7 @@ La découverte, le jeu de clés, et les vérifications qu'un serveur de ressourc
 pur, **sans aucune dépendance** en dehors de la bibliothèque standard.
 
 ```sh
-go get github.com/go-authn/oidc@v0.4.0
+go get github.com/go-authn/oidc@v0.4.1
 ```
 
 Il n'y a pas ici de parcours de connexion : pas de redirection, pas d'échange de code, pas de secret client,
@@ -158,4 +158,4 @@ fait passer un test au rouge. Le plancher de la voie de couverture est de 90 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.4.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.4.1](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1)

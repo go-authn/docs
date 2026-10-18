@@ -12,7 +12,7 @@ format of OpenSSH's `PROTOCOL.krl`, the list `sshd` loads through
 support for it.
 
 ```sh
-go get github.com/go-authn/krl@v0.6.0
+go get github.com/go-authn/krl@v0.6.1
 ```
 
 `IsRevoked` follows `ssh_krl_check_key` in OpenSSH's `krl.c`: a certificate
@@ -172,4 +172,4 @@ present.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/krl@v0.6.0](https://pkg.go.dev/github.com/go-authn/krl@v0.6.0)
+[pkg.go.dev/github.com/go-authn/krl@v0.6.1](https://pkg.go.dev/github.com/go-authn/krl@v0.6.1)

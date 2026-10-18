@@ -11,7 +11,7 @@ anderen Verzeichnis. Was sie authentifizieren will, spricht LDAP.** authnd ist d
 davor: Es führt Binds und Suchen über die Quellen von
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) aus, sodass das, was eine
 Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,
-`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.11.0, dessen Einträge den
+`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.11.1, dessen Einträge den
 Standardschemata folgen und das Schema bestehen, das es unter `cn=Subschema` bereitstellt,
 mit go-authn/ldap v0.8.0 und go-authn/directory v0.14.0 darunter; was geprüft ist und
 was nicht, steht auf der Seite [Stand]({{< relref "/status.md" >}}).
@@ -120,7 +120,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.11.0
+vendorVersion: v0.11.1
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` ist die Password-Modify-Operation aus RFC 3062.
@@ -147,14 +147,18 @@ das ebenfalls einem anonymen Client beantwortet wird.
 {{< callout type="info" >}}
 **Zu den Transkripten**
 
-Jede `check`-Tabelle, jede Startzeile, die mit `ldapsearch` zurückgelesenen Einträge,
-das Root-DSE und `cn=Subschema`, die `samba`-Ablehnungen und die
-`--version`-Zeilen wurden vom Release-Binary v0.11.0 ausgegeben
-(`authnd-darwin-arm64`, `go version -m`: `mod github.com/go-authn/authnd v0.11.0`,
-`vcs.modified=false`). Ebenso die Konfigurationsablehnungen auf diesen Seiten,
-die v0.11.0 byte für byte so ausgab wie v0.10.0. Die Binds, `kinit`s,
-Passwortänderungen und Token-Austausche wurden vom Release-Binary v0.10.0
-ausgegeben und für v0.11.0 nicht erneut ausgeführt, dessen Release-Notes keinen
+Jede Startzeile, das Root-DSE und die `--version`-Zeilen wurden vom
+Release-Binary v0.11.1 ausgegeben (`authnd-darwin-arm64`, `go version -m`:
+`mod github.com/go-authn/authnd v0.11.1`, `vcs.modified=false`), ebenso jeder
+andere Befehl, der im selben Transkript wie eine Startzeile steht. v0.11.1
+ändert nichts außer dieser Zeile. Jede `check`-Tabelle, die mit
+`ldapsearch` zurückgelesenen Einträge, `cn=Subschema` und die
+`samba`-Ablehnungen wurden vom Release-Binary v0.11.0 ausgegeben
+(`mod github.com/go-authn/authnd v0.11.0`, `vcs.modified=false`). Ebenso die
+Konfigurationsablehnungen auf diesen Seiten, die v0.11.0 byte für byte so
+ausgab wie v0.10.0. Die übrigen Binds, `kinit`s, Passwortänderungen und
+Token-Austausche wurden vom Release-Binary v0.10.0 ausgegeben und nicht erneut
+ausgeführt, da weder die Release-Notes von v0.11.0 noch die von v0.11.1 einen
 davon ändern. Alle wurden von den OpenLDAP- und Heimdal-Clients gestellt, die mit
 macOS ausgeliefert werden, auf 127.0.0.1 an nicht privilegierten Ports, in einem
 Arbeitsverzeichnis unter `/tmp`. Deshalb nennen die zugrunde liegenden Konfigurationen Dateien

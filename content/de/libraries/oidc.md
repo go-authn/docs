@@ -11,7 +11,7 @@ Discovery, die Schlüsselmenge und die Prüfungen, die ein Resource Server vorne
 Go, **ohne Abhängigkeiten** außerhalb der Standardbibliothek.
 
 ```sh
-go get github.com/go-authn/oidc@v0.4.0
+go get github.com/go-authn/oidc@v0.4.1
 ```
 
 Hier gibt es keinen Anmeldeablauf: keine Weiterleitung, keinen Code-Austausch, kein Client-Geheimnis,
@@ -158,4 +158,4 @@ färbt einen Test rot. Die Untergrenze der Coverage-Lane liegt bei 90 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.4.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.4.1](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1)

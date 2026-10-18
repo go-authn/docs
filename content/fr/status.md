@@ -9,15 +9,15 @@ Ces pages sont la version **0.4** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
-| authnd | **v0.11.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.0** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.3** | `github.com/go-authn/revocation` |
-| sshcert-authorize | **v0.1.6** | `github.com/go-authn/sshcert` |
+| authnd | **v0.11.1** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
+| sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 Les versions des bibliothèques sont sur [leur propre page]({{< relref "/libraries/_index.md" >}}) ;
 ldap est en **v0.8.0**, avec le schéma d'annuaire, et directory en
 **v0.14.0**, avec les attributs et des valeurs par défaut de ldapdir plus
-larges : les deux sont ce qu'embarque authnd v0.11.0.
+larges : les deux sont ce qu'embarque authnd v0.11.1.
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
 de sorte que les pages qu'une personne trouve sous `/docs/0.4/` continuent de décrire ce
 qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`,
@@ -26,7 +26,7 @@ qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/
 ## Ce que chaque version a ajouté {#what-each-release-added}
 
 Chaque ligne est le changement pour lequel une version a été publiée. Les versions qui n'ont fait que mettre à jour
-des dépendances sont omises.
+des dépendances sont omises, sauf celles que décrit cette version de la documentation.
 
 ### authnd {#authnd}
 
@@ -48,6 +48,7 @@ des dépendances sont omises.
 | v0.10.1 | go-authn/kdc v0.4.2 : un `till` de 19700101000000Z obtient le ticket le plus long, et non un ticket expiré en 1970 |
 | v0.10.2 | go-authn/directory v0.12.0 : un groupe vide est publié comme `posixGroup` sans `memberUid` |
 | v0.11.0 | [des entrées des schémas standard]({{< relref "/authnd/entries.md" >}}), chacune soumise au schéma servi à `cn=Subschema` ; `attributes`, `users_attributes` et `groups_attributes` ; `(uidNumber>=1000)` compare des entiers. ⛔ `publish_nt_hash` demande un [bloc `samba`]({{< relref "/authnd/tls.md#the-samba-block" >}}), et un consommateur qui filtre sur `posixAccount` ou `posixGroup` voit moins d'entrées |
+| v0.11.1 | la ligne de démarrage ne nomme que les sources d'où quelqu'un est servi : sans bloc `user`, elle ne nomme plus le fichier de configuration |
 
 ### authn-bridge {#authn-bridge}
 
@@ -80,6 +81,7 @@ des dépendances sont omises.
 | v0.22.0 | le jeton d'accès ne porte plus `auth_time` ni `acr` (le jeton d'identité, si), pour qu'un jeton ES256 tienne dans les 1023 caractères d'OpenSSH jusqu'au 99e centile des scopes de RENATER |
 | v0.22.1 | `resource` peut être répété au point de terminaison d'autorisation, pour une autorisation bornée à plusieurs serveurs ; refusé à `device_authorization` au lieu d'être ignoré ([indicateurs de ressource]({{< relref "/authn-bridge/resources.md" >}})) |
 | v0.23.0 | `access_token_groups = false` : un client dont les jetons sont collés dans ssh ne porte aucun groupe ([jetons]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
+| v0.23.1 | dépendances seulement : go-jose/v4 v4.1.6, golang.org/x/crypto v0.58.0, golang.org/x/net v0.61.0 ; go-authn/directory v0.12.0, revocation v0.6.3, saml v0.4.1, servercert v0.5.1, sshcert v0.1.6 |
 
 ### authn-revokd {#authn-revokd}
 
@@ -94,6 +96,7 @@ des dépendances sont omises.
 | v0.6.1 | `-version` écrit sur la sortie standard |
 | v0.6.2 | `-once` distingue une récupération échouée d'une liste expirée ; une liste signée par une autre clé n'est plus appelée une concurrence ; `-help` sort avec 0 |
 | v0.6.3 | des domaines d'exemple aux noms de la RFC 2606, dans les exemples et la documentation ; aucun changement de comportement |
+| v0.6.4 | dépendances seulement : golang.org/x/crypto v0.58.0 |
 
 ### sshcert {#sshcert}
 
@@ -104,6 +107,7 @@ des dépendances sont omises.
 | v0.1.4 | la publication vérifie les informations de compilation de chaque binaire |
 | v0.1.5 | `-version` affiche la version du module d'une compilation `go install`, et non `dev` |
 | v0.1.6 | des domaines d'exemple aux noms de la RFC 2606, dans la documentation ; aucun changement de comportement |
+| v0.1.7 | dépendances seulement : golang.org/x/crypto v0.58.0 |
 
 ### Les bibliothèques {#the-libraries}
 
@@ -115,7 +119,15 @@ changé les précédentes.
 |---|---|
 | directory v0.13.0 | [les attributs]({{< relref "/libraries/directory.md#attributes" >}}) : ce qui décrit quelqu'un sans rien prouver, à part des identifiants, avec les noms qui ne peuvent jamais en être un ; `attributes` dans les blocs `user` et `group`, les requêtes `users_attributes` et `groups_attributes`, les `attributes` et `group_attributes` de ldapdir |
 | directory v0.14.0 | ⛔ les [valeurs par défaut]({{< relref "/libraries/directory.md#ldapdir-defaults" >}}) de ldapdir lisent les personnes `account` et `uidObject` et les groupes `groupOfNames`, ce qui élargit ce que donne l'annuaire d'un établissement ; un DN `member` ne correspond qu'à une personne que la source a importée |
+| kdc v0.4.3 | dépendances seulement : go-authn/directory v0.12.0 comme minimum |
+| keyfactor v0.4.2 | dépendances seulement : go-authn/fido v0.6.2 et golang.org/x/crypto v0.58.0 comme minimums |
+| krb5 v0.3.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
+| krl v0.6.1 | dépendances seulement : golang.org/x/crypto v0.58.0 ; testée avec Go 1.27.2 |
 | ldap v0.8.0 | [le paquet `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) et `Server.Schema` : `cn=Subschema` (RFC 4512 §4.2), `Validate`, les règles de correspondance de la RFC 4517 ; `uidNumber` et `gidNumber` s'ordonnent comme des entiers ; une recherche paginée s'en tient aux attributs demandés |
+| oidc v0.4.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
+| servercert v0.5.2 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
+| totp v0.4.2 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
+| wireguard v0.1.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 
 ## Pas encore implémenté {#not-implemented-yet}
 

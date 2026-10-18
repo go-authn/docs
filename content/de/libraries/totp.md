@@ -12,7 +12,7 @@ die schon verwendeten und die falschen Codes; und ein Faktor, den eine
 [mfa]({{< relref "/libraries/mfa.md" >}})-Richtlinie verlangen kann.
 
 ```sh
-go get github.com/go-authn/totp@v0.4.1
+go get github.com/go-authn/totp@v0.4.2
 ```
 
 Seine einzige Abhängigkeit ist `go-authn/mfa`.
@@ -179,4 +179,4 @@ Tests laufen auf acht Architekturen.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/totp@v0.4.1](https://pkg.go.dev/github.com/go-authn/totp@v0.4.1)
+[pkg.go.dev/github.com/go-authn/totp@v0.4.2](https://pkg.go.dev/github.com/go-authn/totp@v0.4.2)

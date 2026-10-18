@@ -12,7 +12,7 @@ mediante [`autocert`](https://pkg.go.dev/golang.org/x/crypto/acme/autocert),
 vinculación de cuenta externa (External Account Binding) incluida.
 
 ```sh
-go get github.com/go-authn/servercert@v0.5.1
+go get github.com/go-authn/servercert@v0.5.2
 ```
 
 Una `Config` indica exactamente un origen — `CertFile` y `KeyFile`, o `ACME` — y
@@ -163,4 +163,4 @@ umbral de cobertura es el 100 %.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.5.1](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.1)
+[pkg.go.dev/github.com/go-authn/servercert@v0.5.2](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.2)

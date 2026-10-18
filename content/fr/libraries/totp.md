@@ -12,7 +12,7 @@ ce qu'un serveur doit retenir, les codes déjà utilisés et les codes faux ; et
 qu'une politique [mfa]({{< relref "/libraries/mfa.md" >}}) peut demander.
 
 ```sh
-go get github.com/go-authn/totp@v0.4.1
+go get github.com/go-authn/totp@v0.4.2
 ```
 
 Sa seule dépendance est `go-authn/mfa`.
@@ -179,4 +179,4 @@ tests s'exécutent sur huit architectures.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/totp@v0.4.1](https://pkg.go.dev/github.com/go-authn/totp@v0.4.1)
+[pkg.go.dev/github.com/go-authn/totp@v0.4.2](https://pkg.go.dev/github.com/go-authn/totp@v0.4.2)

@@ -18,19 +18,19 @@ Diese Seiten beschreiben die Releases, die auf der [Seite „Stand“]({{< relre
 
 | | was es ist | diese Seiten beschreiben |
 |---|---|---|
-| [authnd]({{< relref "/authnd/_index.md" >}}) | ein LDAP-Server, und optional ein Kerberos-Realm, für Personen, die anderswo geführt werden: in einer Datei, einer SQL-Datenbank, einem anderen Verzeichnis | v0.11.0 |
-| [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | ein OpenID-Connect-Anbieter vor einer SAML-Föderation (RENATER, eduGAIN), der außerdem SSH-Zertifikate ausstellt und die Listen signiert, die sie widerrufen | v0.23.0 |
-| [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | ruft diese Listen ab, prüft jede, bevor ein Server sie liest, und schlägt geschlossen fehl (fail closed), wenn eine verfällt | v0.6.3 |
-| [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`, das sshd fragt, ob der Domain-Grant eines Zertifikats diesen Host nennt | v0.1.6 |
+| [authnd]({{< relref "/authnd/_index.md" >}}) | ein LDAP-Server, und optional ein Kerberos-Realm, für Personen, die anderswo geführt werden: in einer Datei, einer SQL-Datenbank, einem anderen Verzeichnis | v0.11.1 |
+| [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | ein OpenID-Connect-Anbieter vor einer SAML-Föderation (RENATER, eduGAIN), der außerdem SSH-Zertifikate ausstellt und die Listen signiert, die sie widerrufen | v0.23.1 |
+| [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | ruft diese Listen ab, prüft jede, bevor ein Server sie liest, und schlägt geschlossen fehl (fail closed), wenn eine verfällt | v0.6.4 |
+| [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`, das sshd fragt, ob der Domain-Grant eines Zertifikats diesen Host nennt | v0.1.7 |
 
 Jedes ist ein statisches Binary für Linux, macOS und Windows auf amd64 und arm64,
 veröffentlicht mit `SHA256SUMS` und Build-Provenienz:
 [einen Download prüfen]({{< relref "/security/verifying-releases.md" >}}).
 
 ```sh
-go install github.com/go-authn/authnd@v0.11.0
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.0
-go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.3
+go install github.com/go-authn/authnd@v0.11.1
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.1
+go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
 ```
 
 Die Befehle heißen `authn-*` (und `authnd`), weil sie auf Maschinen installiert
