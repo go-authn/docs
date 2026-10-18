@@ -1,0 +1,281 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Sasl</title><link>https://go-authn.github.io/docs/0.4/es/tags/sasl/</link><description>Recent content in Sasl on go-authn</description><generator>Hugo -- gohugo.io</generator><language>es</language><atom:link href="https://go-authn.github.io/docs/0.4/es/tags/sasl/index.xml" rel="self" type="application/rss+xml"/><item><title>Un token en el bind, en un campo que no es la contraseña</title><link>https://go-authn.github.io/docs/0.4/es/authnd/tokens/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/es/authnd/tokens/</guid><description>
+&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.4/es/libraries/"&gt;go-authn/oidc&lt;/a&gt; verifica un token y obtiene de
+él una identidad. La forma obvia de llevar uno a un servidor LDAP es el campo de la
+contraseña, y funciona una vez y luego deja de hacerlo: el campo de la contraseña es
+donde el &lt;a href="https://go-authn.github.io/docs/0.4/es/authnd/mfa/"&gt;bloque &lt;code&gt;mfa&lt;/code&gt;&lt;/a&gt; separa el código del final,
+y un token no puede ser ambas cosas.&lt;/p&gt;
+&lt;p&gt;Así que el token va donde el protocolo tiene un sitio para él. Las credenciales de
+un bind &lt;strong&gt;SASL&lt;/strong&gt; son una cadena de octetos con la forma propia del mecanismo, y la
+forma &lt;code&gt;OAUTHBEARER&lt;/code&gt; del RFC 7628 es una cabecera GS2 seguida de pares clave/valor,
+uno de los cuales es &lt;code&gt;auth=Bearer &amp;lt;token&amp;gt;&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;n,,^Aauth=Bearer eyJ…^A^A&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;El campo de la contraseña no se toca. En una misma escucha, al mismo tiempo, una
+persona puede teclear una contraseña con un código al final y otra puede enviar un
+token.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;oidc&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; issuer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.example.org/realms/staff&amp;#34; # the &amp;#34;iss&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;a&lt;/span&gt; &lt;span class="k"&gt;token&lt;/span&gt; &lt;span class="k"&gt;must&lt;/span&gt; &lt;span class="k"&gt;carry&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;and&lt;/span&gt; &lt;span class="k"&gt;where&lt;/span&gt; &lt;span class="k"&gt;discovery&lt;/span&gt; &lt;span class="k"&gt;starts&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # this server&amp;#39;s client id at the provider
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # username_claim = &amp;#34;preferred_username&amp;#34; which claim names the person here
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # jwks_url = &amp;#34;…&amp;#34; skips discovery, for a provider that does not publish it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # allow_plaintext = true only when TLS is terminated in front of this process
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;issuer&lt;/code&gt; y &lt;code&gt;audience&lt;/code&gt; son obligatorios. Sin &lt;code&gt;username_claim&lt;/code&gt;, el nombre es
+&lt;code&gt;preferred_username&lt;/code&gt;, después &lt;code&gt;email&lt;/code&gt; cuando &lt;code&gt;email_verified&lt;/code&gt; es verdadero, y después
+&lt;code&gt;sub&lt;/code&gt;. Con el bloque, el root DSE anuncia el mecanismo:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; supportedSASLMechanisms
+dn:
+supportedSASLMechanisms: OAUTHBEARER&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Sin él, a todo bind SASL se le responde &lt;code&gt;authMethodNotSupported&lt;/code&gt; —&lt;em&gt;así no&lt;/em&gt;—, lo que
+envía a un cliente a un sitio distinto que &lt;em&gt;contraseña incorrecta&lt;/em&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="discovery-happens-at-startup"&gt;El descubrimiento ocurre al arrancar&lt;span class="hx:absolute hx:-mt-20" id="discovery-happens-at-startup"&gt;&lt;/span&gt;
+&lt;a href="#discovery-happens-at-startup" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;El documento de descubrimiento y las claves del proveedor se leen cuando el servidor
+arranca, y también con &lt;code&gt;check&lt;/code&gt;. Un proveedor que no se puede alcanzar detiene el
+servidor allí donde alguien está mirando, en lugar de rechazar después todos los
+binds:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc.hcl
+authnd: oidc &amp;#34;https://127.0.0.1:1/realms/staff&amp;#34;: oidc: reading https://127.0.0.1:1/realms/staff/.well-known/openid-configuration: Get &amp;#34;https://127.0.0.1:1/realms/staff/.well-known/openid-configuration&amp;#34;: dial tcp 127.0.0.1:1: connect: connection refused&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un emisor que no es &lt;code&gt;https&lt;/code&gt; se rechaza, salvo en loopback:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc-http.hcl
+authnd: oidc &amp;#34;http://login.example.org/realms/staff&amp;#34;: oidc: http://login.example.org/realms/staff is not https: the key set decides every signature, and over cleartext so does anybody on the way&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="how-many-factors-is-a-token"&gt;¿Cuántos factores es un token?&lt;span class="hx:absolute hx:-mt-20" id="how-many-factors-is-a-token"&gt;&lt;/span&gt;
+&lt;a href="#how-many-factors-is-a-token" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Los que el emisor dice haber comprobado, y nada más.&lt;/strong&gt; Un token lleva el &lt;code&gt;amr&lt;/code&gt; del
+RFC 8176, los métodos que usó el proveedor. Es la única prueba que existe, así que es
+lo que cuenta la política &lt;code&gt;mfa&lt;/code&gt;, &lt;strong&gt;por clase&lt;/strong&gt;:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;método &lt;code&gt;amr&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;clase&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;pwd&lt;/code&gt;, &lt;code&gt;pin&lt;/code&gt;, &lt;code&gt;kba&lt;/code&gt;, &lt;code&gt;mca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;conocimiento&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;otp&lt;/code&gt;, &lt;code&gt;hwk&lt;/code&gt;, &lt;code&gt;swk&lt;/code&gt;, &lt;code&gt;sms&lt;/code&gt;, &lt;code&gt;tel&lt;/code&gt;, &lt;code&gt;sc&lt;/code&gt;, &lt;code&gt;pop&lt;/code&gt;, &lt;code&gt;user&lt;/code&gt;, &lt;code&gt;wia&lt;/code&gt;, &lt;code&gt;mfa&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;posesión&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;fpt&lt;/code&gt;, &lt;code&gt;face&lt;/code&gt;, &lt;code&gt;iris&lt;/code&gt;, &lt;code&gt;retina&lt;/code&gt;, &lt;code&gt;vbm&lt;/code&gt;, &lt;code&gt;geo&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;inherencia&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;cualquier otro&lt;/td&gt;
+&lt;td&gt;desconocida, que nunca satisface &lt;code&gt;distinct_kinds&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;ningún &lt;code&gt;amr&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;un factor, de posesión: el propio token&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Dos métodos de una misma clase son un solo factor. La alternativa sería que este
+servidor inventara un segundo factor que nadie realizó; y un servidor que cree al
+emisor sobre &lt;em&gt;quién&lt;/em&gt; es esta persona no tiene ningún motivo aparte para no creerle
+sobre &lt;em&gt;cómo&lt;/em&gt; lo comprobó.&lt;/p&gt;
+&lt;p&gt;Con un bloque &lt;code&gt;mfa&lt;/code&gt;, &lt;code&gt;check&lt;/code&gt; lo dice:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check sasl
+ldaps://127.0.0.1:3636, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password account, uidObject uid
+tess the configuration file a password and a one-time-code secret account, uidObject uid
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+tess has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+a bind carries a password with a 6-digit code after it, of two different kinds
+or a token from http://127.0.0.1:18481, over SASL OAUTHBEARER over TLS
+a token counts for the factors its amr claim names, so one with no amr is refused by this policy
+alice has no second factor here, so a password cannot satisfy this policy; a token whose amr names two kinds still can
+no reader is declared: nothing may search, and binds are not affected
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;alice no tiene &lt;code&gt;totp_secret&lt;/code&gt;, así que una contraseña con un código nunca puede bastar
+en su caso; un token cuyo &lt;code&gt;amr&lt;/code&gt; nombra dos clases sí puede, como muestra el primer
+bind de más abajo.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-the-binds-look-like"&gt;Cómo son los binds&lt;span class="hx:absolute hx:-mt-20" id="what-the-binds-look-like"&gt;&lt;/span&gt;
+&lt;a href="#what-the-binds-look-like" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;El emisor aquí es un pequeño proveedor de prueba en loopback, y &lt;code&gt;oidctool&lt;/code&gt; un cliente
+de prueba escrito para estas páginas: firma un token para el nombre indicado, con el
+&lt;code&gt;amr&lt;/code&gt; indicado, lo envía en un bind &lt;code&gt;OAUTHBEARER&lt;/code&gt; (con un &lt;code&gt;authzid&lt;/code&gt; cuando un quinto
+argumento lo nombra), e imprime el código de resultado del bind y las credenciales
+SASL del servidor. Contra la configuración anterior, sobre &lt;code&gt;ldaps://&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 0, serverSaslCreds
+$ ./oidctool alice &amp;#39;&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;kba&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls tess
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;insufficient_scope&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}
+$ ./oidctool zed &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;invalid_token&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;0 es éxito, 49 &lt;code&gt;invalidCredentials&lt;/code&gt;, 14 &lt;code&gt;saslBindInProgress&lt;/code&gt;. Un token
+&lt;code&gt;[&amp;quot;pwd&amp;quot;,&amp;quot;kba&amp;quot;]&lt;/code&gt; nombra dos métodos de una misma clase, así que cuenta una vez. Y con
+la misma configuración sin &lt;code&gt;cert_file&lt;/code&gt; ni &lt;code&gt;key_file&lt;/code&gt;, en una escucha sin cifrar:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3893 clear
+bind result 13&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;13 es &lt;code&gt;confidentialityRequired&lt;/code&gt;: un token no se acepta por una conexión que no
+está cifrada.&lt;/p&gt;
+&lt;p&gt;Lo que escribió el servidor para los cuatro binds rechazados sobre &lt;code&gt;ldaps://&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: the token is for &amp;#34;alice&amp;#34; and asks to act as &amp;#34;tess&amp;#34;; this server does not delegate
+zed was refused: the token verified, and no source here publishes anybody by that name&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;y para el que va sin cifrar:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un bind &lt;code&gt;OAUTHBEARER&lt;/code&gt; correcto deja la conexión con un bind como
+&lt;code&gt;uid=&amp;lt;name&amp;gt;,ou=people,&amp;lt;base_dn&amp;gt;&lt;/code&gt;, escrito como cualquier otra entrada.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;Lo que rechaza&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Un token sin cifrar.&lt;/strong&gt; Un token bearer no necesita ninguna otra mitad: quien lo
+lea en la red es esa persona hasta que caduque. &lt;code&gt;allow_plaintext = true&lt;/code&gt; existe
+para un despliegue que termina TLS delante de este proceso, y &lt;code&gt;check&lt;/code&gt; dice entonces
+&lt;em&gt;a token may cross this socket in the clear&lt;/em&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Una petición para ser otra persona.&lt;/strong&gt; La cabecera GS2 puede nombrar un &lt;code&gt;authzid&lt;/code&gt;.
+Un token para alice que lleva una petición para actuar como tess se rechaza, no se
+trata discretamente como ninguna de las dos.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Un token para alguien a quien ningún origen de aquí publica.&lt;/strong&gt; Al cliente solo se
+le dice &lt;code&gt;invalid_token&lt;/code&gt;; qué nombres existen no es algo que se deba revelar intento
+a intento. El motivo figura en la salida del servidor.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;La vinculación de canal.&lt;/strong&gt; Una cabecera GS2 con &lt;code&gt;p=&lt;/code&gt; —el cliente exige
+vinculación de canal (channel binding)— se rechaza: este servidor no la hace, y
+aceptar la cabecera sin vincular nada haría creer al cliente que el canal se había
+comprobado.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Un mecanismo que este servidor no habla&lt;/strong&gt;, con &lt;code&gt;authMethodNotSupported&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;El rechazo del propio token es el del RFC 7628 §3.2.3: un error JSON que lleva
+&lt;code&gt;openid-configuration&lt;/code&gt;, devuelto como &lt;code&gt;saslBindInProgress&lt;/code&gt; para que el cliente pueda
+enviar el &lt;code&gt;^A&lt;/code&gt; que pone fin al intercambio. A un token que se verifica pero no
+satisface la política &lt;code&gt;mfa&lt;/code&gt; se le responde simplemente &lt;code&gt;invalidCredentials&lt;/code&gt;, como
+muestran el segundo y el tercer bind de más arriba.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Un token no fija una contraseña&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Una persona que solo ha iniciado sesión con un token no puede usar esa sesión para
+darse una primera contraseña, y una persona que ya tiene una debe enviarla igualmente
+para cambiarla. Consulte &lt;a href="https://go-authn.github.io/docs/0.4/es/authnd/passwords/"&gt;cambiar una contraseña&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

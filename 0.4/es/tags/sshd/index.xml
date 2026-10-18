@@ -1,0 +1,417 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Sshd</title><link>https://go-authn.github.io/docs/0.4/es/tags/sshd/</link><description>Recent content in Sshd on go-authn</description><generator>Hugo -- gohugo.io</generator><language>es</language><atom:link href="https://go-authn.github.io/docs/0.4/es/tags/sshd/index.xml" rel="self" type="application/rss+xml"/><item><title>sshcert-authorize</title><link>https://go-authn.github.io/docs/0.4/es/sshcert/authorize/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/es/sshcert/authorize/</guid><description>
+&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; le pregunta, en cada inicio de sesión con certificado, qué principales pueden
+iniciar sesión en la cuenta. Responde con los principales de la cuenta solo si la
+concesión de dominio del certificado nombra este host; en caso contrario no responde
+nada, y &lt;code&gt;sshd&lt;/code&gt; rechaza el certificado. Adopta los argumentos, las opciones, la salida
+y el formato de log del &lt;code&gt;ssh-cert-authorize&lt;/code&gt; de GÉANT, y se diferencia en lo que
+rechaza.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="how-sshd-calls-it"&gt;Cómo lo llama sshd&lt;span class="hx:absolute hx:-mt-20" id="how-sshd-calls-it"&gt;&lt;/span&gt;
+&lt;a href="#how-sshd-calls-it" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# /etc/ssh/sshd_config
+TrustedUserCAKeys /etc/ssh/efp-ssh-ca.pub
+AuthorizedPrincipalsCommand /usr/local/bin/sshcert-authorize %u %k
+AuthorizedPrincipalsCommandUser nobody&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -o root -g root -m &lt;span class="m"&gt;0755&lt;/span&gt; sshcert-authorize /usr/local/bin/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; login.example.org &amp;gt; /etc/ssh/cert-allowed-domain.conf&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;y, para cada cuenta local, los principales que pueden iniciar sesión en ella, uno por
+línea, en &lt;code&gt;/etc/ssh/auth_principals/&amp;lt;account&amp;gt;&lt;/code&gt;. sshd solo ejecuta el comando desde
+una ruta cuyo propietario es root y en la que nadie más puede escribir.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;%u&lt;/code&gt; es la cuenta en la que se inicia sesión. &lt;code&gt;%k&lt;/code&gt; es el certificado, en base64;
+también se lee una línea completa &lt;code&gt;ssh-...-cert-v01@openssh.com BASE64&lt;/code&gt;, y cuando
+falta el argumento el certificado se lee de la entrada estándar. Un tercer
+argumento, cuando lo hay (el &lt;code&gt;%t&lt;/code&gt; de sshd), debe ser el tipo del certificado; si no,
+el certificado se rechaza.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;salida&lt;/th&gt;
+&lt;th&gt;muestra&lt;/th&gt;
+&lt;th&gt;sshd&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;los principales de la cuenta, uno por línea&lt;/td&gt;
+&lt;td&gt;deja pasar el certificado si uno de sus principales está entre ellos&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;1&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;nada&lt;/td&gt;
+&lt;td&gt;lo rechaza&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;2&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;nada&lt;/td&gt;
+&lt;td&gt;lo rechaza: los argumentos eran incorrectos&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;No comprueba la firma, la CA ni las fechas de validez&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Nada en el comando verifica la firma del certificado ni su periodo de
+validez: lo hace sshd, que confía en la CA mediante &lt;code&gt;TrustedUserCAKeys&lt;/code&gt;.
+El comando decide una sola cuestión: si el certificado está destinado a
+este host y a esta cuenta.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;Qué rechaza&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;En el orden en que lo comprueba:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;un nombre de cuenta vacío, &lt;code&gt;.&lt;/code&gt;, &lt;code&gt;..&lt;/code&gt;, o que contiene &lt;code&gt;/&lt;/code&gt;, &lt;code&gt;\&lt;/code&gt; o un NUL;&lt;/li&gt;
+&lt;li&gt;un host sin dominio configurado, o con uno que no es un nombre de host válido;&lt;/li&gt;
+&lt;li&gt;un certificado que no se puede analizar, una clave simple o un certificado de host;&lt;/li&gt;
+&lt;li&gt;un &lt;code&gt;%t&lt;/code&gt; que no es el tipo del certificado;&lt;/li&gt;
+&lt;li&gt;con &lt;code&gt;--krl&lt;/code&gt;, un certificado que la lista revoca, o &lt;strong&gt;todos&lt;/strong&gt; los certificados
+cuando la lista no se puede leer o ha caducado;&lt;/li&gt;
+&lt;li&gt;una concesión de dominio presente y mal formada, &lt;strong&gt;sean cuales sean las opciones&lt;/strong&gt;;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;ninguna concesión de dominio&lt;/strong&gt;, salvo con &lt;code&gt;--allow-no-grant&lt;/code&gt;;&lt;/li&gt;
+&lt;li&gt;una concesión ninguno de cuyos patrones coincide con alguno de los nombres del host;&lt;/li&gt;
+&lt;li&gt;una cuenta sin archivo de principales, o con uno vacío.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Los nombres del host son &lt;code&gt;--domain&lt;/code&gt;, o la variable que nombra &lt;code&gt;--domain-env&lt;/code&gt;, o las
+líneas de &lt;code&gt;--domain-file&lt;/code&gt; (se ignoran las líneas en blanco y los comentarios &lt;code&gt;#&lt;/code&gt;;
+varias líneas son varios nombres, cualquiera de los cuales puede coincidir).&lt;/p&gt;
+&lt;p&gt;Con certificados firmados por una CA de prueba para la cuenta &lt;code&gt;alice&lt;/code&gt;, cuyo archivo
+de principales lista &lt;code&gt;a1b2c3@univ-example.example&lt;/code&gt;, en un host llamado
+&lt;code&gt;login.hpc.example.org&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+a1b2c3@univ-example.example&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La última línea es la respuesta que lee sshd; las líneas anteriores son el log, aquí
+en la salida de error estándar. Un certificado que concede otros hosts:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-other-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1003 key_id=&amp;#34;a1b2c3@univ-example.example other host&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;domain not granted&amp;#34; grant=[&amp;#34;*.elsewhere.example.net&amp;#34;] serial=1003 ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un certificado sin concesión:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-nogrant-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1002 key_id=&amp;#34;a1b2c3@univ-example.example no grant&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;no domain grant&amp;#34; serial=1002 ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Una cuenta sin archivo de principales, y una clave simple:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals bob &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+WARNING: action=denied user=bob domain=login.hpc.example.org reason=&amp;#34;no principals file for the user&amp;#34; serial=1001 ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice.pub)&amp;#34;
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;a ssh-ed25519 key, not a certificate&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Cada uno de ellos salió con &lt;code&gt;1&lt;/code&gt;, y no mostró nada en la salida estándar.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-a-certificate-with-no-grant-is-refused"&gt;Por qué se rechaza un certificado sin concesión&lt;span class="hx:absolute hx:-mt-20" id="why-a-certificate-with-no-grant-is-refused"&gt;&lt;/span&gt;
+&lt;a href="#why-a-certificate-with-no-grant-is-refused" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;El &lt;code&gt;ssh-cert-authorize&lt;/code&gt; de GÉANT deja pasar un certificado sin concesión de dominio
+(&amp;ldquo;might be valid for non-domain-based auth&amp;rdquo;), y también uno cuya concesión no puede
+analizar, o que está vacía. Entonces un sitio que confía en &lt;strong&gt;dos&lt;/strong&gt; CA en
+&lt;code&gt;TrustedUserCAKeys&lt;/code&gt; (la de la federación, y la suya propia para el personal, o una CA
+de prueba) deja entrar un certificado de la segunda CA en todos los hosts, para
+cualquier principal de un archivo de principales, sin ninguna comprobación de
+dominio. El filtro de dominio solo es un filtro si se rechaza un certificado que no
+dice dónde puede usarse.&lt;/p&gt;
+&lt;p&gt;Un sitio que de verdad quiere el comportamiento de GÉANT lo indica, y el comando lo
+registra en el log cada vez que lo aplica:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --allow-no-grant --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-nogrant-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1002 key_id=&amp;#34;a1b2c3@univ-example.example no grant&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+WARNING: action=no_grant_allowed user=alice domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+a1b2c3@univ-example.example&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Incluso entonces, una concesión presente pero mal formada se rechaza.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="krl"&gt;&lt;code&gt;--krl&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="krl"&gt;&lt;/span&gt;
+&lt;a href="#krl" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;RevokedKeys&lt;/code&gt; es la comprobación propia de sshd, hecha antes de que se ejecute el
+comando, para cada clave y cada certificado, y además revoca una clave de CA;
+prefiérala. &lt;code&gt;--krl FILE&lt;/code&gt; comprueba una KRL de OpenSSH dentro del comando, y añade lo
+que sshd no hace: rechaza &lt;strong&gt;todos&lt;/strong&gt; los certificados en cuanto la lista ha caducado
+(su extensión &lt;code&gt;expires@go-authn.github.io&lt;/code&gt;, que sshd ignora), y todos los
+certificados cuando la lista no se puede leer. Una lista sin caducidad se usa sin
+ella.&lt;/p&gt;
+&lt;p&gt;Tres ejecuciones: con la KRL que escribe &lt;a href="https://go-authn.github.io/docs/0.4/es/authn-revokd/"&gt;authn-revokd&lt;/a&gt;,
+primero una vigente y después la de modo cerrado que escribe cuando la lista del emisor
+&lt;a href="https://go-authn.github.io/docs/0.4/es/authn-revokd/lapse/"&gt;caduca&lt;/a&gt;; y por último con &lt;code&gt;--krl&lt;/code&gt; apuntando a un
+archivo que no existe:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+a1b2c3@univ-example.example
+$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;certificate revoked&amp;#34; serial=1001 ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+$ sshcert-authorize --syslog=false --krl missing.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;KRL unreadable: open missing.krl: no such file or directory&amp;#34; serial=1001 ca_fingerprint=SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La segunda ejecución se rechaza porque la lista de modo cerrado revoca la &lt;strong&gt;clave de la CA&lt;/strong&gt; del
+certificado: la comprobación abarca la propia clave del certificado, su número de
+serie y su ID de clave, y la clave que lo firmó. La tercera se rechaza porque la lista
+no se puede leer: la falta de lista no se toma por «nada revocado».&lt;/p&gt;
+&lt;h2 data-hextra-search-id="flags"&gt;Opciones&lt;span class="hx:absolute hx:-mt-20" id="flags"&gt;&lt;/span&gt;
+&lt;a href="#flags" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize -help
+usage: sshcert-authorize [flags] USER [CERTIFICATE [KEYTYPE]]
+An sshd AuthorizedPrincipalsCommand (%u %k) that refuses a certificate whose
+ssh-domain-grant@core.aai.geant.org extension does not grant this host, or that has none.
+-allow-no-grant
+let in a certificate with no domain grant (GÉANT&amp;#39;s behaviour); a malformed grant is still refused
+-debug
+log details
+-domain string
+the host&amp;#39;s domain (overrides --domain-env and --domain-file)
+-domain-env string
+environment variable holding the host&amp;#39;s domain
+-domain-file string
+file holding the host&amp;#39;s domain, one name per line (default &amp;#34;/etc/ssh/cert-allowed-domain.conf&amp;#34;)
+-extension string
+name of the domain-grant extension (default &amp;#34;ssh-domain-grant@core.aai.geant.org&amp;#34;)
+-krl string
+refuse certificates this OpenSSH KRL revokes, and every certificate once it has expired or cannot be read
+-principals-dir string
+directory of principals files, one per user (default &amp;#34;/etc/ssh/auth_principals&amp;#34;)
+-syslog
+log to syslog, facility AUTH (--syslog=false: to stderr) (default true)
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Los &lt;strong&gt;logs&lt;/strong&gt; son líneas &lt;code&gt;key=value&lt;/code&gt; (&lt;code&gt;action=cert_processed&lt;/code&gt;, &lt;code&gt;action=denied&lt;/code&gt;,
+&lt;code&gt;action=authorized&lt;/code&gt;, con &lt;code&gt;serial&lt;/code&gt; y &lt;code&gt;ca_fingerprint&lt;/code&gt;), enviadas por defecto a syslog,
+facilidad AUTH. sshd descarta la salida de error estándar del comando, así que
+mantenga syslog activado en producción; &lt;code&gt;--debug&lt;/code&gt; también escribe todo en la salida
+de error estándar. Un valor que procede del cliente, como el nombre de cuenta, se
+entrecomilla cuando contiene un espacio, &lt;code&gt;=&lt;/code&gt;, una comilla o un carácter de control,
+de modo que no puede falsificar un campo del log.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;-version&lt;/code&gt;&lt;/strong&gt; muestra la versión del módulo, tanto en un binario de versión como en
+uno compilado con &lt;code&gt;go install&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.6
+$ sshcert-authorize -version
+sshcert-authorize v0.1.6&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Antes de la v0.1.5, un binario de &lt;code&gt;go install&lt;/code&gt; mostraba &lt;code&gt;sshcert-authorize dev&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>Cuando una lista caduca</title><link>https://go-authn.github.io/docs/0.4/es/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/es/authn-revokd/lapse/</guid><description>
+&lt;p&gt;Una comprobación de revocación que deja pasar todo cuando no se puede obtener la
+lista es la que derrota un atacante capaz de bloquear la lista. Así que cuando
+authn-revokd no tiene ninguna lista vigente de un origen, lo que protege la lista de
+ese origen se &lt;strong&gt;rechaza&lt;/strong&gt;, hasta que vuelva a llegar una lista vigente.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;salida&lt;/th&gt;
+&lt;th&gt;mientras un origen no tiene lista vigente&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;una KRL, para &lt;code&gt;sshd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;authn-revokd escribe una KRL que &lt;strong&gt;revoca la clave de la CA del origen&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;una CRL, para un servidor TLS&lt;/td&gt;
+&lt;td&gt;la CRL caducada se deja en su sitio; OpenSSL rechaza por sí solo una CRL caducada&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;Para sshd: revocar la propia CA&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; no tiene noción de la caducidad de una lista: seguiría leyendo para siempre el
+último archivo escrito. Pero sí comprueba la &lt;strong&gt;clave de la CA&lt;/strong&gt; de cada certificado
+contra &lt;code&gt;RevokedKeys&lt;/code&gt;. Así que, en lugar de la lista que no puede avalar, authn-revokd
+pone en la salida la propia clave de la CA, y se rechaza cada certificado que firmó
+esa CA, y nada más.&lt;/p&gt;
+&lt;p&gt;Aquí el emisor está detenido, y el origen KRL tiene &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;, de modo que la
+copia guardada caduca en menos de un minuto en lugar de una hora. El origen CRL no
+tiene &lt;code&gt;max_age&lt;/code&gt;, y su copia sigue vigente:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt; está &lt;code&gt;not current&lt;/code&gt;, y su salida está en modo cerrado; &lt;code&gt;bridge-x509&lt;/code&gt; solo
+está &lt;code&gt;not fetched&lt;/code&gt;, y su CRL se deja como estaba
+(&lt;a href="https://go-authn.github.io/docs/0.4/es/authn-revokd/verification/#what--once-reports"&gt;lo que informa &lt;code&gt;-once&lt;/code&gt;&lt;/a&gt;).
+&lt;code&gt;SHA256:Fpa/...&lt;/code&gt; es la CA SSH del bridge. Un certificado firmado por ella queda ahora
+revocado para todo lo que lea el archivo. Las órdenes anteriores se ejecutaron en el
+directorio &lt;code&gt;revokd&lt;/code&gt;, donde está &lt;code&gt;out/&lt;/code&gt;; esta se ejecuta a su lado, en el directorio
+que contiene los certificados de prueba, como en
+&lt;a href="https://go-authn.github.io/docs/0.4/es/sshcert/authorize/#krl"&gt;la página de sshcert-authorize&lt;/a&gt;, así que
+el mismo archivo es &lt;code&gt;../revokd/out/sshd.krl&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;El comentario dice &lt;code&gt;FAIL CLOSED&lt;/code&gt; y nombra el origen, así que una persona que lea
+&lt;code&gt;ssh-keygen -Q -l&lt;/code&gt; ve por qué. La fecha del archivo es 1970 cuando todos los orígenes
+han caducado. La salida se escribe &lt;strong&gt;en cuanto una sincronización lo detecta&lt;/strong&gt;, que
+para el demonio es su siguiente &lt;code&gt;refresh&lt;/code&gt; y para el temporizador su siguiente disparo.
+Cuando vuelve a llegar una lista vigente, la siguiente sincronización la escribe en
+lugar de la clave de la CA, y los certificados de la CA vuelven a aceptarse.&lt;/p&gt;
+&lt;p&gt;Lo mismo ocurre &lt;strong&gt;antes de la primera lista&lt;/strong&gt;: un origen que nunca se ha descargado no
+tiene nada vigente, y su CA queda revocada desde la primera escritura. Una instalación
+nueva rechaza los certificados de la CA hasta que su primera lista se verifica, en
+lugar de aceptarlos sin comprobar.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;Cada CA por su cuenta&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;En una salida que fusiona varios orígenes, solo se revoca la CA del origen caducado.
+Los demás conservan sus listas. Una lista que no se puede fusionar (más allá de los
+rangos de números de serie que admite go-authn/krl) falla en modo cerrado solo para su
+propia CA, y &lt;code&gt;/healthz&lt;/code&gt; la nombra. Solo si las listas se fusionan por separado pero no
+juntas se revocan todas las CA de la salida, y el comentario lo dice
+(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;). Conservar el archivo anterior en su
+lugar dejaría pasar desapercibida una caducidad posterior.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;Para un servidor TLS: la propia CRL&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Una CRL ya dice cuándo deja de estar vigente, y OpenSSL rechaza una que ha pasado su
+&lt;code&gt;nextUpdate&lt;/code&gt; (&amp;ldquo;CRL has expired&amp;rdquo;). Así que authn-revokd deja en su sitio la última CRL
+verificada, y el servidor TLS falla en modo cerrado por sí solo. Por eso también se
+rechaza &lt;code&gt;max_age&lt;/code&gt; en un origen que alimenta una salida CRL: un servidor que ha cargado
+la CRL la conserva hasta su &lt;code&gt;nextUpdate&lt;/code&gt;, escriba lo que escriba authn-revokd.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;Lectores que comprueban la caducidad por sí mismos&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;La KRL fusionada lleva una caducidad, la primera de sus entradas vigentes. Un lector
+que la comprueba, como el &lt;code&gt;ssh_krl_file&lt;/code&gt; de go-fileshare o
+&lt;a href="https://go-authn.github.io/docs/0.4/es/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;,
+ve detenerse authn-revokd igual que vería detenerse el emisor.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Esto solo funciona mientras authn-revokd se ejecuta&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Es authn-revokd quien pone el archivo en modo cerrado. Mientras está detenido, sshd
+sigue leyendo el último archivo escrito, vigente o no. De ahí &lt;code&gt;Restart=always&lt;/code&gt; en el
+demonio, y la supervisión de la unidad, o del temporizador, o de &lt;code&gt;/healthz&lt;/code&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

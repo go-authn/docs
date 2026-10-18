@@ -1,0 +1,472 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Rfc8707</title><link>https://go-authn.github.io/docs/0.4/es/tags/rfc8707/</link><description>Recent content in Rfc8707 on go-authn</description><generator>Hugo -- gohugo.io</generator><language>es</language><atom:link href="https://go-authn.github.io/docs/0.4/es/tags/rfc8707/index.xml" rel="self" type="application/rss+xml"/><item><title>Varios servidores de recursos: un token para uno a la vez</title><link>https://go-authn.github.io/docs/0.4/es/authn-bridge/resources/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/es/authn-bridge/resources/</guid><description>
+&lt;p&gt;Un cliente cuya &lt;code&gt;audience&lt;/code&gt; nombra varios servidores de recursos, como un portal
+delante de varios servidores de ficheros, recibe tokens de acceso dirigidos a
+&lt;strong&gt;todos&lt;/strong&gt; ellos. Cualquiera de esos servidores puede entonces tomar un token que
+recibió y presentarlo a los demás: por eso, dice el RFC 8707 §3, conviene
+restringir la audiencia. Desde la v0.21.0, el cliente puede pedir, con el
+parámetro &lt;code&gt;resource&lt;/code&gt; del RFC 8707, un token dirigido a &lt;strong&gt;uno solo&lt;/strong&gt; de ellos.
+Esta página describe la v0.23.0; lo que la v0.22.0 hacía de otro modo está
+&lt;a href="#departures"&gt;al final&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Sin &lt;code&gt;resource&lt;/code&gt;, nada cambia: el token de acceso es para toda la &lt;code&gt;audience&lt;/code&gt; del
+cliente, como describe &lt;a href="https://go-authn.github.io/docs/0.4/es/authn-bridge/tokens/#the-access-token"&gt;la página de tokens&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-client"&gt;El cliente&lt;span class="hx:absolute hx:-mt-20" id="the-client"&gt;&lt;/span&gt;
+&lt;a href="#the-client" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;No hay nada que activar. Cada URI de la &lt;code&gt;audience&lt;/code&gt; del cliente puede pedirse. Los
+ejemplos siguientes usan un cliente confidencial con tokens de actualización, y
+un cliente de dispositivo con la misma audiencia:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;portal&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/portal.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; redirect_uris&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;http://127.0.0.1:9/portal&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://fs-paris.example.org/&amp;#34;, &amp;#34;https://fs-lyon.example.org/&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; refresh_lifetime&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;8h&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;files-cli&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://fs-paris.example.org/&amp;#34;, &amp;#34;https://fs-lyon.example.org/&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-bridge check --config etc/bridge.hcl
+issuer http://127.0.0.1:28473
+SAML entity http://127.0.0.1:28473/saml
+tls none (a reverse proxy in front)
+federation 1 IdPs, 1 usable here, valid until 2026-10-18T15:48:27Z
+client portal (confidential, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
+client files-cli (public, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;check&lt;/code&gt; lista la audiencia y no dice nada más de ella. En particular, no dice qué
+entradas pueden pedirse: solo puede pedirse una &lt;strong&gt;URI absoluta sin fragmento&lt;/strong&gt;. Un
+nombre lógico como &lt;code&gt;fileshare&lt;/code&gt;, o una URI con &lt;code&gt;#&lt;/code&gt;, se acepta en &lt;code&gt;audience&lt;/code&gt; y sigue
+yendo al token cuando no se nombra ningún recurso, pero un &lt;code&gt;resource&lt;/code&gt; que lo
+nombre se rechaza.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="a-token-for-one-server"&gt;Un token para un solo servidor&lt;span class="hx:absolute hx:-mt-20" id="a-token-for-one-server"&gt;&lt;/span&gt;
+&lt;a href="#a-token-for-one-server" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;La persona inicia sesión como siempre (aquí, contra una federación de prueba, con
+una solicitud de autorización que no nombra ningún recurso). Después, el cliente
+nombra un servidor al canjear el código:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=authorization_code -d code=&amp;#34;$(cat code)&amp;#34; \
+-d code_verifier=&amp;#34;$(cat verifier)&amp;#34; -d redirect_uri=http://127.0.0.1:9/portal \
+--data-urlencode resource=https://fs-paris.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;El &lt;code&gt;aud&lt;/code&gt; es el valor pedido, exactamente como se envió, y nada más. Un servidor
+que comprueba su audiencia, como hace &lt;a href="https://go-authn.github.io/docs/0.4/es/libraries/oidc/"&gt;go-authn/oidc&lt;/a&gt;,
+acepta este token en París y lo rechaza en Lyon.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="another-server-at-the-next-refresh"&gt;Otro servidor, en la siguiente actualización&lt;span class="hx:absolute hx:-mt-20" id="another-server-at-the-next-refresh"&gt;&lt;/span&gt;
+&lt;a href="#another-server-at-the-next-refresh" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;El token de actualización conserva la concesión entera (RFC 8707 §2.2), así que la
+siguiente actualización puede pedir otro servidor:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-lyon.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-lyon.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;El valor de &lt;code&gt;scope&lt;/code&gt; es el mismo para los dos servidores: el proveedor no lo reduce
+según el recurso.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="a-server-the-client-may-not-have"&gt;Un servidor que el cliente no puede tener&lt;span class="hx:absolute hx:-mt-20" id="a-server-the-client-may-not-have"&gt;&lt;/span&gt;
+&lt;a href="#a-server-the-client-may-not-have" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un recurso que no está en la &lt;code&gt;audience&lt;/code&gt; del cliente se rechaza con
+&lt;code&gt;invalid_target&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-nantes.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource \&amp;#34;https://fs-nantes.example.org/\&amp;#34; is not one this client may ask a token for&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;Una actualización rechazada no gasta el token de actualización.&lt;/strong&gt; La solicitud
+se comprueba antes de consumir el token, de modo que el mismo token de
+actualización sigue funcionando. Sin recurso pedido, da un token para toda la
+audiencia del cliente:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: [
+&amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;https://fs-lyon.example.org/&amp;#34;
+],
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;El valor se compara con las entradas de &lt;code&gt;audience&lt;/code&gt; como una cadena, sin
+normalizarlo como URI. El mismo servidor sin su &lt;code&gt;/&lt;/code&gt; final es otro recurso:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-paris.example.org \
+-w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource \&amp;#34;https://fs-paris.example.org\&amp;#34; is not one this client may ask a token for&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="bounding-the-grant-at-the-authorization-request"&gt;Acotar la concesión en la solicitud de autorización&lt;span class="hx:absolute hx:-mt-20" id="bounding-the-grant-at-the-authorization-request"&gt;&lt;/span&gt;
+&lt;a href="#bounding-the-grant-at-the-authorization-request" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;resource&lt;/code&gt; también puede enviarse con la solicitud de autorización. Entonces
+acota la concesión: el código, y los tokens de actualización que siguen, son para
+ese servidor, y una solicitud de token posterior puede volver a nombrarlo, pero
+nunca otro. Tras un inicio de sesión cuya solicitud de autorización llevaba
+&lt;code&gt;resource=https://fs-paris.example.org/&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=authorization_code -d code=&amp;#34;$(cat code)&amp;#34; \
+-d code_verifier=&amp;#34;$(cat verifier)&amp;#34; -d redirect_uri=http://127.0.0.1:9/portal \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-lyon.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource \&amp;#34;https://fs-lyon.example.org/\&amp;#34; was not part of the authorization&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La solicitud de autorización puede llevar &lt;strong&gt;varios&lt;/strong&gt; valores de &lt;code&gt;resource&lt;/code&gt;: es el
+único parámetro que puede repetirse en ella. Cada uno se comprueba, un valor dado
+dos veces cuenta una sola, y la concesión es para los servidores nombrados. Tras
+un inicio de sesión cuya solicitud de autorización llevaba
+&lt;code&gt;resource=https://fs-paris.example.org/&lt;/code&gt; y
+&lt;code&gt;resource=https://fs-lyon.example.org/&lt;/code&gt;, el código da un token para ambos, y cada
+actualización puede pedir cualquiera de los dos:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=authorization_code -d code=&amp;#34;$(cat code)&amp;#34; \
+-d code_verifier=&amp;#34;$(cat verifier)&amp;#34; -d redirect_uri=http://127.0.0.1:9/portal \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: [
+&amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;https://fs-lyon.example.org/&amp;#34;
+],
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-paris.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-lyon.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-lyon.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Con un bloque &lt;code&gt;state&lt;/code&gt;, los recursos de la concesión se guardan con el token de
+actualización, así que un reinicio no la amplía.&lt;/p&gt;
+&lt;p&gt;Un recurso que el cliente no puede tener también se rechaza en el endpoint de
+autorización, como un error enviado a la URI de redirección del cliente. Uno solo
+de esos valores entre otros correctos hace rechazar toda la solicitud:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o /dev/null -w &amp;#34;%{http_code} %{redirect_url}\n&amp;#34; -G http://127.0.0.1:28473/authorize \
+-d response_type=code -d client_id=portal -d scope=openid -d state=s1 \
+--data-urlencode redirect_uri=http://127.0.0.1:9/portal \
+-d code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM -d code_challenge_method=S256 \
+--data-urlencode resource=https://fs-paris.example.org/ \
+--data-urlencode resource=https://fs-nantes.example.org/
+302 http://127.0.0.1:9/portal?error=invalid_target&amp;amp;error_description=resource&amp;#43;%22https%3A%2F%2Ffs-nantes.example.org%2F%22&amp;#43;is&amp;#43;not&amp;#43;one&amp;#43;this&amp;#43;client&amp;#43;may&amp;#43;ask&amp;#43;a&amp;#43;token&amp;#43;for&amp;amp;iss=http%3A%2F%2F127.0.0.1%3A28473&amp;amp;state=s1&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;En el endpoint de token, un recurso por solicitud.&lt;/strong&gt; Un token es para un
+servidor, para los servidores de la concesión o para toda la &lt;code&gt;audience&lt;/code&gt;; nunca
+para una lista que elija la solicitud de token. Un segundo &lt;code&gt;resource&lt;/code&gt; se rechaza
+allí como cualquier parámetro repetido:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-paris.example.org/ \
+--data-urlencode resource=https://fs-lyon.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_request&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource appears more than once&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-rules"&gt;Las reglas&lt;span class="hx:absolute hx:-mt-20" id="the-rules"&gt;&lt;/span&gt;
+&lt;a href="#the-rules" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;dónde&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;resource&lt;/code&gt; lo acepta el endpoint de autorización, y el endpoint de token con las concesiones &lt;code&gt;authorization_code&lt;/code&gt; y &lt;code&gt;refresh_token&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;cuántos&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;en el endpoint de autorización, varios: cada uno se comprueba, y uno rechazado hace rechazar la solicitud. En el endpoint de token, uno: un segundo es &lt;code&gt;invalid_request&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;qué puede nombrarse&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;una URI absoluta sin fragmento que sea, carácter por carácter, una entrada de la &lt;code&gt;audience&lt;/code&gt; del cliente&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;el &lt;code&gt;aud&lt;/code&gt; del token&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;el recurso nombrado en el endpoint de token; si no hay ninguno, los recursos que nombró la solicitud de autorización, en el orden dado; si no hay ninguno de los dos, toda la &lt;code&gt;audience&lt;/code&gt; del cliente&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;una actualización&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;puede nombrar uno de los recursos que nombró la solicitud de autorización o, si no nombró ninguno, cualquier URI de la &lt;code&gt;audience&lt;/code&gt; del cliente. El nuevo token de actualización conserva la concesión entera&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;rechazado&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;invalid_target&lt;/code&gt;, enviado a la URI de redirección en el endpoint de autorización y devuelto como error &lt;code&gt;400&lt;/code&gt; por el endpoint de token. Una actualización rechazada no gasta el token de actualización&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;otras concesiones&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;resource&lt;/code&gt; con &lt;code&gt;client_credentials&lt;/code&gt;, en la solicitud de autorización de dispositivo o al sondear un token de dispositivo se rechaza con &lt;code&gt;invalid_target&lt;/code&gt;, no se ignora: un cliente que pidió un token para un servidor no debe recibir uno para otro. Un token de dispositivo es siempre para toda la &lt;code&gt;audience&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;los scopes propios del proveedor&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;un token con &lt;code&gt;ssh&lt;/code&gt;, &lt;code&gt;nfs&lt;/code&gt;, &lt;code&gt;app_password&lt;/code&gt;, &lt;code&gt;wireguard&lt;/code&gt; o &lt;code&gt;wireguard_peers&lt;/code&gt; es solo para el proveedor, y solo puede nombrarse el propio emisor&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;El rechazo de las otras concesiones, en el endpoint de token y en la solicitud de
+autorización de dispositivo:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=client_credentials \
+--data-urlencode resource=https://fs-paris.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource indicators are taken with the authorization_code and refresh_token grants&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/device_authorization -d client_id=files-cli \
+--data-urlencode resource=https://fs-paris.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource indicators are taken with the authorization_code and refresh_token grants&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="departures"&gt;Dónde se aparta del RFC 8707&lt;span class="hx:absolute hx:-mt-20" id="departures"&gt;&lt;/span&gt;
+&lt;a href="#departures" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;RFC 8707&lt;/th&gt;
+&lt;th&gt;authn-bridge v0.23.0&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;§2: «Multiple &lt;code&gt;resource&lt;/code&gt; parameters MAY be used»&lt;/td&gt;
+&lt;td&gt;en el endpoint de autorización, tal cual. En el endpoint de token, uno: un segundo &lt;code&gt;resource&lt;/code&gt; es &lt;code&gt;invalid_request&lt;/code&gt;, lo que permite el §3 («an authorization server may be unwilling or unable to fulfill a token request with multiple resources»)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.2: el parámetro se aplica «for all grant types»&lt;/td&gt;
+&lt;td&gt;solo &lt;code&gt;authorization_code&lt;/code&gt; y &lt;code&gt;refresh_token&lt;/code&gt;. Con &lt;code&gt;client_credentials&lt;/code&gt; o con la concesión de dispositivo se rechaza con &lt;code&gt;invalid_target&lt;/code&gt;, tanto en la solicitud de autorización de dispositivo como al sondear&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2: el valor «SHOULD NOT include a query component»&lt;/td&gt;
+&lt;td&gt;no se comprueba. Lo que se comprueba es que el valor sea absoluto, no tenga fragmento y esté en la &lt;code&gt;audience&lt;/code&gt; del cliente&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2: el servidor «may map from that value to a more general URI or abstract identifier»&lt;/td&gt;
+&lt;td&gt;ninguna correspondencia: el &lt;code&gt;aud&lt;/code&gt; es el valor pedido, comparado con &lt;code&gt;audience&lt;/code&gt; como cadena&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.2: «the authorization server should downscope the scope value» para cada recurso&lt;/td&gt;
+&lt;td&gt;no se hace: el valor de &lt;code&gt;scope&lt;/code&gt; es el de la concesión, sea cual sea el servidor nombrado&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.1: una solicitud sin &lt;code&gt;resource&lt;/code&gt; MAY procesarse «by using a predefined default resource value»&lt;/td&gt;
+&lt;td&gt;el valor por defecto es toda la &lt;code&gt;audience&lt;/code&gt; del cliente&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.2: una actualización puede limitarse «to those [resources] that were originally granted», y el token de actualización «is bound to the full original grant»&lt;/td&gt;
+&lt;td&gt;tal cual&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;Antes de la v0.22.1&lt;/strong&gt;, la v0.22.0 rechazaba un &lt;code&gt;resource&lt;/code&gt; repetido en el
+endpoint de autorización con una página de error, como cualquier otro parámetro
+repetido, así que una concesión no podía nombrar dos servidores; y su solicitud
+de autorización de dispositivo no leía &lt;code&gt;resource&lt;/code&gt;, así que un dispositivo que
+pedía un solo servidor recibía un token para toda la &lt;code&gt;audience&lt;/code&gt;.&lt;/p&gt;</description></item></channel></rss>

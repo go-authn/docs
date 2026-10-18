@@ -1,0 +1,1621 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Oidc</title><link>https://go-authn.github.io/docs/0.4/fr/tags/oidc/</link><description>Recent content in Oidc on go-authn</description><generator>Hugo -- gohugo.io</generator><language>fr</language><atom:link href="https://go-authn.github.io/docs/0.4/fr/tags/oidc/index.xml" rel="self" type="application/rss+xml"/><item><title>authn-bridge</title><link>https://go-authn.github.io/docs/0.4/fr/authn-bridge/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/fr/authn-bridge/</guid><description>
+&lt;p&gt;&lt;strong&gt;Les personnes se connectent dans leur propre université, par la Fédération
+Éducation-Recherche de RENATER ou par eduGAIN, et les applications obtiennent un jeton OpenID Connect.&lt;/strong&gt;
+La même connexion peut aussi faire certifier une clé SSH, faire émettre un certificat
+client X.509 pour NFS sur TLS, définir un mot de passe d&amp;rsquo;application pour SMB et S3, ou
+enregistrer une clé WireGuard. Le fournisseur peut révoquer ce qu&amp;rsquo;il a émis, et il
+publie des listes signées de ce qu&amp;rsquo;il a révoqué ; un jeton d&amp;rsquo;accès déjà remis reste
+valide jusqu&amp;rsquo;à son expiration. Pur Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un seul
+binaire. Ces pages décrivent la v0.23.0.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.0
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge keygen --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge metadata --config /etc/authn-bridge &amp;gt; sp.xml &lt;span class="c1"&gt;# register this with the federation&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge check --config /etc/authn-bridge
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge --config /etc/authn-bridge &lt;span class="c1"&gt;# serve&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Avant la v0.20.0, la commande s&amp;rsquo;appelait &lt;code&gt;bridge&lt;/code&gt;. C&amp;rsquo;est aussi le
+&lt;code&gt;/sbin/bridge&lt;/code&gt; d&amp;rsquo;iproute2, installé sur pratiquement tous les systèmes Linux, et celui qui venait
+en premier dans &lt;code&gt;PATH&lt;/code&gt; l&amp;rsquo;emportait. Le chemin du module est toujours &lt;code&gt;github.com/go-authn/bridge&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-a-bridge"&gt;Pourquoi un pont&lt;span class="hx:absolute hx:-mt-20" id="why-a-bridge"&gt;&lt;/span&gt;
+&lt;a href="#why-a-bridge" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Une fédération de recherche parle SAML. Ses membres sont des centaines de fournisseurs
+d&amp;rsquo;identité, un par établissement, listés dans un document de métadonnées signé que
+la fédération publie. Les applications écrites aujourd&amp;rsquo;hui veulent OpenID Connect, et font confiance à un seul
+fournisseur. authn-bridge est ce fournisseur unique : un fournisseur de service SAML d&amp;rsquo;un
+côté, enregistré une seule fois auprès de la fédération, et un fournisseur OpenID de l&amp;rsquo;autre.&lt;/p&gt;
+&lt;p&gt;Une passerelle décide de qui est chacun pour chaque application derrière elle, aussi l&amp;rsquo;essentiel
+de ce programme consiste-t-il en refus. Il refuse des métadonnées que la fédération n&amp;rsquo;a pas signées, une
+assertion qui désigne quelqu&amp;rsquo;un du domaine d&amp;rsquo;un autre établissement, des groupes sur lesquels un IdP
+n&amp;rsquo;a aucune autorité, et une configuration qui laisserait passer l&amp;rsquo;un d&amp;rsquo;eux.
+Une configuration qui ne peut pas être servie en sécurité ne démarre pas.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-prints-at-startup"&gt;Ce qu&amp;rsquo;il affiche au démarrage&lt;span class="hx:absolute hx:-mt-20" id="what-it-prints-at-startup"&gt;&lt;/span&gt;
+&lt;a href="#what-it-prints-at-startup" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-bridge --config etc/bridge-admin.hcl
+authn-bridge v0.23.0: http://127.0.0.1:28473 on 127.0.0.1:28473
+metrics on 127.0.0.1:28475
+admin API on unix:///tmp/authn/run/admin.sock&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Il s&amp;rsquo;agit d&amp;rsquo;un fournisseur de test sur l&amp;rsquo;interface de bouclage (un émetteur &lt;code&gt;http://&lt;/code&gt; n&amp;rsquo;est accepté que sur un
+hôte de bouclage). Il récupère les métadonnées de la fédération &lt;strong&gt;avant&lt;/strong&gt; de se mettre à l&amp;rsquo;écoute. Un
+fournisseur qui ne peut nommer aucun établissement est un fournisseur par lequel personne ne peut se connecter :
+sans les métadonnées, il s&amp;rsquo;arrête plutôt que de démarrer.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="where-to-go-next"&gt;Pour aller plus loin&lt;span class="hx:absolute hx:-mt-20" id="where-to-go-next"&gt;&lt;/span&gt;
+&lt;a href="#where-to-go-next" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/install/"&gt;L&amp;rsquo;installer&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;l&amp;rsquo;utilisateur, les répertoires, l&amp;rsquo;unité systemd, les clés&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/configuration/"&gt;La configuration&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;chaque bloc, &lt;code&gt;check&lt;/code&gt;, et ce qui est refusé au démarrage&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/federation/"&gt;Le côté fédération&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;les métadonnées, l&amp;rsquo;empreinte de leur signataire, les portées, et ce qu&amp;rsquo;un IdP peut affirmer&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/tokens/"&gt;Jetons&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;jetons d&amp;rsquo;identité (ID tokens), jetons d&amp;rsquo;accès, l&amp;rsquo;autorisation d&amp;rsquo;appareil, mots de passe d&amp;rsquo;application, clés WireGuard&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/resources/"&gt;Indicateurs de ressource&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;un jeton pour un seul des serveurs de ressources d&amp;rsquo;un client à la fois (RFC 8707)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/certificates/"&gt;Certificats&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;certificats SSH, le profil EuroHPC, certificats clients X.509 pour NFS&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/revocation/"&gt;Révocation&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;la KRL et la CRL signées, et l&amp;rsquo;émetteur de signaux partagés (Shared Signals)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/admin/"&gt;L&amp;rsquo;API d&amp;rsquo;administration&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;désactiver une personne ou un établissement, santé et métriques&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Les listes qu&amp;rsquo;il signe sont lues par &lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-revokd/"&gt;authn-revokd&lt;/a&gt;
+pour un &lt;code&gt;sshd&lt;/code&gt; ordinaire ou un serveur TLS, et par
+&lt;a href="https://go-fileshare.github.io/docs/latest/security/revocation-lists/" target="_blank" rel="noopener"&gt;go-fileshare&lt;/a&gt;,
+qui les vérifie lui-même.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-is-not"&gt;Ce qu&amp;rsquo;il n&amp;rsquo;est pas&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-not"&gt;&lt;/span&gt;
+&lt;a href="#what-it-is-not" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Un seul processus.&lt;/strong&gt; Avec un bloc &lt;code&gt;state&lt;/code&gt;, les jetons de rafraîchissement et les jetons d&amp;rsquo;accès
+honorés à &lt;code&gt;/userinfo&lt;/code&gt; survivent à un redémarrage. Les connexions en cours, les codes et
+les autorisations d&amp;rsquo;appareil, non. L&amp;rsquo;état est écrit au fil de l&amp;rsquo;eau et lu au démarrage, si bien que
+deux instances sur une même base de données manqueraient chacune ce que l&amp;rsquo;autre a écrit.&lt;/li&gt;
+&lt;li&gt;Pas d&amp;rsquo;enregistrement dynamique de clients, et pas de déconnexion front-channel ni back-channel.&lt;/li&gt;
+&lt;li&gt;Pas d&amp;rsquo;utilisateurs ni de groupes à ajouter. Les personnes existent parce que leur établissement se porte
+garant d&amp;rsquo;elles, et leurs groupes sont ce qu&amp;rsquo;il affirme.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;Licence&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause.&lt;/p&gt;</description></item><item><title>Jetons, mots de passe et clés</title><link>https://go-authn.github.io/docs/0.4/fr/authn-bridge/tokens/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/fr/authn-bridge/tokens/</guid><description>
+&lt;p&gt;Chaque identifiant ici commence par la même connexion auprès de l&amp;rsquo;établissement de la personne.
+Ce qui diffère, c&amp;rsquo;est à qui l&amp;rsquo;identifiant est destiné, et comment il est repris. Les
+certificats ont &lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/certificates/"&gt;leur propre page&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-the-provider-publishes"&gt;Ce que publie le fournisseur&lt;span class="hx:absolute hx:-mt-20" id="what-the-provider-publishes"&gt;&lt;/span&gt;
+&lt;a href="#what-the-provider-publishes" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/.well-known/openid-configuration | jq .
+{
+&amp;#34;authorization_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/authorize&amp;#34;,
+&amp;#34;authorization_response_iss_parameter_supported&amp;#34;: true,
+&amp;#34;claims_parameter_supported&amp;#34;: false,
+&amp;#34;claims_supported&amp;#34;: [
+&amp;#34;sub&amp;#34;,
+&amp;#34;iss&amp;#34;,
+&amp;#34;aud&amp;#34;,
+&amp;#34;exp&amp;#34;,
+&amp;#34;iat&amp;#34;,
+&amp;#34;auth_time&amp;#34;,
+&amp;#34;nonce&amp;#34;,
+&amp;#34;acr&amp;#34;,
+&amp;#34;name&amp;#34;,
+&amp;#34;given_name&amp;#34;,
+&amp;#34;family_name&amp;#34;,
+&amp;#34;preferred_username&amp;#34;,
+&amp;#34;email&amp;#34;,
+&amp;#34;groups&amp;#34;,
+&amp;#34;eduperson_principal_name&amp;#34;,
+&amp;#34;eduperson_scoped_affiliation&amp;#34;,
+&amp;#34;eduperson_entitlement&amp;#34;,
+&amp;#34;entitlements&amp;#34;,
+&amp;#34;eduperson_assurance&amp;#34;,
+&amp;#34;eduperson_orcid&amp;#34;,
+&amp;#34;schac_home_organization&amp;#34;,
+&amp;#34;voperson_id&amp;#34;
+],
+&amp;#34;code_challenge_methods_supported&amp;#34;: [
+&amp;#34;S256&amp;#34;
+],
+&amp;#34;device_authorization_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/device_authorization&amp;#34;,
+&amp;#34;grant_types_supported&amp;#34;: [
+&amp;#34;authorization_code&amp;#34;,
+&amp;#34;refresh_token&amp;#34;,
+&amp;#34;urn:ietf:params:oauth:grant-type:device_code&amp;#34;
+],
+&amp;#34;id_token_signing_alg_values_supported&amp;#34;: [
+&amp;#34;RS256&amp;#34;
+],
+&amp;#34;issuer&amp;#34;: &amp;#34;http://127.0.0.1:28473&amp;#34;,
+&amp;#34;jwks_uri&amp;#34;: &amp;#34;http://127.0.0.1:28473/jwks&amp;#34;,
+&amp;#34;request_parameter_supported&amp;#34;: false,
+&amp;#34;request_uri_parameter_supported&amp;#34;: false,
+&amp;#34;response_modes_supported&amp;#34;: [
+&amp;#34;query&amp;#34;
+],
+&amp;#34;response_types_supported&amp;#34;: [
+&amp;#34;code&amp;#34;
+],
+&amp;#34;scopes_supported&amp;#34;: [
+&amp;#34;openid&amp;#34;,
+&amp;#34;profile&amp;#34;,
+&amp;#34;email&amp;#34;,
+&amp;#34;eduperson&amp;#34;,
+&amp;#34;groups&amp;#34;
+],
+&amp;#34;subject_types_supported&amp;#34;: [
+&amp;#34;public&amp;#34;,
+&amp;#34;pairwise&amp;#34;
+],
+&amp;#34;token_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/token&amp;#34;,
+&amp;#34;token_endpoint_auth_methods_supported&amp;#34;: [
+&amp;#34;client_secret_basic&amp;#34;,
+&amp;#34;client_secret_post&amp;#34;,
+&amp;#34;none&amp;#34;
+],
+&amp;#34;userinfo_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/userinfo&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Le flux par code d&amp;rsquo;autorisation, avec &lt;strong&gt;PKCE S256 exigé pour chaque client&lt;/strong&gt;. Une
+requête sans &lt;code&gt;code_challenge_method&lt;/code&gt; est refusée plutôt que lue comme S256,
+puisque la RFC 7636 fait de &lt;code&gt;plain&lt;/code&gt; la valeur par défaut. Un client confidentiel configuré
+&lt;code&gt;pkce = &amp;quot;or_nonce&amp;quot;&lt;/code&gt; peut envoyer à la place un &lt;code&gt;nonce&lt;/code&gt; OpenID.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-id-token"&gt;Le jeton d&amp;rsquo;identité&lt;span class="hx:absolute hx:-mt-20" id="the-id-token"&gt;&lt;/span&gt;
+&lt;a href="#the-id-token" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Pour le client, et sur la connexion, pas sur la personne : RS256, &lt;code&gt;aud&lt;/code&gt; l&amp;rsquo;ID
+du client, &lt;code&gt;sub&lt;/code&gt;, &lt;code&gt;auth_time&lt;/code&gt;, &lt;code&gt;at_hash&lt;/code&gt;, le &lt;code&gt;nonce&lt;/code&gt; quand la requête en avait un, et
+&lt;code&gt;acr&lt;/code&gt; quand l&amp;rsquo;IdP a dit quel contexte d&amp;rsquo;authentification il a utilisé. Durée de vie
+&lt;code&gt;id_token_lifetime&lt;/code&gt;, cinq minutes par défaut.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Rien sur la personne n&amp;rsquo;y figure.&lt;/strong&gt; Les revendications que les portées transmettent sont à
+&lt;code&gt;/userinfo&lt;/code&gt;, comme le dit OIDC Core 5.4 quand un jeton d&amp;rsquo;accès est émis, et il l&amp;rsquo;est
+toujours. Un client dont le jeton d&amp;rsquo;identité est lui-même l&amp;rsquo;identifiant, comme opkssh,
+définit &lt;code&gt;id_token_claims = true&lt;/code&gt; pour les y faire copier. Un jeton d&amp;rsquo;identité n&amp;rsquo;est
+émis que pour une requête comportant la portée &lt;code&gt;openid&lt;/code&gt;.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;portée&lt;/th&gt;
+&lt;th&gt;transmet&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;profile&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;name&lt;/code&gt;, &lt;code&gt;given_name&lt;/code&gt;, &lt;code&gt;family_name&lt;/code&gt;, &lt;code&gt;preferred_username&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;email&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;email&lt;/code&gt; (jamais &lt;code&gt;email_verified&lt;/code&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;eduperson&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;eduperson_principal_name&lt;/code&gt;, &lt;code&gt;eduperson_scoped_affiliation&lt;/code&gt;, &lt;code&gt;eduperson_entitlement&lt;/code&gt; et &lt;code&gt;entitlements&lt;/code&gt;, &lt;code&gt;eduperson_assurance&lt;/code&gt;, &lt;code&gt;eduperson_orcid&lt;/code&gt;, &lt;code&gt;schac_home_organization&lt;/code&gt;, &lt;code&gt;voperson_id&lt;/code&gt; (le &lt;code&gt;subject-id&lt;/code&gt; SAML, en minuscules)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;groups&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;groups&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="the-access-token"&gt;Le jeton d&amp;rsquo;accès&lt;span class="hx:absolute hx:-mt-20" id="the-access-token"&gt;&lt;/span&gt;
+&lt;a href="#the-access-token" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Pour les serveurs de ressources de l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; du client, comme le décrit la RFC 9068 :
+signé avec &lt;code&gt;signing_key_file&lt;/code&gt; (RS256) ou &lt;code&gt;access_token_key_file&lt;/code&gt; (ES256),
+&lt;code&gt;typ: at+jwt&lt;/code&gt;, valide &lt;code&gt;token_lifetime&lt;/code&gt; (une heure par défaut). Il porte ce dont un
+serveur de ressources a besoin pour décider sans demander à personne : &lt;code&gt;preferred_username&lt;/code&gt;,
+&lt;code&gt;groups&lt;/code&gt;, &lt;code&gt;idp&lt;/code&gt; (l&amp;rsquo;entity ID de l&amp;rsquo;IdP qui s&amp;rsquo;est porté garant), &lt;code&gt;scope&lt;/code&gt;, &lt;code&gt;client_id&lt;/code&gt;,
+et &lt;code&gt;session_end&lt;/code&gt; quand l&amp;rsquo;IdP a dit quand sa session prend fin.
+Les groupes peuvent être omis, client par client : &lt;a href="#what-it-leaves-out"&gt;plus bas&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Un client dont l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; nomme plusieurs serveurs de ressources peut demander
+un jeton adressé à l&amp;rsquo;un d&amp;rsquo;eux, avec le &lt;code&gt;resource&lt;/code&gt; de la RFC 8707 : voir
+&lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/resources/"&gt;plusieurs serveurs de ressources&lt;/a&gt;.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="what-it-leaves-out"&gt;Ce qu&amp;rsquo;il ne contient pas, et pourquoi&lt;span class="hx:absolute hx:-mt-20" id="what-it-leaves-out"&gt;&lt;/span&gt;
+&lt;a href="#what-it-leaves-out" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;strong&gt;Ni &lt;code&gt;auth_time&lt;/code&gt; ni &lt;code&gt;acr&lt;/code&gt;&lt;/strong&gt;, bien que la RFC 9068 autorise les deux. Ils restent
+dans le jeton d&amp;rsquo;identité, où OIDC Core les place. Rien ne les lit dans un jeton
+d&amp;rsquo;accès : ni ce fournisseur, qui retrouve un jeton par son &lt;code&gt;jti&lt;/code&gt;, ni
+go-fileshare. Or un jeton d&amp;rsquo;accès est aussi collé comme réponse SSH
+keyboard-interactive (mccli de ssh-oidc, vérifié par motley-cue sur
+&lt;code&gt;/userinfo&lt;/code&gt;), et OpenSSH en lit 1023 caractères ; l&amp;rsquo;&lt;code&gt;acr&lt;/code&gt; d&amp;rsquo;un IdP à lui seul,
+&lt;code&gt;urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport&lt;/code&gt;, en occupe
+environ 90. Avant la v0.22.0, le jeton d&amp;rsquo;accès portait les deux.&lt;/p&gt;
+&lt;p&gt;La longueur d&amp;rsquo;un jeton d&amp;rsquo;accès ES256 (&lt;code&gt;access_token_key_file&lt;/code&gt;) pour un eppn long
+et trois entitlements AARC, mesurée par &lt;code&gt;TestES256AccessTokens&lt;/code&gt; d&amp;rsquo;authn-bridge
+avec un émetteur de longueur réelle, face aux longueurs des &lt;code&gt;shibmd:Scope&lt;/code&gt; des
+métadonnées de RENATER (743 scopes) :&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;longueur du scope&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;caractères&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;13&lt;/td&gt;
+&lt;td&gt;médiane&lt;/td&gt;
+&lt;td&gt;885&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;22&lt;/td&gt;
+&lt;td&gt;95e centile&lt;/td&gt;
+&lt;td&gt;945&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;29&lt;/td&gt;
+&lt;td&gt;99e centile&lt;/td&gt;
+&lt;td&gt;992&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;44&lt;/td&gt;
+&lt;td&gt;le plus long&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;1092 : au-delà&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Avant la v0.22.0, le même jeton faisait 1014 / 1074 / 1121 / 1221 caractères :
+au-delà dès le 95e centile. Ce qui ne tient toujours pas, ce sont les scopes les
+plus longs et surtout les groupes nombreux : chaque entitlement ajoute son URN
+entière, et rien ne borne le nombre qu&amp;rsquo;un IdP en envoie. Un jeton d&amp;rsquo;accès RS256,
+signé avec une clé de 3072 bits, fait environ 1150 caractères avant le moindre
+groupe : un jeton destiné à SSH est donc signé en ES256. Au-delà de 1023
+caractères, mccli demande à motley-cue un mot de passe à usage unique à la
+place, ce que motley-cue autorise par défaut ; un jeton collé dans un &lt;code&gt;ssh&lt;/code&gt;
+ordinaire doit tenir.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Aucun groupe, pour un client qui le demande&lt;/strong&gt; (v0.23.0). Chaque groupe
+ajoute son URN entière, et rien ne borne le nombre qu&amp;rsquo;un IdP en envoie : aucune
+clé ni aucun algorithme de signature ne garantit qu&amp;rsquo;un jeton portant des groupes
+tienne. Un client configuré avec &lt;code&gt;access_token_groups = false&lt;/code&gt; reçoit des jetons
+d&amp;rsquo;accès sans les &lt;code&gt;groups&lt;/code&gt; de la personne :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;oidc-agent&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ssh&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; access_token_groups&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Il est fait pour ssh-oidc : oidc-agent obtient le jeton, mccli le colle comme
+réponse keyboard-interactive, et motley-cue le vérifie sur &lt;code&gt;/userinfo&lt;/code&gt; et y lit
+les groupes. Mesuré par &lt;code&gt;TestAccessTokenWithoutGroups&lt;/code&gt; d&amp;rsquo;authn-bridge, un jeton
+ES256 pour une personne membre de 50 groupes, avec le scope le plus long de
+RENATER (44) et un émetteur de longueur réelle, fait 732 caractères.&lt;/p&gt;
+&lt;p&gt;Face à une fédération de test, une personne membre de trois groupes se connecte
+par ce client, avec le device grant :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-bridge token --issuer http://127.0.0.1:28473 --client oidc-agent --scope &amp;#34;openid eduperson groups&amp;#34; --cache var/tokens.json &amp;gt; at
+To log in, open http://127.0.0.1:28473/device
+and enter the code DHBT-DBZD
+(or open http://127.0.0.1:28473/device?user_code=DHBT-DBZD)
+$ tr -d &amp;#39;\n&amp;#39; &amp;lt; at | wc -c
+625&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Le jeton nomme la personne et son IdP, et aucun groupe :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ cut -d. -f2 at | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; | jq -R &amp;#34;@base64d | fromjson&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;ssh&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;oidc-agent&amp;#34;,
+&amp;#34;exp&amp;#34;: 1791741018,
+&amp;#34;iat&amp;#34;: 1791737418,
+&amp;#34;idp&amp;#34;: &amp;#34;https://idp.univ-example.example/idp/shibboleth&amp;#34;,
+&amp;#34;iss&amp;#34;: &amp;#34;http://127.0.0.1:28473&amp;#34;,
+&amp;#34;jti&amp;#34;: &amp;#34;0zVsbDeAwcubhCCFXtj9Dh0u-93sDBza5sti7EmcSL8&amp;#34;,
+&amp;#34;preferred_username&amp;#34;: &amp;#34;alice@univ-example.example&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid eduperson groups&amp;#34;,
+&amp;#34;sub&amp;#34;: &amp;#34;KEQ1dJYNUw8TtXF5HNbuy3EYZ3rmFMKiqaVY8RH7eLE&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/userinfo&lt;/code&gt; les sert toujours, sous &lt;code&gt;groups&lt;/code&gt; (portée &lt;code&gt;groups&lt;/code&gt;) et sous
+&lt;code&gt;eduperson_entitlement&lt;/code&gt; (portée &lt;code&gt;eduperson&lt;/code&gt;) :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ { printf &amp;#39;Authorization: Bearer &amp;#39;; cat at; } &amp;gt; auth.hdr
+$ curl -s -H @auth.hdr http://127.0.0.1:28473/userinfo | jq .
+{
+&amp;#34;eduperson_entitlement&amp;#34;: [
+&amp;#34;urn:geant:univ-example.example:group:physique#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example&amp;#34;
+],
+&amp;#34;eduperson_principal_name&amp;#34;: &amp;#34;alice@univ-example.example&amp;#34;,
+&amp;#34;entitlements&amp;#34;: [
+&amp;#34;urn:geant:univ-example.example:group:physique#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example&amp;#34;
+],
+&amp;#34;groups&amp;#34;: [
+&amp;#34;urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:physique#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example&amp;#34;
+],
+&amp;#34;sub&amp;#34;: &amp;#34;KEQ1dJYNUw8TtXF5HNbuy3EYZ3rmFMKiqaVY8RH7eLE&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;La valeur par défaut reste &lt;code&gt;true&lt;/code&gt;.&lt;/strong&gt; go-fileshare, comme tout serveur de
+ressources qui décide sur le seul jeton, a besoin des groupes dedans : on ne les
+omet que pour un client dont les jetons vont à un serveur qui lit &lt;code&gt;/userinfo&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Refusé avec les certificats.&lt;/strong&gt; Les certificats SSH et X.509 prennent les
+groupes de la personne dans le jeton d&amp;rsquo;accès : un client avec
+&lt;code&gt;access_token_groups = false&lt;/code&gt; et &lt;code&gt;ssh_certificates&lt;/code&gt; ou &lt;code&gt;x509_certificates&lt;/code&gt;
+émettrait des certificats qui n&amp;rsquo;en portent aucun, et un serveur qui autorise par
+groupe refuserait la personne sans que rien nulle part ne dise pourquoi. &lt;code&gt;check&lt;/code&gt;,
+comme le serveur au démarrage, refuse la combinaison :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;oidc-agent&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ssh&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; access_token_groups&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_certificates&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-bridge check --config etc/bridge.hcl
+authn-bridge: client &amp;#34;oidc-agent&amp;#34;: access_token_groups = false with ssh_certificates or x509_certificates: the certificates take the groups from the access token, and would carry none -- use one client for the certificates and another for tokens pasted into ssh
+$ echo $?
+1&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Les certificats ont alors leur propre client, et les jetons collés dans ssh un autre.&lt;/p&gt;
+&lt;p&gt;Un jeton portant l&amp;rsquo;une des portées propres au fournisseur (&lt;code&gt;ssh&lt;/code&gt;, &lt;code&gt;nfs&lt;/code&gt;,
+&lt;code&gt;app_password&lt;/code&gt;, &lt;code&gt;wireguard&lt;/code&gt;, &lt;code&gt;wireguard_peers&lt;/code&gt;) est adressé &lt;strong&gt;au seul
+fournisseur&lt;/strong&gt; : son &lt;code&gt;aud&lt;/code&gt; est l&amp;rsquo;émetteur, et ces points de terminaison refusent toute autre valeur. Un jeton
+qu&amp;rsquo;un serveur de ressources a reçu ne peut pas être rejoué ici :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -X POST http://127.0.0.1:28473/ssh/certificate -d x -D - -o -
+HTTP/1.1 401 Unauthorized
+Content-Type: text/plain; charset=utf-8
+Www-Authenticate: Bearer error=&amp;#34;invalid_token&amp;#34;
+X-Content-Type-Options: nosniff
+Date: Sun, 11 Oct 2026 09:48:07 GMT
+Content-Length: 23
+the token is not valid&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un jeton d&amp;rsquo;accès déjà distribué est une déclaration signée qu&amp;rsquo;un serveur de ressources
+vérifie seul. Ce à quoi &lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/admin/"&gt;&lt;code&gt;RevokePerson&lt;/code&gt;&lt;/a&gt;
+met fin, c&amp;rsquo;est tout ce qui revient ici avec lui ; le serveur de ressources l&amp;rsquo;apprend
+par &lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/revocation/#shared-signals"&gt;Shared Signals&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="without-a-browser-the-device-grant"&gt;Sans navigateur : l&amp;rsquo;octroi par appareil&lt;span class="hx:absolute hx:-mt-20" id="without-a-browser-the-device-grant"&gt;&lt;/span&gt;
+&lt;a href="#without-a-browser-the-device-grant" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un client WebDAV, un script, un terminal n&amp;rsquo;a pas de navigateur à envoyer vers une université. Un
+client avec &lt;code&gt;device = true&lt;/code&gt; demande un code (RFC 8628), et la personne se connecte
+sur n&amp;rsquo;importe quel autre appareil :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;rclone&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; refresh_lifetime&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;720h&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # refresh tokens, off unless set
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;rclone (WebDAV)&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;authn-bridge token --issuer https://login.example.org --client rclone&lt;/code&gt; affiche
+un jeton d&amp;rsquo;accès, en se connectant la première fois et en rafraîchissant ensuite ; c&amp;rsquo;est
+le client device de golang.org/x/oauth2, pas un client écrit ici.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;codes utilisateur&lt;/td&gt;
+&lt;td&gt;huit lettres parmi &lt;code&gt;BCDFGHJKLMNPQRSTVWXZ&lt;/code&gt; (ni voyelles, ni chiffres), valides dix minutes ; dix codes &lt;strong&gt;erronés&lt;/strong&gt; par hôte pendant ce temps (une adresse IPv4, un /64 IPv6), et dix fois plus pour le /24 ou le /48 qui l&amp;rsquo;entoure&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;interrogation&lt;/td&gt;
+&lt;td&gt;toutes les cinq secondes ; interroger plus vite vaut &lt;code&gt;slow_down&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;appareils en attente&lt;/td&gt;
+&lt;td&gt;20 000 au plus ; au-delà, le plus ancien est évincé plutôt que tout le monde refusé&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;jetons de rafraîchissement&lt;/td&gt;
+&lt;td&gt;renouvelés à chaque usage, au sein d&amp;rsquo;une famille dont la fin est fixée à la connexion par &lt;code&gt;refresh_lifetime&lt;/code&gt; ; un jeton retiré réutilisé révoque la famille et les jetons d&amp;rsquo;accès qu&amp;rsquo;elle a obtenus&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="application-passwords"&gt;Mots de passe d&amp;rsquo;application&lt;span class="hx:absolute hx:-mt-20" id="application-passwords"&gt;&lt;/span&gt;
+&lt;a href="#application-passwords" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;NTLMv2 et SigV4 prouvent un secret que le serveur doit déjà détenir, donc aucun jeton ne
+convient pour SMB ou S3. Un client avec &lt;code&gt;app_passwords = true&lt;/code&gt; permet à un jeton de
+portée &lt;code&gt;app_password&lt;/code&gt; d&amp;rsquo;en définir un, généré et affiché une seule fois :
+&lt;code&gt;authn-bridge app-password --issuer ... --client files&lt;/code&gt; (&lt;code&gt;--remove&lt;/code&gt; le supprime).&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;app_passwords&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # sqlite, postgres or mysql
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/apppw.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; store&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;nt_hash&amp;#34;] # the default, SMB only; add &amp;#34;password&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="k"&gt;S3&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; lifetime&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;2160h&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default, 90 days
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # table = &amp;#34;app_passwords&amp;#34; # the default
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La table est créée si elle manque : &lt;code&gt;login, password, nt_hash, expires, idp&lt;/code&gt;.
+Seul ce dont les protocoles ont besoin est stocké : l&amp;rsquo;empreinte NT pour SMB, le mot de passe lui-même
+seulement quand &lt;code&gt;store&lt;/code&gt; le demande. go-fileshare la lit avec un bloc &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; ;
+nommez les colonnes dans sa requête, jamais &lt;code&gt;*&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Désactiver une personne supprime son mot de passe ; désactiver un établissement supprime ceux
+de ses personnes. Un mot de passe supprimé cesse de fonctionner dans go-fileshare à sa prochaine lecture
+de son annuaire.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="wireguard-keys"&gt;Clés WireGuard&lt;span class="hx:absolute hx:-mt-20" id="wireguard-keys"&gt;&lt;/span&gt;
+&lt;a href="#wireguard-keys" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;WireGuard authentifie un pair par sa clé publique et rien d&amp;rsquo;autre : pas de
+certificat, pas d&amp;rsquo;expiration, pas de révocation. Le fournisseur garde donc la réponse à
+&lt;em&gt;à qui est cette clé, et peut-elle encore se connecter ?&lt;/em&gt; Le client VPN de l&amp;rsquo;appareil
+enregistre la clé publique, pour un bail ; la clé privée ne quitte jamais l&amp;rsquo;appareil ;
+une passerelle lit les clés en vigueur sous la forme d&amp;rsquo;une liste signée pour elle seule.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;certificates_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/certificates.json&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # keys are recorded beside the certificates
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;wireguard&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; lifetime&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;24h&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default: how long a key is listed; registering again renews it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; max_keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;10&lt;/span&gt;&lt;span class="c1"&gt; # the default: devices per person
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;vpn&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # what people log in with
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; wireguard_keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;vpn-gw&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # the gateway&amp;#39;s own client
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/vpn-gw.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; wireguard_peers&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;vpn&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # the clients whose keys it reads
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssf_receiver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;&lt;span class="c1"&gt; # optional: told at once when somebody is disabled
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;POST /wireguard/key&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;{&amp;quot;public_key&amp;quot;: &amp;quot;...&amp;quot;, &amp;quot;device&amp;quot;: &amp;quot;laptop&amp;quot;}&lt;/code&gt;, avec un jeton de portée &lt;code&gt;wireguard&lt;/code&gt; ; répond la fin du bail&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;DELETE /wireguard/key&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;{&amp;quot;public_key&amp;quot;: &amp;quot;...&amp;quot;}&lt;/code&gt; : la personne propriétaire reprend une clé&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /wireguard/peers&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;pour le jeton &lt;code&gt;client_credentials&lt;/code&gt; propre à la passerelle, portée &lt;code&gt;wireguard_peers&lt;/code&gt; : un JWT signé de type &lt;code&gt;wireguard-peers+jwt&lt;/code&gt;, adressé à cette passerelle, valide cinq minutes&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Une clé que quelqu&amp;rsquo;un d&amp;rsquo;autre détient, une clé qui a été reprise, et une clé de trop sont
+refusées avec &lt;code&gt;409&lt;/code&gt;. Un client passerelle doit être confidentiel, et doit nommer des clients
+qui ont &lt;code&gt;wireguard_keys&lt;/code&gt;. Le format de la liste, et le côté passerelle, relèvent de
+go-authn/wireguard.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="openpubkey-and-opkssh"&gt;OpenPubkey et opkssh&lt;span class="hx:absolute hx:-mt-20" id="openpubkey-and-opkssh"&gt;&lt;/span&gt;
+&lt;a href="#openpubkey-and-opkssh" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;opkssh transforme un jeton d&amp;rsquo;identité en connexions SSH sans aucune AC, et le jeton qu&amp;rsquo;il
+fabrique (un PK Token) survit au jeton d&amp;rsquo;identité qu&amp;rsquo;il contient. Le fournisseur renvoie le
+&lt;code&gt;nonce&lt;/code&gt; tel quel dans le flux par code et dans le flux par appareil, signe en RS256, et garde
+une clé retirée &lt;strong&gt;publiée&lt;/strong&gt; aussi longtemps que &lt;code&gt;retired_signing_key_files&lt;/code&gt; la
+nomme, afin qu&amp;rsquo;un PK Token signé avant une rotation se vérifie encore :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-03.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Donnez à opkssh un client à lui avec &lt;code&gt;id_token_claims = true&lt;/code&gt; : il reconnaît les personnes
+d&amp;rsquo;après les revendications du PK Token, et son jeton d&amp;rsquo;identité voyage vers chaque serveur auquel il se connecte.&lt;/p&gt;</description></item><item><title>Plusieurs serveurs de ressources : un jeton pour un seul à la fois</title><link>https://go-authn.github.io/docs/0.4/fr/authn-bridge/resources/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/fr/authn-bridge/resources/</guid><description>
+&lt;p&gt;Un client dont l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; nomme plusieurs serveurs de ressources, comme un
+portail devant plusieurs serveurs de fichiers, obtient des jetons d&amp;rsquo;accès adressés
+à &lt;strong&gt;tous&lt;/strong&gt;. N&amp;rsquo;importe lequel de ces serveurs peut alors prendre un jeton qu&amp;rsquo;il a
+reçu et le présenter aux autres : c&amp;rsquo;est la raison, dit la RFC 8707 §3, de
+restreindre l&amp;rsquo;audience. Depuis la v0.21.0, le client peut demander, avec le
+paramètre &lt;code&gt;resource&lt;/code&gt; de la RFC 8707, un jeton adressé à &lt;strong&gt;un seul&lt;/strong&gt; d&amp;rsquo;entre eux.
+Cette page décrit la v0.23.0 ; ce que la v0.22.0 faisait autrement figure
+&lt;a href="#departures"&gt;à la fin&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Sans &lt;code&gt;resource&lt;/code&gt;, rien ne change : le jeton d&amp;rsquo;accès est pour toute l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; du
+client, comme le décrit &lt;a href="https://go-authn.github.io/docs/0.4/fr/authn-bridge/tokens/#the-access-token"&gt;la page des jetons&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-client"&gt;Le client&lt;span class="hx:absolute hx:-mt-20" id="the-client"&gt;&lt;/span&gt;
+&lt;a href="#the-client" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Il n&amp;rsquo;y a rien à activer. Chaque URI de l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; du client peut être demandée.
+Les exemples ci-dessous utilisent un client confidentiel avec jetons de
+rafraîchissement, et un client par appareil de même audience :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;portal&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/portal.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; redirect_uris&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;http://127.0.0.1:9/portal&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://fs-paris.example.org/&amp;#34;, &amp;#34;https://fs-lyon.example.org/&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; refresh_lifetime&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;8h&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;files-cli&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://fs-paris.example.org/&amp;#34;, &amp;#34;https://fs-lyon.example.org/&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-bridge check --config etc/bridge.hcl
+issuer http://127.0.0.1:28473
+SAML entity http://127.0.0.1:28473/saml
+tls none (a reverse proxy in front)
+federation 1 IdPs, 1 usable here, valid until 2026-10-18T15:48:27Z
+client portal (confidential, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
+client files-cli (public, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;check&lt;/code&gt; liste l&amp;rsquo;audience et n&amp;rsquo;en dit pas plus. En particulier, il ne dit pas
+quelles entrées peuvent être demandées : seule une &lt;strong&gt;URI absolue sans fragment&lt;/strong&gt;
+peut l&amp;rsquo;être. Un nom logique comme &lt;code&gt;fileshare&lt;/code&gt;, ou une URI avec un &lt;code&gt;#&lt;/code&gt;, est accepté
+dans &lt;code&gt;audience&lt;/code&gt; et figure toujours dans le jeton quand aucune ressource n&amp;rsquo;est
+nommée, mais un &lt;code&gt;resource&lt;/code&gt; qui le nomme est refusé.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="a-token-for-one-server"&gt;Un jeton pour un seul serveur&lt;span class="hx:absolute hx:-mt-20" id="a-token-for-one-server"&gt;&lt;/span&gt;
+&lt;a href="#a-token-for-one-server" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;La personne se connecte comme d&amp;rsquo;habitude (ici, auprès d&amp;rsquo;une fédération de test,
+avec une demande d&amp;rsquo;autorisation qui ne nomme aucune ressource). Le client nomme
+ensuite un serveur en échangeant le code :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=authorization_code -d code=&amp;#34;$(cat code)&amp;#34; \
+-d code_verifier=&amp;#34;$(cat verifier)&amp;#34; -d redirect_uri=http://127.0.0.1:9/portal \
+--data-urlencode resource=https://fs-paris.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;L&amp;rsquo;&lt;code&gt;aud&lt;/code&gt; est la valeur demandée, exactement telle qu&amp;rsquo;elle a été envoyée, et rien
+d&amp;rsquo;autre. Un serveur qui vérifie son audience, comme le fait
+&lt;a href="https://go-authn.github.io/docs/0.4/fr/libraries/oidc/"&gt;go-authn/oidc&lt;/a&gt;, accepte ce jeton à Paris et
+le refuse à Lyon.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="another-server-at-the-next-refresh"&gt;Un autre serveur, au rafraîchissement suivant&lt;span class="hx:absolute hx:-mt-20" id="another-server-at-the-next-refresh"&gt;&lt;/span&gt;
+&lt;a href="#another-server-at-the-next-refresh" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Le jeton de rafraîchissement garde l&amp;rsquo;autorisation entière (RFC 8707 §2.2) : le
+rafraîchissement suivant peut donc demander un autre serveur :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-lyon.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-lyon.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La valeur de &lt;code&gt;scope&lt;/code&gt; est la même pour les deux serveurs : le fournisseur ne la
+réduit pas selon la ressource.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="a-server-the-client-may-not-have"&gt;Un serveur que le client ne peut pas avoir&lt;span class="hx:absolute hx:-mt-20" id="a-server-the-client-may-not-have"&gt;&lt;/span&gt;
+&lt;a href="#a-server-the-client-may-not-have" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Une ressource absente de l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; du client est refusée avec
+&lt;code&gt;invalid_target&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-nantes.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource \&amp;#34;https://fs-nantes.example.org/\&amp;#34; is not one this client may ask a token for&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;Un rafraîchissement refusé ne consomme pas le jeton de rafraîchissement.&lt;/strong&gt; La
+demande est vérifiée avant que le jeton ne soit utilisé, si bien que le même jeton
+de rafraîchissement fonctionne encore. Sans ressource demandée, il donne un jeton
+pour toute l&amp;rsquo;audience du client :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: [
+&amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;https://fs-lyon.example.org/&amp;#34;
+],
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La valeur est comparée aux entrées d&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; comme une chaîne, sans être
+normalisée comme une URI. Le même serveur sans son &lt;code&gt;/&lt;/code&gt; final est une autre
+ressource :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-paris.example.org \
+-w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource \&amp;#34;https://fs-paris.example.org\&amp;#34; is not one this client may ask a token for&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="bounding-the-grant-at-the-authorization-request"&gt;Borner l&amp;rsquo;autorisation dès la demande d&amp;rsquo;autorisation&lt;span class="hx:absolute hx:-mt-20" id="bounding-the-grant-at-the-authorization-request"&gt;&lt;/span&gt;
+&lt;a href="#bounding-the-grant-at-the-authorization-request" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;resource&lt;/code&gt; peut aussi accompagner la demande d&amp;rsquo;autorisation. Il borne alors
+l&amp;rsquo;autorisation : le code, et les jetons de rafraîchissement qui suivent, sont
+pour ce serveur, et une demande de jeton ultérieure peut le nommer à nouveau,
+jamais en nommer un autre. Après une connexion dont la demande d&amp;rsquo;autorisation
+portait &lt;code&gt;resource=https://fs-paris.example.org/&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=authorization_code -d code=&amp;#34;$(cat code)&amp;#34; \
+-d code_verifier=&amp;#34;$(cat verifier)&amp;#34; -d redirect_uri=http://127.0.0.1:9/portal \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-lyon.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource \&amp;#34;https://fs-lyon.example.org/\&amp;#34; was not part of the authorization&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La demande d&amp;rsquo;autorisation peut porter &lt;strong&gt;plusieurs&lt;/strong&gt; valeurs de &lt;code&gt;resource&lt;/code&gt; : c&amp;rsquo;est
+le seul paramètre qui puisse y être répété. Chacune est vérifiée, une valeur
+donnée deux fois compte une fois, et l&amp;rsquo;autorisation vaut pour les serveurs
+nommés. Après une connexion dont la demande d&amp;rsquo;autorisation portait
+&lt;code&gt;resource=https://fs-paris.example.org/&lt;/code&gt; et
+&lt;code&gt;resource=https://fs-lyon.example.org/&lt;/code&gt;, le code donne un jeton pour les deux, et
+chaque rafraîchissement peut demander l&amp;rsquo;un ou l&amp;rsquo;autre :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=authorization_code -d code=&amp;#34;$(cat code)&amp;#34; \
+-d code_verifier=&amp;#34;$(cat verifier)&amp;#34; -d redirect_uri=http://127.0.0.1:9/portal \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: [
+&amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;https://fs-lyon.example.org/&amp;#34;
+],
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-paris.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-lyon.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-lyon.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Avec un bloc &lt;code&gt;state&lt;/code&gt;, les ressources de l&amp;rsquo;autorisation sont conservées avec le
+jeton de rafraîchissement : un redémarrage ne l&amp;rsquo;élargit pas.&lt;/p&gt;
+&lt;p&gt;Une ressource que le client ne peut pas avoir est refusée aussi au point de
+terminaison d&amp;rsquo;autorisation, par une erreur renvoyée à l&amp;rsquo;URI de redirection du
+client. Une seule valeur de ce genre parmi des valeurs correctes fait refuser
+toute la demande :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o /dev/null -w &amp;#34;%{http_code} %{redirect_url}\n&amp;#34; -G http://127.0.0.1:28473/authorize \
+-d response_type=code -d client_id=portal -d scope=openid -d state=s1 \
+--data-urlencode redirect_uri=http://127.0.0.1:9/portal \
+-d code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM -d code_challenge_method=S256 \
+--data-urlencode resource=https://fs-paris.example.org/ \
+--data-urlencode resource=https://fs-nantes.example.org/
+302 http://127.0.0.1:9/portal?error=invalid_target&amp;amp;error_description=resource&amp;#43;%22https%3A%2F%2Ffs-nantes.example.org%2F%22&amp;#43;is&amp;#43;not&amp;#43;one&amp;#43;this&amp;#43;client&amp;#43;may&amp;#43;ask&amp;#43;a&amp;#43;token&amp;#43;for&amp;amp;iss=http%3A%2F%2F127.0.0.1%3A28473&amp;amp;state=s1&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;Au point de terminaison de jeton, une ressource par requête.&lt;/strong&gt; Un jeton est
+pour un serveur, pour les serveurs de l&amp;rsquo;autorisation, ou pour toute
+l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; ; jamais pour une liste choisie par la demande de jeton. Un second
+&lt;code&gt;resource&lt;/code&gt; y est refusé comme tout paramètre répété :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-paris.example.org/ \
+--data-urlencode resource=https://fs-lyon.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_request&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource appears more than once&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-rules"&gt;Les règles&lt;span class="hx:absolute hx:-mt-20" id="the-rules"&gt;&lt;/span&gt;
+&lt;a href="#the-rules" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;où&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;resource&lt;/code&gt; est accepté par le point de terminaison d&amp;rsquo;autorisation, et par le point de terminaison de jeton avec les octrois &lt;code&gt;authorization_code&lt;/code&gt; et &lt;code&gt;refresh_token&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;combien&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;au point de terminaison d&amp;rsquo;autorisation, plusieurs : chacun est vérifié, et un seul refusé fait refuser la demande. Au point de terminaison de jeton, un seul : un second donne &lt;code&gt;invalid_request&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;ce qui peut être nommé&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;une URI absolue sans fragment qui est, caractère pour caractère, une entrée de l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; du client&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;l&amp;rsquo;&lt;code&gt;aud&lt;/code&gt; du jeton&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;la ressource nommée au point de terminaison de jeton ; à défaut, les ressources qu&amp;rsquo;a nommées la demande d&amp;rsquo;autorisation, dans l&amp;rsquo;ordre donné ; à défaut des deux, toute l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; du client&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;un rafraîchissement&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;peut nommer l&amp;rsquo;une des ressources qu&amp;rsquo;a nommées la demande d&amp;rsquo;autorisation ou, si elle n&amp;rsquo;en nommait aucune, n&amp;rsquo;importe quelle URI de l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; du client. Le nouveau jeton de rafraîchissement garde l&amp;rsquo;autorisation entière&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;refusé&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;invalid_target&lt;/code&gt;, renvoyé à l&amp;rsquo;URI de redirection au point de terminaison d&amp;rsquo;autorisation, et rendu comme une erreur &lt;code&gt;400&lt;/code&gt; par le point de terminaison de jeton. Un rafraîchissement refusé ne consomme pas le jeton de rafraîchissement&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;autres octrois&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;resource&lt;/code&gt; avec &lt;code&gt;client_credentials&lt;/code&gt;, dans la demande d&amp;rsquo;autorisation d&amp;rsquo;appareil ou en interrogeant pour un jeton d&amp;rsquo;appareil est refusé avec &lt;code&gt;invalid_target&lt;/code&gt;, pas ignoré : un client qui a demandé un jeton pour un serveur ne doit pas en recevoir un pour un autre. Un jeton obtenu par appareil est toujours pour toute l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;les portées propres au fournisseur&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;un jeton portant &lt;code&gt;ssh&lt;/code&gt;, &lt;code&gt;nfs&lt;/code&gt;, &lt;code&gt;app_password&lt;/code&gt;, &lt;code&gt;wireguard&lt;/code&gt; ou &lt;code&gt;wireguard_peers&lt;/code&gt; est pour le seul fournisseur, et seul l&amp;rsquo;émetteur lui-même peut être nommé&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Le refus des autres octrois, au point de terminaison de jeton et dans la demande
+d&amp;rsquo;autorisation d&amp;rsquo;appareil :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=client_credentials \
+--data-urlencode resource=https://fs-paris.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource indicators are taken with the authorization_code and refresh_token grants&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/device_authorization -d client_id=files-cli \
+--data-urlencode resource=https://fs-paris.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource indicators are taken with the authorization_code and refresh_token grants&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="departures"&gt;Là où cela s&amp;rsquo;écarte de la RFC 8707&lt;span class="hx:absolute hx:-mt-20" id="departures"&gt;&lt;/span&gt;
+&lt;a href="#departures" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;RFC 8707&lt;/th&gt;
+&lt;th&gt;authn-bridge v0.23.0&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;§2 : « Multiple &lt;code&gt;resource&lt;/code&gt; parameters MAY be used »&lt;/td&gt;
+&lt;td&gt;au point de terminaison d&amp;rsquo;autorisation, tel quel. Au point de terminaison de jeton, un seul : un second &lt;code&gt;resource&lt;/code&gt; donne &lt;code&gt;invalid_request&lt;/code&gt;, ce que permet le §3 (« an authorization server may be unwilling or unable to fulfill a token request with multiple resources »)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.2 : le paramètre s&amp;rsquo;applique « for all grant types »&lt;/td&gt;
+&lt;td&gt;seulement &lt;code&gt;authorization_code&lt;/code&gt; et &lt;code&gt;refresh_token&lt;/code&gt;. Avec &lt;code&gt;client_credentials&lt;/code&gt; ou l&amp;rsquo;octroi par appareil, il est refusé avec &lt;code&gt;invalid_target&lt;/code&gt;, dans la demande d&amp;rsquo;autorisation d&amp;rsquo;appareil comme lors de l&amp;rsquo;interrogation&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2 : la valeur « SHOULD NOT include a query component »&lt;/td&gt;
+&lt;td&gt;non vérifié. Ce qui est vérifié, c&amp;rsquo;est que la valeur est absolue, n&amp;rsquo;a pas de fragment, et figure dans l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; du client&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2 : le serveur « may map from that value to a more general URI or abstract identifier »&lt;/td&gt;
+&lt;td&gt;aucune correspondance : l&amp;rsquo;&lt;code&gt;aud&lt;/code&gt; est la valeur demandée, comparée à &lt;code&gt;audience&lt;/code&gt; comme une chaîne&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.2 : « the authorization server should downscope the scope value » pour chaque ressource&lt;/td&gt;
+&lt;td&gt;non fait : la valeur de &lt;code&gt;scope&lt;/code&gt; reste celle de l&amp;rsquo;autorisation, quel que soit le serveur nommé&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.1 : une demande sans &lt;code&gt;resource&lt;/code&gt; MAY être traitée « by using a predefined default resource value »&lt;/td&gt;
+&lt;td&gt;la valeur par défaut est toute l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt; du client&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.2 : un rafraîchissement peut être limité « to those [resources] that were originally granted », et le jeton de rafraîchissement « is bound to the full original grant »&lt;/td&gt;
+&lt;td&gt;tel quel&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;Avant la v0.22.1&lt;/strong&gt;, la v0.22.0 refusait un &lt;code&gt;resource&lt;/code&gt; répété au point de
+terminaison d&amp;rsquo;autorisation par une page d&amp;rsquo;erreur, comme tout autre paramètre
+répété, si bien qu&amp;rsquo;une autorisation ne pouvait pas nommer deux serveurs ; et sa
+demande d&amp;rsquo;autorisation d&amp;rsquo;appareil ne lisait pas &lt;code&gt;resource&lt;/code&gt;, si bien qu&amp;rsquo;un
+appareil qui demandait un seul serveur recevait un jeton pour toute
+l&amp;rsquo;&lt;code&gt;audience&lt;/code&gt;.&lt;/p&gt;</description></item><item><title>Un jeton à la liaison, dans un champ qui n'est pas le mot de passe</title><link>https://go-authn.github.io/docs/0.4/fr/authnd/tokens/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/fr/authnd/tokens/</guid><description>
+&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/libraries/"&gt;go-authn/oidc&lt;/a&gt; vérifie un jeton et en tire une
+identité. La façon évidente d&amp;rsquo;en porter un jusqu&amp;rsquo;à un serveur LDAP est le champ du mot de passe,
+et cela fonctionne une fois puis cesse : le champ du mot de passe est l&amp;rsquo;endroit où le
+&lt;a href="https://go-authn.github.io/docs/0.4/fr/authnd/mfa/"&gt;bloc &lt;code&gt;mfa&lt;/code&gt;&lt;/a&gt; retire le code au bout, et
+un jeton ne peut pas être les deux.&lt;/p&gt;
+&lt;p&gt;Le jeton va donc là où le protocole lui a prévu une place. Les identifiants d&amp;rsquo;une liaison
+&lt;strong&gt;SASL&lt;/strong&gt; sont une chaîne d&amp;rsquo;octets à la forme propre au mécanisme, et la forme
+&lt;code&gt;OAUTHBEARER&lt;/code&gt; de RFC 7628 est un en-tête GS2 suivi de paires clé/valeur, dont l&amp;rsquo;une
+est &lt;code&gt;auth=Bearer &amp;lt;token&amp;gt;&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;n,,^Aauth=Bearer eyJ…^A^A&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Le champ du mot de passe n&amp;rsquo;est pas touché. Sur un même écouteur, au même moment, une
+personne peut taper un mot de passe avec un code au bout et une autre envoyer un
+jeton.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;oidc&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; issuer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.example.org/realms/staff&amp;#34; # the &amp;#34;iss&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;a&lt;/span&gt; &lt;span class="k"&gt;token&lt;/span&gt; &lt;span class="k"&gt;must&lt;/span&gt; &lt;span class="k"&gt;carry&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;and&lt;/span&gt; &lt;span class="k"&gt;where&lt;/span&gt; &lt;span class="k"&gt;discovery&lt;/span&gt; &lt;span class="k"&gt;starts&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # this server&amp;#39;s client id at the provider
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # username_claim = &amp;#34;preferred_username&amp;#34; which claim names the person here
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # jwks_url = &amp;#34;…&amp;#34; skips discovery, for a provider that does not publish it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # allow_plaintext = true only when TLS is terminated in front of this process
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;issuer&lt;/code&gt; et &lt;code&gt;audience&lt;/code&gt; sont obligatoires. Sans &lt;code&gt;username_claim&lt;/code&gt;, le nom est
+&lt;code&gt;preferred_username&lt;/code&gt;, puis &lt;code&gt;email&lt;/code&gt; quand &lt;code&gt;email_verified&lt;/code&gt; est vrai, puis &lt;code&gt;sub&lt;/code&gt;.
+Avec le bloc, le root DSE annonce le mécanisme :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; supportedSASLMechanisms
+dn:
+supportedSASLMechanisms: OAUTHBEARER&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Sans lui, chaque liaison SASL reçoit &lt;code&gt;authMethodNotSupported&lt;/code&gt; — &lt;em&gt;pas de cette
+façon&lt;/em&gt;, ce qui envoie un client ailleurs que &lt;em&gt;mauvais mot de passe&lt;/em&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="discovery-happens-at-startup"&gt;La découverte a lieu au démarrage&lt;span class="hx:absolute hx:-mt-20" id="discovery-happens-at-startup"&gt;&lt;/span&gt;
+&lt;a href="#discovery-happens-at-startup" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Le document de découverte et les clés du fournisseur sont lus au démarrage du serveur,
+et par &lt;code&gt;check&lt;/code&gt;. Un fournisseur injoignable arrête le serveur là où
+quelqu&amp;rsquo;un regarde, plutôt que de refuser chaque liaison plus tard :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc.hcl
+authnd: oidc &amp;#34;https://127.0.0.1:1/realms/staff&amp;#34;: oidc: reading https://127.0.0.1:1/realms/staff/.well-known/openid-configuration: Get &amp;#34;https://127.0.0.1:1/realms/staff/.well-known/openid-configuration&amp;#34;: dial tcp 127.0.0.1:1: connect: connection refused&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un émetteur qui n&amp;rsquo;est pas en &lt;code&gt;https&lt;/code&gt; est refusé, sauf en bouclage :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc-http.hcl
+authnd: oidc &amp;#34;http://login.example.org/realms/staff&amp;#34;: oidc: http://login.example.org/realms/staff is not https: the key set decides every signature, and over cleartext so does anybody on the way&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="how-many-factors-is-a-token"&gt;Combien de facteurs vaut un jeton ?&lt;span class="hx:absolute hx:-mt-20" id="how-many-factors-is-a-token"&gt;&lt;/span&gt;
+&lt;a href="#how-many-factors-is-a-token" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Ce que l&amp;rsquo;émetteur dit avoir vérifié, et rien de plus.&lt;/strong&gt; Un jeton porte
+l&amp;rsquo;&lt;code&gt;amr&lt;/code&gt; de RFC 8176, les méthodes que le fournisseur a utilisées. C&amp;rsquo;est la seule preuve
+qui existe, c&amp;rsquo;est donc ce que compte la politique &lt;code&gt;mfa&lt;/code&gt;, &lt;strong&gt;par nature&lt;/strong&gt; :&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;méthode &lt;code&gt;amr&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;nature&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;pwd&lt;/code&gt;, &lt;code&gt;pin&lt;/code&gt;, &lt;code&gt;kba&lt;/code&gt;, &lt;code&gt;mca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;connaissance&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;otp&lt;/code&gt;, &lt;code&gt;hwk&lt;/code&gt;, &lt;code&gt;swk&lt;/code&gt;, &lt;code&gt;sms&lt;/code&gt;, &lt;code&gt;tel&lt;/code&gt;, &lt;code&gt;sc&lt;/code&gt;, &lt;code&gt;pop&lt;/code&gt;, &lt;code&gt;user&lt;/code&gt;, &lt;code&gt;wia&lt;/code&gt;, &lt;code&gt;mfa&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;possession&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;fpt&lt;/code&gt;, &lt;code&gt;face&lt;/code&gt;, &lt;code&gt;iris&lt;/code&gt;, &lt;code&gt;retina&lt;/code&gt;, &lt;code&gt;vbm&lt;/code&gt;, &lt;code&gt;geo&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;inhérence&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;toute autre&lt;/td&gt;
+&lt;td&gt;inconnue, ce qui ne satisfait jamais &lt;code&gt;distinct_kinds&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;aucun &lt;code&gt;amr&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;un facteur, possession — le jeton lui-même&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Deux méthodes d&amp;rsquo;une même nature font un facteur. L&amp;rsquo;alternative serait que ce serveur
+invente un second facteur que personne n&amp;rsquo;a accompli ; et un serveur qui croit
+l&amp;rsquo;émetteur sur &lt;em&gt;qui&lt;/em&gt; est cette personne n&amp;rsquo;a pas de raison distincte de ne pas le croire sur
+&lt;em&gt;comment&lt;/em&gt; il l&amp;rsquo;a vérifié.&lt;/p&gt;
+&lt;p&gt;Avec un bloc &lt;code&gt;mfa&lt;/code&gt;, &lt;code&gt;check&lt;/code&gt; le dit :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check sasl
+ldaps://127.0.0.1:3636, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password account, uidObject uid
+tess the configuration file a password and a one-time-code secret account, uidObject uid
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+tess has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+a bind carries a password with a 6-digit code after it, of two different kinds
+or a token from http://127.0.0.1:18481, over SASL OAUTHBEARER over TLS
+a token counts for the factors its amr claim names, so one with no amr is refused by this policy
+alice has no second factor here, so a password cannot satisfy this policy; a token whose amr names two kinds still can
+no reader is declared: nothing may search, and binds are not affected
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;alice n&amp;rsquo;a pas de &lt;code&gt;totp_secret&lt;/code&gt;, si bien qu&amp;rsquo;un mot de passe avec un code ne peut jamais suffire
+dans son cas ; un jeton dont l&amp;rsquo;&lt;code&gt;amr&lt;/code&gt; nomme deux natures le peut, comme le montre la première liaison
+ci-dessous.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-the-binds-look-like"&gt;À quoi ressemblent les liaisons&lt;span class="hx:absolute hx:-mt-20" id="what-the-binds-look-like"&gt;&lt;/span&gt;
+&lt;a href="#what-the-binds-look-like" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;L&amp;rsquo;émetteur est ici un petit fournisseur de test en bouclage, et &lt;code&gt;oidctool&lt;/code&gt; un client de
+test écrit pour ces pages : il signe un jeton pour le nom donné, avec
+l&amp;rsquo;&lt;code&gt;amr&lt;/code&gt; donné, l&amp;rsquo;envoie dans une liaison &lt;code&gt;OAUTHBEARER&lt;/code&gt; (avec un &lt;code&gt;authzid&lt;/code&gt; quand un
+cinquième argument en nomme un), et affiche le code de résultat de la liaison et les
+identifiants SASL du serveur. Contre la configuration ci-dessus, en &lt;code&gt;ldaps://&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 0, serverSaslCreds
+$ ./oidctool alice &amp;#39;&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;kba&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls tess
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;insufficient_scope&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}
+$ ./oidctool zed &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;invalid_token&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;0 est le succès, 49 &lt;code&gt;invalidCredentials&lt;/code&gt;, 14 &lt;code&gt;saslBindInProgress&lt;/code&gt;. Un jeton
+&lt;code&gt;[&amp;quot;pwd&amp;quot;,&amp;quot;kba&amp;quot;]&lt;/code&gt; nomme deux méthodes d&amp;rsquo;une même nature, il compte donc une fois. Et
+vers la même configuration sans &lt;code&gt;cert_file&lt;/code&gt; ni &lt;code&gt;key_file&lt;/code&gt;, sur un écouteur
+en clair :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3893 clear
+bind result 13&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;13 est &lt;code&gt;confidentialityRequired&lt;/code&gt; : un jeton n&amp;rsquo;est pas accepté sur une connexion
+qui n&amp;rsquo;est pas chiffrée.&lt;/p&gt;
+&lt;p&gt;Ce que le serveur a écrit pour les quatre liaisons refusées sur &lt;code&gt;ldaps://&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: the token is for &amp;#34;alice&amp;#34; and asks to act as &amp;#34;tess&amp;#34;; this server does not delegate
+zed was refused: the token verified, and no source here publishes anybody by that name&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;et pour celle en clair :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Une liaison &lt;code&gt;OAUTHBEARER&lt;/code&gt; réussie laisse la connexion liée comme
+&lt;code&gt;uid=&amp;lt;name&amp;gt;,ou=people,&amp;lt;base_dn&amp;gt;&lt;/code&gt;, écrit comme l&amp;rsquo;est chaque autre entrée.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;Ce qu&amp;rsquo;il refuse&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Un jeton en clair.&lt;/strong&gt; Un jeton porteur n&amp;rsquo;a pas besoin d&amp;rsquo;autre moitié : quiconque le lit
+sur le réseau est cette personne jusqu&amp;rsquo;à son expiration. &lt;code&gt;allow_plaintext = true&lt;/code&gt;
+existe pour un déploiement qui termine TLS devant ce processus, et
+&lt;code&gt;check&lt;/code&gt; dit alors &lt;em&gt;a token may cross this socket in the clear&lt;/em&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Une demande d&amp;rsquo;être quelqu&amp;rsquo;un d&amp;rsquo;autre.&lt;/strong&gt; L&amp;rsquo;en-tête GS2 peut nommer un &lt;code&gt;authzid&lt;/code&gt;. Un
+jeton pour alice portant une demande d&amp;rsquo;agir en tant que tess est refusé, et non traité
+discrètement comme l&amp;rsquo;un ou l&amp;rsquo;autre.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Un jeton pour quelqu&amp;rsquo;un qu&amp;rsquo;aucune source ici ne publie.&lt;/strong&gt; Le client reçoit seulement
+&lt;code&gt;invalid_token&lt;/code&gt; ; quels noms existent n&amp;rsquo;est pas une information à livrer une devinette
+à la fois. La raison est dans la sortie du serveur.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;La liaison de canal (channel binding).&lt;/strong&gt; Un en-tête GS2 avec &lt;code&gt;p=&lt;/code&gt; — le client exige
+la liaison de canal — est refusé : ce serveur ne la fait pas, et accepter
+l&amp;rsquo;en-tête sans rien lier laisserait le client croire que le canal a été
+vérifié.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Un mécanisme que ce serveur ne parle pas&lt;/strong&gt;, avec &lt;code&gt;authMethodNotSupported&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Un refus du jeton lui-même est celui de RFC 7628 §3.2.3 : une erreur JSON portant
+&lt;code&gt;openid-configuration&lt;/code&gt;, renvoyée comme &lt;code&gt;saslBindInProgress&lt;/code&gt; pour que le client puisse
+envoyer le &lt;code&gt;^A&lt;/code&gt; qui clôt l&amp;rsquo;échange. Un jeton qui se vérifie mais ne
+satisfait pas la politique &lt;code&gt;mfa&lt;/code&gt; reçoit simplement &lt;code&gt;invalidCredentials&lt;/code&gt;, comme le montrent
+les deuxième et troisième liaisons ci-dessus.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Un jeton ne définit pas de mot de passe&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Une personne qui ne s&amp;rsquo;est jamais connectée qu&amp;rsquo;avec un jeton ne peut pas se servir de cette session pour
+se donner un premier mot de passe, et une personne qui en a un doit toujours l&amp;rsquo;envoyer
+pour le changer. Voir &lt;a href="https://go-authn.github.io/docs/0.4/fr/authnd/passwords/"&gt;changer un mot de passe&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>oidc — vérifier un jeton porteur</title><link>https://go-authn.github.io/docs/0.4/fr/libraries/oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/fr/libraries/oidc/</guid><description>
+&lt;p&gt;&lt;strong&gt;Qui ce jeton porteur dit-il être à l&amp;rsquo;origine de la demande, et faut-il le croire ?&lt;/strong&gt;
+La découverte, le jeu de clés, et les vérifications qu&amp;rsquo;un serveur de ressources doit faire — en Go
+pur, &lt;strong&gt;sans aucune dépendance&lt;/strong&gt; en dehors de la bibliothèque standard.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/oidc@v0.4.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Il n&amp;rsquo;y a pas ici de parcours de connexion : pas de redirection, pas d&amp;rsquo;échange de code, pas de secret client,
+pas de cookies. C&amp;rsquo;est la moitié &lt;strong&gt;serveur de ressources&lt;/strong&gt; — quelque chose arrive avec un
+jeton, et ceci dit de qui il s&amp;rsquo;agit.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="example"&gt;Exemple&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
+&lt;a href="#example" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;package&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;context&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;log&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;net/http&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;strings&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;github.com/go-authn/oidc&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// Discovery happens here, at startup: an issuer that does not answer is&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// a server that cannot authenticate anybody.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;oidc&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;New&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;context&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Background&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;oidc&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Config&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Issuer&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;https://login.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Audience&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;at+jwt&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// a resource server takes access tokens, not ID tokens&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Fatal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;HandleFunc&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ResponseWriter&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;r&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Request&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;raw&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ok&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;strings&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;CutPrefix&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;r&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Header&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;Authorization&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;Bearer &amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;ok&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Error&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;unauthorized&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;StatusUnauthorized&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;tok&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Verify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;r&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Context&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;raw&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// which check refused it: for this log only&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Error&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;unauthorized&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;StatusUnauthorized&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Fprintln&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;tok&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Subject&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;tok&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Username&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;tok&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Groups&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Fatal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;:8080&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un &lt;code&gt;Verifier&lt;/code&gt; peut être utilisé en concurrence et détient le jeu de clés : construisez-en un au
+démarrage et gardez-le. L&amp;rsquo;erreur de &lt;code&gt;Verify&lt;/code&gt; dit quelle vérification a refusé le jeton, pour
+le journal du serveur ; le client reçoit un seul et même refus, quelle que soit la vérification.&lt;/p&gt;
+&lt;p&gt;Trois configurations que &lt;code&gt;New&lt;/code&gt; refuse avant que quoi que ce soit ne soit récupéré :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;package&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;context&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;github.com/go-authn/oidc&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ctx&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;context&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Background&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;cfg&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;range&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="nx"&gt;oidc&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Config&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Issuer&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;http://login.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Audience&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Issuer&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;https://login.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Audience&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;oidc&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;New&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ctx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;cfg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;oidc: http://login.example.org is not https: the key set decides every signature, and over cleartext so does anybody on the way
+oidc: no audience: a token minted for another service is a valid token, and a verifier that does not check accepts every one the issuer ever signed
+oidc: no issuer: a verifier without one accepts tokens from anybody&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Le reste de &lt;code&gt;Config&lt;/code&gt; est facultatif : &lt;code&gt;JWKSURL&lt;/code&gt; saute la découverte ; &lt;code&gt;UsernameClaim&lt;/code&gt;
+et &lt;code&gt;GroupsClaim&lt;/code&gt; (par défaut &lt;code&gt;groups&lt;/code&gt;) nomment les revendications ; &lt;code&gt;ClockSkew&lt;/code&gt; et
+&lt;code&gt;MinRefresh&lt;/code&gt; valent une minute par défaut ; &lt;code&gt;Client&lt;/code&gt; est le client HTTP, pour un proxy,
+une AC privée ou un délai d&amp;rsquo;expiration. Un &lt;code&gt;Token&lt;/code&gt; lit &lt;code&gt;Subject&lt;/code&gt;, &lt;code&gt;Issuer&lt;/code&gt;, &lt;code&gt;Audience&lt;/code&gt;,
+&lt;code&gt;Email&lt;/code&gt;, &lt;code&gt;EmailVerified&lt;/code&gt;, &lt;code&gt;Username&lt;/code&gt;, &lt;code&gt;Groups&lt;/code&gt;, &lt;code&gt;Expiry&lt;/code&gt;, &lt;code&gt;NotBefore&lt;/code&gt; et
+&lt;code&gt;IssuedAt&lt;/code&gt; ; &lt;code&gt;Claim(name, &amp;amp;v)&lt;/code&gt; décode toute autre revendication, et &lt;code&gt;Has(name)&lt;/code&gt; dit
+si elle est présente.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-accepts"&gt;Ce qu&amp;rsquo;il accepte&lt;span class="hx:absolute hx:-mt-20" id="what-it-accepts"&gt;&lt;/span&gt;
+&lt;a href="#what-it-accepts" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Dix algorithmes de signature, sous forme de &lt;strong&gt;liste d&amp;rsquo;autorisation&lt;/strong&gt; : &lt;code&gt;RS256&lt;/code&gt; &lt;code&gt;RS384&lt;/code&gt; &lt;code&gt;RS512&lt;/code&gt;,
+&lt;code&gt;PS256&lt;/code&gt; &lt;code&gt;PS384&lt;/code&gt; &lt;code&gt;PS512&lt;/code&gt;, &lt;code&gt;ES256&lt;/code&gt; &lt;code&gt;ES384&lt;/code&gt; &lt;code&gt;ES512&lt;/code&gt;, et &lt;code&gt;EdDSA&lt;/code&gt; (Ed25519). Un
+jeton dont l&amp;rsquo;&lt;code&gt;alg&lt;/code&gt; n&amp;rsquo;est pas l&amp;rsquo;un d&amp;rsquo;eux est refusé avant que la moindre clé ne soit récupérée.
+&lt;code&gt;alg: none&lt;/code&gt; et la famille HMAC sont refusés du fait de ne pas figurer sur la liste, et la
+clé doit être de la sorte qu&amp;rsquo;exige l&amp;rsquo;algorithme : un jeton qui se réclame de &lt;code&gt;RS256&lt;/code&gt; est vérifié avec
+une clé RSA ou refusé.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;Ce qu&amp;rsquo;il refuse, et pourquoi&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;pourquoi&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;alg: none&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;un jeton qui se dit non signé est un objet JSON que quelqu&amp;rsquo;un a tapé&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;HMAC contre une clé publique&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;HS256&lt;/code&gt; prend un secret partagé, et la clé de l&amp;rsquo;émetteur est publique : n&amp;rsquo;importe qui pourrait fabriquer un jeton&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;un émetteur qui se contente de &lt;strong&gt;commencer par&lt;/strong&gt; le bon&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;iss&lt;/code&gt; est comparé en entier : &lt;code&gt;https://login.example.org.evil.test&lt;/code&gt; commence par la bonne chaîne&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;une &lt;strong&gt;audience&lt;/strong&gt; absente ou erronée&lt;/td&gt;
+&lt;td&gt;un jeton fabriqué pour un autre service est valide ; il n&amp;rsquo;est pas adressé à celui-ci&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;un jeton &lt;strong&gt;sans expiration&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;c&amp;rsquo;est un mot de passe que quelqu&amp;rsquo;un peut copier une fois&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;un émetteur, un jeu de clés ou une redirection &lt;strong&gt;en HTTP en clair&lt;/strong&gt;, sauf vers le loopback&lt;/td&gt;
+&lt;td&gt;le jeu de clés décide de chaque signature&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;une clé RSA de moins de 2048 bits, ou dont &lt;code&gt;n&lt;/code&gt; ou &lt;code&gt;e&lt;/code&gt; n&amp;rsquo;est pas sous sa forme la plus courte ; un point EC qui n&amp;rsquo;est pas sur sa courbe&lt;/td&gt;
+&lt;td&gt;les signatures d&amp;rsquo;une clé courte peuvent être contrefaites ; avant la v0.2.2, un module de 1024 bits complété d&amp;rsquo;octets nuls passait pour 2048 bits&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;une clé publiée avec un &lt;code&gt;use&lt;/code&gt; autre que &lt;code&gt;sig&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;un jeu de clés contient légitimement aussi des clés de chiffrement&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;avec &lt;code&gt;Type&lt;/code&gt; défini, un jeton d&amp;rsquo;un autre &lt;code&gt;typ&lt;/code&gt; ; sans lui, un &lt;code&gt;typ&lt;/code&gt; autre que &lt;code&gt;JWT&lt;/code&gt; ou &lt;code&gt;at+jwt&lt;/code&gt; (un jeton sans en-tête &lt;code&gt;typ&lt;/code&gt; passe)&lt;/td&gt;
+&lt;td&gt;RFC 9068 §4 : un serveur de ressources vérifie &lt;code&gt;typ: at+jwt&lt;/code&gt;, sinon il prend un jeton d&amp;rsquo;identité (ID token) pour un jeton d&amp;rsquo;accès dès que les audiences concordent&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;une partie qui n&amp;rsquo;est pas en base64url canonique&lt;/td&gt;
+&lt;td&gt;un jeton se vérifie comme une seule chaîne&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Le &lt;code&gt;s&lt;/code&gt; et le &lt;code&gt;n − s&lt;/code&gt; d&amp;rsquo;ECDSA se vérifient tous les deux, comme l&amp;rsquo;algorithme le permet. Une liste de refus ou
+un cache anti-rejeu se fonde donc sur &lt;code&gt;jti&lt;/code&gt; ou &lt;code&gt;sub&lt;/code&gt;, jamais sur le jeton tel qu&amp;rsquo;il a été envoyé.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Les clés changent, et une clé inconnue n&amp;rsquo;est pas un moyen de marteler l&amp;rsquo;émetteur.&lt;/strong&gt; Une
+signature que rien de détenu ne peut vérifier vaut une nouvelle récupération du jeu de clés par
+&lt;code&gt;MinRefresh&lt;/code&gt;, que le &lt;code&gt;kid&lt;/code&gt; soit nouveau ou que le même &lt;code&gt;kid&lt;/code&gt; porte une nouvelle clé.
+Les jetons qui ont besoin du jeu de clés pendant qu&amp;rsquo;une récupération est en cours l&amp;rsquo;attendent, et une
+récupération qui échoue compte quand même.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Quel nom donne &lt;code&gt;Username()&lt;/code&gt;.&lt;/strong&gt; Par défaut &lt;code&gt;preferred_username&lt;/code&gt;, puis
+&lt;code&gt;email&lt;/code&gt; &lt;strong&gt;seulement quand &lt;code&gt;email_verified&lt;/code&gt; est vrai&lt;/strong&gt;, puis &lt;code&gt;sub&lt;/code&gt;. Une adresse e-mail non vérifiée
+est une chaîne que la personne a tapée (OIDC Core §5.1). Une &lt;code&gt;UsernameClaim&lt;/code&gt; configurée est
+lue telle que nommée, sans repli.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;Ce contre quoi il est vérifié&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
+&lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;pyjwt&lt;/strong&gt; signe chaque jeton de la suite de tests, si bien que le vérificateur n&amp;rsquo;est jamais jugé
+par un signataire sorti des mêmes mains. Le jeton de confusion HMAC est forgé à la main,
+parce que pyjwt refuse de le produire. &lt;code&gt;testdata/fixed.json&lt;/code&gt; — des jetons que pyjwt a
+signés une fois avec une clé fixe — permet aux voies d&amp;rsquo;architecture, s390x comprise, de
+vérifier de vraies signatures avec l&amp;rsquo;horloge figée. La voie de test Linux, le détecteur
+de concurrence et la voie de couverture installent pyjwt et positionnent &lt;code&gt;OIDC_REQUIRE_JUDGE&lt;/code&gt;, si bien qu&amp;rsquo;un
+pyjwt absent fait échouer au lieu de sauter. Accepter HMAC, comparer l&amp;rsquo;émetteur par
+préfixe et sauter la vérification de l&amp;rsquo;audience ont chacun été essayés délibérément, et chacun
+fait passer un test au rouge. Le plancher de la voie de couverture est de 90 %.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="reference"&gt;Référence&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
+&lt;a href="#reference" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/oidc@v0.4.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/oidc@v0.4.0&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>
