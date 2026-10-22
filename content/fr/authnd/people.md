@@ -74,6 +74,20 @@ ldap_bind: Invalid credentials (49)
 ```
 bob and eli cannot bind with a password: their sources hold only what an SMB server needs (an NT hash), which a bind cannot be checked against
 ```
+
+**Pourquoi c'est refusé, par conception.** Une empreinte NT est
+`MD4(UTF16LE(password))`, sans sel et rapide à calculer (MS-NLMP §3.3.1,
+NTOWFv1). L'accepter pour vérifier des liaisons LDAP élargirait ce qu'une
+empreinte divulguée ouvre, de SMB à toutes les applications qui se lient par
+authnd. Kerberos refuse ces personnes pour une raison voisine : l'empreinte NT
+est la clé RC4-HMAC (RFC 4757 §2), et le royaume n'émet que de l'AES. C'est une
+décision délibérée, non une fonction manquante, et aucune option ne la change.
+
+**Que faire à la place.** En migrant depuis un annuaire qui ne détient que des
+empreintes NT (Samba, un AD exporté), donnez à chaque personne un vrai mot de
+passe ou une vérification du mot de passe dans sa source : une réinitialisation
+du mot de passe, ou une source `users "ldap"` dont l'annuaire amont vérifie
+lui-même le mot de passe. Ne gardez pas l'empreinte NT comme seul identifiant.
 {{< /callout >}}
 
 ## Dans une base de données SQL {#in-a-sql-database}

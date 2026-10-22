@@ -74,6 +74,21 @@ ldap_bind: Invalid credentials (49)
 ```
 bob and eli cannot bind with a password: their sources hold only what an SMB server needs (an NT hash), which a bind cannot be checked against
 ```
+
+**Warum es abgelehnt wird, mit Absicht.** Ein NT-Hash ist
+`MD4(UTF16LE(password))`, ungesalzen und schnell zu berechnen (MS-NLMP §3.3.1,
+NTOWFv1). Ihn zur Prüfung von LDAP-Binds zu akzeptieren, würde ausweiten, was
+ein abgeflossener Hash öffnet: von SMB auf jede Anwendung, die sich über authnd
+bindet. Kerberos lehnt diese Personen aus einem verwandten Grund ab: Der
+NT-Hash ist der RC4-HMAC-Schlüssel (RFC 4757 §2), und der Realm stellt nur AES
+aus. Das ist eine bewusste Entscheidung, keine fehlende Funktion, und keine
+Option ändert sie.
+
+**Was stattdessen zu tun ist.** Bei der Migration aus einem Verzeichnis, das nur
+NT-Hashes hält (Samba, ein exportiertes AD), geben Sie jeder Person ein echtes
+Passwort oder eine Passwortprüfung in ihrer Quelle: ein Zurücksetzen des
+Passworts oder eine `users "ldap"`-Quelle, deren Upstream-Verzeichnis das
+Passwort selbst prüft. Behalten Sie den NT-Hash nicht als einzige Zugangsdaten.
 {{< /callout >}}
 
 ## In einer SQL-Datenbank {#in-a-sql-database}
