@@ -2,7 +2,7 @@
 title: "Las bibliotecas, una pregunta cada una"
 linkTitle: "Bibliotecas"
 weight: 50
-description: "Los trece módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
+description: "Los catorce módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
 tags: [bibliotecas]
 ---
 
@@ -28,6 +28,7 @@ Todos son Go puro y se compilan con `CGO_ENABLED=0`.
 | [krl]({{< relref "/libraries/krl.md" >}}) | ¿está revocado este certificado o esta clave SSH, tal como respondería sshd? | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | ¿de dónde procede el certificado de servidor TLS de un demonio? | v0.5.2 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | ¿puede conectarse esta clave WireGuard, y de quién es? | v0.1.1 | `github.com/go-authn/wireguard` |
+| [scim]({{< relref "/libraries/scim.md" >}}) | ¿a quién acaba de crear, cambiar o eliminar el proveedor de identidad? | v0.1.0 | `github.com/go-authn/scim` |
 
 ## Cómo se agrupan {#how-they-group}
 
@@ -57,6 +58,9 @@ guarda contraseñas.
 de servicios SAML 2.0 delante de una federación como RENATER o eduGAIN.
 [oidc]({{< relref "/libraries/oidc.md" >}}) verifica los tokens OpenID Connect que
 firma un proveedor: la mitad del servidor de recursos, sin flujo de inicio de sesión.
+[scim]({{< relref "/libraries/scim.md" >}}) va en el otro sentido: el punto de
+acceso SCIM 2.0 al que llama un proveedor de identidad para crear, actualizar y
+eliminar las personas y los grupos de su aplicación.
 
 **Revocación y certificados.** [krl]({{< relref "/libraries/krl.md" >}}) lee, escribe
 y comprueba las listas de revocación de claves de OpenSSH.

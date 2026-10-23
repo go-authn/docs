@@ -2,7 +2,7 @@
 title: "The libraries, one question each"
 linkTitle: "Libraries"
 weight: 50
-description: "The thirteen go-authn Go modules: the question each one answers, the version these pages describe, and why they are separate modules."
+description: "The fourteen go-authn Go modules: the question each one answers, the version these pages describe, and why they are separate modules."
 tags: [libraries]
 ---
 
@@ -28,6 +28,7 @@ All of them are pure Go and build with `CGO_ENABLED=0`.
 | [krl]({{< relref "/libraries/krl.md" >}}) | is this SSH certificate or key revoked, as sshd would answer? | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | where does a daemon's TLS server certificate come from? | v0.5.2 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | may this WireGuard key connect, and whose is it? | v0.1.1 | `github.com/go-authn/wireguard` |
+| [scim]({{< relref "/libraries/scim.md" >}}) | who has the identity provider just created, changed or deleted? | v0.1.0 | `github.com/go-authn/scim` |
 
 ## How they group
 
@@ -57,6 +58,9 @@ holds passwords.
 SAML 2.0 service provider in front of a federation such as RENATER or eduGAIN.
 [oidc]({{< relref "/libraries/oidc.md" >}}) verifies the OpenID Connect tokens
 a provider signs — the resource-server half, with no login flow.
+[scim]({{< relref "/libraries/scim.md" >}}) is the other direction: the SCIM 2.0
+endpoint an identity provider calls to create, update and delete the people and
+groups of your application.
 
 **Revocation and certificates.** [krl]({{< relref "/libraries/krl.md" >}})
 reads, writes and checks OpenSSH key revocation lists.

@@ -40,7 +40,7 @@ take a name somebody else may need.
 ## And the libraries under them
 
 The programs are thin. What they do lives in
-[thirteen modules]({{< relref "/libraries/_index.md" >}}), one question each, so
+[fourteen modules]({{< relref "/libraries/_index.md" >}}), one question each, so
 that a service which only *accepts* Kerberos tickets never links a KDC, and one
 that only checks a one-time code never links a directory.
 

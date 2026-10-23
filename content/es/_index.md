@@ -40,7 +40,7 @@ nombre que otra persona puede necesitar.
 ## Y las bibliotecas que hay debajo {#and-the-libraries-under-them}
 
 Los programas son finos. Lo que hacen reside en
-[trece módulos]({{< relref "/libraries/_index.md" >}}), una pregunta cada uno, de modo
+[catorce módulos]({{< relref "/libraries/_index.md" >}}), una pregunta cada uno, de modo
 que un servicio que solo *acepta* tickets Kerberos nunca enlaza un KDC, y uno que
 solo comprueba un código de un solo uso nunca enlaza un directorio.
 

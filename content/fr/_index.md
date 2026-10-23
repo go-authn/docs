@@ -40,7 +40,7 @@ prendrait un nom dont quelqu'un d'autre pourrait avoir besoin.
 ## Et les bibliothèques en dessous {#and-the-libraries-under-them}
 
 Les programmes sont minces. Ce qu'ils font réside dans
-[treize modules]({{< relref "/libraries/_index.md" >}}), une question chacun, de sorte
+[quatorze modules]({{< relref "/libraries/_index.md" >}}), une question chacun, de sorte
 qu'un service qui ne fait qu'*accepter* des tickets Kerberos ne lie jamais un KDC, et qu'un
 service qui ne vérifie qu'un code à usage unique ne lie jamais un annuaire.
 
