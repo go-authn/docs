@@ -2,7 +2,7 @@
 title: "Die Bibliotheken, je eine Frage"
 linkTitle: "Bibliotheken"
 weight: 50
-description: "Die dreizehn Go-Module von go-authn: die Frage, die jedes beantwortet, die Version, die diese Seiten beschreiben, und warum sie getrennte Module sind."
+description: "Die vierzehn Go-Module von go-authn: die Frage, die jedes beantwortet, die Version, die diese Seiten beschreiben, und warum sie getrennte Module sind."
 tags: [bibliotheken]
 ---
 
@@ -28,6 +28,7 @@ Alle sind reines Go und bauen mit `CGO_ENABLED=0`.
 | [krl]({{< relref "/libraries/krl.md" >}}) | Ist dieses SSH-Zertifikat oder dieser Schlüssel widerrufen, so wie sshd antworten würde? | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | Woher kommt das TLS-Serverzertifikat eines Daemons? | v0.5.2 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | Darf dieser WireGuard-Schlüssel sich verbinden, und wem gehört er? | v0.1.1 | `github.com/go-authn/wireguard` |
+| [scim]({{< relref "/libraries/scim.md" >}}) | Wen hat der Identitätsanbieter gerade angelegt, geändert oder gelöscht? | v0.1.0 | `github.com/go-authn/scim` |
 
 ## Wie sie sich gruppieren {#how-they-group}
 
@@ -57,6 +58,9 @@ Passwörter hält.
 SAML-2.0-Service-Provider vor einer Föderation wie RENATER oder eduGAIN.
 [oidc]({{< relref "/libraries/oidc.md" >}}) prüft die OpenID-Connect-Tokens,
 die ein Anbieter signiert – die Hälfte des Resource-Servers, ohne Anmeldeablauf.
+[scim]({{< relref "/libraries/scim.md" >}}) geht in die andere Richtung: der
+SCIM-2.0-Endpunkt, den ein Identitätsanbieter aufruft, um die Personen und
+Gruppen Ihrer Anwendung anzulegen, zu aktualisieren und zu löschen.
 
 **Widerruf und Zertifikate.** [krl]({{< relref "/libraries/krl.md" >}})
 liest, schreibt und prüft OpenSSH-Sperrlisten für Schlüssel.

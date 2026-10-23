@@ -40,7 +40,7 @@ würde einen Namen belegen, den jemand anderes brauchen könnte.
 ## Und die Bibliotheken darunter {#and-the-libraries-under-them}
 
 Die Programme sind schlank. Was sie tun, steckt in
-[dreizehn Modulen]({{< relref "/libraries/_index.md" >}}), eines pro Frage, sodass
+[vierzehn Modulen]({{< relref "/libraries/_index.md" >}}), eines pro Frage, sodass
 ein Dienst, der Kerberos-Tickets nur *annimmt*, nie einen KDC einbindet, und einer,
 der nur einen Einmalcode prüft, nie ein Verzeichnis.
 
