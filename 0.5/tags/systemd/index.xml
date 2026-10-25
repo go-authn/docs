@@ -1,0 +1,1045 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Systemd</title><link>https://go-authn.github.io/docs/0.5/tags/systemd/</link><description>Recent content in Systemd on go-authn</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://go-authn.github.io/docs/0.5/tags/systemd/index.xml" rel="self" type="application/rss+xml"/><item><title>Installing authn-bridge</title><link>https://go-authn.github.io/docs/0.5/authn-bridge/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/authn-bridge/install/</guid><description>
+&lt;p&gt;The repository ships the unit and the user it runs as:&lt;code&gt;packaging/systemd/authn-bridge.service&lt;/code&gt; and&lt;code&gt;packaging/sysusers.d/authn-bridge.conf&lt;/code&gt;. Everything below runs as root unless
+it says otherwise.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/usr/local/bin/authn-bridge&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the binary&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/authn-bridge/*.hcl&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the configuration, read in name order; &lt;code&gt;root:authn-bridge&lt;/code&gt;, &lt;code&gt;0750&lt;/code&gt;, files &lt;code&gt;0640&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-bridge/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;keys, the subject salt, the SQLite state, the certificates issued, the disabled list; &lt;code&gt;authn-bridge&lt;/code&gt;, &lt;code&gt;0700&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/run/authn-bridge/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the admin socket, when the configuration asks for one&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="the-binary"&gt;The binary&lt;span class="hx:absolute hx:-mt-20" id="the-binary"&gt;&lt;/span&gt;
+&lt;a href="#the-binary" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A release carries &lt;code&gt;authn-bridge-&amp;lt;os&amp;gt;-&amp;lt;arch&amp;gt;&lt;/code&gt; for Linux, macOS and Windows on
+amd64 and arm64, a &lt;code&gt;SHA256SUMS&lt;/code&gt; manifest and a build provenance attestation per
+binary; &lt;a href="https://go-authn.github.io/docs/0.5/security/verifying-releases/"&gt;verifying a download&lt;/a&gt;
+says how to check both. Or build it, which records the version in the binary:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.1
+$ authn-bridge --version
+authn-bridge version v0.23.1&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The path matters: from v0.20.0 the program lives in &lt;code&gt;internal/app&lt;/code&gt; and the
+command in &lt;code&gt;cmd/authn-bridge&lt;/code&gt;, so &lt;code&gt;go install github.com/go-authn/bridge@...&lt;/code&gt;
+builds nothing.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-user-and-why-it-is-not-a-dynamic-one"&gt;The user, and why it is not a dynamic one&lt;span class="hx:absolute hx:-mt-20" id="the-user-and-why-it-is-not-a-dynamic-one"&gt;&lt;/span&gt;
+&lt;a href="#the-user-and-why-it-is-not-a-dynamic-one" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0755&lt;/span&gt; authn-bridge-linux-amd64 /usr/local/bin/authn-bridge
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -D -m &lt;span class="m"&gt;0644&lt;/span&gt; authn-bridge.conf /etc/sysusers.d/authn-bridge.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemd-sysusers &lt;span class="c1"&gt;# creates the authn-bridge user and group&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; authn-bridge.service /etc/systemd/system/authn-bridge.service
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl daemon-reload
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -d -m &lt;span class="m"&gt;0750&lt;/span&gt; -o root -g authn-bridge /etc/authn-bridge
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -d -m &lt;span class="m"&gt;0700&lt;/span&gt; -o authn-bridge -g authn-bridge /var/lib/authn-bridge&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The unit names &lt;code&gt;User=authn-bridge&lt;/code&gt;, not &lt;code&gt;DynamicUser=&lt;/code&gt;. The signing key, the
+subject salt, the SAML key and the certificate authorities are made &lt;strong&gt;before&lt;/strong&gt;
+the first start, live for years, and must keep one owner across reinstalls and
+restores from backup. A dynamic user gets its UID when the service starts.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-keys"&gt;The keys&lt;span class="hx:absolute hx:-mt-20" id="the-keys"&gt;&lt;/span&gt;
+&lt;a href="#the-keys" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Run &lt;code&gt;keygen&lt;/code&gt; as the service&amp;rsquo;s user, so that it owns what it writes. It refuses
+to overwrite a file that is already there:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ mkdir var/nfs-ca
+$ authn-bridge keygen --key var/oidc.key --salt var/salt --ssh-ca var/ssh-ca --x509-ca var/nfs-ca
+wrote var/ssh-ca; its public half, for go-fileshare&amp;#39;s trusted_user_ca_file:
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBNOYvUrAPdRTB&amp;#43;38aml&amp;#43;twPN&amp;#43;2k1shD3l62v8NxrIje go-authn-bridge-ca
+wrote var/oidc.key
+wrote var/nfs-ca/ca.crt and its key; the certificate is what go-fileshare trusts for NFS over TLS
+wrote var/salt -- keep it: a new salt is a new subject for everybody
+$ authn-bridge keygen --key var/oidc.key
+authn-bridge: open var/oidc.key: file exists&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;On a server the paths are under &lt;code&gt;/var/lib/authn-bridge&lt;/code&gt;, and the command is&lt;code&gt;runuser -u authn-bridge -- authn-bridge keygen ...&lt;/code&gt;.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;flag&lt;/th&gt;
+&lt;th&gt;writes&lt;/th&gt;
+&lt;th&gt;for&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;--key&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;an RSA 3072 key&lt;/td&gt;
+&lt;td&gt;ID tokens (RS256), published at &lt;code&gt;/jwks&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;--salt&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;32 random bytes&lt;/td&gt;
+&lt;td&gt;every &lt;code&gt;sub&lt;/code&gt;, which is an HMAC under it&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;--access-token-key&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;a P-256 key&lt;/td&gt;
+&lt;td&gt;access tokens signed ES256 instead, much shorter&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;--ssh-ca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;an Ed25519 key in OpenSSH format&lt;/td&gt;
+&lt;td&gt;the &lt;a href="https://go-authn.github.io/docs/0.5/authn-bridge/certificates/"&gt;SSH certificates&lt;/a&gt; and the KRL&amp;rsquo;s signature&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;--x509-ca DIR&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;DIR/ca.key&lt;/code&gt; (P-256) and &lt;code&gt;DIR/ca.crt&lt;/code&gt;, valid ten years, path length 0&lt;/td&gt;
+&lt;td&gt;NFS client certificates and the CRL&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Back up the salt, and never change it&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;A new salt gives every person a new &lt;code&gt;sub&lt;/code&gt;, and every relying party then
+sees a new person. The same goes for deleting it on uninstall.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The SAML key and certificate are made with &lt;code&gt;openssl&lt;/code&gt;: they are what the
+federation registers and what every IdP encrypts to. The key must be RSA (IdPs
+encrypt to it with RSA-OAEP). It is not the TLS certificate, and does not change
+with it.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;runuser -u authn-bridge -- sh -c &lt;span class="s1"&gt;&amp;#39;umask 077; openssl req -x509 -newkey rsa:3072 -nodes -days 3650 \
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="s1"&gt; -subj &amp;#34;/CN=login.example.org&amp;#34; \
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="s1"&gt; -keyout /var/lib/authn-bridge/saml.key -out /var/lib/authn-bridge/saml.crt&amp;#39;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The federation&amp;rsquo;s metadata signing certificate comes from the federation, and so
+does its SHA-256 fingerprint: take the fingerprint from the federation&amp;rsquo;s web
+page, never from the same download as the certificate. See&lt;a href="https://go-authn.github.io/docs/0.5/authn-bridge/federation/"&gt;the federation side&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-unit"&gt;The unit&lt;span class="hx:absolute hx:-mt-20" id="the-unit"&gt;&lt;/span&gt;
+&lt;a href="#the-unit" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;What it grants, in short:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Type=exec&lt;/code&gt;, &lt;code&gt;Restart=on-failure&lt;/code&gt;, &lt;code&gt;RestartSec=5s&lt;/code&gt;, &lt;code&gt;TimeoutStopSec=20s&lt;/code&gt;.The provider shuts its listener down within ten seconds of &lt;code&gt;SIGTERM&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;StateDirectory=&lt;/code&gt;, &lt;code&gt;RuntimeDirectory=&lt;/code&gt; (both &lt;code&gt;0700&lt;/code&gt;) and&lt;code&gt;ConfigurationDirectory=&lt;/code&gt; (&lt;code&gt;0750&lt;/code&gt;), &lt;code&gt;UMask=0077&lt;/code&gt;. With&lt;code&gt;ProtectSystem=strict&lt;/code&gt;, everything else is read-only.&lt;/li&gt;
+&lt;li&gt;No capability (&lt;code&gt;CapabilityBoundingSet=&lt;/code&gt; and &lt;code&gt;AmbientCapabilities=&lt;/code&gt; empty),&lt;code&gt;NoNewPrivileges=&lt;/code&gt;, &lt;code&gt;PrivateUsers=&lt;/code&gt;, &lt;code&gt;PrivateTmp=&lt;/code&gt;, &lt;code&gt;PrivateDevices=&lt;/code&gt;,&lt;code&gt;PrivateIPC=&lt;/code&gt;, &lt;code&gt;ProtectHome=&lt;/code&gt;, the kernel, clock, hostname and control
+groups protected.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6&lt;/code&gt;: TCP for the listener,the metadata, an ACME CA and a database; a socket for the admin API.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;SystemCallFilter=@system-service&lt;/code&gt;, minus &lt;code&gt;@privileged @resources&lt;/code&gt;, refused
+with &lt;code&gt;EPERM&lt;/code&gt; rather than a kill.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;It waits for &lt;code&gt;network-online.target&lt;/code&gt;, because the metadata is fetched before
+the provider listens.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; --now authn-bridge
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;journalctl -u authn-bridge -n &lt;span class="m"&gt;20&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The first line in the journal is the one shown on&lt;a href="https://go-authn.github.io/docs/0.5/authn-bridge/#what-it-prints-at-startup"&gt;the overview&lt;/a&gt;.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="changes-need-a-restart"&gt;Changes need a restart&lt;span class="hx:absolute hx:-mt-20" id="changes-need-a-restart"&gt;&lt;/span&gt;
+&lt;a href="#changes-need-a-restart" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;The configuration is read once. The unit has no &lt;code&gt;ExecReload=&lt;/code&gt;, so &lt;code&gt;systemctl reload&lt;/code&gt; is refused rather than pretending. A &lt;code&gt;SIGHUP&lt;/code&gt; (from logrotate, or habit)is caught, logged and ignored. Left to Go&amp;rsquo;s default it would kill the process,and systemd would count that as a clean exit that &lt;code&gt;Restart=on-failure&lt;/code&gt; does not
+restart:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;SIGHUP: ignored, nothing is reloaded; restart the service to apply a configuration change (TLS certificate files are re-read on their own)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;TLS certificate files are the exception: they are re-read when they change.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="port-443"&gt;Port 443&lt;span class="hx:absolute hx:-mt-20" id="port-443"&gt;&lt;/span&gt;
+&lt;a href="#port-443" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;The default listener is &lt;code&gt;127.0.0.1:8080&lt;/code&gt;, behind a TLS reverse proxy, and
+needs no capability. To serve TLS itself on port 443 (&lt;code&gt;cert_file&lt;/code&gt; or &lt;code&gt;acme&lt;/code&gt;),the provider needs &lt;code&gt;CAP_NET_BIND_SERVICE&lt;/code&gt; and must leave the private user
+namespace, since a capability held inside it does not apply to the host&amp;rsquo;s
+network:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# /etc/systemd/system/authn-bridge.service.d/port-443.conf&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;CapabilityBoundingSet&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;CAP_NET_BIND_SERVICE&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;AmbientCapabilities&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;CAP_NET_BIND_SERVICE&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;PrivateUsers&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;no&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="upgrading-and-going-back"&gt;Upgrading, and going back&lt;span class="hx:absolute hx:-mt-20" id="upgrading-and-going-back"&gt;&lt;/span&gt;
+&lt;a href="#upgrading-and-going-back" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Back up &lt;code&gt;/var/lib/authn-bridge&lt;/code&gt; first: it holds the keys and the salt, which
+cannot be made again. Keep the binary that works, install the new one, restart:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;cp -p /usr/local/bin/authn-bridge /usr/local/bin/authn-bridge.previous
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0755&lt;/span&gt; authn-bridge-linux-amd64 /usr/local/bin/authn-bridge
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl restart authn-bridge&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Going back is the same with &lt;code&gt;authn-bridge.previous&lt;/code&gt;. A newer release may ship a
+newer unit: compare it with yours, install it and &lt;code&gt;systemctl daemon-reload&lt;/code&gt;
+before the restart.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="coming-from-bridge"&gt;Coming from &lt;code&gt;bridge&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="coming-from-bridge"&gt;&lt;/span&gt;
+&lt;a href="#coming-from-bridge" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;The configuration is unchanged; only the command and the release assets were
+renamed. Change every unit, script, cron job and &lt;code&gt;bearer_token_command&lt;/code&gt; that
+runs &lt;code&gt;bridge&lt;/code&gt;. The log line and the error prefix now say &lt;code&gt;authn-bridge&lt;/code&gt;, so an
+alert that matched &lt;code&gt;bridge v0.&lt;/code&gt; must match &lt;code&gt;authn-bridge v0.&lt;/code&gt;. Metric names(&lt;code&gt;bridge_*&lt;/code&gt;), the &lt;code&gt;bridge_state&lt;/code&gt; table and the user-side cache(&lt;code&gt;go-authn-bridge&lt;/code&gt; in the user&amp;rsquo;s configuration directory, &lt;code&gt;~/.config&lt;/code&gt; on
+Linux) are unchanged, so &lt;code&gt;authn-bridge token&lt;/code&gt; reuses the logins &lt;code&gt;bridge&lt;/code&gt;
+cached.&lt;/p&gt;</description></item><item><title>Installing authn-revokd</title><link>https://go-authn.github.io/docs/0.5/authn-revokd/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/authn-revokd/install/</guid><description>
+&lt;p&gt;The repository ships three units and an account in &lt;code&gt;packaging/&lt;/code&gt;:&lt;code&gt;authn-revokd.service&lt;/code&gt; (the daemon), &lt;code&gt;authn-revokd-once.service&lt;/code&gt; with&lt;code&gt;authn-revokd-once.timer&lt;/code&gt; (the alternative), and&lt;code&gt;sysusers.d/authn-revokd.conf&lt;/code&gt;.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;path&lt;/th&gt;
+&lt;th&gt;what&lt;/th&gt;
+&lt;th&gt;owner, mode&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/usr/local/bin/authn-revokd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the binary&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0755&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/usr/lib/sysusers.d/authn-revokd.conf&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the &lt;code&gt;authn-revokd&lt;/code&gt; system account&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/systemd/system/authn-revokd.service&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the daemon&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/authn-revokd/revokd.hcl&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the configuration, the default &lt;code&gt;-config&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/authn-revokd/ca/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the CA keys and certificates the lists must be signed by&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0755&lt;/code&gt;; the files in it &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;StateDirectory=&lt;/code&gt;, the only writable place&lt;/td&gt;
+&lt;td&gt;authn-revokd, &lt;code&gt;0755&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/state/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;state_dir&lt;/code&gt;: the verified copies&lt;/td&gt;
+&lt;td&gt;authn-revokd, &lt;code&gt;0700&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/sshd.krl&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;an output: what &lt;code&gt;sshd&lt;/code&gt; reads&lt;/td&gt;
+&lt;td&gt;authn-revokd, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;Write the outputs to &lt;code&gt;/var/lib/authn-revokd&lt;/code&gt;, and point the servers there.&lt;/strong&gt;
+An output is written beside its final name and renamed over it, so its&lt;em&gt;directory&lt;/em&gt; must be writable. Making &lt;code&gt;/etc/ssh&lt;/code&gt; writable would let the&lt;code&gt;authn-revokd&lt;/code&gt; account replace &lt;code&gt;sshd_config&lt;/code&gt;. Outputs are &lt;code&gt;0644&lt;/code&gt;, chmod-ed
+explicitly despite &lt;code&gt;UMask=0077&lt;/code&gt;, so that &lt;code&gt;sshd&lt;/code&gt; and a TLS server running as its
+own user can read them; the state stays &lt;code&gt;0700&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-binary-the-account-the-unit"&gt;The binary, the account, the unit&lt;span class="hx:absolute hx:-mt-20" id="the-binary-the-account-the-unit"&gt;&lt;/span&gt;
+&lt;a href="#the-binary-the-account-the-unit" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A release carries &lt;code&gt;authn-revokd-&amp;lt;os&amp;gt;-&amp;lt;arch&amp;gt;&lt;/code&gt; for Linux, macOS and Windows on
+amd64 and arm64, with &lt;code&gt;SHA256SUMS&lt;/code&gt; and build provenance(&lt;a href="https://go-authn.github.io/docs/0.5/security/verifying-releases/"&gt;verifying a download&lt;/a&gt;). Or&lt;code&gt;go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;The account and the unit come from the &lt;code&gt;packaging/&lt;/code&gt; directory of the release
+tag, the same version as the binary: copy that directory beside the binary,from a checkout of the tag or, for v0.6.4, from&lt;a href="https://github.com/go-authn/revocation/tree/v0.6.4/packaging" target="_blank" rel="noopener"&gt;https://github.com/go-authn/revocation/tree/v0.6.4/packaging&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0755&lt;/span&gt; authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/sysusers.d/authn-revokd.conf /usr/lib/sysusers.d/authn-revokd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemd-sysusers /usr/lib/sysusers.d/authn-revokd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/systemd/authn-revokd.service /etc/systemd/system/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl daemon-reload&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The account is static, not &lt;code&gt;DynamicUser=&lt;/code&gt;. authn-revokd refuses a state
+directory owned by anyone but its own uid or root, and the state must keep
+ordering the next list across restarts and upgrades. With a dynamic user the
+files would sit under &lt;code&gt;/var/lib/private&lt;/code&gt;, &lt;code&gt;0700&lt;/code&gt; root, and a TLS server running
+as its own user could not read the CRL.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-daemon"&gt;The daemon&lt;span class="hx:absolute hx:-mt-20" id="the-daemon"&gt;&lt;/span&gt;
+&lt;a href="#the-daemon" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;exec&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecReload&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/bin/kill -HUP $MAINPID&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Restart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;always&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;and around it: &lt;code&gt;User=authn-revokd&lt;/code&gt;, no capability at all, &lt;code&gt;NoNewPrivileges=&lt;/code&gt;,&lt;code&gt;ProtectSystem=strict&lt;/code&gt; with &lt;code&gt;StateDirectory=authn-revokd&lt;/code&gt; (&lt;code&gt;0755&lt;/code&gt;) the one
+writable place, &lt;code&gt;PrivateUsers=&lt;/code&gt;, &lt;code&gt;PrivateTmp=&lt;/code&gt;, &lt;code&gt;PrivateDevices=&lt;/code&gt;,&lt;code&gt;PrivateIPC=&lt;/code&gt;, &lt;code&gt;AF_INET AF_INET6 AF_UNIX&lt;/code&gt; only, &lt;code&gt;@system-service&lt;/code&gt; system calls
+minus &lt;code&gt;@privileged @resources&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;Restart=always&lt;/code&gt;, because sshd ignores the expiry in the KRL.&lt;/strong&gt; The file is
+failed closed by &lt;em&gt;this process&lt;/em&gt; when a list lapses. While it is stopped, sshd
+keeps reading the last file it wrote, and a revocation issued meanwhile never
+arrives. Monitor the unit, or &lt;code&gt;/healthz&lt;/code&gt; when the mirror is on.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;systemctl reload&lt;/code&gt; syncs now.&lt;/strong&gt; It sends &lt;code&gt;SIGHUP&lt;/code&gt;, and the agent fetches every
+source at once instead of at the next &lt;code&gt;refresh&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;hangup: syncing now&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;It does not re-read the configuration, which is read once, at start: after
+changing &lt;code&gt;revokd.hcl&lt;/code&gt;, &lt;code&gt;systemctl restart authn-revokd&lt;/code&gt;. (Before v0.6.0 an
+uncaught &lt;code&gt;SIGHUP&lt;/code&gt; killed the process, and systemd counts that as a clean exit.)&lt;/p&gt;
+&lt;h3 data-hextra-search-id="enable-it-before-wiring-sshd"&gt;Enable it BEFORE wiring sshd&lt;span class="hx:absolute hx:-mt-20" id="enable-it-before-wiring-sshd"&gt;&lt;/span&gt;
+&lt;a href="#enable-it-before-wiring-sshd" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;sshd refuses every certificate when &lt;code&gt;RevokedKeys&lt;/code&gt; names a file that does not exist&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;So start authn-revokd first, and wait until the output is there:&lt;code&gt;ssh-keygen -Q -l -f /var/lib/authn-revokd/sshd.krl&lt;/code&gt; prints its comment,&lt;code&gt;authn-revokd sshd&lt;/code&gt; while every source is current.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; --now authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;journalctl -u authn-revokd -n &lt;span class="m"&gt;20&lt;/span&gt; &lt;span class="c1"&gt;# &amp;#34;&amp;lt;source&amp;gt;: version N, issued ..., expires ...&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="c1"&gt;# &amp;#34;output sshd: wrote /var/lib/authn-revokd/sshd.krl&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Then, in &lt;code&gt;/etc/ssh/sshd_config&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;TrustedUserCAKeys /etc/ssh/ca/univ-a-ssh.pub
+RevokedKeys /var/lib/authn-revokd/sshd.krl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;and &lt;code&gt;sshd -t &amp;amp;&amp;amp; systemctl reload ssh&lt;/code&gt;. sshd reads &lt;code&gt;RevokedKeys&lt;/code&gt; at every
+authentication, so it needs no reload when authn-revokd rewrites the file: the
+atomic rename is enough.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="a-tls-servers-crl"&gt;A TLS server&amp;rsquo;s CRL&lt;span class="hx:absolute hx:-mt-20" id="a-tls-servers-crl"&gt;&lt;/span&gt;
+&lt;a href="#a-tls-servers-crl" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-nginx" data-lang="nginx"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_client_certificate&lt;/span&gt; &lt;span class="s"&gt;/etc/authn-revokd/ca/univ-a-x509.pem&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_verify_client&lt;/span&gt; &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_crl&lt;/span&gt; &lt;span class="s"&gt;/var/lib/authn-revokd/univ-a.crl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;format&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#34;pem&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;A TLS server reads its CRL when it loads its configuration, so it must be
+reloaded when the file changes. An &lt;code&gt;on_change&lt;/code&gt; command runs as the&lt;code&gt;authn-revokd&lt;/code&gt; account, which cannot &lt;code&gt;systemctl reload nginx&lt;/code&gt;: let systemd watch
+the file instead, as root, with a path unit (&lt;code&gt;PathChanged=&lt;/code&gt; on the output) that
+starts a &lt;code&gt;oneshot&lt;/code&gt; running &lt;code&gt;systemctl reload nginx&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="or--once-on-a-timer"&gt;Or: &lt;code&gt;-once&lt;/code&gt;, on a timer&lt;span class="hx:absolute hx:-mt-20" id="or--once-on-a-timer"&gt;&lt;/span&gt;
+&lt;a href="#or--once-on-a-timer" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;authn-revokd -once&lt;/code&gt; syncs once and exits, &lt;code&gt;1&lt;/code&gt; when a list is not current or
+could not be fetched (&lt;a href="https://go-authn.github.io/docs/0.5/authn-revokd/verification/#what--once-reports"&gt;what &lt;code&gt;-once&lt;/code&gt; reports&lt;/a&gt;).The outputs are written either way, and failed closed for sshd once a list
+lapses.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# authn-revokd-once.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Conflicts&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authn-revokd.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;oneshot&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;TimeoutStartSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;5min&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# authn-revokd-once.timer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Conflicts&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authn-revokd.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Timer]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;OnBootSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;30s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;OnUnitActiveSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;1min&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;AccuracySec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;5s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;RandomizedDelaySec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;10s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Install]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;WantedBy&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;timers.target&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The one-shot has the daemon&amp;rsquo;s account and hardening. &lt;code&gt;TimeoutStartSec=5min&lt;/code&gt;
+keeps a sync that hangs on a source from outliving the next tick, and&lt;code&gt;RandomizedDelaySec=10s&lt;/code&gt; keeps a fleet started together from polling its
+issuer in step.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; authn-revokd-once.service authn-revokd-once.timer /etc/systemd/system/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl daemon-reload
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl disable --now authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; --now authn-revokd-once.timer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;Never enable both&lt;/strong&gt;: the units conflict, so starting one stops the other.The daemon remains the better choice. It fails a lapsed list closed at its next&lt;code&gt;refresh&lt;/code&gt;, where the timer waits for its next tick, and only the daemon serves as
+a mirror: &lt;code&gt;listen&lt;/code&gt; is ignored with &lt;code&gt;-once&lt;/code&gt;. A timer that stops firing is a daemon
+that stopped, so monitor &lt;code&gt;systemctl status authn-revokd-once&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="upgrading-and-going-back"&gt;Upgrading, and going back&lt;span class="hx:absolute hx:-mt-20" id="upgrading-and-going-back"&gt;&lt;/span&gt;
+&lt;a href="#upgrading-and-going-back" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Install the new binary beside the old, swap, restart. The state carries over:the verified copies keep ordering the next lists, so neither an upgrade nor a
+rollback to an older binary lets an older list in.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="uninstalling"&gt;Uninstalling&lt;span class="hx:absolute hx:-mt-20" id="uninstalling"&gt;&lt;/span&gt;
+&lt;a href="#uninstalling" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Remove &lt;code&gt;RevokedKeys&lt;/code&gt; and &lt;code&gt;ssl_crl&lt;/code&gt; from the servers&amp;rsquo; configuration &lt;strong&gt;first&lt;/strong&gt;,and reload them: sshd refuses every certificate once the file is gone.&lt;/p&gt;</description></item><item><title>Installing authnd</title><link>https://go-authn.github.io/docs/0.5/authnd/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/authnd/install/</guid><description>
+&lt;p&gt;The repository carries the two files a systemd host needs:&lt;code&gt;packaging/sysusers.d/authnd.conf&lt;/code&gt; (the account) and&lt;code&gt;packaging/systemd/authnd.service&lt;/code&gt; (the unit). This page explains both and
+the steps around them. go-pkgx&amp;rsquo;s versioned services are meant to do this for
+you later; they do not exist yet.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-release-binary"&gt;The release binary&lt;span class="hx:absolute hx:-mt-20" id="the-release-binary"&gt;&lt;/span&gt;
+&lt;a href="#the-release-binary" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Each tag publishes &lt;code&gt;authnd-&amp;lt;os&amp;gt;-&amp;lt;arch&amp;gt;&lt;/code&gt; for linux, darwin and windows on amd64
+and arm64 (&lt;code&gt;.exe&lt;/code&gt; on windows), built with &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, a &lt;code&gt;SHA256SUMS&lt;/code&gt;
+manifest, and a build provenance attestation for every binary.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nv"&gt;version&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;v0.12.0
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nv"&gt;arch&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;amd64 &lt;span class="c1"&gt;# or arm64&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nv"&gt;base&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;https://github.com/go-authn/authnd/releases/download/&lt;span class="nv"&gt;$version&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;curl -fsSLO &lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;&lt;span class="nv"&gt;$base&lt;/span&gt;&lt;span class="s2"&gt;/authnd-linux-&lt;/span&gt;&lt;span class="nv"&gt;$arch&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;curl -fsSLO &lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;&lt;span class="nv"&gt;$base&lt;/span&gt;&lt;span class="s2"&gt;/SHA256SUMS&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sha256sum -c SHA256SUMS --ignore-missing &lt;span class="c1"&gt;# the bytes the release published&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;gh attestation verify &lt;span class="s2"&gt;&amp;#34;authnd-linux-&lt;/span&gt;&lt;span class="nv"&gt;$arch&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt; --repo go-authn/authnd &lt;span class="c1"&gt;# built by the release workflow, at that tag&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Stop if either check fails. The release workflow refuses to publish a binary
+that does not report exactly the tag it is published under, so the version is
+something to compare:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --version
+authnd version v0.12.0&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="building-only-what-you-want"&gt;Building only what you want&lt;span class="hx:absolute hx:-mt-20" id="building-only-what-you-want"&gt;&lt;/span&gt;
+&lt;a href="#building-only-what-you-want" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;The server is always there; two build tags leave out where people can come
+from. &lt;code&gt;-tags nosql&lt;/code&gt; drops the three database drivers (PostgreSQL through pgx,MySQL/MariaDB, SQLite through modernc.org/sqlite) and the &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; block;&lt;code&gt;-tags noldap&lt;/code&gt; drops the LDAP client and the &lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt; block. A
+configuration naming a block the binary was built without is told so —&lt;em&gt;this binary was built without SQL support (-tags nosql)&lt;/em&gt; — rather than that
+the block does not exist. The release binaries are built without tags.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-account"&gt;The account&lt;span class="hx:absolute hx:-mt-20" id="the-account"&gt;&lt;/span&gt;
+&lt;a href="#the-account" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;#Type Name ID Description Home Shell
+u authnd - &amp;#34;authnd LDAP directory and Kerberos KDC&amp;#34; /var/lib/authnd -&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;A static account from sysusers.d, &lt;strong&gt;not&lt;/strong&gt; &lt;code&gt;DynamicUser=&lt;/code&gt;. The files authnd
+reads — password files, a DSN, a keytab, a TLS key — are secrets given to the&lt;code&gt;authnd&lt;/code&gt; group ahead of time, and a &lt;a href="https://go-authn.github.io/docs/0.5/authnd/passwords/"&gt;password change&lt;/a&gt;
+writes back into them. A dynamic uid does not exist until the service starts,and a file it wrote would belong to a number that later means somebody else.&lt;/p&gt;
+&lt;p&gt;The two files come from the &lt;code&gt;packaging/&lt;/code&gt; directory of the release tag, the
+same version as the binary: copy that directory beside the binary, from a
+checkout of the tag or, for v0.12.0, from&lt;a href="https://github.com/go-authn/authnd/tree/v0.12.0/packaging" target="_blank" rel="noopener"&gt;https://github.com/go-authn/authnd/tree/v0.12.0/packaging&lt;/a&gt;.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo install -m &lt;span class="m"&gt;0755&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;authnd-linux-&lt;/span&gt;&lt;span class="nv"&gt;$arch&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt; /usr/local/bin/authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/sysusers.d/authnd.conf /usr/lib/sysusers.d/authnd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemd-sysusers /usr/lib/sysusers.d/authnd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/systemd/authnd.service /etc/systemd/system/authnd.service
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemd-analyze verify /etc/systemd/system/authnd.service
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl daemon-reload&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-the-unit-grants-and-why"&gt;What the unit grants, and why&lt;span class="hx:absolute hx:-mt-20" id="what-the-unit-grants-and-why"&gt;&lt;/span&gt;
+&lt;a href="#what-the-unit-grants-and-why" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;exec&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/local/bin/authnd --config /etc/authnd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Restart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;on-failure&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;RestartSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;5s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;User&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authnd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Group&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authnd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;UMask&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;0077&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;AmbientCapabilities&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;CAP_NET_BIND_SERVICE&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;CapabilityBoundingSet&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;CAP_NET_BIND_SERVICE&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;NoNewPrivileges&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;yes&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;StateDirectory&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authnd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;StateDirectoryMode&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;0700&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ProtectSystem&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;strict&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The rest of the unit is the usual hardening (&lt;code&gt;ProtectHome&lt;/code&gt;, &lt;code&gt;PrivateTmp&lt;/code&gt;,&lt;code&gt;PrivateDevices&lt;/code&gt;, &lt;code&gt;ProtectProc=invisible&lt;/code&gt;, the kernel and cgroup protections,&lt;code&gt;MemoryDenyWriteExecute&lt;/code&gt;, &lt;code&gt;SystemCallFilter=@system-service&lt;/code&gt;,&lt;code&gt;RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX&lt;/code&gt;). Three things it&lt;strong&gt;leaves out&lt;/strong&gt; are deliberate:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ExecReload=&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;authnd has no reload. It reads its configuration, certificate and keytab once; see &lt;a href="https://go-authn.github.io/docs/0.5/authnd/operations/"&gt;running it&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;PrivateUsers=&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;inside a user namespace &lt;code&gt;CAP_NET_BIND_SERVICE&lt;/code&gt; no longer applies to the host&amp;rsquo;s network, and the bind to 389 is refused&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ProcSubset=pid&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;it hides &lt;code&gt;/proc/sys&lt;/code&gt;, where Go reads &lt;code&gt;net/core/somaxconn&lt;/code&gt;, and every listener&amp;rsquo;s backlog falls to Go&amp;rsquo;s fallback of 128&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;code&gt;IPAddressAllow=&lt;/code&gt;/&lt;code&gt;IPAddressDeny=&lt;/code&gt; are not set either: which networks may ask
+a directory is the site&amp;rsquo;s to say, in a drop-in:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl edit authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;IPAddressDeny&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;any&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;IPAddressAllow&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;localhost 10.0.0.0/8&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The one capability is for the privileged ports: LDAP 389, LDAPS 636, and
+Kerberos 88 over UDP and TCP. A PostgreSQL or MariaDB on the same machine is
+reached through its socket, which a read-only file system allows. The state
+directory, &lt;code&gt;/var/lib/authnd&lt;/code&gt;, is there for a SQLite database; authnd keeps no
+state of its own — the second-factor lockout counts live in memory and are
+reset at every restart.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-configuration-directory"&gt;The configuration directory&lt;span class="hx:absolute hx:-mt-20" id="the-configuration-directory"&gt;&lt;/span&gt;
+&lt;a href="#the-configuration-directory" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo install -d -o root -g authnd -m &lt;span class="m"&gt;0750&lt;/span&gt; /etc/authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Every file inside it &lt;code&gt;root:authnd&lt;/code&gt;, mode &lt;code&gt;0640&lt;/code&gt;. Secrets go in files named by&lt;code&gt;*_file&lt;/code&gt; keys rather than inline: a file has permissions, and a configuration
+someone pastes does not. With &lt;code&gt;ProtectSystem=strict&lt;/code&gt; the service cannot write
+under &lt;code&gt;/etc&lt;/code&gt;, which is right for the configuration and wrong for the
+passwords people change themselves — give those a directory of their own:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo install -d -o authnd -g authnd -m &lt;span class="m"&gt;0700&lt;/span&gt; /etc/authnd/passwords
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl edit authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ReadWritePaths&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/etc/authnd/passwords&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Why that directory and not the file is explained in&lt;a href="https://go-authn.github.io/docs/0.5/authnd/passwords/#where-the-new-password-is-written"&gt;changing a password&lt;/a&gt;.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;key&lt;/th&gt;
+&lt;th&gt;default&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;base_dn&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;— (required)&lt;/td&gt;
+&lt;td&gt;the root of the tree, e.g. &lt;code&gt;dc=example,dc=org&lt;/code&gt;; a value with no &lt;code&gt;=&lt;/code&gt; is refused&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;listen&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;127.0.0.1:3893&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;one address. Loopback by default: a directory that appears on every interface the moment it starts is a decision somebody should make on purpose. A site that needs LDAP and LDAPS runs two instances&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;reader &amp;quot;&amp;lt;dn&amp;gt;&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;none&lt;/td&gt;
+&lt;td&gt;a service account that may search; see &lt;a href="https://go-authn.github.io/docs/0.5/authnd/#who-may-bind-and-who-may-read"&gt;who may read&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;cert_file&lt;/code&gt;, &lt;code&gt;key_file&lt;/code&gt;, &lt;code&gt;starttls&lt;/code&gt;, &lt;code&gt;publish_nt_hash&lt;/code&gt;, &lt;code&gt;samba&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;off&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/authnd/tls/"&gt;TLS&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;user&lt;/code&gt;, &lt;code&gt;group&lt;/code&gt;, &lt;code&gt;users&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;—&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/authnd/people/"&gt;the people&lt;/a&gt;; at least one &lt;code&gt;user&lt;/code&gt; or &lt;code&gt;users&lt;/code&gt; block&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;kerberos&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;none&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/authnd/kerberos/"&gt;a realm&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;mfa&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;none&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/authnd/mfa/"&gt;a second factor&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;oidc&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;none&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/authnd/tokens/"&gt;a token at the bind&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;A relative path in the configuration is resolved against the directory the
+process runs in, not the configuration file&amp;rsquo;s; the unit runs from &lt;code&gt;/&lt;/code&gt;, so
+write paths absolute.&lt;/p&gt;
+&lt;p&gt;Before every start:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; --now authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;journalctl -u authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;check&lt;/code&gt; is described on &lt;a href="https://go-authn.github.io/docs/0.5/authnd/check/"&gt;its own page&lt;/a&gt;;running it as &lt;code&gt;authnd&lt;/code&gt; also proves the account can read every file.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="upgrade-roll-back-remove"&gt;Upgrade, roll back, remove&lt;span class="hx:absolute hx:-mt-20" id="upgrade-roll-back-remove"&gt;&lt;/span&gt;
+&lt;a href="#upgrade-roll-back-remove" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Check the configuration with the &lt;strong&gt;new&lt;/strong&gt; binary before it replaces the old
+one, and keep the old one. The new binary is installed beside the old one
+first: that makes it executable, and puts it where the &lt;code&gt;authnd&lt;/code&gt; account can
+run it.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo install -m &lt;span class="m"&gt;0755&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;authnd-linux-&lt;/span&gt;&lt;span class="nv"&gt;$arch&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt; /usr/local/bin/authnd.new
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd /usr/local/bin/authnd.new check /etc/authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo cp /usr/local/bin/authnd /usr/local/bin/authnd.previous
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo mv /usr/local/bin/authnd.new /usr/local/bin/authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl restart authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authnd --version&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Compare &lt;code&gt;packaging/&lt;/code&gt; at the new tag with what is installed (v0.12.0&amp;rsquo;s is
+v0.11.1&amp;rsquo;s, unchanged). Rolling back is the same install from&lt;code&gt;authnd.previous&lt;/code&gt;, and a restart.&lt;/p&gt;
+&lt;p&gt;From v0.10.x to v0.11.0 the &lt;code&gt;check&lt;/code&gt; above is the step that matters: a
+configuration with &lt;code&gt;publish_nt_hash = true&lt;/code&gt; and no&lt;a href="https://go-authn.github.io/docs/0.5/authnd/tls/#the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; block&lt;/a&gt; is refused
+there rather than at the restart, and the lines after its tables say who is
+no longer a &lt;code&gt;posixAccount&lt;/code&gt; and which groups are no longer &lt;code&gt;posixGroup&lt;/code&gt;s(&lt;a href="https://go-authn.github.io/docs/0.5/authnd/entries/"&gt;the entries&lt;/a&gt;).&lt;/p&gt;
+&lt;p&gt;⛔ From v0.11.1 to v0.12.0, upgrade whatever else you do: v0.11.1&amp;rsquo;s release
+binaries were built with Go 1.27.2 and are affected by GO-2026-6809(crypto/x509), which v0.12.0, built with Go 1.27.3, is not. The configuration
+needs no change; to serve a site&amp;rsquo;s own schema, see&lt;a href="https://go-authn.github.io/docs/0.5/authnd/schemas/"&gt;site schemas&lt;/a&gt;, and name the files by
+absolute paths, since a systemd unit&amp;rsquo;s working directory is &lt;code&gt;/&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;To remove it:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl disable --now authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo rm /etc/systemd/system/authnd.service
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo rm -r /etc/systemd/system/authnd.service.d &lt;span class="c1"&gt;# if a drop-in was added&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl daemon-reload
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo rm /usr/local/bin/authnd /usr/local/bin/authnd.previous /usr/lib/sysusers.d/authnd.conf&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/etc/authnd&lt;/code&gt;, &lt;code&gt;/var/lib/authnd&lt;/code&gt; and the &lt;code&gt;authnd&lt;/code&gt; account are left in place:the first two hold people&amp;rsquo;s credentials, and a uid that is reused can be
+given somebody else&amp;rsquo;s files. Remove them deliberately.&lt;/p&gt;</description></item><item><title>Running it: signals, restarts and what it says</title><link>https://go-authn.github.io/docs/0.5/authnd/operations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/authnd/operations/</guid><description>
+&lt;h2 data-hextra-search-id="it-reads-everything-once"&gt;It reads everything once&lt;span class="hx:absolute hx:-mt-20" id="it-reads-everything-once"&gt;&lt;/span&gt;
+&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The configuration files, every source behind them, the TLS certificate and
+the keytab are read &lt;strong&gt;at start&lt;/strong&gt;. There is no reload, and the packaged unit
+has no &lt;code&gt;ExecReload=&lt;/code&gt;. After changing any of them:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl restart authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The one thing applied while it runs is a&lt;a href="https://go-authn.github.io/docs/0.5/authnd/passwords/"&gt;password a person changes through authnd&lt;/a&gt;,which re-reads the &lt;code&gt;user&lt;/code&gt; blocks and nothing else.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="signals"&gt;Signals&lt;span class="hx:absolute hx:-mt-20" id="signals"&gt;&lt;/span&gt;
+&lt;a href="#signals" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;signal&lt;/th&gt;
+&lt;th&gt;what happens&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;SIGTERM&lt;/code&gt;, &lt;code&gt;SIGINT&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;it prints &lt;code&gt;stopping&lt;/code&gt;, closes the listeners &lt;strong&gt;and every established connection&lt;/strong&gt;, stops the realm, closes the sources, and exits 0 once the server has really finished&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;SIGHUP&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;it is caught and logged, and authnd &lt;strong&gt;stays up&lt;/strong&gt; without reloading anything&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd
+ldap on 127.0.0.1:3893, serving 4 people from the configuration file, then a sqlite database
+hangup: authnd does not reload; restart it to apply a changed configuration, certificate or keytab
+alice&amp;#39;s password change was refused: the old password did not verify: directory: wrong password
+alice changed their own password
+stopping&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;That is one run: a &lt;code&gt;kill -HUP&lt;/code&gt;, two attempts to change a password (the first
+refused, the second accepted), then a &lt;code&gt;kill -TERM&lt;/code&gt;.The process was still there after the &lt;code&gt;SIGHUP&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;A &lt;code&gt;SIGHUP&lt;/code&gt; used to &lt;strong&gt;kill&lt;/strong&gt; authnd — Go&amp;rsquo;s default for a signal nobody handles— and systemd counts death by &lt;code&gt;SIGHUP&lt;/code&gt; as a clean exit, so&lt;code&gt;Restart=on-failure&lt;/code&gt; did not start it again: one &lt;code&gt;kill -HUP&lt;/code&gt; or one logrotate&lt;code&gt;postrotate&lt;/code&gt; took a directory down for good. It is caught now so that the
+habit is harmless, and the line says what to do instead.&lt;/p&gt;
+&lt;p&gt;Closing established connections, not only the listener, is deliberate: a
+server that stopped accepting and left its open connections answering would
+look stopped and not be, which is the restart that does not take.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-writes"&gt;What it writes&lt;span class="hx:absolute hx:-mt-20" id="what-it-writes"&gt;&lt;/span&gt;
+&lt;a href="#what-it-writes" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Everything goes to standard output, which under systemd is the journal(&lt;code&gt;journalctl -u authnd&lt;/code&gt;):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;at start, where it listens and whom it serves — &lt;code&gt;ldap on …&lt;/code&gt;, &lt;code&gt;ldaps on …&lt;/code&gt;
+or &lt;code&gt;ldap+starttls on …&lt;/code&gt;, then &lt;code&gt;realm EXAMPLE.ORG on … (udp and tcp)&lt;/code&gt; with a&lt;code&gt;kerberos&lt;/code&gt; block;&lt;/li&gt;
+&lt;li&gt;every refused bind under an &lt;code&gt;mfa&lt;/code&gt; block, every refused token, every
+refused or completed password change, &lt;strong&gt;with the reason&lt;/strong&gt; — which the
+client is never told; see &lt;a href="https://go-authn.github.io/docs/0.5/authnd/mfa/#what-the-binds-look-like"&gt;the second factor&lt;/a&gt;
+and &lt;a href="https://go-authn.github.io/docs/0.5/authnd/tokens/#what-the-binds-look-like"&gt;tokens&lt;/a&gt;;&lt;/li&gt;
+&lt;li&gt;every request the KDC refuses, prefixed &lt;code&gt;kerberos:&lt;/code&gt;, with the Kerberos error
+code; see &lt;a href="https://go-authn.github.io/docs/0.5/authnd/kerberos/#kinit-against-it"&gt;the realm&lt;/a&gt;;&lt;/li&gt;
+&lt;li&gt;the LDAP library&amp;rsquo;s own log, in &lt;code&gt;slog&lt;/code&gt; text form, at level info.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;A plain wrong password on a simple bind, with no &lt;code&gt;mfa&lt;/code&gt; block, is answered&lt;code&gt;invalidCredentials&lt;/code&gt; and not logged by authnd itself.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="when-it-does-not-start"&gt;When it does not start&lt;span class="hx:absolute hx:-mt-20" id="when-it-does-not-start"&gt;&lt;/span&gt;
+&lt;a href="#when-it-does-not-start" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A refusal is one line on standard error, prefixed &lt;code&gt;authnd:&lt;/code&gt;, and exit
+status 1; under the unit, &lt;code&gt;Restart=on-failure&lt;/code&gt; then tries again every five
+seconds and the line is in the journal each time. Everything &lt;code&gt;check&lt;/code&gt; refuses
+is refused here too, and the one thing only the server finds is an address
+it cannot listen on — see&lt;a href="https://go-authn.github.io/docs/0.5/authnd/check/#the-certificate-the-keytab-and-the-one-thing-it-cannot-see"&gt;&lt;code&gt;check&lt;/code&gt;&lt;/a&gt;.The LDAP listener, the certificate and the realm are all opened before the
+first line is printed, so a server that cannot start prints only the
+refusal. Here a second instance meets the first one&amp;rsquo;s Kerberos port:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config cases/realm2
+authnd: kerberos udp 127.0.0.1:18388: listen udp 127.0.0.1:18388: bind: address already in use&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;ldap on …&lt;/code&gt; line, and &lt;code&gt;realm … on …&lt;/code&gt; after it, mean both halves are
+listening.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="telling-that-it-is-up"&gt;Telling that it is up&lt;span class="hx:absolute hx:-mt-20" id="telling-that-it-is-up"&gt;&lt;/span&gt;
+&lt;a href="#telling-that-it-is-up" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;There is no health endpoint and no metrics. What there is:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;the process and its exit status&lt;/strong&gt; — under systemd, &lt;code&gt;systemctl is-active authnd&lt;/code&gt;. If the LDAP listener or the realm stops of its own accord, the
+whole process ends with that error, so a live process is one whose two
+halves both answer;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;the root DSE&lt;/strong&gt;, which answers an anonymous client and says which version
+it is talking to:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; &amp;#39;&amp;#43;&amp;#39; &amp;#39;*&amp;#39;
+dn:
+objectClass: top
+objectClass: OpenLDAProotDSE
+supportedLDAPVersion: 3
+namingContexts: dc=example,dc=org
+supportedExtension: 1.3.6.1.4.1.4203.1.11.3
+supportedExtension: 1.3.6.1.4.1.4203.1.11.1
+supportedControl: 1.2.840.113556.1.4.319
+supportedControl: 1.3.6.1.1.13.1
+supportedControl: 1.3.6.1.1.13.2
+supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
+supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
+subschemaSubentry: cn=Subschema
+vendorName: go-authn/authnd
+vendorVersion: v0.12.0&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;On a &lt;a href="https://go-authn.github.io/docs/0.5/authnd/tls/#starttls-which-refuses-until-it-is-asked-for"&gt;StartTLS listener&lt;/a&gt;
+that query needs &lt;code&gt;-ZZ&lt;/code&gt;. A probe that proves more — that a source still
+answers — is a bind as a person or a reader kept for the purpose; with a&lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt; block, that bind reaches the directory behind this one.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-lives-where-and-what-a-restart-loses"&gt;What lives where, and what a restart loses&lt;span class="hx:absolute hx:-mt-20" id="what-lives-where-and-what-a-restart-loses"&gt;&lt;/span&gt;
+&lt;a href="#what-lives-where-and-what-a-restart-loses" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;configuration, passwords, DSN, certificate, keytab&lt;/td&gt;
+&lt;td&gt;the files the configuration names; nothing is copied&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;a SQLite database&lt;/td&gt;
+&lt;td&gt;wherever its DSN says; &lt;code&gt;/var/lib/authnd&lt;/code&gt; under the unit&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;second-factor counts and lockouts&lt;/td&gt;
+&lt;td&gt;memory only: &lt;strong&gt;a restart forgets them&lt;/strong&gt;, including a person locked out after a hundred wrong codes&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;used one-time codes&lt;/td&gt;
+&lt;td&gt;memory only&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;</description></item></channel></rss>

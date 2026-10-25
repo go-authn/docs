@@ -1,0 +1,168 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Signale</title><link>https://go-authn.github.io/docs/0.5/de/tags/signale/</link><description>Recent content in Signale on go-authn</description><generator>Hugo -- gohugo.io</generator><language>de</language><atom:link href="https://go-authn.github.io/docs/0.5/de/tags/signale/index.xml" rel="self" type="application/rss+xml"/><item><title>Betrieb: Signale, Neustarts und was es ausgibt</title><link>https://go-authn.github.io/docs/0.5/de/authnd/operations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/de/authnd/operations/</guid><description>
+&lt;h2 data-hextra-search-id="it-reads-everything-once"&gt;Es liest alles einmal&lt;span class="hx:absolute hx:-mt-20" id="it-reads-everything-once"&gt;&lt;/span&gt;
+&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Die Konfigurationsdateien, jede Quelle dahinter, das TLS-Zertifikat und
+die Keytab werden &lt;strong&gt;beim Start&lt;/strong&gt; gelesen. Es gibt kein Neuladen, und die mitgelieferte Unit
+hat kein &lt;code&gt;ExecReload=&lt;/code&gt;. Nach einer Änderung an einem davon:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl restart authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Das Einzige, was im laufenden Betrieb angewendet wird, ist ein&lt;a href="https://go-authn.github.io/docs/0.5/de/authnd/passwords/"&gt;Passwort, das eine Person über authnd ändert&lt;/a&gt;;es liest die &lt;code&gt;user&lt;/code&gt;-Blöcke erneut und sonst nichts.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="signals"&gt;Signale&lt;span class="hx:absolute hx:-mt-20" id="signals"&gt;&lt;/span&gt;
+&lt;a href="#signals" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Signal&lt;/th&gt;
+&lt;th&gt;was geschieht&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;SIGTERM&lt;/code&gt;, &lt;code&gt;SIGINT&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;es gibt &lt;code&gt;stopping&lt;/code&gt; aus, schließt die Listener &lt;strong&gt;und jede bestehende Verbindung&lt;/strong&gt;, hält den Realm an, schließt die Quellen und beendet sich mit 0, sobald der Server wirklich fertig ist&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;SIGHUP&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;es wird abgefangen und protokolliert, und authnd &lt;strong&gt;bleibt in Betrieb&lt;/strong&gt;, ohne etwas neu zu laden&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd
+ldap on 127.0.0.1:3893, serving 4 people from the configuration file, then a sqlite database
+hangup: authnd does not reload; restart it to apply a changed configuration, certificate or keytab
+alice&amp;#39;s password change was refused: the old password did not verify: directory: wrong password
+alice changed their own password
+stopping&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Das ist ein einziger Lauf: ein &lt;code&gt;kill -HUP&lt;/code&gt;, zwei Versuche, ein Passwort zu ändern (der erste
+abgelehnt, der zweite angenommen), dann ein &lt;code&gt;kill -TERM&lt;/code&gt;.Der Prozess war nach dem &lt;code&gt;SIGHUP&lt;/code&gt; noch da.&lt;/p&gt;
+&lt;p&gt;Ein &lt;code&gt;SIGHUP&lt;/code&gt; hat authnd früher &lt;strong&gt;beendet&lt;/strong&gt; – Gos Standardverhalten für ein Signal, das
+niemand behandelt –, und systemd wertet einen Tod durch &lt;code&gt;SIGHUP&lt;/code&gt; als sauberes Beenden, sodass&lt;code&gt;Restart=on-failure&lt;/code&gt; es nicht wieder startete: Ein einziges &lt;code&gt;kill -HUP&lt;/code&gt; oder ein einziges
+logrotate-&lt;code&gt;postrotate&lt;/code&gt; legte ein Verzeichnis dauerhaft lahm. Jetzt wird es abgefangen, damit die
+Gewohnheit harmlos ist, und die Logzeile sagt, was stattdessen zu tun ist.&lt;/p&gt;
+&lt;p&gt;Dass auch bestehende Verbindungen geschlossen werden, nicht nur der Listener, ist Absicht: Ein
+Server, der keine Verbindungen mehr annimmt, seine offenen aber weiter beantwortet, sähe
+angehalten aus, ohne es zu sein – genau der Neustart, der nicht greift.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-writes"&gt;Was es schreibt&lt;span class="hx:absolute hx:-mt-20" id="what-it-writes"&gt;&lt;/span&gt;
+&lt;a href="#what-it-writes" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Alles geht auf die Standardausgabe, die unter systemd das Journal ist(&lt;code&gt;journalctl -u authnd&lt;/code&gt;):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;beim Start, wo es lauscht und wen es bedient – &lt;code&gt;ldap on …&lt;/code&gt;, &lt;code&gt;ldaps on …&lt;/code&gt;
+oder &lt;code&gt;ldap+starttls on …&lt;/code&gt;, dann &lt;code&gt;realm EXAMPLE.ORG on … (udp and tcp)&lt;/code&gt; bei einem&lt;code&gt;kerberos&lt;/code&gt;-Block;&lt;/li&gt;
+&lt;li&gt;jeder abgelehnte Bind unter einem &lt;code&gt;mfa&lt;/code&gt;-Block, jedes abgelehnte Token, jede
+abgelehnte oder abgeschlossene Passwortänderung, &lt;strong&gt;mit dem Grund&lt;/strong&gt; – den der
+Client nie erfährt; siehe &lt;a href="https://go-authn.github.io/docs/0.5/de/authnd/mfa/#what-the-binds-look-like"&gt;den zweiten Faktor&lt;/a&gt;
+und &lt;a href="https://go-authn.github.io/docs/0.5/de/authnd/tokens/#what-the-binds-look-like"&gt;Tokens&lt;/a&gt;;&lt;/li&gt;
+&lt;li&gt;jede Anfrage, die das KDC ablehnt, mit dem Präfix &lt;code&gt;kerberos:&lt;/code&gt; und dem Kerberos-Fehlercode;siehe &lt;a href="https://go-authn.github.io/docs/0.5/de/authnd/kerberos/#kinit-against-it"&gt;den Realm&lt;/a&gt;;&lt;/li&gt;
+&lt;li&gt;das eigene Log der LDAP-Bibliothek, im &lt;code&gt;slog&lt;/code&gt;-Textformat, auf Stufe info.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Ein schlicht falsches Passwort bei einem einfachen Bind, ohne &lt;code&gt;mfa&lt;/code&gt;-Block, wird mit&lt;code&gt;invalidCredentials&lt;/code&gt; beantwortet und von authnd selbst nicht protokolliert.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="when-it-does-not-start"&gt;Wenn es nicht startet&lt;span class="hx:absolute hx:-mt-20" id="when-it-does-not-start"&gt;&lt;/span&gt;
+&lt;a href="#when-it-does-not-start" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Eine Ablehnung ist eine Zeile auf der Standardfehlerausgabe, mit dem Präfix &lt;code&gt;authnd:&lt;/code&gt;, und
+Exit-Status 1; unter der Unit versucht es &lt;code&gt;Restart=on-failure&lt;/code&gt; dann alle fünf
+Sekunden erneut, und die Zeile steht jedes Mal im Journal. Alles, was &lt;code&gt;check&lt;/code&gt; ablehnt,wird auch hier abgelehnt, und das Einzige, was nur der Server findet, ist eine Adresse,auf der er nicht lauschen kann – siehe&lt;a href="https://go-authn.github.io/docs/0.5/de/authnd/check/#the-certificate-the-keytab-and-the-one-thing-it-cannot-see"&gt;&lt;code&gt;check&lt;/code&gt;&lt;/a&gt;.Der LDAP-Listener, das Zertifikat und der Realm werden alle geöffnet, bevor die
+erste Zeile ausgegeben wird; ein Server, der nicht starten kann, gibt daher nur die
+Ablehnung aus. Hier trifft eine zweite Instanz auf den Kerberos-Port der ersten:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config cases/realm2
+authnd: kerberos udp 127.0.0.1:18388: listen udp 127.0.0.1:18388: bind: address already in use&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Die Zeile &lt;code&gt;ldap on …&lt;/code&gt; und danach &lt;code&gt;realm … on …&lt;/code&gt; bedeuten, dass beide Hälften
+lauschen.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="telling-that-it-is-up"&gt;Erkennen, dass es läuft&lt;span class="hx:absolute hx:-mt-20" id="telling-that-it-is-up"&gt;&lt;/span&gt;
+&lt;a href="#telling-that-it-is-up" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Es gibt keinen Health-Endpunkt und keine Metriken. Was es gibt:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;den Prozess und seinen Exit-Status&lt;/strong&gt; – unter systemd &lt;code&gt;systemctl is-active authnd&lt;/code&gt;. Hält der LDAP-Listener oder der Realm von selbst an, endet der
+ganze Prozess mit diesem Fehler; ein lebender Prozess ist also einer, dessen beide
+Hälften antworten;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;das Root-DSE&lt;/strong&gt;, das einem anonymen Client antwortet und sagt, mit welcher Version
+er spricht:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; &amp;#39;&amp;#43;&amp;#39; &amp;#39;*&amp;#39;
+dn:
+objectClass: top
+objectClass: OpenLDAProotDSE
+supportedLDAPVersion: 3
+namingContexts: dc=example,dc=org
+supportedExtension: 1.3.6.1.4.1.4203.1.11.3
+supportedExtension: 1.3.6.1.4.1.4203.1.11.1
+supportedControl: 1.2.840.113556.1.4.319
+supportedControl: 1.3.6.1.1.13.1
+supportedControl: 1.3.6.1.1.13.2
+supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
+supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
+subschemaSubentry: cn=Subschema
+vendorName: go-authn/authnd
+vendorVersion: v0.12.0&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Auf einem &lt;a href="https://go-authn.github.io/docs/0.5/de/authnd/tls/#starttls-which-refuses-until-it-is-asked-for"&gt;StartTLS-Listener&lt;/a&gt;
+braucht diese Abfrage &lt;code&gt;-ZZ&lt;/code&gt;. Eine Probe, die mehr beweist – dass eine Quelle noch
+antwortet –, ist ein Bind als eine Person oder als ein eigens dafür vorgehaltenes Lesekonto; mit einem&lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt;-Block erreicht dieser Bind das Verzeichnis hinter diesem.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-lives-where-and-what-a-restart-loses"&gt;Was wo liegt und was ein Neustart verliert&lt;span class="hx:absolute hx:-mt-20" id="what-lives-where-and-what-a-restart-loses"&gt;&lt;/span&gt;
+&lt;a href="#what-lives-where-and-what-a-restart-loses" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;Konfiguration, Passwörter, DSN, Zertifikat, Keytab&lt;/td&gt;
+&lt;td&gt;die Dateien, die die Konfiguration nennt; nichts wird kopiert&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;eine SQLite-Datenbank&lt;/td&gt;
+&lt;td&gt;wo ihr DSN es sagt; &lt;code&gt;/var/lib/authnd&lt;/code&gt; unter der Unit&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;Zähler und Sperren des zweiten Faktors&lt;/td&gt;
+&lt;td&gt;nur im Speicher: &lt;strong&gt;ein Neustart vergisst sie&lt;/strong&gt;, auch eine Person, die nach hundert falschen Codes gesperrt wurde&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;verwendete Einmalcodes&lt;/td&gt;
+&lt;td&gt;nur im Speicher&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;</description></item></channel></rss>

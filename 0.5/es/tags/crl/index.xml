@@ -1,0 +1,401 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Crl</title><link>https://go-authn.github.io/docs/0.5/es/tags/crl/</link><description>Recent content in Crl on go-authn</description><generator>Hugo -- gohugo.io</generator><language>es</language><atom:link href="https://go-authn.github.io/docs/0.5/es/tags/crl/index.xml" rel="self" type="application/rss+xml"/><item><title>authn-revokd</title><link>https://go-authn.github.io/docs/0.5/es/authn-revokd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/es/authn-revokd/</guid><description>
+&lt;p&gt;&lt;strong&gt;OpenSSH no tiene forma de distribuir una KRL, y nada en una KRL dice que esté
+desfasada.&lt;/strong&gt; &lt;code&gt;sshd&lt;/code&gt; lee como lista vigente un archivo que dejó de actualizarse hace
+meses. authn-revokd cierra ambas brechas para las listas que publica&lt;a href="https://go-authn.github.io/docs/0.5/es/authn-bridge/revocation/"&gt;authn-bridge&lt;/a&gt;: descarga cada lista, la
+conserva solo si se verifica, la escribe donde la lee &lt;code&gt;sshd&lt;/code&gt; o un servidor TLS y,cuando una lista caduca, escribe una que &lt;strong&gt;revoca la propia CA&lt;/strong&gt;. Go puro,&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un solo binario. Estas páginas describen la v0.6.4.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
+$ authn-revokd -version
+authn-revokd v0.6.4
+$ authn-revokd -help
+Usage of authn-revokd:
+-config string
+the configuration file (default &amp;#34;/etc/authn-revokd/revokd.hcl&amp;#34;)
+-once
+sync once and exit: 1 when a list is not current, or could not be fetched
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;-help&lt;/code&gt; termina con 0; antes de la v0.6.2 terminaba con 2.&lt;/p&gt;
+&lt;p&gt;Antes de la v0.6.0 el comando se llamaba &lt;code&gt;revokd&lt;/code&gt;, y leía &lt;code&gt;/etc/revokd.hcl&lt;/code&gt; por
+defecto. Ya nada lee ese archivo; cuando existe y el nuevo valor por defecto no, el
+error nombra las dos rutas.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-does-in-one-run"&gt;Lo que hace, en una ejecución&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-in-one-run"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-in-one-run" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Contra un authn-bridge de prueba en loopback, con un origen KRL y un origen CRL:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+output tls: wrote /tmp/authn/revokd/out/bridge.crl
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261011T115024
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Una segunda ejecución sin nada nuevo no imprime nada y termina con 0: una salida solo
+se reescribe cuando cambia su contenido.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-the-transport-does-not-matter"&gt;Por qué el transporte no importa&lt;span class="hx:absolute hx:-mt-20" id="why-the-transport-does-not-matter"&gt;&lt;/span&gt;
+&lt;a href="#why-the-transport-does-not-matter" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Cada lista se autentica a sí misma: una KRL mediante una firma SSHSIG separada hecha
+con la propia clave de la CA, una CRL mediante la firma de su CA. Cada lista dice
+cuándo deja de estar vigente. Así que una lista puede llegar por HTTPS, por HTTP sin
+cifrar dentro de un clúster, desde un espejo o desde un archivo. El transporte decide
+lo rápido que llega un cambio, nunca si se acepta una lista falsificada o desfasada.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;auténtica&lt;/td&gt;
+&lt;td&gt;SSHSIG con la clave de la CA SSH, espacio de nombres &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;firmada por su CA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;vigente&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;expires@go-authn.github.io&lt;/code&gt;, que sshd ignora&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;nunca hacia atrás&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;krl_version&lt;/code&gt;, y después la fecha de generación&lt;/td&gt;
+&lt;td&gt;CRL Number, y después &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;en modo cerrado&lt;/td&gt;
+&lt;td&gt;authn-revokd escribe una KRL que revoca la clave de la CA&lt;/td&gt;
+&lt;td&gt;OpenSSL rechaza por sí solo una CRL caducada&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="where-to-go-next"&gt;Por dónde seguir&lt;span class="hx:absolute hx:-mt-20" id="where-to-go-next"&gt;&lt;/span&gt;
+&lt;a href="#where-to-go-next" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/es/authn-revokd/install/"&gt;Instalarlo&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;el demonio, o &lt;code&gt;-once&lt;/code&gt; con un temporizador; conectar sshd y nginx&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/es/authn-revokd/configuration/"&gt;La configuración&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;orígenes, salidas, el espejo, y lo que se rechaza&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/es/authn-revokd/verification/"&gt;Cómo se verifica una lista&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;firma, fechas, y nunca más antigua que la lista guardada, también entre reinicios&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/es/authn-revokd/lapse/"&gt;Cuando una lista caduca&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;la KRL que revoca la propia CA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="what-it-does-not-do"&gt;Lo que no hace&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-not-do"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-not-do" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Una revocación no llega a un servidor más rápido de lo que authn-revokd consulta(&lt;code&gt;refresh&lt;/code&gt;), más el retraso del emisor en volver a emitir. Mientras el emisor está
+caído, sus certificados se rechazan a partir de la caducidad de la lista. Quien tenga
+la clave de una CA puede firmar cualquier lista, igual que puede firmar cualquier
+certificado.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;Licencia&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause.&lt;/p&gt;</description></item><item><title>Lo que revoca, y cómo se enteran los servidores</title><link>https://go-authn.github.io/docs/0.5/es/authn-bridge/revocation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/es/authn-bridge/revocation/</guid><description>
+&lt;p&gt;Desactivar a una persona o una institución (&lt;a href="https://go-authn.github.io/docs/0.5/es/authn-bridge/admin/"&gt;la API de administración&lt;/a&gt;)pone fin a todo lo que vuelve al proveedor: los tokens de actualización,&lt;code&gt;/userinfo&lt;/code&gt;, los certificados nuevos, las contraseñas de aplicación. Lo que ya ha
+entregado se comprueba en otro lugar, contra claves, y tres mecanismos llegan a
+ello:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;credencial&lt;/th&gt;
+&lt;th&gt;se retira mediante&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;un certificado SSH firmado por esta CA&lt;/td&gt;
+&lt;td&gt;la &lt;strong&gt;KRL&lt;/strong&gt;, &lt;code&gt;GET /ssh/krl&lt;/code&gt;, con su firma en &lt;code&gt;/ssh/krl.sig&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;un certificado de cliente X.509&lt;/td&gt;
+&lt;td&gt;la &lt;strong&gt;CRL&lt;/strong&gt;, &lt;code&gt;GET /x509/crl&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;un token de acceso, un certificado de opkssh, cualquier cosa que un servidor verifica por sí solo&lt;/td&gt;
+&lt;td&gt;un evento &lt;strong&gt;Shared Signals&lt;/strong&gt; &lt;code&gt;session-revoked&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;La revocación es permanente. Volver a activar a una persona no le devuelve sus
+certificados; recibe otros nuevos. Una lista de la que se pudiera retirar una
+revocación sería una lista que podría editar cualquiera que alcance la API de
+administración.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-lists"&gt;Las listas&lt;span class="hx:absolute hx:-mt-20" id="the-lists"&gt;&lt;/span&gt;
+&lt;a href="#the-lists" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Ambas se emiten como indica el protocolo de go-authn/revocation, de modo que
+puedan viajar por cualquier medio (un espejo, HTTP sin cifrar, un archivo) y
+seguir pudiendo comprobarlas quien las lea:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;formato&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;PROTOCOL.krl&lt;/code&gt; de OpenSSH, escrito por go-authn/krl: lo que leen &lt;code&gt;RevokedKeys&lt;/code&gt; de &lt;code&gt;sshd&lt;/code&gt; y &lt;code&gt;ssh-keygen -Q&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;DER, RFC 5280&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;firmada&lt;/td&gt;
+&lt;td&gt;una SSHSIG separada con la clave de la CA SSH, espacio de nombres &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;por la CA que firma los certificados&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;vigente hasta&lt;/td&gt;
+&lt;td&gt;su extensión &lt;code&gt;expires@go-authn.github.io&lt;/code&gt; (que sshd ignora)&lt;/td&gt;
+&lt;td&gt;su &lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;ordenada por&lt;/td&gt;
+&lt;td&gt;su &lt;code&gt;krl_version&lt;/code&gt;, y luego su fecha de generación&lt;/td&gt;
+&lt;td&gt;su CRL Number, y luego &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Cada lista indica que deja de estar vigente &lt;strong&gt;una hora&lt;/strong&gt; después de emitirse. Una
+lista se conserva y se sirve sin cambios hasta que ha recorrido la mitad de ese
+plazo, o hasta que se revoca algo; la petición siguiente obtiene entonces una
+nueva emisión. Una emisión nunca lleva una fecha anterior a la que sustituye,aunque el reloj retroceda, ya que un lector rechaza como reversión una emisión
+anterior de la misma versión. El CRL Number aumenta en cada emisión.&lt;/p&gt;
+&lt;p&gt;La KRL de un proveedor de prueba sin nada revocado:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -D - -o var/bridge.krl http://127.0.0.1:28473/ssh/krl
+HTTP/1.1 200 OK
+Cache-Control: max-age=60
+Content-Type: application/octet-stream
+Etag: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;
+Date: Sun, 11 Oct 2026 09:48:14 GMT
+Content-Length: 130
+$ ssh-keygen -Q -l -f var/bridge.krl
+# KRL version 0
+# Generated at 20261011T114814
+# Comment: go-authn/bridge http://127.0.0.1:28473&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;El ETag es el del contenido.&lt;/strong&gt; Un lector sondea con &lt;code&gt;If-None-Match&lt;/code&gt;, y obtiene&lt;code&gt;304&lt;/code&gt; mientras la emisión que tiene siga siendo la que se sirve; como el contenido
+cambia al menos cada media hora, un lector que sondea nunca conserva una copia más
+allá de su caducidad:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o /dev/null -H &amp;#39;If-None-Match: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl
+304&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;La firma se descarga con &lt;code&gt;If-Match&lt;/code&gt;&lt;/strong&gt; sobre el ETag de la lista. Si la lista se
+ha vuelto a emitir entretanto, la respuesta es &lt;code&gt;412&lt;/code&gt;, en lugar de una firma que no
+le corresponde:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o var/bridge.krl.sig -H &amp;#39;If-Match: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl.sig
+200
+$ curl -s -o /dev/null -H &amp;#39;If-Match: &amp;#34;stale&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl.sig
+412&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;ssh-keygen&lt;/code&gt; comprueba la firma, y la rechaza en cualquier otro espacio de
+nombres:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Y verify -f allowed -I bridge -n krl@go-authn.github.io -s bridge.krl.sig &amp;lt; bridge.krl
+Good &amp;#34;krl@go-authn.github.io&amp;#34; signature for bridge with ED25519 key SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;donde &lt;code&gt;allowed&lt;/code&gt; es la línea&lt;code&gt;bridge namespaces=&amp;quot;krl@go-authn.github.io&amp;quot; &amp;lt;the CA key from /ssh/config&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;La CRL, emitida quince segundos después:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ openssl crl -inform DER -in var/bridge.crl -noout -text
+Certificate Revocation List (CRL):
+Version 2 (0x1)
+Signature Algorithm: ecdsa-with-SHA256
+Issuer: CN=go-authn bridge NFS client CA
+Last Update: Oct 11 09:48:29 2026 GMT
+Next Update: Oct 11 10:48:29 2026 GMT
+CRL extensions:
+X509v3 Authority Key Identifier:
+2A:90:7A:50:FF:65:52:BA:70:4E:E1:F8:70:EE:7A:FC:B1:8B:FE:4E
+X509v3 CRL Number:
+1791712109993
+No Revoked Certificates.
+Signature Algorithm: ecdsa-with-SHA256
+Signature Value:
+30:44:02:20:37:90:14:6f:c1:f2:ea:98:29:04:61:88:a8:17:
+88:e3:f6:84:9d:46:a7:fc:2b:ac:81:26:47:9d:ac:84:23:38:
+02:20:0a:a6:93:cb:7d:2d:81:e4:59:d4:0d:a0:fd:f4:6e:75:
+c9:0d:53:e7:92:49:ac:a1:31:a8:90:09:91:d1:87:b6&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un certificado permanece en su lista hasta que caduca: un certificado caducado se
+rechaza en todas partes sin necesidad de figurar en la lista.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="who-reads-them"&gt;Quién las lee&lt;span class="hx:absolute hx:-mt-20" id="who-reads-them"&gt;&lt;/span&gt;
+&lt;a href="#who-reads-them" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;Un &lt;code&gt;sshd&lt;/code&gt; normal, o nginx y otros servidores TLS:&lt;a href="https://go-authn.github.io/docs/0.5/es/authn-revokd/"&gt;authn-revokd&lt;/a&gt; descarga las listas,conserva solo las que se verifican, las escribe donde las leen los servidores, y
+falla en modo cerrado para sshd cuando una lista caduca.&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://go-fileshare.github.io/docs/latest/security/revocation-lists/" target="_blank" rel="noopener"&gt;go-fileshare&lt;/a&gt;
+las descarga y las verifica por sí mismo, y rechaza los certificados del
+proveedor mientras no tenga ninguna lista vigente.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="shared-signals"&gt;Shared Signals&lt;span class="hx:absolute hx:-mt-20" id="shared-signals"&gt;&lt;/span&gt;
+&lt;a href="#shared-signals" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un token de acceso o un certificado de opkssh se comprueba donde se usa, y ninguna
+lista puede nombrarlo. Por eso el proveedor es un transmisor de OpenID Shared
+Signals: con &lt;code&gt;DisablePerson&lt;/code&gt;, &lt;code&gt;RevokePerson&lt;/code&gt; y &lt;code&gt;DisableIdP&lt;/code&gt; pone en cola un evento
+CAEP &lt;strong&gt;&lt;code&gt;session-revoked&lt;/code&gt;&lt;/strong&gt; (todo lo emitido a este sujeto antes de la hora del
+evento queda anulado) para cada receptor que lo haya solicitado.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;state&lt;/span&gt; { &lt;span class="p"&gt;...&lt;/span&gt; }&lt;span class="c1"&gt; # required: a queue a restart empties loses revocations
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;ssf {} # event_retention&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;192h&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;by&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;fileshare-ssf&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # a receiver: client credentials, scope ssf
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/fileshare-ssf.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssf_receiver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/.well-known/ssf-configuration | jq .
+{
+&amp;#34;issuer&amp;#34;: &amp;#34;http://127.0.0.1:28473&amp;#34;,
+&amp;#34;jwks_uri&amp;#34;: &amp;#34;http://127.0.0.1:28473/jwks&amp;#34;,
+&amp;#34;delivery_methods_supported&amp;#34;: [
+&amp;#34;urn:ietf:rfc:8936&amp;#34;
+],
+&amp;#34;configuration_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams&amp;#34;,
+&amp;#34;status_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/status&amp;#34;,
+&amp;#34;add_subject_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/subjects:add&amp;#34;,
+&amp;#34;remove_subject_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/subjects:remove&amp;#34;,
+&amp;#34;verification_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/verify&amp;#34;,
+&amp;#34;spec_version&amp;#34;: &amp;#34;1_0&amp;#34;,
+&amp;#34;authorization_schemes&amp;#34;: [
+{
+&amp;#34;spec_urn&amp;#34;: &amp;#34;urn:ietf:rfc:6749&amp;#34;
+}
+]
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Solo entrega por sondeo&lt;/strong&gt; (RFC 8936): el receptor pregunta; desde aquí no se
+establece ninguna conexión saliente.&lt;/li&gt;
+&lt;li&gt;Un receptor se autentica con un token de acceso obtenido mediante la concesión&lt;strong&gt;client credentials&lt;/strong&gt;, para un cliente &lt;code&gt;ssf_receiver&lt;/code&gt; con un secreto, scope&lt;code&gt;ssf&lt;/code&gt;. Solo ve sus propios flujos, diez como máximo.&lt;/li&gt;
+&lt;li&gt;Los eventos son SET (RFC 8417) firmados con la clave de los tokens de ID, sin&lt;code&gt;exp&lt;/code&gt; ni &lt;code&gt;sub&lt;/code&gt;. El sujeto es, por defecto, la &lt;strong&gt;cuenta&lt;/strong&gt;, &lt;code&gt;acct:&amp;lt;username&amp;gt;&lt;/code&gt;: un&lt;code&gt;sub&lt;/code&gt; puede ser pairwise, uno por cliente. Un receptor configurado con&lt;code&gt;ssf_subject_format = &amp;quot;iss_sub&amp;quot;&lt;/code&gt; recibe en su lugar el emisor y el &lt;code&gt;sub&lt;/code&gt;
+público.&lt;/li&gt;
+&lt;li&gt;La desactivación de una institución es un evento por cada persona de la que el
+proveedor tiene rastro allí, y uno cuyo sujeto es el &lt;strong&gt;tenant&lt;/strong&gt;, el entity ID de
+la institución, con sus ámbitos, que cubre a las personas que el proveedor ha
+olvidado.&lt;/li&gt;
+&lt;li&gt;Los flujos y los eventos no entregados se conservan en la base de datos &lt;code&gt;state&lt;/code&gt;
+hasta que se confirman o pasa &lt;code&gt;event_retention&lt;/code&gt;. Un evento que un receptor
+notifica como erróneo se vuelve a entregar, hasta diez veces.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;El bloque SSF se rechaza sin un bloque &lt;code&gt;state&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: ssf: needs a state block: a queue a restart empties loses revocations&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

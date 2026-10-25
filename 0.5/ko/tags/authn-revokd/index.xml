@@ -1,0 +1,890 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Authn-Revokd</title><link>https://go-authn.github.io/docs/0.5/ko/tags/authn-revokd/</link><description>Recent content in Authn-Revokd on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ko</language><atom:link href="https://go-authn.github.io/docs/0.5/ko/tags/authn-revokd/index.xml" rel="self" type="application/rss+xml"/><item><title>authn-revokd 설치하기</title><link>https://go-authn.github.io/docs/0.5/ko/authn-revokd/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ko/authn-revokd/install/</guid><description>
+&lt;p&gt;저장소는 &lt;code&gt;packaging/&lt;/code&gt;에 유닛 세 개와 계정 하나를 제공합니다.&lt;code&gt;authn-revokd.service&lt;/code&gt;(데몬), &lt;code&gt;authn-revokd-once.service&lt;/code&gt;와&lt;code&gt;authn-revokd-once.timer&lt;/code&gt;(대안), 그리고 &lt;code&gt;sysusers.d/authn-revokd.conf&lt;/code&gt;입니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;경로&lt;/th&gt;
+&lt;th&gt;설명&lt;/th&gt;
+&lt;th&gt;소유자, 모드&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/usr/local/bin/authn-revokd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;바이너리&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0755&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/usr/lib/sysusers.d/authn-revokd.conf&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;authn-revokd&lt;/code&gt; 시스템 계정&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/systemd/system/authn-revokd.service&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;데몬&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/authn-revokd/revokd.hcl&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;구성, 기본 &lt;code&gt;-config&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/authn-revokd/ca/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;목록이 서명되어야 하는 CA 키와 인증서&lt;/td&gt;
+&lt;td&gt;root, &lt;code&gt;0755&lt;/code&gt;, 그 안의 파일은 &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;StateDirectory=&lt;/code&gt;, 유일하게 쓸 수 있는 곳&lt;/td&gt;
+&lt;td&gt;authn-revokd, &lt;code&gt;0755&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/state/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;state_dir&lt;/code&gt;: 검증된 사본&lt;/td&gt;
+&lt;td&gt;authn-revokd, &lt;code&gt;0700&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/sshd.krl&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;출력: &lt;code&gt;sshd&lt;/code&gt;가 읽는 것&lt;/td&gt;
+&lt;td&gt;authn-revokd, &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;출력을 &lt;code&gt;/var/lib/authn-revokd&lt;/code&gt;에 기록하고, 서버가 그곳을 가리키게 하십시오.&lt;/strong&gt;
+출력은 최종 이름 옆에 기록된 뒤 이름이 바뀌어 덮어쓰므로, 그 &lt;em&gt;디렉터리&lt;/em&gt;에 쓸 수
+있어야 합니다. &lt;code&gt;/etc/ssh&lt;/code&gt;를 쓰기 가능하게 하면 &lt;code&gt;authn-revokd&lt;/code&gt; 계정이 &lt;code&gt;sshd_config&lt;/code&gt;를
+바꿀 수 있게 됩니다. 출력은 &lt;code&gt;0644&lt;/code&gt;이며 &lt;code&gt;UMask=0077&lt;/code&gt;에도 불구하고 명시적으로 chmod하여,자신의 사용자로 실행되는 &lt;code&gt;sshd&lt;/code&gt;와 TLS 서버가 읽을 수 있게 합니다. 상태는 &lt;code&gt;0700&lt;/code&gt;으로
+유지됩니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-binary-the-account-the-unit"&gt;바이너리, 계정, 유닛&lt;span class="hx:absolute hx:-mt-20" id="the-binary-the-account-the-unit"&gt;&lt;/span&gt;
+&lt;a href="#the-binary-the-account-the-unit" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;릴리스에는 amd64와 arm64의 Linux, macOS, Windows용 &lt;code&gt;authn-revokd-&amp;lt;os&amp;gt;-&amp;lt;arch&amp;gt;&lt;/code&gt;가&lt;code&gt;SHA256SUMS&lt;/code&gt;와 빌드 출처 증명과 함께 들어 있습니다(&lt;a href="https://go-authn.github.io/docs/0.5/ko/security/verifying-releases/"&gt;다운로드 검증하기&lt;/a&gt;). 또는&lt;code&gt;go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;계정과 유닛은 바이너리와 같은 버전인 릴리스 태그의 &lt;code&gt;packaging/&lt;/code&gt; 디렉터리에서
+가져옵니다. 태그의 체크아웃에서, 또는 v0.6.4의 경우&lt;a href="https://github.com/go-authn/revocation/tree/v0.6.4/packaging" target="_blank" rel="noopener"&gt;https://github.com/go-authn/revocation/tree/v0.6.4/packaging&lt;/a&gt;에서 그 디렉터리를
+바이너리 옆에 복사하십시오.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0755&lt;/span&gt; authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/sysusers.d/authn-revokd.conf /usr/lib/sysusers.d/authn-revokd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemd-sysusers /usr/lib/sysusers.d/authn-revokd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/systemd/authn-revokd.service /etc/systemd/system/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl daemon-reload&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;계정은 &lt;code&gt;DynamicUser=&lt;/code&gt;가 아니라 정적 계정입니다. authn-revokd는 자신의 uid나 root가
+아닌 사람이 소유한 상태 디렉터리를 거부하며, 상태는 재시작과 업그레이드를 거쳐서도
+다음 목록의 순서를 계속 정해야 합니다. 동적 사용자라면 파일이 root 소유 &lt;code&gt;0700&lt;/code&gt;인&lt;code&gt;/var/lib/private&lt;/code&gt; 아래에 있게 되어, 자신의 사용자로 실행되는 TLS 서버가 CRL을 읽을
+수 없습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-daemon"&gt;데몬&lt;span class="hx:absolute hx:-mt-20" id="the-daemon"&gt;&lt;/span&gt;
+&lt;a href="#the-daemon" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;exec&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecReload&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/bin/kill -HUP $MAINPID&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Restart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;always&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그리고 그 주위에: &lt;code&gt;User=authn-revokd&lt;/code&gt;, capability 전혀 없음, &lt;code&gt;NoNewPrivileges=&lt;/code&gt;,&lt;code&gt;ProtectSystem=strict&lt;/code&gt;에 &lt;code&gt;StateDirectory=authn-revokd&lt;/code&gt;(&lt;code&gt;0755&lt;/code&gt;)가 유일하게 쓸 수 있는
+곳, &lt;code&gt;PrivateUsers=&lt;/code&gt;, &lt;code&gt;PrivateTmp=&lt;/code&gt;, &lt;code&gt;PrivateDevices=&lt;/code&gt;, &lt;code&gt;PrivateIPC=&lt;/code&gt;,&lt;code&gt;AF_INET AF_INET6 AF_UNIX&lt;/code&gt;만, &lt;code&gt;@system-service&lt;/code&gt; 시스템 콜에서&lt;code&gt;@privileged @resources&lt;/code&gt;를 뺀 것.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;sshd는 KRL의 만료를 무시하므로 &lt;code&gt;Restart=always&lt;/code&gt;입니다.&lt;/strong&gt; 목록이 만료되면 파일은&lt;em&gt;이 프로세스가&lt;/em&gt; 실패 시 차단 상태로 만듭니다. 프로세스가 멈춰 있는 동안 sshd는 마지막으로
+기록된 파일을 계속 읽고, 그동안 발급된 폐기는 도착하지 않습니다. 유닛을 모니터링하거나,미러가 켜져 있으면 &lt;code&gt;/healthz&lt;/code&gt;를 모니터링하십시오.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;systemctl reload&lt;/code&gt;는 지금 동기화합니다.&lt;/strong&gt; &lt;code&gt;SIGHUP&lt;/code&gt;을 보내며, 에이전트는 다음&lt;code&gt;refresh&lt;/code&gt;를 기다리지 않고 모든 소스를 즉시 가져옵니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;hangup: syncing now&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;구성은 시작할 때 한 번만 읽으므로 다시 읽지 않습니다. &lt;code&gt;revokd.hcl&lt;/code&gt;을 바꾼 뒤에는&lt;code&gt;systemctl restart authn-revokd&lt;/code&gt;를 하십시오. (v0.6.0 이전에는 처리되지 않은&lt;code&gt;SIGHUP&lt;/code&gt;이 프로세스를 죽였고, systemd는 이를 정상 종료로 간주합니다.)&lt;/p&gt;
+&lt;h3 data-hextra-search-id="enable-it-before-wiring-sshd"&gt;sshd를 연결하기 전에 켜십시오&lt;span class="hx:absolute hx:-mt-20" id="enable-it-before-wiring-sshd"&gt;&lt;/span&gt;
+&lt;a href="#enable-it-before-wiring-sshd" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;RevokedKeys&lt;/code&gt;가 존재하지 않는 파일을 지정하면 sshd는 모든 인증서를 거부합니다&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;그러므로 authn-revokd를 먼저 시작하고 출력이 생길 때까지 기다리십시오.&lt;code&gt;ssh-keygen -Q -l -f /var/lib/authn-revokd/sshd.krl&lt;/code&gt;은 모든 소스가 현재인 동안
+주석 &lt;code&gt;authn-revokd sshd&lt;/code&gt;를 출력합니다.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; --now authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;journalctl -u authn-revokd -n &lt;span class="m"&gt;20&lt;/span&gt; &lt;span class="c1"&gt;# &amp;#34;&amp;lt;source&amp;gt;: version N, issued ..., expires ...&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="c1"&gt;# &amp;#34;output sshd: wrote /var/lib/authn-revokd/sshd.krl&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그다음 &lt;code&gt;/etc/ssh/sshd_config&lt;/code&gt;에:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;TrustedUserCAKeys /etc/ssh/ca/univ-a-ssh.pub
+RevokedKeys /var/lib/authn-revokd/sshd.krl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그리고 &lt;code&gt;sshd -t &amp;amp;&amp;amp; systemctl reload ssh&lt;/code&gt;. sshd는 인증할 때마다 &lt;code&gt;RevokedKeys&lt;/code&gt;를 읽으므로
+authn-revokd가 파일을 다시 기록해도 다시 불러올 필요가 없습니다. 원자적 이름 변경이면
+충분합니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="a-tls-servers-crl"&gt;TLS 서버의 CRL&lt;span class="hx:absolute hx:-mt-20" id="a-tls-servers-crl"&gt;&lt;/span&gt;
+&lt;a href="#a-tls-servers-crl" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-nginx" data-lang="nginx"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_client_certificate&lt;/span&gt; &lt;span class="s"&gt;/etc/authn-revokd/ca/univ-a-x509.pem&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_verify_client&lt;/span&gt; &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_crl&lt;/span&gt; &lt;span class="s"&gt;/var/lib/authn-revokd/univ-a.crl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;format&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#34;pem&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;TLS 서버는 구성을 로드할 때 CRL을 읽으므로, 파일이 바뀌면 다시 불러와야 합니다.&lt;code&gt;on_change&lt;/code&gt; 명령은 &lt;code&gt;authn-revokd&lt;/code&gt; 계정으로 실행되는데 이 계정은 &lt;code&gt;systemctl reload nginx&lt;/code&gt;를 할 수 없습니다. 대신 systemd가 root로 파일을 지켜보게 하십시오. 출력에 대한
+경로 유닛(&lt;code&gt;PathChanged=&lt;/code&gt;)이 &lt;code&gt;systemctl reload nginx&lt;/code&gt;를 실행하는 &lt;code&gt;oneshot&lt;/code&gt;을
+시작하게 합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="or--once-on-a-timer"&gt;또는: 타이머의 &lt;code&gt;-once&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="or--once-on-a-timer"&gt;&lt;/span&gt;
+&lt;a href="#or--once-on-a-timer" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;authn-revokd -once&lt;/code&gt;는 한 번 동기화하고 종료하며, 목록이 현재가 아니거나 가져올 수
+없으면 &lt;code&gt;1&lt;/code&gt;입니다(&lt;a href="https://go-authn.github.io/docs/0.5/ko/authn-revokd/verification/#what--once-reports"&gt;&lt;code&gt;-once&lt;/code&gt;가 보고하는 것&lt;/a&gt;).출력은 어느 쪽이든 기록되며, 목록이 만료되면 sshd에 대해 실패 시 차단 상태가 됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# authn-revokd-once.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Conflicts&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authn-revokd.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;oneshot&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;TimeoutStartSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;5min&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# authn-revokd-once.timer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Conflicts&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authn-revokd.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Timer]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;OnBootSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;30s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;OnUnitActiveSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;1min&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;AccuracySec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;5s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;RandomizedDelaySec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;10s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Install]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;WantedBy&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;timers.target&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;일회성 실행은 데몬의 계정과 강화 설정을 갖습니다. &lt;code&gt;TimeoutStartSec=5min&lt;/code&gt;은 소스에서
+멈춘 동기화가 다음 틱보다 오래 살아남지 않게 하고, &lt;code&gt;RandomizedDelaySec=10s&lt;/code&gt;는
+함께 시작한 서버 군이 같은 박자로 발급자를 폴링하지 않게 합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; authn-revokd-once.service authn-revokd-once.timer /etc/systemd/system/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl daemon-reload
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl disable --now authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; --now authn-revokd-once.timer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;둘을 함께 켜지 마십시오.&lt;/strong&gt; 유닛이 충돌하므로 하나를 시작하면 다른 하나가 멈춥니다.데몬이 더 나은 선택으로 남습니다. 만료된 목록을 타이머가 다음 틱을 기다리는 동안 데몬은
+다음 &lt;code&gt;refresh&lt;/code&gt;에서 실패 시 차단 처리하며, 미러로 동작하는 것도 데몬뿐입니다.&lt;code&gt;listen&lt;/code&gt;은 &lt;code&gt;-once&lt;/code&gt;에서 무시됩니다. 발사를 멈춘 타이머는 멈춘 데몬과 같으므로&lt;code&gt;systemctl status authn-revokd-once&lt;/code&gt;를 모니터링하십시오.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="upgrading-and-going-back"&gt;업그레이드와 되돌리기&lt;span class="hx:absolute hx:-mt-20" id="upgrading-and-going-back"&gt;&lt;/span&gt;
+&lt;a href="#upgrading-and-going-back" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;새 바이너리를 이전 것 옆에 설치하고, 교체하고, 재시작합니다. 상태는 이어집니다.검증된 사본이 다음 목록의 순서를 계속 정하므로, 업그레이드도 이전 바이너리로의
+롤백도 오래된 목록이 들어오게 하지 않습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="uninstalling"&gt;제거하기&lt;span class="hx:absolute hx:-mt-20" id="uninstalling"&gt;&lt;/span&gt;
+&lt;a href="#uninstalling" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;서버의 구성에서 &lt;code&gt;RevokedKeys&lt;/code&gt;와 &lt;code&gt;ssl_crl&lt;/code&gt;을 &lt;strong&gt;먼저&lt;/strong&gt; 제거하고 서버를 다시
+불러오십시오. 파일이 사라지면 sshd는 모든 인증서를 거부합니다.&lt;/p&gt;</description></item><item><title>구성</title><link>https://go-authn.github.io/docs/0.5/ko/authn-revokd/configuration/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ko/authn-revokd/configuration/</guid><description>
+&lt;p&gt;기본값은 &lt;code&gt;/etc/authn-revokd/revokd.hcl&lt;/code&gt; 파일 하나입니다(&lt;code&gt;-config&lt;/code&gt;로 다른 파일을
+지정). 시작할 때 한 번 읽습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;state_dir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-revokd/state&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the verified copies: what orders the next list
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;refresh&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1m&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;source&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;univ-a-ssh&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.univ-a.example/ssh/krl&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # and .../ssh/krl.sig beside it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_ca&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-revokd/ca/univ-a-ssh.pub&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # what the list must be signed by
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;source&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;univ-b-ssh&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;http://mirror.cluster.local:8080/univ-b-ssh&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # a mirror: plain http is fine
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_ca&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-revokd/ca/univ-b-ssh.pub&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;source&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;univ-a-x509&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.univ-a.example/x509/crl&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; x509_ca&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-revokd/ca/univ-a-x509.pem&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;output&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sshd&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # sshd_config: RevokedKeys /var/lib/authn-revokd/sshd.krl
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; path&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-revokd/sshd.krl&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sources&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;univ-a-ssh&amp;#34;, &amp;#34;univ-b-ssh&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # merged into one file
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;output&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # nginx: ssl_crl /var/lib/authn-revokd/univ-a.crl
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; path&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-revokd/univ-a.crl&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sources&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;univ-a-x509&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; format&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;pem&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;# listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:8080&amp;#34;&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;serve&lt;/span&gt; &lt;span class="k"&gt;the&lt;/span&gt; &lt;span class="k"&gt;verified&lt;/span&gt; &lt;span class="k"&gt;lists&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt; &lt;span class="k"&gt;a&lt;/span&gt; &lt;span class="k"&gt;mirror&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-keys"&gt;키&lt;span class="hx:absolute hx:-mt-20" id="the-keys"&gt;&lt;/span&gt;
+&lt;a href="#the-keys" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;키&lt;/th&gt;
+&lt;th&gt;기본값&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;state_dir&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;필수, 절대 경로. 없으면 &lt;code&gt;0700&lt;/code&gt;으로 생성&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;refresh&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;1m&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;모든 소스를 가져오는 주기, 1초 이상. 각 대기는 위아래로 10분의 1씩 달라져서 서버 군이 같은 박자로 움직이지 않음&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;listen&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;host:port&lt;/code&gt;: 검증된 목록을 제공, 즉 미러. &lt;code&gt;-once&lt;/code&gt;에서는 무시됨&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;source &amp;quot;&amp;lt;name&amp;gt;&amp;quot;&lt;/code&gt;&lt;/strong&gt;: 목록 하나. 이름은 문자, 숫자, &lt;code&gt;.&lt;/code&gt;, &lt;code&gt;_&lt;/code&gt;, &lt;code&gt;-&lt;/code&gt;이며 점으로 시작하지
+않고 최대 64자입니다. 상태 디렉터리의 파일 이름이자 미러의 경로가 됩니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;키&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;url&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;https://&lt;/code&gt;, &lt;code&gt;http://&lt;/code&gt; 또는 &lt;code&gt;file://&lt;/code&gt;. KRL의 서명은 같은 URL에 &lt;code&gt;.sig&lt;/code&gt;를 붙여 가져옴&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ssh_ca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;SSH CA의 공개 키, &lt;code&gt;authorized_keys&lt;/code&gt; 한 줄: KRL 소스. 인증서는 여기서 거부됨&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;x509_ca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;CA의 PEM 인증서: CRL 소스&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;max_age&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;자체 만료에 더해, 이보다 오래 전에 발급된 목록도 거부. CRL 출력에 공급하는 소스에서는 거부됨&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;revoke_keys&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;다른 소스와 공유하는 출력에서 이 소스의 목록이 &lt;strong&gt;일반 키&lt;/strong&gt;를 폐기하도록 허용. KRL 소스에만&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;output &amp;quot;&amp;lt;name&amp;gt;&amp;quot;&lt;/code&gt;&lt;/strong&gt;: 서버가 읽는 파일 하나.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;키&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;path&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;절대 경로. 그 옆에 기록한 뒤 이름을 바꿔 덮어씀&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sources&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;하나의 파일로 병합되는 KRL 소스들, 또는 정확히 하나의 CRL 소스&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;format&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;der&lt;/code&gt;(기본값) 또는 &lt;code&gt;pem&lt;/code&gt;. CRL 출력에만&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;on_change&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;파일이 바뀐 뒤, 그리고 성공할 때까지 매 동기화마다 실행하는 명령과 인수&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="one-krl-for-several-cas"&gt;여러 CA를 위한 하나의 KRL&lt;span class="hx:absolute hx:-mt-20" id="one-krl-for-several-cas"&gt;&lt;/span&gt;
+&lt;a href="#one-krl-for-several-cas" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;OpenSSH 10.3 이전에는 &lt;code&gt;RevokedKeys&lt;/code&gt;가 파일 하나만 받으므로 출력의 KRL 소스들은
+병합되며, &lt;strong&gt;각 목록은 자신의 CA에는 온전한 효과를 유지하고 다른 CA에는 아무 효과도
+없습니다.&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;유지:&lt;/strong&gt; 일련번호와 키 ID, CA를 지정하지 않는 섹션(자신의 CA로 한정됨), 그리고 그
+CA의 모든 인증서를 폐기하는 자신의 CA 키.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;제외하고 기록:&lt;/strong&gt; 다른 CA의 섹션, 그리고 다른 CA의 키.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;일반 사용자 키&lt;/strong&gt;는 출력에 소스가 둘 이상이면, 소스에 &lt;code&gt;revoke_keys = true&lt;/code&gt;가 있지
+않는 한 제외됩니다. KRL은 키를 하나의 CA로 한정할 수 없습니다. sshd는 누가
+서명했든 인증서 자신의 키를 파일과 대조하므로, 한 CA가 지명한 키는 파일의 모든 CA
+아래에서 그 소유자를 막아 버립니다. 소스가 하나인 출력은 이를 유지합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;각 목록은 먼저 단독으로 병합됩니다. 병합할 수 없는 목록은 &lt;strong&gt;자신의 CA에 한해서만&lt;/strong&gt;
+실패 시 차단되며, 병합된 파일은 현재 입력 중 가장 먼저 만료되는 것과 함께 만료되므로
+만료를 확인하는 읽는 쪽은 authn-revokd가 멈춘 것을 알게 됩니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-mirror"&gt;미러&lt;span class="hx:absolute hx:-mt-20" id="the-mirror"&gt;&lt;/span&gt;
+&lt;a href="#the-mirror" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;listen&lt;/code&gt;이 있으면 authn-revokd는 자신이 보유한 것을 메모리에서 제공하며, 쓰기가 한창
+진행 중일 수 있는 파일에서는 절대 제공하지 않습니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /&amp;lt;source&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;ETag&lt;/code&gt;와 함께 목록. &lt;code&gt;If-None-Match&lt;/code&gt;는 &lt;code&gt;304&lt;/code&gt;로 응답&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /&amp;lt;source&amp;gt;.sig&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;KRL의 서명. 다른 ETag에 대한 &lt;code&gt;If-Match&lt;/code&gt;는 &lt;code&gt;412&lt;/code&gt;로 응답&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /healthz&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;200 ok&lt;/code&gt;, 또는 현재 목록이 없는 각 소스와 실패한 각 출력을 지정하는 &lt;code&gt;503&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28474/healthz
+ok
+$ curl -s -D - -o /dev/null http://127.0.0.1:28474/bridge-ssh
+HTTP/1.1 200 OK
+Cache-Control: max-age=30
+Content-Type: application/octet-stream
+Etag: &amp;#34;83278365ecb0f44b05170bb12f151756&amp;#34;
+Date: Sun, 11 Oct 2026 09:51:05 GMT
+Content-Length: 130
+$ curl -s -o /dev/null -w &amp;#34;%{http_code}\n&amp;#34; -H &amp;#39;If-Match: &amp;#34;stale&amp;#34;&amp;#39; http://127.0.0.1:28474/bridge-ssh.sig
+412&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;CRL 소스에는 &lt;code&gt;.sig&lt;/code&gt;가 없습니다(&lt;code&gt;404&lt;/code&gt;). 미러는 연쇄할 수 있습니다. 모든 목록이 스스로
+검증되므로 미러의 소스가 다른 미러일 수 있습니다. 느린 업스트림이 미러의 응답을
+막는 일은 없습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-is-refused-at-start"&gt;시작할 때 거부되는 것&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-start"&gt;&lt;/span&gt;
+&lt;a href="#what-is-refused-at-start" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;다음은 각각 아무것도 가져오기 전에 &lt;code&gt;2&lt;/code&gt;로 종료합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-revokd: v/relative-state.hcl: state_dir &amp;#34;state&amp;#34;: an absolute path
+authn-revokd: v/refresh.hcl: refresh &amp;#34;500ms&amp;#34;: a duration of a second or more
+authn-revokd: v/both-ca.hcl: source &amp;#34;bridge-ssh&amp;#34;: ssh_ca and x509_ca together: one source is one list
+authn-revokd: v/sig-name.hcl: source &amp;#34;bridge-ssh.sig&amp;#34;: a name that ends in .sig, or healthz, is a path the mirror already serves
+authn-revokd: v/mixed.hcl: output &amp;#34;sshd&amp;#34; mixes KRL and CRL sources
+authn-revokd: v/krl-format.hcl: output &amp;#34;sshd&amp;#34;: format is for CRL outputs; a KRL is what sshd reads
+authn-revokd: v/revoke-keys-crl.hcl: source &amp;#34;bridge-x509&amp;#34;: revoke_keys is for a KRL source (ssh_ca): a CRL revokes its own CA&amp;#39;s certificates only&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;없는 구성도 마찬가지입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config nowhere.hcl -once
+authn-revokd: nowhere.hcl: no such file or directory&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;v0.6.2 이전에는 HCL 파서의 메시지였습니다.&lt;code&gt;nowhere.hcl: &amp;lt;nil&amp;gt;: Failed to read file; The configuration file &amp;quot;nowhere.hcl&amp;quot; could not be read.&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;CRL 출력도 소스 하나만 받으며(TLS 서버는 발급자당 CRL 하나를 읽습니다), &lt;code&gt;max_age&lt;/code&gt;가
+있는 CRL 소스는 아무것도 이를 강제할 수 없으므로 거부됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-revokd: v/crl-maxage.hcl: output &amp;#34;tls&amp;#34;: source &amp;#34;bridge-x509&amp;#34; has a max_age, which a CRL output cannot enforce: the TLS server judges a CRL by its nextUpdate alone. Remove max_age, or ask the CA for a closer nextUpdate&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;CRL을 로드한 TLS 서버는 authn-revokd가 무엇을 기록하든 &lt;code&gt;nextUpdate&lt;/code&gt;까지 그것을
+메모리에 유지합니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;상태 디렉터리&lt;/strong&gt;는 sshd의 StrictModes 규칙을 따릅니다. 그 안의 파일을 바꾸거나
+제거할 수 있는 사람이 다음 목록을 결정하며, 비워진 상태는 재생된 오래된 목록이
+들어오게 합니다. 그래서 심볼릭 링크이거나, 그룹이나 다른 사용자가 쓸 수 있거나,authn-revokd의 사용자나 root가 아닌 사람이 소유하면 안 됩니다. 이들은 &lt;code&gt;1&lt;/code&gt;로
+종료합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-revokd: state_dir /tmp/authn/revokd/state-wide is writable by its group or by others (mode -rwxrwxrwx): whoever can write there decides which list comes next
+authn-revokd: state_dir /tmp/authn/revokd/state-link is a symbolic link (L---------): whoever owns it decides where the state is; name the directory itself&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>authn-revokd</title><link>https://go-authn.github.io/docs/0.5/ko/authn-revokd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ko/authn-revokd/</guid><description>
+&lt;p&gt;&lt;strong&gt;OpenSSH에는 KRL을 배포하는 방법이 없고, KRL에는 그것이 오래되었다고 말하는 것이
+아무것도 없습니다.&lt;/strong&gt; &lt;code&gt;sshd&lt;/code&gt;는 몇 달 전에 갱신이 멈춘 파일도 현재 목록으로 읽습니다.authn-revokd는 &lt;a href="https://go-authn.github.io/docs/0.5/ko/authn-bridge/revocation/"&gt;authn-bridge&lt;/a&gt;가 게시하는
+목록에 대해 두 틈을 모두 메웁니다. 각 목록을 가져와 검증되는 경우에만 보관하고,&lt;code&gt;sshd&lt;/code&gt;나 TLS 서버가 읽는 곳에 기록하며, 목록이 만료되면 &lt;strong&gt;CA 자체를 폐기하는&lt;/strong&gt; 목록을
+기록합니다. 순수 Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, 바이너리 하나입니다. 이 문서는 v0.6.4를
+설명합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
+$ authn-revokd -version
+authn-revokd v0.6.4
+$ authn-revokd -help
+Usage of authn-revokd:
+-config string
+the configuration file (default &amp;#34;/etc/authn-revokd/revokd.hcl&amp;#34;)
+-once
+sync once and exit: 1 when a list is not current, or could not be fetched
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;-help&lt;/code&gt;는 0으로 종료합니다. v0.6.2 이전에는 2로 종료했습니다.&lt;/p&gt;
+&lt;p&gt;v0.6.0 이전에는 명령이 &lt;code&gt;revokd&lt;/code&gt;였고 기본값으로 &lt;code&gt;/etc/revokd.hcl&lt;/code&gt;을 읽었습니다. 이제
+그 파일을 읽는 것은 없으며, 그 파일은 있는데 새 기본값은 없으면 오류가 두 경로를 모두
+지정합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-does-in-one-run"&gt;한 번의 실행으로 하는 일&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-in-one-run"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-in-one-run" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;루프백의 테스트 authn-bridge에 대해, KRL 소스와 CRL 소스가 있는 경우:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+output tls: wrote /tmp/authn/revokd/out/bridge.crl
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261011T115024
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;새로운 것이 없는 두 번째 실행은 아무것도 출력하지 않고 0으로 종료합니다. 출력은
+내용이 바뀔 때만 다시 기록됩니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-the-transport-does-not-matter"&gt;전송 방식이 중요하지 않은 이유&lt;span class="hx:absolute hx:-mt-20" id="why-the-transport-does-not-matter"&gt;&lt;/span&gt;
+&lt;a href="#why-the-transport-does-not-matter" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;모든 목록은 스스로를 인증합니다. KRL은 CA 자신의 키로 만든 분리된 SSHSIG 서명으로,CRL은 해당 CA의 서명으로 인증합니다. 모든 목록은 언제 유효하지 않게 되는지를
+밝힙니다. 그러므로 목록은 HTTPS, 클러스터 내부의 일반 HTTP, 미러, 파일 중 무엇으로든
+올 수 있습니다. 전송 방식은 변경이 얼마나 빨리 도착하는지를 정할 뿐, 위조되었거나
+오래된 목록을 받아들일지 여부는 정하지 않습니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;진본&lt;/td&gt;
+&lt;td&gt;SSH CA 키의 SSHSIG, 네임스페이스 &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;해당 CA가 서명&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;현재성&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;expires@go-authn.github.io&lt;/code&gt;, sshd는 무시&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;역행 없음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;krl_version&lt;/code&gt;, 그다음 생성 날짜&lt;/td&gt;
+&lt;td&gt;CRL Number, 그다음 &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;실패 시 차단&lt;/td&gt;
+&lt;td&gt;authn-revokd가 CA 키를 폐기하는 KRL을 기록&lt;/td&gt;
+&lt;td&gt;OpenSSL이 만료된 CRL을 스스로 거부&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="where-to-go-next"&gt;다음에 볼 곳&lt;span class="hx:absolute hx:-mt-20" id="where-to-go-next"&gt;&lt;/span&gt;
+&lt;a href="#where-to-go-next" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/ko/authn-revokd/install/"&gt;설치하기&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;데몬, 또는 타이머의 &lt;code&gt;-once&lt;/code&gt;, sshd와 nginx 연결하기&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/ko/authn-revokd/configuration/"&gt;구성&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;소스, 출력, 미러, 거부되는 것&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/ko/authn-revokd/verification/"&gt;목록 검증 방법&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;서명, 날짜, 보유한 목록보다 오래되지 않음(재시작을 거쳐서도)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/ko/authn-revokd/lapse/"&gt;목록이 만료될 때&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;CA 자체를 폐기하는 KRL&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="what-it-does-not-do"&gt;하지 않는 것&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-not-do"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-not-do" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;폐기는 authn-revokd가 폴링하는 주기(&lt;code&gt;refresh&lt;/code&gt;)에 발급자가 다시 발급하기까지의 지연을
+더한 것보다 빨리 서버에 도달하지 않습니다. 발급자가 내려가 있는 동안 그 인증서는
+목록의 만료 시점부터 거부됩니다. CA의 키를 가진 사람은 인증서에 서명할 수 있는 것처럼
+어떤 목록에도 서명할 수 있습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;라이선스&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause.&lt;/p&gt;</description></item><item><title>목록 검증 방법</title><link>https://go-authn.github.io/docs/0.5/ko/authn-revokd/verification/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ko/authn-revokd/verification/</guid><description>
+&lt;p&gt;검증되지 않는 목록은 절대 기록되거나 제공되거나 사용되지 않습니다. 마지막으로 성공한
+사본이 남습니다. 어떤 이유로든 실패한 가져오기는 그것을 아무것도 폐기하지 않는 빈
+응답으로 대체하지 않습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-signature"&gt;서명&lt;span class="hx:absolute hx:-mt-20" id="the-signature"&gt;&lt;/span&gt;
+&lt;a href="#the-signature" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;KRL&lt;/strong&gt;은 서명 &lt;code&gt;&amp;lt;url&amp;gt;.sig&lt;/code&gt;와 함께 가져옵니다. 파일 전체에 대한 armored SSHSIG이며,&lt;code&gt;ssh_ca&lt;/code&gt;로 구성된 &lt;strong&gt;SSH CA 키&lt;/strong&gt;가 &lt;code&gt;krl@go-authn.github.io&lt;/code&gt; 네임스페이스에서 만든
+것입니다. 네임스페이스는 서명이 다른 용도로 오인되는 것을 막습니다. 서명자는
+SHA-512로 해시하며 SHA-256도 받아들입니다. PROTOCOL.sshsig가 금지하는 SHA-1 형식의
+RSA 서명은 거부됩니다.&lt;/p&gt;
+&lt;p&gt;KRL 자체는 &lt;code&gt;sshd&lt;/code&gt;가 구문 분석하는 방식대로 구문 분석되어야 하며, OpenSSH가 검증하지
+않는 OpenSSH 자체의 서명 섹션을 담고 있어서는 안 됩니다.&lt;/p&gt;
+&lt;p&gt;다른 키로 서명된 목록은 거부됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-other.hcl -once
+bridge-ssh: revocation: the KRL&amp;#39;s signature does not verify by SHA256:xm8VDcZUh44N&amp;#43;RQSiPbroPInzkMhN/KCWI/TC&amp;#43;9HPNQ: public key does not match
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/other.krl
+output tls: wrote /tmp/authn/revokd/out/other.crl
+authn-revokd: not current: bridge-ssh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;여기서 &lt;code&gt;ssh_ca&lt;/code&gt;는 bridge의 목록에 서명하지 않은 키를 지정했고, 오류가 그 키를
+지명합니다. 검증되지 않는 서명은 두 요청 사이에 다시 발급된 목록일 수도 있으므로,보고하기 전에 둘 다 한 번 더 가져옵니다. 이것은 그 소스의 첫 가져오기였으므로
+보관할 정상 사본이 없었고, 출력은 즉시&lt;a href="https://go-authn.github.io/docs/0.5/ko/authn-revokd/lapse/"&gt;실패 시 차단 목록&lt;/a&gt;입니다. (v0.6.2 이전에는
+같은 실패가 위 메시지 앞에 &amp;ldquo;the list changed between it and its signature&amp;quot;를
+붙였는데, 마치 목록이 다시 발급된 것처럼 보였습니다.)&lt;/p&gt;
+&lt;p&gt;서명은 &lt;code&gt;If-Match: &amp;lt;the list's ETag&amp;gt;&lt;/code&gt;로 가져옵니다. 두 요청 사이에 다시 발급된
+목록은 &lt;code&gt;412&lt;/code&gt;로 응답하며 둘 다 다시 가져옵니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;CRL&lt;/strong&gt;은 &lt;code&gt;x509_ca&lt;/code&gt;로 구성된 CA 인증서와 대조합니다. 먼저 원시 바이트의 서명을,나머지를 구문 분석하기 &lt;strong&gt;전에&lt;/strong&gt; 확인하므로, 누가 서명했든 큰 CRL은 구문 분석이
+아니라 서명 검사의 비용만 듭니다. 그다음 발급자가 그 인증서의 subject여야 하고,CRL Number와 &lt;code&gt;thisUpdate&lt;/code&gt;보다 뒤의 &lt;code&gt;nextUpdate&lt;/code&gt;가 있어야 하며, 델타 CRL이어서는
+안 되고, CRL Number와 Authority Key Identifier 이외의 critical 확장이나 critical
+항목 확장을 담고 있어서도 안 됩니다.&lt;/p&gt;
+&lt;p&gt;KRL은 &lt;code&gt;expires@go-authn.github.io&lt;/code&gt; 확장에 &lt;strong&gt;언제 만료되는지도 밝혀야&lt;/strong&gt; 합니다. 그렇지
+않은 것은 오래된 것과 구별할 수 없습니다.&lt;/p&gt;
+&lt;p&gt;본문의 크기는 제한됩니다. KRL은 32 MiB, 그 서명은 64 KiB, CRL은 64 MiB입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-dates"&gt;날짜&lt;span class="hx:absolute hx:-mt-20" id="the-dates"&gt;&lt;/span&gt;
+&lt;a href="#the-dates" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;목록은 다음일 때 현재입니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;지금이 만료 전일 때(KRL의 확장, CRL의 &lt;code&gt;nextUpdate&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;5분 넘게 미래에 발급되지 않았을 때: 시계가 그보다 많이 앞서 있는 발급자는 나이를 알
+수 없는 목록을 기록합니다&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;max_age&lt;/code&gt;가 있으면, 그보다 오래 전에 발급되지 않았을 때&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;현재가 아닌 목록은 가져올 때 거부됩니다. &lt;code&gt;304 Not Modified&lt;/code&gt;는 새 소식이 아닙니다.보유한 사본이 그동안 만료되었을 수 있으며, 매 동기화마다 다시 판단합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="never-older-than-the-list-held"&gt;보유한 목록보다 오래되지 않음&lt;span class="hx:absolute hx:-mt-20" id="never-older-than-the-list-held"&gt;&lt;/span&gt;
+&lt;a href="#never-older-than-the-list-held" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;목록의 위치는 &lt;strong&gt;버전&lt;/strong&gt;(KRL의 &lt;code&gt;krl_version&lt;/code&gt;, CRL Number), 그다음 &lt;strong&gt;발급 시각&lt;/strong&gt;(KRL의
+생성 날짜, CRL의 &lt;code&gt;thisUpdate&lt;/code&gt;)입니다. 목록은 더 높은 버전이거나, 같은 버전이 더 나중에
+발급되었을 때(같은 폐기를 새 만료와 함께 다시 발급)만 보유한 것을 대체할 수 있습니다.그 밖의 것은 롤백입니다. 여전히 서명되어 있고 만료되지 않았지만 더 새 목록이 폐기한
+것을 되돌릴 재생되거나 복원된 오래된 목록입니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="across-restarts-too"&gt;재시작을 거쳐서도&lt;span class="hx:absolute hx:-mt-20" id="across-restarts-too"&gt;&lt;/span&gt;
+&lt;a href="#across-restarts-too" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;보유한 목록은 &lt;code&gt;state_dir&lt;/code&gt;에 소스당 파일 하나로 보관되며, 목록과 서명이 함께 들어
+있고, 디렉터리를 동기화한 단일 이름 변경으로 기록됩니다. 시작할 때 각 사본을&lt;strong&gt;다시 검증&lt;/strong&gt;하며(만료되었든 아니든 다음에 올 것의 순서를 정합니다), 더 이상 검증되지
+않는 사본은 다음 것의 순서를 정하는 데조차 신뢰하지 않고 로그에 그렇게 기록합니다.&lt;/p&gt;
+&lt;p&gt;여기서는 재시작 후, 소스가 이전 bridge 프로세스가 19초 전에 제공한, 여전히 서명되어
+있고 만료되지 않은 목록을 가리킵니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+$ authn-revokd -config revokd-old.hcl -once
+bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-11T09:50:05Z, the copy held at 2026-10-11T09:50:24Z
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261011T115024
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;첫 번째 실행은 출력을 기록하지 않았습니다. 파일이 이미 그 목록을 담고 있었기
+때문입니다. 더 오래된 목록은 거부되고 출력은 더 새 것을 유지합니다. 이를 거부한
+프로세스는 더 새 목록을 본 적이 없었으며, &lt;code&gt;state_dir&lt;/code&gt;에서 읽어 온 것입니다.&lt;/p&gt;
+&lt;p&gt;상태가 롤백을 감지할 수 있게 하는 것이므로, 디렉터리는 sshd의 StrictModes 규칙을
+따릅니다(&lt;a href="https://go-authn.github.io/docs/0.5/ko/authn-revokd/configuration/#what-is-refused-at-start"&gt;구성&lt;/a&gt;).두 번의 쓰기 사이의 충돌이 검증되지 않는 쌍을 남겨 롤백 방지 장치까지 함께 잃게 할 수
+없습니다. 목록과 서명은 하나의 파일입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what--once-reports"&gt;&lt;code&gt;-once&lt;/code&gt;가 보고하는 것&lt;span class="hx:absolute hx:-mt-20" id="what--once-reports"&gt;&lt;/span&gt;
+&lt;a href="#what--once-reports" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-once&lt;/code&gt;는 소스에 현재 목록이 없거나, &lt;strong&gt;마지막 가져오기가 실패했거나&lt;/strong&gt;, 출력을 기록할
+수 없으면 &lt;code&gt;1&lt;/code&gt;로 종료하며, 마지막 줄이 앞의 두 가지 중 어느 쪽인지 알려 줍니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;마지막 줄&lt;/th&gt;
+&lt;th&gt;소스&lt;/th&gt;
+&lt;th&gt;그 출력&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not current: &amp;lt;source&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;현재 목록이 없음: 한 번도 가져오지 못했거나, 만료되었거나, &lt;code&gt;max_age&lt;/code&gt;를 넘김&lt;/td&gt;
+&lt;td&gt;sshd에 대해 실패 시 차단&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not fetched: &amp;lt;source&amp;gt; (the list held is current until &amp;lt;T&amp;gt;)&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;가져오기가 실패했지만 보유한 사본은 아직 현재&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;T&lt;/code&gt;까지 그 사본에서 변경 없이 기록&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;여기서는 보유한 두 목록이 아직 현재인 동안 발급자가 멈춰 있습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z), bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그 실행은 &lt;code&gt;sshd.krl&lt;/code&gt;을 그대로 두었습니다. 보유한 목록이 만료되면 같은 소스는&lt;code&gt;not current&lt;/code&gt;로 보고되며, &lt;a href="https://go-authn.github.io/docs/0.5/ko/authn-revokd/lapse/"&gt;목록이 만료될 때&lt;/a&gt;처럼
+두 종류가 한 줄을 공유할 수 있습니다. v0.6.2 이전에는 두 경우 모두 &lt;code&gt;not current&lt;/code&gt;로
+보고되었는데, 가져오기만 실패했는데도 목록이 만료되었다고 말하는 것이었습니다. 종료
+상태는 그때도 &lt;code&gt;1&lt;/code&gt;이었습니다.&lt;/p&gt;
+&lt;p&gt;미러의 &lt;code&gt;/healthz&lt;/code&gt;는 대신 보유한 사본으로 판단하며, 발급자가 내려가 있고 사본이 아직
+현재인 동안 &lt;code&gt;ok&lt;/code&gt;로 응답했습니다.&lt;/p&gt;</description></item><item><title>목록이 만료될 때</title><link>https://go-authn.github.io/docs/0.5/ko/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ko/authn-revokd/lapse/</guid><description>
+&lt;p&gt;목록을 구할 수 없을 때 모든 것을 통과시키는 폐기 검사는, 목록을 막을 수 있는 공격자에게
+무력화되는 검사입니다. 그래서 authn-revokd가 소스의 현재 목록을 보유하지 않을 때는,그 소스의 목록이 보호하는 것을 현재 목록이 다시 도착할 때까지 &lt;strong&gt;거부&lt;/strong&gt;합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;출력&lt;/th&gt;
+&lt;th&gt;소스에 현재 목록이 없는 동안&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sshd&lt;/code&gt;를 위한 KRL&lt;/td&gt;
+&lt;td&gt;authn-revokd가 &lt;strong&gt;소스의 CA 키를 폐기하는&lt;/strong&gt; KRL을 기록&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;TLS 서버를 위한 CRL&lt;/td&gt;
+&lt;td&gt;만료된 CRL을 그대로 둠. OpenSSL이 만료된 CRL을 스스로 거부&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;sshd를 위해: CA 자체를 폐기하기&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt;에는 목록의 만료라는 개념이 없어서 마지막으로 기록된 파일을 영원히 읽을
+것입니다. 하지만 모든 인증서의 &lt;strong&gt;CA 키&lt;/strong&gt;는 &lt;code&gt;RevokedKeys&lt;/code&gt;와 대조합니다. 그래서
+보증할 수 없는 목록 대신 authn-revokd는 CA 자신의 키를 출력에 넣으며, 그 CA가
+서명한 모든 인증서가 거부되고 다른 것은 거부되지 않습니다.&lt;/p&gt;
+&lt;p&gt;여기서는 발급자가 멈춰 있고 KRL 소스에 &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;가 있어서, 보유한 사본이
+한 시간이 아니라 1분 안에 만료됩니다. CRL 소스에는 &lt;code&gt;max_age&lt;/code&gt;가 없으며 사본은 아직
+현재입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt;는 &lt;code&gt;not current&lt;/code&gt;이며 그 출력은 실패 시 차단 상태입니다. &lt;code&gt;bridge-x509&lt;/code&gt;는&lt;code&gt;not fetched&lt;/code&gt;일 뿐이며 그 CRL은 그대로 남습니다(&lt;a href="https://go-authn.github.io/docs/0.5/ko/authn-revokd/verification/#what--once-reports"&gt;&lt;code&gt;-once&lt;/code&gt;가 보고하는 것&lt;/a&gt;).&lt;code&gt;SHA256:Fpa/...&lt;/code&gt;는 bridge의 SSH CA입니다. 그것이 서명한 인증서는 이제 파일을 읽는
+모든 것에게 폐기된 것입니다. 위의 명령은 &lt;code&gt;out/&lt;/code&gt;이 있는 &lt;code&gt;revokd&lt;/code&gt; 디렉터리에서
+실행했고, 이것은 그 옆의 테스트 인증서가 있는 디렉터리에서&lt;a href="https://go-authn.github.io/docs/0.5/ko/sshcert/authorize/#krl"&gt;sshcert-authorize 페이지&lt;/a&gt;처럼 실행하므로
+같은 파일이 &lt;code&gt;../revokd/out/sshd.krl&lt;/code&gt;입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;주석에 &lt;code&gt;FAIL CLOSED&lt;/code&gt;와 소스 이름이 있으므로 &lt;code&gt;ssh-keygen -Q -l&lt;/code&gt;을 읽는 사람은 이유를
+알 수 있습니다. 모든 소스가 만료되면 파일의 날짜는 1970년입니다. 출력은 동기화가
+이를 &lt;strong&gt;알아차리는 즉시&lt;/strong&gt; 기록되며, 데몬에서는 다음 &lt;code&gt;refresh&lt;/code&gt;, 타이머에서는 다음
+틱입니다. 현재 목록이 다시 도착하면 다음 동기화가 CA의 키 대신 그것을 기록하고, CA의
+인증서는 다시 받아들여집니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;첫 번째 목록 전에도&lt;/strong&gt; 같습니다. 한 번도 가져오지 않은 소스는 현재인 것이 없으며,그 CA는 첫 기록부터 폐기됩니다. 새 설치는 CA의 인증서를 확인 없이 받아들이지 않고
+첫 목록이 검증될 때까지 거부합니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;각 CA는 각자&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;여러 소스를 병합하는 출력에서는 만료된 소스의 CA만 폐기됩니다. 나머지는 자신의 목록을
+유지합니다. 병합할 수 없는 목록(go-authn/krl이 유지하는 일련번호 범위를 넘는 경우)은
+자신의 CA에 한해서만 실패 시 차단되며 &lt;code&gt;/healthz&lt;/code&gt;가 이를 지명합니다. 목록이 단독으로는
+병합되지만 함께는 병합되지 않는 경우에만 출력의 모든 CA가 폐기되며, 주석이 이를
+밝힙니다(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;). 이전 파일을 대신
+유지하면 이후의 만료가 눈에 띄지 않게 됩니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;TLS 서버를 위해: CRL 자체&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;CRL은 이미 자신이 언제 유효하지 않게 되는지 밝히며, OpenSSL은 &lt;code&gt;nextUpdate&lt;/code&gt;가 지난
+것을 거부합니다(&amp;ldquo;CRL has expired&amp;rdquo;). 그래서 authn-revokd는 마지막으로 검증된 CRL을
+그대로 두고, TLS 서버가 스스로 실패 시 차단합니다. CRL 출력에 공급하는 소스에서&lt;code&gt;max_age&lt;/code&gt;가 거부되는 이유이기도 합니다. CRL을 로드한 서버는 authn-revokd가 무엇을
+기록하든 &lt;code&gt;nextUpdate&lt;/code&gt;까지 그것을 유지합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;만료를 스스로 확인하는 읽는 쪽&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;병합된 KRL은 현재 입력 중 가장 먼저 만료되는 것의 만료를 담습니다. go-fileshare의&lt;code&gt;ssh_krl_file&lt;/code&gt;이나&lt;a href="https://go-authn.github.io/docs/0.5/ko/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;처럼 이를
+확인하는 읽는 쪽은 발급자가 멈춘 것을 알게 되는 것과 같이 authn-revokd가 멈춘 것을
+알게 됩니다.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;authn-revokd가 실행 중일 때만 동작합니다&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;파일을 실패 시 차단 상태로 만드는 것은 authn-revokd입니다. 멈춰 있는 동안 sshd는
+현재이든 아니든 마지막으로 기록된 파일을 계속 읽습니다. 그래서 데몬에&lt;code&gt;Restart=always&lt;/code&gt;가 있고, 유닛이나 타이머, 또는 &lt;code&gt;/healthz&lt;/code&gt;를 모니터링해야 합니다.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

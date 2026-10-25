@@ -1,0 +1,102 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Fail Closed</title><link>https://go-authn.github.io/docs/0.5/de/tags/fail-closed/</link><description>Recent content in Fail Closed on go-authn</description><generator>Hugo -- gohugo.io</generator><language>de</language><atom:link href="https://go-authn.github.io/docs/0.5/de/tags/fail-closed/index.xml" rel="self" type="application/rss+xml"/><item><title>Wenn eine Liste verfällt</title><link>https://go-authn.github.io/docs/0.5/de/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/de/authn-revokd/lapse/</guid><description>
+&lt;p&gt;Eine Widerrufsprüfung, die alles durchlässt, wenn die Liste nicht zu bekommen ist, ist
+genau die, die ein Angreifer aushebelt, der die Liste blockieren kann. Wenn authn-revokd also
+keine aktuelle Liste einer Quelle hält, wird das, was die Liste dieser Quelle schützt,&lt;strong&gt;abgelehnt&lt;/strong&gt;, bis wieder eine aktuelle Liste eintrifft.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Ausgabe&lt;/th&gt;
+&lt;th&gt;solange eine Quelle keine aktuelle Liste hat&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;eine KRL, für &lt;code&gt;sshd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;authn-revokd schreibt eine KRL, die &lt;strong&gt;den CA-Schlüssel der Quelle widerruft&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;eine CRL, für einen TLS-Server&lt;/td&gt;
+&lt;td&gt;die abgelaufene CRL bleibt an ihrem Platz; OpenSSL lehnt eine abgelaufene CRL von sich aus ab&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;Für sshd: die CA selbst widerrufen&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; kennt keinen Ablauf einer Liste: Es würde die zuletzt geschriebene Datei für immer
+weiterlesen. Es prüft aber den &lt;strong&gt;CA-Schlüssel&lt;/strong&gt; jedes Zertifikats gegen&lt;code&gt;RevokedKeys&lt;/code&gt;. Anstelle der Liste, für die es nicht bürgen kann, setzt authn-revokd daher
+den eigenen Schlüssel der CA in die Ausgabe, und jedes Zertifikat, das diese CA signiert hat, wird
+abgelehnt, und nichts sonst.&lt;/p&gt;
+&lt;p&gt;Hier ist der Aussteller gestoppt, und die KRL-Quelle hat &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;, sodass die
+gehaltene Kopie innerhalb einer Minute statt einer Stunde verfällt. Die CRL-Quelle hat kein&lt;code&gt;max_age&lt;/code&gt;, und ihre Kopie ist noch aktuell:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt; ist &lt;code&gt;not current&lt;/code&gt;, und seine Ausgabe schlägt geschlossen fehl (fail closed); &lt;code&gt;bridge-x509&lt;/code&gt;
+ist nur &lt;code&gt;not fetched&lt;/code&gt;, und seine CRL bleibt, wie sie war(&lt;a href="https://go-authn.github.io/docs/0.5/de/authn-revokd/verification/#what--once-reports"&gt;was &lt;code&gt;-once&lt;/code&gt; meldet&lt;/a&gt;).&lt;code&gt;SHA256:Fpa/...&lt;/code&gt; ist die SSH-CA der Bridge. Ein Zertifikat, das sie signiert hat, ist nun
+für alles, was die Datei liest, widerrufen. Die Befehle oben liefen im Verzeichnis &lt;code&gt;revokd&lt;/code&gt;,in dem &lt;code&gt;out/&lt;/code&gt; liegt; dieser läuft daneben, im Verzeichnis mit den Testzertifikaten, wie auf&lt;a href="https://go-authn.github.io/docs/0.5/de/sshcert/authorize/#krl"&gt;der Seite von sshcert-authorize&lt;/a&gt;, daher ist
+dieselbe Datei &lt;code&gt;../revokd/out/sshd.krl&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Der Kommentar sagt &lt;code&gt;FAIL CLOSED&lt;/code&gt; und nennt die Quelle, sodass eine Person, die&lt;code&gt;ssh-keygen -Q -l&lt;/code&gt; liest, sieht, warum. Das Datum der Datei ist 1970, wenn jede Quelle
+verfallen ist. Die Ausgabe wird geschrieben, &lt;strong&gt;sobald eine Synchronisierung es bemerkt&lt;/strong&gt;, was für den Daemon
+sein nächster &lt;code&gt;refresh&lt;/code&gt; ist und für den Timer sein nächster Takt. Wenn wieder eine aktuelle Liste
+eintrifft, schreibt die nächste Synchronisierung sie anstelle des CA-Schlüssels, und die Zertifikate der CA
+werden wieder angenommen.&lt;/p&gt;
+&lt;p&gt;Dasselbe geschieht &lt;strong&gt;vor der ersten Liste&lt;/strong&gt;: Eine nie abgerufene Quelle hat nichts
+Aktuelles, und ihre CA ist ab dem ersten Schreiben widerrufen. Eine neue Installation lehnt
+die Zertifikate der CA ab, bis ihre erste Liste die Prüfung besteht, statt sie
+ungeprüft anzunehmen.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;Jede CA für sich&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;In einer Ausgabe, die mehrere Quellen zusammenführt, wird nur die CA der verfallenen Quelle
+widerrufen. Die anderen behalten ihre Listen. Eine Liste, die sich nicht zusammenführen lässt (jenseits der
+Seriennummernbereiche, die go-authn/krl behält), schlägt nur für ihre eigene CA geschlossen fehl, und&lt;code&gt;/healthz&lt;/code&gt; nennt sie. Nur wenn sich die Listen einzeln, aber nicht gemeinsam zusammenführen lassen, wird jede CA
+der Ausgabe widerrufen, und der Kommentar sagt es(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;). Stattdessen die alte Datei zu behalten,würde einen späteren Verfall unbemerkt lassen.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;Für einen TLS-Server: die CRL selbst&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Eine CRL sagt bereits, wann sie aufhört, aktuell zu sein, und OpenSSL lehnt eine ab, die
+ihr &lt;code&gt;nextUpdate&lt;/code&gt; überschritten hat („CRL has expired“). authn-revokd lässt daher die letzte geprüfte
+CRL an ihrem Platz, und der TLS-Server schlägt von sich aus geschlossen fehl. Deshalb wird auch&lt;code&gt;max_age&lt;/code&gt; bei einer Quelle abgelehnt, die eine CRL-Ausgabe speist: Ein Server, der
+die CRL geladen hat, behält sie bis zu ihrem &lt;code&gt;nextUpdate&lt;/code&gt;, was auch immer authn-revokd schreibt.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;Leser, die den Ablauf selbst prüfen&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Die zusammengeführte KRL trägt einen Ablauf, den ersten ihrer aktuellen Eingaben. Ein Leser,der ihn prüft, etwa &lt;code&gt;ssh_krl_file&lt;/code&gt; von go-fileshare oder&lt;a href="https://go-authn.github.io/docs/0.5/de/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;,sieht authn-revokd anhalten, wie er den Aussteller anhalten sähe.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Das funktioniert nur, solange authn-revokd läuft&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Dass die Datei geschlossen fehlschlägt, besorgt authn-revokd. Solange es gestoppt ist, liest sshd
+weiter die zuletzt geschriebene Datei, aktuell oder nicht. Daher &lt;code&gt;Restart=always&lt;/code&gt; beim
+Daemon und die Überwachung der Unit, des Timers oder von &lt;code&gt;/healthz&lt;/code&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

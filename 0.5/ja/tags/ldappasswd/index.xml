@@ -1,0 +1,188 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Ldappasswd</title><link>https://go-authn.github.io/docs/0.5/ja/tags/ldappasswd/</link><description>Recent content in Ldappasswd on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ja</language><atom:link href="https://go-authn.github.io/docs/0.5/ja/tags/ldappasswd/index.xml" rel="self" type="application/rss+xml"/><item><title>本人による自分のパスワードの変更</title><link>https://go-authn.github.io/docs/0.5/ja/authnd/passwords/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ja/authnd/passwords/</guid><description>
+&lt;p&gt;人は、RFC 3062 のパスワード変更操作 (&lt;code&gt;ldappasswd&lt;/code&gt; が送るもの) または RFC 4511 の modify を通じて、&lt;strong&gt;自分自身の&lt;/strong&gt;パスワードを、他の誰のものでもなく変更できます。どちらの場合も、&lt;strong&gt;接続が何でバインドしたかにかかわらず、現在のパスワードを新しいパスワードと一緒に送らなければなりません&lt;/strong&gt;。&lt;a href="https://go-authn.github.io/docs/0.5/ja/authnd/tokens/"&gt;OAUTHBEARER トークン&lt;/a&gt;でバインドしたセッションは、短命で、場合によっては一要素ですが、そうでなければ、それを &lt;code&gt;kinit&lt;/code&gt; でも使える恒久的なパスワードに変えられてしまうからです。&lt;/p&gt;
+&lt;p&gt;これは &lt;code&gt;pwdSafeModify&lt;/code&gt; を設定した OpenLDAP の ppolicy の動作で、その &lt;code&gt;ppolicy.c&lt;/code&gt; が返す結果コードを返します。RFC 3062 §3 はこれを認めています。&amp;ldquo;If oldPasswd is
+not present, the server MAY use other policy to determine whether or not to
+change the password.&amp;rdquo;&lt;/p&gt;
+&lt;h2 data-hextra-search-id="with-ldappasswd"&gt;&lt;code&gt;ldappasswd&lt;/code&gt; で&lt;span class="hx:absolute hx:-mt-20" id="with-ldappasswd"&gt;&lt;/span&gt;
+&lt;a href="#with-ldappasswd" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-t&lt;/code&gt; は古いパスワードを入れたファイル、&lt;code&gt;-T&lt;/code&gt; は新しいパスワードを入れたファイルです。&lt;code&gt;-A&lt;/code&gt; と &lt;code&gt;-S&lt;/code&gt; は代わりにプロンプトで尋ねます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -T alice.new
+Result: Insufficient access (50)
+Additional info: a password change must send the old password with the new one
+$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -t wrong.pwin -T alice.new
+Result: Server is unwilling to perform (53)
+Additional info: the old password sent is not the current one
+$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -t alice.pwin -T alice.new
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
+ldap_bind: Invalid credentials (49)
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.new
+dn:uid=alice,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;古いパスワードは直ちに使えなくなります。バインドでも、&lt;a href="https://go-authn.github.io/docs/0.5/ja/authnd/kerberos/#a-password-changed-over-ldap"&gt;レルム&lt;/a&gt;があれば &lt;code&gt;kinit&lt;/code&gt; でもです。サーバーは出力でそのことを述べます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;alice&amp;#39;s password change was refused: the old password did not verify: directory: wrong password
+alice changed their own password&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;authnd はパスワードを生成しません。新しいパスワードのない要求は &lt;code&gt;unwillingToPerform&lt;/code&gt; で拒否されます(&lt;em&gt;this server does not generate passwords: send the
+one you want&lt;/em&gt;)。生成したパスワードは接続越しに送り返さなければならず、そのパスワードが確実にたどり着く場所は、端末のスクロールバックです。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="with-ldapmodify"&gt;&lt;code&gt;ldapmodify&lt;/code&gt; で&lt;span class="hx:absolute hx:-mt-20" id="with-ldapmodify"&gt;&lt;/span&gt;
+&lt;a href="#with-ldapmodify" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;変更は、&lt;strong&gt;古い値の削除に続けて新しい値を追加する、一回の要求&lt;/strong&gt;です。RFC 4511 §4.6 は modify の変更を順番に、アトミックに適用するので、削除される値が保持している値でなければ、削除が、したがって要求全体が失敗します。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;dn: uid=alice,ou=people,dc=example,dc=org
+changetype: modify
+delete: userPassword
+userPassword: alice-test-pw
+-
+add: userPassword
+userPassword: alice-new-pw
+-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;単なる &lt;code&gt;replace&lt;/code&gt; は何も証明せず、&lt;code&gt;userPassword&lt;/code&gt; 以外はこのサーバーが変更するものではありません。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f replace.ldif
+ldap_modify: Insufficient access (50)
+additional info: a password change must send the old password with the new one
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;
+$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f other.ldif
+ldap_modify: Server is unwilling to perform (53)
+additional info: this server changes userPassword and nothing else, not cn
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;パスワード&lt;strong&gt;と&lt;/strong&gt;それ以外を求める modify は、全体が拒否されます。modify はアトミックであり、その半分だけを受け入れると、誰も求めていないことについて成功を報告してしまうからです。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="who-can-change-what"&gt;誰が何を変更できるか&lt;span class="hx:absolute hx:-mt-20" id="who-can-change-what"&gt;&lt;/span&gt;
+&lt;a href="#who-can-change-what" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;要求&lt;/th&gt;
+&lt;th&gt;応答&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;古いパスワードがない、または単なる &lt;code&gt;replace: userPassword&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;現在のものではない古いパスワード&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;他人のエントリ&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;、&lt;em&gt;a password may be changed only by the person it belongs to&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;匿名の接続&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;、&lt;em&gt;an anonymous connection has not said who it is&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;パスワードをまったく持たない人 — トークンでしかバインドできていない場合&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;: ベアラートークンはパスワードではなく、最初のパスワードを設定しません。管理者が設定で設定します&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;users&lt;/code&gt; ブロックから提供されている人&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;: authnd はそれらのソースを読むだけで書き込みません&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;ファイルに書き込めない&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;other&lt;/code&gt; (80)、&lt;em&gt;the password could not be written&lt;/em&gt;。理由はサーバーの出力にあります&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;最後から二番目の例を、SQLite データベース由来の dora について、リリースバイナリから示します。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=dora,ou=people,dc=example,dc=org -y dora.pwin -t dora.pwin -T dora.new
+Result: Server is unwilling to perform (53)
+Additional info: dora is served from a sqlite database, which this server reads and does not write&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;人は&lt;strong&gt;DN ではなく ID で&lt;/strong&gt;照合されます。セッション自身の名前が対象の名前とバイト単位で完全に一致しなければならないので、&lt;code&gt;uid=Backup&lt;/code&gt; としてバインドしたセッションは、二つの DN が等しいと比較されても &lt;code&gt;backup&lt;/code&gt; のパスワードを変更できません。これと、&lt;a href="https://go-authn.github.io/docs/0.5/ja/authnd/people/#order-and-the-one-exception"&gt;大文字小文字だけが異なる名前の拒否&lt;/a&gt;は、互いに依存しない二つの統制です。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="where-the-new-password-is-written"&gt;新しいパスワードの書き込み先&lt;span class="hx:absolute hx:-mt-20" id="where-the-new-password-is-written"&gt;&lt;/span&gt;
+&lt;a href="#where-the-new-password-is-written" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;その人を宣言しているファイル&lt;/strong&gt;に書き戻され、他のどこにも書かれません。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;password_file&lt;/code&gt; を持つ &lt;code&gt;user&lt;/code&gt; ブロックでは、&lt;strong&gt;そのファイル&lt;/strong&gt;が書き換えられます。プロセスに可能な範囲で所有者とグループが保たれ、モードは最大でも 0600 に狭められます。広げられることはありません。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;password&lt;/code&gt; をインラインで持つ &lt;code&gt;user&lt;/code&gt; ブロックでは、設定ファイルが新しい値で書き換えられ、コメント、順序、モードは保たれます。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;nt_hash&lt;/code&gt; だけを持つ &lt;code&gt;user&lt;/code&gt; ブロックには、パスワードは与えられません。それはその人を証明するものを変えることになり、設定の変更だからです。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;すべての書き込みは、&lt;strong&gt;同じディレクトリ内&lt;/strong&gt;の一時ファイルに対して行われ、その後リネームされます。そのため、ディスクが満杯になったりクラッシュしたりしても、空のファイルではなく古いパスワードが残ります。そのためにはディレクトリへの書き込み権限が必要です。パッケージ付属のユニットでは&lt;code&gt;ProtectSystem=strict&lt;/code&gt; がそれを取り上げており、変更は次のように拒否されます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f safe.ldif
+ldap_modify: Other (e.g., implementation specific) error (80)
+additional info: the password could not be written
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;理由はサーバーの出力にあります。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-863420940: permission denied&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;そのため、パスワードはサービスが書き込める専用のディレクトリに置き、設定はサービスに対して読み取り専用にしてください。&lt;a href="https://go-authn.github.io/docs/0.5/ja/authnd/install/#the-configuration-directory"&gt;&lt;code&gt;ReadWritePaths=&lt;/code&gt; ドロップイン&lt;/a&gt;
+です。パスワードがインラインで書かれている人には &lt;code&gt;/etc/authnd&lt;/code&gt; 自体が書き込み可能である必要があり、それではサービスが自分自身の設定を書き換えられるようにもなってしまいます。&lt;/p&gt;
+&lt;p&gt;書き込みに成功すると、設定ファイルは**&lt;code&gt;user&lt;/code&gt; ブロックについてだけ**再度読み込まれます。ディスク上で待機している無関係な編集が、誰かのパスワード変更のせいで中途半端に有効になることはありません。それ以外のすべては引き続き再起動を待ちます。ただしファイルは全体が読まれるため、そのうちの一つがもう読み込めなくなっていれば、パスワードは書き込まれ、クライアントには&lt;em&gt;the password was written but this server did not reload it&lt;/em&gt; と告げられます。稼働中のサーバーは、再起動されるまで古いものを保持します。&lt;/p&gt;</description></item></channel></rss>

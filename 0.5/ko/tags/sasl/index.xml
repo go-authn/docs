@@ -1,0 +1,261 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Sasl</title><link>https://go-authn.github.io/docs/0.5/ko/tags/sasl/</link><description>Recent content in Sasl on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ko</language><atom:link href="https://go-authn.github.io/docs/0.5/ko/tags/sasl/index.xml" rel="self" type="application/rss+xml"/><item><title>비밀번호가 아닌 필드에 담긴 바인드 시의 토큰</title><link>https://go-authn.github.io/docs/0.5/ko/authnd/tokens/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ko/authnd/tokens/</guid><description>
+&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.5/ko/libraries/"&gt;go-authn/oidc&lt;/a&gt;는 토큰을 신원으로 검증합니다.토큰을 LDAP 서버에 전달하는 가장 뻔한 방법은 비밀번호 필드이며, 한 번은 동작하다가
+멈춥니다. 비밀번호 필드는 &lt;a href="https://go-authn.github.io/docs/0.5/ko/authnd/mfa/"&gt;&lt;code&gt;mfa&lt;/code&gt; 블록&lt;/a&gt;이 끝에서 코드를
+떼어 내는 곳이고, 토큰은 둘 다가 될 수 없기 때문입니다.&lt;/p&gt;
+&lt;p&gt;그래서 토큰은 프로토콜이 자리를 마련해 둔 곳으로 갑니다. &lt;strong&gt;SASL&lt;/strong&gt; 바인드의
+자격 증명은 메커니즘 고유의 형태를 가진 옥텟 문자열이며, RFC 7628의&lt;code&gt;OAUTHBEARER&lt;/code&gt; 형태는 GS2 헤더 다음에 키/값 쌍이 오고 그중 하나가&lt;code&gt;auth=Bearer &amp;lt;token&amp;gt;&lt;/code&gt;입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;n,,^Aauth=Bearer eyJ…^A^A&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;비밀번호 필드는 건드리지 않습니다. 한 리스너에서 동시에, 어떤 사람은 끝에 코드가
+붙은 비밀번호를 입력하고 다른 사람은 토큰을 보낼 수 있습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;oidc&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; issuer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.example.org/realms/staff&amp;#34; # the &amp;#34;iss&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;a&lt;/span&gt; &lt;span class="k"&gt;token&lt;/span&gt; &lt;span class="k"&gt;must&lt;/span&gt; &lt;span class="k"&gt;carry&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;and&lt;/span&gt; &lt;span class="k"&gt;where&lt;/span&gt; &lt;span class="k"&gt;discovery&lt;/span&gt; &lt;span class="k"&gt;starts&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # this server&amp;#39;s client id at the provider
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # username_claim = &amp;#34;preferred_username&amp;#34; which claim names the person here
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # jwks_url = &amp;#34;…&amp;#34; skips discovery, for a provider that does not publish it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # allow_plaintext = true only when TLS is terminated in front of this process
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;issuer&lt;/code&gt;와 &lt;code&gt;audience&lt;/code&gt;는 필수입니다. &lt;code&gt;username_claim&lt;/code&gt;이 없으면 이름은&lt;code&gt;preferred_username&lt;/code&gt;이고, 그다음 &lt;code&gt;email_verified&lt;/code&gt;가 true일 때의 &lt;code&gt;email&lt;/code&gt;, 그다음&lt;code&gt;sub&lt;/code&gt;입니다. 이 블록이 있으면 루트 DSE가 메커니즘을 알립니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; supportedSASLMechanisms
+dn:
+supportedSASLMechanisms: OAUTHBEARER&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;블록이 없으면 모든 SASL 바인드에 &lt;code&gt;authMethodNotSupported&lt;/code&gt;로 응답합니다 — &lt;em&gt;이
+방식이 아님&lt;/em&gt;이며, 이는 클라이언트를 &lt;em&gt;잘못된 비밀번호&lt;/em&gt;와는 다른 곳으로 보냅니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="discovery-happens-at-startup"&gt;디스커버리는 시작할 때 일어납니다&lt;span class="hx:absolute hx:-mt-20" id="discovery-happens-at-startup"&gt;&lt;/span&gt;
+&lt;a href="#discovery-happens-at-startup" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;공급자의 디스커버리 문서와 키는 서버가 시작할 때와 &lt;code&gt;check&lt;/code&gt;가 실행될 때 읽습니다.접근할 수 없는 공급자는 나중에 모든 바인드를 거부하는 대신, 누군가 지켜보고 있는
+시점에 서버를 멈춥니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc.hcl
+authnd: oidc &amp;#34;https://127.0.0.1:1/realms/staff&amp;#34;: oidc: reading https://127.0.0.1:1/realms/staff/.well-known/openid-configuration: Get &amp;#34;https://127.0.0.1:1/realms/staff/.well-known/openid-configuration&amp;#34;: dial tcp 127.0.0.1:1: connect: connection refused&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;https&lt;/code&gt;가 아닌 발급자는 루프백을 제외하고 거부됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc-http.hcl
+authnd: oidc &amp;#34;http://login.example.org/realms/staff&amp;#34;: oidc: http://login.example.org/realms/staff is not https: the key set decides every signature, and over cleartext so does anybody on the way&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="how-many-factors-is-a-token"&gt;토큰은 몇 개의 인증 요소인가?&lt;span class="hx:absolute hx:-mt-20" id="how-many-factors-is-a-token"&gt;&lt;/span&gt;
+&lt;a href="#how-many-factors-is-a-token" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;발급자가 확인했다고 말하는 것이며, 그 이상은 아닙니다.&lt;/strong&gt; 토큰은 RFC 8176의&lt;code&gt;amr&lt;/code&gt;, 즉 공급자가 사용한 방법을 담습니다. 이것이 유일한 증거이므로 &lt;code&gt;mfa&lt;/code&gt; 정책이&lt;strong&gt;종류별로&lt;/strong&gt; 집계하는 대상입니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;code&gt;amr&lt;/code&gt; 방법&lt;/th&gt;
+&lt;th&gt;종류&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;pwd&lt;/code&gt;, &lt;code&gt;pin&lt;/code&gt;, &lt;code&gt;kba&lt;/code&gt;, &lt;code&gt;mca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;지식&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;otp&lt;/code&gt;, &lt;code&gt;hwk&lt;/code&gt;, &lt;code&gt;swk&lt;/code&gt;, &lt;code&gt;sms&lt;/code&gt;, &lt;code&gt;tel&lt;/code&gt;, &lt;code&gt;sc&lt;/code&gt;, &lt;code&gt;pop&lt;/code&gt;, &lt;code&gt;user&lt;/code&gt;, &lt;code&gt;wia&lt;/code&gt;, &lt;code&gt;mfa&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;소유&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;fpt&lt;/code&gt;, &lt;code&gt;face&lt;/code&gt;, &lt;code&gt;iris&lt;/code&gt;, &lt;code&gt;retina&lt;/code&gt;, &lt;code&gt;vbm&lt;/code&gt;, &lt;code&gt;geo&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;고유 특성&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;그 밖의 모든 것&lt;/td&gt;
+&lt;td&gt;알 수 없음, &lt;code&gt;distinct_kinds&lt;/code&gt;를 절대 충족하지 않음&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;amr&lt;/code&gt;이 아예 없음&lt;/td&gt;
+&lt;td&gt;인증 요소 하나, 소유 — 토큰 자체&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;같은 종류의 방법 두 개는 인증 요소 하나입니다. 그렇지 않으면 이 서버가 아무도
+수행하지 않은 두 번째 인증 요소를 지어내는 셈이 됩니다. 그리고 &lt;em&gt;누구인지&lt;/em&gt;에 대해
+발급자를 믿는 서버에게는 &lt;em&gt;어떻게&lt;/em&gt; 확인했는지에 대해 믿지 않을 별도의 근거가
+없습니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;mfa&lt;/code&gt; 블록이 있으면 &lt;code&gt;check&lt;/code&gt;가 이를 알려 줍니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check sasl
+ldaps://127.0.0.1:3636, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password account, uidObject uid
+tess the configuration file a password and a one-time-code secret account, uidObject uid
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+tess has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+a bind carries a password with a 6-digit code after it, of two different kinds
+or a token from http://127.0.0.1:18481, over SASL OAUTHBEARER over TLS
+a token counts for the factors its amr claim names, so one with no amr is refused by this policy
+alice has no second factor here, so a password cannot satisfy this policy; a token whose amr names two kinds still can
+no reader is declared: nothing may search, and binds are not affected
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;alice에게는 &lt;code&gt;totp_secret&lt;/code&gt;이 없으므로 코드가 붙은 비밀번호로는 결코 충분하지 않지만,&lt;code&gt;amr&lt;/code&gt;이 두 종류를 지정하는 토큰은 충분합니다. 아래의 첫 번째 바인드가 이를 보여
+줍니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-the-binds-look-like"&gt;바인드는 어떻게 보이는가&lt;span class="hx:absolute hx:-mt-20" id="what-the-binds-look-like"&gt;&lt;/span&gt;
+&lt;a href="#what-the-binds-look-like" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;여기서 발급자는 루프백의 작은 테스트 공급자이고, &lt;code&gt;oidctool&lt;/code&gt;은 이 문서를 위해
+작성한 테스트 클라이언트입니다. 주어진 이름에 대해, 주어진 &lt;code&gt;amr&lt;/code&gt;로 토큰에 서명하고,&lt;code&gt;OAUTHBEARER&lt;/code&gt; 바인드로 보내며(다섯 번째 인수가 지정하면 &lt;code&gt;authzid&lt;/code&gt;와 함께), 바인드의
+결과 코드와 서버의 SASL 자격 증명을 출력합니다. 위의 구성에 대해 &lt;code&gt;ldaps://&lt;/code&gt;로:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 0, serverSaslCreds
+$ ./oidctool alice &amp;#39;&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;kba&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls tess
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;insufficient_scope&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}
+$ ./oidctool zed &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;invalid_token&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;0은 성공, 49는 &lt;code&gt;invalidCredentials&lt;/code&gt;, 14는 &lt;code&gt;saslBindInProgress&lt;/code&gt;입니다.&lt;code&gt;[&amp;quot;pwd&amp;quot;,&amp;quot;kba&amp;quot;]&lt;/code&gt; 토큰은 같은 종류의 방법 두 개를 지정하므로 한 번으로 집계됩니다.그리고 &lt;code&gt;cert_file&lt;/code&gt;과 &lt;code&gt;key_file&lt;/code&gt;이 없는 같은 구성의 평문 리스너에서는:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3893 clear
+bind result 13&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;13은 &lt;code&gt;confidentialityRequired&lt;/code&gt;입니다. 토큰은 암호화되지 않은 연결에서는 받지
+않습니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;ldaps://&lt;/code&gt;로 거부된 네 번의 바인드에 대해 서버가 기록한 내용입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: the token is for &amp;#34;alice&amp;#34; and asks to act as &amp;#34;tess&amp;#34;; this server does not delegate
+zed was refused: the token verified, and no source here publishes anybody by that name&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그리고 평문 바인드에 대해서는:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;성공한 &lt;code&gt;OAUTHBEARER&lt;/code&gt; 바인드는 연결을 &lt;code&gt;uid=&amp;lt;name&amp;gt;,ou=people,&amp;lt;base_dn&amp;gt;&lt;/code&gt;으로
+바인드된 상태로 두며, 다른 모든 엔트리와 같은 방식으로 표기됩니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;거부하는 것&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;평문의 토큰.&lt;/strong&gt; 베어러 토큰은 다른 절반이 필요 없습니다. 전송 중에 그것을 읽은
+사람은 만료될 때까지 그 사람입니다. &lt;code&gt;allow_plaintext = true&lt;/code&gt;는 이 프로세스 앞에서
+TLS를 종단하는 배포를 위한 것이며, 그러면 &lt;code&gt;check&lt;/code&gt;가 &lt;em&gt;a token may cross this
+socket in the clear&lt;/em&gt;라고 알려 줍니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;다른 사람이 되겠다는 요청.&lt;/strong&gt; GS2 헤더는 &lt;code&gt;authzid&lt;/code&gt;를 지정할 수 있습니다. alice용
+토큰이 tess로 행동하겠다는 요청을 담고 있으면, 둘 중 어느 쪽으로도 조용히
+취급되지 않고 거부됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;여기 어떤 소스도 게시하지 않는 사람의 토큰.&lt;/strong&gt; 클라이언트는 &lt;code&gt;invalid_token&lt;/code&gt;만
+듣습니다. 어떤 이름이 존재하는지는 추측 한 번에 하나씩 내줄 것이 아닙니다.이유는 서버의 출력에 있습니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;채널 바인딩.&lt;/strong&gt; &lt;code&gt;p=&lt;/code&gt;가 있는 GS2 헤더 — 클라이언트가 채널 바인딩을 고집함 — 는
+거부됩니다. 이 서버는 이를 하지 않으며, 아무것도 바인딩하지 않으면서 헤더를
+받아들이면 클라이언트가 채널이 확인되었다고 믿게 됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;이 서버가 사용하지 않는 메커니즘&lt;/strong&gt;은 &lt;code&gt;authMethodNotSupported&lt;/code&gt;로.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;토큰 자체의 거부는 RFC 7628 §3.2.3을 따릅니다. &lt;code&gt;openid-configuration&lt;/code&gt;을 담은 JSON
+오류이며, 클라이언트가 교환을 끝내는 &lt;code&gt;^A&lt;/code&gt;를 보낼 수 있도록 &lt;code&gt;saslBindInProgress&lt;/code&gt;로
+반환됩니다. 검증은 되었지만 &lt;code&gt;mfa&lt;/code&gt; 정책을 충족하지 못하는 토큰에는 위의 두 번째와
+세 번째 바인드가 보여 주듯 그냥 &lt;code&gt;invalidCredentials&lt;/code&gt;로 응답합니다.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;토큰은 비밀번호를 설정하지 않습니다&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;토큰으로만 로그인해 본 사람은 그 세션으로 자신에게 첫 번째 비밀번호를 줄 수
+없으며, 비밀번호가 있는 사람도 그것을 변경하려면 여전히 보내야 합니다.&lt;a href="https://go-authn.github.io/docs/0.5/ko/authnd/passwords/"&gt;비밀번호 변경&lt;/a&gt;을 참조하십시오.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

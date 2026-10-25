@@ -1,0 +1,359 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Crl</title><link>https://go-authn.github.io/docs/0.5/zh-cn/tags/crl/</link><description>Recent content in Crl on go-authn</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><atom:link href="https://go-authn.github.io/docs/0.5/zh-cn/tags/crl/index.xml" rel="self" type="application/rss+xml"/><item><title>authn-revokd</title><link>https://go-authn.github.io/docs/0.5/zh-cn/authn-revokd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/zh-cn/authn-revokd/</guid><description>
+&lt;p&gt;&lt;strong&gt;OpenSSH 没有分发 KRL 的办法，而 KRL 中也没有任何内容表明它已过时。&lt;/strong&gt; &lt;code&gt;sshd&lt;/code&gt; 会把几个月前就停止更新的文件当作当前列表读取。authn-revokd 弥补了这两个缺口，针对&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authn-bridge/revocation/"&gt;authn-bridge&lt;/a&gt;发布的列表：它获取每个列表，只有验证通过才保留，将其写到 &lt;code&gt;sshd&lt;/code&gt; 或 TLS服务器读取的位置，并且在列表过期时写出一个&lt;strong&gt;吊销 CA本身&lt;/strong&gt;的列表。纯 Go，&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;，单个二进制文件。这些页面描述 v0.6.4。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
+$ authn-revokd -version
+authn-revokd v0.6.4
+$ authn-revokd -help
+Usage of authn-revokd:
+-config string
+the configuration file (default &amp;#34;/etc/authn-revokd/revokd.hcl&amp;#34;)
+-once
+sync once and exit: 1 when a list is not current, or could not be fetched
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;-help&lt;/code&gt; 以 0 退出；在 v0.6.2 之前它以 2 退出。&lt;/p&gt;
+&lt;p&gt;在 v0.6.0 之前，该命令名为 &lt;code&gt;revokd&lt;/code&gt;，默认读取 &lt;code&gt;/etc/revokd.hcl&lt;/code&gt;。现在没有任何程序读取该文件；当它存在而新的默认文件不存在时，错误信息会同时指出两个路径。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-does-in-one-run"&gt;一次运行中它做什么&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-in-one-run"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-in-one-run" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;针对环回地址上的测试 authn-bridge，带有一个 KRL 来源和一个 CRL 来源：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+output tls: wrote /tmp/authn/revokd/out/bridge.crl
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261011T115024
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;没有新内容的第二次运行不输出任何内容并以 0 退出：只有内容改变时，输出才会被重写。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-the-transport-does-not-matter"&gt;为什么传输方式无关紧要&lt;span class="hx:absolute hx:-mt-20" id="why-the-transport-does-not-matter"&gt;&lt;/span&gt;
+&lt;a href="#why-the-transport-does-not-matter" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;每个列表都能自我认证：KRL 通过 CA 自己的密钥生成的分离式 SSHSIG 签名，CRL 通过其 CA 的签名。每个列表都声明它何时不再有效。因此列表可以通过 HTTPS、集群内的普通 HTTP、镜像或文件传来。传输方式决定变更到达的速度，但绝不决定是否接受伪造或过时的列表。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;真实性&lt;/td&gt;
+&lt;td&gt;由 SSH CA 密钥生成的 SSHSIG，命名空间 &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;由其 CA 签名&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;当前有效&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;expires@go-authn.github.io&lt;/code&gt;，sshd 会忽略它&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;绝不倒退&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;krl_version&lt;/code&gt;，然后是生成日期&lt;/td&gt;
+&lt;td&gt;CRL Number，然后是 &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;故障即拒绝&lt;/td&gt;
+&lt;td&gt;authn-revokd 写出吊销 CA 密钥的 KRL&lt;/td&gt;
+&lt;td&gt;OpenSSL 自行拒绝过期的 CRL&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="where-to-go-next"&gt;接下来去哪里&lt;span class="hx:absolute hx:-mt-20" id="where-to-go-next"&gt;&lt;/span&gt;
+&lt;a href="#where-to-go-next" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authn-revokd/install/"&gt;安装&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;守护进程，或定时器上的 &lt;code&gt;-once&lt;/code&gt;；接入 sshd 和 nginx&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authn-revokd/configuration/"&gt;配置&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;来源、输出、镜像，以及什么会被拒绝&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authn-revokd/verification/"&gt;列表如何验证&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;签名、日期，以及绝不早于所持列表（重启之后也一样）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authn-revokd/lapse/"&gt;列表过期时&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;吊销 CA 本身的 KRL&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="what-it-does-not-do"&gt;它不做什么&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-not-do"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-not-do" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;吊销到达服务器的速度不会快于 authn-revokd 的轮询（&lt;code&gt;refresh&lt;/code&gt;），再加上签发方重新签发的延迟。签发方宕机期间，其证书从列表过期之时起就会被拒绝。持有 CA 密钥的人可以签署任何列表，正如他们可以签发任何证书一样。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;许可证&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause。&lt;/p&gt;</description></item><item><title>它吊销什么，以及服务器如何得知</title><link>https://go-authn.github.io/docs/0.5/zh-cn/authn-bridge/revocation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/zh-cn/authn-bridge/revocation/</guid><description>
+&lt;p&gt;禁用人员或机构（&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authn-bridge/admin/"&gt;管理 API&lt;/a&gt;）会终止一切回到提供方的内容：刷新令牌、&lt;code&gt;/userinfo&lt;/code&gt;、新证书、应用密码。已经发放出去的内容在别处凭密钥检查，有三种机制可以触及它：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;凭据&lt;/th&gt;
+&lt;th&gt;收回方式&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;此 CA 签发的 SSH 证书&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;KRL&lt;/strong&gt;，&lt;code&gt;GET /ssh/krl&lt;/code&gt;，其签名位于 &lt;code&gt;/ssh/krl.sig&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;X.509 客户端证书&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;CRL&lt;/strong&gt;，&lt;code&gt;GET /x509/crl&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;访问令牌、opkssh 证书，以及服务器独立验证的任何内容&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;Shared Signals&lt;/strong&gt; &lt;code&gt;session-revoked&lt;/code&gt; 事件&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;吊销是永久的。重新启用某人并不会让其证书恢复；他们会得到新的证书。可以从中撤销吊销的列表，就是能访问管理 API 的人可以编辑的列表。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-lists"&gt;列表&lt;span class="hx:absolute hx:-mt-20" id="the-lists"&gt;&lt;/span&gt;
+&lt;a href="#the-lists" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;两者都按 go-authn/revocation 的协议签发，使它们可以经过任何途径（镜像、普通 HTTP、文件）传递，并且仍然可以被读取它们的人检查：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;格式&lt;/td&gt;
+&lt;td&gt;OpenSSH &lt;code&gt;PROTOCOL.krl&lt;/code&gt;，由 go-authn/krl 写出：&lt;code&gt;sshd&lt;/code&gt; 的 &lt;code&gt;RevokedKeys&lt;/code&gt; 和 &lt;code&gt;ssh-keygen -Q&lt;/code&gt; 读取的格式&lt;/td&gt;
+&lt;td&gt;DER，RFC 5280&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;签名&lt;/td&gt;
+&lt;td&gt;由 SSH CA 密钥生成的分离式 SSHSIG，命名空间 &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;由签发证书的 CA 签名&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;有效期至&lt;/td&gt;
+&lt;td&gt;其 &lt;code&gt;expires@go-authn.github.io&lt;/code&gt; 扩展（sshd 会忽略它）&lt;/td&gt;
+&lt;td&gt;其 &lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;排序依据&lt;/td&gt;
+&lt;td&gt;其 &lt;code&gt;krl_version&lt;/code&gt;，然后是其生成日期&lt;/td&gt;
+&lt;td&gt;其 CRL Number，然后是 &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;每个列表都声明在签发&lt;strong&gt;一小时&lt;/strong&gt;之后不再有效。列表会被保留并原样提供，直到过去一半时间，或直到有内容被吊销；下一个请求随后会得到新的签发版本。新的签发版本的日期绝不早于它所取代的版本，即使时钟回拨也是如此，因为读取方会把同一版本的较早签发版本当作回滚而拒绝。CRL Number 在每次签发时递增。&lt;/p&gt;
+&lt;p&gt;来自测试提供方、没有吊销任何内容的 KRL：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -D - -o var/bridge.krl http://127.0.0.1:28473/ssh/krl
+HTTP/1.1 200 OK
+Cache-Control: max-age=60
+Content-Type: application/octet-stream
+Etag: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;
+Date: Sun, 11 Oct 2026 09:48:14 GMT
+Content-Length: 130
+$ ssh-keygen -Q -l -f var/bridge.krl
+# KRL version 0
+# Generated at 20261011T114814
+# Comment: go-authn/bridge http://127.0.0.1:28473&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;ETag 是内容的 ETag。&lt;/strong&gt; 读取方用 &lt;code&gt;If-None-Match&lt;/code&gt; 轮询，只要其持有的签发版本仍是所提供的那个，就会得到&lt;code&gt;304&lt;/code&gt;；由于内容至少每半小时就会改变，轮询的读取方永远不会把副本保留到过期之后：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o /dev/null -H &amp;#39;If-None-Match: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl
+304&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;签名使用 &lt;code&gt;If-Match&lt;/code&gt; 获取&lt;/strong&gt;，对应列表的 ETag。期间重新签发的列表会答复 &lt;code&gt;412&lt;/code&gt;，而不是给出与它不匹配的签名：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o var/bridge.krl.sig -H &amp;#39;If-Match: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl.sig
+200
+$ curl -s -o /dev/null -H &amp;#39;If-Match: &amp;#34;stale&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl.sig
+412&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;ssh-keygen&lt;/code&gt; 检查签名，并拒绝任何其他命名空间中的签名：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Y verify -f allowed -I bridge -n krl@go-authn.github.io -s bridge.krl.sig &amp;lt; bridge.krl
+Good &amp;#34;krl@go-authn.github.io&amp;#34; signature for bridge with ED25519 key SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;其中 &lt;code&gt;allowed&lt;/code&gt; 是这一行：&lt;code&gt;bridge namespaces=&amp;quot;krl@go-authn.github.io&amp;quot; &amp;lt;the CA key from /ssh/config&amp;gt;&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;十五秒之后签发的 CRL：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ openssl crl -inform DER -in var/bridge.crl -noout -text
+Certificate Revocation List (CRL):
+Version 2 (0x1)
+Signature Algorithm: ecdsa-with-SHA256
+Issuer: CN=go-authn bridge NFS client CA
+Last Update: Oct 11 09:48:29 2026 GMT
+Next Update: Oct 11 10:48:29 2026 GMT
+CRL extensions:
+X509v3 Authority Key Identifier:
+2A:90:7A:50:FF:65:52:BA:70:4E:E1:F8:70:EE:7A:FC:B1:8B:FE:4E
+X509v3 CRL Number:
+1791712109993
+No Revoked Certificates.
+Signature Algorithm: ecdsa-with-SHA256
+Signature Value:
+30:44:02:20:37:90:14:6f:c1:f2:ea:98:29:04:61:88:a8:17:
+88:e3:f6:84:9d:46:a7:fc:2b:ac:81:26:47:9d:ac:84:23:38:
+02:20:0a:a6:93:cb:7d:2d:81:e4:59:d4:0d:a0:fd:f4:6e:75:
+c9:0d:53:e7:92:49:ac:a1:31:a8:90:09:91:d1:87:b6&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;证书会一直留在列表中直到过期：过期的证书在各处都会被拒绝，无需列出。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="who-reads-them"&gt;谁读取它们&lt;span class="hx:absolute hx:-mt-20" id="who-reads-them"&gt;&lt;/span&gt;
+&lt;a href="#who-reads-them" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;普通的 &lt;code&gt;sshd&lt;/code&gt;，或 nginx 和其他 TLS 服务器：&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authn-revokd/"&gt;authn-revokd&lt;/a&gt;获取这些列表，只保留通过验证的列表，将它们写到服务器读取的位置，并在列表过期时对 sshd 故障即拒绝。&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://go-fileshare.github.io/docs/latest/security/revocation-lists/" target="_blank" rel="noopener"&gt;go-fileshare&lt;/a&gt;
+自行获取并验证它们，并且在没有当前有效列表时拒绝提供方的证书。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="shared-signals"&gt;共享信号&lt;span class="hx:absolute hx:-mt-20" id="shared-signals"&gt;&lt;/span&gt;
+&lt;a href="#shared-signals" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;访问令牌或 opkssh 证书是在使用它们的地方检查的，任何列表都无法逐一指名。因此提供方是 OpenID Shared Signals 发送方：在&lt;code&gt;DisablePerson&lt;/code&gt;、&lt;code&gt;RevokePerson&lt;/code&gt; 和 &lt;code&gt;DisableIdP&lt;/code&gt; 时，它会为每个提出请求的接收方排入一个 CAEP&lt;strong&gt;&lt;code&gt;session-revoked&lt;/code&gt;&lt;/strong&gt; 事件（在事件时间之前签发给该主体的一切都作废）。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;state&lt;/span&gt; { &lt;span class="p"&gt;...&lt;/span&gt; }&lt;span class="c1"&gt; # required: a queue a restart empties loses revocations
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;ssf {} # event_retention&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;192h&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;by&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;fileshare-ssf&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # a receiver: client credentials, scope ssf
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/fileshare-ssf.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssf_receiver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/.well-known/ssf-configuration | jq .
+{
+&amp;#34;issuer&amp;#34;: &amp;#34;http://127.0.0.1:28473&amp;#34;,
+&amp;#34;jwks_uri&amp;#34;: &amp;#34;http://127.0.0.1:28473/jwks&amp;#34;,
+&amp;#34;delivery_methods_supported&amp;#34;: [
+&amp;#34;urn:ietf:rfc:8936&amp;#34;
+],
+&amp;#34;configuration_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams&amp;#34;,
+&amp;#34;status_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/status&amp;#34;,
+&amp;#34;add_subject_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/subjects:add&amp;#34;,
+&amp;#34;remove_subject_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/subjects:remove&amp;#34;,
+&amp;#34;verification_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/verify&amp;#34;,
+&amp;#34;spec_version&amp;#34;: &amp;#34;1_0&amp;#34;,
+&amp;#34;authorization_schemes&amp;#34;: [
+{
+&amp;#34;spec_urn&amp;#34;: &amp;#34;urn:ietf:rfc:6749&amp;#34;
+}
+]
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;仅支持轮询投递&lt;/strong&gt;（RFC 8936）：由接收方发起询问；这里不会主动向外连接。&lt;/li&gt;
+&lt;li&gt;接收方使用来自 &lt;strong&gt;client credentials&lt;/strong&gt; 授权的访问令牌进行认证，适用于带有密钥的 &lt;code&gt;ssf_receiver&lt;/code&gt; 客户端，scope 为 &lt;code&gt;ssf&lt;/code&gt;。它只能看到自己的流，最多十个。&lt;/li&gt;
+&lt;li&gt;事件是 SET（RFC 8417），用 ID 令牌密钥签名，没有 &lt;code&gt;exp&lt;/code&gt; 也没有&lt;code&gt;sub&lt;/code&gt;。主体默认是&lt;strong&gt;账户&lt;/strong&gt;，&lt;code&gt;acct:&amp;lt;username&amp;gt;&lt;/code&gt;：&lt;code&gt;sub&lt;/code&gt;
+可能是成对的，每个客户端一个。配置了&lt;code&gt;ssf_subject_format = &amp;quot;iss_sub&amp;quot;&lt;/code&gt; 的接收方则得到签发方和公开的 &lt;code&gt;sub&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;禁用一个机构，会为提供方在其中留有记录的每个人员各产生一个事件，外加一个其主体为&lt;strong&gt;租户&lt;/strong&gt;（即机构的实体 ID）的事件，附带其 scope，用于覆盖提供方已经遗忘的人员。&lt;/li&gt;
+&lt;li&gt;流和未送达的事件保存在 &lt;code&gt;state&lt;/code&gt; 数据库中，直到被确认或 &lt;code&gt;event_retention&lt;/code&gt; 过期。接收方报告出错的事件会被再次发出，最多十次。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;没有 &lt;code&gt;state&lt;/code&gt; 块的 SSF 块会被拒绝：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: ssf: needs a state block: a queue a restart empties loses revocations&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

@@ -1,0 +1,146 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – シグナル</title><link>https://go-authn.github.io/docs/0.5/ja/tags/%E3%82%B7%E3%82%B0%E3%83%8A%E3%83%AB/</link><description>Recent content in シグナル on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ja</language><atom:link href="https://go-authn.github.io/docs/0.5/ja/tags/%E3%82%B7%E3%82%B0%E3%83%8A%E3%83%AB/index.xml" rel="self" type="application/rss+xml"/><item><title>運用: シグナル、再起動、出力される内容</title><link>https://go-authn.github.io/docs/0.5/ja/authnd/operations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ja/authnd/operations/</guid><description>
+&lt;h2 data-hextra-search-id="it-reads-everything-once"&gt;すべてを一度だけ読み込む&lt;span class="hx:absolute hx:-mt-20" id="it-reads-everything-once"&gt;&lt;/span&gt;
+&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;設定ファイル、その背後にあるすべてのソース、TLS 証明書、キータブは&lt;strong&gt;起動時に&lt;/strong&gt;読み込まれます。リロードはなく、パッケージ付属のユニットにも &lt;code&gt;ExecReload=&lt;/code&gt; はありません。これらのいずれかを変更した後は:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl restart authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;実行中に反映される唯一のものは、&lt;a href="https://go-authn.github.io/docs/0.5/ja/authnd/passwords/"&gt;人が authnd を通じて変更したパスワード&lt;/a&gt;で、&lt;code&gt;user&lt;/code&gt; ブロックだけを再読み込みし、他は何も読みません。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="signals"&gt;シグナル&lt;span class="hx:absolute hx:-mt-20" id="signals"&gt;&lt;/span&gt;
+&lt;a href="#signals" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;シグナル&lt;/th&gt;
+&lt;th&gt;動作&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;SIGTERM&lt;/code&gt;、&lt;code&gt;SIGINT&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;stopping&lt;/code&gt; を出力し、リスナーと&lt;strong&gt;確立済みのすべての接続&lt;/strong&gt;を閉じ、レルムを停止し、ソースを閉じ、サーバーが実際に終了した時点で 0 で終了します&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;SIGHUP&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;捕捉されてログに記録され、authnd は何もリロードせずに&lt;strong&gt;稼働し続けます&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd
+ldap on 127.0.0.1:3893, serving 4 people from the configuration file, then a sqlite database
+hangup: authnd does not reload; restart it to apply a changed configuration, certificate or keytab
+alice&amp;#39;s password change was refused: the old password did not verify: directory: wrong password
+alice changed their own password
+stopping&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;これは一回の実行です。&lt;code&gt;kill -HUP&lt;/code&gt; が一回、パスワード変更の試行が二回 (最初は拒否され、二回目は受け入れられました)、そして &lt;code&gt;kill -TERM&lt;/code&gt; です。&lt;code&gt;SIGHUP&lt;/code&gt; の後もプロセスは残っていました。&lt;/p&gt;
+&lt;p&gt;かつて &lt;code&gt;SIGHUP&lt;/code&gt; は authnd を&lt;strong&gt;終了させて&lt;/strong&gt;いました。誰も処理しないシグナルに対する Go の既定の動作です。systemd は &lt;code&gt;SIGHUP&lt;/code&gt; による終了を正常終了と数えるため、&lt;code&gt;Restart=on-failure&lt;/code&gt; では再起動されませんでした。一度の &lt;code&gt;kill -HUP&lt;/code&gt; や、一度の logrotate の &lt;code&gt;postrotate&lt;/code&gt; で、ディレクトリがそのまま落ちたのです。今では捕捉されるので、その習慣は無害であり、ログの行が代わりに何をすべきかを伝えます。&lt;/p&gt;
+&lt;p&gt;リスナーだけでなく確立済みの接続も閉じるのは意図的です。受け付けを止めても開いている接続に応答し続けるサーバーは、止まったように見えても止まっておらず、それは反映されない再起動になってしまいます。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-writes"&gt;出力される内容&lt;span class="hx:absolute hx:-mt-20" id="what-it-writes"&gt;&lt;/span&gt;
+&lt;a href="#what-it-writes" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;すべては標準出力に出力され、systemd の下ではジャーナルになります(&lt;code&gt;journalctl -u authnd&lt;/code&gt;)。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;起動時に、待ち受け先と提供対象 — &lt;code&gt;ldap on …&lt;/code&gt;、&lt;code&gt;ldaps on …&lt;/code&gt;、&lt;code&gt;ldap+starttls on …&lt;/code&gt;。&lt;code&gt;kerberos&lt;/code&gt; ブロックがある場合は続けて &lt;code&gt;realm EXAMPLE.ORG on … (udp and tcp)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;mfa&lt;/code&gt; ブロックの下で拒否されたすべてのバインド、拒否されたすべてのトークン、拒否または完了したすべてのパスワード変更を、&lt;strong&gt;理由とともに&lt;/strong&gt;。クライアントには決して告げられません。&lt;a href="https://go-authn.github.io/docs/0.5/ja/authnd/mfa/#what-the-binds-look-like"&gt;第二要素&lt;/a&gt;と&lt;a href="https://go-authn.github.io/docs/0.5/ja/authnd/tokens/#what-the-binds-look-like"&gt;トークン&lt;/a&gt;を参照&lt;/li&gt;
+&lt;li&gt;KDC が拒否したすべての要求を、&lt;code&gt;kerberos:&lt;/code&gt; を前置し、Kerberos のエラーコードとともに。&lt;a href="https://go-authn.github.io/docs/0.5/ja/authnd/kerberos/#kinit-against-it"&gt;レルム&lt;/a&gt;を参照&lt;/li&gt;
+&lt;li&gt;LDAP ライブラリ自身のログを、&lt;code&gt;slog&lt;/code&gt; のテキスト形式で、info レベルで&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;mfa&lt;/code&gt; ブロックがない単純バインドでの単なる間違ったパスワードには &lt;code&gt;invalidCredentials&lt;/code&gt; が返され、authnd 自身はログに記録しません。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="when-it-does-not-start"&gt;起動しないとき&lt;span class="hx:absolute hx:-mt-20" id="when-it-does-not-start"&gt;&lt;/span&gt;
+&lt;a href="#when-it-does-not-start" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;拒否は、標準エラーへの &lt;code&gt;authnd:&lt;/code&gt; で始まる一行と、終了ステータス 1 です。ユニットの下では&lt;code&gt;Restart=on-failure&lt;/code&gt; が五秒ごとに再試行し、その行は毎回ジャーナルに残ります。&lt;code&gt;check&lt;/code&gt; が拒否するものはここでもすべて拒否され、サーバーだけが見つけるのは、待ち受けられないアドレスです。&lt;a href="https://go-authn.github.io/docs/0.5/ja/authnd/check/#the-certificate-the-keytab-and-the-one-thing-it-cannot-see"&gt;&lt;code&gt;check&lt;/code&gt;&lt;/a&gt;を参照してください。LDAP リスナー、証明書、レルムはいずれも最初の行が出力される前に開かれるので、起動できないサーバーは拒否のメッセージだけを出力します。ここでは二つ目のインスタンスが、一つ目の Kerberos ポートにぶつかっています。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config cases/realm2
+authnd: kerberos udp 127.0.0.1:18388: listen udp 127.0.0.1:18388: bind: address already in use&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;ldap on …&lt;/code&gt; の行と、その後の &lt;code&gt;realm … on …&lt;/code&gt; は、両方の半分が待ち受けていることを意味します。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="telling-that-it-is-up"&gt;稼働の確認&lt;span class="hx:absolute hx:-mt-20" id="telling-that-it-is-up"&gt;&lt;/span&gt;
+&lt;a href="#telling-that-it-is-up" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ヘルスエンドポイントもメトリクスもありません。あるのは次のものです。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;プロセスとその終了ステータス&lt;/strong&gt; — systemd の下では &lt;code&gt;systemctl is-active authnd&lt;/code&gt;。LDAP リスナーまたはレルムが自ら停止した場合、そのエラーとともにプロセス全体が終了するので、生きているプロセスとは、二つの半分がどちらも応答するものです&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;ルート DSE&lt;/strong&gt;。匿名のクライアントに応答し、どのバージョンと話しているかを示します。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; &amp;#39;&amp;#43;&amp;#39; &amp;#39;*&amp;#39;
+dn:
+objectClass: top
+objectClass: OpenLDAProotDSE
+supportedLDAPVersion: 3
+namingContexts: dc=example,dc=org
+supportedExtension: 1.3.6.1.4.1.4203.1.11.3
+supportedExtension: 1.3.6.1.4.1.4203.1.11.1
+supportedControl: 1.2.840.113556.1.4.319
+supportedControl: 1.3.6.1.1.13.1
+supportedControl: 1.3.6.1.1.13.2
+supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
+supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
+subschemaSubentry: cn=Subschema
+vendorName: go-authn/authnd
+vendorVersion: v0.12.0&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.5/ja/authnd/tls/#starttls-which-refuses-until-it-is-asked-for"&gt;StartTLS リスナー&lt;/a&gt;では、このクエリに &lt;code&gt;-ZZ&lt;/code&gt; が必要です。より多くを証明するプローブ、つまりソースがまだ応答することの確認は、そのために用意した人または reader としてのバインドです。&lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt; ブロックがある場合、そのバインドはこの背後にあるディレクトリに到達します。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-lives-where-and-what-a-restart-loses"&gt;何がどこにあり、再起動で何が失われるか&lt;span class="hx:absolute hx:-mt-20" id="what-lives-where-and-what-a-restart-loses"&gt;&lt;/span&gt;
+&lt;a href="#what-lives-where-and-what-a-restart-loses" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;設定、パスワード、DSN、証明書、キータブ&lt;/td&gt;
+&lt;td&gt;設定が指名するファイル。何もコピーされません&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;SQLite データベース&lt;/td&gt;
+&lt;td&gt;DSN が指す場所。ユニットの下では &lt;code&gt;/var/lib/authnd&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;第二要素のカウントとロックアウト&lt;/td&gt;
+&lt;td&gt;メモリ上のみ: &lt;strong&gt;再起動で忘れられます&lt;/strong&gt;。百回間違えてロックアウトされた人も含みます&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;使用済みのワンタイムコード&lt;/td&gt;
+&lt;td&gt;メモリ上のみ&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;</description></item></channel></rss>
