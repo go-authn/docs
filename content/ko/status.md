@@ -1,0 +1,146 @@
+---
+title: "상태"
+weight: 60
+description: "이 문서가 설명하는 릴리스, 각 릴리스에서 추가된 것, 그리고 아직 구현되지 않은 것."
+tags: [상태, 릴리스]
+---
+
+이 문서는 문서 버전 **0.4**이며 다음을 설명합니다.
+
+| 프로그램 | 릴리스 | 모듈 |
+|---|---|---|
+| authnd | **v0.11.1** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
+| sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
+
+라이브러리의 버전은 [해당 페이지]({{< relref "/libraries/_index.md" >}})에
+있습니다. ldap은 HCL2 스키마와 `ldapschema` 변환기를 갖춘 **v0.9.0**이고,
+directory는 속성과 더 넓어진 ldapdir 기본값을 갖춘 **v0.14.0**입니다. authnd
+v0.11.1은 ldap v0.8.0과 directory v0.14.0을 내장합니다.
+위 프로그램 중 어느 것이든 새 마이너 버전이 나오면 새 문서 버전이 됩니다. 따라서
+독자가 `/docs/0.4/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
+페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`에 남아 있습니다.
+
+## 각 릴리스에서 추가된 것 {#what-each-release-added}
+
+각 줄은 해당 릴리스를 만든 이유가 된 변경입니다. 의존성만 갱신한 릴리스는, 이
+문서 버전이 설명하는 것을 제외하고 생략했습니다.
+
+### authnd {#authnd}
+
+| | |
+|---|---|
+| v0.1.0 | 다른 곳(파일, SQL 데이터베이스, 다른 디렉터리)에 있는 사람들을 위한 LDAP 서버 |
+| v0.2.0 | 필드가 하나뿐인 프로토콜 위의 두 번째 인증 요소 |
+| v0.5.0 | 정확히 하나의 신원만 건드리는 비밀번호 변경, 경쟁 상태 없는 다시 불러오기, KDC가 변경을 인식함 |
+| v0.6.0 | oidc, directory, ldap, totp, mfa의 보안 수정 |
+| v0.7.0 | 비밀번호를 변경하려면 이전 비밀번호가 필요함, 비밀 값을 고정 길이 다이제스트로 비교함 |
+| v0.8.2 | 코드는 올바른 비밀번호 뒤에서만 인정됨, 리더는 구성된 DN으로 키가 지정됨 |
+| v0.9.0 | `stable`이 아니라 고정된 Go 1.27.1로 빌드하고 테스트함 |
+| v0.9.2 | 모든 태그에 릴리스 바이너리, `SHA256SUMS`, 빌드 출처 증명 |
+| v0.9.3 | 체크아웃 밖에서 빌드한 바이너리, 각각이 태그를 정확히 보고해야 함 |
+| v0.9.4 | `SIGHUP`이 더 이상 authnd를 종료하지 않음: 기록만 하고 아무것도 다시 불러오지 않음 |
+| v0.9.5 | 릴리스가 바이너리 하나가 아니라 **모든** 바이너리의 빌드 정보를 확인함 |
+| v0.9.6 | `check`가 각 사람에게 티켓을 발급할 수 없는 이유를 알려 줌 |
+| v0.10.0 | `check`가 서버처럼 인증서와 keytab을 열어 봄, 비밀번호로 바인드할 수 없는 사람과 토큰으로 여전히 허용되는 사람을 알려 줌, 수신 대기 줄이 렐름을 연 뒤에 나옴 |
+| v0.10.1 | go-authn/kdc v0.4.2: `till`이 19700101000000Z이면 1970년에 만료된 티켓이 아니라 가장 긴 티켓을 받음 |
+| v0.10.2 | go-authn/directory v0.12.0: 빈 그룹은 `memberUid` 없는 `posixGroup`으로 게시됨 |
+| v0.11.0 | [표준 스키마 엔트리]({{< relref "/authnd/entries.md" >}}), 각각 `cn=Subschema`에서 제공하는 스키마에 맞춰짐, `attributes`, `users_attributes`, `groups_attributes`, `(uidNumber>=1000)`이 정수로 비교함. ⛔ `publish_nt_hash`에는 [`samba` 블록]({{< relref "/authnd/tls.md#the-samba-block" >}})이 필요하며, `posixAccount`나 `posixGroup`으로 필터링하는 소비자는 더 적은 엔트리를 봄 |
+| v0.11.1 | 시작 줄이 실제로 사람들을 제공하는 소스만 지정함: `user` 블록이 없으면 더 이상 구성 파일을 지정하지 않음 |
+
+### authn-bridge {#authn-bridge}
+
+| | |
+|---|---|
+| v0.1.0 | SAML 페더레이션 앞에 놓인 OpenID Connect 공급자 |
+| v0.2.0 | 디바이스 그랜트, SSH 인증서, 애플리케이션 비밀번호, OpenPubkey |
+| v0.3.0 | 관리 API(`bridge.admin.v1`)와 `/healthz`, `/readyz`, `/metrics` |
+| v0.4.0 | ES256 액세스 토큰 |
+| v0.5.0 | go-fileshare와 공유하는 go-authn/servercert를 통한 TLS |
+| v0.6.0 | 폐기할 수 있는 인증서: SSH KRL, 그리고 CRL이 있는 NFS용 X.509 |
+| v0.7.0 | 재시작 후에도 유지되는 상태: 리프레시 토큰과 인정된 액세스 토큰 |
+| v0.8.0 | Shared Signals 송신기: CAEP `session-revoked` |
+| v0.9.0 | v0.8.1에 대한 적대적 검토의 수정 사항 |
+| v0.10.0 | 어디서든 확인할 수 있는 폐기 목록: 서명된 KRL, 만료, 내용의 ETag |
+| v0.10.2 | 발급마다 CRL 번호 부여, 직전 발급보다 이른 날짜의 발급은 절대 없음 |
+| v0.11.0 | 그룹이 신원 공급자에 묶임, 신원 단위 비활성화, 브리지 전용 audience |
+| v0.12.0 | 진행 중인 로그인이 메모리가 아니라 봉인된 쿠키에 있음 |
+| v0.13.0 | 기밀 클라이언트가 nonce로 코드를 보호할 수 있음(RFC 9700 2.1.1) |
+| v0.16.0 | `max_age`는 마지막 인증이 너무 오래된 경우에만 새 인증을 요청함 |
+| v0.16.3 | 두 번째 검토: 모든 표기가 폐기됨, `sub` 단위 비활성화, 재시작 간 재생 없음 |
+| v0.17.0 | 사람들이 등록하고 게이트웨이용으로 나열되는 WireGuard 키 |
+| v0.18.0 | 사람의 클레임이 없는 ID 토큰, go-authn/saml v0.4.0 |
+| v0.19.0 | EuroHPC SSH CA 프로필, 클라이언트별 선택 적용 |
+| v0.19.3 | 모든 태그에 릴리스 바이너리, `SHA256SUMS`, 빌드 출처 증명 |
+| v0.20.0 | 명령은 `authn-bridge`, 강화된 systemd 유닛과 설치 가이드 |
+| v0.20.1 | 더 이상 사실이 아니던 주석과 거부 메시지, README에 `RevokePerson`이 폐기하는 모든 것을 나열함 |
+| v0.21.0 | [RFC 8707 리소스 지표]({{< relref "/authn-bridge/resources.md" >}}): `audience`가 여러 리소스 서버를 지정하는 클라이언트가 그중 하나를 수신자로 하는 토큰을 요청할 수 있음. v0.20.1보다 한 시간 먼저 태그되었으며 v0.20.1에도 포함되어 있지만 v0.20.1의 수정 사항은 없음 |
+| v0.21.1 | HTTP/2 권고 사항에 따른 golang.org/x/net v0.60.0과 Go 1.27.2, v0.20.1의 수정 사항 재적용, 자리 표시자 도메인을 RFC 2606 이름으로 변경 |
+| v0.22.0 | 액세스 토큰이 더 이상 `auth_time`이나 `acr`을 담지 않음(ID 토큰은 여전히 담음). 그래서 ES256 토큰이 RENATER 스코프의 99번째 백분위수까지 OpenSSH의 1023자에 들어맞음 |
+| v0.22.1 | 여러 서버로 제한된 그랜트를 위해 인가 엔드포인트에서 `resource`를 반복할 수 있음, `device_authorization`에서는 무시하지 않고 거부함([리소스 지표]({{< relref "/authn-bridge/resources.md" >}})) |
+| v0.23.0 | `access_token_groups = false`: 토큰을 ssh에 붙여 넣는 클라이언트는 그룹을 담지 않음([토큰]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
+| v0.23.1 | 의존성만: go-jose/v4 v4.1.6, golang.org/x/crypto v0.58.0, golang.org/x/net v0.61.0, go-authn/directory v0.12.0, revocation v0.6.3, saml v0.4.1, servercert v0.5.1, sshcert v0.1.6 |
+
+### authn-revokd {#authn-revokd}
+
+| | |
+|---|---|
+| v0.1.0 | 서명되고 만료되는 폐기 목록: 프로토콜, 라이브러리, revokd(에이전트와 미러) |
+| v0.2.0 | 적대적 검토의 수정 사항 |
+| v0.2.1 | 각 CA의 목록이 자체 키 폐기와 병합됨, CRL의 서명을 구문 분석하기 전에 확인함 |
+| v0.3.0 | 범위가 지정된 키 폐기, CA별 실패 시 차단, 상태 디렉터리 소유자 확인 |
+| v0.5.0 | 모든 태그에 릴리스 바이너리, `SHA256SUMS`, 빌드 출처 증명 |
+| v0.6.0 | 명령은 `authn-revokd`, systemd 유닛과 설치 가이드, `SIGHUP`이 즉시 동기화함 |
+| v0.6.1 | `-version`이 표준 출력에 출력됨 |
+| v0.6.2 | `-once`가 가져오기 실패와 만료된 목록을 구분함, 다른 키로 서명된 목록을 더 이상 경쟁 상태라고 부르지 않음, `-help`가 0으로 종료함 |
+| v0.6.3 | 예제와 문서의 자리 표시자 도메인을 RFC 2606 이름으로 변경, 동작 변화 없음 |
+| v0.6.4 | 의존성만: golang.org/x/crypto v0.58.0 |
+
+### sshcert {#sshcert}
+
+| | |
+|---|---|
+| v0.1.0 | 도메인 권한 부여 확장, 그리고 실패 시 차단하는 `sshcert-authorize` |
+| v0.1.2 | 모든 태그에 릴리스 바이너리, `SHA256SUMS`, 빌드 출처 증명 |
+| v0.1.4 | 릴리스가 모든 바이너리의 빌드 정보를 확인함 |
+| v0.1.5 | `-version`이 `dev`가 아니라 `go install` 빌드의 모듈 버전을 출력함 |
+| v0.1.6 | 문서의 자리 표시자 도메인을 RFC 2606 이름으로 변경, 동작 변화 없음 |
+| v0.1.7 | 의존성만: golang.org/x/crypto v0.58.0 |
+
+### 라이브러리 {#the-libraries}
+
+이 문서 버전을 위해 만들어진 라이브러리 릴리스입니다. 이전 릴리스에서 바뀐 것은
+각 라이브러리의 페이지에 설명되어 있습니다.
+
+| | |
+|---|---|
+| directory v0.13.0 | [속성]({{< relref "/libraries/directory.md#attributes" >}}): 누군가를 설명하되 아무것도 증명하지 않는 것(자격 증명 제외), 속성이 될 수 없는 이름 포함, `user`와 `group` 블록의 `attributes`, `users_attributes`와 `groups_attributes` 쿼리, ldapdir의 `attributes`와 `group_attributes` |
+| directory v0.14.0 | ⛔ ldapdir의 [기본값]({{< relref "/libraries/directory.md#ldapdir-defaults" >}})이 `account`와 `uidObject` 사람 및 `groupOfNames` 그룹을 읽으므로 기관의 디렉터리가 제공하는 범위가 넓어짐, `member` DN은 소스가 가져온 사람에게만 매핑됨 |
+| kdc v0.4.3 | 의존성만: 최소 요구 버전으로 go-authn/directory v0.12.0 |
+| keyfactor v0.4.2 | 의존성만: 최소 요구 버전으로 go-authn/fido v0.6.2와 golang.org/x/crypto v0.58.0 |
+| krb5 v0.3.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
+| krl v0.6.1 | 의존성만: golang.org/x/crypto v0.58.0, Go 1.27.2로 테스트함 |
+| ldap v0.8.0 | [`schema` 패키지]({{< relref "/libraries/ldap.md#the-schema" >}})와 `Server.Schema`: `cn=Subschema`(RFC 4512 §4.2), `Validate`, RFC 4517 매칭 규칙, `uidNumber`와 `gidNumber`는 정수로 정렬됨, 페이지 검색이 요청된 속성만 유지함 |
+| ldap v0.9.0 | [HCL2 스키마]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): `schema/hclschema` 패키지와 OpenLDAP `.schema`, cn=config LDIF, HCL2 사이를 변환하는 `ldapschema` 명령(`to-hcl`, `to-schema`, `check`), 리더는 slapd처럼 파일을 읽음, DIT 콘텐츠와 구조 규칙, 이름 형식, `include`, `X-SUBST`는 지원되지 않음 |
+| oidc v0.4.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
+| servercert v0.5.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
+| totp v0.4.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
+| wireguard v0.1.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
+
+## 아직 구현되지 않은 것 {#not-implemented-yet}
+
+- **LDAP을 통한 쓰기**, 사람이 자신의 비밀번호를 바꾸는 경우는 제외합니다. authnd는
+  자기 자신의 `userPassword`에 대한 modify와 RFC 3062 비밀번호 변경 작업
+  (`ldappasswd`가 보내는 것)에만 응답하며, 둘 다 현재 비밀번호가 있어야 합니다.
+  그 밖에는 아무것도 하지 않습니다. add, delete, modifyDN은 go-authn/ldap에
+  존재하지만 의도적으로 연결하지 않았습니다(`server.go`). 라이브러리는 modify를
+  순서 있는 목록으로 다루고(RFC 4511 4.6) 읽기 엔트리 컨트롤(RFC 4527)에
+  응답하므로 형태는 갖추어져 있습니다. 부족한 것은 누가 무엇을 쓸 수 있는가라는
+  정책입니다.
+- **Kerberos 안의 두 번째 인증 요소**: FAST(RFC 6113) 안에서의 OTP 사전 인증
+  (RFC 6560). 이것이 생기기 전까지는 `kerberos` 블록과 `mfa` 블록을 함께
+  구성할 수 없습니다.
+- **RC4-HMAC**: 렐름은 aes256-cts-hmac-sha1-96만 발급하므로 NT 해시로만 알려진
+  사람에게는 티켓을 발급할 수 없습니다. 이것은 채워지기를 기다리는 빈틈이 아니라
+  선택입니다(RC4는 RFC 8429에서 사용 중단되었습니다).
