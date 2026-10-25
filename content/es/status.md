@@ -15,9 +15,10 @@ Estas páginas son la versión **0.4** de la documentación, y describen:
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 Las versiones de las bibliotecas están en [su propia página]({{< relref "/libraries/_index.md" >}});
-ldap está en la **v0.8.0**, con el esquema de directorio, y directory en la
-**v0.14.0**, con atributos y valores por defecto de ldapdir más amplios: ambas
-son las que incorpora authnd v0.11.1.
+ldap está en la **v0.9.0**, con los esquemas en HCL2 y el conversor
+`ldapschema`, y directory en la **v0.14.0**, con atributos y valores por
+defecto de ldapdir más amplios. authnd v0.11.1 incorpora ldap v0.8.0 y
+directory v0.14.0.
 Una nueva versión menor de cualquiera de los programas anteriores es una nueva
 versión de la documentación, de modo que las páginas que alguien encuentra bajo
 `/docs/0.4/` siguen describiendo lo que instaló; las de las versiones anteriores
@@ -124,6 +125,7 @@ anteriores.
 | krb5 v0.3.1 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
 | krl v0.6.1 | solo dependencias: golang.org/x/crypto v0.58.0; probada con Go 1.27.2 |
 | ldap v0.8.0 | [el paquete `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) y `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, las reglas de comparación del RFC 4517; `uidNumber` y `gidNumber` se ordenan como enteros; una búsqueda paginada se ciñe a los atributos pedidos |
+| ldap v0.9.0 | [los esquemas en HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): el paquete `schema/hclschema` y el comando `ldapschema` (`to-hcl`, `to-schema`, `check`) entre `.schema` de OpenLDAP, LDIF cn=config y HCL2; los lectores leen los archivos como slapd; las reglas de contenido y de estructura del DIT, las formas de nombre, `include` y `X-SUBST` no se admiten |
 | oidc v0.4.1 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
 | servercert v0.5.2 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
 | totp v0.4.2 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
