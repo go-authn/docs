@@ -1,0 +1,930 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Authn-Revokd</title><link>https://go-authn.github.io/docs/0.4/ja/tags/authn-revokd/</link><description>Recent content in Authn-Revokd on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ja</language><atom:link href="https://go-authn.github.io/docs/0.4/ja/tags/authn-revokd/index.xml" rel="self" type="application/rss+xml"/><item><title>authn-revokd のインストール</title><link>https://go-authn.github.io/docs/0.4/ja/authn-revokd/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ja/authn-revokd/install/</guid><description>
+&lt;p&gt;リポジトリは &lt;code&gt;packaging/&lt;/code&gt; に三つのユニットとアカウントを含んでいます。
+&lt;code&gt;authn-revokd.service&lt;/code&gt; (デーモン)、&lt;code&gt;authn-revokd-once.service&lt;/code&gt; と
+&lt;code&gt;authn-revokd-once.timer&lt;/code&gt; (代替手段)、そして &lt;code&gt;sysusers.d/authn-revokd.conf&lt;/code&gt; です。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;パス&lt;/th&gt;
+&lt;th&gt;内容&lt;/th&gt;
+&lt;th&gt;所有者、モード&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/usr/local/bin/authn-revokd&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;バイナリ&lt;/td&gt;
+&lt;td&gt;root、&lt;code&gt;0755&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/usr/lib/sysusers.d/authn-revokd.conf&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;authn-revokd&lt;/code&gt; システムアカウント&lt;/td&gt;
+&lt;td&gt;root、&lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/systemd/system/authn-revokd.service&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;デーモン&lt;/td&gt;
+&lt;td&gt;root、&lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/authn-revokd/revokd.hcl&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;設定。&lt;code&gt;-config&lt;/code&gt; の既定値&lt;/td&gt;
+&lt;td&gt;root、&lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/etc/authn-revokd/ca/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;リストが署名されていなければならない CA の鍵と証明書&lt;/td&gt;
+&lt;td&gt;root、&lt;code&gt;0755&lt;/code&gt;。中のファイルは &lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;StateDirectory=&lt;/code&gt;、唯一の書き込み可能な場所&lt;/td&gt;
+&lt;td&gt;authn-revokd、&lt;code&gt;0755&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/state/&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;state_dir&lt;/code&gt;: 検証済みのコピー&lt;/td&gt;
+&lt;td&gt;authn-revokd、&lt;code&gt;0700&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/var/lib/authn-revokd/sshd.krl&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;出力: &lt;code&gt;sshd&lt;/code&gt; が読むもの&lt;/td&gt;
+&lt;td&gt;authn-revokd、&lt;code&gt;0644&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;出力は &lt;code&gt;/var/lib/authn-revokd&lt;/code&gt; に書き込み、サーバーをそこに向けてください。&lt;/strong&gt; 出力は最終的な
+名前の隣に書き込まれてからリネームで上書きされるので、その&lt;em&gt;ディレクトリ&lt;/em&gt;が書き込み可能で
+なければなりません。&lt;code&gt;/etc/ssh&lt;/code&gt; を書き込み可能にすると、&lt;code&gt;authn-revokd&lt;/code&gt; アカウントが &lt;code&gt;sshd_config&lt;/code&gt; を
+置き換えられるようになってしまいます。出力は &lt;code&gt;0644&lt;/code&gt; で、&lt;code&gt;UMask=0077&lt;/code&gt; にもかかわらず明示的に
+chmod されるので、独自のユーザーで動く &lt;code&gt;sshd&lt;/code&gt; と TLS サーバーが読めます。状態は &lt;code&gt;0700&lt;/code&gt; のままです。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-binary-the-account-the-unit"&gt;バイナリ、アカウント、ユニット&lt;span class="hx:absolute hx:-mt-20" id="the-binary-the-account-the-unit"&gt;&lt;/span&gt;
+&lt;a href="#the-binary-the-account-the-unit" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;リリースには、Linux、macOS、Windows の amd64 と arm64 向けの &lt;code&gt;authn-revokd-&amp;lt;os&amp;gt;-&amp;lt;arch&amp;gt;&lt;/code&gt; が、
+&lt;code&gt;SHA256SUMS&lt;/code&gt; とビルド来歴とともに含まれます
+(&lt;a href="https://go-authn.github.io/docs/0.4/ja/security/verifying-releases/"&gt;ダウンロードの検証&lt;/a&gt;)。あるいは
+&lt;code&gt;go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4&lt;/code&gt; です。&lt;/p&gt;
+&lt;p&gt;アカウントとユニットはリリースタグの &lt;code&gt;packaging/&lt;/code&gt; ディレクトリにあり、バイナリと同じバージョン
+です。そのタグのチェックアウトから、または v0.6.4 の場合は
+&lt;a href="https://github.com/go-authn/revocation/tree/v0.6.4/packaging" target="_blank" rel="noopener"&gt;https://github.com/go-authn/revocation/tree/v0.6.4/packaging&lt;/a&gt; から、そのディレクトリを
+バイナリの隣にコピーしてください。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0755&lt;/span&gt; authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/sysusers.d/authn-revokd.conf /usr/lib/sysusers.d/authn-revokd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemd-sysusers /usr/lib/sysusers.d/authn-revokd.conf
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; packaging/systemd/authn-revokd.service /etc/systemd/system/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl daemon-reload&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;アカウントは静的で、&lt;code&gt;DynamicUser=&lt;/code&gt; ではありません。authn-revokd は、自身の uid か root 以外が
+所有する状態ディレクトリを拒否し、状態は再起動とアップグレードをまたいで次のリストの順序を
+決め続けなければなりません。動的ユーザーでは、ファイルは &lt;code&gt;/var/lib/private&lt;/code&gt; の下に置かれ、
+root の &lt;code&gt;0700&lt;/code&gt; になり、独自のユーザーで動く TLS サーバーが CRL を読めなくなります。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-daemon"&gt;デーモン&lt;span class="hx:absolute hx:-mt-20" id="the-daemon"&gt;&lt;/span&gt;
+&lt;a href="#the-daemon" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;exec&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecReload&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/bin/kill -HUP $MAINPID&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Restart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;always&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;そしてその周囲に: &lt;code&gt;User=authn-revokd&lt;/code&gt;、ケーパビリティなし、&lt;code&gt;NoNewPrivileges=&lt;/code&gt;、
+&lt;code&gt;ProtectSystem=strict&lt;/code&gt; と、唯一の書き込み可能な場所である &lt;code&gt;StateDirectory=authn-revokd&lt;/code&gt;
+(&lt;code&gt;0755&lt;/code&gt;)、&lt;code&gt;PrivateUsers=&lt;/code&gt;、&lt;code&gt;PrivateTmp=&lt;/code&gt;、&lt;code&gt;PrivateDevices=&lt;/code&gt;、&lt;code&gt;PrivateIPC=&lt;/code&gt;、
+&lt;code&gt;AF_INET AF_INET6 AF_UNIX&lt;/code&gt; のみ、&lt;code&gt;@system-service&lt;/code&gt; のシステムコールから
+&lt;code&gt;@privileged @resources&lt;/code&gt; を除いたもの。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;Restart=always&lt;/code&gt; なのは、sshd が KRL の有効期限を無視するためです。&lt;/strong&gt; リストが失効したとき、
+ファイルは&lt;em&gt;このプロセス&lt;/em&gt;によってフェイルクローズされます。停止している間、sshd は最後に書き込まれた
+ファイルを読み続け、その間に発行された失効は届きません。ユニットを監視するか、ミラーが有効なら
+&lt;code&gt;/healthz&lt;/code&gt; を監視してください。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;systemctl reload&lt;/code&gt; は今すぐ同期します。&lt;/strong&gt; &lt;code&gt;SIGHUP&lt;/code&gt; を送り、エージェントは次の &lt;code&gt;refresh&lt;/code&gt; を待たずに
+すべてのソースを取得します。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;hangup: syncing now&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;設定は再読み込みされません。設定は起動時に一度だけ読み込まれるので、&lt;code&gt;revokd.hcl&lt;/code&gt; を変更した後は
+&lt;code&gt;systemctl restart authn-revokd&lt;/code&gt; です。(v0.6.0 より前は、捕捉されない &lt;code&gt;SIGHUP&lt;/code&gt; がプロセスを
+終了させ、systemd はそれを正常終了と数えていました。)&lt;/p&gt;
+&lt;h3 data-hextra-search-id="enable-it-before-wiring-sshd"&gt;sshd を接続する前に有効にする&lt;span class="hx:absolute hx:-mt-20" id="enable-it-before-wiring-sshd"&gt;&lt;/span&gt;
+&lt;a href="#enable-it-before-wiring-sshd" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;RevokedKeys&lt;/code&gt; が存在しないファイルを指していると、sshd はすべての証明書を拒否する&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;そのため、まず authn-revokd を起動し、出力ができるまで待ってください。
+&lt;code&gt;ssh-keygen -Q -l -f /var/lib/authn-revokd/sshd.krl&lt;/code&gt; が、すべてのソースが現在のものである間、
+コメント &lt;code&gt;authn-revokd sshd&lt;/code&gt; を出力します。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; --now authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;journalctl -u authn-revokd -n &lt;span class="m"&gt;20&lt;/span&gt; &lt;span class="c1"&gt;# &amp;#34;&amp;lt;source&amp;gt;: version N, issued ..., expires ...&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="c1"&gt;# &amp;#34;output sshd: wrote /var/lib/authn-revokd/sshd.krl&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;その後、&lt;code&gt;/etc/ssh/sshd_config&lt;/code&gt; に:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;TrustedUserCAKeys /etc/ssh/ca/univ-a-ssh.pub
+RevokedKeys /var/lib/authn-revokd/sshd.krl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;そして &lt;code&gt;sshd -t &amp;amp;&amp;amp; systemctl reload ssh&lt;/code&gt;。sshd は認証のたびに &lt;code&gt;RevokedKeys&lt;/code&gt; を読むので、
+authn-revokd がファイルを書き換えたときにリロードは不要です。アトミックなリネームで十分です。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="a-tls-servers-crl"&gt;TLS サーバーの CRL&lt;span class="hx:absolute hx:-mt-20" id="a-tls-servers-crl"&gt;&lt;/span&gt;
+&lt;a href="#a-tls-servers-crl" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-nginx" data-lang="nginx"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_client_certificate&lt;/span&gt; &lt;span class="s"&gt;/etc/authn-revokd/ca/univ-a-x509.pem&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_verify_client&lt;/span&gt; &lt;span class="no"&gt;on&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssl_crl&lt;/span&gt; &lt;span class="s"&gt;/var/lib/authn-revokd/univ-a.crl&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;format&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#34;pem&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;TLS サーバーは設定を読み込むときに CRL を読むので、ファイルが変わったらリロードしなければ
+なりません。&lt;code&gt;on_change&lt;/code&gt; コマンドは &lt;code&gt;authn-revokd&lt;/code&gt; アカウントとして実行され、&lt;code&gt;systemctl reload nginx&lt;/code&gt;
+はできません。代わりに systemd にファイルを root として監視させてください。出力に対する
+&lt;code&gt;PathChanged=&lt;/code&gt; を持つパスユニットが、&lt;code&gt;systemctl reload nginx&lt;/code&gt; を実行する &lt;code&gt;oneshot&lt;/code&gt; を起動します。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="or--once-on-a-timer"&gt;または: タイマーでの &lt;code&gt;-once&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="or--once-on-a-timer"&gt;&lt;/span&gt;
+&lt;a href="#or--once-on-a-timer" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;authn-revokd -once&lt;/code&gt; は一度同期して終了し、リストが現在のものでない、または取得できなかった場合は
+&lt;code&gt;1&lt;/code&gt; で終了します (&lt;a href="https://go-authn.github.io/docs/0.4/ja/authn-revokd/verification/#what--once-reports"&gt;&lt;code&gt;-once&lt;/code&gt; が報告するもの&lt;/a&gt;)。
+出力はどちらの場合も書き込まれ、リストが失効すると sshd 向けにフェイルクローズされます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# authn-revokd-once.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Conflicts&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authn-revokd.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;oneshot&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;TimeoutStartSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;5min&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# authn-revokd-once.timer&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;Conflicts&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;authn-revokd.service&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Timer]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;OnBootSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;30s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;OnUnitActiveSec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;1min&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;AccuracySec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;5s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;RandomizedDelaySec&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;10s&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Install]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;WantedBy&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;timers.target&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;ワンショットはデーモンのアカウントと堅牢化を持ちます。&lt;code&gt;TimeoutStartSec=5min&lt;/code&gt; は、あるソースで
+ハングした同期が次のティックより長生きするのを防ぎ、&lt;code&gt;RandomizedDelaySec=10s&lt;/code&gt; は、一緒に起動した
+複数台が足並みをそろえて発行者をポーリングするのを防ぎます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -m &lt;span class="m"&gt;0644&lt;/span&gt; authn-revokd-once.service authn-revokd-once.timer /etc/systemd/system/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl daemon-reload
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl disable --now authn-revokd
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;systemctl &lt;span class="nb"&gt;enable&lt;/span&gt; --now authn-revokd-once.timer&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;両方を有効にしないでください。&lt;/strong&gt; ユニットは競合するので、一方を起動するともう一方が停止します。
+デーモンのほうが優れた選択です。失効したリストを次の &lt;code&gt;refresh&lt;/code&gt; でフェイルクローズしますが、
+タイマーは次のティックを待ちます。そしてミラーとして提供できるのはデーモンだけです。&lt;code&gt;listen&lt;/code&gt; は
+&lt;code&gt;-once&lt;/code&gt; では無視されます。発火を止めたタイマーは、停止したデーモンと同じなので、
+&lt;code&gt;systemctl status authn-revokd-once&lt;/code&gt; を監視してください。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="upgrading-and-going-back"&gt;アップグレードと、元に戻すこと&lt;span class="hx:absolute hx:-mt-20" id="upgrading-and-going-back"&gt;&lt;/span&gt;
+&lt;a href="#upgrading-and-going-back" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;新しいバイナリを古いものの隣にインストールし、入れ替えて、再起動します。状態は引き継がれます。
+検証済みのコピーが次のリストの順序を決め続けるので、アップグレードでも古いバイナリへの
+ロールバックでも、古いリストが入り込むことはありません。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="uninstalling"&gt;アンインストール&lt;span class="hx:absolute hx:-mt-20" id="uninstalling"&gt;&lt;/span&gt;
+&lt;a href="#uninstalling" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;まず、サーバーの設定から &lt;code&gt;RevokedKeys&lt;/code&gt; と &lt;code&gt;ssl_crl&lt;/code&gt; を削除し、リロードしてください。
+ファイルがなくなると、sshd はすべての証明書を拒否します。&lt;/p&gt;</description></item><item><title>設定</title><link>https://go-authn.github.io/docs/0.4/ja/authn-revokd/configuration/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ja/authn-revokd/configuration/</guid><description>
+&lt;p&gt;一つのファイルで、既定は &lt;code&gt;/etc/authn-revokd/revokd.hcl&lt;/code&gt; です (&lt;code&gt;-config&lt;/code&gt; で別のものを指定)。
+起動時に一度だけ読み込まれます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;state_dir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-revokd/state&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the verified copies: what orders the next list
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;refresh&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1m&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;source&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;univ-a-ssh&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.univ-a.example/ssh/krl&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # and .../ssh/krl.sig beside it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_ca&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-revokd/ca/univ-a-ssh.pub&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # what the list must be signed by
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;source&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;univ-b-ssh&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;http://mirror.cluster.local:8080/univ-b-ssh&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # a mirror: plain http is fine
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_ca&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-revokd/ca/univ-b-ssh.pub&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;source&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;univ-a-x509&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.univ-a.example/x509/crl&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; x509_ca&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-revokd/ca/univ-a-x509.pem&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;output&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sshd&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # sshd_config: RevokedKeys /var/lib/authn-revokd/sshd.krl
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; path&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-revokd/sshd.krl&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sources&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;univ-a-ssh&amp;#34;, &amp;#34;univ-b-ssh&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # merged into one file
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;output&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # nginx: ssl_crl /var/lib/authn-revokd/univ-a.crl
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; path&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-revokd/univ-a.crl&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sources&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;univ-a-x509&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; format&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;pem&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;# listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:8080&amp;#34;&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;serve&lt;/span&gt; &lt;span class="k"&gt;the&lt;/span&gt; &lt;span class="k"&gt;verified&lt;/span&gt; &lt;span class="k"&gt;lists&lt;/span&gt;&lt;span class="err"&gt;:&lt;/span&gt; &lt;span class="k"&gt;a&lt;/span&gt; &lt;span class="k"&gt;mirror&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-keys"&gt;キー&lt;span class="hx:absolute hx:-mt-20" id="the-keys"&gt;&lt;/span&gt;
+&lt;a href="#the-keys" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;キー&lt;/th&gt;
+&lt;th&gt;既定値&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;state_dir&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;必須、絶対パス。なければ &lt;code&gt;0700&lt;/code&gt; で作成される&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;refresh&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;1m&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;すべてのソースを取得する頻度。一秒以上。各待機は前後一割ずつ変動し、複数台が足並みをそろえ続けないようにする&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;listen&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;host:port&lt;/code&gt;: 検証済みのリストを提供する、ミラー。&lt;code&gt;-once&lt;/code&gt; では無視される&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;source &amp;quot;&amp;lt;name&amp;gt;&amp;quot;&lt;/code&gt;&lt;/strong&gt;: 一つのリスト。名前は英字、数字、&lt;code&gt;.&lt;/code&gt;、&lt;code&gt;_&lt;/code&gt;、&lt;code&gt;-&lt;/code&gt; で、ドットで始まらず、
+最大 64 文字です。状態ディレクトリ内のファイルと、ミラーのパスの名前になります。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;キー&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;url&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;https://&lt;/code&gt;、&lt;code&gt;http://&lt;/code&gt;、&lt;code&gt;file://&lt;/code&gt;。KRL の署名は、同じ URL に &lt;code&gt;.sig&lt;/code&gt; を付けて取得する&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ssh_ca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;SSH CA の公開鍵、&lt;code&gt;authorized_keys&lt;/code&gt; の一行: KRL ソース。ここでの証明書は拒否される&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;x509_ca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;CA の PEM 証明書: CRL ソース&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;max_age&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;自身の有効期限に加えて、これより前に発行されたリストも拒否する。CRL 出力に供給するソースでは拒否される&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;revoke_keys&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;他のソースと共有する出力で、このソースのリストが&lt;strong&gt;単なる鍵&lt;/strong&gt;を失効させることを許す。KRL ソースのみ&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;output &amp;quot;&amp;lt;name&amp;gt;&amp;quot;&lt;/code&gt;&lt;/strong&gt;: サーバーが読む一つのファイル。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;キー&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;path&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;絶対パス。同じ場所の隣に書き込まれ、リネームで上書きされる&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sources&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;一つのファイルにマージされる KRL ソース。または、ちょうど一つの CRL ソース&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;format&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;der&lt;/code&gt; (既定) または &lt;code&gt;pem&lt;/code&gt;。CRL 出力のみ&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;on_change&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;ファイルが変わった後に実行されるコマンドとその引数。成功するまで、同期のたびに再度実行される&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="one-krl-for-several-cas"&gt;複数の CA に一つの KRL&lt;span class="hx:absolute hx:-mt-20" id="one-krl-for-several-cas"&gt;&lt;/span&gt;
+&lt;a href="#one-krl-for-several-cas" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;OpenSSH 10.3 より前は &lt;code&gt;RevokedKeys&lt;/code&gt; が単一のファイルしか受け付けないので、出力の KRL ソースは
+マージされ、&lt;strong&gt;各リストは自身の CA に対しては完全な効果を保ち、他の CA に対しては何の効果も
+持ちません&lt;/strong&gt;。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;保持されるもの:&lt;/strong&gt; そのシリアルとキー ID、CA を指名しないセクション (自身の CA にスコープ
+される)、そして自身の CA 鍵。これはその CA のすべての証明書を失効させる。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;除外され、ログに記録されるもの:&lt;/strong&gt; 他の CA のセクションと、他の CA の鍵。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;単なるユーザー鍵&lt;/strong&gt;は、出力に複数のソースがある場合は除外されます。ソースに
+&lt;code&gt;revoke_keys = true&lt;/code&gt; がある場合を除きます。KRL は鍵を一つの CA にスコープできません。sshd は
+証明書自身の鍵を、誰が署名したかにかかわらずファイルと照合するので、ある CA が名指しした鍵は、
+ファイルのどの CA の下でも、その持ち主を締め出してしまいます。ソースが一つの出力では保持されます。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;各リストは、まず単独でマージされます。マージできないものは&lt;strong&gt;自身の CA についてのみ&lt;/strong&gt;フェイル
+クローズします。マージされたファイルは、現在の入力のうち最も早いものとともに期限切れになるので、
+期限を確認する読み手には authn-revokd が停止したことが分かります。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-mirror"&gt;ミラー&lt;span class="hx:absolute hx:-mt-20" id="the-mirror"&gt;&lt;/span&gt;
+&lt;a href="#the-mirror" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;listen&lt;/code&gt; があると、authn-revokd は保持しているものを、メモリから、書き込みの途中かもしれない
+ファイルからではなく、提供します。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /&amp;lt;source&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;ETag&lt;/code&gt; 付きのリスト。&lt;code&gt;If-None-Match&lt;/code&gt; には &lt;code&gt;304&lt;/code&gt; を返す&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /&amp;lt;source&amp;gt;.sig&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;KRL の署名。別の ETag の &lt;code&gt;If-Match&lt;/code&gt; には &lt;code&gt;412&lt;/code&gt; を返す&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /healthz&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;200 ok&lt;/code&gt;、または現在のリストがない各ソースと失敗した各出力を挙げる &lt;code&gt;503&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28474/healthz
+ok
+$ curl -s -D - -o /dev/null http://127.0.0.1:28474/bridge-ssh
+HTTP/1.1 200 OK
+Cache-Control: max-age=30
+Content-Type: application/octet-stream
+Etag: &amp;#34;83278365ecb0f44b05170bb12f151756&amp;#34;
+Date: Sun, 11 Oct 2026 09:51:05 GMT
+Content-Length: 130
+$ curl -s -o /dev/null -w &amp;#34;%{http_code}\n&amp;#34; -H &amp;#39;If-Match: &amp;#34;stale&amp;#34;&amp;#39; http://127.0.0.1:28474/bridge-ssh.sig
+412&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;CRL ソースには &lt;code&gt;.sig&lt;/code&gt; がありません (&lt;code&gt;404&lt;/code&gt;)。ミラーは連鎖できます。すべてのリストが単独で
+検証されるので、ミラーのソースを別のミラーにできます。遅い上流がミラーの応答を妨げることは
+ありません。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-is-refused-at-start"&gt;起動時に拒否されるもの&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-start"&gt;&lt;/span&gt;
+&lt;a href="#what-is-refused-at-start" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;以下はいずれも、何かが取得される前に、&lt;code&gt;2&lt;/code&gt; で終了します。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-revokd: v/relative-state.hcl: state_dir &amp;#34;state&amp;#34;: an absolute path
+authn-revokd: v/refresh.hcl: refresh &amp;#34;500ms&amp;#34;: a duration of a second or more
+authn-revokd: v/both-ca.hcl: source &amp;#34;bridge-ssh&amp;#34;: ssh_ca and x509_ca together: one source is one list
+authn-revokd: v/sig-name.hcl: source &amp;#34;bridge-ssh.sig&amp;#34;: a name that ends in .sig, or healthz, is a path the mirror already serves
+authn-revokd: v/mixed.hcl: output &amp;#34;sshd&amp;#34; mixes KRL and CRL sources
+authn-revokd: v/krl-format.hcl: output &amp;#34;sshd&amp;#34;: format is for CRL outputs; a KRL is what sshd reads
+authn-revokd: v/revoke-keys-crl.hcl: source &amp;#34;bridge-x509&amp;#34;: revoke_keys is for a KRL source (ssh_ca): a CRL revokes its own CA&amp;#39;s certificates only&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;存在しない設定も同様です。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config nowhere.hcl -once
+authn-revokd: nowhere.hcl: no such file or directory&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;v0.6.2 より前は、HCL パーサーのメッセージでした。
+&lt;code&gt;nowhere.hcl: &amp;lt;nil&amp;gt;: Failed to read file; The configuration file &amp;quot;nowhere.hcl&amp;quot; could not be read.&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;CRL 出力も一つのソースしか受け付けず (TLS サーバーは発行者ごとに一つの CRL を読む)、
+&lt;code&gt;max_age&lt;/code&gt; のある CRL ソースは、強制できるものがないので拒否されます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-revokd: v/crl-maxage.hcl: output &amp;#34;tls&amp;#34;: source &amp;#34;bridge-x509&amp;#34; has a max_age, which a CRL output cannot enforce: the TLS server judges a CRL by its nextUpdate alone. Remove max_age, or ask the CA for a closer nextUpdate&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;CRL を読み込んだ TLS サーバーは、authn-revokd が何を書き込もうと、&lt;code&gt;nextUpdate&lt;/code&gt; までそれを
+メモリに保持します。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;状態ディレクトリ&lt;/strong&gt;は、sshd の StrictModes ルールに従います。そのファイルを置き換えたり
+削除したりできる者が、次にどのリストが来るかを決め、空にされた状態は、再生された古いリストを
+招き入れます。そのためシンボリックリンクであってはならず、グループや他者に書き込み可能で
+あってはならず、authn-revokd のユーザーか root 以外が所有していてはなりません。これらは &lt;code&gt;1&lt;/code&gt; で
+終了します。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-revokd: state_dir /tmp/authn/revokd/state-wide is writable by its group or by others (mode -rwxrwxrwx): whoever can write there decides which list comes next
+authn-revokd: state_dir /tmp/authn/revokd/state-link is a symbolic link (L---------): whoever owns it decides where the state is; name the directory itself&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>authn-revokd</title><link>https://go-authn.github.io/docs/0.4/ja/authn-revokd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ja/authn-revokd/</guid><description>
+&lt;p&gt;&lt;strong&gt;OpenSSH には KRL を配布する手段がなく、KRL の中にそれが古いと示すものもありません。&lt;/strong&gt;
+&lt;code&gt;sshd&lt;/code&gt; は、何か月も前に更新が止まったファイルを、現在のリストとして読みます。authn-revokd は、
+&lt;a href="https://go-authn.github.io/docs/0.4/ja/authn-bridge/revocation/"&gt;authn-bridge&lt;/a&gt; が公開するリストについて、この二つの
+隙間を塞ぎます。各リストを取得し、検証に通った場合にのみ保持し、&lt;code&gt;sshd&lt;/code&gt; や TLS サーバーが読む
+場所に書き込み、リストが失効したときは &lt;strong&gt;CA 自体を失効させる&lt;/strong&gt;リストを書き込みます。
+純粋な Go、&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;、単一のバイナリ。これらのページは v0.6.4 を説明しています。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
+$ authn-revokd -version
+authn-revokd v0.6.4
+$ authn-revokd -help
+Usage of authn-revokd:
+-config string
+the configuration file (default &amp;#34;/etc/authn-revokd/revokd.hcl&amp;#34;)
+-once
+sync once and exit: 1 when a list is not current, or could not be fetched
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;-help&lt;/code&gt; は 0 で終了します。v0.6.2 より前は 2 で終了していました。&lt;/p&gt;
+&lt;p&gt;v0.6.0 より前は、コマンドは &lt;code&gt;revokd&lt;/code&gt; で、既定で &lt;code&gt;/etc/revokd.hcl&lt;/code&gt; を読んでいました。そのファイルは
+もう読まれず、そのファイルがあって新しい既定のファイルがない場合、エラーは両方のパスを
+示します。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-does-in-one-run"&gt;一回の実行で何をするか&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-in-one-run"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-in-one-run" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ループバック上のテスト用 authn-bridge に対して、KRL ソースと CRL ソースで:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+output tls: wrote /tmp/authn/revokd/out/bridge.crl
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261011T115024
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;新しいものが何もない二回目の実行は何も出力せず、0 で終了します。出力は、内容が変わったときに
+のみ書き換えられるからです。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-the-transport-does-not-matter"&gt;トランスポートが問題にならない理由&lt;span class="hx:absolute hx:-mt-20" id="why-the-transport-does-not-matter"&gt;&lt;/span&gt;
+&lt;a href="#why-the-transport-does-not-matter" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;すべてのリストは自身を認証します。KRL は CA 自身の鍵による分離 SSHSIG 署名で、CRL はその CA の
+署名でです。すべてのリストは、有効でなくなる時刻を述べます。そのためリストは、HTTPS、
+クラスタ内の平文 HTTP、ミラー、ファイルのいずれで届いても構いません。トランスポートが決めるのは
+変更が届く速さであり、偽造されたリストや古いリストが受け入れられるかどうかではありません。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;真正性&lt;/td&gt;
+&lt;td&gt;SSH CA 鍵による SSHSIG、名前空間 &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;その CA による署名&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;有効性&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;expires@go-authn.github.io&lt;/code&gt;。sshd は無視する&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;後戻りしない&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;krl_version&lt;/code&gt;、次に生成日時&lt;/td&gt;
+&lt;td&gt;CRL Number、次に &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;フェイルクローズ&lt;/td&gt;
+&lt;td&gt;authn-revokd が CA 鍵を失効させる KRL を書き込む&lt;/td&gt;
+&lt;td&gt;OpenSSL が期限切れの CRL を自ら拒否する&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="where-to-go-next"&gt;次に読むもの&lt;span class="hx:absolute hx:-mt-20" id="where-to-go-next"&gt;&lt;/span&gt;
+&lt;a href="#where-to-go-next" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ja/authn-revokd/install/"&gt;インストール&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;デーモン、またはタイマーでの &lt;code&gt;-once&lt;/code&gt;。sshd と nginx の接続&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ja/authn-revokd/configuration/"&gt;設定&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;ソース、出力、ミラー、拒否されるもの&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ja/authn-revokd/verification/"&gt;リストの検証方法&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;署名、日付、そして再起動をまたいで、保持しているリストより古くならないこと&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ja/authn-revokd/lapse/"&gt;リストが失効したとき&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;CA 自体を失効させる KRL&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="what-it-does-not-do"&gt;しないこと&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-not-do"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-not-do" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;失効がサーバーに届く速さは、authn-revokd のポーリング (&lt;code&gt;refresh&lt;/code&gt;) に、発行者が再発行するまでの
+遅れを加えたものより速くなりません。発行者が停止している間、その証明書はリストの有効期限から
+拒否されます。CA の鍵を持つ者は、証明書に署名できるのと同じように、どのリストにも署名できます。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;ライセンス&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause。&lt;/p&gt;</description></item><item><title>リストの検証方法</title><link>https://go-authn.github.io/docs/0.4/ja/authn-revokd/verification/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ja/authn-revokd/verification/</guid><description>
+&lt;p&gt;検証に通らないリストは、書き込まれることも、提供されることも、使われることもありません。
+最後の正常なコピーが残ります。どんな理由であれ失敗した取得が、何も失効させない空の応答でそれを
+置き換えることはありません。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-signature"&gt;署名&lt;span class="hx:absolute hx:-mt-20" id="the-signature"&gt;&lt;/span&gt;
+&lt;a href="#the-signature" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;KRL&lt;/strong&gt; は署名 &lt;code&gt;&amp;lt;url&amp;gt;.sig&lt;/code&gt; とともに取得されます。ファイル全体に対する armored SSHSIG で、
+&lt;code&gt;ssh_ca&lt;/code&gt; として設定された &lt;strong&gt;SSH CA 鍵&lt;/strong&gt;により、名前空間 &lt;code&gt;krl@go-authn.github.io&lt;/code&gt; で署名されて
+います。名前空間により、署名が他のものに流用されることを防ぎます。署名者は SHA-512 でハッシュ
+しますが、SHA-256 も受け入れられます。PROTOCOL.sshsig が禁じている、SHA-1 形式の RSA 署名は
+拒否されます。&lt;/p&gt;
+&lt;p&gt;KRL 自体は &lt;code&gt;sshd&lt;/code&gt; が解析するのと同じように解析できなければならず、OpenSSH 自身の署名セクションを
+含んではなりません。OpenSSH はそれを検証しないからです。&lt;/p&gt;
+&lt;p&gt;他の鍵で署名されたリストは拒否されます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-other.hcl -once
+bridge-ssh: revocation: the KRL&amp;#39;s signature does not verify by SHA256:xm8VDcZUh44N&amp;#43;RQSiPbroPInzkMhN/KCWI/TC&amp;#43;9HPNQ: public key does not match
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/other.krl
+output tls: wrote /tmp/authn/revokd/out/other.crl
+authn-revokd: not current: bridge-ssh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;ここでは &lt;code&gt;ssh_ca&lt;/code&gt; が bridge のリストに署名していない鍵を指名しており、エラーはその鍵を名指し
+します。検証に通らない署名は、二つのリクエストの間にリストが再発行されたことによる場合も
+あるので、報告する前に両方をもう一度取得します。これはそのソースの最初の取得だったので、
+保持すべき正常なコピーがなく、出力は直ちに
+&lt;a href="https://go-authn.github.io/docs/0.4/ja/authn-revokd/lapse/"&gt;フェイルクローズのリスト&lt;/a&gt;になります。(v0.6.2 より前は、
+同じ失敗が上のメッセージの前に &amp;ldquo;the list changed between it and its signature&amp;rdquo; を付けて
+おり、リストが再発行されたかのようでした。)&lt;/p&gt;
+&lt;p&gt;署名は &lt;code&gt;If-Match: &amp;lt;the list's ETag&amp;gt;&lt;/code&gt; で取得されます。二つのリクエストの間にリストが再発行されると
+&lt;code&gt;412&lt;/code&gt; が返り、両方が再度取得されます。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;CRL&lt;/strong&gt; は &lt;code&gt;x509_ca&lt;/code&gt; として設定された CA 証明書に対して検証されます。まず生のバイトに対する
+署名を、残りを解析する&lt;strong&gt;前に&lt;/strong&gt;確認するので、誰が署名した大きな CRL でも、解析ではなく署名確認の
+コストで済みます。次に、その発行者がその証明書のサブジェクトでなければならず、CRL Number と
+&lt;code&gt;thisUpdate&lt;/code&gt; より後の &lt;code&gt;nextUpdate&lt;/code&gt; を持たなければならず、デルタ CRL であってはならず、CRL Number
+と Authority Key Identifier 以外のクリティカル拡張や、クリティカルなエントリ拡張を含んでは
+なりません。&lt;/p&gt;
+&lt;p&gt;KRL は &lt;code&gt;expires@go-authn.github.io&lt;/code&gt; 拡張で&lt;strong&gt;有効期限を述べて&lt;/strong&gt;いなければなりません。述べていない
+ものは、古いものと区別できないからです。&lt;/p&gt;
+&lt;p&gt;本文のサイズには上限があります。KRL は 32 MiB、その署名は 64 KiB、CRL は 64 MiB です。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-dates"&gt;日付&lt;span class="hx:absolute hx:-mt-20" id="the-dates"&gt;&lt;/span&gt;
+&lt;a href="#the-dates" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;リストが現在のものであるのは、次の場合です。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;現在が有効期限 (KRL の拡張、CRL の &lt;code&gt;nextUpdate&lt;/code&gt;) より前である&lt;/li&gt;
+&lt;li&gt;五分を超えて未来に発行されていない: 時計がそれ以上進んでいる発行者は、年齢が分からないリストを
+書く&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;max_age&lt;/code&gt; がある場合、それより前に発行されていない&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;現在のものでないリストは、取得時に拒否されます。&lt;code&gt;304 Not Modified&lt;/code&gt; は新しい情報ではありません。
+保持しているコピーはその後に期限切れになっているかもしれず、同期のたびに再度判断されます。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="never-older-than-the-list-held"&gt;保持しているリストより古くならない&lt;span class="hx:absolute hx:-mt-20" id="never-older-than-the-list-held"&gt;&lt;/span&gt;
+&lt;a href="#never-older-than-the-list-held" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;リストの位置は、その&lt;strong&gt;バージョン&lt;/strong&gt; (KRL の &lt;code&gt;krl_version&lt;/code&gt;、CRL Number)、次にその&lt;strong&gt;発行時刻&lt;/strong&gt;
+(KRL の生成日時、CRL の &lt;code&gt;thisUpdate&lt;/code&gt;) です。リストが保持しているものを置き換えられるのは、より
+高いバージョンを持つか、同じバージョンでより後に発行された場合だけです。同じ失効を新しい有効期限で
+再発行したものです。それ以外はロールバックです。再生または復元された古いリストで、署名されていて
+期限も切れていないものが、新しいリストが失効させたものを元に戻してしまいます。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="across-restarts-too"&gt;再起動をまたいでも&lt;span class="hx:absolute hx:-mt-20" id="across-restarts-too"&gt;&lt;/span&gt;
+&lt;a href="#across-restarts-too" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;保持しているリストは &lt;code&gt;state_dir&lt;/code&gt; に、ソースごとに、リストとその署名を一緒に入れた一つのファイルと
+して保持され、ディレクトリを同期した単一のリネームで書き込まれます。起動時に各コピーは
+&lt;strong&gt;再度検証され&lt;/strong&gt; (期限切れかどうかにかかわらず、次に来るものの順序を決めます)、検証に通らなく
+なったコピーは、次のものの順序を決めるためにすら信頼されず、ログにそう記録されます。&lt;/p&gt;
+&lt;p&gt;ここでは、再起動後に、ソースを、以前の bridge プロセスが十九秒前に提供した、まだ署名されていて
+期限も切れていないリストに向けます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+$ authn-revokd -config revokd-old.hcl -once
+bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-11T09:50:05Z, the copy held at 2026-10-11T09:50:24Z
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261011T115024
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;最初の実行は出力を書き込みませんでした。ファイルがすでにそれらのリストを保持していたからです。
+古いリストは拒否され、出力は新しいほうを保ちます。それを拒否したプロセスは新しいリストを
+見たことがなく、&lt;code&gt;state_dir&lt;/code&gt; から読み戻したのです。&lt;/p&gt;
+&lt;p&gt;状態こそがロールバックを検出可能にするものなので、ディレクトリは sshd の StrictModes ルールに
+従います (&lt;a href="https://go-authn.github.io/docs/0.4/ja/authn-revokd/configuration/#what-is-refused-at-start"&gt;設定&lt;/a&gt;)。
+二回の書き込みの間にクラッシュしても、検証に通らない組が残ることはなく、それはロールバックの
+ガードごと失うことになります。リストとその署名は一つのファイルだからです。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what--once-reports"&gt;&lt;code&gt;-once&lt;/code&gt; が報告するもの&lt;span class="hx:absolute hx:-mt-20" id="what--once-reports"&gt;&lt;/span&gt;
+&lt;a href="#what--once-reports" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-once&lt;/code&gt; は、ソースに現在のリストがないとき、&lt;strong&gt;最後の取得が失敗した&lt;/strong&gt;とき、または出力が書き込めな
+かったときに &lt;code&gt;1&lt;/code&gt; で終了し、最後の行が最初の二つのうちどちらかを述べます。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;最後の行&lt;/th&gt;
+&lt;th&gt;ソース&lt;/th&gt;
+&lt;th&gt;その出力&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not current: &amp;lt;source&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;現在のリストがない: 一度も取得していない、期限切れ、または &lt;code&gt;max_age&lt;/code&gt; 超過&lt;/td&gt;
+&lt;td&gt;sshd 向けにフェイルクローズ&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not fetched: &amp;lt;source&amp;gt; (the list held is current until &amp;lt;T&amp;gt;)&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;取得は失敗したが、保持しているコピーはまだ現在のもの&lt;/td&gt;
+&lt;td&gt;そのコピーから、変更なしで &lt;code&gt;T&lt;/code&gt; まで書き込まれる&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;ここでは、保持している両方のリストがまだ現在のものである間に発行者が停止しています。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z), bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;その実行は &lt;code&gt;sshd.krl&lt;/code&gt; をそのままにしました。保持しているリストが失効すると、同じソースは
+&lt;code&gt;not current&lt;/code&gt; と報告され、両方の種類が同じ行に並ぶことがあります。
+&lt;a href="https://go-authn.github.io/docs/0.4/ja/authn-revokd/lapse/"&gt;リストが失効したとき&lt;/a&gt;のとおりです。v0.6.2 より前は、
+どちらの場合も &lt;code&gt;not current&lt;/code&gt; と報告されていたため、取得が失敗しただけなのにリストが失効したと
+述べていました。終了ステータスはそのときも &lt;code&gt;1&lt;/code&gt; でした。&lt;/p&gt;
+&lt;p&gt;ミラーの &lt;code&gt;/healthz&lt;/code&gt; は代わりに保持しているコピーで判断し、発行者が停止していてコピーがまだ
+現在のものである間は &lt;code&gt;ok&lt;/code&gt; を返しました。&lt;/p&gt;</description></item><item><title>リストが失効したとき</title><link>https://go-authn.github.io/docs/0.4/ja/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ja/authn-revokd/lapse/</guid><description>
+&lt;p&gt;リストを得られないときにすべてを通してしまう失効チェックは、リストを妨害できる攻撃者に
+破られるものです。そのため authn-revokd がソースから現在のリストを得ていないとき、そのソースの
+リストが守るものは、現在のリストが再び届くまで&lt;strong&gt;拒否されます&lt;/strong&gt;。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;出力&lt;/th&gt;
+&lt;th&gt;ソースに現在のリストがない間&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sshd&lt;/code&gt; 向けの KRL&lt;/td&gt;
+&lt;td&gt;authn-revokd は、&lt;strong&gt;ソースの CA 鍵を失効させる&lt;/strong&gt; KRL を書き込む&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;TLS サーバー向けの CRL&lt;/td&gt;
+&lt;td&gt;期限切れの CRL がそのまま残される。OpenSSL が期限切れの CRL を自ら拒否する&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;sshd 向け: CA 自体を失効させる&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; にはリストの有効期限という概念がなく、最後に書き込まれたファイルを永遠に読み続けます。
+しかしすべての証明書の &lt;strong&gt;CA 鍵&lt;/strong&gt;を &lt;code&gt;RevokedKeys&lt;/code&gt; と照合します。そのため authn-revokd は、保証できない
+リストの代わりに、CA 自身の鍵を出力に入れ、その CA が署名したすべての証明書が拒否され、
+他には何も影響しません。&lt;/p&gt;
+&lt;p&gt;ここでは発行者が停止しており、KRL ソースには &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt; があるため、保持しているコピーは
+一時間ではなく一分以内に失効します。CRL ソースには &lt;code&gt;max_age&lt;/code&gt; がなく、そのコピーはまだ現在の
+ものです。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt; は &lt;code&gt;not current&lt;/code&gt; で、その出力はフェイルクローズされています。&lt;code&gt;bridge-x509&lt;/code&gt; は
+&lt;code&gt;not fetched&lt;/code&gt; にすぎず、その CRL はそのまま残されています
+(&lt;a href="https://go-authn.github.io/docs/0.4/ja/authn-revokd/verification/#what--once-reports"&gt;&lt;code&gt;-once&lt;/code&gt; が報告するもの&lt;/a&gt;)。
+&lt;code&gt;SHA256:Fpa/...&lt;/code&gt; は bridge の SSH CA です。それが署名した証明書は、ファイルを読むものにとっては
+失効済みとなります。上のコマンドは &lt;code&gt;out/&lt;/code&gt; がある &lt;code&gt;revokd&lt;/code&gt; ディレクトリで実行しました。次のものは
+その隣の、テスト用証明書を保持するディレクトリで実行します。
+&lt;a href="https://go-authn.github.io/docs/0.4/ja/sshcert/authorize/#krl"&gt;sshcert-authorize のページ&lt;/a&gt;と同じなので、同じファイルは
+&lt;code&gt;../revokd/out/sshd.krl&lt;/code&gt; です。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;コメントは &lt;code&gt;FAIL CLOSED&lt;/code&gt; と述べてソースを名指しするので、&lt;code&gt;ssh-keygen -Q -l&lt;/code&gt; を読む人は理由が
+分かります。すべてのソースが失効した場合、ファイルの日付は 1970 年になります。出力は、同期が
+気づいた&lt;strong&gt;直後に&lt;/strong&gt;書き込まれます。デーモンでは次の &lt;code&gt;refresh&lt;/code&gt;、タイマーでは次のティックです。
+現在のリストが再び届くと、次の同期が CA の鍵の代わりにそれを書き込み、その CA の証明書は
+再び受け入れられます。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;最初のリストの前&lt;/strong&gt;にも同じことが起きます。一度も取得されていないソースには現在のものが何もなく、
+その CA は最初の書き込みから失効しています。新規のインストールは、最初のリストが検証に通る
+まで、CA の証明書を無検証で受け入れるのではなく、拒否します。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;各 CA は自分自身について&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;複数のソースをマージする出力では、失効したソースの CA だけが失効されます。他のものは
+リストを保持します。マージできないリスト (go-authn/krl が保持するシリアル範囲を超えるもの) は
+自身の CA についてのみフェイルクローズし、&lt;code&gt;/healthz&lt;/code&gt; がそれを名指しします。リストが単独では
+マージできるのに一緒にはできない場合にのみ、出力のすべての CA が失効され、コメントがそう述べます
+(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;)。代わりに古いファイルを保持すると、後の失効が
+見過ごされてしまいます。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;TLS サーバー向け: CRL 自体&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;CRL はすでに有効でなくなる時刻を述べており、OpenSSL は &lt;code&gt;nextUpdate&lt;/code&gt; を過ぎたものを拒否します
+(&amp;ldquo;CRL has expired&amp;rdquo;)。そのため authn-revokd は最後に検証した CRL をそのまま残し、TLS サーバーが
+自らフェイルクローズします。CRL 出力に供給するソースで &lt;code&gt;max_age&lt;/code&gt; が拒否されるのもそのためです。
+CRL を読み込んだサーバーは、authn-revokd が何を書き込もうと、&lt;code&gt;nextUpdate&lt;/code&gt; までそれを保持します。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;有効期限を自分で確認する読み手&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;マージされた KRL は、現在の入力のうち最も早いものの有効期限を運びます。それを確認する読み手、
+たとえば go-fileshare の &lt;code&gt;ssh_krl_file&lt;/code&gt; や
+&lt;a href="https://go-authn.github.io/docs/0.4/ja/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;は、発行者が停止したのと
+同じように、authn-revokd が停止したことが分かります。&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;これは authn-revokd が動いている間にのみ機能する&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;ファイルは authn-revokd によってフェイルクローズされます。それが停止している間、sshd は最後に
+書き込まれたファイルを、現在のものであろうとなかろうと読み続けます。そのためデーモンには
+&lt;code&gt;Restart=always&lt;/code&gt; があり、ユニット、タイマー、または &lt;code&gt;/healthz&lt;/code&gt; を監視します。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

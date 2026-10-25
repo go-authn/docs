@@ -1,0 +1,530 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Tls</title><link>https://go-authn.github.io/docs/0.4/ko/tags/tls/</link><description>Recent content in Tls on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ko</language><atom:link href="https://go-authn.github.io/docs/0.4/ko/tags/tls/index.xml" rel="self" type="application/rss+xml"/><item><title>TLS: ldaps:// 또는 StartTLS, 둘을 동시에는 안 됨</title><link>https://go-authn.github.io/docs/0.4/ko/authnd/tls/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ko/authnd/tls/</guid><description>
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;0.0.0.0:636&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;cert_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/cert.pem&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the chain, leaf first
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/key.pem&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;cert_file&lt;/code&gt;과 &lt;code&gt;key_file&lt;/code&gt;이 함께 있어야 TLS가 켜지며, 하나만 있으면 거부됩니다
+(&lt;em&gt;one without the other serves nothing&lt;/em&gt;). TLS 1.2가 최소 버전입니다. authnd에는
+ACME 클라이언트가 없습니다. 두 파일은 다른 것이 기록합니다 —
+&lt;a href="https://go-authn.github.io/docs/0.4/ko/libraries/servercert/"&gt;go-authn/servercert&lt;/a&gt;, certbot, 사이트
+자체의 CA — 그리고 인증서는 리스너를 열 때 한 번만 읽으므로 갱신할 때마다
+authnd를 &lt;strong&gt;재시작&lt;/strong&gt;합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="two-ways-one-listener-each"&gt;두 가지 방식, 각각 리스너 하나&lt;span class="hx:absolute hx:-mt-20" id="two-ways-one-listener-each"&gt;&lt;/span&gt;
+&lt;a href="#two-ways-one-listener-each" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;starttls&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;리스너&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;check&lt;/code&gt;의 표시&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;ldaps://&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;설정하지 않음&lt;/td&gt;
+&lt;td&gt;LDAP이 한 바이트도 오가기 전에 TLS 핸드셰이크가 이루어짐&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;ldaps://…&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;StartTLS&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;starttls = true&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;평문이며, 클라이언트가 요청하면 업그레이드됨 (RFC 4511 §4.14)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;ldap+starttls://…&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;둘 중 하나이며 그래야만 합니다. 리스너는 핸드셰이크를 요구하면서 동시에 핸드셰이크가
+요청되는지 기다릴 수는 없습니다. 어느 쪽을 원하는지는 &lt;strong&gt;클라이언트&lt;/strong&gt;에 달려
+있습니다. 대부분의 클라이언트는 636의 &lt;code&gt;ldaps://&lt;/code&gt;로 설정되어 있고, 389를 가리키며
+&amp;ldquo;TLS 사용&amp;quot;을 선택한 클라이언트는 StartTLS를 요청합니다. 둘 다 필요한 사이트는
+각각 자신의 &lt;code&gt;--config&lt;/code&gt;로 인스턴스 두 개를 실행합니다. 인증서 없는
+&lt;code&gt;starttls = true&lt;/code&gt;는 거부됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/starttls-nocert.hcl
+authnd: starttls needs cert_file and key_file: there is nothing to upgrade a connection WITH&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="ldaps"&gt;ldaps://&lt;span class="hx:absolute hx:-mt-20" id="ldaps"&gt;&lt;/span&gt;
+&lt;a href="#ldaps" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;서버, &lt;code&gt;127.0.0.1&lt;/code&gt;용 CA 서명 인증서, 그리고 이 프로그램이 아닌 클라이언트가
+검증한 체인입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config ldaps
+ldaps on 127.0.0.1:3636, serving 3 people from the configuration file
+uid=carol,ou=people,dc=example,dc=org is published without sambaNTPassword: no sambaSID and no uidNumber to derive one from
+$ openssl s_client -connect 127.0.0.1:3636 -CAfile tls/ca.pem -verify_return_error -verify_ip 127.0.0.1 &amp;lt;/dev/null 2&amp;gt;&amp;amp;1 | grep -E &amp;#39;Verify return|Protocol|subject=|issuer=&amp;#39;
+subject=CN=localhost
+issuer=CN=docs test CA
+Protocol: TLSv1.3
+Verify return code: 0 (ok)
+Protocol : TLSv1.3
+Verify return code: 0 (ok)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="starttls-which-refuses-until-it-is-asked-for"&gt;StartTLS는 요청받을 때까지 거부합니다&lt;span class="hx:absolute hx:-mt-20" id="starttls-which-refuses-until-it-is-asked-for"&gt;&lt;/span&gt;
+&lt;a href="#starttls-which-refuses-until-it-is-asked-for" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;StartTLS는 &lt;strong&gt;클라이언트&lt;/strong&gt;가 요청하는 것이므로 제공하는 것만으로는 아무것도
+약속하지 않습니다. 요청하지 않는 클라이언트는 평문으로 바인드할 것입니다. 그래서
+&lt;code&gt;starttls = true&lt;/code&gt;인 리스너는 연결이 업그레이드될 때까지 모든 바인드와 모든 검색을
+&lt;code&gt;confidentialityRequired&lt;/code&gt;로 거부합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3389 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org &amp;#39;(uid=bob)&amp;#39;
+ldap_bind: Confidentiality required (13)
+additional info: this listener requires TLS, and nothing asked for it
+$ LDAPTLS_REQCERT=never ldapsearch -ZZ -x -LLL -H ldap://127.0.0.1:3389 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org &amp;#39;(uid=bob)&amp;#39;
+dn: uid=bob,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: sambaSamAccount
+objectClass: uidObject
+uid: bob
+cn: bob
+sambaSID: S-1-5-21-1004336348-1177238915-682003330-1104
+sambaNTPassword: 8846F7EAEE8FB117AD06BDD830B7586C&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;(&lt;code&gt;-ZZ&lt;/code&gt;는 &amp;ldquo;StartTLS를 하고, 실패하면 실패 처리&amp;quot;입니다. &lt;code&gt;LDAPTLS_REQCERT=never&lt;/code&gt;가
+있는 것은 macOS에 포함된 &lt;code&gt;ldapsearch&lt;/code&gt;가 시스템 저장소를 신뢰하며 이 테스트 CA를
+신뢰하도록 지정할 수 없었기 때문입니다. 체인은
+&lt;code&gt;openssl s_client -starttls ldap -CAfile tls/ca.pem -verify_return_error&lt;/code&gt;로 따로
+확인했고, &lt;code&gt;Verify return code: 0 (ok)&lt;/code&gt;라고 응답했습니다.)&lt;/p&gt;
+&lt;p&gt;그 거부가 &lt;code&gt;cert_file&lt;/code&gt;을 제안이 아니라 보장으로 만들며, &lt;code&gt;publish_nt_hash&lt;/code&gt;가 의존하는
+것도 그것입니다. 루트 DSE를 읽기 전에 &lt;code&gt;ldapsearch -x&lt;/code&gt;가 보내는 익명 바인드도
+포함되므로, StartTLS 리스너에서는 그 디스커버리 쿼리에도 &lt;code&gt;-ZZ&lt;/code&gt;가 필요합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="publish_nt_hash"&gt;&lt;code&gt;publish_nt_hash&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="publish_nt_hash"&gt;&lt;/span&gt;
+&lt;a href="#publish_nt_hash" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sambaNTPassword&lt;/code&gt;는 Samba나 다른 SMB 서버가 이 디렉터리를 통해 사람들을 인증할 수
+있게 해 주는 것이며, 로그인 폼이 뜻하는 의미의 비밀번호 해시가 &lt;strong&gt;아닙니다&lt;/strong&gt;.
+&lt;code&gt;MD4(UTF16LE(password))&lt;/code&gt;를 가진 사람은 비밀번호를 알지 못한 채로 NTLMv2를 통해 그
+사람으로 인증됩니다. 그래서 요청할 때만 게시되고, v0.11.0부터는 사람들의 SID가
+속한 도메인과 함께 게시됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;publish_nt_hash&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;samba&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; domain_sid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;S-1-5-21-1004336348-1177238915-682003330&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # `net getlocalsid` on the SMB server
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;리스너에 TLS가 있거나, 루프백(&lt;code&gt;127.0.0.0/8&lt;/code&gt;, &lt;code&gt;::1&lt;/code&gt;, &lt;code&gt;localhost&lt;/code&gt;)이어서 네트워크를
+전혀 지나지 않는 경우가 아니면 요청이 거부됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/nthash-clear.hcl
+authnd: publish_nt_hash needs cert_file and key_file: an NT hash IS the credential, and 0.0.0.0:3893 is not loopback, so it would cross a network in the clear&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; 블록&lt;span class="hx:absolute hx:-mt-20" id="the-samba-block"&gt;&lt;/span&gt;
+&lt;a href="#the-samba-block" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;sambaNTPassword&lt;/code&gt;는 Samba의 &lt;code&gt;sambaSamAccount&lt;/code&gt;에 속하며, 이 클래스의 MUST는 &lt;code&gt;uid&lt;/code&gt;와
+&lt;code&gt;sambaSID&lt;/code&gt;이고 다른 클래스는 이를 허용하지 않습니다. authnd가 게시하는 모든 엔트리는
+&lt;a href="https://go-authn.github.io/docs/0.4/ko/authnd/entries/"&gt;자신이 제공하는 스키마&lt;/a&gt;를 통과하므로, 이
+속성은 &lt;code&gt;sambaSamAccount&lt;/code&gt;에서만 게시되고 그러려면 SID가 필요합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;키&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;domain_sid&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;필수: &lt;code&gt;net getlocalsid&lt;/code&gt;가 출력하는 SMB 서버의 도메인 SID, &lt;code&gt;S-1-5-21-…&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;algorithmic_rid_base&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;선택, 기본값은 Samba와 같은 &lt;code&gt;1000&lt;/code&gt;. 홀수이거나 1000 미만이면 거부됩니다. Samba가 조용히 다른 값을 쓰게 되기 때문입니다&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;소스가 제공하는 경우(&lt;a href="https://go-authn.github.io/docs/0.4/ko/authnd/entries/#adding-attributes"&gt;속성&lt;/a&gt;)
+사람의 &lt;code&gt;sambaSID&lt;/code&gt;는 그 사람 자신의 &lt;code&gt;sambaSID&lt;/code&gt; 속성입니다. 그렇지 않으면
+&lt;code&gt;domain_sid-RID&lt;/code&gt;이며, RID = 2 × &lt;code&gt;uidNumber&lt;/code&gt; + &lt;code&gt;algorithmic_rid_base&lt;/code&gt;로 Samba의
+알고리즘 매핑입니다(smb.conf(5), &lt;em&gt;algorithmic rid base&lt;/em&gt;). NT 키는 있고 둘 다 없는
+사람은 &lt;code&gt;sambaNTPassword&lt;/code&gt; &lt;strong&gt;없이&lt;/strong&gt; 게시되며, &lt;code&gt;check&lt;/code&gt;와 시작 로그가 누구인지
+알려 줍니다. Samba 정의는 이 블록이 있을 때만 &lt;code&gt;cn=Subschema&lt;/code&gt;가 제공하는 스키마에
+추가됩니다. 이 정의는 Samba가 공개한 OID, 이름, 구문으로 작성한 것이며 GPL-3.0인
+&lt;code&gt;samba.schema&lt;/code&gt;에서 복사한 것이 아닙니다.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-red-200 hx:bg-red-100 hx:text-red-900 hx:dark:border-red-200/30 hx:dark:bg-red-900/30 hx:dark:text-red-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;v0.10.x 구성에는 호환성이 깨짐: &lt;code&gt;samba&lt;/code&gt; 블록 없는 &lt;code&gt;publish_nt_hash&lt;/code&gt;는 시작하지 않습니다&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;v0.10.x는 &lt;code&gt;publish_nt_hash = true&lt;/code&gt;만으로 서비스했습니다. v0.11.0부터 그 구성은
+시작 시와 &lt;code&gt;check&lt;/code&gt;에서 거부되며, 무엇을 추가해야 하는지 알려 줍니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/nthash.hcl
+authnd: publish_nt_hash needs a samba block: sambaNTPassword belongs to Samba&amp;#39;s sambaSamAccount, whose MUST is uid and sambaSID, and a SID needs the domain&amp;#39;s. Add
+samba {
+domain_sid = &amp;#34;S-1-5-21-...&amp;#34; # the SMB server&amp;#39;s: `net getlocalsid` prints it
+}
+and each person&amp;#39;s sambaSID is their own sambaSID attribute, or domain_sid-(2 x uidNumber &amp;#43; 1000), Samba&amp;#39;s algorithmic mapping; `authnd check` lists who has neither&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;업그레이드하기 전에 새 바이너리로 &lt;code&gt;check&lt;/code&gt;를 실행하십시오. 거부는 의도적입니다.
+v0.10.x의 엔트리는 스키마를 통과할 수 없고, 조용한 두 가지 대안 — 모든 사람에게서
+SMB를 빼앗는 속성 제외, 그 사람을 빼앗는 엔트리 제외 — 은 모두 콘솔에 아무 표시도
+없이 일어나게 됩니다.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;publish_nt_hash&lt;/code&gt; 없는 &lt;code&gt;samba&lt;/code&gt; 블록도 아무것도 게시하지 않으므로 거부됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/samba-alone.hcl
+authnd: a samba block without publish_nt_hash publishes nothing: it is the domain of the sambaSID that sambaNTPassword needs. Remove it, or set publish_nt_hash = true&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="what-check-says"&gt;&lt;code&gt;check&lt;/code&gt;가 알려 주는 것&lt;span class="hx:absolute hx:-mt-20" id="what-check-says"&gt;&lt;/span&gt;
+&lt;a href="#what-check-says" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;ldaps://&lt;/code&gt; 리스너의 세 사람입니다. alice는 비밀번호와 POSIX 세 가지가 있으므로
+SID가 파생됩니다(2 × 1000 + 1000). bob은 NT 해시만 있고 자신의 &lt;code&gt;sambaSID&lt;/code&gt;가
+있으며, carol은 비밀번호가 있고 둘 다 없습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3636&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;cert_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls/cert.pem&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls/key.pem&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;publish_nt_hash&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;samba&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; domain_sid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;S-1-5-21-1004336348-1177238915-682003330&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/alice.pw&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { uidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;1000&amp;#34;, gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;1000&amp;#34;, homeDirectory&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/home/alice&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;bob&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; nt_hash&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;8846F7EAEE8FB117AD06BDD830B7586C&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { sambaSID&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;S-1-5-21-1004336348-1177238915-682003330-1104&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;carol&amp;#34; { password&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;carol-pw&amp;#34;&lt;/span&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check ldaps
+ldaps://127.0.0.1:3636, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password account, posixAccount, sambaSamAccount, uidObject uid, cn, gidNumber, homeDirectory, uidNumber, sambaSID and sambaNTPassword
+bob the configuration file an NT hash account, sambaSamAccount, uidObject uid, cn, sambaSID and sambaNTPassword
+carol the configuration file a password account, uidObject uid
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, sambaSamAccount, uidObject
+carol has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+carol is published without sambaNTPassword: no sambaSID and no uidNumber to derive one from
+a bind carries a password
+bob cannot bind with a password: the source holds only what an SMB server needs (an NT hash), which a bind cannot be checked against
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is published over TLS: it IS the credential, and whoever reads it authenticates as that person over NTLMv2
+in sambaSamAccount, with sambaSIDs in S-1-5-21-1004336348-1177238915-682003330 (a person&amp;#39;s own sambaSID, or RID 2 x uidNumber &amp;#43; 1000)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;StartTLS 리스너의 경우에는 &lt;em&gt;sambaNTPassword is published over TLS, once StartTLS
+has been asked for&lt;/em&gt;라고 나옵니다. alice에게는 NT 해시가 따로 적혀 있지 않으며,
+alice의 해시는 가지고 있는 비밀번호에서 파생됩니다. bob의 해시는 SMB 서버가
+사용하도록 게시되며, &lt;code&gt;check&lt;/code&gt;는 bob이 authnd 자체에는 바인드할 수 없다는 것도
+알려 줍니다. carol의 엔트리는 그 속성 없이 게시되며, 소스가 &lt;code&gt;uidNumber&lt;/code&gt;나
+&lt;code&gt;sambaSID&lt;/code&gt;를 줄 때까지 SMB 서버는 carol에게 서비스할 수 없습니다.&lt;/p&gt;
+&lt;p&gt;같은 사람들의 StartTLS 리스너에서 reader가 받는 것입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ LDAPTLS_REQCERT=never ldapsearch -ZZ -x -LLL -H ldap://127.0.0.1:3389 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org &amp;#39;(uid=alice)&amp;#39;
+dn: uid=alice,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: sambaSamAccount
+objectClass: uidObject
+uid: alice
+cn: alice
+gidNumber: 1000
+homeDirectory: /home/alice
+uidNumber: 1000
+sambaSID: S-1-5-21-1004336348-1177238915-682003330-3000
+sambaNTPassword: D061EF15E9494B458016FA760CECDD63&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ko/authnd/#who-may-bind-and-who-may-read"&gt;reader&lt;/a&gt;만 검색할 수
+있으므로 reader만이 이 속성을 보게 됩니다. 따라서 누가 이를 읽을 수 있는가는 누가
+reader의 비밀번호를 가지고 있는가와 같은 질문입니다.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;NTLMv2에는 비밀번호나 그 MD4가 필요하며, 다른 것으로는 안 됩니다&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;authnd에게 누군가에 대해 묻는 파일 서버가 SMB로 그 사람에게 서비스할 수 있으려면
+&lt;em&gt;소스&lt;/em&gt;가 그에 충분한 것 — 비밀번호 또는 해시 — 를 가지고 있어야 합니다. 비밀번호만
+확인하는 디렉터리 — &lt;code&gt;check&lt;/code&gt;의 &lt;em&gt;a password check&lt;/em&gt; — 에서 오는 사람은 그 사이에서
+authnd가 무엇을 하든 &lt;code&gt;sambaNTPassword&lt;/code&gt;를 받을 수 없습니다. &lt;code&gt;publish_nt_hash&lt;/code&gt;가
+없으면 아무도 받을 수 없으며, 그러면 &lt;code&gt;check&lt;/code&gt;는 &lt;em&gt;sambaNTPassword is not published,
+so nothing here can authenticate an SMB session&lt;/em&gt;이라고 알려 줍니다.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="tokens-need-it-too"&gt;토큰에도 필요함&lt;span class="hx:absolute hx:-mt-20" id="tokens-need-it-too"&gt;&lt;/span&gt;
+&lt;a href="#tokens-need-it-too" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ko/authnd/tokens/"&gt;&lt;code&gt;oidc&lt;/code&gt; 블록&lt;/a&gt;은 암호화되지 않은 연결에서의 토큰을
+거부합니다. 단, &lt;code&gt;allow_plaintext = true&lt;/code&gt;로 TLS가 이 프로세스 앞에서 종단된다고
+선언한 경우는 예외입니다.&lt;/p&gt;</description></item><item><title>servercert — 데몬의 TLS 인증서는 어디서 오는가</title><link>https://go-authn.github.io/docs/0.4/ko/libraries/servercert/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ko/libraries/servercert/</guid><description>
+&lt;p&gt;&lt;strong&gt;데몬의 TLS 서버 인증서는 어디서 오는가?&lt;/strong&gt; 디스크의 인증서와 키로, 바뀌면 다시
+읽습니다. 또는 &lt;a href="https://pkg.go.dev/golang.org/x/crypto/acme/autocert" target="_blank" rel="noopener"&gt;&lt;code&gt;autocert&lt;/code&gt;&lt;/a&gt;를 통한
+ACME CA로, External Account Binding을 포함합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/servercert@v0.5.2&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;Config&lt;/code&gt;는 정확히 하나의 소스 — &lt;code&gt;CertFile&lt;/code&gt;과 &lt;code&gt;KeyFile&lt;/code&gt;, 또는 &lt;code&gt;ACME&lt;/code&gt; — 를 지정하며,
+&lt;code&gt;New&lt;/code&gt;는 &lt;code&gt;TLSConfig()&lt;/code&gt;가 이를 제공하는 &lt;code&gt;*Source&lt;/code&gt;를 반환합니다. &lt;code&gt;MinVersion&lt;/code&gt;은 TLS
+1.2입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="example"&gt;예제&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
+&lt;a href="#example" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;파일로:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;package&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;log&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;net/http&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;github.com/go-authn/servercert&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;src&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;servercert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;New&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;servercert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Config&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;CertFile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/etc/fileshare/tls/fullchain.pem&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;KeyFile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/etc/fileshare/tls/privkey.pem&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;OnError&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;error&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// a renewal that did not load&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Fatal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// unreadable, unparsable, or a key that is not the certificate&amp;#39;s&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;srv&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Server&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Addr&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;:443&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;TLSConfig&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;src&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;TLSConfig&lt;/span&gt;&lt;span class="p"&gt;()}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Fatal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;srv&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;ListenAndServeTLS&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;Config.Check&lt;/code&gt;는 동작할 수 없는 구성을 거부하며 아무것도 건드리지 않습니다. 파일을
+읽지도, 디렉터리를 만들지도 않습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;package&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;github.com/go-authn/servercert&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// Check touches nothing: no file is read, no directory created.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;range&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="nx"&gt;servercert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Config&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;ACME&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;servercert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ACME&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Domains&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;*.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;CacheDir&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/var/lib/fileshare/acme&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;}},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;ACME&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;servercert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ACME&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Domains&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;192.0.2.10&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;CacheDir&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/var/lib/fileshare/acme&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;}},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;ACME&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;servercert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ACME&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Domains&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;files.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;CacheDir&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;acme&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;}},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;CertFile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/etc/fileshare/tls/fullchain.pem&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;ACME&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;servercert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ACME&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Domains&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;files.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;CacheDir&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/var/lib/fileshare/acme&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;DirectoryURL&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;http://acme.example.org/directory&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;}},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;ACME&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;servercert&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ACME&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Domains&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;files.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;CacheDir&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/var/lib/fileshare/acme&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;}},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Check&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;servercert: ACME domain &amp;#34;*.example.org&amp;#34; is a wildcard; that needs dns-01, which autocert does not do
+servercert: ACME domain &amp;#34;192.0.2.10&amp;#34; is an IP address; autocert issues only for DNS names
+servercert: ACME.CacheDir &amp;#34;acme&amp;#34; is not an absolute path
+servercert: CertFile and KeyFile go together; one of them is empty
+servercert: ACME.DirectoryURL &amp;#34;http://acme.example.org/directory&amp;#34; is not an https URL (RFC 8555 §6.1)
+&amp;lt;nil&amp;gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;마지막은 Let&amp;rsquo;s Encrypt 운영 환경입니다: &lt;code&gt;DirectoryURL&lt;/code&gt;이 비어 있습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="files"&gt;파일&lt;span class="hx:absolute hx:-mt-20" id="files"&gt;&lt;/span&gt;
+&lt;a href="#files" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;New&lt;/code&gt;는 쌍을 읽고, 읽을 수 없거나, 구문 분석되지 않거나, 키가 인증서의 것이 아닌
+쌍에 대해 &lt;strong&gt;지금&lt;/strong&gt; 실패합니다. 그 후에는 핸드셰이크 중에 최대 10초에 한 번 파일을 다시
+읽으며, 바뀐 쌍은 락을 잡지 않고 구문 분석하여 교체합니다. 로드되지 &lt;strong&gt;않는&lt;/strong&gt; 바뀐 쌍 —
+키보다 먼저 기록된 인증서, 잘린 파일 — 은 &lt;code&gt;OnError&lt;/code&gt;에 한 번 보고되고 마지막으로 정상인
+쌍이 계속 사용되므로, 두 파일을 차례로 기록하는 갱신 작업이 서버를 내리는 일은
+없습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="acme"&gt;ACME&lt;span class="hx:absolute hx:-mt-20" id="acme"&gt;&lt;/span&gt;
+&lt;a href="#acme" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;autocert는 두 가지 챌린지 타입에만 응답합니다. &lt;code&gt;tls-alpn-01&lt;/code&gt;(RFC 8737, 443 포트, ALPN
+&lt;code&gt;acme-tls/1&lt;/code&gt;)과, &lt;code&gt;HTTPChallenge&lt;/code&gt;가 있을 때 &lt;code&gt;http-01&lt;/code&gt;(RFC 8555 §8.3, 80 포트,
+&lt;code&gt;Source.HTTPHandler&lt;/code&gt;가 제공)입니다. &lt;code&gt;dns-01&lt;/code&gt;은 없으므로 와일드카드도 IP 주소
+인증서도 없습니다.&lt;/p&gt;
+&lt;p&gt;인증서는 SNI가 &lt;code&gt;Domains&lt;/code&gt; 중 하나를 지정하는 첫 핸드셰이크에서, 또는 어떤 클라이언트보다
+먼저 &lt;code&gt;Source.Prefetch&lt;/code&gt;로 받으며, 만료 전에 autocert가 갱신합니다. IP 주소로 연결하는
+클라이언트는 SNI를 보내지 않으며 첫 번째 도메인의 인증서를 받습니다.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;NextProtos&lt;/code&gt;는 교체하지 말고 추가하십시오&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;ACME에서는 &lt;code&gt;TLSConfig().NextProtos&lt;/code&gt;가 &lt;code&gt;acme-tls/1&lt;/code&gt;을 담고 있으며, 이것이 없으면 CA의
+tls-alpn-01 검증이 실패합니다. 그리고 추가해야 합니다. ALPN 프로토콜을 알리는 Go TLS
+서버는 제안이 하나도 겹치지 않는 클라이언트를 거부하므로, NFS-over-TLS 서버는 &lt;code&gt;sunrpc&lt;/code&gt;를
+추가합니다(RFC 9289). &lt;code&gt;net/http&lt;/code&gt;는 &lt;code&gt;http/1.1&lt;/code&gt;과 &lt;code&gt;h2&lt;/code&gt;를 스스로 추가합니다.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;챌린지가 필요 없는 CA.&lt;/strong&gt; autocert는 새 주문이 이미 &lt;code&gt;ready&lt;/code&gt;이면 즉시 반환하며, 이는
+도메인이 사전 검증된 CA가 응답하는 방식입니다. Enterprise Admin 계정에 대한, HARICA가
+제공하는 GÉANT TCS가 그렇습니다. 인터넷에서 80 포트에도 443 포트에도 도달할 수 없는 내부
+서버도 공개적으로 신뢰되는 인증서를 받을 수 있습니다. EAB HMAC 키는 비밀 값이므로 구성은
+키가 아니라 그것을 담은 &lt;strong&gt;파일&lt;/strong&gt;(&lt;code&gt;EABHMACKeyFile&lt;/code&gt;)을 지정합니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;x/crypto/acme&lt;/code&gt;의 결함 하나는 우회합니다
+(&lt;a href="https://github.com/golang/go/issues/77704" target="_blank" rel="noopener"&gt;golang/go#77704&lt;/a&gt;). CA가 아직 처리 중인
+주문을 확정한 뒤, 클라이언트는 finalize 응답의 &lt;code&gt;Location&lt;/code&gt; 헤더 URL을 폴링하는데 RFC 8555는
+거기에 그것을 두지 않습니다. servercert는 이전 newOrder 응답에서 얻은 주문의 URL로 그
+헤더를 추가하는 트랜스포트를 ACME 클라이언트에 줍니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;거부하는 것과 그 이유&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Check&lt;/code&gt;는 거부합니다. 소스가 없거나 둘 다 있는 경우, 파일 쌍의 절반, 도메인이나 캐시
+디렉터리가 없는 ACME, 상대 경로, EAB의 절반, IP 주소이거나 와일드카드이거나 레이블이
+하나이거나 점으로 끝나거나 유효한 호스트 이름이 아닌 도메인, https가 아닌 디렉터리
+URL(RFC 8555 §6.1).&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;New&lt;/code&gt;는 또한 개인 키를 담고 있는 캐시 디렉터리가 심볼릭 링크이거나, 그룹이나 다른
+사용자가 접근할 수 있거나, 프로세스의 유효 사용자가 아닌 사용자가 소유하거나, 쓸 수
+없으면 거부합니다. 없으면 &lt;code&gt;0700&lt;/code&gt;으로 만들고 이후에 검사합니다. 그 위의 모든 디렉터리는
+sshd의 &lt;code&gt;StrictModes&lt;/code&gt;가 &lt;code&gt;authorized_keys&lt;/code&gt;로 가는 경로에 요구하는 것처럼 root나 유효
+사용자만 바꿀 수 있어야 하며, 그 위의 심볼릭 링크는 root가 소유하지 않으면 거부됩니다.
+Windows에서는 모드와 소유자를 검사하지 않습니다. ACL이 둘 다 결정하며 제한하는 것은
+사용자의 몫입니다. 경로의 어디든 심볼릭 링크가 있으면 거부됩니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;무엇과 대조해 검사하는가&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
+&lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;pebble&lt;/strong&gt;, Let&amp;rsquo;s Encrypt의 테스트 CA를 &lt;code&gt;ca&lt;/code&gt;, &lt;code&gt;db&lt;/code&gt;, &lt;code&gt;va&lt;/code&gt;, &lt;code&gt;wfe&lt;/code&gt; 패키지로 프로세스
+안에서 DNS 스텁과 함께 실행하여, &lt;code&gt;crypto/tls&lt;/code&gt;가 pebble의 루트에 대해 검증하는 실제
+인증서를 발급합니다. tls-alpn-01, &lt;code&gt;HTTPHandler&lt;/code&gt;를 통한 http-01과 &lt;code&gt;HTTPChallenge&lt;/code&gt;를 끈
+대조군, EAB 필수/없음/틀림/맞음, 챌린지 포트가 열려 있지 않은 상태에서 발급된 사전 검증
+도메인과 그 대조군. 한 테스트는 golang/go#77704 우회 없이 같은 발급을 실행하여 실패해야
+함을 요구합니다. 커버리지 하한은 100%입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="reference"&gt;참고&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
+&lt;a href="#reference" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/servercert@v0.5.2" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/servercert@v0.5.2&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>

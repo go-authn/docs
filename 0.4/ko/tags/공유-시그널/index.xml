@@ -1,0 +1,277 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – 공유 시그널</title><link>https://go-authn.github.io/docs/0.4/ko/tags/%EA%B3%B5%EC%9C%A0-%EC%8B%9C%EA%B7%B8%EB%84%90/</link><description>Recent content in 공유 시그널 on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ko</language><atom:link href="https://go-authn.github.io/docs/0.4/ko/tags/%EA%B3%B5%EC%9C%A0-%EC%8B%9C%EA%B7%B8%EB%84%90/index.xml" rel="self" type="application/rss+xml"/><item><title>무엇을 폐기하는지, 그리고 서버가 그것을 알게 되는 방법</title><link>https://go-authn.github.io/docs/0.4/ko/authn-bridge/revocation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ko/authn-bridge/revocation/</guid><description>
+&lt;p&gt;사람이나 기관을 비활성화하면(&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-bridge/admin/"&gt;관리 API&lt;/a&gt;) 공급자로
+되돌아오는 모든 것이 끝납니다. 리프레시 토큰, &lt;code&gt;/userinfo&lt;/code&gt;, 새 인증서, 애플리케이션
+비밀번호. 이미 전달된 것은 다른 곳에서 키를 기준으로 확인되며, 세 가지 메커니즘이
+거기에 도달합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;자격 증명&lt;/th&gt;
+&lt;th&gt;회수하는 방법&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;이 CA가 서명한 SSH 인증서&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;KRL&lt;/strong&gt;, &lt;code&gt;GET /ssh/krl&lt;/code&gt;, 서명은 &lt;code&gt;/ssh/krl.sig&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;X.509 클라이언트 인증서&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;CRL&lt;/strong&gt;, &lt;code&gt;GET /x509/crl&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;액세스 토큰, opkssh 인증서, 서버가 단독으로 검증하는 모든 것&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;Shared Signals&lt;/strong&gt; &lt;code&gt;session-revoked&lt;/code&gt; 이벤트&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;폐기는 영구적입니다. 사람을 다시 활성화해도 그들의 인증서가 돌아오지 않으며, 새
+인증서를 받습니다. 폐기를 빼낼 수 있는 목록은 관리 API에 도달하는 누군가가 편집할 수
+있는 목록입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-lists"&gt;목록&lt;span class="hx:absolute hx:-mt-20" id="the-lists"&gt;&lt;/span&gt;
+&lt;a href="#the-lists" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;둘 다 go-authn/revocation의 프로토콜이 말하는 대로 발급되므로, 무엇을 통해서든
+(미러, 일반 HTTP, 파일) 이동해도 읽는 사람이 확인할 수 있습니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;형식&lt;/td&gt;
+&lt;td&gt;OpenSSH &lt;code&gt;PROTOCOL.krl&lt;/code&gt;, go-authn/krl이 기록: &lt;code&gt;sshd&lt;/code&gt;의 &lt;code&gt;RevokedKeys&lt;/code&gt;와 &lt;code&gt;ssh-keygen -Q&lt;/code&gt;가 읽는 것&lt;/td&gt;
+&lt;td&gt;DER, RFC 5280&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;서명&lt;/td&gt;
+&lt;td&gt;SSH CA 키의 분리된 SSHSIG, 네임스페이스 &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;인증서에 서명하는 CA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;유효 기한&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;expires@go-authn.github.io&lt;/code&gt; 확장 (sshd는 무시)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;순서&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;krl_version&lt;/code&gt;, 그다음 생성 날짜&lt;/td&gt;
+&lt;td&gt;CRL Number, 그다음 &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;각 목록은 발급된 지 &lt;strong&gt;한 시간&lt;/strong&gt; 뒤에 유효하지 않게 된다고 밝힙니다. 목록은 그
+절반에 도달하거나 무언가 폐기될 때까지 그대로 보관되고 제공되며, 그다음 요청이 새
+발급을 받습니다. 발급은 시계가 거꾸로 가더라도 그것이 대체하는 발급보다 이른 날짜가
+되지 않습니다. 읽는 쪽은 같은 버전의 더 이른 발급을 롤백으로 거부하기 때문입니다.
+CRL Number는 발급마다 증가합니다.&lt;/p&gt;
+&lt;p&gt;아무것도 폐기되지 않은 테스트 공급자의 KRL:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -D - -o var/bridge.krl http://127.0.0.1:28473/ssh/krl
+HTTP/1.1 200 OK
+Cache-Control: max-age=60
+Content-Type: application/octet-stream
+Etag: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;
+Date: Sun, 11 Oct 2026 09:48:14 GMT
+Content-Length: 130
+$ ssh-keygen -Q -l -f var/bridge.krl
+# KRL version 0
+# Generated at 20261011T114814
+# Comment: go-authn/bridge http://127.0.0.1:28473&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;ETag는 내용의 것입니다.&lt;/strong&gt; 읽는 쪽은 &lt;code&gt;If-None-Match&lt;/code&gt;로 폴링하며, 보유한 발급이
+여전히 제공되는 것인 동안 &lt;code&gt;304&lt;/code&gt;를 받습니다. 내용은 최소 30분마다 바뀌므로 폴링하는
+읽는 쪽은 만료 이후에도 사본을 유지하는 일이 없습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o /dev/null -H &amp;#39;If-None-Match: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl
+304&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;서명은 목록의 ETag에 대한 &lt;code&gt;If-Match&lt;/code&gt;로 가져옵니다.&lt;/strong&gt; 그 사이에 다시 발급된 목록은
+일치하지 않는 서명이 아니라 &lt;code&gt;412&lt;/code&gt;로 응답합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o var/bridge.krl.sig -H &amp;#39;If-Match: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl.sig
+200
+$ curl -s -o /dev/null -H &amp;#39;If-Match: &amp;#34;stale&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl.sig
+412&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;ssh-keygen&lt;/code&gt;은 서명을 확인하며, 다른 네임스페이스의 서명은 거부합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Y verify -f allowed -I bridge -n krl@go-authn.github.io -s bridge.krl.sig &amp;lt; bridge.krl
+Good &amp;#34;krl@go-authn.github.io&amp;#34; signature for bridge with ED25519 key SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;여기서 &lt;code&gt;allowed&lt;/code&gt;는 다음 줄입니다.
+&lt;code&gt;bridge namespaces=&amp;quot;krl@go-authn.github.io&amp;quot; &amp;lt;the CA key from /ssh/config&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;15초 뒤에 발급된 CRL:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ openssl crl -inform DER -in var/bridge.crl -noout -text
+Certificate Revocation List (CRL):
+Version 2 (0x1)
+Signature Algorithm: ecdsa-with-SHA256
+Issuer: CN=go-authn bridge NFS client CA
+Last Update: Oct 11 09:48:29 2026 GMT
+Next Update: Oct 11 10:48:29 2026 GMT
+CRL extensions:
+X509v3 Authority Key Identifier:
+2A:90:7A:50:FF:65:52:BA:70:4E:E1:F8:70:EE:7A:FC:B1:8B:FE:4E
+X509v3 CRL Number:
+1791712109993
+No Revoked Certificates.
+Signature Algorithm: ecdsa-with-SHA256
+Signature Value:
+30:44:02:20:37:90:14:6f:c1:f2:ea:98:29:04:61:88:a8:17:
+88:e3:f6:84:9d:46:a7:fc:2b:ac:81:26:47:9d:ac:84:23:38:
+02:20:0a:a6:93:cb:7d:2d:81:e4:59:d4:0d:a0:fd:f4:6e:75:
+c9:0d:53:e7:92:49:ac:a1:31:a8:90:09:91:d1:87:b6&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;인증서는 만료될 때까지 목록에 남아 있습니다. 만료된 인증서는 나열되지 않아도 어디서나
+거부됩니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="who-reads-them"&gt;누가 읽는가&lt;span class="hx:absolute hx:-mt-20" id="who-reads-them"&gt;&lt;/span&gt;
+&lt;a href="#who-reads-them" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;일반 &lt;code&gt;sshd&lt;/code&gt;, 또는 nginx와 다른 TLS 서버:
+&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-revokd/"&gt;authn-revokd&lt;/a&gt;가 목록을 가져와 검증되는
+것만 보관하고, 서버가 읽는 곳에 기록하며, 목록이 만료되면 sshd에 대해 실패 시
+차단합니다.&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://go-fileshare.github.io/docs/latest/security/revocation-lists/" target="_blank" rel="noopener"&gt;go-fileshare&lt;/a&gt;는
+목록을 스스로 가져와 검증하며, 현재 목록이 없는 동안에는 공급자의 인증서를
+거부합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="shared-signals"&gt;Shared Signals&lt;span class="hx:absolute hx:-mt-20" id="shared-signals"&gt;&lt;/span&gt;
+&lt;a href="#shared-signals" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;액세스 토큰이나 opkssh 인증서는 사용되는 곳에서 확인되며, 어떤 목록도 이를 지명할
+수 없습니다. 그래서 공급자는 OpenID Shared Signals 송신기입니다. &lt;code&gt;DisablePerson&lt;/code&gt;,
+&lt;code&gt;RevokePerson&lt;/code&gt;, &lt;code&gt;DisableIdP&lt;/code&gt; 때, 요청한 모든 수신기를 위해 CAEP
+&lt;strong&gt;&lt;code&gt;session-revoked&lt;/code&gt;&lt;/strong&gt; 이벤트(이벤트 시각 이전에 이 주체에게 발급된 모든 것이
+무효)를 큐에 넣습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;state&lt;/span&gt; { &lt;span class="p"&gt;...&lt;/span&gt; }&lt;span class="c1"&gt; # required: a queue a restart empties loses revocations
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;ssf {} # event_retention&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;192h&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;by&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;fileshare-ssf&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # a receiver: client credentials, scope ssf
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/fileshare-ssf.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssf_receiver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/.well-known/ssf-configuration | jq .
+{
+&amp;#34;issuer&amp;#34;: &amp;#34;http://127.0.0.1:28473&amp;#34;,
+&amp;#34;jwks_uri&amp;#34;: &amp;#34;http://127.0.0.1:28473/jwks&amp;#34;,
+&amp;#34;delivery_methods_supported&amp;#34;: [
+&amp;#34;urn:ietf:rfc:8936&amp;#34;
+],
+&amp;#34;configuration_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams&amp;#34;,
+&amp;#34;status_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/status&amp;#34;,
+&amp;#34;add_subject_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/subjects:add&amp;#34;,
+&amp;#34;remove_subject_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/subjects:remove&amp;#34;,
+&amp;#34;verification_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/verify&amp;#34;,
+&amp;#34;spec_version&amp;#34;: &amp;#34;1_0&amp;#34;,
+&amp;#34;authorization_schemes&amp;#34;: [
+{
+&amp;#34;spec_urn&amp;#34;: &amp;#34;urn:ietf:rfc:6749&amp;#34;
+}
+]
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;폴링 전달만&lt;/strong&gt; (RFC 8936): 수신기가 요청하며, 여기서 밖으로 연결하는 것은
+없습니다.&lt;/li&gt;
+&lt;li&gt;수신기는 비밀 값이 있는 &lt;code&gt;ssf_receiver&lt;/code&gt; 클라이언트의 &lt;strong&gt;클라이언트 자격 증명&lt;/strong&gt;
+그랜트로 얻은 &lt;code&gt;ssf&lt;/code&gt; 스코프의 액세스 토큰으로 인증합니다. 자신의 스트림만 볼 수
+있고, 최대 열 개입니다.&lt;/li&gt;
+&lt;li&gt;이벤트는 ID 토큰 키로 서명한 SET(RFC 8417)이며 &lt;code&gt;exp&lt;/code&gt;도 &lt;code&gt;sub&lt;/code&gt;도 없습니다. 주체는
+기본적으로 &lt;strong&gt;계정&lt;/strong&gt;, &lt;code&gt;acct:&amp;lt;username&amp;gt;&lt;/code&gt;입니다. &lt;code&gt;sub&lt;/code&gt;는 클라이언트마다 하나인
+pairwise일 수 있기 때문입니다. &lt;code&gt;ssf_subject_format = &amp;quot;iss_sub&amp;quot;&lt;/code&gt;로 구성된 수신기는
+대신 발급자와 공개 &lt;code&gt;sub&lt;/code&gt;를 받습니다.&lt;/li&gt;
+&lt;li&gt;비활성화된 기관은 그곳에서 공급자가 흔적을 가진 사람마다 하나의 이벤트이며,
+주체가 &lt;strong&gt;테넌트&lt;/strong&gt;, 즉 기관의 엔티티 ID인 이벤트가 하나 있어 스코프와 함께 공급자가
+잊어버린 사람들까지 포함합니다.&lt;/li&gt;
+&lt;li&gt;스트림과 전달되지 않은 이벤트는 확인응답되거나 &lt;code&gt;event_retention&lt;/code&gt;이 지날 때까지
+&lt;code&gt;state&lt;/code&gt; 데이터베이스에 보관됩니다. 수신기가 오류로 보고한 이벤트는 최대 열 번까지
+다시 전달됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;SSF 블록은 &lt;code&gt;state&lt;/code&gt; 블록이 없으면 거부됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: ssf: needs a state block: a queue a restart empties loses revocations&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

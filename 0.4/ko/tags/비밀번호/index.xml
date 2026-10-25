@@ -1,0 +1,224 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – 비밀번호</title><link>https://go-authn.github.io/docs/0.4/ko/tags/%EB%B9%84%EB%B0%80%EB%B2%88%ED%98%B8/</link><description>Recent content in 비밀번호 on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ko</language><atom:link href="https://go-authn.github.io/docs/0.4/ko/tags/%EB%B9%84%EB%B0%80%EB%B2%88%ED%98%B8/index.xml" rel="self" type="application/rss+xml"/><item><title>사람이 자신의 비밀번호를 변경하기</title><link>https://go-authn.github.io/docs/0.4/ko/authnd/passwords/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ko/authnd/passwords/</guid><description>
+&lt;p&gt;사람은 RFC 3062 비밀번호 변경 작업(&lt;code&gt;ldappasswd&lt;/code&gt;가 보내는 것) 또는 RFC 4511
+modify를 통해 &lt;strong&gt;자기 자신의&lt;/strong&gt; 비밀번호를 변경할 수 있으며, 다른 사람의 것은
+변경할 수 없습니다. 두 경우 모두 &lt;strong&gt;연결이 무엇으로 바인드했든 현재 비밀번호를 새
+비밀번호와 함께 보내야 합니다.&lt;/strong&gt; &lt;a href="https://go-authn.github.io/docs/0.4/ko/authnd/tokens/"&gt;OAUTHBEARER 토큰&lt;/a&gt;으로
+바인드된 세션은 수명이 짧고 인증 요소가 하나일 수도 있는데, 그렇지 않으면 이를
+&lt;code&gt;kinit&lt;/code&gt;에서도 동작하는 영구 비밀번호로 바꿀 수 있기 때문입니다.&lt;/p&gt;
+&lt;p&gt;이는 &lt;code&gt;pwdSafeModify&lt;/code&gt;를 설정한 OpenLDAP ppolicy의 동작이며, &lt;code&gt;ppolicy.c&lt;/code&gt;가 반환하는
+결과 코드를 그대로 사용합니다. RFC 3062 §3이 이를 허용합니다. &amp;ldquo;If oldPasswd is
+not present, the server MAY use other policy to determine whether or not to
+change the password.&amp;rdquo;&lt;/p&gt;
+&lt;h2 data-hextra-search-id="with-ldappasswd"&gt;&lt;code&gt;ldappasswd&lt;/code&gt;로&lt;span class="hx:absolute hx:-mt-20" id="with-ldappasswd"&gt;&lt;/span&gt;
+&lt;a href="#with-ldappasswd" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-t&lt;/code&gt;는 이전 비밀번호가 든 파일이고 &lt;code&gt;-T&lt;/code&gt;는 새 비밀번호가 든 파일입니다. &lt;code&gt;-A&lt;/code&gt;와
+&lt;code&gt;-S&lt;/code&gt;는 대신 프롬프트로 묻습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -T alice.new
+Result: Insufficient access (50)
+Additional info: a password change must send the old password with the new one
+$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -t wrong.pwin -T alice.new
+Result: Server is unwilling to perform (53)
+Additional info: the old password sent is not the current one
+$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -t alice.pwin -T alice.new
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
+ldap_bind: Invalid credentials (49)
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.new
+dn:uid=alice,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;이전 비밀번호는 즉시 동작하지 않게 되며, 바인드에서도, 그리고
+&lt;a href="https://go-authn.github.io/docs/0.4/ko/authnd/kerberos/#a-password-changed-over-ldap"&gt;렐름&lt;/a&gt;이 있으면
+&lt;code&gt;kinit&lt;/code&gt;에서도 마찬가지입니다. 서버는 출력에 이를 기록합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;alice&amp;#39;s password change was refused: the old password did not verify: directory: wrong password
+alice changed their own password&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;authnd는 비밀번호를 생성하지 않습니다. 새 비밀번호가 없는 요청은
+&lt;code&gt;unwillingToPerform&lt;/code&gt;으로 거부됩니다(&lt;em&gt;this server does not generate passwords:
+send the one you want&lt;/em&gt;). 서버가 만들어 낸 비밀번호는 연결을 통해 다시 보내야
+하는데, 그것이 반드시 도달하는 곳은 터미널의 스크롤백입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="with-ldapmodify"&gt;&lt;code&gt;ldapmodify&lt;/code&gt;로&lt;span class="hx:absolute hx:-mt-20" id="with-ldapmodify"&gt;&lt;/span&gt;
+&lt;a href="#with-ldapmodify" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;변경은 &lt;strong&gt;이전 값의 삭제 다음에 새 값의 추가를, 한 요청 안에서&lt;/strong&gt; 하는 것입니다.
+RFC 4511 §4.6은 modify의 변경을 순서대로 원자적으로 적용하므로, 삭제하는 값이
+보유한 값이 아니면 삭제가 — 그리고 요청 전체가 — 실패합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;dn: uid=alice,ou=people,dc=example,dc=org
+changetype: modify
+delete: userPassword
+userPassword: alice-test-pw
+-
+add: userPassword
+userPassword: alice-new-pw
+-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;단순한 &lt;code&gt;replace&lt;/code&gt;는 아무것도 증명하지 못하며, &lt;code&gt;userPassword&lt;/code&gt; 이외의 것은 이 서버가
+바꾸지 않습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f replace.ldif
+ldap_modify: Insufficient access (50)
+additional info: a password change must send the old password with the new one
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;
+$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f other.ldif
+ldap_modify: Server is unwilling to perform (53)
+additional info: this server changes userPassword and nothing else, not cn
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;비밀번호 &lt;strong&gt;그리고&lt;/strong&gt; 다른 것을 요청하는 modify는 통째로 거부됩니다. modify는
+원자적이고, 절반만 수행하면 아무도 요청하지 않은 일에 대해 성공을 보고하게
+되기 때문입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="who-can-change-what"&gt;누가 무엇을 변경할 수 있는가&lt;span class="hx:absolute hx:-mt-20" id="who-can-change-what"&gt;&lt;/span&gt;
+&lt;a href="#who-can-change-what" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;요청&lt;/th&gt;
+&lt;th&gt;응답&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;이전 비밀번호가 없음, 또는 단순한 &lt;code&gt;replace: userPassword&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;현재 비밀번호가 아닌 이전 비밀번호&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;다른 사람의 엔트리&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;, &lt;em&gt;a password may be changed only by the person it belongs to&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;익명 연결&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;insufficientAccessRights&lt;/code&gt;, &lt;em&gt;an anonymous connection has not said who it is&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;비밀번호가 아예 없는 사람 — 토큰으로만 바인드했을 수 있음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;: 베어러 토큰은 비밀번호가 아니며 첫 번째 비밀번호를 설정하지 않습니다. 관리자가 구성에서 설정합니다&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;users&lt;/code&gt; 블록에서 서비스되는 사람&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;unwillingToPerform&lt;/code&gt;: authnd는 그 소스를 읽기만 하고 쓰지 않습니다&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;파일에 쓸 수 없음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;other&lt;/code&gt;(80), &lt;em&gt;the password could not be written&lt;/em&gt;. 이유는 서버의 출력에 있습니다&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;끝에서 두 번째의 경우로, SQLite 데이터베이스에서 오는 dora에 대해 릴리스
+바이너리가 낸 결과입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldappasswd -x -H ldap://127.0.0.1:3893 -D uid=dora,ou=people,dc=example,dc=org -y dora.pwin -t dora.pwin -T dora.new
+Result: Server is unwilling to perform (53)
+Additional info: dora is served from a sqlite database, which this server reads and does not write&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;사람은 DN이 아니라 &lt;strong&gt;신원으로&lt;/strong&gt; 일치시킵니다. 세션 자신의 이름이 대상의 이름과
+바이트 단위로 정확히 같아야 하므로, &lt;code&gt;uid=Backup&lt;/code&gt;으로 바인드된 세션은 두 DN이
+같다고 비교되더라도 &lt;code&gt;backup&lt;/code&gt;의 비밀번호를 바꿀 수 없습니다. 이것과
+&lt;a href="https://go-authn.github.io/docs/0.4/ko/authnd/people/#order-and-the-one-exception"&gt;대소문자만 다른 이름의 거부&lt;/a&gt;는
+서로 의존하지 않는 두 가지 통제입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="where-the-new-password-is-written"&gt;새 비밀번호가 기록되는 곳&lt;span class="hx:absolute hx:-mt-20" id="where-the-new-password-is-written"&gt;&lt;/span&gt;
+&lt;a href="#where-the-new-password-is-written" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;그 사람을 선언한 파일&lt;/strong&gt;에 다시 기록되며, 다른 곳에는 기록되지 않습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;password_file&lt;/code&gt;이 있는 &lt;code&gt;user&lt;/code&gt; 블록은 &lt;strong&gt;그 파일&lt;/strong&gt;을 다시 씁니다. 프로세스가
+할 수 있는 범위에서 소유자와 그룹을 유지하고, 모드는 최대 0600으로 좁히며 절대
+넓히지 않습니다&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;password&lt;/code&gt;가 인라인인 &lt;code&gt;user&lt;/code&gt; 블록은 구성 파일을 새 값으로 다시 쓰며, 주석, 순서,
+모드는 유지합니다&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;nt_hash&lt;/code&gt;만 있는 &lt;code&gt;user&lt;/code&gt; 블록에는 비밀번호를 부여하지 않습니다. 그것은 그 사람을
+증명하는 것을 바꾸는 일이며, 구성의 변경이기 때문입니다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;모든 쓰기는 &lt;strong&gt;같은 디렉터리의&lt;/strong&gt; 임시 파일에 한 다음 이름을 바꾸는 방식이므로,
+디스크가 가득 차거나 충돌이 나도 빈 파일이 아니라 이전 비밀번호가 남습니다.
+그러려면 디렉터리에 대한 쓰기 권한이 필요합니다. 패키지로 제공되는 유닛에서는
+&lt;code&gt;ProtectSystem=strict&lt;/code&gt;가 이를 빼앗으며, 변경은 다음과 같이 거부됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapmodify -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin -f safe.ldif
+ldap_modify: Other (e.g., implementation specific) error (80)
+additional info: the password could not be written
+modifying entry &amp;#34;uid=alice,ou=people,dc=example,dc=org&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;이유는 서버의 출력에 있습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-863420940: permission denied&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그러므로 비밀번호는 서비스가 쓸 수 있는 별도의 디렉터리에 두고, 구성은 서비스에
+읽기 전용으로 두십시오 —
+&lt;a href="https://go-authn.github.io/docs/0.4/ko/authnd/install/#the-configuration-directory"&gt;&lt;code&gt;ReadWritePaths=&lt;/code&gt; 드롭인&lt;/a&gt;.
+비밀번호가 인라인으로 기록된 사람이 있으면 &lt;code&gt;/etc/authnd&lt;/code&gt; 자체를 쓰기 가능하게
+해야 하는데, 그러면 서비스가 자신의 구성을 다시 쓸 수도 있게 됩니다.&lt;/p&gt;
+&lt;p&gt;쓰기에 성공하면 구성 파일을 &lt;strong&gt;&lt;code&gt;user&lt;/code&gt; 블록에 한해서만&lt;/strong&gt; 다시 읽습니다. 디스크에서
+기다리고 있는 관련 없는 편집이, 누군가 비밀번호를 바꿨다는 이유로 중간에
+적용되지 않습니다. 나머지는 모두 여전히 재시작을 기다립니다. 다만 파일은 통째로
+읽으므로, 그중 하나가 더 이상 로드되지 않으면 비밀번호는 기록되고 클라이언트는
+&lt;em&gt;the password was written but this server did not reload it&lt;/em&gt;라고 듣게 됩니다 —
+실행 중인 서버는 재시작할 때까지 이전 비밀번호를 유지합니다.&lt;/p&gt;</description></item></channel></rss>

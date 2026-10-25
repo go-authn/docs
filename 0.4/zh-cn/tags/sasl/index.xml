@@ -1,0 +1,281 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Sasl</title><link>https://go-authn.github.io/docs/0.4/zh-cn/tags/sasl/</link><description>Recent content in Sasl on go-authn</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><atom:link href="https://go-authn.github.io/docs/0.4/zh-cn/tags/sasl/index.xml" rel="self" type="application/rss+xml"/><item><title>绑定时使用令牌，放在密码之外的字段中</title><link>https://go-authn.github.io/docs/0.4/zh-cn/authnd/tokens/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/zh-cn/authnd/tokens/</guid><description>
+&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.4/zh-cn/libraries/"&gt;go-authn/oidc&lt;/a&gt;将令牌验证为一个
+身份。把令牌带给 LDAP 服务器的显而易见的方法是密码
+字段，它能用一次，然后就不行了：密码字段正是
+&lt;a href="https://go-authn.github.io/docs/0.4/zh-cn/authnd/mfa/"&gt;&lt;code&gt;mfa&lt;/code&gt; 块&lt;/a&gt;从末尾取走代码的地方，
+而令牌不可能同时兼顾两者。&lt;/p&gt;
+&lt;p&gt;因此令牌放在协议为它预留的位置。&lt;strong&gt;SASL&lt;/strong&gt; 绑定的
+凭据是一个具有该机制自身形态的八位字节串，而 RFC 7628 的
+&lt;code&gt;OAUTHBEARER&lt;/code&gt; 形态是一个 GS2 头，后面跟着键/值对，其中之一
+是 &lt;code&gt;auth=Bearer &amp;lt;token&amp;gt;&lt;/code&gt;：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;n,,^Aauth=Bearer eyJ…^A^A&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;密码字段保持不动。在同一个监听器上，同一时间，
+有人可以输入末尾带代码的密码，另一人可以发送
+令牌。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;oidc&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; issuer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.example.org/realms/staff&amp;#34; # the &amp;#34;iss&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;a&lt;/span&gt; &lt;span class="k"&gt;token&lt;/span&gt; &lt;span class="k"&gt;must&lt;/span&gt; &lt;span class="k"&gt;carry&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;and&lt;/span&gt; &lt;span class="k"&gt;where&lt;/span&gt; &lt;span class="k"&gt;discovery&lt;/span&gt; &lt;span class="k"&gt;starts&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # this server&amp;#39;s client id at the provider
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # username_claim = &amp;#34;preferred_username&amp;#34; which claim names the person here
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # jwks_url = &amp;#34;…&amp;#34; skips discovery, for a provider that does not publish it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # allow_plaintext = true only when TLS is terminated in front of this process
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;issuer&lt;/code&gt; 和 &lt;code&gt;audience&lt;/code&gt; 是必需的。没有 &lt;code&gt;username_claim&lt;/code&gt; 时，名称取
+&lt;code&gt;preferred_username&lt;/code&gt;，然后是 &lt;code&gt;email&lt;/code&gt;（当 &lt;code&gt;email_verified&lt;/code&gt; 为 true 时），然后是 &lt;code&gt;sub&lt;/code&gt;。
+有了该块，根 DSE 会通告该机制：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; supportedSASLMechanisms
+dn:
+supportedSASLMechanisms: OAUTHBEARER&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;没有它时，每个 SASL 绑定都会得到 &lt;code&gt;authMethodNotSupported&lt;/code&gt; 的答复——&lt;em&gt;不是这种
+方式&lt;/em&gt;，这会把客户端引向与&lt;em&gt;密码错误&lt;/em&gt;不同的地方。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="discovery-happens-at-startup"&gt;发现在启动时进行&lt;span class="hx:absolute hx:-mt-20" id="discovery-happens-at-startup"&gt;&lt;/span&gt;
+&lt;a href="#discovery-happens-at-startup" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;提供方的发现文档和密钥在服务器启动时读取，
+&lt;code&gt;check&lt;/code&gt; 也会读取。无法连接的提供方会在有人关注的时候使服务器停止，
+而不是在之后拒绝每个绑定：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc.hcl
+authnd: oidc &amp;#34;https://127.0.0.1:1/realms/staff&amp;#34;: oidc: reading https://127.0.0.1:1/realms/staff/.well-known/openid-configuration: Get &amp;#34;https://127.0.0.1:1/realms/staff/.well-known/openid-configuration&amp;#34;: dial tcp 127.0.0.1:1: connect: connection refused&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;不是 &lt;code&gt;https&lt;/code&gt; 的签发方会被拒绝，环回地址除外：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc-http.hcl
+authnd: oidc &amp;#34;http://login.example.org/realms/staff&amp;#34;: oidc: http://login.example.org/realms/staff is not https: the key set decides every signature, and over cleartext so does anybody on the way&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="how-many-factors-is-a-token"&gt;令牌算几个因素？&lt;span class="hx:absolute hx:-mt-20" id="how-many-factors-is-a-token"&gt;&lt;/span&gt;
+&lt;a href="#how-many-factors-is-a-token" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;签发方声称检查过什么就算什么，不多也不少。&lt;/strong&gt; 令牌携带
+RFC 8176 的 &lt;code&gt;amr&lt;/code&gt;，即提供方所使用的方法。这是仅有的
+证据，因此 &lt;code&gt;mfa&lt;/code&gt; 策略&lt;strong&gt;按种类&lt;/strong&gt;对其计数：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;code&gt;amr&lt;/code&gt; 方法&lt;/th&gt;
+&lt;th&gt;种类&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;pwd&lt;/code&gt;、&lt;code&gt;pin&lt;/code&gt;、&lt;code&gt;kba&lt;/code&gt;、&lt;code&gt;mca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;知识&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;otp&lt;/code&gt;、&lt;code&gt;hwk&lt;/code&gt;、&lt;code&gt;swk&lt;/code&gt;、&lt;code&gt;sms&lt;/code&gt;、&lt;code&gt;tel&lt;/code&gt;、&lt;code&gt;sc&lt;/code&gt;、&lt;code&gt;pop&lt;/code&gt;、&lt;code&gt;user&lt;/code&gt;、&lt;code&gt;wia&lt;/code&gt;、&lt;code&gt;mfa&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;持有&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;fpt&lt;/code&gt;、&lt;code&gt;face&lt;/code&gt;、&lt;code&gt;iris&lt;/code&gt;、&lt;code&gt;retina&lt;/code&gt;、&lt;code&gt;vbm&lt;/code&gt;、&lt;code&gt;geo&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;固有&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;其他任何值&lt;/td&gt;
+&lt;td&gt;未知，永远不能满足 &lt;code&gt;distinct_kinds&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;完全没有 &lt;code&gt;amr&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;一个因素，持有——即令牌本身&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;同一种类的两种方法算一个因素。否则就等于此服务器
+凭空捏造了一个无人执行过的第二因素；而一个相信
+签发方关于&lt;em&gt;此人是谁&lt;/em&gt;的服务器，没有单独的理由
+不相信它关于&lt;em&gt;如何检查&lt;/em&gt;的说法。&lt;/p&gt;
+&lt;p&gt;有 &lt;code&gt;mfa&lt;/code&gt; 块时，&lt;code&gt;check&lt;/code&gt; 会这样说明：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check sasl
+ldaps://127.0.0.1:3636, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password account, uidObject uid
+tess the configuration file a password and a one-time-code secret account, uidObject uid
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+tess has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+a bind carries a password with a 6-digit code after it, of two different kinds
+or a token from http://127.0.0.1:18481, over SASL OAUTHBEARER over TLS
+a token counts for the factors its amr claim names, so one with no amr is refused by this policy
+alice has no second factor here, so a password cannot satisfy this policy; a token whose amr names two kinds still can
+no reader is declared: nothing may search, and binds are not affected
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;alice 没有 &lt;code&gt;totp_secret&lt;/code&gt;，因此带代码的密码对她永远不够；
+而 &lt;code&gt;amr&lt;/code&gt; 指名两种种类的令牌可以，如下面的第一个绑定
+所示。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-the-binds-look-like"&gt;绑定是什么样子&lt;span class="hx:absolute hx:-mt-20" id="what-the-binds-look-like"&gt;&lt;/span&gt;
+&lt;a href="#what-the-binds-look-like" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;这里的签发方是环回地址上的一个小型测试提供方，而 &lt;code&gt;oidctool&lt;/code&gt; 是为这些页面编写的测试
+客户端：它为给定的名称签署一个令牌，带上给定的
+&lt;code&gt;amr&lt;/code&gt;，将其放在 &lt;code&gt;OAUTHBEARER&lt;/code&gt; 绑定中发送（当第五个参数指名了
+&lt;code&gt;authzid&lt;/code&gt; 时则带上它），并输出绑定的结果代码和
+服务器的 SASL 凭据。针对上述配置，通过 &lt;code&gt;ldaps://&lt;/code&gt;：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 0, serverSaslCreds
+$ ./oidctool alice &amp;#39;&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;kba&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls tess
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;insufficient_scope&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}
+$ ./oidctool zed &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;invalid_token&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;0 表示成功，49 是 &lt;code&gt;invalidCredentials&lt;/code&gt;，14 是 &lt;code&gt;saslBindInProgress&lt;/code&gt;。
+&lt;code&gt;[&amp;quot;pwd&amp;quot;,&amp;quot;kba&amp;quot;]&lt;/code&gt; 令牌指名同一种类的两种方法，因此只算一次。而对于
+没有 &lt;code&gt;cert_file&lt;/code&gt; 和 &lt;code&gt;key_file&lt;/code&gt; 的同一配置，在明文
+监听器上：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3893 clear
+bind result 13&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;13 是 &lt;code&gt;confidentialityRequired&lt;/code&gt;：不会通过未加密的
+连接接受令牌。&lt;/p&gt;
+&lt;p&gt;对于通过 &lt;code&gt;ldaps://&lt;/code&gt; 被拒绝的四个绑定，服务器写出的内容：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: the token is for &amp;#34;alice&amp;#34; and asks to act as &amp;#34;tess&amp;#34;; this server does not delegate
+zed was refused: the token verified, and no source here publishes anybody by that name&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;以及明文那一个：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;成功的 &lt;code&gt;OAUTHBEARER&lt;/code&gt; 绑定会使连接绑定为
+&lt;code&gt;uid=&amp;lt;name&amp;gt;,ou=people,&amp;lt;base_dn&amp;gt;&lt;/code&gt;，写法与其他每个条目相同。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;它拒绝什么&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;明文传输的令牌。&lt;/strong&gt; 持有者令牌不需要另一半：任何从线路上
+读到它的人，在它过期之前就是那个人。&lt;code&gt;allow_plaintext = true&lt;/code&gt;
+适用于在此进程之前终止 TLS 的部署，而
+&lt;code&gt;check&lt;/code&gt; 此时会提示 &lt;em&gt;a token may cross this socket in the clear&lt;/em&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;冒充他人的请求。&lt;/strong&gt; GS2 头可以指名 &lt;code&gt;authzid&lt;/code&gt;。alice 的
+令牌如果带有以 tess 身份行事的请求，会被拒绝，而不是悄悄地
+当作其中任何一个处理。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;为任何来源都未发布的人员签发的令牌。&lt;/strong&gt; 客户端只会得到
+&lt;code&gt;invalid_token&lt;/code&gt;；哪些名称存在，不应当
+一次猜一个地透露出去。原因在服务器的输出中。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;通道绑定。&lt;/strong&gt; 带有 &lt;code&gt;p=&lt;/code&gt; 的 GS2 头——客户端坚持要求
+通道绑定——会被拒绝：此服务器不支持它，而接受
+该头却不绑定任何内容，会让客户端误以为通道已经
+被检查。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;此服务器不支持的机制&lt;/strong&gt;，返回 &lt;code&gt;authMethodNotSupported&lt;/code&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;对令牌本身的拒绝遵循 RFC 7628 §3.2.3：一个携带
+&lt;code&gt;openid-configuration&lt;/code&gt; 的 JSON 错误，以 &lt;code&gt;saslBindInProgress&lt;/code&gt; 返回，使客户端可以
+发送结束该交换的 &lt;code&gt;^A&lt;/code&gt;。通过验证但不满足
+&lt;code&gt;mfa&lt;/code&gt; 策略的令牌，则直接得到 &lt;code&gt;invalidCredentials&lt;/code&gt; 的答复，如上面的
+第二和第三个绑定所示。&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;令牌不会设置密码&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;只用令牌登录过的人员，不能利用该会话为自己
+设置第一个密码，而已有密码的人员更改密码时仍然必须
+发送旧密码。参见&lt;a href="https://go-authn.github.io/docs/0.4/zh-cn/authnd/passwords/"&gt;更改密码&lt;/a&gt;。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

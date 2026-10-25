@@ -1,0 +1,838 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – 폐기</title><link>https://go-authn.github.io/docs/0.4/ko/tags/%ED%8F%90%EA%B8%B0/</link><description>Recent content in 폐기 on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ko</language><atom:link href="https://go-authn.github.io/docs/0.4/ko/tags/%ED%8F%90%EA%B8%B0/index.xml" rel="self" type="application/rss+xml"/><item><title>authn-revokd</title><link>https://go-authn.github.io/docs/0.4/ko/authn-revokd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ko/authn-revokd/</guid><description>
+&lt;p&gt;&lt;strong&gt;OpenSSH에는 KRL을 배포하는 방법이 없고, KRL에는 그것이 오래되었다고 말하는 것이
+아무것도 없습니다.&lt;/strong&gt; &lt;code&gt;sshd&lt;/code&gt;는 몇 달 전에 갱신이 멈춘 파일도 현재 목록으로 읽습니다.
+authn-revokd는 &lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-bridge/revocation/"&gt;authn-bridge&lt;/a&gt;가 게시하는
+목록에 대해 두 틈을 모두 메웁니다. 각 목록을 가져와 검증되는 경우에만 보관하고,
+&lt;code&gt;sshd&lt;/code&gt;나 TLS 서버가 읽는 곳에 기록하며, 목록이 만료되면 &lt;strong&gt;CA 자체를 폐기하는&lt;/strong&gt; 목록을
+기록합니다. 순수 Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, 바이너리 하나입니다. 이 문서는 v0.6.4를
+설명합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
+$ authn-revokd -version
+authn-revokd v0.6.4
+$ authn-revokd -help
+Usage of authn-revokd:
+-config string
+the configuration file (default &amp;#34;/etc/authn-revokd/revokd.hcl&amp;#34;)
+-once
+sync once and exit: 1 when a list is not current, or could not be fetched
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;-help&lt;/code&gt;는 0으로 종료합니다. v0.6.2 이전에는 2로 종료했습니다.&lt;/p&gt;
+&lt;p&gt;v0.6.0 이전에는 명령이 &lt;code&gt;revokd&lt;/code&gt;였고 기본값으로 &lt;code&gt;/etc/revokd.hcl&lt;/code&gt;을 읽었습니다. 이제
+그 파일을 읽는 것은 없으며, 그 파일은 있는데 새 기본값은 없으면 오류가 두 경로를 모두
+지정합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-does-in-one-run"&gt;한 번의 실행으로 하는 일&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-in-one-run"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-in-one-run" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;루프백의 테스트 authn-bridge에 대해, KRL 소스와 CRL 소스가 있는 경우:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+output tls: wrote /tmp/authn/revokd/out/bridge.crl
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261011T115024
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;새로운 것이 없는 두 번째 실행은 아무것도 출력하지 않고 0으로 종료합니다. 출력은
+내용이 바뀔 때만 다시 기록됩니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-the-transport-does-not-matter"&gt;전송 방식이 중요하지 않은 이유&lt;span class="hx:absolute hx:-mt-20" id="why-the-transport-does-not-matter"&gt;&lt;/span&gt;
+&lt;a href="#why-the-transport-does-not-matter" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;모든 목록은 스스로를 인증합니다. KRL은 CA 자신의 키로 만든 분리된 SSHSIG 서명으로,
+CRL은 해당 CA의 서명으로 인증합니다. 모든 목록은 언제 유효하지 않게 되는지를
+밝힙니다. 그러므로 목록은 HTTPS, 클러스터 내부의 일반 HTTP, 미러, 파일 중 무엇으로든
+올 수 있습니다. 전송 방식은 변경이 얼마나 빨리 도착하는지를 정할 뿐, 위조되었거나
+오래된 목록을 받아들일지 여부는 정하지 않습니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;진본&lt;/td&gt;
+&lt;td&gt;SSH CA 키의 SSHSIG, 네임스페이스 &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;해당 CA가 서명&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;현재성&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;expires@go-authn.github.io&lt;/code&gt;, sshd는 무시&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;역행 없음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;krl_version&lt;/code&gt;, 그다음 생성 날짜&lt;/td&gt;
+&lt;td&gt;CRL Number, 그다음 &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;실패 시 차단&lt;/td&gt;
+&lt;td&gt;authn-revokd가 CA 키를 폐기하는 KRL을 기록&lt;/td&gt;
+&lt;td&gt;OpenSSL이 만료된 CRL을 스스로 거부&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="where-to-go-next"&gt;다음에 볼 곳&lt;span class="hx:absolute hx:-mt-20" id="where-to-go-next"&gt;&lt;/span&gt;
+&lt;a href="#where-to-go-next" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-revokd/install/"&gt;설치하기&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;데몬, 또는 타이머의 &lt;code&gt;-once&lt;/code&gt;, sshd와 nginx 연결하기&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-revokd/configuration/"&gt;구성&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;소스, 출력, 미러, 거부되는 것&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-revokd/verification/"&gt;목록 검증 방법&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;서명, 날짜, 보유한 목록보다 오래되지 않음(재시작을 거쳐서도)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-revokd/lapse/"&gt;목록이 만료될 때&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;CA 자체를 폐기하는 KRL&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="what-it-does-not-do"&gt;하지 않는 것&lt;span class="hx:absolute hx:-mt-20" id="what-it-does-not-do"&gt;&lt;/span&gt;
+&lt;a href="#what-it-does-not-do" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;폐기는 authn-revokd가 폴링하는 주기(&lt;code&gt;refresh&lt;/code&gt;)에 발급자가 다시 발급하기까지의 지연을
+더한 것보다 빨리 서버에 도달하지 않습니다. 발급자가 내려가 있는 동안 그 인증서는
+목록의 만료 시점부터 거부됩니다. CA의 키를 가진 사람은 인증서에 서명할 수 있는 것처럼
+어떤 목록에도 서명할 수 있습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;라이선스&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause.&lt;/p&gt;</description></item><item><title>목록 검증 방법</title><link>https://go-authn.github.io/docs/0.4/ko/authn-revokd/verification/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ko/authn-revokd/verification/</guid><description>
+&lt;p&gt;검증되지 않는 목록은 절대 기록되거나 제공되거나 사용되지 않습니다. 마지막으로 성공한
+사본이 남습니다. 어떤 이유로든 실패한 가져오기는 그것을 아무것도 폐기하지 않는 빈
+응답으로 대체하지 않습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-signature"&gt;서명&lt;span class="hx:absolute hx:-mt-20" id="the-signature"&gt;&lt;/span&gt;
+&lt;a href="#the-signature" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;KRL&lt;/strong&gt;은 서명 &lt;code&gt;&amp;lt;url&amp;gt;.sig&lt;/code&gt;와 함께 가져옵니다. 파일 전체에 대한 armored SSHSIG이며,
+&lt;code&gt;ssh_ca&lt;/code&gt;로 구성된 &lt;strong&gt;SSH CA 키&lt;/strong&gt;가 &lt;code&gt;krl@go-authn.github.io&lt;/code&gt; 네임스페이스에서 만든
+것입니다. 네임스페이스는 서명이 다른 용도로 오인되는 것을 막습니다. 서명자는
+SHA-512로 해시하며 SHA-256도 받아들입니다. PROTOCOL.sshsig가 금지하는 SHA-1 형식의
+RSA 서명은 거부됩니다.&lt;/p&gt;
+&lt;p&gt;KRL 자체는 &lt;code&gt;sshd&lt;/code&gt;가 구문 분석하는 방식대로 구문 분석되어야 하며, OpenSSH가 검증하지
+않는 OpenSSH 자체의 서명 섹션을 담고 있어서는 안 됩니다.&lt;/p&gt;
+&lt;p&gt;다른 키로 서명된 목록은 거부됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-other.hcl -once
+bridge-ssh: revocation: the KRL&amp;#39;s signature does not verify by SHA256:xm8VDcZUh44N&amp;#43;RQSiPbroPInzkMhN/KCWI/TC&amp;#43;9HPNQ: public key does not match
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+output sshd: wrote /tmp/authn/revokd/out/other.krl
+output tls: wrote /tmp/authn/revokd/out/other.crl
+authn-revokd: not current: bridge-ssh&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;여기서 &lt;code&gt;ssh_ca&lt;/code&gt;는 bridge의 목록에 서명하지 않은 키를 지정했고, 오류가 그 키를
+지명합니다. 검증되지 않는 서명은 두 요청 사이에 다시 발급된 목록일 수도 있으므로,
+보고하기 전에 둘 다 한 번 더 가져옵니다. 이것은 그 소스의 첫 가져오기였으므로
+보관할 정상 사본이 없었고, 출력은 즉시
+&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-revokd/lapse/"&gt;실패 시 차단 목록&lt;/a&gt;입니다. (v0.6.2 이전에는
+같은 실패가 위 메시지 앞에 &amp;ldquo;the list changed between it and its signature&amp;quot;를
+붙였는데, 마치 목록이 다시 발급된 것처럼 보였습니다.)&lt;/p&gt;
+&lt;p&gt;서명은 &lt;code&gt;If-Match: &amp;lt;the list's ETag&amp;gt;&lt;/code&gt;로 가져옵니다. 두 요청 사이에 다시 발급된
+목록은 &lt;code&gt;412&lt;/code&gt;로 응답하며 둘 다 다시 가져옵니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;CRL&lt;/strong&gt;은 &lt;code&gt;x509_ca&lt;/code&gt;로 구성된 CA 인증서와 대조합니다. 먼저 원시 바이트의 서명을,
+나머지를 구문 분석하기 &lt;strong&gt;전에&lt;/strong&gt; 확인하므로, 누가 서명했든 큰 CRL은 구문 분석이
+아니라 서명 검사의 비용만 듭니다. 그다음 발급자가 그 인증서의 subject여야 하고,
+CRL Number와 &lt;code&gt;thisUpdate&lt;/code&gt;보다 뒤의 &lt;code&gt;nextUpdate&lt;/code&gt;가 있어야 하며, 델타 CRL이어서는
+안 되고, CRL Number와 Authority Key Identifier 이외의 critical 확장이나 critical
+항목 확장을 담고 있어서도 안 됩니다.&lt;/p&gt;
+&lt;p&gt;KRL은 &lt;code&gt;expires@go-authn.github.io&lt;/code&gt; 확장에 &lt;strong&gt;언제 만료되는지도 밝혀야&lt;/strong&gt; 합니다. 그렇지
+않은 것은 오래된 것과 구별할 수 없습니다.&lt;/p&gt;
+&lt;p&gt;본문의 크기는 제한됩니다. KRL은 32 MiB, 그 서명은 64 KiB, CRL은 64 MiB입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-dates"&gt;날짜&lt;span class="hx:absolute hx:-mt-20" id="the-dates"&gt;&lt;/span&gt;
+&lt;a href="#the-dates" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;목록은 다음일 때 현재입니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;지금이 만료 전일 때(KRL의 확장, CRL의 &lt;code&gt;nextUpdate&lt;/code&gt;)&lt;/li&gt;
+&lt;li&gt;5분 넘게 미래에 발급되지 않았을 때: 시계가 그보다 많이 앞서 있는 발급자는 나이를 알
+수 없는 목록을 기록합니다&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;max_age&lt;/code&gt;가 있으면, 그보다 오래 전에 발급되지 않았을 때&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;현재가 아닌 목록은 가져올 때 거부됩니다. &lt;code&gt;304 Not Modified&lt;/code&gt;는 새 소식이 아닙니다.
+보유한 사본이 그동안 만료되었을 수 있으며, 매 동기화마다 다시 판단합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="never-older-than-the-list-held"&gt;보유한 목록보다 오래되지 않음&lt;span class="hx:absolute hx:-mt-20" id="never-older-than-the-list-held"&gt;&lt;/span&gt;
+&lt;a href="#never-older-than-the-list-held" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;목록의 위치는 &lt;strong&gt;버전&lt;/strong&gt;(KRL의 &lt;code&gt;krl_version&lt;/code&gt;, CRL Number), 그다음 &lt;strong&gt;발급 시각&lt;/strong&gt;(KRL의
+생성 날짜, CRL의 &lt;code&gt;thisUpdate&lt;/code&gt;)입니다. 목록은 더 높은 버전이거나, 같은 버전이 더 나중에
+발급되었을 때(같은 폐기를 새 만료와 함께 다시 발급)만 보유한 것을 대체할 수 있습니다.
+그 밖의 것은 롤백입니다. 여전히 서명되어 있고 만료되지 않았지만 더 새 목록이 폐기한
+것을 되돌릴 재생되거나 복원된 오래된 목록입니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="across-restarts-too"&gt;재시작을 거쳐서도&lt;span class="hx:absolute hx:-mt-20" id="across-restarts-too"&gt;&lt;/span&gt;
+&lt;a href="#across-restarts-too" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;보유한 목록은 &lt;code&gt;state_dir&lt;/code&gt;에 소스당 파일 하나로 보관되며, 목록과 서명이 함께 들어
+있고, 디렉터리를 동기화한 단일 이름 변경으로 기록됩니다. 시작할 때 각 사본을
+&lt;strong&gt;다시 검증&lt;/strong&gt;하며(만료되었든 아니든 다음에 올 것의 순서를 정합니다), 더 이상 검증되지
+않는 사본은 다음 것의 순서를 정하는 데조차 신뢰하지 않고 로그에 그렇게 기록합니다.&lt;/p&gt;
+&lt;p&gt;여기서는 재시작 후, 소스가 이전 bridge 프로세스가 19초 전에 제공한, 여전히 서명되어
+있고 만료되지 않은 목록을 가리킵니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+$ authn-revokd -config revokd-old.hcl -once
+bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-11T09:50:05Z, the copy held at 2026-10-11T09:50:24Z
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 20261011T115024
+# Comment: authn-revokd sshd&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;첫 번째 실행은 출력을 기록하지 않았습니다. 파일이 이미 그 목록을 담고 있었기
+때문입니다. 더 오래된 목록은 거부되고 출력은 더 새 것을 유지합니다. 이를 거부한
+프로세스는 더 새 목록을 본 적이 없었으며, &lt;code&gt;state_dir&lt;/code&gt;에서 읽어 온 것입니다.&lt;/p&gt;
+&lt;p&gt;상태가 롤백을 감지할 수 있게 하는 것이므로, 디렉터리는 sshd의 StrictModes 규칙을
+따릅니다(&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-revokd/configuration/#what-is-refused-at-start"&gt;구성&lt;/a&gt;).
+두 번의 쓰기 사이의 충돌이 검증되지 않는 쌍을 남겨 롤백 방지 장치까지 함께 잃게 할 수
+없습니다. 목록과 서명은 하나의 파일입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what--once-reports"&gt;&lt;code&gt;-once&lt;/code&gt;가 보고하는 것&lt;span class="hx:absolute hx:-mt-20" id="what--once-reports"&gt;&lt;/span&gt;
+&lt;a href="#what--once-reports" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;-once&lt;/code&gt;는 소스에 현재 목록이 없거나, &lt;strong&gt;마지막 가져오기가 실패했거나&lt;/strong&gt;, 출력을 기록할
+수 없으면 &lt;code&gt;1&lt;/code&gt;로 종료하며, 마지막 줄이 앞의 두 가지 중 어느 쪽인지 알려 줍니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;마지막 줄&lt;/th&gt;
+&lt;th&gt;소스&lt;/th&gt;
+&lt;th&gt;그 출력&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not current: &amp;lt;source&amp;gt;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;현재 목록이 없음: 한 번도 가져오지 못했거나, 만료되었거나, &lt;code&gt;max_age&lt;/code&gt;를 넘김&lt;/td&gt;
+&lt;td&gt;sshd에 대해 실패 시 차단&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;not fetched: &amp;lt;source&amp;gt; (the list held is current until &amp;lt;T&amp;gt;)&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;가져오기가 실패했지만 보유한 사본은 아직 현재&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;T&lt;/code&gt;까지 그 사본에서 변경 없이 기록&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;여기서는 보유한 두 목록이 아직 현재인 동안 발급자가 멈춰 있습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z), bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그 실행은 &lt;code&gt;sshd.krl&lt;/code&gt;을 그대로 두었습니다. 보유한 목록이 만료되면 같은 소스는
+&lt;code&gt;not current&lt;/code&gt;로 보고되며, &lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-revokd/lapse/"&gt;목록이 만료될 때&lt;/a&gt;처럼
+두 종류가 한 줄을 공유할 수 있습니다. v0.6.2 이전에는 두 경우 모두 &lt;code&gt;not current&lt;/code&gt;로
+보고되었는데, 가져오기만 실패했는데도 목록이 만료되었다고 말하는 것이었습니다. 종료
+상태는 그때도 &lt;code&gt;1&lt;/code&gt;이었습니다.&lt;/p&gt;
+&lt;p&gt;미러의 &lt;code&gt;/healthz&lt;/code&gt;는 대신 보유한 사본으로 판단하며, 발급자가 내려가 있고 사본이 아직
+현재인 동안 &lt;code&gt;ok&lt;/code&gt;로 응답했습니다.&lt;/p&gt;</description></item><item><title>목록이 만료될 때</title><link>https://go-authn.github.io/docs/0.4/ko/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ko/authn-revokd/lapse/</guid><description>
+&lt;p&gt;목록을 구할 수 없을 때 모든 것을 통과시키는 폐기 검사는, 목록을 막을 수 있는 공격자에게
+무력화되는 검사입니다. 그래서 authn-revokd가 소스의 현재 목록을 보유하지 않을 때는,
+그 소스의 목록이 보호하는 것을 현재 목록이 다시 도착할 때까지 &lt;strong&gt;거부&lt;/strong&gt;합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;출력&lt;/th&gt;
+&lt;th&gt;소스에 현재 목록이 없는 동안&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sshd&lt;/code&gt;를 위한 KRL&lt;/td&gt;
+&lt;td&gt;authn-revokd가 &lt;strong&gt;소스의 CA 키를 폐기하는&lt;/strong&gt; KRL을 기록&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;TLS 서버를 위한 CRL&lt;/td&gt;
+&lt;td&gt;만료된 CRL을 그대로 둠. OpenSSL이 만료된 CRL을 스스로 거부&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;sshd를 위해: CA 자체를 폐기하기&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt;에는 목록의 만료라는 개념이 없어서 마지막으로 기록된 파일을 영원히 읽을
+것입니다. 하지만 모든 인증서의 &lt;strong&gt;CA 키&lt;/strong&gt;는 &lt;code&gt;RevokedKeys&lt;/code&gt;와 대조합니다. 그래서
+보증할 수 없는 목록 대신 authn-revokd는 CA 자신의 키를 출력에 넣으며, 그 CA가
+서명한 모든 인증서가 거부되고 다른 것은 거부되지 않습니다.&lt;/p&gt;
+&lt;p&gt;여기서는 발급자가 멈춰 있고 KRL 소스에 &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt;가 있어서, 보유한 사본이
+한 시간이 아니라 1분 안에 만료됩니다. CRL 소스에는 &lt;code&gt;max_age&lt;/code&gt;가 없으며 사본은 아직
+현재입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt;는 &lt;code&gt;not current&lt;/code&gt;이며 그 출력은 실패 시 차단 상태입니다. &lt;code&gt;bridge-x509&lt;/code&gt;는
+&lt;code&gt;not fetched&lt;/code&gt;일 뿐이며 그 CRL은 그대로 남습니다
+(&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-revokd/verification/#what--once-reports"&gt;&lt;code&gt;-once&lt;/code&gt;가 보고하는 것&lt;/a&gt;).
+&lt;code&gt;SHA256:Fpa/...&lt;/code&gt;는 bridge의 SSH CA입니다. 그것이 서명한 인증서는 이제 파일을 읽는
+모든 것에게 폐기된 것입니다. 위의 명령은 &lt;code&gt;out/&lt;/code&gt;이 있는 &lt;code&gt;revokd&lt;/code&gt; 디렉터리에서
+실행했고, 이것은 그 옆의 테스트 인증서가 있는 디렉터리에서
+&lt;a href="https://go-authn.github.io/docs/0.4/ko/sshcert/authorize/#krl"&gt;sshcert-authorize 페이지&lt;/a&gt;처럼 실행하므로
+같은 파일이 &lt;code&gt;../revokd/out/sshd.krl&lt;/code&gt;입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;주석에 &lt;code&gt;FAIL CLOSED&lt;/code&gt;와 소스 이름이 있으므로 &lt;code&gt;ssh-keygen -Q -l&lt;/code&gt;을 읽는 사람은 이유를
+알 수 있습니다. 모든 소스가 만료되면 파일의 날짜는 1970년입니다. 출력은 동기화가
+이를 &lt;strong&gt;알아차리는 즉시&lt;/strong&gt; 기록되며, 데몬에서는 다음 &lt;code&gt;refresh&lt;/code&gt;, 타이머에서는 다음
+틱입니다. 현재 목록이 다시 도착하면 다음 동기화가 CA의 키 대신 그것을 기록하고, CA의
+인증서는 다시 받아들여집니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;첫 번째 목록 전에도&lt;/strong&gt; 같습니다. 한 번도 가져오지 않은 소스는 현재인 것이 없으며,
+그 CA는 첫 기록부터 폐기됩니다. 새 설치는 CA의 인증서를 확인 없이 받아들이지 않고
+첫 목록이 검증될 때까지 거부합니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;각 CA는 각자&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;여러 소스를 병합하는 출력에서는 만료된 소스의 CA만 폐기됩니다. 나머지는 자신의 목록을
+유지합니다. 병합할 수 없는 목록(go-authn/krl이 유지하는 일련번호 범위를 넘는 경우)은
+자신의 CA에 한해서만 실패 시 차단되며 &lt;code&gt;/healthz&lt;/code&gt;가 이를 지명합니다. 목록이 단독으로는
+병합되지만 함께는 병합되지 않는 경우에만 출력의 모든 CA가 폐기되며, 주석이 이를
+밝힙니다(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;). 이전 파일을 대신
+유지하면 이후의 만료가 눈에 띄지 않게 됩니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;TLS 서버를 위해: CRL 자체&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;CRL은 이미 자신이 언제 유효하지 않게 되는지 밝히며, OpenSSL은 &lt;code&gt;nextUpdate&lt;/code&gt;가 지난
+것을 거부합니다(&amp;ldquo;CRL has expired&amp;rdquo;). 그래서 authn-revokd는 마지막으로 검증된 CRL을
+그대로 두고, TLS 서버가 스스로 실패 시 차단합니다. CRL 출력에 공급하는 소스에서
+&lt;code&gt;max_age&lt;/code&gt;가 거부되는 이유이기도 합니다. CRL을 로드한 서버는 authn-revokd가 무엇을
+기록하든 &lt;code&gt;nextUpdate&lt;/code&gt;까지 그것을 유지합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;만료를 스스로 확인하는 읽는 쪽&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;병합된 KRL은 현재 입력 중 가장 먼저 만료되는 것의 만료를 담습니다. go-fileshare의
+&lt;code&gt;ssh_krl_file&lt;/code&gt;이나
+&lt;a href="https://go-authn.github.io/docs/0.4/ko/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;처럼 이를
+확인하는 읽는 쪽은 발급자가 멈춘 것을 알게 되는 것과 같이 authn-revokd가 멈춘 것을
+알게 됩니다.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;authn-revokd가 실행 중일 때만 동작합니다&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;파일을 실패 시 차단 상태로 만드는 것은 authn-revokd입니다. 멈춰 있는 동안 sshd는
+현재이든 아니든 마지막으로 기록된 파일을 계속 읽습니다. 그래서 데몬에
+&lt;code&gt;Restart=always&lt;/code&gt;가 있고, 유닛이나 타이머, 또는 &lt;code&gt;/healthz&lt;/code&gt;를 모니터링해야 합니다.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>무엇을 폐기하는지, 그리고 서버가 그것을 알게 되는 방법</title><link>https://go-authn.github.io/docs/0.4/ko/authn-bridge/revocation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ko/authn-bridge/revocation/</guid><description>
+&lt;p&gt;사람이나 기관을 비활성화하면(&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-bridge/admin/"&gt;관리 API&lt;/a&gt;) 공급자로
+되돌아오는 모든 것이 끝납니다. 리프레시 토큰, &lt;code&gt;/userinfo&lt;/code&gt;, 새 인증서, 애플리케이션
+비밀번호. 이미 전달된 것은 다른 곳에서 키를 기준으로 확인되며, 세 가지 메커니즘이
+거기에 도달합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;자격 증명&lt;/th&gt;
+&lt;th&gt;회수하는 방법&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;이 CA가 서명한 SSH 인증서&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;KRL&lt;/strong&gt;, &lt;code&gt;GET /ssh/krl&lt;/code&gt;, 서명은 &lt;code&gt;/ssh/krl.sig&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;X.509 클라이언트 인증서&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;CRL&lt;/strong&gt;, &lt;code&gt;GET /x509/crl&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;액세스 토큰, opkssh 인증서, 서버가 단독으로 검증하는 모든 것&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;Shared Signals&lt;/strong&gt; &lt;code&gt;session-revoked&lt;/code&gt; 이벤트&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;폐기는 영구적입니다. 사람을 다시 활성화해도 그들의 인증서가 돌아오지 않으며, 새
+인증서를 받습니다. 폐기를 빼낼 수 있는 목록은 관리 API에 도달하는 누군가가 편집할 수
+있는 목록입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-lists"&gt;목록&lt;span class="hx:absolute hx:-mt-20" id="the-lists"&gt;&lt;/span&gt;
+&lt;a href="#the-lists" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;둘 다 go-authn/revocation의 프로토콜이 말하는 대로 발급되므로, 무엇을 통해서든
+(미러, 일반 HTTP, 파일) 이동해도 읽는 사람이 확인할 수 있습니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;KRL&lt;/th&gt;
+&lt;th&gt;CRL&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;형식&lt;/td&gt;
+&lt;td&gt;OpenSSH &lt;code&gt;PROTOCOL.krl&lt;/code&gt;, go-authn/krl이 기록: &lt;code&gt;sshd&lt;/code&gt;의 &lt;code&gt;RevokedKeys&lt;/code&gt;와 &lt;code&gt;ssh-keygen -Q&lt;/code&gt;가 읽는 것&lt;/td&gt;
+&lt;td&gt;DER, RFC 5280&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;서명&lt;/td&gt;
+&lt;td&gt;SSH CA 키의 분리된 SSHSIG, 네임스페이스 &lt;code&gt;krl@go-authn.github.io&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;인증서에 서명하는 CA&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;유효 기한&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;expires@go-authn.github.io&lt;/code&gt; 확장 (sshd는 무시)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nextUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;순서&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;krl_version&lt;/code&gt;, 그다음 생성 날짜&lt;/td&gt;
+&lt;td&gt;CRL Number, 그다음 &lt;code&gt;thisUpdate&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;각 목록은 발급된 지 &lt;strong&gt;한 시간&lt;/strong&gt; 뒤에 유효하지 않게 된다고 밝힙니다. 목록은 그
+절반에 도달하거나 무언가 폐기될 때까지 그대로 보관되고 제공되며, 그다음 요청이 새
+발급을 받습니다. 발급은 시계가 거꾸로 가더라도 그것이 대체하는 발급보다 이른 날짜가
+되지 않습니다. 읽는 쪽은 같은 버전의 더 이른 발급을 롤백으로 거부하기 때문입니다.
+CRL Number는 발급마다 증가합니다.&lt;/p&gt;
+&lt;p&gt;아무것도 폐기되지 않은 테스트 공급자의 KRL:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -D - -o var/bridge.krl http://127.0.0.1:28473/ssh/krl
+HTTP/1.1 200 OK
+Cache-Control: max-age=60
+Content-Type: application/octet-stream
+Etag: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;
+Date: Sun, 11 Oct 2026 09:48:14 GMT
+Content-Length: 130
+$ ssh-keygen -Q -l -f var/bridge.krl
+# KRL version 0
+# Generated at 20261011T114814
+# Comment: go-authn/bridge http://127.0.0.1:28473&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;ETag는 내용의 것입니다.&lt;/strong&gt; 읽는 쪽은 &lt;code&gt;If-None-Match&lt;/code&gt;로 폴링하며, 보유한 발급이
+여전히 제공되는 것인 동안 &lt;code&gt;304&lt;/code&gt;를 받습니다. 내용은 최소 30분마다 바뀌므로 폴링하는
+읽는 쪽은 만료 이후에도 사본을 유지하는 일이 없습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o /dev/null -H &amp;#39;If-None-Match: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl
+304&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;서명은 목록의 ETag에 대한 &lt;code&gt;If-Match&lt;/code&gt;로 가져옵니다.&lt;/strong&gt; 그 사이에 다시 발급된 목록은
+일치하지 않는 서명이 아니라 &lt;code&gt;412&lt;/code&gt;로 응답합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o var/bridge.krl.sig -H &amp;#39;If-Match: &amp;#34;db5b4e920d2da3911da51a8f70db8c4f&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl.sig
+200
+$ curl -s -o /dev/null -H &amp;#39;If-Match: &amp;#34;stale&amp;#34;&amp;#39; -w &amp;#39;%{http_code}\n&amp;#39; http://127.0.0.1:28473/ssh/krl.sig
+412&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;ssh-keygen&lt;/code&gt;은 서명을 확인하며, 다른 네임스페이스의 서명은 거부합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Y verify -f allowed -I bridge -n krl@go-authn.github.io -s bridge.krl.sig &amp;lt; bridge.krl
+Good &amp;#34;krl@go-authn.github.io&amp;#34; signature for bridge with ED25519 key SHA256:Fpa/Ku2Wv1EDCR&amp;#43;KSsqZ2eECTM1zftiBWj01Lr&amp;#43;NO2Q&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;여기서 &lt;code&gt;allowed&lt;/code&gt;는 다음 줄입니다.
+&lt;code&gt;bridge namespaces=&amp;quot;krl@go-authn.github.io&amp;quot; &amp;lt;the CA key from /ssh/config&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;15초 뒤에 발급된 CRL:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ openssl crl -inform DER -in var/bridge.crl -noout -text
+Certificate Revocation List (CRL):
+Version 2 (0x1)
+Signature Algorithm: ecdsa-with-SHA256
+Issuer: CN=go-authn bridge NFS client CA
+Last Update: Oct 11 09:48:29 2026 GMT
+Next Update: Oct 11 10:48:29 2026 GMT
+CRL extensions:
+X509v3 Authority Key Identifier:
+2A:90:7A:50:FF:65:52:BA:70:4E:E1:F8:70:EE:7A:FC:B1:8B:FE:4E
+X509v3 CRL Number:
+1791712109993
+No Revoked Certificates.
+Signature Algorithm: ecdsa-with-SHA256
+Signature Value:
+30:44:02:20:37:90:14:6f:c1:f2:ea:98:29:04:61:88:a8:17:
+88:e3:f6:84:9d:46:a7:fc:2b:ac:81:26:47:9d:ac:84:23:38:
+02:20:0a:a6:93:cb:7d:2d:81:e4:59:d4:0d:a0:fd:f4:6e:75:
+c9:0d:53:e7:92:49:ac:a1:31:a8:90:09:91:d1:87:b6&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;인증서는 만료될 때까지 목록에 남아 있습니다. 만료된 인증서는 나열되지 않아도 어디서나
+거부됩니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="who-reads-them"&gt;누가 읽는가&lt;span class="hx:absolute hx:-mt-20" id="who-reads-them"&gt;&lt;/span&gt;
+&lt;a href="#who-reads-them" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;일반 &lt;code&gt;sshd&lt;/code&gt;, 또는 nginx와 다른 TLS 서버:
+&lt;a href="https://go-authn.github.io/docs/0.4/ko/authn-revokd/"&gt;authn-revokd&lt;/a&gt;가 목록을 가져와 검증되는
+것만 보관하고, 서버가 읽는 곳에 기록하며, 목록이 만료되면 sshd에 대해 실패 시
+차단합니다.&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://go-fileshare.github.io/docs/latest/security/revocation-lists/" target="_blank" rel="noopener"&gt;go-fileshare&lt;/a&gt;는
+목록을 스스로 가져와 검증하며, 현재 목록이 없는 동안에는 공급자의 인증서를
+거부합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="shared-signals"&gt;Shared Signals&lt;span class="hx:absolute hx:-mt-20" id="shared-signals"&gt;&lt;/span&gt;
+&lt;a href="#shared-signals" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;액세스 토큰이나 opkssh 인증서는 사용되는 곳에서 확인되며, 어떤 목록도 이를 지명할
+수 없습니다. 그래서 공급자는 OpenID Shared Signals 송신기입니다. &lt;code&gt;DisablePerson&lt;/code&gt;,
+&lt;code&gt;RevokePerson&lt;/code&gt;, &lt;code&gt;DisableIdP&lt;/code&gt; 때, 요청한 모든 수신기를 위해 CAEP
+&lt;strong&gt;&lt;code&gt;session-revoked&lt;/code&gt;&lt;/strong&gt; 이벤트(이벤트 시각 이전에 이 주체에게 발급된 모든 것이
+무효)를 큐에 넣습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;state&lt;/span&gt; { &lt;span class="p"&gt;...&lt;/span&gt; }&lt;span class="c1"&gt; # required: a queue a restart empties loses revocations
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;ssf {} # event_retention&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;192h&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;by&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;fileshare-ssf&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # a receiver: client credentials, scope ssf
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/fileshare-ssf.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssf_receiver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/.well-known/ssf-configuration | jq .
+{
+&amp;#34;issuer&amp;#34;: &amp;#34;http://127.0.0.1:28473&amp;#34;,
+&amp;#34;jwks_uri&amp;#34;: &amp;#34;http://127.0.0.1:28473/jwks&amp;#34;,
+&amp;#34;delivery_methods_supported&amp;#34;: [
+&amp;#34;urn:ietf:rfc:8936&amp;#34;
+],
+&amp;#34;configuration_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams&amp;#34;,
+&amp;#34;status_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/status&amp;#34;,
+&amp;#34;add_subject_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/subjects:add&amp;#34;,
+&amp;#34;remove_subject_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/subjects:remove&amp;#34;,
+&amp;#34;verification_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/ssf/streams/verify&amp;#34;,
+&amp;#34;spec_version&amp;#34;: &amp;#34;1_0&amp;#34;,
+&amp;#34;authorization_schemes&amp;#34;: [
+{
+&amp;#34;spec_urn&amp;#34;: &amp;#34;urn:ietf:rfc:6749&amp;#34;
+}
+]
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;폴링 전달만&lt;/strong&gt; (RFC 8936): 수신기가 요청하며, 여기서 밖으로 연결하는 것은
+없습니다.&lt;/li&gt;
+&lt;li&gt;수신기는 비밀 값이 있는 &lt;code&gt;ssf_receiver&lt;/code&gt; 클라이언트의 &lt;strong&gt;클라이언트 자격 증명&lt;/strong&gt;
+그랜트로 얻은 &lt;code&gt;ssf&lt;/code&gt; 스코프의 액세스 토큰으로 인증합니다. 자신의 스트림만 볼 수
+있고, 최대 열 개입니다.&lt;/li&gt;
+&lt;li&gt;이벤트는 ID 토큰 키로 서명한 SET(RFC 8417)이며 &lt;code&gt;exp&lt;/code&gt;도 &lt;code&gt;sub&lt;/code&gt;도 없습니다. 주체는
+기본적으로 &lt;strong&gt;계정&lt;/strong&gt;, &lt;code&gt;acct:&amp;lt;username&amp;gt;&lt;/code&gt;입니다. &lt;code&gt;sub&lt;/code&gt;는 클라이언트마다 하나인
+pairwise일 수 있기 때문입니다. &lt;code&gt;ssf_subject_format = &amp;quot;iss_sub&amp;quot;&lt;/code&gt;로 구성된 수신기는
+대신 발급자와 공개 &lt;code&gt;sub&lt;/code&gt;를 받습니다.&lt;/li&gt;
+&lt;li&gt;비활성화된 기관은 그곳에서 공급자가 흔적을 가진 사람마다 하나의 이벤트이며,
+주체가 &lt;strong&gt;테넌트&lt;/strong&gt;, 즉 기관의 엔티티 ID인 이벤트가 하나 있어 스코프와 함께 공급자가
+잊어버린 사람들까지 포함합니다.&lt;/li&gt;
+&lt;li&gt;스트림과 전달되지 않은 이벤트는 확인응답되거나 &lt;code&gt;event_retention&lt;/code&gt;이 지날 때까지
+&lt;code&gt;state&lt;/code&gt; 데이터베이스에 보관됩니다. 수신기가 오류로 보고한 이벤트는 최대 열 번까지
+다시 전달됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;SSF 블록은 &lt;code&gt;state&lt;/code&gt; 블록이 없으면 거부됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: ssf: needs a state block: a queue a restart empties loses revocations&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>krl — OpenSSH 키 폐기 목록</title><link>https://go-authn.github.io/docs/0.4/ko/libraries/krl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ko/libraries/krl/</guid><description>
+&lt;p&gt;&lt;strong&gt;sshd가 답하는 대로, 이 SSH 인증서나 키는 폐기되었는가?&lt;/strong&gt; OpenSSH의
+&lt;code&gt;PROTOCOL.krl&lt;/code&gt;의 바이너리 형식이며, &lt;code&gt;sshd&lt;/code&gt;가 &lt;code&gt;RevokedKeys&lt;/code&gt;로 로드하고
+&lt;code&gt;ssh-keygen -k&lt;/code&gt;가 기록하는 목록입니다. &lt;code&gt;golang.org/x/crypto/ssh&lt;/code&gt;는 이를 지원하지
+않습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/krl@v0.6.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;IsRevoked&lt;/code&gt;는 OpenSSH &lt;code&gt;krl.c&lt;/code&gt;의 &lt;code&gt;ssh_krl_check_key&lt;/code&gt;를 따릅니다. 인증서는 일련번호나
+키 ID가 서명한 CA 아래에서 또는 모든 CA 아래에서 폐기되었거나, CA 키가 폐기되었거나,
+자신의 키가 블롭이나 SHA-1 또는 SHA-256 지문으로 폐기되었을 때 폐기된 것입니다. 일련번호
+0 — CA가 아무것도 지정하지 않을 때 기록하는 값 — 은 일련번호로는 절대 폐기되지
+않습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="example"&gt;예제&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
+&lt;a href="#example" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;package&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;crypto/ed25519&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;crypto/rand&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;time&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;github.com/go-authn/krl&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;golang.org/x/crypto/ssh&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ca&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;signer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;user&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;signer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// The issuer: certificate 42 is revoked, and so is everything for key ID &amp;#34;alice&amp;#34;.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;krl&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;NewBuilder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;7&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;revoked by the bridge&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;RevokeSerial&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ca&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;PublicKey&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;42&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;RevokeKeyID&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// nil: under any CA&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;SetExpires&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Now&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="nf"&gt;Add&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Hour&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Marshal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;time&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Now&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;panic&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// The server: parse the list, then ask about each certificate.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;krl&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Parse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;panic&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;version&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Version&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;signed&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Signed&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;expires set&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Expires&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;IsZero&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;range&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kd"&gt;struct&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;serial&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;uint64&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}{{&lt;/span&gt;&lt;span class="mi"&gt;42&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;bob&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;43&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;bob&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="mi"&gt;44&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;}}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;serial&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;k&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;IsRevoked&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nf"&gt;certificate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ca&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;user&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;PublicKey&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;serial&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;signer&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Signer&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;priv&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ed25519&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;GenerateKey&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rand&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Reader&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;s&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;NewSignerFromKey&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;priv&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;s&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;certificate&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ca&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Signer&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;key&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;PublicKey&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;serial&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;uint64&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Certificate&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Certificate&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Key&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Serial&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;serial&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;KeyId&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;CertType&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;UserCert&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ValidPrincipals&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;id&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ValidBefore&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ssh&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;CertTimeInfinity&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;SignCert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;rand&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Reader&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ca&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;panic&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;c&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;version 7 signed false expires set true
+42 bob true
+43 bob false
+44 alice true&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;같은 목록과 인증서를 파일로 기록하면 OpenSSH 10.3p1의 &lt;code&gt;ssh-keygen -Q -f list.krl&lt;/code&gt;이
+같은 세 가지 답을 줍니다: &lt;code&gt;REVOKED&lt;/code&gt;, &lt;code&gt;ok&lt;/code&gt;, &lt;code&gt;REVOKED&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="expiry-expiresgo-authngithubio"&gt;만료: &lt;code&gt;expires@go-authn.github.io&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="expiry-expiresgo-authngithubio"&gt;&lt;/span&gt;
+&lt;a href="#expiry-expiresgo-authngithubio" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;KRL에는 생성 날짜와 버전이 있지만 언제 유효하지 않게 되는지는 나와 있지 않으므로,
+오래된 사본을 새 것과 구별할 수 없습니다. &lt;code&gt;Builder.SetExpires&lt;/code&gt;는 그 시각을
+&lt;code&gt;ExtensionExpires&lt;/code&gt;라는 확장 섹션에 &lt;strong&gt;critical이 아닌&lt;/strong&gt; 상태로 기록하므로, &lt;code&gt;sshd&lt;/code&gt;와
+&lt;code&gt;ssh-keygen&lt;/code&gt;은 목록을 로드하고 이를 무시합니다. &lt;code&gt;Parse&lt;/code&gt;는 이를 &lt;code&gt;KRL.Expires&lt;/code&gt;로
+읽습니다.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;서명 없음&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;OpenSSH는 KRL 서명 섹션을 쓰는 방법을 공개한 적이 없고 이제는 검증하지도 않습니다.
+&lt;code&gt;Parse&lt;/code&gt;는 이를 건너뛰고 &lt;code&gt;Signed&lt;/code&gt;를 설정하는데, 이는 진본 여부에 대해 아무것도 말하지
+않습니다. &lt;code&gt;Builder&lt;/code&gt;는 서명을 절대 쓰지 않습니다. 목록의 무결성, 따라서 그 만료의
+무결성은 전송 구간 — 인증된 서버의 HTTPS — 또는 호출자가 검사하는 분리된 SSHSIG
+서명에서 오며, 이 패키지는 후자를 하지 않습니다.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="merging-one-file-for-sshd"&gt;병합: sshd를 위한 하나의 파일&lt;span class="hx:absolute hx:-mt-20" id="merging-one-file-for-sshd"&gt;&lt;/span&gt;
+&lt;a href="#merging-one-file-for-sshd" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt;는 OpenSSH 10.3까지 &lt;code&gt;RevokedKeys&lt;/code&gt; 파일 하나만 읽었으므로, 여러 CA를 신뢰하는
+서버에는 그 목록들이 하나로 필요합니다. &lt;code&gt;Builder.Merge&lt;/code&gt;는 구문 분석한 목록의 모든
+폐기를 추가합니다. &lt;code&gt;Builder.MergeCA(k, ca, others...)&lt;/code&gt;는 &lt;code&gt;k&lt;/code&gt;의 &lt;code&gt;ca&lt;/code&gt; 섹션, &lt;code&gt;ca&lt;/code&gt;로
+범위가 다시 정해진 모든 CA 섹션, 명시적 키와 지문을 유지하고, 다른 CA의 섹션과
+&lt;code&gt;others&lt;/code&gt; 중 하나를 지정하는 키나 지문은 개수를 세면서 제외합니다.
+&lt;code&gt;MergeOptions{DropKeys: true}&lt;/code&gt;와 함께 &lt;code&gt;MergeCAWith&lt;/code&gt;를 쓰면 &lt;code&gt;ca&lt;/code&gt; 자신의 것을 제외한
+모든 명시적 키도 제외하며, 모든 CA의 사용자를 신뢰하지 않는 목록을 위한 것입니다.
+폐기된 사용자 키는 &lt;code&gt;sshd&lt;/code&gt;가 누가 서명했든 인증서 자신의 키를 검사하므로 병합된 파일의
+모든 CA 아래에서 그 사용자를 막아 버립니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;거부하는 것과 그 이유&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Parse&lt;/code&gt;는 &lt;code&gt;ssh-keygen&lt;/code&gt;과 &lt;code&gt;sshd&lt;/code&gt;가 거부하는 것을 거부합니다. 잘못된 매직 또는 형식
+버전, 잘리거나 뒤에 붙은 데이터, 알 수 없는 섹션 또는 인증서 하위 섹션, critical로
+표시된 알 수 없는 확장, OpenSSH가 구문 분석할 수 없는 CA 키, 일련번호 0, 뒤집힌 일련번호
+범위, OpenSSH가 읽는 것보다 큰 비트맵 또는 2^64−1을 넘어 감기는 비트맵. 형식이 잘못되었거나
+반복된 만료도 거부합니다. 없는 것으로 읽으면 만료되도록 만든 목록이 절대 만료되지 않는
+목록이 되기 때문입니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;Builder&lt;/code&gt;는 — 첫 번째 잘못된 요청을 반환하는 &lt;code&gt;Marshal&lt;/code&gt;에서 — 일련번호 0, 낮은 쪽이 0이거나
+높은 쪽보다 큰 범위, NUL을 포함하는 키 ID 또는 주석, CA 키가 와야 할 곳에 주어진
+인증서, 생성 날짜보다 이른 만료를 거부합니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;의도적인 차이 하나.&lt;/strong&gt; 가까이 있는 희소한 일련번호가 많으면 &lt;code&gt;ssh-keygen -k&lt;/code&gt;는 자신의
+읽기 쪽이 받아들이는 것보다 넓은 비트맵을 기록한 다음 자신의 파일을 거부합니다(&lt;em&gt;bignum
+is too large&lt;/em&gt;). &lt;code&gt;Parse&lt;/code&gt;도 &lt;code&gt;sshd&lt;/code&gt;처럼 그 파일을 거부합니다. &lt;code&gt;Builder&lt;/code&gt;는 비트맵이 그만큼
+넓어지기 전에 새 섹션을 시작하므로, 기록하는 것은 항상 읽을 수 있습니다.&lt;/p&gt;
+&lt;p&gt;Parse는 OpenSSH처럼 목록이 폐기하는 것에 비례하여 할당합니다. KRL은 엄청나게 큰 것을
+보내지 않는다고 신뢰되는 출처에서 와야 합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;무엇과 대조해 검사하는가&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
+&lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;OpenSSH의 &lt;code&gt;ssh-keygen&lt;/code&gt;&lt;/strong&gt;, Linux와 macOS 레인에서, &lt;code&gt;KRL_REQUIRE_SSHKEYGEN=1&lt;/code&gt;이
+없는 경우를 실패로 만듭니다(Windows는 순수 Go 테스트만 실행).&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;모든 일련번호 인코딩, 키 ID, CA 셋과 &amp;ldquo;any CA&amp;rdquo;, 명시적 키, 폐기된 CA 키를 가진
+&lt;code&gt;ssh-keygen -k&lt;/code&gt;가 기록한 KRL: &lt;code&gt;IsRevoked&lt;/code&gt;가 인증서 250개에 대해 &lt;code&gt;ssh-keygen -Q&lt;/code&gt;처럼
+응답하며, 같은 폐기를 받은 &lt;code&gt;Builder&lt;/code&gt;는 &lt;strong&gt;같은 바이트&lt;/strong&gt;를 기록합니다&lt;/li&gt;
+&lt;li&gt;둘 다 기록한 무작위 일련번호 집합 40개: 바이트 단위로 동일하며 인증서 약 9000개에
+대한 답도 같습니다&lt;/li&gt;
+&lt;li&gt;모든 절단과 약 1400개의 단일 바이트 손상: &lt;code&gt;Parse&lt;/code&gt;는 &lt;code&gt;ssh-keygen&lt;/code&gt;이 거부하는 것을
+정확히 거부합니다&lt;/li&gt;
+&lt;li&gt;만료 확장은 &lt;code&gt;ssh-keygen&lt;/code&gt;에 로드되고, 같은 섹션을 critical로 표시하면 거부됩니다&lt;/li&gt;
+&lt;li&gt;병합된 목록은 소스 중 하나가 폐기하는 것을 정확히 폐기합니다&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;ssh-keygen&lt;/code&gt;이 기록한 KRL로 시드한 &lt;code&gt;FuzzParse&lt;/code&gt;와 &lt;code&gt;FuzzBuilder&lt;/code&gt;가 CI에서 실행됩니다.
+커버리지 하한은 100%이며 &lt;code&gt;ssh-keygen&lt;/code&gt;이 있는 Linux 레인에서 측정합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="reference"&gt;참고&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
+&lt;a href="#reference" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/krl@v0.6.1" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/krl@v0.6.1&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>
