@@ -11,13 +11,13 @@ tags: [authn-revokd, 폐기, krl, crl]
 authn-revokd는 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}})가 게시하는
 목록에 대해 두 틈을 모두 메웁니다. 각 목록을 가져와 검증되는 경우에만 보관하고,
 `sshd`나 TLS 서버가 읽는 곳에 기록하며, 목록이 만료되면 **CA 자체를 폐기하는** 목록을
-기록합니다. 순수 Go, `CGO_ENABLED=0`, 바이너리 하나입니다. 이 문서는 v0.6.4를
+기록합니다. 순수 Go, `CGO_ENABLED=0`, 바이너리 하나입니다. 이 문서는 v0.6.5를
 설명합니다.
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.5
 $ authn-revokd -version
-authn-revokd v0.6.4
+authn-revokd v0.6.5
 $ authn-revokd -help
 Usage of authn-revokd:
   -config string

@@ -10,8 +10,8 @@ tags: [状态, 发布版本]
 | 程序 | 版本 | 模块 |
 |---|---|---|
 | authnd | **v0.12.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
+| authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
@@ -34,6 +34,12 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 已修复的工具链；在 1.27.3 下运行 `govulncheck` 不报告任何漏洞。
 它的发布二进制文件在 `go version -m` 中报告 `go1.27.3`。
 参见[升级说明]({{< relref "/authnd/_index.md" >}})。
+{{< /callout >}}
+
+{{< callout type="warning" >}}
+**安全：请使用 authn-bridge v0.23.3 和 authn-revokd v0.6.5**
+
+在 Go 1.27.2 下，`govulncheck` 在这两个程序中都报告了 GO-2026-6809：`crypto/x509` 的 `Certificate.Verify` 未拒绝已知被攻破的中间证书。该问题已在 Go 1.26.10 和 1.27.3 中修复。**用较旧版本的 Go 构建的发布二进制文件受到影响。** v0.23.3 和 v0.6.5 使用 Go 1.27.3 构建，其 `go` 指令为 1.27.3，因此 `go install` 会自行切换到已修复的工具链；它们的发布二进制文件在 `go version -m` 中显示 `go1.27.3`。sshcert 不受影响，也没有新版本。
 {{< /callout >}}
 
 ## 每个版本新增了什么 {#what-each-release-added}
@@ -96,6 +102,8 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.22.1 | `resource` 可在授权端点重复出现，用于限定在多个服务器范围内的授权；在 `device_authorization` 处被拒绝而不是被忽略（[资源指示符]({{< relref "/authn-bridge/resources.md" >}})） |
 | v0.23.0 | `access_token_groups = false`：令牌被粘贴到 ssh 中的客户端不携带组（[令牌]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})） |
 | v0.23.1 | 仅依赖项：go-jose/v4 v4.1.6、golang.org/x/crypto v0.58.0、golang.org/x/net v0.61.0；go-authn/directory v0.12.0、revocation v0.6.3、saml v0.4.1、servercert v0.5.1、sshcert v0.1.6 |
+| v0.23.2 | 安全：go-authn/oidc v0.4.2，它拒绝超出 int64 范围的 `nbf`（尚未生效的令牌曾被接受）以及 `e = 0` 的 RSA 密钥（它曾被解析）；go-authn/wireguard v0.1.2 |
+| v0.23.3 | 使用 Go 1.27.3 构建，针对 GO-2026-6809（`crypto/x509`：`Certificate.Verify` 未拒绝已知被攻破的中间证书）；`go` 指令为 1.27.3；行为没有变化 |
 
 ### authn-revokd {#authn-revokd}
 
@@ -111,6 +119,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.6.2 | `-once` 区分获取失败与列表过期；由另一把密钥签名的列表不再被称为竞态；`-help` 以 0 退出 |
 | v0.6.3 | 示例和文档中的占位域名改用 RFC 2606 名称；行为不变 |
 | v0.6.4 | 仅依赖项：golang.org/x/crypto v0.58.0 |
+| v0.6.5 | 使用 Go 1.27.3 构建，针对 GO-2026-6809（`crypto/x509`：`Certificate.Verify` 未拒绝已知被攻破的中间证书）；`go` 指令为 1.27.3；行为没有变化 |
 
 ### sshcert {#sshcert}
 

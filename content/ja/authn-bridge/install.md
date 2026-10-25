@@ -25,9 +25,9 @@ tags: [authn-bridge, インストール, systemd]
 あります。あるいはビルドすると、バージョンがバイナリに記録されます。
 
 ```
-$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.1
+$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
 $ authn-bridge --version
-authn-bridge version v0.23.1
+authn-bridge version v0.23.3
 ```
 
 パスが重要です。v0.20.0 からプログラムは `internal/app` に、コマンドは `cmd/authn-bridge` に

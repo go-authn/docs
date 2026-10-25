@@ -58,15 +58,15 @@ Mit `reflection = true`, gegen einen Testanbieter:
 ```
 $ grpcurl -plaintext -unix $PWD/run/admin.sock bridge.admin.v1.AdminService/Status
 {
-  "version": "v0.23.0",
+  "version": "v0.23.3",
   "issuer": "http://127.0.0.1:28473",
-  "started": "2026-10-11T16:50:39.955689Z",
+  "started": "2026-10-25T18:44:30.210885Z",
   "federation": {
     "metadataUrl": "file:///tmp/authn/fed/metadata.xml",
     "idps": 1,
     "usable": 1,
-    "validUntil": "2026-10-18T16:49:48Z",
-    "lastRefresh": "2026-10-11T16:50:39.956938Z"
+    "validUntil": "2026-11-01T18:43:40Z",
+    "lastRefresh": "2026-10-25T18:44:30.211975Z"
   },
   "counts": {}
 }
@@ -164,12 +164,12 @@ nicht der öffentliche sein darf (eine Konfiguration, die ihn dazu macht, wird a
 
 ```
 $ curl -s http://127.0.0.1:28475/metrics | grep "^bridge_"
-bridge_build_info{version="v0.23.0",goversion="go1.27.2",revision="bd63c1f29a7d6897bb05dcbbf6539455cd989958"} 1
-bridge_start_time_seconds 1791737439
+bridge_build_info{version="v0.23.3",goversion="go1.27.3",revision="b04769c43c24f684df9e0b5a0d1cb6997ee90d95"} 1
+bridge_start_time_seconds 1792953870
 bridge_ready 1
-bridge_metadata_valid_until_timestamp_seconds 1792342188
+bridge_metadata_valid_until_timestamp_seconds 1793558620
 bridge_metadata_idps 1
-bridge_metadata_last_refresh_timestamp_seconds 1791737439
+bridge_metadata_last_refresh_timestamp_seconds 1792953870
 bridge_metadata_refreshes_total{result="failed"} 0
 bridge_metadata_refreshes_total{result="ok"} 1
 bridge_logins_in_progress 0

@@ -34,12 +34,12 @@ propre utilisateur puissent les lire ; l'état reste en `0700`.
 Une version contient `authn-revokd-<os>-<arch>` pour Linux, macOS et Windows sur
 amd64 et arm64, avec `SHA256SUMS` et la provenance de compilation
 ([vérifier un téléchargement]({{< relref "/security/verifying-releases.md" >}})). Ou
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4`.
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.5`.
 
 Le compte et l'unité viennent du répertoire `packaging/` de l'étiquette de la
 version, la même version que le binaire : copiez ce répertoire à côté du
-binaire, depuis une extraction de l'étiquette ou, pour v0.6.4, depuis
-<https://github.com/go-authn/revocation/tree/v0.6.4/packaging>.
+binaire, depuis une extraction de l'étiquette ou, pour v0.6.5, depuis
+<https://github.com/go-authn/revocation/tree/v0.6.5/packaging>.
 
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd

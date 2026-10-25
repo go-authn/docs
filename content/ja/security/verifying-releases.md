@@ -8,11 +8,11 @@ tags: [セキュリティ, リリース]
 
 authnd、authn-bridge、authn-revokd、sshcert の各リリースは、六つの静的バイナリ
 (`CGO_ENABLED=0`: linux、darwin、windows の amd64 と arm64)、`SHA256SUMS` ファイル、そして
-すべてのバイナリのビルド来歴証明を公開します。以下の例は authn-bridge v0.23.1 を使います。
+すべてのバイナリのビルド来歴証明を公開します。以下の例は authn-bridge v0.23.3 を使います。
 他のプログラムも、それぞれのリポジトリと名前で同じように動作します。
 
 ```sh
-gh release download v0.23.1 --repo go-authn/bridge
+gh release download v0.23.3 --repo go-authn/bridge
 ```
 
 ## 1. チェックサム {#1-the-checksum}
@@ -60,17 +60,18 @@ go version -m authn-bridge-linux-amd64
 ```
 
 ```
+authn-bridge-linux-amd64: go1.27.3
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.23.1	
+	mod	github.com/go-authn/bridge	v0.23.3	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=9a51e5e9839f879d44c09b8b4e71f823e72ee0aa
+	build	vcs.revision=b04769c43c24f684df9e0b5a0d1cb6997ee90d95
 	build	vcs.modified=false
 ```
 
-(重要な行に短縮しています)。`mod` 行はタグと正確に一致しなければならず、`vcs.modified` は `false`
+(重要な行に短縮しています。最初の行は、そのバイナリをビルドした Go ツールチェーンです)。`mod` 行はタグと正確に一致しなければならず、`vcs.modified` は `false`
 でなければなりません。コミットされていない変更のあるツリーからのビルドは `true` となり、そのバージョンは
-`v0.23.1+dirty` と表示されます。リリースワークフローは、六つのバイナリ**すべて**が両方の確認に
+`v0.23.3+dirty` と表示されます。リリースワークフローは、六つのバイナリ**すべて**が両方の確認に
 通らない限り、またプログラムがバージョン行の最後の語としてタグを表示しない限り、公開を
 拒否します。
 
@@ -78,9 +79,9 @@ go version -m authn-bridge-linux-amd64
 $ authnd --version
 authnd version v0.12.0
 $ authn-bridge --version
-authn-bridge version v0.23.1
+authn-bridge version v0.23.3
 $ authn-revokd -version
-authn-revokd v0.6.4
+authn-revokd v0.6.5
 ```
 
 authnd と authn-bridge は `--version` を受け付け、authn-revokd は Go 標準のフラグ構文である

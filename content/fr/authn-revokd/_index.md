@@ -12,12 +12,12 @@ en vigueur. authn-revokd comble ces deux lacunes pour les listes que publie
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}}) : il
 récupère chaque liste, ne la garde que si elle se vérifie, l'écrit là où `sshd` ou un serveur
 TLS la lit, et, quand une liste expire, en écrit une qui **révoque l'AC (autorité de certification)
-elle-même**. Pur Go, `CGO_ENABLED=0`, un seul binaire. Ces pages décrivent la v0.6.4.
+elle-même**. Pur Go, `CGO_ENABLED=0`, un seul binaire. Ces pages décrivent la v0.6.5.
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.5
 $ authn-revokd -version
-authn-revokd v0.6.4
+authn-revokd v0.6.5
 $ authn-revokd -help
 Usage of authn-revokd:
   -config string

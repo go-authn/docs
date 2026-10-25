@@ -10,8 +10,8 @@ tags: [ステータス, リリース]
 | プログラム | リリース | モジュール |
 |---|---|---|
 | authnd | **v0.12.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
+| authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 ライブラリのバージョンは[専用ページ]({{< relref "/libraries/_index.md" >}})にあります。
@@ -32,6 +32,12 @@ authnd は証明書を検証します (`x509.Certificate.Verify`。`govulncheck`
 `go install` は修正済みのツールチェーンへ自動的に切り替わります。Go 1.27.3 での
 `govulncheck` は脆弱性なしと報告します。そのリリースバイナリは `go version -m` で
 `go1.27.3` と報告します。[アップグレードの注記]({{< relref "/authnd/_index.md" >}})を参照してください。
+{{< /callout >}}
+
+{{< callout type="warning" >}}
+**セキュリティ: authn-bridge v0.23.3 と authn-revokd v0.6.5 を使ってください**
+
+Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を報告します。`crypto/x509` の `Certificate.Verify` が、既知の侵害された中間証明書を拒否していませんでした。Go 1.26.10 と 1.27.3 で修正されています。**より古い Go でビルドしたリリースバイナリは影響を受けます。** v0.23.3 と v0.6.5 は Go 1.27.3 でビルドされ、`go` ディレクティブも 1.27.3 なので、`go install` は自動的に修正済みのツールチェーンに切り替わります。両方のリリースバイナリは `go version -m` で `go1.27.3` と表示されます。sshcert は影響を受けず、新しいリリースもありません。
 {{< /callout >}}
 
 ## 各リリースで追加されたもの {#what-each-release-added}
@@ -94,6 +100,8 @@ authnd は証明書を検証します (`x509.Certificate.Verify`。`govulncheck`
 | v0.22.1 | 複数のサーバーに限定したグラントのため、認可エンドポイントで `resource` を繰り返せる。`device_authorization` では無視せず拒否する ([リソースインジケーター]({{< relref "/authn-bridge/resources.md" >}})) |
 | v0.23.0 | `access_token_groups = false`: トークンを ssh に貼り付けるクライアントはグループを含まない ([トークン]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
 | v0.23.1 | 依存関係のみ: go-jose/v4 v4.1.6、golang.org/x/crypto v0.58.0、golang.org/x/net v0.61.0。go-authn/directory v0.12.0、revocation v0.6.3、saml v0.4.1、servercert v0.5.1、sshcert v0.1.6 |
+| v0.23.2 | セキュリティ: go-authn/oidc v0.4.2。int64 の範囲外の `nbf`（まだ有効でないトークンが受理されていた）と `e = 0` の RSA 鍵（解析されていた）を拒否する。go-authn/wireguard v0.1.2 |
+| v0.23.3 | Go 1.27.3 でビルド。GO-2026-6809 への対応（`crypto/x509`: `Certificate.Verify` が既知の侵害された中間証明書を拒否していなかった）。`go` ディレクティブは 1.27.3。動作の変更なし |
 
 ### authn-revokd {#authn-revokd}
 
@@ -109,6 +117,7 @@ authnd は証明書を検証します (`x509.Certificate.Verify`。`govulncheck`
 | v0.6.2 | `-once` は取得の失敗と期限切れのリストを区別する。別の鍵で署名されたリストを競合と呼ばなくなった。`-help` は 0 で終了する |
 | v0.6.3 | サンプルとドキュメントのプレースホルダードメインを RFC 2606 の名前に変更。動作に変更なし |
 | v0.6.4 | 依存関係のみ: golang.org/x/crypto v0.58.0 |
+| v0.6.5 | Go 1.27.3 でビルド。GO-2026-6809 への対応（`crypto/x509`: `Certificate.Verify` が既知の侵害された中間証明書を拒否していなかった）。`go` ディレクティブは 1.27.3。動作の変更なし |
 
 ### sshcert {#sshcert}
 
