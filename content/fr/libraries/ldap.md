@@ -12,7 +12,7 @@ serveur qui l'exécute et qui détient la configuration, les sources d'annuaire 
 politique de liaison ; celle-ci détient les octets.
 
 ```sh
-go get github.com/go-authn/ldap@v0.8.0
+go get github.com/go-authn/ldap@v0.9.0
 ```
 
 Écrite d'après les RFC 4511 (le protocole), 4512 (le root DSE et le schéma),
@@ -302,6 +302,160 @@ collectifs ; les options autres que `lang-` et `binary`.
 [authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}}) sert ce
 schéma et y soumet chaque entrée qu'il publie.
 
+## Les schémas en HCL2, et le convertisseur {#hcl2-and-the-converter}
+
+Depuis la v0.9.0, un schéma peut s'écrire en HCL2 aussi bien que dans les
+fichiers que lit slapd. Le paquet `schema/hclschema` décode le HCL2 vers les
+mêmes `*schema.Definitions` que renvoie `schema.Read`, et les ré-encode
+(`hclschema.Decode`, `hclschema.Encode`) ; `schema` lui-même n'a aucune
+dépendance à HCL. Un bloc est une définition, et son type dit laquelle :
+`object_identifier`, `ldap_syntax`, `matching_rule`, `attribute_type` ou
+`object_class`. L'étiquette est le premier NAME. Les attributs sont les termes
+de la RFC 4512 §4.1, en minuscules avec des tirets bas (`desc`, `sup`,
+`equality`, `single_value`, `kind`, `must`, `may`, etc.), et le `{len}` d'une
+syntaxe est `syntax_len`.
+
+**Des valeurs littérales, seulement.** Une valeur est une chaîne entre
+guillemets, un nombre, un booléen ou une liste de ceux-ci. Une variable, une
+fonction, un opérateur ou un gabarit `${...}` est refusé avant toute
+évaluation : lire un schéma ne l'exécute donc jamais. Chaque champ est vérifié
+par l'analyseur strict de la RFC 4512, et les erreurs qui demandent une
+position arrivent avec le fichier, la ligne et la colonne.
+
+La commande `ldapschema` convertit d'un format à l'autre :
+
+```sh
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0
+```
+
+- `ldapschema to-hcl [--macros] FILE...` lit des fichiers `.schema` d'OpenLDAP,
+  du LDIF cn=config et du LDIF de sous-schéma, et écrit du HCL2.
+- `ldapschema to-schema [--macros] FILE...` lit du HCL2 et écrit un fichier
+  `.schema` d'OpenLDAP.
+- `ldapschema check FILE...` construit les définitions par-dessus
+  `schema.Standard()` et rend compte.
+
+La sortie va sur stdout. Le code de sortie est 0 quand la commande a réussi, 1
+quand un fichier ou une définition est refusé, et 2 pour une erreur d'usage.
+
+**Les lecteurs lisent les fichiers comme slapd**, parce que les schémas publiés
+sont écrits pour slapd : termes dans n'importe quel ordre, continuation de
+ligne de slapd dans un fichier `.schema` et pliage de la RFC 2849 en LDIF,
+valeurs en base64, préfixe `{N}` de cn=config, et macros `objectidentifier`
+résolues dans l'ordre des fichiers. Les fonctions `Parse*` exportées, et ce
+qu'un serveur publie, restent strictement RFC 4512.
+
+Un exemple, lancé depuis un répertoire vide avec `ldapschema` v0.9.0. Le
+schéma est inventé pour cette page : 1.3.6.1.4.1.99999 est un arc d'exemple à
+usage privé, attribué à personne. Une macro, un type d'attribut, une classe
+auxiliaire :
+
+```
+$ cat site.schema
+# An example arc: 1.3.6.1.4.1.99999 is for private use.
+objectidentifier site 1.3.6.1.4.1.99999
+
+attributetype ( site:1.1 NAME 'siteBadge'
+	DESC 'the badge number'
+	EQUALITY caseIgnoreMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32}
+	SINGLE-VALUE )
+
+objectclass ( site:2.1 NAME 'sitePerson'
+	DESC 'a person with a badge'
+	SUP top AUXILIARY
+	MAY siteBadge )
+
+$ ldapschema to-hcl site.schema
+object_identifier "site" {
+  oid = "1.3.6.1.4.1.99999"
+}
+
+attribute_type "siteBadge" {
+  oid          = "1.3.6.1.4.1.99999.1.1"
+  desc         = "the badge number"
+  equality     = "caseIgnoreMatch"
+  syntax       = "1.3.6.1.4.1.1466.115.121.1.15"
+  syntax_len   = 32
+  single_value = true
+}
+
+object_class "sitePerson" {
+  oid  = "1.3.6.1.4.1.99999.2.1"
+  desc = "a person with a badge"
+  sup  = ["top"]
+  kind = "auxiliary"
+  may  = ["siteBadge"]
+}
+
+$ ldapschema to-hcl site.schema > site.hcl
+$ ldapschema to-schema site.hcl
+objectidentifier site 1.3.6.1.4.1.99999
+
+attributetype ( 1.3.6.1.4.1.99999.1.1
+	NAME 'siteBadge'
+	DESC 'the badge number'
+	EQUALITY caseIgnoreMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32}
+	SINGLE-VALUE )
+
+objectclass ( 1.3.6.1.4.1.99999.2.1
+	NAME 'sitePerson'
+	DESC 'a person with a badge'
+	SUP top
+	AUXILIARY
+	MAY siteBadge )
+
+$ ldapschema to-schema --macros site.hcl
+objectidentifier site 1.3.6.1.4.1.99999
+
+attributetype ( site:1.1
+	NAME 'siteBadge'
+	DESC 'the badge number'
+	EQUALITY caseIgnoreMatch
+	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32}
+	SINGLE-VALUE )
+
+objectclass ( site:2.1
+	NAME 'sitePerson'
+	DESC 'a person with a badge'
+	SUP top
+	AUXILIARY
+	MAY siteBadge )
+
+$ ldapschema check site.schema
+read: 1 object identifiers, 0 syntaxes, 0 matching rules, 1 attribute types, 1 object classes
+build: ok, 2 definitions added to schema.Standard()
+```
+
+Les OID numériques sont la sortie par défaut, parce que c'est ce qu'un client
+voit dans le sous-schéma ; `--macros` garde les noms de macros. `check`
+signale aussi les définitions que `schema.Standard()` possède déjà, et chaque
+référence que rien ne définit, là où `Build` s'arrête à la première.
+
+**`check` peut sortir avec le code 1 sur un fichier que slapd charge.** Le
+`core.schema` d'OpenLDAP renvoie à quatre choses que slapd intègre et que
+`schema.Standard()` ne définit pas : les syntaxes 1.3.6.1.4.1.1466.115.121.1.42
+et 1.3.6.1.4.1.1466.115.121.1.43, et les règles de correspondance
+`protocolInformationMatch` et `presentationAddressMatch`. `ldapschema check
+core.schema` les liste sous `missing:` et sort avec le code 1. Il faut le lire
+comme « non défini ici », pas comme un défaut du fichier.
+
+**Ce qui n'est pas géré :** les règles de contenu DIT, les règles de structure
+DIT et les formes de noms ; les directives `include`, puisqu'un fichier
+`.schema` est lu comme des définitions et n'est pas exécuté comme une
+configuration de slapd ; et `X-SUBST` sur `ldapsyntax`.
+
+**Les schémas publiés se convertissent.** La version a été mesurée sur les
+fichiers `core`, `cosine`, `inetorgperson` et `nis` d'OpenLDAP, sur SUPANN 2021
+de RENATER, sur eduPerson de REFEDS et sur le schéma de Samba : pour chacun,
+`.schema` vers HCL et retour, et LDIF contre `.schema`, donnent des
+définitions égales. Seuls les fichiers d'OpenLDAP sont dans le dépôt. SUPANN et
+eduPerson ne sont pas reproduits ici ; lisez-les sur les pages de leurs
+auteurs :
+[SUPANN 2021](https://services.renater.fr/documentation/supann/supann2021/recommandations/tables_references/schemas_techniques_supann)
+et [eduPerson](https://github.com/REFEDS/eduperson).
+
 ## Ce contre quoi elle est vérifiée {#what-it-is-checked-against}
 
 **Le `ldapsearch` d'OpenLDAP**, en CI, et exigé là où il est installé : la
@@ -318,4 +472,4 @@ lignes non atteintes nommées dans le workflow.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.8.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.8.0)
+[pkg.go.dev/github.com/go-authn/ldap@v0.9.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.9.0)

@@ -15,9 +15,9 @@ These pages are documentation version **0.4**, and describe:
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
-ldap is **v0.8.0**, with the directory schema, and directory **v0.14.0**,
-with attributes and wider ldapdir defaults: both are what authnd v0.11.1
-embeds.
+ldap is **v0.9.0**, with schemas in HCL2 and the `ldapschema` converter, and
+directory **v0.14.0**, with attributes and wider ldapdir defaults. authnd
+v0.11.1 embeds ldap v0.8.0 and directory v0.14.0.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.4/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
@@ -123,6 +123,7 @@ library's page says what earlier ones changed.
 | krb5 v0.3.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | krl v0.6.1 | dependencies only: golang.org/x/crypto v0.58.0; tested with Go 1.27.2 |
 | ldap v0.8.0 | [package `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) and `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, RFC 4517 matching rules; `uidNumber` and `gidNumber` order as integers; a paged search keeps to the requested attributes |
+| ldap v0.9.0 | [schemas in HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): package `schema/hclschema` and the `ldapschema` command (`to-hcl`, `to-schema`, `check`) between OpenLDAP `.schema`, cn=config LDIF and HCL2; the readers read files as slapd does; DIT content and structure rules, name forms, `include` and `X-SUBST` are not supported |
 | oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | totp v0.4.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |

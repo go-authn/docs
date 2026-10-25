@@ -15,9 +15,10 @@ Diese Seiten sind die Dokumentationsversion **0.4** und beschreiben:
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}});
-ldap ist bei **v0.8.0**, mit dem Verzeichnisschema, und directory bei **v0.14.0**,
-mit Attributen und erweiterten ldapdir-Standardwerten: beide sind das, was authnd v0.11.1
-einbettet.
+ldap ist bei **v0.9.0**, mit Schemas in HCL2 und dem Konverter `ldapschema`,
+und directory bei **v0.14.0**, mit Attributen und erweiterten
+ldapdir-Standardwerten. authnd v0.11.1 bettet ldap v0.8.0 und directory v0.14.0
+ein.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
 sodass die Seiten, die jemand unter `/docs/0.4/` findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`,
@@ -123,6 +124,7 @@ jeder Bibliothek sagt, was frühere geändert haben.
 | krb5 v0.3.1 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | krl v0.6.1 | nur Abhängigkeiten: golang.org/x/crypto v0.58.0; mit Go 1.27.2 getestet |
 | ldap v0.8.0 | [Paket `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) und `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, Matching-Regeln nach RFC 4517; `uidNumber` und `gidNumber` werden als Ganzzahlen geordnet; eine seitenweise Suche hält sich an die angeforderten Attribute |
+| ldap v0.9.0 | [Schemas in HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): das Paket `schema/hclschema` und der Befehl `ldapschema` (`to-hcl`, `to-schema`, `check`) zwischen OpenLDAP-`.schema`, cn=config-LDIF und HCL2; die Leser lesen Dateien wie slapd; DIT-Content-Regeln, DIT-Structure-Regeln, Name Forms, `include` und `X-SUBST` werden nicht unterstützt |
 | oidc v0.4.1 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | servercert v0.5.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | totp v0.4.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |

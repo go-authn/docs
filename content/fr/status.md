@@ -15,9 +15,10 @@ Ces pages sont la version **0.4** de la documentation, et décrivent :
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 Les versions des bibliothèques sont sur [leur propre page]({{< relref "/libraries/_index.md" >}}) ;
-ldap est en **v0.8.0**, avec le schéma d'annuaire, et directory en
-**v0.14.0**, avec les attributs et des valeurs par défaut de ldapdir plus
-larges : les deux sont ce qu'embarque authnd v0.11.1.
+ldap est en **v0.9.0**, avec les schémas en HCL2 et le convertisseur
+`ldapschema`, et directory en **v0.14.0**, avec les attributs et des valeurs
+par défaut de ldapdir plus larges. authnd v0.11.1 embarque ldap v0.8.0 et
+directory v0.14.0.
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
 de sorte que les pages qu'une personne trouve sous `/docs/0.4/` continuent de décrire ce
 qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`,
@@ -124,6 +125,7 @@ changé les précédentes.
 | krb5 v0.3.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 | krl v0.6.1 | dépendances seulement : golang.org/x/crypto v0.58.0 ; testée avec Go 1.27.2 |
 | ldap v0.8.0 | [le paquet `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) et `Server.Schema` : `cn=Subschema` (RFC 4512 §4.2), `Validate`, les règles de correspondance de la RFC 4517 ; `uidNumber` et `gidNumber` s'ordonnent comme des entiers ; une recherche paginée s'en tient aux attributs demandés |
+| ldap v0.9.0 | [les schémas en HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}) : le paquet `schema/hclschema` et la commande `ldapschema` (`to-hcl`, `to-schema`, `check`) entre `.schema` d'OpenLDAP, LDIF cn=config et HCL2 ; les lecteurs lisent les fichiers comme slapd ; les règles de contenu et de structure DIT, les formes de noms, `include` et `X-SUBST` ne sont pas gérés |
 | oidc v0.4.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 | servercert v0.5.2 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 | totp v0.4.2 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
