@@ -152,10 +152,45 @@ ist die Datei, die der slapd eines Standorts lädt, die Datei, die authnd lädt.
 - Die Dateien entscheiden, was jeder Eintrag enthalten darf. Sie sind keine Geheimnisse, aber halten Sie
   sie bei der übrigen Konfiguration: `root:authnd`, Modus `0640`, in einem
   Verzeichnis, in das nur root schreibt ([Installation]({{< relref "/authnd/install.md" >}})).
-- Eine Datei, die sich nicht aufbauen lässt, verweigert den Start und `check`, mit der Datei und
-  der Zeile der Definition: eine unbekannte Oberklasse, ein unbekanntes Attribut, eine unbekannte Matching-Regel oder
-  Syntax, eine STRUCTURAL-Klasse, die von einer AUXILIARY-Klasse abgeleitet ist, eine OID oder ein Name,
-  der doppelt definiert ist.
+- Eine Datei, die sich nicht aufbauen lässt, verweigert den Start und `check`, mit der Datei, der
+  Zeile und der Spalte, in der die Definition beginnt, und der Art der Ablehnung am Ende der Meldung:
+  eine unbekannte Oberklasse, ein unbekanntes Attribut, eine unbekannte Matching-Regel oder
+  Syntax (`unknown reference`), eine STRUCTURAL-Klasse, die von einer AUXILIARY-Klasse abgeleitet ist
+  (`kind violation`), eine OID oder ein Name, der doppelt definiert ist (`duplicate OID`,
+  `duplicate name`). Seit v0.12.1 stammen Stelle und Art aus dem typisierten
+  [`*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}) von
+  go-authn/ldap, nicht aus dem Lesen seiner Meldung. Eine aus einer Datei gelesene Definition beginnt in
+  Spalte 1, auch wenn ihr Text über mehrere Zeilen umgebrochen ist. Ein Duplikat sagt, wo seine
+  erste Definition steht, und eine Neudefinition sagt, welche Standarddatei oder welche Zeile
+  einer früheren Datei das Original enthält. Zwei Beispiele:
+
+  `cases/unknown.schema` hat ein MAY, das nirgends definiert ist:
+
+  ```
+  # exampleB has a MAY that is defined nowhere.
+  objectclass ( 1.3.6.1.4.1.99999.2.9 NAME 'exampleB' SUP top AUXILIARY
+  	MAY noSuchAttribute )
+  ```
+
+  ```
+  $ authnd check cases/unknown.hcl
+  authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)
+  ```
+
+  `cases/twice.schema` gibt zwei Attributtypen dieselbe OID:
+
+  ```
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleA'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleB'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+  ```
+
+  ```
+  $ authnd check cases/twice.hcl
+  authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)
+  ```
 
 ### Eine Neudefinition wird abgelehnt, selbst eine identische {#redefinition}
 
@@ -174,7 +209,7 @@ eigenen Definition neu definiert:
 
 ```
 $ authnd check cases/dup.hcl
-authnd: schema_files: cases/cn-copy.schema:1: the attribute type cn (2.5.4.3) is already defined by the standard schema, and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
 ```
 
 ## Der `schema { }`-Block {#the-schema-block}
@@ -429,9 +464,9 @@ MUST von `supannPerson` oder `eduPerson` fehlt, wird ohne die Klasse veröffentl
 {{< callout type="info" >}}
 **Zu den Transkripten**
 
-Jeder Befehl auf dieser Seite wurde mit dem Release-Binary v0.12.0 ausgeführt
+Jeder Befehl auf dieser Seite wurde mit dem Release-Binary v0.12.1 ausgeführt
 (`authnd-darwin-arm64`, gegen `SHA256SUMS` geprüft; `go version -m`:
-`go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
+`go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`,
 `vcs.modified=false`) und `ldapsearch` von OpenLDAP, auf 127.0.0.1, in einem Arbeitsverzeichnis
 zum Ausprobieren, mit den gezeigten Dateien. Die Pfade sind deshalb relativ; ein
 Dienst verwendet absolute. Das Schema ist ein für diese Seite geschriebenes Beispiel.

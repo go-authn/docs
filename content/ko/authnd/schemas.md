@@ -150,9 +150,44 @@ go-authn/ldap의 [slapd 호환 리더]({{< relref "/libraries/ldap.md#hcl2-and-t
 - 파일은 모든 엔트리가 가질 수 있는 것을 결정합니다. 비밀은 아니지만 나머지 구성과
   함께 보관하십시오. `root:authnd`, 모드 `0640`, root만 쓸 수 있는 디렉터리입니다
   ([설치]({{< relref "/authnd/install.md" >}})).
-- 빌드되지 않는 파일은 시작과 `check`를 거부하며, 파일과 정의의 줄을 알려 줍니다.
-  알 수 없는 상위 클래스, 속성, 매칭 규칙 또는 구문, AUXILIARY 클래스에서 파생된
-  STRUCTURAL 클래스, 두 번 정의된 OID 또는 이름이 그 예입니다.
+- 빌드되지 않는 파일은 시작과 `check`를 거부하며, 파일, 정의가 시작되는 줄과
+  열, 그리고 메시지 끝에 거부의 종류를 알려 줍니다. 알 수 없는 상위 클래스, 속성,
+  매칭 규칙 또는 구문(`unknown reference`), AUXILIARY 클래스에서 파생된 STRUCTURAL
+  클래스(`kind violation`), 두 번 정의된 OID 또는 이름(`duplicate OID`,
+  `duplicate name`)이 그 예입니다. v0.12.1부터 위치와 종류는 메시지를 읽어서가
+  아니라 go-authn/ldap의 타입이 있는
+  [`*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}})에서 옵니다.
+  파일에서 읽은 정의는 여러 줄에 걸쳐 접혀 있어도 1열에서 시작합니다. 중복은 첫
+  번째 정의가 어디 있는지 알려 주고, 재정의는 원본이 어느 표준 파일에, 또는 앞선
+  파일의 어느 줄에 있는지 알려 줍니다. 두 가지 예입니다.
+
+  `cases/unknown.schema`에는 어디에도 정의되지 않은 MAY가 있습니다.
+
+  ```
+  # exampleB has a MAY that is defined nowhere.
+  objectclass ( 1.3.6.1.4.1.99999.2.9 NAME 'exampleB' SUP top AUXILIARY
+  	MAY noSuchAttribute )
+  ```
+
+  ```
+  $ authnd check cases/unknown.hcl
+  authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)
+  ```
+
+  `cases/twice.schema`는 하나의 OID를 두 속성 타입에 부여합니다.
+
+  ```
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleA'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleB'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+  ```
+
+  ```
+  $ authnd check cases/twice.hcl
+  authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)
+  ```
 
 ### 재정의는 동일하더라도 거부됩니다 {#redefinition}
 
@@ -171,7 +206,7 @@ authnd도 거부합니다.
 
 ```
 $ authnd check cases/dup.hcl
-authnd: schema_files: cases/cn-copy.schema:1: the attribute type cn (2.5.4.3) is already defined by the standard schema, and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
 ```
 
 ## `schema { }` 블록 {#the-schema-block}
@@ -421,8 +456,8 @@ without* 줄을 읽으십시오. `supannPerson`이나 `eduPerson`의 MUST가 없
 {{< callout type="info" >}}
 **트랜스크립트에 대하여**
 
-이 페이지의 모든 명령은 v0.12.0 릴리스 바이너리(`authnd-darwin-arm64`, `SHA256SUMS`와
-대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
+이 페이지의 모든 명령은 v0.12.1 릴리스 바이너리(`authnd-darwin-arm64`, `SHA256SUMS`와
+대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`,
 `vcs.modified=false`)와 OpenLDAP의 `ldapsearch`로, 127.0.0.1에서, 임시 디렉터리 안에서,
 보이는 파일들과 함께 실행했습니다. 그래서 경로가 상대 경로이며, 서비스는 절대 경로를
 사용합니다. 스키마는 이 페이지를 위해 작성한 예제입니다.

@@ -11,7 +11,7 @@ tags: [라이브러리, ldap, 디렉터리]
 바인드 정책을 소유하는 서버이며, 이 라이브러리는 바이트를 소유합니다.
 
 ```sh
-go get github.com/go-authn/ldap@v0.9.0
+go get github.com/go-authn/ldap@v0.10.0
 ```
 
 RFC 4511(프로토콜), 4512(루트 DSE와 스키마), 4513(인증), 4514와 4515(DN과 필터 문자열
@@ -279,6 +279,84 @@ RFC 4523의 인증서 매칭 규칙과 `directoryStringFirstComponentMatch`(정�
 [authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}})는 이 스키마를
 제공하며 게시하는 모든 엔트리를 여기에 맞춥니다.
 
+## 빌드되지 않는 스키마 {#build-error}
+
+v0.10.0부터 `schema.Build` 또는 `schema.BuildFrom`이 거부하는 정의는
+`*schema.BuildError`이며 `errors.As`로 찾습니다. 프로그램은 거부 사실을 메시지를
+비교해서가 아니라 필드로 보고합니다. Build는 처음 거부하는 정의에서 멈추므로
+거부되는 정의는 하나입니다.
+
+- `Kind`는 Build가 수행하는 모든 검사 중 하나입니다. `UnknownReference`,
+  `DuplicateOID`, `DuplicateName`, `SuperiorCycle`, `KindViolation`,
+  `UsageMismatch`, `CollectiveMismatch`, `UsageViolation`입니다.
+- `Element`(구문, 매칭 규칙, 속성 타입 또는 오브젝트 클래스), `OID`, `Name`(첫
+  번째 NAME)은 거부된 정의의 것이고, `Pos`는 그 정의가 시작되는 위치입니다.
+  `file:line:column`이며, `.schema` 키워드가 있는 줄 또는 LDIF의 `attributeTypes:`
+  줄이고 그 줄이 접히거나 base64여도 마찬가지이며, HCL에서는 블록 자체의
+  위치입니다. 코드로 만든 정의에는 위치가 없습니다.
+- `Field`는 문제가 되는 항(`SUP`, `EQUALITY`, `SYNTAX`, `MUST`, `NAME` ...)이고,
+  `Ref`는 오류가 가리키는 대상입니다. 정의되지 않은 이름이나 OID, 또는 `RefOID`와
+  `RefPos`를 가진 다른 정의입니다. 중복의 경우에는 첫 번째 정의이며, 메시지가 그
+  위치를 알려 줍니다.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/ldap/schema"
+)
+
+// An object class whose superclass is defined nowhere.
+const site = `# site.schema
+objectclass ( 1.3.6.1.4.1.99999.1.1 NAME 'siteMember'
+	SUP top AUXILIARY )
+objectclass ( 1.3.6.1.4.1.99999.1.2 NAME 'siteGuest'
+	SUP nobody AUXILIARY )
+`
+
+func main() {
+	files := append(schema.StandardFiles(), schema.File{Name: "site.schema", Data: []byte(site)})
+	_, err := schema.Build(files...)
+
+	var be *schema.BuildError
+	if !errors.As(err, &be) {
+		fmt.Println("not a BuildError:", err)
+		return
+	}
+	fmt.Println("error:  ", be)
+	fmt.Println("Kind:   ", be.Kind)
+	fmt.Println("Element:", be.Element)
+	fmt.Println("OID:    ", be.OID)
+	fmt.Println("Name:   ", be.Name)
+	fmt.Println("Field:  ", be.Field)
+	fmt.Println("Ref:    ", be.Ref)
+	fmt.Println("Pos:    ", be.Pos)
+	fmt.Println("RefPos: ", be.RefPos.IsValid())
+	fmt.Println("is UnknownReference:", be.Kind == schema.UnknownReference)
+}
+```
+
+```
+error:   site.schema:4:1: schema: the object class siteGuest has the superclass nobody, which is not defined
+Kind:    unknown reference
+Element: object class
+OID:     1.3.6.1.4.1.99999.1.2
+Name:    siteGuest
+Field:   SUP
+Ref:     nobody
+Pos:     site.schema:4:1
+RefPos:  false
+is UnknownReference: true
+```
+
+`github.com/go-authn/ldap` v0.10.0으로 빈 모듈에서 실행한 예제입니다. 첫 번째
+클래스는 문제가 없고, 두 번째는 4번째 줄에서 시작하며 다른 곳에는 잘못이 없으므로
+`RefPos`는 비어 있습니다. `schema.Read`가 반환하는 모든 정의에도 `Pos`가 있으며,
+Position의 `String`은 열을 알 수 없을 때 열을 생략합니다.
+
 ## HCL2의 스키마와 변환기 {#hcl2-and-the-converter}
 
 v0.9.0부터 스키마는 slapd가 읽는 파일뿐 아니라 HCL2로도 쓸 수 있습니다.
@@ -435,4 +513,4 @@ build: ok, 2 definitions added to schema.Standard()
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.9.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.9.0)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.0)

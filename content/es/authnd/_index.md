@@ -11,10 +11,10 @@ directorio. Lo que quiere autenticarlas habla LDAP.** authnd es la fachada:
 hace binds y búsquedas sobre los orígenes de
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}), así que lo que guarda
 una base de datos puede leerlo cualquier cosa que sepa consultar un directorio.
-Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.12.0,
+Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.12.1,
 cuyas entradas siguen los esquemas estándar y superan el esquema que sirve en
 `cn=Subschema`, que un sitio amplía con el suyo
-([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), con go-authn/ldap v0.9.0 y
+([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), con go-authn/ldap v0.10.0 y
 go-authn/directory v0.15.0 por debajo; lo que está verificado y lo que no
 figura en la página de [estado]({{< relref "/status.md" >}}).
 
@@ -177,8 +177,10 @@ que también se responde a un cliente anónimo.
 {{< callout type="info" >}}
 **Sobre las transcripciones**
 
-El root DSE, las líneas `--version` y todo lo de la página de
-[esquemas de un sitio]({{< relref "/authnd/schemas.md" >}}) los imprimió el
+Todo lo de la página de [esquemas de un sitio]({{< relref "/authnd/schemas.md" >}})
+lo imprimió el binario de la versión v0.12.1 (`authnd-darwin-arm64`,
+`go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`,
+`vcs.modified=false`). El root DSE y las líneas `--version` los imprimió el
 binario de la versión v0.12.0 (`authnd-darwin-arm64`, comprobado con
 `SHA256SUMS`; `go version -m`: `go1.27.3`,
 `mod github.com/go-authn/authnd v0.12.0`, `vcs.modified=false`). Las demás

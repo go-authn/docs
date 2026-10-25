@@ -10,9 +10,9 @@ tags: [authnd, ldap]
 认证的系统使用的是 LDAP。** authnd 就是前端：它基于 [go-authn/directory]({{< relref "/libraries/_index.md" >}})
 的各个来源进行绑定和搜索，因此数据库中保存的内容可以被任何懂得
 如何查询目录的程序读取。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述
-v0.12.0，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
+v0.12.1，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
 提供的模式，站点可以用自己的模式对其扩展
-（[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），其下是 go-authn/ldap v0.9.0 和
+（[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），其下是 go-authn/ldap v0.10.0 和
 go-authn/directory v0.15.0；哪些已经验证、哪些尚未验证，见
 [状态]({{< relref "/status.md" >}})页面。
 
@@ -168,9 +168,11 @@ vendorVersion: v0.12.0
 {{< callout type="info" >}}
 **关于这些记录**
 
-根 DSE、`--version` 行以及
 [站点模式]({{< relref "/authnd/schemas.md" >}})页面上的所有内容，都由
-v0.12.0 发布的二进制文件（`authnd-darwin-arm64`，已对照 `SHA256SUMS` 核对；
+v0.12.1 发布的二进制文件输出（`authnd-darwin-arm64`，`go version -m`：
+`go1.27.3`，`mod github.com/go-authn/authnd v0.12.1`，`vcs.modified=false`）。
+根 DSE 和 `--version` 行由 v0.12.0
+发布的二进制文件（`authnd-darwin-arm64`，已对照 `SHA256SUMS` 核对；
 `go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.12.0`，
 `vcs.modified=false`）输出。其他启动行由 v0.11.1
 发布的二进制文件（`mod github.com/go-authn/authnd v0.11.1`，

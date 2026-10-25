@@ -9,15 +9,16 @@ These pages are documentation version **0.5**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.12.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
-ldap is **v0.9.0**, with schemas in HCL2 and the `ldapschema` converter, and
+ldap is **v0.10.0**, with a typed `BuildError` for a schema that does not build,
+schemas in HCL2 and the `ldapschema` converter, and
 directory **v0.15.0**, with declared object classes. authnd
-v0.12.0 embeds ldap v0.9.0 and directory v0.15.0.
+v0.12.1 embeds ldap v0.10.0 and directory v0.15.0.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.5/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
@@ -69,6 +70,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.11.0 | [standard-schema entries]({{< relref "/authnd/entries.md" >}}), each held to the schema served at `cn=Subschema`; `attributes`, `users_attributes` and `groups_attributes`; `(uidNumber>=1000)` compares integers. ⛔ `publish_nt_hash` needs a [`samba` block]({{< relref "/authnd/tls.md#the-samba-block" >}}), and a consumer filtering on `posixAccount` or `posixGroup` sees fewer entries |
 | v0.11.1 | the startup line names only the sources somebody is served from: with no `user` block it no longer names the configuration file |
 | v0.12.0 | [site schemas]({{< relref "/authnd/schemas.md" >}}): `schema_files` (OpenLDAP `.schema` and cn=config LDIF, as published; a redefinition is refused, even identical, as slapd does) and a `schema { }` block; auxiliary classes declared per source with `object_classes`, validated at startup and published with their superclasses; `check` reports the files, the declarations, the classes left off a person for a missing MUST, and groups two sources disagree on. ⛔ Built with Go 1.27.3: v0.11.1's binaries (Go 1.27.2) are affected by GO-2026-6809 |
+| v0.12.1 | a schema file or block that does not build is refused at the position go-authn/ldap v0.10.0's `BuildError` carries, with a column (`site.schema:6:` becomes `site.schema:6:1:`); the message ends with the kind of refusal, and a duplicate says where its first definition is |
 
 ### authn-bridge
 
@@ -148,6 +150,7 @@ library's page says what earlier ones changed.
 | krl v0.6.1 | dependencies only: golang.org/x/crypto v0.58.0; tested with Go 1.27.2 |
 | ldap v0.8.0 | [package `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) and `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, RFC 4517 matching rules; `uidNumber` and `gidNumber` order as integers; a paged search keeps to the requested attributes |
 | ldap v0.9.0 | [schemas in HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): package `schema/hclschema` and the `ldapschema` command (`to-hcl`, `to-schema`, `check`) between OpenLDAP `.schema`, cn=config LDIF and HCL2; the readers read files as slapd does; DIT content and structure rules, name forms, `include` and `X-SUBST` are not supported |
+| ldap v0.10.0 | [a typed `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}) for a definition `Build` refuses, matched with `errors.As`: `Kind`, `Element`, `OID`, `Name`, `Field`, `Pos` (file:line:column where the definition starts, also for folded or base64 LDIF and HCL), and `Ref`, `RefOID` and `RefPos` for the other definition; every definition read carries a `Pos`; "object classes" in a message |
 | oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | totp v0.4.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |

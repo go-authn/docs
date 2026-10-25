@@ -12,7 +12,7 @@ es el servidor que la ejecuta y que es dueño de la configuración, de los oríg
 directorio y de la política de bind; esta es dueña de los bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.9.0
+go get github.com/go-authn/ldap@v0.10.0
 ```
 
 Escrita a partir de los RFC 4511 (el protocolo), 4512 (el root DSE y el
@@ -299,6 +299,87 @@ las opciones distintas de `lang-` y `binary`.
 [authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}}) sirve este
 esquema y somete a él cada entrada que publica.
 
+## Un esquema que no se construye {#build-error}
+
+Desde la v0.10.0, una definición que `schema.Build` o `schema.BuildFrom`
+rechazan es un `*schema.BuildError`, que se obtiene con `errors.As`. Un
+programa informa de un rechazo a partir de sus campos, nunca comparando el
+mensaje. Build se detiene en la primera definición que rechaza, así que solo
+hay una.
+
+- `Kind` es una de todas las comprobaciones que hace Build: `UnknownReference`,
+  `DuplicateOID`, `DuplicateName`, `SuperiorCycle`, `KindViolation`,
+  `UsageMismatch`, `CollectiveMismatch` y `UsageViolation`.
+- `Element` (sintaxis, regla de comparación, tipo de atributo o clase de
+  objeto), `OID` y `Name` (su primer NAME) son los de la definición rechazada,
+  y `Pos` es el lugar donde empieza: `archivo:línea:columna`, la línea de la
+  palabra clave del `.schema` o de la línea `attributeTypes:` del LDIF, también
+  cuando esa línea está plegada o en base64, y la posición del propio bloque en
+  HCL. Una definición construida en código no tiene ninguna.
+- `Field` es el término que falla (`SUP`, `EQUALITY`, `SYNTAX`, `MUST`, `NAME`
+  ...), y `Ref` aquello a lo que se refiere el error: el nombre o el OID sin
+  definir, o la otra definición, con su `RefOID` y su `RefPos`. En un
+  duplicado es la primera definición, y el mensaje dice dónde está.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/ldap/schema"
+)
+
+// An object class whose superclass is defined nowhere.
+const site = `# site.schema
+objectclass ( 1.3.6.1.4.1.99999.1.1 NAME 'siteMember'
+	SUP top AUXILIARY )
+objectclass ( 1.3.6.1.4.1.99999.1.2 NAME 'siteGuest'
+	SUP nobody AUXILIARY )
+`
+
+func main() {
+	files := append(schema.StandardFiles(), schema.File{Name: "site.schema", Data: []byte(site)})
+	_, err := schema.Build(files...)
+
+	var be *schema.BuildError
+	if !errors.As(err, &be) {
+		fmt.Println("not a BuildError:", err)
+		return
+	}
+	fmt.Println("error:  ", be)
+	fmt.Println("Kind:   ", be.Kind)
+	fmt.Println("Element:", be.Element)
+	fmt.Println("OID:    ", be.OID)
+	fmt.Println("Name:   ", be.Name)
+	fmt.Println("Field:  ", be.Field)
+	fmt.Println("Ref:    ", be.Ref)
+	fmt.Println("Pos:    ", be.Pos)
+	fmt.Println("RefPos: ", be.RefPos.IsValid())
+	fmt.Println("is UnknownReference:", be.Kind == schema.UnknownReference)
+}
+```
+
+```
+error:   site.schema:4:1: schema: the object class siteGuest has the superclass nobody, which is not defined
+Kind:    unknown reference
+Element: object class
+OID:     1.3.6.1.4.1.99999.1.2
+Name:    siteGuest
+Field:   SUP
+Ref:     nobody
+Pos:     site.schema:4:1
+RefPos:  false
+is UnknownReference: true
+```
+
+Ejecutado desde un módulo vacío con `github.com/go-authn/ldap` v0.10.0. La
+primera clase es correcta; la segunda empieza en la línea 4, y nada más falla,
+así que `RefPos` está vacío. Toda definición que devuelve `schema.Read` lleva
+también una `Pos`, y el `String` de la Position omite la columna cuando no se
+conoce.
+
 ## Esquemas en HCL2, y el conversor {#hcl2-and-the-converter}
 
 Desde la v0.9.0, un esquema puede escribirse en HCL2 además de en los
@@ -468,4 +549,4 @@ con las tres líneas no alcanzadas nombradas en el workflow.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.9.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.9.0)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.0)

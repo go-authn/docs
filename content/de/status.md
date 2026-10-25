@@ -9,15 +9,16 @@ Diese Seiten sind die Dokumentationsversion **0.5** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
-| authnd | **v0.12.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}});
-ldap ist bei **v0.9.0**, mit Schemas in HCL2 und dem Konverter `ldapschema`,
+ldap ist bei **v0.10.0**, mit einem typisierten `BuildError` für ein Schema, das sich nicht aufbauen lässt,
+Schemas in HCL2 und dem Konverter `ldapschema`,
 und directory bei **v0.15.0**, mit deklarierten Objektklassen. authnd
-v0.12.0 bettet ldap v0.9.0 und directory v0.15.0 ein.
+v0.12.1 bettet ldap v0.10.0 und directory v0.15.0 ein.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
 sodass die Seiten, die jemand unter `/docs/0.5/` findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`,
@@ -69,6 +70,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen, außer denen, die diese Do
 | v0.11.0 | [Einträge nach Standardschema]({{< relref "/authnd/entries.md" >}}), jeder an dem unter `cn=Subschema` bereitgestellten Schema gemessen; `attributes`, `users_attributes` und `groups_attributes`; `(uidNumber>=1000)` vergleicht Ganzzahlen. ⛔ `publish_nt_hash` braucht einen [`samba`-Block]({{< relref "/authnd/tls.md#the-samba-block" >}}), und ein Konsument, der nach `posixAccount` oder `posixGroup` filtert, sieht weniger Einträge |
 | v0.11.1 | die Startzeile nennt nur die Quellen, aus denen jemand bereitgestellt wird: ohne `user`-Block nennt sie die Konfigurationsdatei nicht mehr |
 | v0.12.0 | [Standort-Schemata]({{< relref "/authnd/schemas.md" >}}): `schema_files` (OpenLDAP-`.schema` und cn=config-LDIF, wie veröffentlicht; eine Neudefinition wird abgelehnt, selbst eine identische, wie slapd es tut) und ein `schema { }`-Block; Hilfsklassen (AUXILIARY), pro Quelle mit `object_classes` deklariert, beim Start validiert und mit ihren Oberklassen veröffentlicht; `check` meldet die Dateien, die Deklarationen, die einer Person wegen eines fehlenden MUST vorenthaltenen Klassen und Gruppen, bei denen sich zwei Quellen uneins sind. ⛔ Mit Go 1.27.3 gebaut: Die Binaries von v0.11.1 (Go 1.27.2) sind von GO-2026-6809 betroffen |
+| v0.12.1 | eine Schemadatei oder ein Schemablock, der sich nicht aufbauen lässt, wird an der Stelle abgelehnt, die der `BuildError` von go-authn/ldap v0.10.0 trägt, mit einer Spalte (`site.schema:6:` wird zu `site.schema:6:1:`); die Meldung endet mit der Art der Ablehnung, und bei einem Duplikat steht, wo seine erste Definition ist |
 
 ### authn-bridge {#authn-bridge}
 
@@ -148,6 +150,7 @@ jeder Bibliothek sagt, was frühere geändert haben.
 | krl v0.6.1 | nur Abhängigkeiten: golang.org/x/crypto v0.58.0; mit Go 1.27.2 getestet |
 | ldap v0.8.0 | [Paket `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) und `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, Matching-Regeln nach RFC 4517; `uidNumber` und `gidNumber` werden als Ganzzahlen geordnet; eine seitenweise Suche hält sich an die angeforderten Attribute |
 | ldap v0.9.0 | [Schemas in HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): das Paket `schema/hclschema` und der Befehl `ldapschema` (`to-hcl`, `to-schema`, `check`) zwischen OpenLDAP-`.schema`, cn=config-LDIF und HCL2; die Leser lesen Dateien wie slapd; DIT-Content-Regeln, DIT-Structure-Regeln, Name Forms, `include` und `X-SUBST` werden nicht unterstützt |
+| ldap v0.10.0 | [ein typisierter `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}) für eine Definition, die `Build` ablehnt, mit `errors.As` abgeglichen: `Kind`, `Element`, `OID`, `Name`, `Field`, `Pos` (Datei:Zeile:Spalte, an der die Definition beginnt, auch für umgebrochenes oder base64-kodiertes LDIF und HCL) sowie `Ref`, `RefOID` und `RefPos` für die andere Definition; jede gelesene Definition trägt eine `Pos`; „object classes“ in einer Meldung |
 | oidc v0.4.1 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | servercert v0.5.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | totp v0.4.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |

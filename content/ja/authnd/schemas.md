@@ -150,9 +150,43 @@ this configuration can be served
 - ファイルは、すべてのエントリが何を持てるかを決めます。秘密ではありませんが、他の設定と一緒に
   保管してください。`root:authnd`、モード `0640`、root だけが書き込めるディレクトリです
   ([インストール]({{< relref "/authnd/install.md" >}}))。
-- ビルドできないファイルは、ファイルと定義の行を示して、起動と `check` を拒否します。
-  未知のスーパークラス、属性、マッチングルール、構文、補助クラスから派生した構造クラス、
-  二度定義された OID や名前などです。
+- ビルドできないファイルは、起動と `check` を拒否します。メッセージには、ファイル、行、定義の始まる列が示され、
+  末尾に拒否の種類が付きます。未知のスーパークラス、属性、マッチングルール、構文
+  (`unknown reference`)、補助クラスから派生した構造クラス (`kind violation`)、
+  二度定義された OID や名前 (`duplicate OID`、`duplicate name`) などです。v0.12.1 から、
+  場所と種類は、メッセージを読み解くのではなく、go-authn/ldap の型付きの
+  [`*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}) から得られます。
+  ファイルから読んだ定義は、テキストが複数行に折り返されていても、1 列目から始まります。
+  重複は最初の定義の場所を示し、再定義は、元の定義を保持する標準ファイル、
+  または先のファイルの行を示します。二つの例:
+
+  `cases/unknown.schema` には、どこにも定義されていない MAY があります。
+
+  ```
+  # exampleB has a MAY that is defined nowhere.
+  objectclass ( 1.3.6.1.4.1.99999.2.9 NAME 'exampleB' SUP top AUXILIARY
+  	MAY noSuchAttribute )
+  ```
+
+  ```
+  $ authnd check cases/unknown.hcl
+  authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)
+  ```
+
+  `cases/twice.schema` は、二つの属性型に一つの OID を与えています。
+
+  ```
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleA'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleB'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+  ```
+
+  ```
+  $ authnd check cases/twice.hcl
+  authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)
+  ```
 
 ### 再定義は、同一であっても拒否される {#redefinition}
 
@@ -170,7 +204,7 @@ attributeType* と答えます (`servers/slapd/at.c`、`oc.c`)。前者が許さ
 
 ```
 $ authnd check cases/dup.hcl
-authnd: schema_files: cases/cn-copy.schema:1: the attribute type cn (2.5.4.3) is already defined by the standard schema, and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
 ```
 
 ## `schema { }` ブロック {#the-schema-block}
@@ -412,9 +446,9 @@ users "sql" {
 {{< callout type="info" >}}
 **トランスクリプトについて**
 
-このページのコマンドはすべて、v0.12.0 のリリースバイナリ
+このページのコマンドはすべて、v0.12.1 のリリースバイナリ
 (`authnd-darwin-arm64`、`SHA256SUMS` と照合済み、`go version -m`:
-`go1.27.3`、`mod github.com/go-authn/authnd v0.12.0`、
+`go1.27.3`、`mod github.com/go-authn/authnd v0.12.1`、
 `vcs.modified=false`) と OpenLDAP の `ldapsearch` で、127.0.0.1 上の作業用ディレクトリで、
 示したファイルを使って実行しました。パスが相対なのはそのためで、サービスでは絶対パスを使います。
 スキーマは、このページのために書いた例です。

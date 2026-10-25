@@ -153,10 +153,47 @@ un sitio es el archivo que carga authnd. Las definiciones se sirven en
 - Los archivos deciden qué puede contener cada entrada. No son secretos, pero
   guárdelos con el resto de la configuración: `root:authnd`, modo `0640`, en un
   directorio donde solo escribe root ([instalación]({{< relref "/authnd/install.md" >}})).
-- Un archivo que no se construye rechaza el arranque, y `check`, con el archivo
-  y la línea de la definición: una superclase, un atributo, una regla de
-  comparación o una sintaxis desconocidos, una clase estructural derivada de una
-  auxiliar, un OID o un nombre definidos dos veces.
+- Un archivo que no se construye rechaza el arranque, y `check`, con el
+  archivo, la línea y la columna donde empieza la definición, y el tipo de
+  rechazo al final del mensaje: una superclase, un atributo, una regla de
+  comparación o una sintaxis desconocidos (`unknown reference`), una clase
+  estructural derivada de una auxiliar (`kind violation`), un OID o un nombre
+  definidos dos veces (`duplicate OID`, `duplicate name`). Desde la v0.12.1 el
+  lugar y el tipo vienen del
+  [`*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}})
+  tipado de go-authn/ldap, no de la lectura de su mensaje. Una definición leída
+  de un archivo empieza en la columna 1, también cuando su texto está plegado en
+  varias líneas. Un duplicado dice dónde está su primera definición, y una
+  redefinición dice qué archivo estándar, o qué línea de un archivo anterior,
+  contiene el original. Dos ejemplos:
+
+  `cases/unknown.schema` tiene un MAY que no está definido en ninguna parte:
+
+  ```
+  # exampleB has a MAY that is defined nowhere.
+  objectclass ( 1.3.6.1.4.1.99999.2.9 NAME 'exampleB' SUP top AUXILIARY
+  	MAY noSuchAttribute )
+  ```
+
+  ```
+  $ authnd check cases/unknown.hcl
+  authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)
+  ```
+
+  `cases/twice.schema` da un mismo OID a dos tipos de atributo:
+
+  ```
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleA'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleB'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+  ```
+
+  ```
+  $ authnd check cases/twice.hcl
+  authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)
+  ```
 
 ### Una redefinición se rechaza, incluso una idéntica {#redefinition}
 
@@ -176,7 +213,7 @@ redefine `cn` (2.5.4.3) con una definición propia:
 
 ```
 $ authnd check cases/dup.hcl
-authnd: schema_files: cases/cn-copy.schema:1: the attribute type cn (2.5.4.3) is already defined by the standard schema, and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
 ```
 
 ## El bloque `schema { }` {#the-schema-block}
@@ -435,9 +472,9 @@ grafía (PostgreSQL pasa a minúsculas uno sin comillas; consulte
 {{< callout type="info" >}}
 **Sobre las transcripciones**
 
-Cada comando de esta página se ejecutó con el binario de la versión v0.12.0
+Cada comando de esta página se ejecutó con el binario de la versión v0.12.1
 (`authnd-darwin-arm64`, comprobado con `SHA256SUMS`; `go version -m`:
-`go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
+`go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`,
 `vcs.modified=false`) y el `ldapsearch` de OpenLDAP, en 127.0.0.1, en un
 directorio temporal, con los archivos mostrados. Por eso las rutas son
 relativas; un servicio usa rutas absolutas. El esquema es un ejemplo escrito

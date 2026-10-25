@@ -9,15 +9,15 @@ tags: [状态, 发布版本]
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.12.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
-ldap 为 **v0.9.0**，带有 HCL2 模式和 `ldapschema` 转换器，
+ldap 为 **v0.10.0**，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
 directory 为 **v0.15.0**，带有已声明的对象类。authnd
-v0.12.0 内嵌 ldap v0.9.0 和 directory v0.15.0。
+v0.12.1 内嵌 ldap v0.10.0 和 directory v0.15.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
 因此读者在 `/docs/0.5/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
@@ -69,6 +69,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.11.0 | [标准模式条目]({{< relref "/authnd/entries.md" >}})，每个条目都受 `cn=Subschema` 所提供的模式约束；`attributes`、`users_attributes` 和 `groups_attributes`；`(uidNumber>=1000)` 按整数比较。⛔ `publish_nt_hash` 需要一个 [`samba` 块]({{< relref "/authnd/tls.md#the-samba-block" >}})，并且按 `posixAccount` 或 `posixGroup` 过滤的使用方看到的条目会变少 |
 | v0.11.1 | 启动行只列出有人从中获得服务的来源：没有 `user` 块时，不再列出配置文件 |
 | v0.12.0 | [站点模式]({{< relref "/authnd/schemas.md" >}})：`schema_files`（OpenLDAP `.schema` 和 cn=config LDIF，按发布时的原样；重新定义会被拒绝，即使完全相同，如同 slapd 那样）和 `schema { }` 块；用 `object_classes` 按来源声明辅助类，在启动时验证，并连同其父类一起发布；`check` 报告这些文件、这些声明、因缺少 MUST 而未加到某个人员上的类，以及两个来源存在分歧的组。⛔ 由 Go 1.27.3 构建：v0.11.1 的二进制文件（Go 1.27.2）受 GO-2026-6809 影响 |
+| v0.12.1 | 无法构建的模式文件或块，会在 go-authn/ldap v0.10.0 的 `BuildError` 所携带的位置被拒绝，并带有列（`site.schema:6:` 变为 `site.schema:6:1:`）；信息以拒绝的类型结尾，重复定义会指出它的第一个定义在哪里 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -148,6 +149,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | krl v0.6.1 | 仅依赖项：golang.org/x/crypto v0.58.0；已用 Go 1.27.2 测试 |
 | ldap v0.8.0 | [`schema` 包]({{< relref "/libraries/ldap.md#the-schema" >}})和 `Server.Schema`：`cn=Subschema`（RFC 4512 §4.2）、`Validate`、RFC 4517 匹配规则；`uidNumber` 和 `gidNumber` 按整数排序；分页搜索仅返回所请求的属性 |
 | ldap v0.9.0 | [HCL2 模式]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}})：包 `schema/hclschema` 和 `ldapschema` 命令（`to-hcl`、`to-schema`、`check`），在 OpenLDAP `.schema`、cn=config LDIF 与 HCL2 之间转换；读取器像 slapd 一样读取文件；不支持 DIT 内容和结构规则、名称形式、`include` 和 `X-SUBST` |
+| ldap v0.10.0 | 针对 `Build` 拒绝的定义的[类型化 `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}})，用 `errors.As` 匹配：`Kind`、`Element`、`OID`、`Name`、`Field`、`Pos`（定义起始处的 file:line:column，折叠或 base64 的 LDIF 与 HCL 同样适用），以及指向另一个定义的 `Ref`、`RefOID` 和 `RefPos`；读取的每个定义都带有 `Pos`；信息中写作 "object classes" |
 | oidc v0.4.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | servercert v0.5.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | totp v0.4.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |

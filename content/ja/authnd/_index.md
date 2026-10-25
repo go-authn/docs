@@ -10,11 +10,11 @@ tags: [authnd, ldap]
 その人々を認証したいものは LDAP を話します。** authnd はその窓口です。
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) のソースに対してバインドと検索を行うので、
 データベースが保持しているものを、ディレクトリに問い合わせる方法を知っているものなら何でも読めます。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.12.0 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.12.1 を説明しています。
 そのエントリは標準スキーマに従い、`cn=Subschema` で公開するスキーマに適合します。
 サイトはこのスキーマを自前のもの
 ([SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})) で拡張できます。
-その下には go-authn/ldap v0.9.0 と go-authn/directory v0.15.0 があります。
+その下には go-authn/ldap v0.10.0 と go-authn/directory v0.15.0 があります。
 何が検証済みで何が未検証かは、[ステータス]({{< relref "/status.md" >}})のページにあります。
 
 {{< callout type="warning" >}}
@@ -169,8 +169,11 @@ vendorVersion: v0.12.0
 {{< callout type="info" >}}
 **トランスクリプトについて**
 
-ルート DSE、`--version` の行、そして[サイトスキーマ]({{< relref "/authnd/schemas.md" >}})のページにあるものはすべて、
-v0.12.0 のリリースバイナリ (`authnd-darwin-arm64`、`SHA256SUMS` と照合済み、
+[サイトスキーマ]({{< relref "/authnd/schemas.md" >}})のページにあるものはすべて、
+v0.12.1 のリリースバイナリ (`authnd-darwin-arm64`、`go version -m`:
+`go1.27.3`、`mod github.com/go-authn/authnd v0.12.1`、`vcs.modified=false`) が
+出力したものです。ルート DSE と `--version` の行は、v0.12.0 のリリースバイナリ
+(`authnd-darwin-arm64`、`SHA256SUMS` と照合済み、
 `go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.12.0`、
 `vcs.modified=false`) が出力したものです。その他の起動時の行は v0.11.1 のリリースバイナリ
 (`mod github.com/go-authn/authnd v0.11.1`、`vcs.modified=false`) が出力したもので、

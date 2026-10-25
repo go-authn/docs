@@ -152,10 +152,47 @@ que charge le slapd d'un site est le fichier que charge authnd. Les définitions
 - Les fichiers décident de ce que chaque entrée peut contenir. Ce ne sont pas des secrets, mais gardez-les
   avec le reste de la configuration : `root:authnd`, mode `0640`, dans un
   répertoire que seul root peut écrire ([l'installation]({{< relref "/authnd/install.md" >}})).
-- Un fichier qui ne se construit pas refuse le démarrage, et `check`, avec le fichier et
-  la ligne de la définition : une superclasse, un attribut, une règle de comparaison ou une
-  syntaxe inconnus, une classe structurelle dérivée d'une classe auxiliaire, un OID ou un nom
-  défini deux fois.
+- Un fichier qui ne se construit pas refuse le démarrage, et `check`, avec le
+  fichier, la ligne et la colonne où la définition commence, et le genre de
+  refus à la fin du message : une superclasse, un attribut, une règle de
+  comparaison ou une syntaxe inconnus (`unknown reference`), une classe
+  structurelle dérivée d'une classe auxiliaire (`kind violation`), un OID ou un
+  nom défini deux fois (`duplicate OID`, `duplicate name`). Depuis la v0.12.1,
+  la place et le genre viennent de la
+  [`*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}) typée
+  de go-authn/ldap, et non de la lecture de son message. Une définition lue dans
+  un fichier commence à la colonne 1, y compris quand son texte est replié sur
+  plusieurs lignes. Un doublon dit où se trouve sa première définition, et une
+  redéfinition dit quel fichier standard, ou quelle ligne d'un fichier
+  précédent, détient l'original. Deux exemples :
+
+  `cases/unknown.schema` a un MAY qui n'est défini nulle part :
+
+  ```
+  # exampleB has a MAY that is defined nowhere.
+  objectclass ( 1.3.6.1.4.1.99999.2.9 NAME 'exampleB' SUP top AUXILIARY
+  	MAY noSuchAttribute )
+  ```
+
+  ```
+  $ authnd check cases/unknown.hcl
+  authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)
+  ```
+
+  `cases/twice.schema` donne un même OID à deux types d'attribut :
+
+  ```
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleA'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleB'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+  ```
+
+  ```
+  $ authnd check cases/twice.hcl
+  authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)
+  ```
 
 ### Une redéfinition est refusée, même identique {#redefinition}
 
@@ -174,7 +211,7 @@ redéfinit `cn` (2.5.4.3) avec une définition qui lui est propre :
 
 ```
 $ authnd check cases/dup.hcl
-authnd: schema_files: cases/cn-copy.schema:1: the attribute type cn (2.5.4.3) is already defined by the standard schema, and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
 ```
 
 ## Le bloc `schema { }` {#the-schema-block}
@@ -428,9 +465,9 @@ MUST de `supannPerson` ou d'`eduPerson` est publiée sans la classe, et
 {{< callout type="info" >}}
 **À propos des transcriptions**
 
-Chaque commande de cette page a été exécutée avec le binaire de la version v0.12.0
+Chaque commande de cette page a été exécutée avec le binaire de la version v0.12.1
 (`authnd-darwin-arm64`, vérifié avec `SHA256SUMS` ; `go version -m` :
-`go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
+`go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`,
 `vcs.modified=false`) et le `ldapsearch` d'OpenLDAP, sur 127.0.0.1, dans un répertoire
 de travail temporaire, avec les fichiers montrés. Les chemins sont relatifs pour cette raison ; un
 service en utilise des absolus. Le schéma est un exemple écrit pour cette page.
