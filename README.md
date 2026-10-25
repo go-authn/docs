@@ -51,7 +51,10 @@ To add a language `<lang>`:
    keeps the English one's anchor as an explicit id, so the relrefs resolve in
    every language and links into a page keep their fragment.
 2. `i18n/<lang>.yaml`: the site's own strings (copyright, version). French,
-   Spanish and German are already there.
+   Spanish, German, Simplified Chinese (`zh-cn`), Korean (`ko`) and Japanese
+   (`ja`) are already there. Their search works with the theme's own FlexSearch
+   tokenizer (one token per ideograph, kana or hangul syllable);
+   `hasCJKLanguage: true` in `hugo.yaml` is for Hugo's word counts.
 3. A `languages.<lang>` entry in `hugo.yaml`: label, `contentDir`, weight,
    `params.flag`, the translated `params.description`, and a `dateFormat`.
 4. Its flag in `static/images/flags/`, from
