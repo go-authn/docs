@@ -513,7 +513,7 @@ the filter, the operations. &lt;a href="https://go-authn.github.io/docs/0.4/auth
 server that runs it and owns the configuration, the directory sources and the
 bind policy; this owns the bytes.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/ldap@v0.8.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/ldap@v0.9.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -848,6 +848,153 @@ implemented, so assertions using them are Undefined; collective attributes;
 options other than &lt;code&gt;lang-&lt;/code&gt; and &lt;code&gt;binary&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.4/authnd/entries/#the-schema-it-serves"&gt;authnd&lt;/a&gt; serves
 this schema and holds every entry it publishes to it.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="hcl2-and-the-converter"&gt;Schemas in HCL2, and the converter&lt;span class="hx:absolute hx:-mt-20" id="hcl2-and-the-converter"&gt;&lt;/span&gt;
+&lt;a href="#hcl2-and-the-converter" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;From v0.9.0, a schema can be written in HCL2 as well as in the files slapd
+reads. Package &lt;code&gt;schema/hclschema&lt;/code&gt; decodes HCL2 into the same
+&lt;code&gt;*schema.Definitions&lt;/code&gt; that &lt;code&gt;schema.Read&lt;/code&gt; returns, and encodes them back
+(&lt;code&gt;hclschema.Decode&lt;/code&gt;, &lt;code&gt;hclschema.Encode&lt;/code&gt;); &lt;code&gt;schema&lt;/code&gt; itself keeps no HCL
+dependency. One block is one definition, and its type says which:
+&lt;code&gt;object_identifier&lt;/code&gt;, &lt;code&gt;ldap_syntax&lt;/code&gt;, &lt;code&gt;matching_rule&lt;/code&gt;, &lt;code&gt;attribute_type&lt;/code&gt; or
+&lt;code&gt;object_class&lt;/code&gt;. The label is the first NAME. The attributes are the terms of
+RFC 4512 §4.1 in lower case with underscores (&lt;code&gt;desc&lt;/code&gt;, &lt;code&gt;sup&lt;/code&gt;, &lt;code&gt;equality&lt;/code&gt;,
+&lt;code&gt;single_value&lt;/code&gt;, &lt;code&gt;kind&lt;/code&gt;, &lt;code&gt;must&lt;/code&gt;, &lt;code&gt;may&lt;/code&gt;, and so on), and the &lt;code&gt;{len}&lt;/code&gt; of a
+syntax is &lt;code&gt;syntax_len&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Literal values only.&lt;/strong&gt; A value is a quoted string, a number, a boolean or a
+list of those. A variable, a function, an operator or a &lt;code&gt;${...}&lt;/code&gt; template is
+refused before anything is evaluated, so reading a schema never runs it.
+Each field is checked by the strict RFC 4512 parser, and the errors that need
+a position come with the file, line and column.&lt;/p&gt;
+&lt;p&gt;The command &lt;code&gt;ldapschema&lt;/code&gt; converts between the formats:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ldapschema to-hcl [--macros] FILE...&lt;/code&gt; reads OpenLDAP &lt;code&gt;.schema&lt;/code&gt; files,
+cn=config LDIF and subschema LDIF, and writes HCL2.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ldapschema to-schema [--macros] FILE...&lt;/code&gt; reads HCL2 and writes an OpenLDAP
+&lt;code&gt;.schema&lt;/code&gt; file.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ldapschema check FILE...&lt;/code&gt; builds the definitions on top of
+&lt;code&gt;schema.Standard()&lt;/code&gt; and reports.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Output goes to stdout. The exit status is 0 when the command worked, 1 when a
+file or a definition is refused, and 2 on a usage error.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;The readers read files as slapd does&lt;/strong&gt;, because published schemas are
+written for slapd: terms in any order, slapd&amp;rsquo;s line continuation in a
+&lt;code&gt;.schema&lt;/code&gt; file and RFC 2849 folding in LDIF, base64 values, the &lt;code&gt;{N}&lt;/code&gt; prefix
+of cn=config, and &lt;code&gt;objectidentifier&lt;/code&gt; macros resolved in file order. The
+exported &lt;code&gt;Parse*&lt;/code&gt; functions, and what a server publishes, stay strict RFC
+4512.&lt;/p&gt;
+&lt;p&gt;An example, run from an empty directory with &lt;code&gt;ldapschema&lt;/code&gt; v0.9.0. The
+schema is invented for this page: 1.3.6.1.4.1.99999 is a private-use example
+arc, not an allocation to anyone. One macro, one attribute type, one
+auxiliary class:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ cat site.schema
+# An example arc: 1.3.6.1.4.1.99999 is for private use.
+objectidentifier site 1.3.6.1.4.1.99999
+attributetype ( site:1.1 NAME &amp;#39;siteBadge&amp;#39;
+DESC &amp;#39;the badge number&amp;#39;
+EQUALITY caseIgnoreMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32}
+SINGLE-VALUE )
+objectclass ( site:2.1 NAME &amp;#39;sitePerson&amp;#39;
+DESC &amp;#39;a person with a badge&amp;#39;
+SUP top AUXILIARY
+MAY siteBadge )
+$ ldapschema to-hcl site.schema
+object_identifier &amp;#34;site&amp;#34; {
+oid = &amp;#34;1.3.6.1.4.1.99999&amp;#34;
+}
+attribute_type &amp;#34;siteBadge&amp;#34; {
+oid = &amp;#34;1.3.6.1.4.1.99999.1.1&amp;#34;
+desc = &amp;#34;the badge number&amp;#34;
+equality = &amp;#34;caseIgnoreMatch&amp;#34;
+syntax = &amp;#34;1.3.6.1.4.1.1466.115.121.1.15&amp;#34;
+syntax_len = 32
+single_value = true
+}
+object_class &amp;#34;sitePerson&amp;#34; {
+oid = &amp;#34;1.3.6.1.4.1.99999.2.1&amp;#34;
+desc = &amp;#34;a person with a badge&amp;#34;
+sup = [&amp;#34;top&amp;#34;]
+kind = &amp;#34;auxiliary&amp;#34;
+may = [&amp;#34;siteBadge&amp;#34;]
+}
+$ ldapschema to-hcl site.schema &amp;gt; site.hcl
+$ ldapschema to-schema site.hcl
+objectidentifier site 1.3.6.1.4.1.99999
+attributetype ( 1.3.6.1.4.1.99999.1.1
+NAME &amp;#39;siteBadge&amp;#39;
+DESC &amp;#39;the badge number&amp;#39;
+EQUALITY caseIgnoreMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32}
+SINGLE-VALUE )
+objectclass ( 1.3.6.1.4.1.99999.2.1
+NAME &amp;#39;sitePerson&amp;#39;
+DESC &amp;#39;a person with a badge&amp;#39;
+SUP top
+AUXILIARY
+MAY siteBadge )
+$ ldapschema to-schema --macros site.hcl
+objectidentifier site 1.3.6.1.4.1.99999
+attributetype ( site:1.1
+NAME &amp;#39;siteBadge&amp;#39;
+DESC &amp;#39;the badge number&amp;#39;
+EQUALITY caseIgnoreMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32}
+SINGLE-VALUE )
+objectclass ( site:2.1
+NAME &amp;#39;sitePerson&amp;#39;
+DESC &amp;#39;a person with a badge&amp;#39;
+SUP top
+AUXILIARY
+MAY siteBadge )
+$ ldapschema check site.schema
+read: 1 object identifiers, 0 syntaxes, 0 matching rules, 1 attribute types, 1 object classes
+build: ok, 2 definitions added to schema.Standard()&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Numeric OIDs are the default on output, because that is what a client sees in
+the subschema; &lt;code&gt;--macros&lt;/code&gt; keeps the macro names. &lt;code&gt;check&lt;/code&gt; also reports the
+definitions &lt;code&gt;schema.Standard()&lt;/code&gt; already has, and every reference that nothing
+defines, where &lt;code&gt;Build&lt;/code&gt; stops at the first.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;check&lt;/code&gt; can exit 1 on a file that slapd loads.&lt;/strong&gt; OpenLDAP&amp;rsquo;s &lt;code&gt;core.schema&lt;/code&gt;
+refers to four things that slapd builds in and that &lt;code&gt;schema.Standard()&lt;/code&gt; does
+not define: the syntaxes 1.3.6.1.4.1.1466.115.121.1.42 and
+1.3.6.1.4.1.1466.115.121.1.43, and the matching rules &lt;code&gt;protocolInformationMatch&lt;/code&gt;
+and &lt;code&gt;presentationAddressMatch&lt;/code&gt;. &lt;code&gt;ldapschema check core.schema&lt;/code&gt; lists them as
+&lt;code&gt;missing:&lt;/code&gt; and exits 1. Read that as &amp;ldquo;not defined here&amp;rdquo;, not as a defect of
+the file.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;What it does not support:&lt;/strong&gt; DIT content rules, DIT structure rules and name
+forms; &lt;code&gt;include&lt;/code&gt; directives, since a &lt;code&gt;.schema&lt;/code&gt; file is read as definitions and
+is not run as a slapd configuration; and &lt;code&gt;X-SUBST&lt;/code&gt; on &lt;code&gt;ldapsyntax&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Published schemas convert.&lt;/strong&gt; The release was measured on OpenLDAP&amp;rsquo;s
+&lt;code&gt;core&lt;/code&gt;, &lt;code&gt;cosine&lt;/code&gt;, &lt;code&gt;inetorgperson&lt;/code&gt; and &lt;code&gt;nis&lt;/code&gt;, on SUPANN 2021 from RENATER, on
+eduPerson from REFEDS and on Samba&amp;rsquo;s schema: for each, &lt;code&gt;.schema&lt;/code&gt; to HCL and
+back, and LDIF against &lt;code&gt;.schema&lt;/code&gt;, give equal definitions. Only OpenLDAP&amp;rsquo;s
+files are in the repository. SUPANN and eduPerson are not reproduced here;
+read them at their authors&amp;rsquo; pages:
+&lt;a href="https://services.renater.fr/documentation/supann/supann2021/recommandations/tables_references/schemas_techniques_supann" target="_blank" rel="noopener"&gt;SUPANN 2021&lt;/a&gt;
+and &lt;a href="https://github.com/REFEDS/eduperson" target="_blank" rel="noopener"&gt;eduPerson&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;What it is checked against&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
 &lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;OpenLDAP&amp;rsquo;s &lt;code&gt;ldapsearch&lt;/code&gt;&lt;/strong&gt;, in CI, and required where it is installed: the
 Linux test lane, the race detector and the coverage lane set
@@ -860,7 +1007,7 @@ mechanism, StartTLS followed by more LDAP.&lt;/p&gt;
 decoders and the filter round trip. The coverage floor is 99.7%, with the three
 unreached lines named in the workflow.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Reference&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/ldap@v0.8.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/ldap@v0.8.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>kdc — issuing Kerberos tickets from a directory</title><link>https://go-authn.github.io/docs/0.4/libraries/kdc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/libraries/kdc/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/ldap@v0.9.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/ldap@v0.9.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>kdc — issuing Kerberos tickets from a directory</title><link>https://go-authn.github.io/docs/0.4/libraries/kdc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/libraries/kdc/</guid><description>
 &lt;p&gt;&lt;strong&gt;How does a realm issue tickets from a directory?&lt;/strong&gt; AS-REQ and TGS-REQ, over
 UDP and TCP, with encrypted-timestamp pre-authentication required, for the
 people a &lt;a href="https://go-authn.github.io/docs/0.4/libraries/directory/"&gt;directory&lt;/a&gt; knows and the

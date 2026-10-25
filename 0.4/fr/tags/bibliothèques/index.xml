@@ -783,7 +783,7 @@ de modules publiés, versionnés et testés chacun de leur côté. Chacun répon
 &lt;tr&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/libraries/ldap/"&gt;ldap&lt;/a&gt;&lt;/td&gt;
 &lt;td&gt;quels sont les octets d&amp;rsquo;un serveur LDAP ?&lt;/td&gt;
-&lt;td&gt;v0.8.0&lt;/td&gt;
+&lt;td&gt;v0.9.0&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/ldap&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -851,7 +851,8 @@ vérificateur, des clés SSH, un secret de code à usage unique — et, à part
 d&amp;rsquo;eux, les attributs qui la décrivent sans rien prouver.
 &lt;a href="https://go-authn.github.io/docs/0.4/fr/libraries/ldap/"&gt;ldap&lt;/a&gt; est le protocole réseau LDAP, côté
 serveur, et le schéma d&amp;rsquo;annuaire contre lequel une entrée peut être
-vérifiée ; ce qu&amp;rsquo;il répond est l&amp;rsquo;affaire du gestionnaire.&lt;/p&gt;
+vérifiée, lu dans des fichiers OpenLDAP ou écrit en HCL2 ; ce qu&amp;rsquo;il répond est
+l&amp;rsquo;affaire du gestionnaire.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Kerberos, en deux moitiés.&lt;/strong&gt; &lt;a href="https://go-authn.github.io/docs/0.4/fr/libraries/krb5/"&gt;krb5&lt;/a&gt;
 &lt;em&gt;accepte&lt;/em&gt; les tickets : un keytab, un AP-REQ en entrée, un AP-REP en sortie.
 &lt;a href="https://go-authn.github.io/docs/0.4/fr/libraries/kdc/"&gt;kdc&lt;/a&gt; les &lt;em&gt;délivre&lt;/em&gt;, à partir d&amp;rsquo;un annuaire qui
@@ -1435,7 +1436,7 @@ le filtre, les opérations. &lt;a href="https://go-authn.github.io/docs/0.4/fr/a
 serveur qui l&amp;rsquo;exécute et qui détient la configuration, les sources d&amp;rsquo;annuaire et la
 politique de liaison ; celle-ci détient les octets.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/ldap@v0.8.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/ldap@v0.9.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copier le code"
@@ -1780,6 +1781,155 @@ si bien que les assertions qui les utilisent sont Undefined ; les attributs
 collectifs ; les options autres que &lt;code&gt;lang-&lt;/code&gt; et &lt;code&gt;binary&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.4/fr/authnd/entries/#the-schema-it-serves"&gt;authnd&lt;/a&gt; sert ce
 schéma et y soumet chaque entrée qu&amp;rsquo;il publie.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="hcl2-and-the-converter"&gt;Les schémas en HCL2, et le convertisseur&lt;span class="hx:absolute hx:-mt-20" id="hcl2-and-the-converter"&gt;&lt;/span&gt;
+&lt;a href="#hcl2-and-the-converter" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Depuis la v0.9.0, un schéma peut s&amp;rsquo;écrire en HCL2 aussi bien que dans les
+fichiers que lit slapd. Le paquet &lt;code&gt;schema/hclschema&lt;/code&gt; décode le HCL2 vers les
+mêmes &lt;code&gt;*schema.Definitions&lt;/code&gt; que renvoie &lt;code&gt;schema.Read&lt;/code&gt;, et les ré-encode
+(&lt;code&gt;hclschema.Decode&lt;/code&gt;, &lt;code&gt;hclschema.Encode&lt;/code&gt;) ; &lt;code&gt;schema&lt;/code&gt; lui-même n&amp;rsquo;a aucune
+dépendance à HCL. Un bloc est une définition, et son type dit laquelle :
+&lt;code&gt;object_identifier&lt;/code&gt;, &lt;code&gt;ldap_syntax&lt;/code&gt;, &lt;code&gt;matching_rule&lt;/code&gt;, &lt;code&gt;attribute_type&lt;/code&gt; ou
+&lt;code&gt;object_class&lt;/code&gt;. L&amp;rsquo;étiquette est le premier NAME. Les attributs sont les termes
+de la RFC 4512 §4.1, en minuscules avec des tirets bas (&lt;code&gt;desc&lt;/code&gt;, &lt;code&gt;sup&lt;/code&gt;,
+&lt;code&gt;equality&lt;/code&gt;, &lt;code&gt;single_value&lt;/code&gt;, &lt;code&gt;kind&lt;/code&gt;, &lt;code&gt;must&lt;/code&gt;, &lt;code&gt;may&lt;/code&gt;, etc.), et le &lt;code&gt;{len}&lt;/code&gt; d&amp;rsquo;une
+syntaxe est &lt;code&gt;syntax_len&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Des valeurs littérales, seulement.&lt;/strong&gt; Une valeur est une chaîne entre
+guillemets, un nombre, un booléen ou une liste de ceux-ci. Une variable, une
+fonction, un opérateur ou un gabarit &lt;code&gt;${...}&lt;/code&gt; est refusé avant toute
+évaluation : lire un schéma ne l&amp;rsquo;exécute donc jamais. Chaque champ est vérifié
+par l&amp;rsquo;analyseur strict de la RFC 4512, et les erreurs qui demandent une
+position arrivent avec le fichier, la ligne et la colonne.&lt;/p&gt;
+&lt;p&gt;La commande &lt;code&gt;ldapschema&lt;/code&gt; convertit d&amp;rsquo;un format à l&amp;rsquo;autre :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ldapschema to-hcl [--macros] FILE...&lt;/code&gt; lit des fichiers &lt;code&gt;.schema&lt;/code&gt; d&amp;rsquo;OpenLDAP,
+du LDIF cn=config et du LDIF de sous-schéma, et écrit du HCL2.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ldapschema to-schema [--macros] FILE...&lt;/code&gt; lit du HCL2 et écrit un fichier
+&lt;code&gt;.schema&lt;/code&gt; d&amp;rsquo;OpenLDAP.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ldapschema check FILE...&lt;/code&gt; construit les définitions par-dessus
+&lt;code&gt;schema.Standard()&lt;/code&gt; et rend compte.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;La sortie va sur stdout. Le code de sortie est 0 quand la commande a réussi, 1
+quand un fichier ou une définition est refusé, et 2 pour une erreur d&amp;rsquo;usage.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Les lecteurs lisent les fichiers comme slapd&lt;/strong&gt;, parce que les schémas publiés
+sont écrits pour slapd : termes dans n&amp;rsquo;importe quel ordre, continuation de
+ligne de slapd dans un fichier &lt;code&gt;.schema&lt;/code&gt; et pliage de la RFC 2849 en LDIF,
+valeurs en base64, préfixe &lt;code&gt;{N}&lt;/code&gt; de cn=config, et macros &lt;code&gt;objectidentifier&lt;/code&gt;
+résolues dans l&amp;rsquo;ordre des fichiers. Les fonctions &lt;code&gt;Parse*&lt;/code&gt; exportées, et ce
+qu&amp;rsquo;un serveur publie, restent strictement RFC 4512.&lt;/p&gt;
+&lt;p&gt;Un exemple, lancé depuis un répertoire vide avec &lt;code&gt;ldapschema&lt;/code&gt; v0.9.0. Le
+schéma est inventé pour cette page : 1.3.6.1.4.1.99999 est un arc d&amp;rsquo;exemple à
+usage privé, attribué à personne. Une macro, un type d&amp;rsquo;attribut, une classe
+auxiliaire :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ cat site.schema
+# An example arc: 1.3.6.1.4.1.99999 is for private use.
+objectidentifier site 1.3.6.1.4.1.99999
+attributetype ( site:1.1 NAME &amp;#39;siteBadge&amp;#39;
+DESC &amp;#39;the badge number&amp;#39;
+EQUALITY caseIgnoreMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32}
+SINGLE-VALUE )
+objectclass ( site:2.1 NAME &amp;#39;sitePerson&amp;#39;
+DESC &amp;#39;a person with a badge&amp;#39;
+SUP top AUXILIARY
+MAY siteBadge )
+$ ldapschema to-hcl site.schema
+object_identifier &amp;#34;site&amp;#34; {
+oid = &amp;#34;1.3.6.1.4.1.99999&amp;#34;
+}
+attribute_type &amp;#34;siteBadge&amp;#34; {
+oid = &amp;#34;1.3.6.1.4.1.99999.1.1&amp;#34;
+desc = &amp;#34;the badge number&amp;#34;
+equality = &amp;#34;caseIgnoreMatch&amp;#34;
+syntax = &amp;#34;1.3.6.1.4.1.1466.115.121.1.15&amp;#34;
+syntax_len = 32
+single_value = true
+}
+object_class &amp;#34;sitePerson&amp;#34; {
+oid = &amp;#34;1.3.6.1.4.1.99999.2.1&amp;#34;
+desc = &amp;#34;a person with a badge&amp;#34;
+sup = [&amp;#34;top&amp;#34;]
+kind = &amp;#34;auxiliary&amp;#34;
+may = [&amp;#34;siteBadge&amp;#34;]
+}
+$ ldapschema to-hcl site.schema &amp;gt; site.hcl
+$ ldapschema to-schema site.hcl
+objectidentifier site 1.3.6.1.4.1.99999
+attributetype ( 1.3.6.1.4.1.99999.1.1
+NAME &amp;#39;siteBadge&amp;#39;
+DESC &amp;#39;the badge number&amp;#39;
+EQUALITY caseIgnoreMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32}
+SINGLE-VALUE )
+objectclass ( 1.3.6.1.4.1.99999.2.1
+NAME &amp;#39;sitePerson&amp;#39;
+DESC &amp;#39;a person with a badge&amp;#39;
+SUP top
+AUXILIARY
+MAY siteBadge )
+$ ldapschema to-schema --macros site.hcl
+objectidentifier site 1.3.6.1.4.1.99999
+attributetype ( site:1.1
+NAME &amp;#39;siteBadge&amp;#39;
+DESC &amp;#39;the badge number&amp;#39;
+EQUALITY caseIgnoreMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{32}
+SINGLE-VALUE )
+objectclass ( site:2.1
+NAME &amp;#39;sitePerson&amp;#39;
+DESC &amp;#39;a person with a badge&amp;#39;
+SUP top
+AUXILIARY
+MAY siteBadge )
+$ ldapschema check site.schema
+read: 1 object identifiers, 0 syntaxes, 0 matching rules, 1 attribute types, 1 object classes
+build: ok, 2 definitions added to schema.Standard()&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Les OID numériques sont la sortie par défaut, parce que c&amp;rsquo;est ce qu&amp;rsquo;un client
+voit dans le sous-schéma ; &lt;code&gt;--macros&lt;/code&gt; garde les noms de macros. &lt;code&gt;check&lt;/code&gt;
+signale aussi les définitions que &lt;code&gt;schema.Standard()&lt;/code&gt; possède déjà, et chaque
+référence que rien ne définit, là où &lt;code&gt;Build&lt;/code&gt; s&amp;rsquo;arrête à la première.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;check&lt;/code&gt; peut sortir avec le code 1 sur un fichier que slapd charge.&lt;/strong&gt; Le
+&lt;code&gt;core.schema&lt;/code&gt; d&amp;rsquo;OpenLDAP renvoie à quatre choses que slapd intègre et que
+&lt;code&gt;schema.Standard()&lt;/code&gt; ne définit pas : les syntaxes 1.3.6.1.4.1.1466.115.121.1.42
+et 1.3.6.1.4.1.1466.115.121.1.43, et les règles de correspondance
+&lt;code&gt;protocolInformationMatch&lt;/code&gt; et &lt;code&gt;presentationAddressMatch&lt;/code&gt;. &lt;code&gt;ldapschema check core.schema&lt;/code&gt; les liste sous &lt;code&gt;missing:&lt;/code&gt; et sort avec le code 1. Il faut le lire
+comme « non défini ici », pas comme un défaut du fichier.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Ce qui n&amp;rsquo;est pas géré :&lt;/strong&gt; les règles de contenu DIT, les règles de structure
+DIT et les formes de noms ; les directives &lt;code&gt;include&lt;/code&gt;, puisqu&amp;rsquo;un fichier
+&lt;code&gt;.schema&lt;/code&gt; est lu comme des définitions et n&amp;rsquo;est pas exécuté comme une
+configuration de slapd ; et &lt;code&gt;X-SUBST&lt;/code&gt; sur &lt;code&gt;ldapsyntax&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Les schémas publiés se convertissent.&lt;/strong&gt; La version a été mesurée sur les
+fichiers &lt;code&gt;core&lt;/code&gt;, &lt;code&gt;cosine&lt;/code&gt;, &lt;code&gt;inetorgperson&lt;/code&gt; et &lt;code&gt;nis&lt;/code&gt; d&amp;rsquo;OpenLDAP, sur SUPANN 2021
+de RENATER, sur eduPerson de REFEDS et sur le schéma de Samba : pour chacun,
+&lt;code&gt;.schema&lt;/code&gt; vers HCL et retour, et LDIF contre &lt;code&gt;.schema&lt;/code&gt;, donnent des
+définitions égales. Seuls les fichiers d&amp;rsquo;OpenLDAP sont dans le dépôt. SUPANN et
+eduPerson ne sont pas reproduits ici ; lisez-les sur les pages de leurs
+auteurs :
+&lt;a href="https://services.renater.fr/documentation/supann/supann2021/recommandations/tables_references/schemas_techniques_supann" target="_blank" rel="noopener"&gt;SUPANN 2021&lt;/a&gt;
+et &lt;a href="https://github.com/REFEDS/eduperson" target="_blank" rel="noopener"&gt;eduPerson&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;Ce contre quoi elle est vérifiée&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
 &lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Le &lt;code&gt;ldapsearch&lt;/code&gt; d&amp;rsquo;OpenLDAP&lt;/strong&gt;, en CI, et exigé là où il est installé : la
 voie de test Linux, le détecteur de concurrence et la voie de couverture positionnent
@@ -1792,7 +1942,7 @@ arbitraire, StartTLS suivi de davantage de LDAP.&lt;/p&gt;
 décodeurs et l&amp;rsquo;aller-retour du filtre. Le plancher de couverture est de 99,7 %, avec les trois
 lignes non atteintes nommées dans le workflow.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Référence&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/ldap@v0.8.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/ldap@v0.8.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>krb5 — accepter un ticket Kerberos</title><link>https://go-authn.github.io/docs/0.4/fr/libraries/krb5/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/fr/libraries/krb5/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/ldap@v0.9.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/ldap@v0.9.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>krb5 — accepter un ticket Kerberos</title><link>https://go-authn.github.io/docs/0.4/fr/libraries/krb5/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/fr/libraries/krb5/</guid><description>
 &lt;p&gt;&lt;strong&gt;Ce ticket Kerberos est-il bon pour ce service ?&lt;/strong&gt; La moitié &lt;strong&gt;accepteur&lt;/strong&gt; de
 Kerberos, et seulement cette moitié : il détient un keytab, vérifie l&amp;rsquo;AP-REQ qu&amp;rsquo;un client
 présente, répond par l&amp;rsquo;AP-REP qui prouve que le service est authentique, puis
