@@ -11,10 +11,10 @@ anderen Verzeichnis. Was sie authentifizieren will, spricht LDAP.** authnd ist d
 davor: Es führt Binds und Suchen über die Quellen von
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) aus, sodass das, was eine
 Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,
-`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.12.0, dessen Einträge den
+`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.12.1, dessen Einträge den
 Standardschemata folgen und das Schema bestehen, das es unter `cn=Subschema` bereitstellt
 und das ein Standort um sein eigenes erweitert
-([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), mit go-authn/ldap v0.9.0 und
+([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), mit go-authn/ldap v0.10.0 und
 go-authn/directory v0.15.0 darunter; was geprüft ist und
 was nicht, steht auf der Seite [Stand]({{< relref "/status.md" >}}).
 
@@ -176,8 +176,10 @@ das ebenfalls einem anonymen Client beantwortet wird.
 {{< callout type="info" >}}
 **Zu den Transkripten**
 
-Das Root-DSE, die `--version`-Zeilen und alles auf der Seite
-[Standort-Schemata]({{< relref "/authnd/schemas.md" >}}) wurden vom
+Alles auf der Seite [Standort-Schemata]({{< relref "/authnd/schemas.md" >}})
+wurde vom Release-Binary v0.12.1 ausgegeben (`authnd-darwin-arm64`,
+`go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`,
+`vcs.modified=false`). Das Root-DSE und die `--version`-Zeilen wurden vom
 Release-Binary v0.12.0 ausgegeben (`authnd-darwin-arm64`, gegen `SHA256SUMS`
 geprüft; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
 `vcs.modified=false`). Die übrigen Startzeilen wurden vom Release-Binary

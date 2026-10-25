@@ -11,10 +11,10 @@ tags: [authnd, ldap]
 [go-authn/directory]({{< relref "/libraries/_index.md" >}})의 소스 위에서 바인드와
 검색을 처리하므로, 데이터베이스에 있는 내용을 디렉터리에 질의할 줄 아는 어떤
 것이든 읽을 수 있습니다. 순수 Go, `CGO_ENABLED=0`, 바이너리 하나입니다. 이 문서는
-v0.12.0을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
+v0.12.1을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
 제공하는 스키마를 통과합니다. 사이트는 이 스키마를 자신의 스키마로
 확장할 수 있습니다([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})). 그 아래에는
-go-authn/ldap v0.9.0과 go-authn/directory v0.15.0이 있습니다. 무엇이 검증되었고
+go-authn/ldap v0.10.0과 go-authn/directory v0.15.0이 있습니다. 무엇이 검증되었고
 무엇이 아닌지는 [상태]({{< relref "/status.md" >}}) 페이지에 있습니다.
 
 {{< callout type="warning" >}}
@@ -171,10 +171,13 @@ vendorVersion: v0.12.0
 {{< callout type="info" >}}
 **트랜스크립트에 대하여**
 
-루트 DSE, `--version` 줄, 그리고 [사이트 스키마]({{< relref "/authnd/schemas.md" >}})
-페이지의 모든 내용은 v0.12.0 릴리스 바이너리(`authnd-darwin-arm64`, `SHA256SUMS`와
-대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
-`vcs.modified=false`)가 출력한 것입니다. 나머지 시작 줄은 v0.11.1 릴리스
+[사이트 스키마]({{< relref "/authnd/schemas.md" >}}) 페이지의 모든 내용은 v0.12.1
+릴리스 바이너리(`authnd-darwin-arm64`, `go version -m`: `go1.27.3`,
+`mod github.com/go-authn/authnd v0.12.1`, `vcs.modified=false`)가 출력한
+것입니다. 루트 DSE와 `--version` 줄은 v0.12.0 릴리스 바이너리(`authnd-darwin-arm64`,
+`SHA256SUMS`와 대조함; `go version -m`: `go1.27.3`,
+`mod github.com/go-authn/authnd v0.12.0`, `vcs.modified=false`)가 출력한
+것입니다. 나머지 시작 줄은 v0.11.1 릴리스
 바이너리(`mod github.com/go-authn/authnd v0.11.1`, `vcs.modified=false`)가 출력한
 것이며, 시작 줄과 같은 트랜스크립트에 보이는 다른 모든 명령도 마찬가지입니다.
 v0.11.1은 그 줄 외에는 아무것도 바꾸지 않았고, v0.12.0의 변경 내역은 스키마

@@ -9,15 +9,16 @@ Estas páginas son la versión **0.5** de la documentación, y describen:
 
 | programa | versión | módulo |
 |---|---|---|
-| authnd | **v0.12.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 Las versiones de las bibliotecas están en [su propia página]({{< relref "/libraries/_index.md" >}});
-ldap está en la **v0.9.0**, con los esquemas en HCL2 y el conversor
+ldap está en la **v0.10.0**, con un `BuildError` tipado para un esquema que no
+se construye, los esquemas en HCL2 y el conversor
 `ldapschema`, y directory en la **v0.15.0**, con clases de objeto declaradas.
-authnd v0.12.0 incorpora ldap v0.9.0 y directory v0.15.0.
+authnd v0.12.1 incorpora ldap v0.10.0 y directory v0.15.0.
 Una nueva versión menor de cualquiera de los programas anteriores es una nueva
 versión de la documentación, de modo que las páginas que alguien encuentra bajo
 `/docs/0.5/` siguen describiendo lo que instaló; las de las versiones anteriores
@@ -70,6 +71,7 @@ que solo actualizaron dependencias, salvo las que describe esta versión de la d
 | v0.11.0 | [entradas de esquema estándar]({{< relref "/authnd/entries.md" >}}), cada una sometida al esquema servido en `cn=Subschema`; `attributes`, `users_attributes` y `groups_attributes`; `(uidNumber>=1000)` compara enteros. ⛔ `publish_nt_hash` necesita un [bloque `samba`]({{< relref "/authnd/tls.md#the-samba-block" >}}), y un consumidor que filtra por `posixAccount` o `posixGroup` ve menos entradas |
 | v0.11.1 | la línea de arranque solo nombra las fuentes desde las que se sirve a alguien: sin bloque `user`, ya no nombra el archivo de configuración |
 | v0.12.0 | [esquemas de un sitio]({{< relref "/authnd/schemas.md" >}}): `schema_files` (`.schema` de OpenLDAP y LDIF de cn=config, tal como se publican; una redefinición se rechaza, incluso idéntica, como hace slapd) y un bloque `schema { }`; clases auxiliares declaradas por origen con `object_classes`, validadas al arrancar y publicadas con sus superclases; `check` informa de los archivos, de las declaraciones, de las clases omitidas en una persona por falta de un MUST y de los grupos sobre los que dos orígenes discrepan. ⛔ Compilada con Go 1.27.3: los binarios de la v0.11.1 (Go 1.27.2) están afectados por GO-2026-6809 |
+| v0.12.1 | un archivo o bloque de esquema que no se construye se rechaza en la posición que lleva el `BuildError` de go-authn/ldap v0.10.0, con una columna (`site.schema:6:` pasa a ser `site.schema:6:1:`); el mensaje termina con el tipo de rechazo, y un duplicado dice dónde está su primera definición |
 
 ### authn-bridge {#authn-bridge}
 
@@ -150,6 +152,7 @@ anteriores.
 | krl v0.6.1 | solo dependencias: golang.org/x/crypto v0.58.0; probada con Go 1.27.2 |
 | ldap v0.8.0 | [el paquete `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) y `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, las reglas de comparación del RFC 4517; `uidNumber` y `gidNumber` se ordenan como enteros; una búsqueda paginada se ciñe a los atributos pedidos |
 | ldap v0.9.0 | [los esquemas en HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): el paquete `schema/hclschema` y el comando `ldapschema` (`to-hcl`, `to-schema`, `check`) entre `.schema` de OpenLDAP, LDIF cn=config y HCL2; los lectores leen los archivos como slapd; las reglas de contenido y de estructura del DIT, las formas de nombre, `include` y `X-SUBST` no se admiten |
+| ldap v0.10.0 | [un `*schema.BuildError` tipado]({{< relref "/libraries/ldap.md#build-error" >}}) para una definición que `Build` rechaza, que se obtiene con `errors.As`: `Kind`, `Element`, `OID`, `Name`, `Field`, `Pos` (archivo:línea:columna donde empieza la definición, también para LDIF plegado o en base64 y para HCL), y `Ref`, `RefOID` y `RefPos` para la otra definición; toda definición leída lleva una `Pos`; «clases de objeto» en un mensaje |
 | oidc v0.4.1 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
 | servercert v0.5.2 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
 | totp v0.4.2 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |

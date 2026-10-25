@@ -152,10 +152,46 @@ a site's slapd loads is the file authnd loads. The definitions are served at
 - The files decide what every entry may hold. They are not secrets, but keep
   them with the rest of the configuration: `root:authnd`, mode `0640`, in a
   directory only root writes ([install]({{< relref "/authnd/install.md" >}})).
-- A file that does not build refuses startup, and `check`, with the file and
-  the line of the definition: an unknown superclass, attribute, matching rule or
-  syntax, a structural class derived from an auxiliary one, an OID or a name
-  defined twice.
+- A file that does not build refuses startup, and `check`, with the file, the
+  line and the column where the definition starts, and the kind of refusal at
+  the end of the message: an unknown superclass, attribute, matching rule or
+  syntax (`unknown reference`), a structural class derived from an auxiliary
+  one (`kind violation`), an OID or a name defined twice (`duplicate OID`,
+  `duplicate name`). Since v0.12.1 the place and the kind come from
+  go-authn/ldap's typed
+  [`*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}), not
+  from reading its message. A definition read from a file starts at column 1,
+  also when its text is folded over several lines. A duplicate says where its
+  first definition is, and a redefinition says which standard file, or which
+  line of an earlier file, holds the original. Two examples:
+
+  `cases/unknown.schema` has a MAY that is defined nowhere:
+
+  ```
+  # exampleB has a MAY that is defined nowhere.
+  objectclass ( 1.3.6.1.4.1.99999.2.9 NAME 'exampleB' SUP top AUXILIARY
+  	MAY noSuchAttribute )
+  ```
+
+  ```
+  $ authnd check cases/unknown.hcl
+  authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)
+  ```
+
+  `cases/twice.schema` gives one OID to two attribute types:
+
+  ```
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleA'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleB'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+  ```
+
+  ```
+  $ authnd check cases/twice.hcl
+  authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)
+  ```
 
 ### A redefinition is refused, even an identical one {#redefinition}
 
@@ -174,7 +210,7 @@ redefines `cn` (2.5.4.3) with a definition of its own:
 
 ```
 $ authnd check cases/dup.hcl
-authnd: schema_files: cases/cn-copy.schema:1: the attribute type cn (2.5.4.3) is already defined by the standard schema, and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
 ```
 
 ## The `schema { }` block {#the-schema-block}
@@ -428,9 +464,9 @@ MUST of `supannPerson` or `eduPerson` is published without the class, and
 {{< callout type="info" >}}
 **About the transcripts**
 
-Every command on this page was run with the v0.12.0 release binary
+Every command on this page was run with the v0.12.1 release binary
 (`authnd-darwin-arm64`, checked against `SHA256SUMS`; `go version -m`:
-`go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
+`go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`,
 `vcs.modified=false`) and OpenLDAP's `ldapsearch`, on 127.0.0.1, in a scratch
 directory, with the files shown. The paths are relative for that reason; a
 service uses absolute ones. The schema is an example written for this page.

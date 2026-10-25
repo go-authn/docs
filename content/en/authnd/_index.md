@@ -11,9 +11,9 @@ things that want to authenticate them speak LDAP.** authnd is the front: it
 binds and searches over [go-authn/directory]({{< relref "/libraries/_index.md" >}})'s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe
-v0.12.0, whose entries follow the standard schemas and pass the schema it
+v0.12.1, whose entries follow the standard schemas and pass the schema it
 serves at `cn=Subschema`, which a site extends with its own
-([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), with go-authn/ldap v0.9.0 and
+([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), with go-authn/ldap v0.10.0 and
 go-authn/directory v0.15.0 under it; what is verified and what is not is on
 the [status]({{< relref "/status.md" >}}) page.
 
@@ -174,9 +174,11 @@ which is answered to an anonymous client as well.
 {{< callout type="info" >}}
 **About the transcripts**
 
-The root DSE, the `--version` lines and everything on the
-[site schemas]({{< relref "/authnd/schemas.md" >}}) page were printed by the
-v0.12.0 release binary (`authnd-darwin-arm64`, checked against `SHA256SUMS`;
+Everything on the [site schemas]({{< relref "/authnd/schemas.md" >}}) page was
+printed by the v0.12.1 release binary (`authnd-darwin-arm64`, `go version -m`:
+`go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`, `vcs.modified=false`).
+The root DSE and the `--version` lines were printed by the v0.12.0 release
+binary (`authnd-darwin-arm64`, checked against `SHA256SUMS`;
 `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
 `vcs.modified=false`). The other startup lines were printed by the v0.11.1
 release binary (`mod github.com/go-authn/authnd v0.11.1`,

@@ -150,9 +150,43 @@ this configuration can be served
 - 这些文件决定每个条目可以包含什么。它们不是机密，但请与
   配置的其余部分放在一起：`root:authnd`，权限 `0640`，位于
   只有 root 可写的目录中（[安装]({{< relref "/authnd/install.md" >}})）。
-- 无法构建的文件会使启动以及 `check` 被拒绝，并给出文件和
-  定义所在的行：未知的父类、属性、匹配规则或
-  语法，由辅助类派生的结构类，重复定义的 OID 或名称。
+- 无法构建的文件会使启动以及 `check` 被拒绝，并给出文件、行
+  和定义起始的列，信息末尾是拒绝的类型：未知的父类、属性、
+  匹配规则或语法（`unknown reference`），由辅助类派生的结构类
+  （`kind violation`），重复定义的 OID 或名称（`duplicate OID`、
+  `duplicate name`）。自 v0.12.1 起，位置和类型来自 go-authn/ldap 的类型化
+  [`*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}})，而不是
+  通过解析它的错误信息。从文件读取的定义从第 1 列开始，
+  即使其文本折叠成多行也一样。重复定义会指出它的第一个定义在哪里，
+  重新定义则会指出原件在哪个标准文件，或更早文件的哪一行。两个示例：
+
+  `cases/unknown.schema` 有一个在任何地方都未定义的 MAY：
+
+  ```
+  # exampleB has a MAY that is defined nowhere.
+  objectclass ( 1.3.6.1.4.1.99999.2.9 NAME 'exampleB' SUP top AUXILIARY
+  	MAY noSuchAttribute )
+  ```
+
+  ```
+  $ authnd check cases/unknown.hcl
+  authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)
+  ```
+
+  `cases/twice.schema` 给两个属性类型赋予同一个 OID：
+
+  ```
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleA'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+
+  attributetype ( 1.3.6.1.4.1.99999.1.9 NAME 'exampleB'
+  	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+  ```
+
+  ```
+  $ authnd check cases/twice.hcl
+  authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)
+  ```
 
 ### 重新定义会被拒绝，即使完全相同 {#redefinition}
 
@@ -171,7 +205,7 @@ attributeType*（`servers/slapd/at.c`、`oc.c`）。只有 slapd 自己硬编码
 
 ```
 $ authnd check cases/dup.hcl
-authnd: schema_files: cases/cn-copy.schema:1: the attribute type cn (2.5.4.3) is already defined by the standard schema, and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too ("Duplicate attributeType", servers/slapd/at.c and oc.c). Remove it from this file
 ```
 
 ## `schema { }` 块 {#the-schema-block}
@@ -421,9 +455,9 @@ users "sql" {
 {{< callout type="info" >}}
 **关于这些记录**
 
-本页上的每条命令都由 v0.12.0 发布的二进制文件
+本页上的每条命令都由 v0.12.1 发布的二进制文件
 （`authnd-darwin-arm64`，已对照 `SHA256SUMS` 核对；`go version -m`：
-`go1.27.3`，`mod github.com/go-authn/authnd v0.12.0`，
+`go1.27.3`，`mod github.com/go-authn/authnd v0.12.1`，
 `vcs.modified=false`）和 OpenLDAP 的 `ldapsearch` 运行，在 127.0.0.1 上，
 在一个临时目录中，使用所示的文件。路径因此是相对的；
 服务则使用绝对路径。该模式是为本页编写的示例。

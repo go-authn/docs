@@ -12,7 +12,7 @@ tags: [库, ldap, 目录]
 绑定策略；本库拥有字节。
 
 ```sh
-go get github.com/go-authn/ldap@v0.9.0
+go get github.com/go-authn/ldap@v0.10.0
 ```
 
 依据 RFC 4511（协议）、4512（根 DSE 和模式）、
@@ -292,6 +292,84 @@ SSSD 由 `ldap_min_id` 和 `ldap_max_id` 构建的那个。slapd 自己定义这
 [authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}})提供
 此模式，并让它发布的每个条目都遵从它。
 
+## 无法构建的模式 {#build-error}
+
+自 v0.10.0 起，`schema.Build` 或 `schema.BuildFrom` 拒绝的定义是一个
+`*schema.BuildError`，可用 `errors.As` 取得。程序应根据它的字段报告拒绝，
+绝不要匹配错误信息。Build 在遇到第一个被拒绝的定义时就停止，
+所以只有一个。
+
+- `Kind` 是 Build 所做的各项检查之一：`UnknownReference`、
+  `DuplicateOID`、`DuplicateName`、`SuperiorCycle`、`KindViolation`、
+  `UsageMismatch`、`CollectiveMismatch` 和 `UsageViolation`。
+- `Element`（语法、匹配规则、属性类型或对象类）、`OID` 和
+  `Name`（它的第一个 NAME）属于被拒绝的定义，`Pos` 是它的起点：
+  `file:line:column`，即 `.schema` 关键字所在的行，或 LDIF 中
+  `attributeTypes:` 所在的行，该行被折叠或为 base64 时也一样；HCL 则是
+  该块自身的位置。在代码中构建的定义没有位置。
+- `Field` 是出错的术语（`SUP`、`EQUALITY`、`SYNTAX`、`MUST`、`NAME`
+  ……），`Ref` 是错误所指之处：未定义的名称或 OID，或者另一个
+  定义，连同它的 `RefOID` 和 `RefPos`。对于重复定义，它是第一个
+  定义，信息中会说明它在哪里。
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/ldap/schema"
+)
+
+// An object class whose superclass is defined nowhere.
+const site = `# site.schema
+objectclass ( 1.3.6.1.4.1.99999.1.1 NAME 'siteMember'
+	SUP top AUXILIARY )
+objectclass ( 1.3.6.1.4.1.99999.1.2 NAME 'siteGuest'
+	SUP nobody AUXILIARY )
+`
+
+func main() {
+	files := append(schema.StandardFiles(), schema.File{Name: "site.schema", Data: []byte(site)})
+	_, err := schema.Build(files...)
+
+	var be *schema.BuildError
+	if !errors.As(err, &be) {
+		fmt.Println("not a BuildError:", err)
+		return
+	}
+	fmt.Println("error:  ", be)
+	fmt.Println("Kind:   ", be.Kind)
+	fmt.Println("Element:", be.Element)
+	fmt.Println("OID:    ", be.OID)
+	fmt.Println("Name:   ", be.Name)
+	fmt.Println("Field:  ", be.Field)
+	fmt.Println("Ref:    ", be.Ref)
+	fmt.Println("Pos:    ", be.Pos)
+	fmt.Println("RefPos: ", be.RefPos.IsValid())
+	fmt.Println("is UnknownReference:", be.Kind == schema.UnknownReference)
+}
+```
+
+```
+error:   site.schema:4:1: schema: the object class siteGuest has the superclass nobody, which is not defined
+Kind:    unknown reference
+Element: object class
+OID:     1.3.6.1.4.1.99999.1.2
+Name:    siteGuest
+Field:   SUP
+Ref:     nobody
+Pos:     site.schema:4:1
+RefPos:  false
+is UnknownReference: true
+```
+
+在空模块中用 `github.com/go-authn/ldap` v0.10.0 运行。第一个
+类没有问题；第二个从第 4 行开始，别处并无错误，因此
+`RefPos` 为空。`schema.Read` 返回的每个定义同样带有 `Pos`，
+Position 的 `String` 在列未知时会省略列。
+
 ## HCL2 模式与转换器 {#hcl2-and-the-converter}
 
 自 v0.9.0 起，模式既可以用 slapd 读取的文件编写，也可以用 HCL2 编写。包 `schema/hclschema` 把 HCL2 解码为
@@ -457,4 +535,4 @@ StartTLS 之后再有更多 LDAP。
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.9.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.9.0)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.0)

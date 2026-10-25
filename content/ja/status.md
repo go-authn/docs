@@ -9,15 +9,16 @@ tags: [ステータス, リリース]
 
 | プログラム | リリース | モジュール |
 |---|---|---|
-| authnd | **v0.12.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 ライブラリのバージョンは[専用ページ]({{< relref "/libraries/_index.md" >}})にあります。
-ldap は **v0.9.0** で、HCL2 のスキーマと `ldapschema` コンバーターを備えています。
+ldap は **v0.10.0** で、ビルドできないスキーマのための型付きの `BuildError`、
+HCL2 のスキーマと `ldapschema` コンバーターを備えています。
 directory は **v0.15.0** で、宣言されたオブジェクトクラスを備えています。
-authnd v0.12.0 は ldap v0.9.0 と directory v0.15.0 を組み込んでいます。
+authnd v0.12.1 は ldap v0.10.0 と directory v0.15.0 を組み込んでいます。
 上記のいずれかのプログラムのマイナーバージョンが新しくなると、新しいドキュメントバージョンになります。
 そのため、`/docs/0.5/` 以下のページは、読者がインストールしたものを説明し続け、
 以前のリリースのページは `/docs/0.1/`、`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/` 以下に残ります。
@@ -67,6 +68,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | v0.11.0 | [標準スキーマのエントリ]({{< relref "/authnd/entries.md" >}})。各エントリは `cn=Subschema` で公開されるスキーマに適合しなければならない。`attributes`、`users_attributes`、`groups_attributes`。`(uidNumber>=1000)` は整数として比較する。⛔ `publish_nt_hash` には [`samba` ブロック]({{< relref "/authnd/tls.md#the-samba-block" >}})が必要で、`posixAccount` や `posixGroup` で絞り込むコンシューマーに見えるエントリが減る |
 | v0.11.1 | 起動時の行は、誰かが提供を受けているソースだけを示す: `user` ブロックがなければ設定ファイルを示さなくなった |
 | v0.12.0 | [サイトスキーマ]({{< relref "/authnd/schemas.md" >}}): `schema_files` (公開されているとおりの OpenLDAP `.schema` と cn=config LDIF。再定義は、slapd と同様に、同一であっても拒否される) と `schema { }` ブロック。ソースごとに `object_classes` で宣言する補助クラスは、起動時に検証され、スーパークラスとともに公開される。`check` はファイル、宣言、MUST が足りないために人から外されたクラス、二つのソースの意見が食い違うグループを報告する。⛔ Go 1.27.3 でビルド: v0.11.1 のバイナリ (Go 1.27.2) は GO-2026-6809 の影響を受ける |
+| v0.12.1 | ビルドできないスキーマファイルまたはブロックは、go-authn/ldap v0.10.0 の `BuildError` が持つ位置で、列付きで拒否される (`site.schema:6:` は `site.schema:6:1:` になる)。メッセージは拒否の種類で終わり、重複は最初の定義の場所を示す |
 
 ### authn-bridge {#authn-bridge}
 
@@ -146,6 +148,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | krl v0.6.1 | 依存関係のみ: golang.org/x/crypto v0.58.0。Go 1.27.2 でテスト |
 | ldap v0.8.0 | [パッケージ `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) と `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2)、`Validate`、RFC 4517 のマッチングルール。`uidNumber` と `gidNumber` は整数として順序付けされる。ページング検索は要求された属性にとどまる |
 | ldap v0.9.0 | [HCL2 のスキーマ]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): パッケージ `schema/hclschema` と、OpenLDAP の `.schema`、cn=config LDIF、HCL2 の間を変換する `ldapschema` コマンド (`to-hcl`、`to-schema`、`check`)。リーダーは slapd と同じようにファイルを読む。DIT コンテンツルールと構造ルール、ネームフォーム、`include`、`X-SUBST` はサポートしない |
+| ldap v0.10.0 | `Build` が拒否する定義のための[型付きの `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}})。`errors.As` で照合する: `Kind`、`Element`、`OID`、`Name`、`Field`、`Pos` (定義の始まる file:line:column。折り返された LDIF や base64 の LDIF、HCL でも同様)、もう一方の定義のための `Ref`、`RefOID`、`RefPos`。読み込まれたすべての定義が `Pos` を持つ。メッセージ中の "object classes" |
 | oidc v0.4.1 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | servercert v0.5.2 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | totp v0.4.2 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |

@@ -9,15 +9,16 @@ Ces pages sont la version **0.5** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
-| authnd | **v0.12.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 Les versions des bibliothèques sont sur [leur propre page]({{< relref "/libraries/_index.md" >}}) ;
-ldap est en **v0.9.0**, avec les schémas en HCL2 et le convertisseur
+ldap est en **v0.10.0**, avec une `BuildError` typée pour un schéma qui ne se
+construit pas, les schémas en HCL2 et le convertisseur
 `ldapschema`, et directory en **v0.15.0**, avec les classes d'objet déclarées.
-authnd v0.12.0 embarque ldap v0.9.0 et directory v0.15.0.
+authnd v0.12.1 embarque ldap v0.10.0 et directory v0.15.0.
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
 de sorte que les pages qu'une personne trouve sous `/docs/0.5/` continuent de décrire ce
 qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`,
@@ -69,6 +70,7 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.11.0 | [des entrées des schémas standard]({{< relref "/authnd/entries.md" >}}), chacune soumise au schéma servi à `cn=Subschema` ; `attributes`, `users_attributes` et `groups_attributes` ; `(uidNumber>=1000)` compare des entiers. ⛔ `publish_nt_hash` demande un [bloc `samba`]({{< relref "/authnd/tls.md#the-samba-block" >}}), et un consommateur qui filtre sur `posixAccount` ou `posixGroup` voit moins d'entrées |
 | v0.11.1 | la ligne de démarrage ne nomme que les sources d'où quelqu'un est servi : sans bloc `user`, elle ne nomme plus le fichier de configuration |
 | v0.12.0 | [schémas de site]({{< relref "/authnd/schemas.md" >}}) : `schema_files` (`.schema` OpenLDAP et LDIF cn=config, tels que publiés ; une redéfinition est refusée, même identique, comme le fait slapd) et un bloc `schema { }` ; classes auxiliaires déclarées par source avec `object_classes`, validées au démarrage et publiées avec leurs superclasses ; `check` rapporte les fichiers, les déclarations, les classes retirées à une personne faute d'un MUST, et les groupes sur lesquels deux sources sont en désaccord. ⛔ Compilée avec Go 1.27.3 : les binaires de la v0.11.1 (Go 1.27.2) sont touchés par GO-2026-6809 |
+| v0.12.1 | un fichier ou un bloc de schéma qui ne se construit pas est refusé à la position que porte la `BuildError` de go-authn/ldap v0.10.0, avec une colonne (`site.schema:6:` devient `site.schema:6:1:`) ; le message se termine par le genre de refus, et un doublon dit où se trouve sa première définition |
 
 ### authn-bridge {#authn-bridge}
 
@@ -149,6 +151,7 @@ changé les précédentes.
 | krl v0.6.1 | dépendances seulement : golang.org/x/crypto v0.58.0 ; testée avec Go 1.27.2 |
 | ldap v0.8.0 | [le paquet `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) et `Server.Schema` : `cn=Subschema` (RFC 4512 §4.2), `Validate`, les règles de correspondance de la RFC 4517 ; `uidNumber` et `gidNumber` s'ordonnent comme des entiers ; une recherche paginée s'en tient aux attributs demandés |
 | ldap v0.9.0 | [les schémas en HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}) : le paquet `schema/hclschema` et la commande `ldapschema` (`to-hcl`, `to-schema`, `check`) entre `.schema` d'OpenLDAP, LDIF cn=config et HCL2 ; les lecteurs lisent les fichiers comme slapd ; les règles de contenu et de structure DIT, les formes de noms, `include` et `X-SUBST` ne sont pas gérés |
+| ldap v0.10.0 | [une `*schema.BuildError` typée]({{< relref "/libraries/ldap.md#build-error" >}}) pour une définition que `Build` refuse, reconnue avec `errors.As` : `Kind`, `Element`, `OID`, `Name`, `Field`, `Pos` (fichier:ligne:colonne où la définition commence, y compris pour le LDIF replié ou en base64 et le HCL), et `Ref`, `RefOID` et `RefPos` pour l'autre définition ; chaque définition lue porte un `Pos` ; « object classes » dans un message |
 | oidc v0.4.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 | servercert v0.5.2 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 | totp v0.4.2 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
