@@ -32,11 +32,11 @@ chmod されるので、独自のユーザーで動く `sshd` と TLS サーバ�
 リリースには、Linux、macOS、Windows の amd64 と arm64 向けの `authn-revokd-<os>-<arch>` が、
 `SHA256SUMS` とビルド来歴とともに含まれます
 ([ダウンロードの検証]({{< relref "/security/verifying-releases.md" >}}))。あるいは
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4` です。
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.5` です。
 
 アカウントとユニットはリリースタグの `packaging/` ディレクトリにあり、バイナリと同じバージョン
-です。そのタグのチェックアウトから、または v0.6.4 の場合は
-<https://github.com/go-authn/revocation/tree/v0.6.4/packaging> から、そのディレクトリを
+です。そのタグのチェックアウトから、または v0.6.5 の場合は
+<https://github.com/go-authn/revocation/tree/v0.6.5/packaging> から、そのディレクトリを
 バイナリの隣にコピーしてください。
 
 ```sh

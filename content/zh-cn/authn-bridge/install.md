@@ -25,9 +25,9 @@ arm64）的 `authn-bridge-<os>-<arch>`、一个 `SHA256SUMS` 清单，以及每�
 说明了如何检查这两者。或者自行构建，这会将版本记录在二进制文件中：
 
 ```
-$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.1
+$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
 $ authn-bridge --version
-authn-bridge version v0.23.1
+authn-bridge version v0.23.3
 ```
 
 路径很重要：自 v0.20.0 起，程序位于 `internal/app`，而

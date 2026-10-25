@@ -9,11 +9,11 @@ tags: [security, releases]
 Each release of authnd, authn-bridge, authn-revokd and sshcert publishes six
 static binaries (`CGO_ENABLED=0`: linux, darwin and windows, on amd64 and
 arm64), a `SHA256SUMS` file, and a build-provenance attestation for every
-binary. The examples below use authn-bridge v0.23.1; the other programs work
+binary. The examples below use authn-bridge v0.23.3; the other programs work
 the same way with their own repository and name.
 
 ```sh
-gh release download v0.23.1 --repo go-authn/bridge
+gh release download v0.23.3 --repo go-authn/bridge
 ```
 
 ## 1. The checksum
@@ -62,17 +62,18 @@ go version -m authn-bridge-linux-amd64
 ```
 
 ```
+authn-bridge-linux-amd64: go1.27.3
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.23.1	
+	mod	github.com/go-authn/bridge	v0.23.3	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=9a51e5e9839f879d44c09b8b4e71f823e72ee0aa
+	build	vcs.revision=b04769c43c24f684df9e0b5a0d1cb6997ee90d95
 	build	vcs.modified=false
 ```
 
-(lines shortened to the ones that matter). The `mod` line must be the tag
+(lines shortened to the ones that matter; the first names the Go toolchain that built the binary). The `mod` line must be the tag
 exactly, and `vcs.modified` must be `false`: a build from a tree with
-uncommitted changes says `true`, and its version reads `v0.23.1+dirty`. The
+uncommitted changes says `true`, and its version reads `v0.23.3+dirty`. The
 release workflow refuses to publish unless **every one** of the six binaries
 passes both checks, and unless the program prints the tag as the last word of
 its version line:
@@ -81,9 +82,9 @@ its version line:
 $ authnd --version
 authnd version v0.12.0
 $ authn-bridge --version
-authn-bridge version v0.23.1
+authn-bridge version v0.23.3
 $ authn-revokd -version
-authn-revokd v0.6.4
+authn-revokd v0.6.5
 ```
 
 authnd and authn-bridge take `--version`; authn-revokd takes `-version`, Go's

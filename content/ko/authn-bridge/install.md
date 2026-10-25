@@ -26,9 +26,9 @@ root로 실행합니다.
 방법을 설명합니다. 또는 직접 빌드하면 바이너리에 버전이 기록됩니다.
 
 ```
-$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.1
+$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
 $ authn-bridge --version
-authn-bridge version v0.23.1
+authn-bridge version v0.23.3
 ```
 
 경로가 중요합니다. v0.20.0부터 프로그램은 `internal/app`에, 명령은

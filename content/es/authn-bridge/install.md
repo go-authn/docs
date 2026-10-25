@@ -27,9 +27,9 @@ explica cómo comprobar ambos. O compílelo, lo que registra la versión en el
 binario:
 
 ```
-$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.1
+$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
 $ authn-bridge --version
-authn-bridge version v0.23.1
+authn-bridge version v0.23.3
 ```
 
 La ruta importa: desde la v0.20.0 el programa está en `internal/app` y el

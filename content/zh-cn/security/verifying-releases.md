@@ -9,11 +9,11 @@ tags: [安全, 发布版本]
 authnd、authn-bridge、authn-revokd 和 sshcert 的每个版本都发布六个
 静态二进制文件（`CGO_ENABLED=0`：linux、darwin 和 windows，各有 amd64 与
 arm64），一个 `SHA256SUMS` 文件，以及针对每个
-二进制文件的构建溯源证明。下面的示例使用 authn-bridge v0.23.1；其他程序
+二进制文件的构建溯源证明。下面的示例使用 authn-bridge v0.23.3；其他程序
 的做法相同，只需换成各自的仓库和名称。
 
 ```sh
-gh release download v0.23.1 --repo go-authn/bridge
+gh release download v0.23.3 --repo go-authn/bridge
 ```
 
 ## 1. 校验和 {#1-the-checksum}
@@ -60,16 +60,17 @@ go version -m authn-bridge-linux-amd64
 ```
 
 ```
+authn-bridge-linux-amd64: go1.27.3
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.23.1	
+	mod	github.com/go-authn/bridge	v0.23.3	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=9a51e5e9839f879d44c09b8b4e71f823e72ee0aa
+	build	vcs.revision=b04769c43c24f684df9e0b5a0d1cb6997ee90d95
 	build	vcs.modified=false
 ```
 
-（已精简为重要的几行。）`mod` 行必须与标签完全一致，且 `vcs.modified` 必须为 `false`：
-从含有未提交更改的目录树构建的程序会显示 `true`，其版本读作 `v0.23.1+dirty`。
+（已精简为重要的几行；第一行是构建该二进制文件的 Go 工具链。）`mod` 行必须与标签完全一致，且 `vcs.modified` 必须为 `false`：
+从含有未提交更改的目录树构建的程序会显示 `true`，其版本读作 `v0.23.3+dirty`。
 除非六个二进制文件中的**每一个**都通过这两项检查，并且程序在其
 版本行的最后一个词中打印出标签，否则发布工作流拒绝发布：
 
@@ -77,9 +78,9 @@ go version -m authn-bridge-linux-amd64
 $ authnd --version
 authnd version v0.12.0
 $ authn-bridge --version
-authn-bridge version v0.23.1
+authn-bridge version v0.23.3
 $ authn-revokd -version
-authn-revokd v0.6.4
+authn-revokd v0.6.5
 ```
 
 authnd 和 authn-bridge 接受 `--version`；authn-revokd 接受 `-version`，即 Go 的

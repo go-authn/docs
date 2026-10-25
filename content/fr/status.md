@@ -10,8 +10,8 @@ Ces pages sont la version **0.5** de la documentation, et décrivent :
 | programme | version | module |
 |---|---|---|
 | authnd | **v0.12.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
+| authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 Les versions des bibliothèques sont sur [leur propre page]({{< relref "/libraries/_index.md" >}}) ;
@@ -34,6 +34,12 @@ La v0.12.0 est compilée avec Go 1.27.3 et sa directive `go` est 1.27.3 : `go in
 passe donc de lui-même à la chaîne d'outils corrigée ; `govulncheck` sous 1.27.3
 ne signale aucune vulnérabilité. Son binaire de la version affiche `go1.27.3` dans
 `go version -m`. Voir [la note de mise à niveau]({{< relref "/authnd/_index.md" >}}).
+{{< /callout >}}
+
+{{< callout type="warning" >}}
+**Sécurité : prenez authn-bridge v0.23.3 et authn-revokd v0.6.5**
+
+Sous Go 1.27.2, `govulncheck` signale GO-2026-6809 dans les deux programmes : `Certificate.Verify` de `crypto/x509` ne rejetait pas des certificats intermédiaires compromis connus. Le correctif est dans Go 1.26.10 et 1.27.3. **Les binaires de version construits avec un Go plus ancien sont concernés.** v0.23.3 et v0.6.5 sont construits avec Go 1.27.3 et leur directive `go` vaut 1.27.3 ; `go install` bascule donc de lui-même vers la chaîne d'outils corrigée, et leurs binaires de version affichent `go1.27.3` dans `go version -m`. sshcert n'est pas concerné et n'a pas de nouvelle version.
 {{< /callout >}}
 
 ## Ce que chaque version a ajouté {#what-each-release-added}
@@ -96,6 +102,8 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.22.1 | `resource` peut être répété au point de terminaison d'autorisation, pour une autorisation bornée à plusieurs serveurs ; refusé à `device_authorization` au lieu d'être ignoré ([indicateurs de ressource]({{< relref "/authn-bridge/resources.md" >}})) |
 | v0.23.0 | `access_token_groups = false` : un client dont les jetons sont collés dans ssh ne porte aucun groupe ([jetons]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
 | v0.23.1 | dépendances seulement : go-jose/v4 v4.1.6, golang.org/x/crypto v0.58.0, golang.org/x/net v0.61.0 ; go-authn/directory v0.12.0, revocation v0.6.3, saml v0.4.1, servercert v0.5.1, sshcert v0.1.6 |
+| v0.23.2 | sécurité : go-authn/oidc v0.4.2, qui refuse un `nbf` hors de l'intervalle int64 (un jeton pas encore valide était accepté) et une clé RSA avec `e = 0` (elle était analysée) ; go-authn/wireguard v0.1.2 |
+| v0.23.3 | construit avec Go 1.27.3, pour GO-2026-6809 (`crypto/x509` : `Certificate.Verify` ne rejetait pas des certificats intermédiaires compromis connus) ; la directive `go` vaut 1.27.3 ; aucun changement de comportement |
 
 ### authn-revokd {#authn-revokd}
 
@@ -111,6 +119,7 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.6.2 | `-once` distingue une récupération échouée d'une liste expirée ; une liste signée par une autre clé n'est plus appelée une concurrence ; `-help` sort avec 0 |
 | v0.6.3 | des domaines d'exemple aux noms de la RFC 2606, dans les exemples et la documentation ; aucun changement de comportement |
 | v0.6.4 | dépendances seulement : golang.org/x/crypto v0.58.0 |
+| v0.6.5 | construit avec Go 1.27.3, pour GO-2026-6809 (`crypto/x509` : `Certificate.Verify` ne rejetait pas des certificats intermédiaires compromis connus) ; la directive `go` vaut 1.27.3 ; aucun changement de comportement |
 
 ### sshcert {#sshcert}
 

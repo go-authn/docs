@@ -9,11 +9,11 @@ tags: [보안, 릴리스]
 authnd, authn-bridge, authn-revokd, sshcert의 각 릴리스는 정적 바이너리 여섯 개
 (`CGO_ENABLED=0`: amd64와 arm64의 linux, darwin, windows), `SHA256SUMS` 파일, 그리고
 모든 바이너리에 대한 빌드 출처 증명(attestation)을 게시합니다. 아래 예제는
-authn-bridge v0.23.1을 사용하며, 다른 프로그램도 각자의 저장소와 이름으로 같은
+authn-bridge v0.23.3을 사용하며, 다른 프로그램도 각자의 저장소와 이름으로 같은
 방식으로 동작합니다.
 
 ```sh
-gh release download v0.23.1 --repo go-authn/bridge
+gh release download v0.23.3 --repo go-authn/bridge
 ```
 
 ## 1. 체크섬 {#1-the-checksum}
@@ -61,17 +61,18 @@ go version -m authn-bridge-linux-amd64
 ```
 
 ```
+authn-bridge-linux-amd64: go1.27.3
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.23.1	
+	mod	github.com/go-authn/bridge	v0.23.3	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=9a51e5e9839f879d44c09b8b4e71f823e72ee0aa
+	build	vcs.revision=b04769c43c24f684df9e0b5a0d1cb6997ee90d95
 	build	vcs.modified=false
 ```
 
-(중요한 줄만 남겨 줄였습니다.) `mod` 줄은 태그와 정확히 같아야 하고
+(중요한 줄만 남겨 줄였습니다. 첫 줄은 바이너리를 빌드한 Go 툴체인입니다.) `mod` 줄은 태그와 정확히 같아야 하고
 `vcs.modified`는 `false`여야 합니다. 커밋되지 않은 변경이 있는 트리에서 빌드하면
-`true`라고 나오고 버전은 `v0.23.1+dirty`로 표시됩니다. 릴리스 워크플로는 여섯
+`true`라고 나오고 버전은 `v0.23.3+dirty`로 표시됩니다. 릴리스 워크플로는 여섯
 바이너리 **모두**가 두 검사를 통과하지 않으면, 그리고 프로그램이 버전 줄의 마지막
 단어로 태그를 출력하지 않으면 게시를 거부합니다.
 
@@ -79,9 +80,9 @@ go version -m authn-bridge-linux-amd64
 $ authnd --version
 authnd version v0.12.0
 $ authn-bridge --version
-authn-bridge version v0.23.1
+authn-bridge version v0.23.3
 $ authn-revokd -version
-authn-revokd v0.6.4
+authn-revokd v0.6.5
 ```
 
 authnd와 authn-bridge는 `--version`을 받고, authn-revokd는 Go의 표준 플래그

@@ -11,7 +11,7 @@ tags: [authn-bridge, oidc, 令牌, rfc8707]
 这些服务器中的任何一个都可以拿着收到的令牌去
 向其他服务器出示：RFC 8707 §3 说明，这正是应当限制 audience 的原因。自
 v0.21.0 起，客户端可以用 RFC 8707 的 `resource` 参数请求发往其中**一个**
-服务器的令牌。本页描述 v0.23.1；v0.22.0 的不同之处见
+服务器的令牌。本页描述 v0.23.3；v0.22.0 的不同之处见
 [末尾](#departures)。
 
 没有 `resource` 时，一切不变：访问令牌发往客户端的全部
@@ -305,7 +305,7 @@ $ curl -s http://127.0.0.1:28473/device_authorization -d client_id=files-cli \
 
 ## 与 RFC 8707 的偏离之处 {#departures}
 
-| RFC 8707 | authn-bridge v0.23.1 |
+| RFC 8707 | authn-bridge v0.23.3 |
 |---|---|
 | §2：“Multiple `resource` parameters MAY be used” | 在授权端点，照此执行。在令牌端点只能有一个：第二个 `resource` 是 `invalid_request`，§3 允许这样做（“an authorization server may be unwilling or unable to fulfill a token request with multiple resources”） |
 | §2.2：该参数适用于“for all grant types” | 仅限 `authorization_code` 和 `refresh_token`。对于 `client_credentials` 或设备授权，它会被以 `invalid_target` 拒绝，在设备授权请求处和轮询时都是如此 |

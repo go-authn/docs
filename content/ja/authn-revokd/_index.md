@@ -11,12 +11,12 @@ tags: [authn-revokd, 失効, krl, crl]
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}}) が公開するリストについて、この二つの
 隙間を塞ぎます。各リストを取得し、検証に通った場合にのみ保持し、`sshd` や TLS サーバーが読む
 場所に書き込み、リストが失効したときは **CA 自体を失効させる**リストを書き込みます。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.6.4 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.6.5 を説明しています。
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.5
 $ authn-revokd -version
-authn-revokd v0.6.4
+authn-revokd v0.6.5
 $ authn-revokd -help
 Usage of authn-revokd:
   -config string

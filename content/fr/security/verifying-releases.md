@@ -9,11 +9,11 @@ tags: [sécurité, versions]
 Chaque version d'authnd, authn-bridge, authn-revokd et sshcert publie six
 binaires statiques (`CGO_ENABLED=0` : linux, darwin et windows, sur amd64 et
 arm64), un fichier `SHA256SUMS`, et une attestation de provenance de compilation pour chaque
-binaire. Les exemples ci-dessous utilisent authn-bridge v0.23.1 ; les autres programmes fonctionnent de la même
+binaire. Les exemples ci-dessous utilisent authn-bridge v0.23.3 ; les autres programmes fonctionnent de la même
 façon avec leur propre dépôt et leur propre nom.
 
 ```sh
-gh release download v0.23.1 --repo go-authn/bridge
+gh release download v0.23.3 --repo go-authn/bridge
 ```
 
 ## 1. La somme de contrôle {#1-the-checksum}
@@ -62,17 +62,18 @@ go version -m authn-bridge-linux-amd64
 ```
 
 ```
+authn-bridge-linux-amd64: go1.27.3
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.23.1	
+	mod	github.com/go-authn/bridge	v0.23.3	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=9a51e5e9839f879d44c09b8b4e71f823e72ee0aa
+	build	vcs.revision=b04769c43c24f684df9e0b5a0d1cb6997ee90d95
 	build	vcs.modified=false
 ```
 
-(lignes réduites à celles qui comptent). La ligne `mod` doit être exactement l'étiquette,
+(lignes réduites à celles qui comptent ; la première nomme la chaîne d'outils Go qui a construit le binaire). La ligne `mod` doit être exactement l'étiquette,
 et `vcs.modified` doit valoir `false` : une compilation depuis un arbre avec des
-changements non commités indique `true`, et sa version se lit `v0.23.1+dirty`. Le
+changements non commités indique `true`, et sa version se lit `v0.23.3+dirty`. Le
 workflow de publication refuse de publier à moins que **chacun** des six binaires
 ne passe les deux vérifications, et à moins que le programme n'affiche l'étiquette comme dernier mot de
 sa ligne de version :
@@ -81,9 +82,9 @@ sa ligne de version :
 $ authnd --version
 authnd version v0.12.0
 $ authn-bridge --version
-authn-bridge version v0.23.1
+authn-bridge version v0.23.3
 $ authn-revokd -version
-authn-revokd v0.6.4
+authn-revokd v0.6.5
 ```
 
 authnd et authn-bridge prennent `--version` ; authn-revokd prend `-version`, la

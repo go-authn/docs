@@ -10,8 +10,8 @@ tags: [상태, 릴리스]
 | 프로그램 | 릴리스 | 모듈 |
 |---|---|---|
 | authnd | **v0.12.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
+| authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 라이브러리의 버전은 [해당 페이지]({{< relref "/libraries/_index.md" >}})에
@@ -33,6 +33,12 @@ authnd는 인증서를 검증하며(`x509.Certificate.Verify`, `govulncheck`에 
 1.27.3에서의 `govulncheck`는 취약점이 없다고 보고합니다. 릴리스 바이너리는
 `go version -m`에서 `go1.27.3`을 보고합니다.
 [업그레이드 안내]({{< relref "/authnd/_index.md" >}})를 참조하십시오.
+{{< /callout >}}
+
+{{< callout type="warning" >}}
+**보안: authn-bridge v0.23.3과 authn-revokd v0.6.5를 사용하세요**
+
+Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 보고합니다. `crypto/x509`의 `Certificate.Verify`가 알려진 침해된 중간 인증서를 거부하지 않았습니다. Go 1.26.10과 1.27.3에서 수정되었습니다. **더 오래된 Go로 빌드한 릴리스 바이너리는 영향을 받습니다.** v0.23.3과 v0.6.5는 Go 1.27.3으로 빌드되고 `go` 지시어도 1.27.3이므로, `go install`이 스스로 수정된 툴체인으로 전환합니다. 두 릴리스 바이너리는 `go version -m`에서 `go1.27.3`을 보고합니다. sshcert는 영향을 받지 않으며 새 릴리스가 없습니다.
 {{< /callout >}}
 
 ## 각 릴리스에서 추가된 것 {#what-each-release-added}
@@ -95,6 +101,8 @@ authnd는 인증서를 검증하며(`x509.Certificate.Verify`, `govulncheck`에 
 | v0.22.1 | 여러 서버로 제한된 그랜트를 위해 인가 엔드포인트에서 `resource`를 반복할 수 있음, `device_authorization`에서는 무시하지 않고 거부함([리소스 지표]({{< relref "/authn-bridge/resources.md" >}})) |
 | v0.23.0 | `access_token_groups = false`: 토큰을 ssh에 붙여 넣는 클라이언트는 그룹을 담지 않음([토큰]({{< relref "/authn-bridge/tokens.md#what-it-leaves-out" >}})) |
 | v0.23.1 | 의존성만: go-jose/v4 v4.1.6, golang.org/x/crypto v0.58.0, golang.org/x/net v0.61.0, go-authn/directory v0.12.0, revocation v0.6.3, saml v0.4.1, servercert v0.5.1, sshcert v0.1.6 |
+| v0.23.2 | 보안: go-authn/oidc v0.4.2는 int64 범위를 벗어난 `nbf`(아직 유효하지 않은 토큰이 받아들여졌음)와 `e = 0`인 RSA 키(파싱되었음)를 거부합니다. go-authn/wireguard v0.1.2 |
+| v0.23.3 | Go 1.27.3으로 빌드, GO-2026-6809 대응(`crypto/x509`: `Certificate.Verify`가 알려진 침해된 중간 인증서를 거부하지 않았음). `go` 지시어는 1.27.3. 동작 변경 없음 |
 
 ### authn-revokd {#authn-revokd}
 
@@ -110,6 +118,7 @@ authnd는 인증서를 검증하며(`x509.Certificate.Verify`, `govulncheck`에 
 | v0.6.2 | `-once`가 가져오기 실패와 만료된 목록을 구분함, 다른 키로 서명된 목록을 더 이상 경쟁 상태라고 부르지 않음, `-help`가 0으로 종료함 |
 | v0.6.3 | 예제와 문서의 자리 표시자 도메인을 RFC 2606 이름으로 변경, 동작 변화 없음 |
 | v0.6.4 | 의존성만: golang.org/x/crypto v0.58.0 |
+| v0.6.5 | Go 1.27.3으로 빌드, GO-2026-6809 대응(`crypto/x509`: `Certificate.Verify`가 알려진 침해된 중간 인증서를 거부하지 않았음). `go` 지시어는 1.27.3. 동작 변경 없음 |
 
 ### sshcert {#sshcert}
 
