@@ -19,7 +19,7 @@ tags: [authnd, 安装, systemd]
 清单，以及针对每个二进制文件的构建溯源证明。
 
 ```sh
-version=v0.11.1
+version=v0.12.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ gh attestation verify "authnd-linux-$arch" --repo go-authn/authnd   # built by t
 
 ```
 $ authnd --version
-authnd version v0.11.1
+authnd version v0.12.0
 ```
 
 ### 只构建你想要的部分 {#building-only-what-you-want}
@@ -64,8 +64,8 @@ u     authnd -  "authnd LDAP directory and Kerberos KDC" /var/lib/authnd -
 
 这两个文件来自发布标签的 `packaging/` 目录，与
 二进制文件的版本相同：把该目录复制到二进制文件旁边，可以来自该标签的
-检出副本，或者对于 v0.11.1，来自
-<https://github.com/go-authn/authnd/tree/v0.11.1/packaging>。
+检出副本，或者对于 v0.12.0，来自
+<https://github.com/go-authn/authnd/tree/v0.12.0/packaging>。
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
@@ -198,8 +198,8 @@ sudo systemctl restart authnd
 authnd --version
 ```
 
-将新标签处的 `packaging/` 与已安装的内容进行比较（v0.11.1 的与
-v0.10.2 的相同，没有变化）。回滚就是从
+将新标签处的 `packaging/` 与已安装的内容进行比较（v0.12.0 的与
+v0.11.1 的相同，没有变化）。回滚就是从
 `authnd.previous` 做同样的安装，然后重启。
 
 从 v0.10.x 到 v0.11.0，上面的 `check` 是关键的一步：
@@ -208,6 +208,12 @@ v0.10.2 的相同，没有变化）。回滚就是从
 这一步被拒绝，而不是在重启时；表格之后的各行会说明谁
 不再是 `posixAccount`，以及哪些组不再是 `posixGroup`
 （[条目]({{< relref "/authnd/entries.md" >}})）。
+
+⛔ 从 v0.11.1 到 v0.12.0，无论如何都要升级：v0.11.1 的发布二进制文件
+由 Go 1.27.2 构建，受 GO-2026-6809（crypto/x509）影响，而由
+Go 1.27.3 构建的 v0.12.0 不受影响。配置无需改动；要提供站点自己的
+模式，请参见[站点模式]({{< relref "/authnd/schemas.md" >}})，
+并用绝对路径指名这些文件，因为 systemd 单元的工作目录是 `/`。
 
 移除它：
 

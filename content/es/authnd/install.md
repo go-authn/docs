@@ -19,7 +19,7 @@ y arm64 (`.exe` en windows), compilado con `CGO_ENABLED=0`, un manifiesto
 `SHA256SUMS`, y una atestación de procedencia de compilación para cada binario.
 
 ```sh
-version=v0.11.1
+version=v0.12.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ con la que se publica, así que la versión es algo que se puede comparar:
 
 ```
 $ authnd --version
-authnd version v0.11.1
+authnd version v0.12.0
 ```
 
 ### Compilar solo lo que quiere {#building-only-what-you-want}
@@ -66,8 +66,8 @@ escribiera pertenecería a un número que más tarde designa a otra persona.
 
 Los dos archivos vienen del directorio `packaging/` de la etiqueta de la versión,
 la misma versión que el binario: copie ese directorio junto al binario, desde una
-copia de la etiqueta o, para la v0.11.1, desde
-<https://github.com/go-authn/authnd/tree/v0.11.1/packaging>.
+copia de la etiqueta o, para la v0.12.0, desde
+<https://github.com/go-authn/authnd/tree/v0.12.0/packaging>.
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
@@ -202,7 +202,7 @@ authnd --version
 ```
 
 Compare `packaging/` en la nueva etiqueta con lo que está instalado (el de la
-v0.11.1 es el de la v0.10.2, sin cambios). Volver atrás es la misma
+v0.12.0 es el de la v0.11.1, sin cambios). Volver atrás es la misma
 instalación a partir de `authnd.previous`, y un reinicio.
 
 De la v0.10.x a la v0.11.0, el `check` de arriba es el paso que importa: una
@@ -211,6 +211,14 @@ configuración con `publish_nt_hash = true` y sin
 ahí y no en el reinicio, y las líneas que siguen a sus tablas dicen quién ha
 dejado de ser un `posixAccount` y qué grupos han dejado de ser `posixGroup`
 ([las entradas]({{< relref "/authnd/entries.md" >}})).
+
+⛔ De la v0.11.1 a la v0.12.0, actualice en cualquier caso:
+los binarios de la versión v0.11.1 se compilaron con Go 1.27.2 y les afecta
+GO-2026-6809 (crypto/x509), que a la v0.12.0, compilada con Go 1.27.3, no. La
+configuración no necesita cambios; para servir el esquema propio de un sitio,
+consulte [esquemas de un sitio]({{< relref "/authnd/schemas.md" >}}), y nombre
+los archivos con rutas absolutas, pues el directorio de trabajo de una unidad
+systemd es `/`.
 
 Para desinstalarlo:
 

@@ -79,6 +79,25 @@ this configuration can be served
 - 스키마 검사에서 발견된 모든 문제와 함께, **게시되지 않은 모든 엔트리**
 - **NT 키는 있고 `sambaSID`가 없는 사람**, 그래서 `sambaNTPassword`도 없는 사람
 
+v0.12.0부터는 첫 줄과 표 사이에, [사이트 스키마]({{< relref "/authnd/schemas.md" >}})가
+추가한 것과 소스가 선언하는 것이 나옵니다.
+
+- **불러온 스키마 파일과 `schema` 블록**, 그리고 각각이 추가하는 것:
+  `schema: etc/authnd/example.schema adds 3 object identifier macros, 2
+  attribute types and 2 object classes`
+- **각 소스가 선언하는 클래스**: `users "sql" declares exampleStaff and
+  exampleLockerHolder for its people`, 그리고 선언의 위치
+- **사람이나 그룹에서 빠진 모든 클래스**: 소스가 선언하는 클래스의 MUST가 없기
+  때문입니다. `ben is published without exampleStaff, which its source declares: ben
+  has no exampleEmployeeId, which exampleStaff requires`, 그리고 속성 줄들 뒤에는
+  그 클래스와 함께 빠진 속성들
+- **두 소스가 서로 다른 클래스를 선언하는 그룹**: 첫 번째 소스의 목록이 게시되고
+  두 번째 소스의 목록은 무시됩니다.
+
+빌드되지 않는 파일, 재정의, 그리고 정의되지 않았거나 STRUCTURAL이거나 authnd가
+스스로 도출하는 선언 클래스는 `check`와 서버를 똑같이 멈추게 하며, 파일 또는
+구성의 위치를 알려 줍니다.
+
 그다음은 바인드와 검색에 관한 것입니다.
 
 - **바인드가 담는 것**: *a password*, 또는 [`mfa` 블록]({{< relref "/authnd/mfa.md" >}})이

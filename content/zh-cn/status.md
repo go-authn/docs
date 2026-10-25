@@ -5,23 +5,36 @@ description: "这些页面描述哪些版本、每个版本新增了什么，以
 tags: [状态, 发布版本]
 ---
 
-这些页面是文档版本 **0.4**，描述的内容如下：
+这些页面是文档版本 **0.5**，描述的内容如下：
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.11.1** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
 ldap 为 **v0.9.0**，带有 HCL2 模式和 `ldapschema` 转换器，
-directory 为 **v0.14.0**，带有属性以及更宽的 ldapdir 默认值。authnd
-v0.11.1 内嵌 ldap v0.8.0 和 directory v0.14.0。
+directory 为 **v0.15.0**，带有已声明的对象类。authnd
+v0.12.0 内嵌 ldap v0.9.0 和 directory v0.15.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
-因此读者在 `/docs/0.4/` 下找到的页面始终描述其所安装的版本；
+因此读者在 `/docs/0.5/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
-`/docs/0.2/` 和 `/docs/0.3/` 之下。
+`/docs/0.2/`、`/docs/0.3/` 和 `/docs/0.4/` 之下。
+
+{{< callout type="warning" >}}
+**安全：请使用 authnd v0.12.0，而不是 v0.11.1**
+
+authnd 要验证证书（`x509.Certificate.Verify`，据 `govulncheck`
+可从 `main` 到达），而 Go 1.27.2 的 crypto/x509 不会不信任
+GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
+发布二进制文件由 Go 1.27.2 构建，受此影响。** v0.12.0 由 Go 1.27.3
+构建，其 `go` 指令为 1.27.3，因此 `go install` 会自动切换到
+已修复的工具链；在 1.27.3 下运行 `govulncheck` 不报告任何漏洞。
+它的发布二进制文件在 `go version -m` 中报告 `go1.27.3`。
+参见[升级说明]({{< relref "/authnd/_index.md" >}})。
+{{< /callout >}}
 
 ## 每个版本新增了什么 {#what-each-release-added}
 
@@ -49,6 +62,7 @@ v0.11.1 内嵌 ldap v0.8.0 和 directory v0.14.0。
 | v0.10.2 | go-authn/directory v0.12.0：空组发布为不带 `memberUid` 的 `posixGroup` |
 | v0.11.0 | [标准模式条目]({{< relref "/authnd/entries.md" >}})，每个条目都受 `cn=Subschema` 所提供的模式约束；`attributes`、`users_attributes` 和 `groups_attributes`；`(uidNumber>=1000)` 按整数比较。⛔ `publish_nt_hash` 需要一个 [`samba` 块]({{< relref "/authnd/tls.md#the-samba-block" >}})，并且按 `posixAccount` 或 `posixGroup` 过滤的使用方看到的条目会变少 |
 | v0.11.1 | 启动行只列出有人从中获得服务的来源：没有 `user` 块时，不再列出配置文件 |
+| v0.12.0 | [站点模式]({{< relref "/authnd/schemas.md" >}})：`schema_files`（OpenLDAP `.schema` 和 cn=config LDIF，按发布时的原样；重新定义会被拒绝，即使完全相同，如同 slapd 那样）和 `schema { }` 块；用 `object_classes` 按来源声明辅助类，在启动时验证，并连同其父类一起发布；`check` 报告这些文件、这些声明、因缺少 MUST 而未加到某个人员上的类，以及两个来源存在分歧的组。⛔ 由 Go 1.27.3 构建：v0.11.1 的二进制文件（Go 1.27.2）受 GO-2026-6809 影响 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -118,6 +132,7 @@ v0.11.1 内嵌 ldap v0.8.0 和 directory v0.14.0。
 |---|---|
 | directory v0.13.0 | [属性]({{< relref "/libraries/directory.md#attributes" >}})：除凭据之外，描述某人但不证明任何事的内容，以及永远不能作为属性的名称；`user` 和 `group` 块中的 `attributes`、`users_attributes` 和 `groups_attributes` 查询、ldapdir 的 `attributes` 和 `group_attributes` |
 | directory v0.14.0 | ⛔ ldapdir 的[默认值]({{< relref "/libraries/directory.md#ldapdir-defaults" >}})读取 `account` 和 `uidObject` 人员以及 `groupOfNames` 组，这扩大了机构目录所提供的内容；`member` DN 只映射到来源已导入的人员 |
+| directory v0.15.0 | [对象类]({{< relref "/libraries/directory.md#object-classes" >}})，声明出来而从不推断：`users` 块中的 `object_classes` 和 `group_object_classes`，`user` 和 `group` 块中的 `object_classes`，sqldir 的 `WithObjectClasses` 和 ldapdir 的 `Config.ObjectClasses`；第一个声明某组的类的来源决定；`sqldir.ClosesDB` |
 | kdc v0.4.3 | 仅依赖项：以 go-authn/directory v0.12.0 为最低版本 |
 | keyfactor v0.4.2 | 仅依赖项：以 go-authn/fido v0.6.2 和 golang.org/x/crypto v0.58.0 为最低版本 |
 | krb5 v0.3.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |

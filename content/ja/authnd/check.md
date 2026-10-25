@@ -79,6 +79,25 @@ this configuration can be served
 - **公開されないすべてのエントリ**と、スキーマ検証で見つかったそれぞれの問題
 - **NT 鍵を持つが `sambaSID` がない人**。したがって `sambaNTPassword` もない
 
+v0.12.0 からは、最初の行と表の間に、[サイトスキーマ]({{< relref "/authnd/schemas.md" >}})が
+追加したものと、ソースが宣言するものが表示されます。
+
+- **読み込まれたスキーマファイルと `schema` ブロック**と、それぞれが追加するもの:
+  `schema: etc/authnd/example.schema adds 3 object identifier macros, 2
+  attribute types and 2 object classes`
+- **各ソースが宣言するクラス**: `users "sql" declares exampleStaff and
+  exampleLockerHolder for its people`。宣言の位置も付く
+- **人またはグループから外されたすべてのクラス**。そのソースが宣言するクラスの MUST が
+  足りないためで、`ben is published without exampleStaff, which its
+  source declares: ben has no exampleEmployeeId, which exampleStaff
+  requires`、そして属性の行の後に、それと一緒に外れたものが続く
+- **二つのソースが異なるクラスを宣言するグループ**: 最初のソースの一覧が公開され、
+  二つ目のものは無視される
+
+ビルドできないファイル、再定義、そして宣言されたクラスが未定義、STRUCTURAL、または
+authnd が自ら導出するものである場合は、`check` もサーバーも停止し、ファイルまたは
+設定の位置が示されます。
+
 次に、バインドと検索について。
 
 - **バインドが運ぶもの**: *a password*、[`mfa` ブロック]({{< relref "/authnd/mfa.md" >}})がある場合は

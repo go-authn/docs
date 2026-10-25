@@ -18,7 +18,7 @@ tags: [authnd, 설치, systemd]
 매니페스트와 모든 바이너리에 대한 빌드 출처 증명(attestation)도 함께 게시합니다.
 
 ```sh
-version=v0.11.1
+version=v0.12.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -34,7 +34,7 @@ gh attestation verify "authnd-linux-$arch" --repo go-authn/authnd   # built by t
 
 ```
 $ authnd --version
-authnd version v0.11.1
+authnd version v0.12.0
 ```
 
 ### 원하는 것만 빌드하기 {#building-only-what-you-want}
@@ -61,8 +61,8 @@ sysusers.d의 정적 계정이며, `DynamicUser=`가 **아닙니다**. authnd가
 그 uid가 기록한 파일은 나중에 다른 사람을 가리키게 될 번호에 속하게 됩니다.
 
 두 파일은 바이너리와 같은 버전인 릴리스 태그의 `packaging/` 디렉터리에서
-가져옵니다. 태그의 체크아웃에서, 또는 v0.11.1의 경우
-<https://github.com/go-authn/authnd/tree/v0.11.1/packaging>에서 그 디렉터리를
+가져옵니다. 태그의 체크아웃에서, 또는 v0.12.0의 경우
+<https://github.com/go-authn/authnd/tree/v0.12.0/packaging>에서 그 디렉터리를
 바이너리 옆에 복사하십시오.
 
 ```sh
@@ -195,7 +195,7 @@ sudo systemctl restart authnd
 authnd --version
 ```
 
-새 태그의 `packaging/`을 설치된 것과 비교하십시오(v0.11.1의 것은 v0.10.2의
+새 태그의 `packaging/`을 설치된 것과 비교하십시오(v0.12.0의 것은 v0.11.1의
 것과 같고 바뀌지 않았습니다). 롤백은 `authnd.previous`에서 같은 방식으로
 설치하고 재시작하는 것입니다.
 
@@ -204,6 +204,13 @@ v0.10.x에서 v0.11.0으로 올릴 때는 위의 `check`가 중요한 단계입�
 없는 구성은 재시작 때가 아니라 거기서 거부되며, 표 뒤의 줄들이 누가 더 이상
 `posixAccount`가 아니고 어떤 그룹이 더 이상 `posixGroup`이 아닌지 알려 줍니다
 ([엔트리]({{< relref "/authnd/entries.md" >}})).
+
+⛔ v0.11.1에서 v0.12.0으로 올릴 때는 다른 무엇을 하든 업그레이드하십시오.
+v0.11.1의 릴리스 바이너리는 Go 1.27.2로 빌드되어 GO-2026-6809(crypto/x509)의
+영향을 받지만, Go 1.27.3으로 빌드된 v0.12.0은 그렇지 않습니다. 구성은 바꿀 필요가
+없습니다. 사이트 고유의 스키마를 제공하려면 [사이트 스키마]({{< relref "/authnd/schemas.md" >}})를
+참조하고, 파일은 절대 경로로 지정하십시오. systemd 유닛의 작업 디렉터리는 `/`이기
+때문입니다.
 
 제거하려면:
 

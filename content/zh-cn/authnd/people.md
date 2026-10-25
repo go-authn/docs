@@ -35,6 +35,7 @@ group "staff" { members = ["alice", "carol"] }
 | `authorized_keys` | `authorized_keys` 各行，发布为 `sshPublicKey` |
 | `authorized_keys_file` | 同上，来自文件 |
 | `attributes` | 自 v0.11.0 起，描述人员但不证明任何事的内容——`sn`、`uidNumber`、`gidNumber`、`homeDirectory`、`mail`……——以字符串或字符串列表的映射表示；`group` 块也接受它。它们决定条目发布为什么：参见[条目]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
+| `object_classes` | 自 v0.12.0 起，该人员（在 `group` 块中则是该组）发布时所带的辅助类，例如 `["siteMember"]`：声明出来，从不推断，并在[站点模式]({{< relref "/authnd/schemas.md#object-classes" >}})中定义 |
 
 启动时被拒绝，并指名相关人员：
 
@@ -111,6 +112,22 @@ authnd 没有针对哈希列的设置。`groups` 查询返回
 `groups_attributes`（组，然后同样）。不带引号的别名会被
 PostgreSQL 转为小写。参见[条目]({{< relref "/authnd/entries.md#in-a-sql-database" >}})。
 
+**`users` 块所给出之人员的类**，声明在其查询旁边
+（自 v0.12.0 起，`users "ldap"` 块中也是同样的两个键）：
+
+```hcl
+users "sql" {
+  # ...
+  object_classes       = ["supannPerson", "eduPerson"]   # every person this block gives
+  group_object_classes = ["supannGroupe"]                # every group
+}
+```
+
+每个类都必须是所提供的模式（标准模式，或
+[`schema_files` 和 `schema` 块]({{< relref "/authnd/schemas.md" >}})）所定义的
+AUXILIARY 类，并且不能是 authnd 自行派生的类。缺少已声明类的某个 MUST 的人员，
+发布时不带该类，`check` 会说明这一点。
+
 `driver` 接受 `postgres`（或 `postgresql`、`pgx`）、`mysql`（或 `mariadb`）
 和 `sqlite`（或 `sqlite3`）。数据库在启动时、任何监听之前就会被访问，
 因此没有应答的数据库会在有人关注的时候使服务器停止：
@@ -157,6 +174,7 @@ users "ldap" {
 | `group_member_attribute` | 无：`memberUid`（名称）**和** `member`（DN）；设置后，只读取这一个属性 |
 | `totp_attribute` | 无：没有标准属性，而猜测的结果是读不到任何内容，却看起来像是已经读过了 |
 | `attributes`、`group_attributes` | 无：从每个人员的条目和每个组的条目中复制的属性，例如 `["mail", "uidNumber", "homeDirectory"]` 和 `["gidNumber"]`（[条目]({{< relref "/authnd/entries.md#adding-attributes" >}})） |
+| `object_classes`、`group_object_classes` | 无：自 v0.12.0 起，从该目录读取的每个人员和每个组所带的辅助类（[站点模式]({{< relref "/authnd/schemas.md#object-classes" >}})）；上游条目所带的类从不复制 |
 | `start_tls` | `false` |
 
 `member` DN 只有在它是人员搜索所返回的条目的 DN 时才算数：

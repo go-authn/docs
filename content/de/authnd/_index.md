@@ -11,10 +11,38 @@ anderen Verzeichnis. Was sie authentifizieren will, spricht LDAP.** authnd ist d
 davor: Es führt Binds und Suchen über die Quellen von
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) aus, sodass das, was eine
 Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,
-`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.11.1, dessen Einträge den
-Standardschemata folgen und das Schema bestehen, das es unter `cn=Subschema` bereitstellt,
-mit go-authn/ldap v0.8.0 und go-authn/directory v0.14.0 darunter; was geprüft ist und
+`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.12.0, dessen Einträge den
+Standardschemata folgen und das Schema bestehen, das es unter `cn=Subschema` bereitstellt
+und das ein Standort um sein eigenes erweitert
+([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), mit go-authn/ldap v0.9.0 und
+go-authn/directory v0.15.0 darunter; was geprüft ist und
 was nicht, steht auf der Seite [Stand]({{< relref "/status.md" >}}).
+
+{{< callout type="warning" >}}
+**Upgrade von v0.11.x**
+
+- ⛔ **Sicherheit: Nehmen Sie v0.12.0, nicht v0.11.1.** Die Release-Binaries von
+  v0.11.1 wurden mit Go 1.27.2 gebaut, dessen crypto/x509 den kompromittierten
+  Zwischenzertifikaten, die GO-2026-6809 nennt, das Vertrauen nicht entzieht, und
+  authnd prüft Zertifikate. v0.12.0 wird mit Go 1.27.3 gebaut, und seine
+  `go`-Direktive lautet 1.27.3, sodass `go install` von selbst auf die
+  korrigierte Toolchain wechselt.
+- Eine Konfiguration, die die neuen Schlüssel nicht verwendet, veröffentlicht, was
+  v0.11.1 veröffentlicht hat: Eine Klasse wird deklariert, nie abgeleitet, also
+  ändert sich ohne `object_classes` nichts.
+- Neu, alles optional: [`schema_files` und ein `schema`-Block]({{< relref "/authnd/schemas.md" >}})
+  fügen dem bereitgestellten Schema die Definitionen eines Standorts hinzu, und
+  `object_classes` und `group_object_classes` deklarieren die Hilfsklassen
+  (AUXILIARY), die die Personen und Gruppen einer Quelle tragen. Eine Definition, die eine
+  bereits vorhandene neu definiert, wird abgelehnt, selbst wortgleich, wie
+  slapd sie ablehnt.
+- `check` und die Startzeilen sagen, welche Dateien und Blöcke geladen wurden, was
+  jede Quelle deklariert, welche Klassen einer Person mangels eines
+  MUST vorenthalten wurden und über welche Gruppen sich zwei Quellen uneinig sind.
+
+Führen Sie `authnd check` mit dem neuen Binary vor dem Neustart aus, wie
+[Installation]({{< relref "/authnd/install.md#upgrade-roll-back-remove" >}}) es sagt.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Upgrade von v0.10.x**
@@ -120,7 +148,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.11.1
+vendorVersion: v0.12.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` ist die Password-Modify-Operation aus RFC 3062.
@@ -136,6 +164,7 @@ das ebenfalls einem anonymen Client beantwortet wird.
 | [Installation]({{< relref "/authnd/install.md" >}}) | das Release-Binary, das Konto `authnd`, die systemd-Unit, Upgrades |
 | [Woher die Personen kommen]({{< relref "/authnd/people.md" >}}) | `user`- und `group`-Blöcke, eine SQL-Datenbank, ein anderes LDAP-Verzeichnis |
 | [Die Einträge und das Schema]({{< relref "/authnd/entries.md" >}}) | als was jede Person und jede Gruppe veröffentlicht wird, `cn=Subschema`, Attribute, was weggelassen oder zurückgehalten wird |
+| [Standort-Schemata]({{< relref "/authnd/schemas.md" >}}) | `schema_files`, der `schema`-Block und `object_classes`: SUPANN, eduPerson oder die eigenen Attribute eines Standorts |
 | [`check`]({{< relref "/authnd/check.md" >}}) | die Konfiguration vor einem Neustart zurücklesen |
 | [TLS]({{< relref "/authnd/tls.md" >}}) | `ldaps://` oder StartTLS, und `publish_nt_hash` |
 | [Ein Passwort ändern]({{< relref "/authnd/passwords.md" >}}) | `ldappasswd`, `ldapmodify`, und warum immer nach dem alten Passwort gefragt wird |
@@ -147,11 +176,16 @@ das ebenfalls einem anonymen Client beantwortet wird.
 {{< callout type="info" >}}
 **Zu den Transkripten**
 
-Jede Startzeile, das Root-DSE und die `--version`-Zeilen wurden vom
-Release-Binary v0.11.1 ausgegeben (`authnd-darwin-arm64`, `go version -m`:
-`mod github.com/go-authn/authnd v0.11.1`, `vcs.modified=false`), ebenso jeder
-andere Befehl, der im selben Transkript wie eine Startzeile steht. v0.11.1
-ändert nichts außer dieser Zeile. Jede `check`-Tabelle, die mit
+Das Root-DSE, die `--version`-Zeilen und alles auf der Seite
+[Standort-Schemata]({{< relref "/authnd/schemas.md" >}}) wurden vom
+Release-Binary v0.12.0 ausgegeben (`authnd-darwin-arm64`, gegen `SHA256SUMS`
+geprüft; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
+`vcs.modified=false`). Die übrigen Startzeilen wurden vom Release-Binary
+v0.11.1 ausgegeben (`mod github.com/go-authn/authnd v0.11.1`,
+`vcs.modified=false`), ebenso jeder andere Befehl, der im selben Transkript
+wie eine Startzeile steht; v0.11.1 änderte nichts außer dieser Zeile, und das
+Changelog von v0.12.0 ändert nichts für eine Konfiguration, die weder Schemadatei
+noch -block noch Klasse deklariert, sodass sie nicht erneut ausgeführt wurden. Jede `check`-Tabelle, die mit
 `ldapsearch` zurückgelesenen Einträge, `cn=Subschema` und die
 `samba`-Ablehnungen wurden vom Release-Binary v0.11.0 ausgegeben
 (`mod github.com/go-authn/authnd v0.11.0`, `vcs.modified=false`). Ebenso die

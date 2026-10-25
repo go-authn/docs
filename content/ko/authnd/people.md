@@ -35,6 +35,7 @@ group "staff" { members = ["alice", "carol"] }
 | `authorized_keys` | `authorized_keys` 줄, `sshPublicKey`로 게시됨 |
 | `authorized_keys_file` | 같은 것을 파일에서 |
 | `attributes` | v0.11.0부터, 사람을 설명하되 아무것도 증명하지 않는 것 — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — 을 문자열 또는 문자열 목록의 맵으로. `group` 블록도 받습니다. 이것들이 엔트리가 무엇으로 게시되는지를 결정합니다. [엔트리]({{< relref "/authnd/entries.md#adding-attributes" >}})를 참조 |
+| `object_classes` | v0.12.0부터, 이 사람(`group` 블록에서는 이 그룹)이 함께 게시되는 보조 클래스, 예: `["siteMember"]`. 선언되는 것이지 추론되지 않으며, [사이트 스키마]({{< relref "/authnd/schemas.md#object-classes" >}})에서 정의됩니다 |
 
 시작 시 거부되며 해당 사람의 이름을 지정합니다.
 
@@ -109,6 +110,22 @@ users "sql" {
 같은 것)입니다. 따옴표 없는 별칭은 PostgreSQL이 소문자로 바꿉니다.
 [엔트리]({{< relref "/authnd/entries.md#in-a-sql-database" >}})를 참조하십시오.
 
+**`users` 블록이 제공하는 것의 클래스**는 그 쿼리 옆에 선언합니다
+(v0.12.0부터 `users "ldap"` 블록에서도 같은 두 키를 씁니다).
+
+```hcl
+users "sql" {
+  # ...
+  object_classes       = ["supannPerson", "eduPerson"]   # every person this block gives
+  group_object_classes = ["supannGroupe"]                # every group
+}
+```
+
+각각은 제공하는 스키마(표준 스키마, 또는
+[`schema_files`와 `schema` 블록]({{< relref "/authnd/schemas.md" >}}))가 정의하는
+AUXILIARY 클래스여야 하며, authnd가 스스로 도출하는 클래스여서는 안 됩니다. 선언된
+클래스의 MUST가 없는 사람은 그 클래스 없이 게시되며, `check`가 이를 알려 줍니다.
+
 `driver`는 `postgres`(또는 `postgresql`, `pgx`), `mysql`(또는 `mariadb`),
 `sqlite`(또는 `sqlite3`)를 받습니다. 데이터베이스는 아무것도 수신하기 전에 시작할
 때 접속하므로, 응답하지 않는 데이터베이스는 누군가 지켜보고 있는 시점에 서버를
@@ -156,6 +173,7 @@ users "ldap" {
 | `group_member_attribute` | 없음: `memberUid`(이름) **그리고** `member`(DN). 설정하면 그 속성 하나만 읽음 |
 | `totp_attribute` | 없음: 표준 속성이 없으며, 추측하면 읽은 것처럼 보이면서 아무것도 읽지 않게 됨 |
 | `attributes`, `group_attributes` | 없음: 각 사람의 엔트리와 각 그룹의 엔트리에서 복사할 속성, 예를 들어 `["mail", "uidNumber", "homeDirectory"]`와 `["gidNumber"]` ([엔트리]({{< relref "/authnd/entries.md#adding-attributes" >}})) |
+| `object_classes`, `group_object_classes` | 없음: v0.12.0부터, 이 디렉터리에서 읽은 모든 사람과 모든 그룹이 함께 게시되는 보조 클래스 ([사이트 스키마]({{< relref "/authnd/schemas.md#object-classes" >}})). 업스트림 엔트리가 가진 클래스는 결코 복사되지 않음 |
 | `start_tls` | `false` |
 
 `member` DN은 사람 검색이 반환한 엔트리의 DN일 때만 인정됩니다. 그 밖의 DN이나

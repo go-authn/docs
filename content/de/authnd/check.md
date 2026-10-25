@@ -81,6 +81,26 @@ Konfiguration verlässt. Zuerst zu [den Einträgen]({{< relref "/authnd/entries.
 - **jeder nicht veröffentlichte Eintrag**, mit jedem Problem, das die Schemaprüfung gefunden hat;
 - **wer einen NT-Schlüssel und keine `sambaSID` hat**, und damit kein `sambaNTPassword`.
 
+Ab v0.12.0, zwischen der ersten Zeile und den Tabellen, was ein
+[Standort-Schema]({{< relref "/authnd/schemas.md" >}}) hinzugefügt hat und was die
+Quellen deklarieren:
+
+- **die geladenen Schemadateien und `schema`-Blöcke**, und was jede hinzufügt:
+  `schema: etc/authnd/example.schema adds 3 object identifier macros, 2
+  attribute types and 2 object classes`;
+- **die Klassen, die jede Quelle deklariert**: `users "sql" declares exampleStaff and
+  exampleLockerHolder for its people`, mit der Position der Deklaration;
+- **jede Klasse, die einer Person oder Gruppe vorenthalten wird**, weil ihr ein MUST einer
+  Klasse fehlt, die ihre Quelle deklariert: `ben is published without exampleStaff, which its
+  source declares: ben has no exampleEmployeeId, which exampleStaff
+  requires`, und, nach den Zeilen der Attribute, diejenigen, die sie mitgenommen hat;
+- **eine Gruppe, für die zwei Quellen unterschiedliche Klassen deklarieren**: Die Liste der
+  ersten Quelle wird veröffentlicht und die der zweiten ignoriert.
+
+Eine Datei, die sich nicht aufbauen lässt, eine Neudefinition und eine deklarierte Klasse, die
+undefiniert, STRUCTURAL oder eine ist, die authnd selbst ableitet, halten `check` und den Server
+gleichermaßen an, mit der Datei oder der Position in der Konfiguration.
+
 Dann zu Binds und Suchen:
 
 - **was ein Bind trägt**: *a password* oder, mit einem [`mfa`-Block]({{< relref "/authnd/mfa.md" >}}),
