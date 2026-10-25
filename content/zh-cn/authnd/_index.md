@@ -10,10 +10,31 @@ tags: [authnd, ldap]
 认证的系统使用的是 LDAP。** authnd 就是前端：它基于 [go-authn/directory]({{< relref "/libraries/_index.md" >}})
 的各个来源进行绑定和搜索，因此数据库中保存的内容可以被任何懂得
 如何查询目录的程序读取。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述
-v0.11.1，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
-提供的模式，其下是 go-authn/ldap v0.8.0 和 go-authn/directory
-v0.14.0；哪些已经验证、哪些尚未验证，见
+v0.12.0，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
+提供的模式，站点可以用自己的模式对其扩展
+（[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），其下是 go-authn/ldap v0.9.0 和
+go-authn/directory v0.15.0；哪些已经验证、哪些尚未验证，见
 [状态]({{< relref "/status.md" >}})页面。
+
+{{< callout type="warning" >}}
+**从 v0.11.x 升级**
+
+- ⛔ **安全：请使用 v0.12.0，而不是 v0.11.1。** v0.11.1 的发布二进制文件
+  由 Go 1.27.2 构建，其 crypto/x509 不会不信任 GO-2026-6809 所指明的
+  已被攻破的中间证书，而 authnd 要验证证书。v0.12.0 由 Go 1.27.3 构建，
+  其 `go` 指令为 1.27.3，因此 `go install` 会自动切换到已修复的工具链。
+- 不使用新键的配置，发布的内容与 v0.11.1 相同：类是声明出来的，从不推断，
+  所以没有 `object_classes` 就不会有任何变化。
+- 新增，且全部可选：[`schema_files` 和 `schema` 块]({{< relref "/authnd/schemas.md" >}})
+  把站点的定义添加到所提供的模式中，`object_classes` 和
+  `group_object_classes` 声明某个来源的人员和组所带的辅助类。重新定义
+  已有定义的定义会被拒绝，即使逐字相同也一样，正如 slapd 所拒绝的那样。
+- `check` 和启动日志会说明加载了哪些文件和块、每个来源声明了什么、
+  哪些类因缺少 MUST 而未加到某个人员上，以及哪些组在两个来源之间存在分歧。
+
+重启之前，请按[安装]({{< relref "/authnd/install.md#upgrade-roll-back-remove" >}})所述，
+用新的二进制文件运行 `authnd check`。
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **从 v0.10.x 升级**
@@ -119,7 +140,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.11.1
+vendorVersion: v0.12.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` 是 RFC 3062 密码修改操作。
@@ -135,6 +156,7 @@ vendorVersion: v0.11.1
 | [安装]({{< relref "/authnd/install.md" >}}) | 发布的二进制文件、`authnd` 账户、systemd 单元、升级 |
 | [人员从哪里来]({{< relref "/authnd/people.md" >}}) | `user` 和 `group` 块、SQL 数据库、另一个 LDAP 目录 |
 | [条目与模式]({{< relref "/authnd/entries.md" >}}) | 每个人员和组发布为什么、`cn=Subschema`、属性、哪些被丢弃或扣留 |
+| [站点模式]({{< relref "/authnd/schemas.md" >}}) | `schema_files`、`schema` 块和 `object_classes`：SUPANN、eduPerson 或站点自己的属性 |
 | [`check`]({{< relref "/authnd/check.md" >}}) | 在重启之前回读配置 |
 | [TLS]({{< relref "/authnd/tls.md" >}}) | `ldaps://` 或 StartTLS，以及 `publish_nt_hash` |
 | [更改密码]({{< relref "/authnd/passwords.md" >}}) | `ldappasswd`、`ldapmodify`，以及为什么总是要求提供旧密码 |
@@ -146,11 +168,15 @@ vendorVersion: v0.11.1
 {{< callout type="info" >}}
 **关于这些记录**
 
-每一行启动输出、根 DSE 和 `--version` 行都由
-v0.11.1 发布的二进制文件（`authnd-darwin-arm64`，`go version -m`：
-`mod github.com/go-authn/authnd v0.11.1`，`vcs.modified=false`）输出，与启动行
-出现在同一份记录中的其他每条命令也是如此。v0.11.1
-只改动了那一行。每个 `check` 表格、用 `ldapsearch` 读回的
+根 DSE、`--version` 行以及
+[站点模式]({{< relref "/authnd/schemas.md" >}})页面上的所有内容，都由
+v0.12.0 发布的二进制文件（`authnd-darwin-arm64`，已对照 `SHA256SUMS` 核对；
+`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.12.0`，
+`vcs.modified=false`）输出。其他启动行由 v0.11.1
+发布的二进制文件（`mod github.com/go-authn/authnd v0.11.1`，
+`vcs.modified=false`）输出，与启动行出现在同一份记录中的其他每条命令也是如此；
+v0.11.1 只改动了那一行，而对于没有声明任何模式文件、块或类的配置，
+v0.12.0 的发布说明没有改变任何东西，所以没有重新运行。每个 `check` 表格、用 `ldapsearch` 读回的
 条目、`cn=Subschema` 以及 `samba` 的拒绝信息，都由
 v0.11.0 发布的二进制文件输出（`mod github.com/go-authn/authnd v0.11.0`，
 `vcs.modified=false`）。这些页面上的配置拒绝信息也是如此，

@@ -11,7 +11,7 @@ en memoria, una base de datos SQL, un servidor LDAP, o bloques `user` y `group` 
 archivo de configuración; y lo que importa es la segunda mitad de la pregunta.
 
 ```sh
-go get github.com/go-authn/directory@v0.14.0
+go get github.com/go-authn/directory@v0.15.0
 ```
 
 ## Lo que prueba a alguien no es una sola cosa {#what-proves-somebody-is-not-one-thing}
@@ -239,6 +239,76 @@ Los atributos de un grupo vienen de `Set.GroupAttributes`, a través del
 directorio, mientras que una `description` que solo tiene el directorio pasa, y
 un origen averiado es un error aunque otro haya respondido. Los atributos de
 una persona llegan con la persona, desde el origen al que pertenece el nombre.
+
+## Clases de objeto {#object-classes}
+
+Desde la v0.15.0 un origen puede **declarar** las clases de objeto auxiliares
+que llevan sus personas y sus grupos, para que un servidor como
+[authnd]({{< relref "/authnd/schemas.md" >}}) pueda publicar un esquema de un
+sitio (SUPANN, eduPerson). Una clase promete la forma de cada entrada (RFC 4512
+§4.1.1), así que nunca se deduce de los atributos presentes, ni se lee de los
+datos: ni una columna de base de datos, ni un valor `objectClass` de origen. Que
+aparezca un atributo en una base de datos no puede cambiar una clase publicada.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/directory"
+)
+
+func main() {
+	c, err := directory.NewObjectClasses("supannPerson", "eduPerson", "EDUPERSON")
+	fmt.Println(c.Names(), err)
+	ann := directory.NewIdentity("ann", directory.WithPassword("hunter2"), directory.WithObjectClasses(c))
+	fmt.Println(ann.ObjectClasses())
+	fmt.Println(directory.NewIdentity("bob").ObjectClasses())
+
+	// A class is a name, never a number or a filter.
+	for _, name := range []string{"edu Person", "1.3.6.1.4.1.5923.1.1.2", "x)(objectClass=*"} {
+		_, err := directory.NewObjectClasses("eduPerson", name)
+		fmt.Println(errors.Is(err, directory.ErrObjectClassName), err)
+	}
+}
+```
+
+```
+[supannPerson eduPerson] <nil>
+[supannPerson eduPerson]
+[]
+true directory: not an object class name: "edu Person" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+true directory: not an object class name: "1.3.6.1.4.1.5923.1.1.2" is an OID: name the class by its descriptor, so that what is refused by name stays refused
+true directory: not an object class name: "x)(objectClass=*" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+```
+
+Los nombres se conservan en el orden escrito, una sola vez cada uno, sin
+distinguir mayúsculas (`EDUPERSON` repite `eduPerson`). Este paquete comprueba
+solo la **grafía**, la de un descriptor del RFC 4512: los OID numéricos, los
+espacios, las comillas y los paréntesis se rechazan, y el rechazo se somete a
+fuzzing. Que una clase esté definida, sea AUXILIARY y no sea una que el
+servidor deduce, lo comprueba el servidor contra el esquema que sirve.
+
+De dónde vienen:
+
+- **`hcldir`**: `object_classes` y `group_object_classes` en un bloque `users`
+  de cualquiera de los dos tipos, y `object_classes` en un bloque `user` y en
+  uno `group`. Un error lleva la posición en la configuración.
+- **`sqldir`**: `WithObjectClasses` y `WithGroupObjectClasses`.
+- **`ldapdir`**: `Config.ObjectClasses` y `Config.GroupObjectClasses`.
+
+`Identity.ObjectClasses()` devuelve una copia de la lista de una persona. Las de
+un grupo vienen de `Set.GroupObjectClasses`, a través del `GroupObjectClasser`
+opcional, junto a `GroupAttributer`. **El primer origen que tiene el grupo y
+declara clases decide, entero**: un origen que no declara nada no decide, y la
+lista distinta de un origen posterior se ignora, ni fusionada ni como error.
+(authnd lo dice en `check`.)
+
+`sqldir.ClosesDB()` entrega una base de datos a su origen, y
+`(*sqldir.Source).Close` la cierra; `hcldir.Open` ahora devuelve el propio
+`*sqldir.Source`.
 
 ## Los valores por defecto de ldapdir {#ldapdir-defaults}
 

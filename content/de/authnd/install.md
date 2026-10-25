@@ -19,7 +19,7 @@ arm64 (`.exe` unter windows), gebaut mit `CGO_ENABLED=0`, ein `SHA256SUMS`-Manif
 Build-Provenance-Attestierung für jedes Binary.
 
 ```sh
-version=v0.11.1
+version=v0.12.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ daher ist die Version etwas, das sich vergleichen lässt:
 
 ```
 $ authnd --version
-authnd version v0.11.1
+authnd version v0.12.0
 ```
 
 ### Nur bauen, was Sie wollen {#building-only-what-you-want}
@@ -63,8 +63,8 @@ Datei, die sie geschrieben hat, gehörte dann einer Nummer, die später jemand a
 
 Die beiden Dateien stammen aus dem Verzeichnis `packaging/` des Release-Tags, derselben
 Version wie das Binary: Kopieren Sie dieses Verzeichnis neben das Binary, aus einem
-Checkout des Tags oder, für v0.11.1, von
-<https://github.com/go-authn/authnd/tree/v0.11.1/packaging>.
+Checkout des Tags oder, für v0.12.0, von
+<https://github.com/go-authn/authnd/tree/v0.12.0/packaging>.
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
@@ -195,8 +195,8 @@ sudo systemctl restart authnd
 authnd --version
 ```
 
-Vergleichen Sie `packaging/` am neuen Tag mit dem, was installiert ist (das von v0.11.1 ist
-das von v0.10.2, unverändert). Ein Rollback ist dieselbe Installation aus
+Vergleichen Sie `packaging/` am neuen Tag mit dem, was installiert ist (das von v0.12.0 ist
+das von v0.11.1, unverändert). Ein Rollback ist dieselbe Installation aus
 `authnd.previous` und ein Neustart.
 
 Von v0.10.x auf v0.11.0 ist das `check` oben der Schritt, auf den es ankommt: Eine
@@ -205,6 +205,13 @@ Konfiguration mit `publish_nt_hash = true` und ohne
 statt erst beim Neustart, und die Zeilen nach seinen Tabellen sagen, wer kein
 `posixAccount` mehr ist und welche Gruppen keine `posixGroup`s mehr sind
 ([die Einträge]({{< relref "/authnd/entries.md" >}})).
+
+⛔ Von v0.11.1 auf v0.12.0 spielen Sie das Upgrade ein, was Sie sonst auch tun: Die
+Release-Binaries von v0.11.1 wurden mit Go 1.27.2 gebaut und sind von GO-2026-6809
+(crypto/x509) betroffen, was v0.12.0, gebaut mit Go 1.27.3, nicht ist. Die Konfiguration
+braucht keine Änderung; um das eigene Schema eines Standorts bereitzustellen, siehe
+[Standort-Schemata]({{< relref "/authnd/schemas.md" >}}), und nennen Sie die Dateien
+mit absoluten Pfaden, denn das Arbeitsverzeichnis einer systemd-Unit ist `/`.
 
 Zum Entfernen:
 

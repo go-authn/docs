@@ -11,7 +11,7 @@ tags: [ライブラリ, ディレクトリ, ldap, sql]
 あります。
 
 ```sh
-go get github.com/go-authn/directory@v0.14.0
+go get github.com/go-authn/directory@v0.15.0
 ```
 
 ## 何が人を証明するかは一つではない {#what-proves-somebody-is-not-one-thing}
@@ -225,6 +225,71 @@ true directory: not an attribute this package carries: "2.5.4.35" is an OID: nam
 ものを上書きしつつ、ディレクトリにしかない `description` は通ります。そして壊れたソースは、
 別のソースが答えたときでもエラーです。人の属性は、その名前を所有するソースから、その人とともに
 来ます。
+
+## オブジェクトクラス {#object-classes}
+
+v0.15.0 から、ソースは自分の人々とグループが持つ補助オブジェクトクラスを**宣言**できます。
+これにより、[authnd]({{< relref "/authnd/schemas.md" >}}) のようなサーバーがサイトスキーマ
+(SUPANN、eduPerson) を公開できます。クラスはすべてのエントリの形を約束するもの (RFC 4512
+§4.1.1) なので、存在する属性から推論されることは決してなく、データから読まれることも
+決してありません。データベースの列も、上流の `objectClass` の値もそうです。データベースに
+現れた属性が、公開されるクラスを変えることはできません。
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/directory"
+)
+
+func main() {
+	c, err := directory.NewObjectClasses("supannPerson", "eduPerson", "EDUPERSON")
+	fmt.Println(c.Names(), err)
+	ann := directory.NewIdentity("ann", directory.WithPassword("hunter2"), directory.WithObjectClasses(c))
+	fmt.Println(ann.ObjectClasses())
+	fmt.Println(directory.NewIdentity("bob").ObjectClasses())
+
+	// A class is a name, never a number or a filter.
+	for _, name := range []string{"edu Person", "1.3.6.1.4.1.5923.1.1.2", "x)(objectClass=*"} {
+		_, err := directory.NewObjectClasses("eduPerson", name)
+		fmt.Println(errors.Is(err, directory.ErrObjectClassName), err)
+	}
+}
+```
+
+```
+[supannPerson eduPerson] <nil>
+[supannPerson eduPerson]
+[]
+true directory: not an object class name: "edu Person" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+true directory: not an object class name: "1.3.6.1.4.1.5923.1.1.2" is an OID: name the class by its descriptor, so that what is refused by name stays refused
+true directory: not an object class name: "x)(objectClass=*" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+```
+
+名前は書かれた順序で、大文字小文字を無視して一度だけ保持されます (`EDUPERSON` は
+`eduPerson` の繰り返しです)。このパッケージが検査するのは RFC 4512 の記述子としての
+**綴り**だけです。数値 OID、空白、引用符、丸括弧は拒否され、その拒否はファジングされています。
+クラスが定義されているか、AUXILIARY か、サーバーが導出するものでないかは、サーバーが
+提供するスキーマに照らして、サーバー側が検査します。
+
+どこから来るか:
+
+- **`hcldir`**: どちらの種類の `users` ブロックでも `object_classes` と `group_object_classes`、
+  そして `user` と `group` ブロックの `object_classes`。エラーには設定内の位置が付きます。
+- **`sqldir`**: `WithObjectClasses` と `WithGroupObjectClasses`。
+- **`ldapdir`**: `Config.ObjectClasses` と `Config.GroupObjectClasses`。
+
+`Identity.ObjectClasses()` は人の一覧のコピーを返します。グループのものは、任意の
+`GroupObjectClasser` を通じて `Set.GroupObjectClasses` から得られ、`GroupAttributer` の
+横に並びます。**そのグループを持ち、クラスを宣言する最初のソースが、全体を決めます**。
+何も宣言しないソースは決めず、後のソースの異なる一覧は無視され、マージもエラーもありません。
+(authnd は `check` でそれを知らせます。)
+
+`sqldir.ClosesDB()` はデータベースをそのソースに渡し、`(*sqldir.Source).Close` がそれを閉じます。
+`hcldir.Open` は `*sqldir.Source` そのものを返すようになりました。
 
 ## ldapdir の既定値 {#ldapdir-defaults}
 

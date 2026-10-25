@@ -5,24 +5,36 @@ description: "Les versions que décrivent ces pages, ce que chaque version a ajo
 tags: [état, versions]
 ---
 
-Ces pages sont la version **0.4** de la documentation, et décrivent :
+Ces pages sont la version **0.5** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
-| authnd | **v0.11.1** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 Les versions des bibliothèques sont sur [leur propre page]({{< relref "/libraries/_index.md" >}}) ;
 ldap est en **v0.9.0**, avec les schémas en HCL2 et le convertisseur
-`ldapschema`, et directory en **v0.14.0**, avec les attributs et des valeurs
-par défaut de ldapdir plus larges. authnd v0.11.1 embarque ldap v0.8.0 et
-directory v0.14.0.
+`ldapschema`, et directory en **v0.15.0**, avec les classes d'objet déclarées.
+authnd v0.12.0 embarque ldap v0.9.0 et directory v0.15.0.
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
-de sorte que les pages qu'une personne trouve sous `/docs/0.4/` continuent de décrire ce
+de sorte que les pages qu'une personne trouve sous `/docs/0.5/` continuent de décrire ce
 qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`,
-`/docs/0.2/` et `/docs/0.3/`.
+`/docs/0.2/`, `/docs/0.3/` et `/docs/0.4/`.
+
+{{< callout type="warning" >}}
+**Sécurité : utilisez authnd v0.12.0, pas la v0.11.1**
+
+authnd vérifie des certificats (`x509.Certificate.Verify`, atteint depuis `main`
+selon `govulncheck`), et le crypto/x509 de Go 1.27.2 ne révoquait pas la
+confiance dans les certificats intermédiaires compromis que nomme GO-2026-6809.
+**Les binaires de la v0.11.1 ont été compilés avec Go 1.27.2 et sont touchés.**
+La v0.12.0 est compilée avec Go 1.27.3 et sa directive `go` est 1.27.3 : `go install`
+passe donc de lui-même à la chaîne d'outils corrigée ; `govulncheck` sous 1.27.3
+ne signale aucune vulnérabilité. Son binaire de la version affiche `go1.27.3` dans
+`go version -m`. Voir [la note de mise à niveau]({{< relref "/authnd/_index.md" >}}).
+{{< /callout >}}
 
 ## Ce que chaque version a ajouté {#what-each-release-added}
 
@@ -50,6 +62,7 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.10.2 | go-authn/directory v0.12.0 : un groupe vide est publié comme `posixGroup` sans `memberUid` |
 | v0.11.0 | [des entrées des schémas standard]({{< relref "/authnd/entries.md" >}}), chacune soumise au schéma servi à `cn=Subschema` ; `attributes`, `users_attributes` et `groups_attributes` ; `(uidNumber>=1000)` compare des entiers. ⛔ `publish_nt_hash` demande un [bloc `samba`]({{< relref "/authnd/tls.md#the-samba-block" >}}), et un consommateur qui filtre sur `posixAccount` ou `posixGroup` voit moins d'entrées |
 | v0.11.1 | la ligne de démarrage ne nomme que les sources d'où quelqu'un est servi : sans bloc `user`, elle ne nomme plus le fichier de configuration |
+| v0.12.0 | [schémas de site]({{< relref "/authnd/schemas.md" >}}) : `schema_files` (`.schema` OpenLDAP et LDIF cn=config, tels que publiés ; une redéfinition est refusée, même identique, comme le fait slapd) et un bloc `schema { }` ; classes auxiliaires déclarées par source avec `object_classes`, validées au démarrage et publiées avec leurs superclasses ; `check` rapporte les fichiers, les déclarations, les classes retirées à une personne faute d'un MUST, et les groupes sur lesquels deux sources sont en désaccord. ⛔ Compilée avec Go 1.27.3 : les binaires de la v0.11.1 (Go 1.27.2) sont touchés par GO-2026-6809 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -120,6 +133,7 @@ changé les précédentes.
 |---|---|
 | directory v0.13.0 | [les attributs]({{< relref "/libraries/directory.md#attributes" >}}) : ce qui décrit quelqu'un sans rien prouver, à part des identifiants, avec les noms qui ne peuvent jamais en être un ; `attributes` dans les blocs `user` et `group`, les requêtes `users_attributes` et `groups_attributes`, les `attributes` et `group_attributes` de ldapdir |
 | directory v0.14.0 | ⛔ les [valeurs par défaut]({{< relref "/libraries/directory.md#ldapdir-defaults" >}}) de ldapdir lisent les personnes `account` et `uidObject` et les groupes `groupOfNames`, ce qui élargit ce que donne l'annuaire d'un établissement ; un DN `member` ne correspond qu'à une personne que la source a importée |
+| directory v0.15.0 | [classes d'objet]({{< relref "/libraries/directory.md#object-classes" >}}), déclarées et jamais déduites : `object_classes` et `group_object_classes` dans les blocs `users`, `object_classes` dans les blocs `user` et `group`, `WithObjectClasses` pour sqldir et `Config.ObjectClasses` pour ldapdir ; la première source qui déclare les classes d'un groupe décide ; `sqldir.ClosesDB` |
 | kdc v0.4.3 | dépendances seulement : go-authn/directory v0.12.0 comme minimum |
 | keyfactor v0.4.2 | dépendances seulement : go-authn/fido v0.6.2 et golang.org/x/crypto v0.58.0 comme minimums |
 | krb5 v0.3.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |

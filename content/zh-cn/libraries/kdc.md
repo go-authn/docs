@@ -18,7 +18,7 @@ go get github.com/go-authn/kdc@v0.4.3
 
 在 v0.4.3，其 `go.mod` 至少要求 `go-authn/directory` v0.12.0 和
 gokrb5 v8.4.4：这只是最低版本，因此要求 directory v0.14.0（即这些页面所
-描述的版本）的程序会用 v0.14.0 构建，authnd v0.11.0 就是如此。
+描述的版本）的程序会用 v0.15.0 构建，authnd v0.12.0 就是如此。
 接受的一半是 [krb5]({{< relref "/libraries/krb5.md" >}})，只
 验证票据的服务完全不需要本模块。
 

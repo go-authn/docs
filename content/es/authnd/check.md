@@ -83,6 +83,26 @@ la configuración. Primero, sobre [las entradas]({{< relref "/authnd/entries.md"
 - **quién tiene una clave NT y ningún `sambaSID`**, y por tanto ningún
   `sambaNTPassword`.
 
+Desde la v0.12.0, entre la primera línea y las tablas, lo que añadió un
+[esquema de un sitio]({{< relref "/authnd/schemas.md" >}}) y lo que declaran
+los orígenes:
+
+- **los archivos de esquema y los bloques `schema` cargados**, y lo que añade
+  cada uno: `schema: etc/authnd/example.schema adds 3 object identifier macros, 2
+  attribute types and 2 object classes`;
+- **las clases que declara cada origen**: `users "sql" declares exampleStaff and
+  exampleLockerHolder for its people`, con la posición de la declaración;
+- **cada clase omitida en una persona o un grupo**, porque le falta un MUST de
+  una clase que su origen declara: `ben is published without exampleStaff, which its
+  source declares: ben has no exampleEmployeeId, which exampleStaff
+  requires`, y, tras las líneas de los atributos, las que se llevó consigo;
+- **un grupo para el que dos orígenes declaran clases distintas**: se publica
+  la lista del primer origen y se ignora la del segundo.
+
+Un archivo que no se construye, una redefinición, y una clase declarada que no
+está definida, es STRUCTURAL o la deduce authnd detienen por igual `check` y el
+servidor, con la posición del archivo o de la configuración.
+
 Después, sobre binds y búsquedas:
 
 - **qué lleva un bind**: *a password* o, con un [bloque `mfa`]({{< relref "/authnd/mfa.md" >}}),

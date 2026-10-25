@@ -35,6 +35,7 @@ group "staff" { members = ["alice", "carol"] }
 | `authorized_keys` | `authorized_keys` の行。`sshPublicKey` として公開される |
 | `authorized_keys_file` | 同じものをファイルから |
 | `attributes` | v0.11.0 から。人を説明するだけで何も証明しないもの — `sn`、`uidNumber`、`gidNumber`、`homeDirectory`、`mail`… — を、文字列または文字列のリストのマップとして指定する。`group` ブロックも受け付ける。エントリが何として公開されるかを決める。[エントリ]({{< relref "/authnd/entries.md#adding-attributes" >}})を参照 |
+| `object_classes` | v0.12.0 から。この人 (`group` ブロックでは、このグループ) が公開される際の補助クラス。たとえば `["siteMember"]`。宣言されるもので推論されず、[サイトスキーマ]({{< relref "/authnd/schemas.md#object-classes" >}})で定義される |
 
 起動時に、その人の名前を挙げて拒否されるもの:
 
@@ -108,6 +109,22 @@ authnd にはハッシュ化された列のための設定はありません。`
 です。引用符のないエイリアスは PostgreSQL によって小文字にされます。
 [エントリ]({{< relref "/authnd/entries.md#in-a-sql-database" >}})を参照してください。
 
+**`users` ブロックが与えるもののクラス**は、そのクエリの横で宣言します
+(v0.12.0 から、`users "ldap"` ブロックでも同じ二つのキーが使えます)。
+
+```hcl
+users "sql" {
+  # ...
+  object_classes       = ["supannPerson", "eduPerson"]   # every person this block gives
+  group_object_classes = ["supannGroupe"]                # every group
+}
+```
+
+それぞれは、提供されるスキーマ (標準スキーマ、または
+[`schema_files` と `schema` ブロック]({{< relref "/authnd/schemas.md" >}}))が定義する
+AUXILIARY クラスでなければならず、authnd が自ら導出するクラスであってはなりません。
+宣言されたクラスの MUST が足りない人は、そのクラスなしで公開され、`check` がそれを知らせます。
+
 `driver` は `postgres` (または `postgresql`、`pgx`)、`mysql` (または `mariadb`)、
 `sqlite` (または `sqlite3`) を受け付けます。データベースには、何かが待ち受けを始める前の
 起動時に接続するので、応答しないデータベースがあれば、誰かが見ている場でサーバーが止まります。
@@ -153,6 +170,7 @@ users "ldap" {
 | `group_member_attribute` | なし: `memberUid` (名前)**と** `member` (DN)。設定すると、それが読まれる唯一の属性になる |
 | `totp_attribute` | なし: 標準の属性がなく、推測では何も読まないのに読んだように見えてしまう |
 | `attributes`、`group_attributes` | なし: 各人のエントリと各グループのエントリからコピーする属性。`["mail", "uidNumber", "homeDirectory"]` と `["gidNumber"]` など ([エントリ]({{< relref "/authnd/entries.md#adding-attributes" >}})) |
+| `object_classes`、`group_object_classes` | なし: v0.12.0 から、このディレクトリから読まれるすべての人とすべてのグループが公開される際の補助クラス ([サイトスキーマ]({{< relref "/authnd/schemas.md#object-classes" >}}))。上流のエントリが持つクラスはコピーされない |
 | `start_tls` | `false` |
 
 `member` DN が数えられるのは、人々の検索が返したエントリの DN である場合だけです。それらの外の

@@ -36,6 +36,7 @@ group "staff" { members = ["alice", "carol"] }
 | `authorized_keys` | des lignes `authorized_keys`, publiées comme `sshPublicKey` |
 | `authorized_keys_file` | les mêmes, depuis un fichier |
 | `attributes` | depuis la v0.11.0, ce qui décrit la personne sans rien prouver — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — sous forme d'une table de chaînes ou de listes de chaînes ; un bloc `group` le prend aussi. Ils décident de ce sous quoi l'entrée est publiée : voir [les entrées]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
+| `object_classes` | depuis la v0.12.0, les classes auxiliaires sous lesquelles cette personne (ou, dans un bloc `group`, ce groupe) est publiée, comme `["siteMember"]` : déclarées, jamais déduites, et définies dans un [schéma de site]({{< relref "/authnd/schemas.md#object-classes" >}}) |
 
 Refusés au démarrage, en nommant la personne :
 
@@ -115,6 +116,22 @@ colonne par attribut) et `groups_attributes` (un groupe, puis de même). Un
 alias sans guillemets est mis en minuscules par PostgreSQL. Voir
 [les entrées]({{< relref "/authnd/entries.md#in-a-sql-database" >}}).
 
+**Les classes de ce que donne un bloc `users`** se déclarent à côté de ses
+requêtes (à partir de la v0.12.0, les mêmes deux clés dans un bloc `users "ldap"`) :
+
+```hcl
+users "sql" {
+  # ...
+  object_classes       = ["supannPerson", "eduPerson"]   # every person this block gives
+  group_object_classes = ["supannGroupe"]                # every group
+}
+```
+
+Chacune doit être une classe AUXILIARY que définit le schéma servi (le schéma
+standard, ou [`schema_files` et un bloc `schema`]({{< relref "/authnd/schemas.md" >}})),
+et pas une classe qu'authnd déduit lui-même. Une personne à qui manque un MUST
+d'une classe déclarée est publiée sans elle, et `check` le dit.
+
 `driver` accepte `postgres` (ou `postgresql`, `pgx`), `mysql` (ou `mariadb`)
 et `sqlite` (ou `sqlite3`). La base de données est contactée au démarrage, avant
 que quoi que ce soit n'écoute, si bien qu'une base qui ne répond pas arrête le serveur là où
@@ -162,6 +179,7 @@ attributs les nomment :
 | `group_member_attribute` | aucun : `memberUid` (des noms) **et** `member` (des DN) ; s'il est défini, c'est le seul attribut lu |
 | `totp_attribute` | aucun : il n'existe pas d'attribut standard, et une supposition ne lirait rien tout en ayant l'air d'avoir cherché |
 | `attributes`, `group_attributes` | aucun : les attributs à copier depuis l'entrée de chaque personne et celle de chaque groupe, comme `["mail", "uidNumber", "homeDirectory"]` et `["gidNumber"]` ([les entrées]({{< relref "/authnd/entries.md#adding-attributes" >}})) |
+| `object_classes`, `group_object_classes` | aucun : à partir de la v0.12.0, les classes auxiliaires sous lesquelles est publiée chaque personne et chaque groupe lu depuis cet annuaire ([schémas de site]({{< relref "/authnd/schemas.md#object-classes" >}})) ; les classes que portent les entrées en amont ne sont jamais copiées |
 | `start_tls` | `false` |
 
 Un DN `member` ne compte que lorsqu'il est le DN d'une entrée qu'a renvoyée

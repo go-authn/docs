@@ -81,6 +81,25 @@ this configuration can be served
 - **每个未发布的条目**，以及模式检查所发现的每个问题；
 - **谁有 NT 密钥却没有 `sambaSID`**，因而没有 `sambaNTPassword`。
 
+从 v0.12.0 起，在第一行和各表格之间，会给出[站点模式]({{< relref "/authnd/schemas.md" >}})
+添加了什么，以及各来源声明了什么：
+
+- **加载的模式文件和 `schema` 块**，以及每一个添加了什么：
+  `schema: etc/authnd/example.schema adds 3 object identifier macros, 2
+  attribute types and 2 object classes`；
+- **每个来源声明的类**：`users "sql" declares exampleStaff and
+  exampleLockerHolder for its people`，并附上该声明的位置；
+- **每个未加到某个人员或组上的类**，因为它缺少其来源所声明的某个类的
+  MUST：`ben is published without exampleStaff, which its
+  source declares: ben has no exampleEmployeeId, which exampleStaff
+  requires`，以及在各属性行之后，随之一并丢失的那些属性；
+- **两个来源为同一个组声明了不同的类**：发布第一个来源的列表，
+  忽略第二个来源的列表。
+
+无法构建的文件、重新定义，以及未定义、为 STRUCTURAL 或由 authnd
+自行派生的已声明类，都会使 `check` 和服务器同样停止，并给出文件或
+配置中的位置。
+
 然后是关于绑定和搜索：
 
 - **绑定携带什么**：*a password*，或者在有 [`mfa` 块]({{< relref "/authnd/mfa.md" >}})时是

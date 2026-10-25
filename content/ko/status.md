@@ -5,22 +5,35 @@ description: "이 문서가 설명하는 릴리스, 각 릴리스에서 추가�
 tags: [상태, 릴리스]
 ---
 
-이 문서는 문서 버전 **0.4**이며 다음을 설명합니다.
+이 문서는 문서 버전 **0.5**이며 다음을 설명합니다.
 
 | 프로그램 | 릴리스 | 모듈 |
 |---|---|---|
-| authnd | **v0.11.1** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 라이브러리의 버전은 [해당 페이지]({{< relref "/libraries/_index.md" >}})에
 있습니다. ldap은 HCL2 스키마와 `ldapschema` 변환기를 갖춘 **v0.9.0**이고,
-directory는 속성과 더 넓어진 ldapdir 기본값을 갖춘 **v0.14.0**입니다. authnd
-v0.11.1은 ldap v0.8.0과 directory v0.14.0을 내장합니다.
+directory는 선언된 오브젝트 클래스를 갖춘 **v0.15.0**입니다. authnd
+v0.12.0은 ldap v0.9.0과 directory v0.15.0을 내장합니다.
 위 프로그램 중 어느 것이든 새 마이너 버전이 나오면 새 문서 버전이 됩니다. 따라서
-독자가 `/docs/0.4/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
-페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`에 남아 있습니다.
+독자가 `/docs/0.5/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
+페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`에 남아 있습니다.
+
+{{< callout type="warning" >}}
+**보안: v0.11.1이 아니라 authnd v0.12.0을 사용하십시오**
+
+authnd는 인증서를 검증하며(`x509.Certificate.Verify`, `govulncheck`에 따르면
+`main`에서 도달 가능), Go 1.27.2의 crypto/x509는 GO-2026-6809가 지목하는 침해된
+중간 인증서들을 신뢰 해제하지 않았습니다. **v0.11.1의 릴리스 바이너리는 Go
+1.27.2로 빌드되었으며 영향을 받습니다.** v0.12.0은 Go 1.27.3으로 빌드되었고 `go`
+지시문이 1.27.3이므로, `go install`이 수정된 툴체인으로 알아서 전환합니다. Go
+1.27.3에서의 `govulncheck`는 취약점이 없다고 보고합니다. 릴리스 바이너리는
+`go version -m`에서 `go1.27.3`을 보고합니다.
+[업그레이드 안내]({{< relref "/authnd/_index.md" >}})를 참조하십시오.
+{{< /callout >}}
 
 ## 각 릴리스에서 추가된 것 {#what-each-release-added}
 
@@ -48,6 +61,7 @@ v0.11.1은 ldap v0.8.0과 directory v0.14.0을 내장합니다.
 | v0.10.2 | go-authn/directory v0.12.0: 빈 그룹은 `memberUid` 없는 `posixGroup`으로 게시됨 |
 | v0.11.0 | [표준 스키마 엔트리]({{< relref "/authnd/entries.md" >}}), 각각 `cn=Subschema`에서 제공하는 스키마에 맞춰짐, `attributes`, `users_attributes`, `groups_attributes`, `(uidNumber>=1000)`이 정수로 비교함. ⛔ `publish_nt_hash`에는 [`samba` 블록]({{< relref "/authnd/tls.md#the-samba-block" >}})이 필요하며, `posixAccount`나 `posixGroup`으로 필터링하는 소비자는 더 적은 엔트리를 봄 |
 | v0.11.1 | 시작 줄이 실제로 사람들을 제공하는 소스만 지정함: `user` 블록이 없으면 더 이상 구성 파일을 지정하지 않음 |
+| v0.12.0 | [사이트 스키마]({{< relref "/authnd/schemas.md" >}}): `schema_files`(OpenLDAP `.schema`와 cn=config LDIF를 게시된 그대로, 재정의는 slapd처럼 동일하더라도 거부됨)와 `schema { }` 블록, 소스별로 `object_classes`로 선언하는 보조 클래스(시작 시 검증되고 상위 클래스와 함께 게시됨), `check`가 파일, 선언, MUST가 없어 사람에게서 빠진 클래스, 두 소스가 일치하지 않는 그룹을 보고함. ⛔ Go 1.27.3으로 빌드됨: v0.11.1의 바이너리(Go 1.27.2)는 GO-2026-6809의 영향을 받음 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -117,6 +131,7 @@ v0.11.1은 ldap v0.8.0과 directory v0.14.0을 내장합니다.
 |---|---|
 | directory v0.13.0 | [속성]({{< relref "/libraries/directory.md#attributes" >}}): 누군가를 설명하되 아무것도 증명하지 않는 것(자격 증명 제외), 속성이 될 수 없는 이름 포함, `user`와 `group` 블록의 `attributes`, `users_attributes`와 `groups_attributes` 쿼리, ldapdir의 `attributes`와 `group_attributes` |
 | directory v0.14.0 | ⛔ ldapdir의 [기본값]({{< relref "/libraries/directory.md#ldapdir-defaults" >}})이 `account`와 `uidObject` 사람 및 `groupOfNames` 그룹을 읽으므로 기관의 디렉터리가 제공하는 범위가 넓어짐, `member` DN은 소스가 가져온 사람에게만 매핑됨 |
+| directory v0.15.0 | [오브젝트 클래스]({{< relref "/libraries/directory.md#object-classes" >}}), 선언되며 추론되지 않음: `users` 블록의 `object_classes`와 `group_object_classes`, `user`와 `group` 블록의 `object_classes`, sqldir의 `WithObjectClasses`와 ldapdir의 `Config.ObjectClasses`, 그룹의 클래스는 이를 선언하는 첫 번째 소스가 결정함, `sqldir.ClosesDB` |
 | kdc v0.4.3 | 의존성만: 최소 요구 버전으로 go-authn/directory v0.12.0 |
 | keyfactor v0.4.2 | 의존성만: 최소 요구 버전으로 go-authn/fido v0.6.2와 golang.org/x/crypto v0.58.0 |
 | krb5 v0.3.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |

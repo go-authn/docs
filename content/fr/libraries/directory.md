@@ -11,7 +11,7 @@ tenue en mémoire, une base de données SQL, un serveur LDAP, ou des blocs `user
 fichier de configuration — et ce qui compte, c'est la seconde moitié de la question.
 
 ```sh
-go get github.com/go-authn/directory@v0.14.0
+go get github.com/go-authn/directory@v0.15.0
 ```
 
 ## Ce qui prouve quelqu'un n'est pas une seule chose {#what-proves-somebody-is-not-one-thing}
@@ -242,6 +242,76 @@ l'emporte sur celui de l'annuaire tandis qu'une `description` que seul
 l'annuaire a passe, et une source en panne est une erreur même quand une
 autre a répondu. Les attributs d'une personne viennent avec la personne,
 depuis la source qui possède le nom.
+
+## Les classes d'objet {#object-classes}
+
+À partir de la v0.15.0, une source peut **déclarer** les classes d'objet
+auxiliaires que portent ses personnes et ses groupes, afin qu'un serveur comme
+[authnd]({{< relref "/authnd/schemas.md" >}}) puisse publier un schéma de site
+(SUPANN, eduPerson). Une classe promet la forme de chaque entrée (RFC 4512
+§4.1.1) : elle n'est donc jamais déduite des attributs présents, ni lue dans
+les données, ni colonne de base de données, ni valeur `objectClass` en amont. Un
+attribut qui apparaît dans une base de données ne peut pas changer une classe publiée.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/directory"
+)
+
+func main() {
+	c, err := directory.NewObjectClasses("supannPerson", "eduPerson", "EDUPERSON")
+	fmt.Println(c.Names(), err)
+	ann := directory.NewIdentity("ann", directory.WithPassword("hunter2"), directory.WithObjectClasses(c))
+	fmt.Println(ann.ObjectClasses())
+	fmt.Println(directory.NewIdentity("bob").ObjectClasses())
+
+	// A class is a name, never a number or a filter.
+	for _, name := range []string{"edu Person", "1.3.6.1.4.1.5923.1.1.2", "x)(objectClass=*"} {
+		_, err := directory.NewObjectClasses("eduPerson", name)
+		fmt.Println(errors.Is(err, directory.ErrObjectClassName), err)
+	}
+}
+```
+
+```
+[supannPerson eduPerson] <nil>
+[supannPerson eduPerson]
+[]
+true directory: not an object class name: "edu Person" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+true directory: not an object class name: "1.3.6.1.4.1.5923.1.1.2" is an OID: name the class by its descriptor, so that what is refused by name stays refused
+true directory: not an object class name: "x)(objectClass=*" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+```
+
+Les noms sont gardés dans l'ordre où ils sont écrits, une seule fois chacun, sans
+tenir compte de la casse (`EDUPERSON` répète `eduPerson`). Ce paquet ne vérifie
+que la **graphie**, celle d'un descripteur de la RFC 4512 : les OID numériques,
+les espaces, les guillemets et les parenthèses sont refusés, et le refus est
+soumis au fuzzing. Que la classe soit définie, AUXILIARY, et pas une que le
+serveur déduit, c'est au serveur de le vérifier contre le schéma qu'il sert.
+
+D'où elles viennent :
+
+- **`hcldir`** : `object_classes` et `group_object_classes` dans un bloc
+  `users` de l'une ou l'autre sorte, et `object_classes` dans un bloc `user` et
+  un bloc `group`. Une erreur porte la position dans la configuration.
+- **`sqldir`** : `WithObjectClasses` et `WithGroupObjectClasses`.
+- **`ldapdir`** : `Config.ObjectClasses` et `Config.GroupObjectClasses`.
+
+`Identity.ObjectClasses()` renvoie une copie de la liste d'une personne. Celles
+d'un groupe viennent de `Set.GroupObjectClasses`, par l'interface facultative
+`GroupObjectClasser`, à côté de `GroupAttributer`. **La première source qui a
+le groupe et déclare des classes décide, en entier** : une source qui ne déclare
+rien ne décide pas, et la liste différente d'une source ultérieure est
+ignorée, ni fusionnée ni une erreur. (authnd le dit dans `check`.)
+
+`sqldir.ClosesDB()` remet une base de données à sa source, et
+`(*sqldir.Source).Close` la ferme ; `hcldir.Open` renvoie désormais lui-même le
+`*sqldir.Source`.
 
 ## Les valeurs par défaut de ldapdir {#ldapdir-defaults}
 

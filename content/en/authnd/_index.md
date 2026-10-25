@@ -11,10 +11,35 @@ things that want to authenticate them speak LDAP.** authnd is the front: it
 binds and searches over [go-authn/directory]({{< relref "/libraries/_index.md" >}})'s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe
-v0.11.1, whose entries follow the standard schemas and pass the schema it
-serves at `cn=Subschema`, with go-authn/ldap v0.8.0 and go-authn/directory
-v0.14.0 under it; what is verified and what is not is on the
-[status]({{< relref "/status.md" >}}) page.
+v0.12.0, whose entries follow the standard schemas and pass the schema it
+serves at `cn=Subschema`, which a site extends with its own
+([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), with go-authn/ldap v0.9.0 and
+go-authn/directory v0.15.0 under it; what is verified and what is not is on
+the [status]({{< relref "/status.md" >}}) page.
+
+{{< callout type="warning" >}}
+**Upgrading from v0.11.x**
+
+- ⛔ **Security: take v0.12.0, not v0.11.1.** v0.11.1's release binaries were
+  built with Go 1.27.2, whose crypto/x509 does not distrust the compromised
+  intermediate certificates GO-2026-6809 names, and authnd verifies
+  certificates. v0.12.0 is built with Go 1.27.3, and its `go` directive is
+  1.27.3, so `go install` switches to the fixed toolchain by itself.
+- A configuration that does not use the new keys publishes what v0.11.1
+  published: a class is declared, never inferred, so without `object_classes`
+  nothing changes.
+- New, all optional: [`schema_files` and a `schema` block]({{< relref "/authnd/schemas.md" >}})
+  add a site's definitions to the schema served, and `object_classes` and
+  `group_object_classes` declare the auxiliary classes a source's people and
+  groups carry. A definition that redefines one already there is refused,
+  even word for word, as slapd refuses it.
+- `check` and the startup log say which files and blocks were loaded, what each
+  source declares, which classes were left off a person for lack of a
+  MUST, and which groups two sources disagree about.
+
+Run `authnd check` with the new binary before the restart, as
+[install]({{< relref "/authnd/install.md#upgrade-roll-back-remove" >}}) says.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Upgrading from v0.10.x**
@@ -121,7 +146,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.11.1
+vendorVersion: v0.12.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` is the RFC 3062 password modify operation.
@@ -137,6 +162,7 @@ which is answered to an anonymous client as well.
 | [Installing it]({{< relref "/authnd/install.md" >}}) | the release binary, the `authnd` account, the systemd unit, upgrades |
 | [Where the people come from]({{< relref "/authnd/people.md" >}}) | `user` and `group` blocks, a SQL database, another LDAP directory |
 | [The entries and the schema]({{< relref "/authnd/entries.md" >}}) | what each person and group is published as, `cn=Subschema`, attributes, what is dropped or withheld |
+| [Site schemas]({{< relref "/authnd/schemas.md" >}}) | `schema_files`, the `schema` block and `object_classes`: SUPANN, eduPerson or a site's own attributes |
 | [`check`]({{< relref "/authnd/check.md" >}}) | read the configuration back before restarting |
 | [TLS]({{< relref "/authnd/tls.md" >}}) | `ldaps://` or StartTLS, and `publish_nt_hash` |
 | [Changing a password]({{< relref "/authnd/passwords.md" >}}) | `ldappasswd`, `ldapmodify`, and why the old password is always asked for |
@@ -148,11 +174,16 @@ which is answered to an anonymous client as well.
 {{< callout type="info" >}}
 **About the transcripts**
 
-Every startup line, the root DSE and the `--version` lines were printed by
-the v0.11.1 release binary (`authnd-darwin-arm64`, `go version -m`:
-`mod github.com/go-authn/authnd v0.11.1`, `vcs.modified=false`), and so was
-every other command shown in the same transcript as a startup line. v0.11.1
-changes nothing but that line. Every `check` table, the entries read
+The root DSE, the `--version` lines and everything on the
+[site schemas]({{< relref "/authnd/schemas.md" >}}) page were printed by the
+v0.12.0 release binary (`authnd-darwin-arm64`, checked against `SHA256SUMS`;
+`go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
+`vcs.modified=false`). The other startup lines were printed by the v0.11.1
+release binary (`mod github.com/go-authn/authnd v0.11.1`,
+`vcs.modified=false`), and so was every other command shown in the same
+transcript as a startup line; v0.11.1 changed nothing but that line, and
+v0.12.0's changelog changes nothing for a configuration that declares no
+schema file, block or class, so they were not run again. Every `check` table, the entries read
 back with `ldapsearch`, `cn=Subschema` and the `samba` refusals were printed
 by the v0.11.0 release binary (`mod github.com/go-authn/authnd v0.11.0`,
 `vcs.modified=false`). So were the configuration refusals on these pages,

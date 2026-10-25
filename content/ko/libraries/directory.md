@@ -11,7 +11,7 @@ tags: [라이브러리, 디렉터리, ldap, sql]
 모델이며, 요점은 질문의 후반부에 있습니다.
 
 ```sh
-go get github.com/go-authn/directory@v0.14.0
+go get github.com/go-authn/directory@v0.15.0
 ```
 
 ## 사람을 증명하는 것은 하나가 아닙니다 {#what-proves-somebody-is-not-one-thing}
@@ -228,6 +228,74 @@ true directory: not an attribute this package carries: "2.5.4.35" is an OID: nam
 디렉터리의 것을 덮어쓰지만 디렉터리에만 있는 `description`은 그대로 전달되고, 다른
 소스가 답했더라도 고장 난 소스는 오류입니다. 사람의 속성은 그 이름을 소유한 소스에서
 사람과 함께 옵니다.
+
+## 오브젝트 클래스 {#object-classes}
+
+v0.15.0부터 소스는 자신의 사람과 그룹이 갖는 보조 오브젝트 클래스를 **선언**할 수
+있으며, 그래서 [authnd]({{< relref "/authnd/schemas.md" >}}) 같은 서버가 사이트
+스키마(SUPANN, eduPerson)를 게시할 수 있습니다. 클래스는 모든 엔트리의 형태를
+약속하므로(RFC 4512 §4.1.1) 존재하는 속성으로부터 추론되지 않고, 데이터에서
+읽히지도 않습니다. 데이터베이스 열도, 업스트림의 `objectClass` 값도 아닙니다.
+데이터베이스에 속성이 나타난다고 해서 게시되는 클래스가 바뀔 수는 없습니다.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/directory"
+)
+
+func main() {
+	c, err := directory.NewObjectClasses("supannPerson", "eduPerson", "EDUPERSON")
+	fmt.Println(c.Names(), err)
+	ann := directory.NewIdentity("ann", directory.WithPassword("hunter2"), directory.WithObjectClasses(c))
+	fmt.Println(ann.ObjectClasses())
+	fmt.Println(directory.NewIdentity("bob").ObjectClasses())
+
+	// A class is a name, never a number or a filter.
+	for _, name := range []string{"edu Person", "1.3.6.1.4.1.5923.1.1.2", "x)(objectClass=*"} {
+		_, err := directory.NewObjectClasses("eduPerson", name)
+		fmt.Println(errors.Is(err, directory.ErrObjectClassName), err)
+	}
+}
+```
+
+```
+[supannPerson eduPerson] <nil>
+[supannPerson eduPerson]
+[]
+true directory: not an object class name: "edu Person" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+true directory: not an object class name: "1.3.6.1.4.1.5923.1.1.2" is an OID: name the class by its descriptor, so that what is refused by name stays refused
+true directory: not an object class name: "x)(objectClass=*" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+```
+
+이름은 쓴 순서대로, 대소문자를 무시하고 한 번씩만 유지됩니다(`EDUPERSON`은
+`eduPerson`의 반복입니다). 이 패키지는 RFC 4512 디스크립터의 **철자**만
+검사합니다. 숫자 OID, 공백, 따옴표, 괄호는 거부되며, 이 거부는 퍼징됩니다. 클래스가
+정의되어 있는지, AUXILIARY인지, 서버가 도출하는 것이 아닌지는 서버가 제공하는
+스키마와 대조해 서버가 검사할 몫입니다.
+
+출처는 다음과 같습니다.
+
+- **`hcldir`**: 두 종류 모두의 `users` 블록에서 `object_classes`와
+  `group_object_classes`, 그리고 `user`와 `group` 블록에서 `object_classes`.
+  오류에는 구성 안의 위치가 담깁니다.
+- **`sqldir`**: `WithObjectClasses`와 `WithGroupObjectClasses`.
+- **`ldapdir`**: `Config.ObjectClasses`와 `Config.GroupObjectClasses`.
+
+`Identity.ObjectClasses()`는 사람의 목록 사본을 반환합니다. 그룹의 목록은
+`GroupAttributer` 옆의 선택적 `GroupObjectClasser`를 통해
+`Set.GroupObjectClasses`에서 옵니다. **그룹을 가지고 있으면서 클래스를 선언하는 첫
+번째 소스가 전체를 결정합니다.** 아무것도 선언하지 않는 소스는 결정하지 않으며,
+이후 소스의 다른 목록은 병합되지도 오류가 되지도 않고 무시됩니다. (authnd는
+`check`에서 이를 알려 줍니다.)
+
+`sqldir.ClosesDB()`는 데이터베이스를 자신의 소스에 넘겨주고,
+`(*sqldir.Source).Close`는 그것을 닫습니다. `hcldir.Open`은 이제 `*sqldir.Source`
+자체를 반환합니다.
 
 ## ldapdir의 기본값 {#ldapdir-defaults}
 

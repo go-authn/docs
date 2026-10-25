@@ -11,7 +11,7 @@ tags: [库, 目录, ldap, sql]
 块——其要点在于这个问题的后半部分。
 
 ```sh
-go get github.com/go-authn/directory@v0.14.0
+go get github.com/go-authn/directory@v0.15.0
 ```
 
 ## 证明某人的依据并不单一 {#what-proves-somebody-is-not-one-thing}
@@ -236,6 +236,72 @@ true directory: not an attribute this package carries: "2.5.4.35" is an OID: nam
 `gidNumber` 会覆盖目录的，而只有目录才有的 `description`
 会照常通过，并且即使另一个来源已作答，损坏的来源仍然是错误。人员的属性
 随人员一起提供，来自拥有该名称的来源。
+
+## 对象类 {#object-classes}
+
+自 v0.15.0 起，来源可以**声明**其人员和组所带的辅助对象类，
+这样 [authnd]({{< relref "/authnd/schemas.md" >}}) 之类的服务器就能发布站点模式
+（SUPANN、eduPerson）。类承诺了每个条目的形态（RFC 4512
+§4.1.1），因此从不根据现有属性推断，也从不从数据中读取：
+不来自数据库列，也不来自上游的 `objectClass` 值。数据库中出现某个
+属性，不能改变已发布的类。
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/directory"
+)
+
+func main() {
+	c, err := directory.NewObjectClasses("supannPerson", "eduPerson", "EDUPERSON")
+	fmt.Println(c.Names(), err)
+	ann := directory.NewIdentity("ann", directory.WithPassword("hunter2"), directory.WithObjectClasses(c))
+	fmt.Println(ann.ObjectClasses())
+	fmt.Println(directory.NewIdentity("bob").ObjectClasses())
+
+	// A class is a name, never a number or a filter.
+	for _, name := range []string{"edu Person", "1.3.6.1.4.1.5923.1.1.2", "x)(objectClass=*"} {
+		_, err := directory.NewObjectClasses("eduPerson", name)
+		fmt.Println(errors.Is(err, directory.ErrObjectClassName), err)
+	}
+}
+```
+
+```
+[supannPerson eduPerson] <nil>
+[supannPerson eduPerson]
+[]
+true directory: not an object class name: "edu Person" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+true directory: not an object class name: "1.3.6.1.4.1.5923.1.1.2" is an OID: name the class by its descriptor, so that what is refused by name stays refused
+true directory: not an object class name: "x)(objectClass=*" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+```
+
+名称按书写顺序保留，每个只出现一次，忽略大小写（`EDUPERSON`
+重复了 `eduPerson`）。本包只检查**拼写**，即 RFC 4512
+的描述符：数字 OID、空格、引号和括号都会被拒绝，
+并且该拒绝经过模糊测试。某个类是否已定义、是否为 AUXILIARY、是否不是
+服务器自行派生的类，则由服务器对照它所提供的模式来检查。
+
+它们来自哪里：
+
+- **`hcldir`**：任一种 `users` 块中的 `object_classes` 和
+  `group_object_classes`，以及 `user` 和 `group` 块中的 `object_classes`。
+  错误会带有配置中的位置。
+- **`sqldir`**：`WithObjectClasses` 和 `WithGroupObjectClasses`。
+- **`ldapdir`**：`Config.ObjectClasses` 和 `Config.GroupObjectClasses`。
+
+`Identity.ObjectClasses()` 返回某个人员的列表的副本。组的类
+来自 `Set.GroupObjectClasses`，通过可选的 `GroupObjectClasser`，
+与 `GroupAttributer` 并列。**第一个拥有该组并声明了类的来源整体决定**：
+不声明任何类的来源不参与决定，而后面来源给出的不同列表会被忽略，
+既不合并也不报错。（authnd 会在 `check` 中说明这一点。）
+
+`sqldir.ClosesDB()` 把一个数据库交给它的来源，`(*sqldir.Source).Close`
+会关闭它；`hcldir.Open` 现在返回 `*sqldir.Source` 本身。
 
 ## ldapdir 的默认值 {#ldapdir-defaults}
 

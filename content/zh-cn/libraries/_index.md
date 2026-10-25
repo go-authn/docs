@@ -19,7 +19,7 @@ tags: [库]
 | [totp]({{< relref "/libraries/totp.md" >}}) | 这个六位数字代码是否正确，以前是否用过？ | v0.4.2 | `github.com/go-authn/totp` |
 | [fido]({{< relref "/libraries/fido.md" >}}) | 如何通过 64 字节报告与安全密钥通信？ | v0.6.2 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | *已注册的*那把密钥是否作出了回答，是否有人触摸过它？ | v0.4.2 | `github.com/go-authn/keyfactor` |
-| [directory]({{< relref "/libraries/directory.md" >}}) | 某人是谁，什么可以证明其身份？ | v0.14.0 | `github.com/go-authn/directory` |
+| [directory]({{< relref "/libraries/directory.md" >}}) | 某人是谁，什么可以证明其身份？ | v0.15.0 | `github.com/go-authn/directory` |
 | [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP 服务器的字节是什么？ | v0.9.0 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | 这张 Kerberos 票据对此服务是否有效？ | v0.3.1 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | 域如何根据目录签发票据？ | v0.4.3 | `github.com/go-authn/kdc` |

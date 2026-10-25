@@ -11,10 +11,35 @@ tags: [authnd, ldap]
 [go-authn/directory]({{< relref "/libraries/_index.md" >}})의 소스 위에서 바인드와
 검색을 처리하므로, 데이터베이스에 있는 내용을 디렉터리에 질의할 줄 아는 어떤
 것이든 읽을 수 있습니다. 순수 Go, `CGO_ENABLED=0`, 바이너리 하나입니다. 이 문서는
-v0.11.1을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
-제공하는 스키마를 통과합니다. 그 아래에는 go-authn/ldap v0.8.0과
-go-authn/directory v0.14.0이 있습니다. 무엇이 검증되었고 무엇이 아닌지는
-[상태]({{< relref "/status.md" >}}) 페이지에 있습니다.
+v0.12.0을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
+제공하는 스키마를 통과합니다. 사이트는 이 스키마를 자신의 스키마로
+확장할 수 있습니다([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})). 그 아래에는
+go-authn/ldap v0.9.0과 go-authn/directory v0.15.0이 있습니다. 무엇이 검증되었고
+무엇이 아닌지는 [상태]({{< relref "/status.md" >}}) 페이지에 있습니다.
+
+{{< callout type="warning" >}}
+**v0.11.x에서 업그레이드하는 경우**
+
+- ⛔ **보안: v0.11.1이 아니라 v0.12.0을 사용하십시오.** v0.11.1의 릴리스 바이너리는
+  Go 1.27.2로 빌드되었는데, 이 버전의 crypto/x509는 GO-2026-6809가 지목하는
+  침해된 중간 인증서들을 신뢰 해제하지 않으며, authnd는 인증서를 검증합니다.
+  v0.12.0은 Go 1.27.3으로 빌드되었고 `go` 지시문도 1.27.3이므로, `go install`이
+  수정된 툴체인으로 알아서 전환합니다.
+- 새 키를 사용하지 않는 구성은 v0.11.1이 게시하던 것을 그대로 게시합니다. 클래스는
+  선언되는 것이지 추론되지 않으므로, `object_classes`가 없으면 아무것도
+  바뀌지 않습니다.
+- 모두 선택 사항인 새 기능: [`schema_files`와 `schema` 블록]({{< relref "/authnd/schemas.md" >}})은
+  제공하는 스키마에 사이트의 정의를 추가하고, `object_classes`와
+  `group_object_classes`는 소스의 사람과 그룹이 갖는 보조 클래스를 선언합니다.
+  이미 있는 정의를 다시 정의하는 정의는, slapd가 거부하는 것과 마찬가지로, 한 글자도
+  다르지 않더라도 거부됩니다.
+- `check`와 시작 로그는 어떤 파일과 블록을 불러왔는지, 각 소스가 무엇을 선언하는지,
+  MUST가 없어서 사람에게서 빠진 클래스가 무엇인지, 두 소스가 서로 다르게 선언하는
+  그룹이 무엇인지 알려 줍니다.
+
+다시 시작하기 전에 [설치]({{< relref "/authnd/install.md#upgrade-roll-back-remove" >}})가
+안내하는 대로 새 바이너리로 `authnd check`를 실행하십시오.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **v0.10.x에서 업그레이드하는 경우**
@@ -118,7 +143,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.11.1
+vendorVersion: v0.12.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1`은 RFC 3062 비밀번호 변경 작업입니다.
@@ -134,6 +159,7 @@ vendorVersion: v0.11.1
 | [설치하기]({{< relref "/authnd/install.md" >}}) | 릴리스 바이너리, `authnd` 계정, systemd 유닛, 업그레이드 |
 | [사람들은 어디에서 오는가]({{< relref "/authnd/people.md" >}}) | `user`와 `group` 블록, SQL 데이터베이스, 다른 LDAP 디렉터리 |
 | [엔트리와 스키마]({{< relref "/authnd/entries.md" >}}) | 각 사람과 그룹이 무엇으로 게시되는지, `cn=Subschema`, 속성, 제외되거나 보류되는 것 |
+| [사이트 스키마]({{< relref "/authnd/schemas.md" >}}) | `schema_files`, `schema` 블록, `object_classes`: SUPANN, eduPerson 또는 사이트 고유의 속성 |
 | [`check`]({{< relref "/authnd/check.md" >}}) | 다시 시작하기 전에 구성을 되읽기 |
 | [TLS]({{< relref "/authnd/tls.md" >}}) | `ldaps://` 또는 StartTLS, 그리고 `publish_nt_hash` |
 | [비밀번호 변경]({{< relref "/authnd/passwords.md" >}}) | `ldappasswd`, `ldapmodify`, 그리고 이전 비밀번호를 항상 묻는 이유 |
@@ -145,11 +171,15 @@ vendorVersion: v0.11.1
 {{< callout type="info" >}}
 **트랜스크립트에 대하여**
 
-모든 시작 줄, 루트 DSE, `--version` 줄은 v0.11.1 릴리스 바이너리
-(`authnd-darwin-arm64`, `go version -m`: `mod github.com/go-authn/authnd v0.11.1`,
-`vcs.modified=false`)가 출력한 것이며, 시작 줄과 같은 트랜스크립트에 보이는 다른
-모든 명령도 마찬가지입니다. v0.11.1은 그 줄 외에는 아무것도 바꾸지 않습니다.
-모든 `check` 표, `ldapsearch`로 되읽은 엔트리, `cn=Subschema`, `samba` 거부는
+루트 DSE, `--version` 줄, 그리고 [사이트 스키마]({{< relref "/authnd/schemas.md" >}})
+페이지의 모든 내용은 v0.12.0 릴리스 바이너리(`authnd-darwin-arm64`, `SHA256SUMS`와
+대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
+`vcs.modified=false`)가 출력한 것입니다. 나머지 시작 줄은 v0.11.1 릴리스
+바이너리(`mod github.com/go-authn/authnd v0.11.1`, `vcs.modified=false`)가 출력한
+것이며, 시작 줄과 같은 트랜스크립트에 보이는 다른 모든 명령도 마찬가지입니다.
+v0.11.1은 그 줄 외에는 아무것도 바꾸지 않았고, v0.12.0의 변경 내역은 스키마
+파일, 블록, 클래스를 선언하지 않는 구성에는 아무것도 바꾸지 않으므로 다시
+실행하지 않았습니다. 모든 `check` 표, `ldapsearch`로 되읽은 엔트리, `cn=Subschema`, `samba` 거부는
 v0.11.0 릴리스 바이너리(`mod github.com/go-authn/authnd v0.11.0`,
 `vcs.modified=false`)가 출력한 것입니다. 이 문서의 구성 거부도 마찬가지이며,
 v0.11.0은 이를 v0.10.0과 바이트 단위로 동일하게 출력했습니다. 그 밖의 바인드,

@@ -18,7 +18,7 @@ tags: [authnd, インストール, systemd]
 すべてのバイナリのビルド来歴証明も付きます。
 
 ```sh
-version=v0.11.1
+version=v0.12.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -34,7 +34,7 @@ gh attestation verify "authnd-linux-$arch" --repo go-authn/authnd   # built by t
 
 ```
 $ authnd --version
-authnd version v0.11.1
+authnd version v0.12.0
 ```
 
 ### 必要なものだけをビルドする {#building-only-what-you-want}
@@ -60,8 +60,8 @@ sysusers.d による静的アカウントで、`DynamicUser=` では**ありま�
 番号のものになってしまいます。
 
 二つのファイルはリリースタグの `packaging/` ディレクトリにあり、バイナリと同じバージョンです。
-そのタグのチェックアウトから、または v0.11.1 の場合は
-<https://github.com/go-authn/authnd/tree/v0.11.1/packaging> から、
+そのタグのチェックアウトから、または v0.12.0 の場合は
+<https://github.com/go-authn/authnd/tree/v0.12.0/packaging> から、
 そのディレクトリをバイナリの隣にコピーしてください。
 
 ```sh
@@ -192,8 +192,8 @@ sudo systemctl restart authnd
 authnd --version
 ```
 
-新しいタグの `packaging/` を、インストール済みのものと比較してください (v0.11.1 のものは
-v0.10.2 のものと同じで、変更はありません)。ロールバックは、`authnd.previous` から同じように
+新しいタグの `packaging/` を、インストール済みのものと比較してください (v0.12.0 のものは
+v0.11.1 のものと同じで、変更はありません)。ロールバックは、`authnd.previous` から同じように
 インストールして再起動するだけです。
 
 v0.10.x から v0.11.0 への場合、上記の `check` が重要な手順です。`publish_nt_hash = true` で
@@ -201,6 +201,12 @@ v0.10.x から v0.11.0 への場合、上記の `check` が重要な手順です
 なくそこで拒否され、表の後の行が、もはや `posixAccount` でなくなる人と、もはや `posixGroup` で
 なくなるグループを知らせます
 ([エントリ]({{< relref "/authnd/entries.md" >}}))。
+
+⛔ v0.11.1 から v0.12.0 への場合は、他に何をするにせよアップグレードしてください。v0.11.1 の
+リリースバイナリは Go 1.27.2 でビルドされており、GO-2026-6809 (crypto/x509) の影響を受けますが、
+Go 1.27.3 でビルドされた v0.12.0 は受けません。設定の変更は不要です。サイト独自のスキーマを
+提供するには、[サイトスキーマ]({{< relref "/authnd/schemas.md" >}})を参照し、
+systemd ユニットの作業ディレクトリは `/` なので、ファイルは絶対パスで指定してください。
 
 削除するには:
 

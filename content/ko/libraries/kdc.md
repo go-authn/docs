@@ -17,7 +17,7 @@ go get github.com/go-authn/kdc@v0.4.3
 
 v0.4.3의 `go.mod`는 최소 `go-authn/directory` v0.12.0과 gokrb5 v8.4.4를 요구합니다.
 이는 최소 요구 버전이므로, 이 문서가 설명하는 directory v0.14.0을 요구하는 프로그램은
-authnd v0.11.0처럼 v0.14.0으로 빌드됩니다. 받아들이는 쪽 절반은
+authnd v0.12.0처럼 v0.15.0으로 빌드됩니다. 받아들이는 쪽 절반은
 [krb5]({{< relref "/libraries/krb5.md" >}})이며, 티켓을 검증하기만 하는 서비스에는 이
 모듈이 전혀 필요하지 않습니다.
 

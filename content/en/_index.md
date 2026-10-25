@@ -18,7 +18,7 @@ These pages describe the releases listed on the [status page]({{< relref "/statu
 
 | | what it is | these pages describe |
 |---|---|---|
-| [authnd]({{< relref "/authnd/_index.md" >}}) | an LDAP server, and optionally a Kerberos realm, for people who live somewhere else: a file, a SQL database, another directory | v0.11.1 |
+| [authnd]({{< relref "/authnd/_index.md" >}}) | an LDAP server, and optionally a Kerberos realm, for people who live somewhere else: a file, a SQL database, another directory | v0.12.0 |
 | [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | an OpenID Connect provider in front of a SAML federation (RENATER, eduGAIN), which also issues SSH certificates and signs the lists that revoke them | v0.23.1 |
 | [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | fetches those lists, verifies each before any server reads it, and fails closed when one lapses | v0.6.4 |
 | [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`, which sshd asks whether a certificate's domain grant names this host | v0.1.7 |
@@ -28,7 +28,7 @@ published with `SHA256SUMS` and build provenance:
 [verifying a download]({{< relref "/security/verifying-releases.md" >}}).
 
 ```sh
-go install github.com/go-authn/authnd@v0.11.1
+go install github.com/go-authn/authnd@v0.12.0
 go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.1
 go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.4
 ```

@@ -10,10 +10,35 @@ tags: [authnd, ldap]
 その人々を認証したいものは LDAP を話します。** authnd はその窓口です。
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) のソースに対してバインドと検索を行うので、
 データベースが保持しているものを、ディレクトリに問い合わせる方法を知っているものなら何でも読めます。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.11.1 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.12.0 を説明しています。
 そのエントリは標準スキーマに従い、`cn=Subschema` で公開するスキーマに適合します。
-その下には go-authn/ldap v0.8.0 と go-authn/directory v0.14.0 があります。
+サイトはこのスキーマを自前のもの
+([SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})) で拡張できます。
+その下には go-authn/ldap v0.9.0 と go-authn/directory v0.15.0 があります。
 何が検証済みで何が未検証かは、[ステータス]({{< relref "/status.md" >}})のページにあります。
+
+{{< callout type="warning" >}}
+**v0.11.x からのアップグレード**
+
+- ⛔ **セキュリティ: v0.11.1 ではなく v0.12.0 を使ってください。** v0.11.1 のリリースバイナリは
+  Go 1.27.2 でビルドされており、その crypto/x509 は GO-2026-6809 が挙げる侵害された
+  中間証明書を信頼から外しません。authnd は証明書を検証します。v0.12.0 は Go 1.27.3 で
+  ビルドされ、その `go` ディレクティブは 1.27.3 なので、`go install` は修正済みの
+  ツールチェーンへ自動的に切り替わります。
+- 新しいキーを使わない設定は、v0.11.1 が公開していたものをそのまま公開します。
+  クラスは宣言されるもので推論されないため、`object_classes` がなければ何も変わりません。
+- 新規で、すべて任意: [`schema_files` と `schema` ブロック]({{< relref "/authnd/schemas.md" >}})は
+  サイトの定義を提供されるスキーマに追加し、`object_classes` と `group_object_classes` は
+  ソースの人々とグループが持つ補助クラスを宣言します。すでにある定義を再定義する定義は、
+  slapd が拒否するのと同様に、一語一句同じであっても拒否されます。
+- `check` と起動時のログは、どのファイルとブロックが読み込まれたか、各ソースが何を宣言するか、
+  MUST が足りないために人から外されたクラスはどれか、二つのソースの意見が食い違うグループは
+  どれかを知らせます。
+
+再起動の前に、
+[インストール]({{< relref "/authnd/install.md#upgrade-roll-back-remove" >}})にあるとおり、
+新しいバイナリで `authnd check` を実行してください。
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **v0.10.x からのアップグレード**
@@ -117,7 +142,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.11.1
+vendorVersion: v0.12.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` は RFC 3062 のパスワード変更操作です。
@@ -132,6 +157,7 @@ vendorVersion: v0.11.1
 | [インストール]({{< relref "/authnd/install.md" >}}) | リリースバイナリ、`authnd` アカウント、systemd ユニット、アップグレード |
 | [人々の出どころ]({{< relref "/authnd/people.md" >}}) | `user` と `group` ブロック、SQL データベース、別の LDAP ディレクトリ |
 | [エントリとスキーマ]({{< relref "/authnd/entries.md" >}}) | 各人とグループが何として公開されるか、`cn=Subschema`、属性、破棄または保留されるもの |
+| [サイトスキーマ]({{< relref "/authnd/schemas.md" >}}) | `schema_files`、`schema` ブロック、`object_classes`: SUPANN、eduPerson、またはサイト独自の属性 |
 | [`check`]({{< relref "/authnd/check.md" >}}) | 再起動する前に設定を読み戻す |
 | [TLS]({{< relref "/authnd/tls.md" >}}) | `ldaps://` または StartTLS、そして `publish_nt_hash` |
 | [パスワードの変更]({{< relref "/authnd/passwords.md" >}}) | `ldappasswd`、`ldapmodify`、そして古いパスワードを常に求める理由 |
@@ -143,11 +169,14 @@ vendorVersion: v0.11.1
 {{< callout type="info" >}}
 **トランスクリプトについて**
 
-起動時の行、ルート DSE、`--version` の行はすべて、v0.11.1 のリリースバイナリ
-(`authnd-darwin-arm64`、`go version -m`:
-`mod github.com/go-authn/authnd v0.11.1`、`vcs.modified=false`) が出力したものです。
+ルート DSE、`--version` の行、そして[サイトスキーマ]({{< relref "/authnd/schemas.md" >}})のページにあるものはすべて、
+v0.12.0 のリリースバイナリ (`authnd-darwin-arm64`、`SHA256SUMS` と照合済み、
+`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.12.0`、
+`vcs.modified=false`) が出力したものです。その他の起動時の行は v0.11.1 のリリースバイナリ
+(`mod github.com/go-authn/authnd v0.11.1`、`vcs.modified=false`) が出力したもので、
 起動時の行と同じトランスクリプトに示した他のコマンドもすべて同様です。
-v0.11.1 が変更したのはその行だけです。`check` の表、`ldapsearch` で読み戻したエントリ、
+v0.11.1 が変更したのはその行だけであり、v0.12.0 の変更履歴は、スキーマファイル、ブロック、
+クラスを宣言しない設定には何も変えないため、再実行していません。`check` の表、`ldapsearch` で読み戻したエントリ、
 `cn=Subschema`、`samba` の拒否は、v0.11.0 のリリースバイナリ
 (`mod github.com/go-authn/authnd v0.11.0`、`vcs.modified=false`) が出力したものです。
 これらのページにある設定の拒否も同様で、v0.11.0 は v0.10.0 とバイト単位で同じ出力をしました。

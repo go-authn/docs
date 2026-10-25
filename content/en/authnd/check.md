@@ -82,6 +82,26 @@ the configuration. First, about [the entries]({{< relref "/authnd/entries.md" >}
 - **every entry not published**, with each problem the schema check found;
 - **who has an NT key and no `sambaSID`**, and so no `sambaNTPassword`.
 
+From v0.12.0, between the first line and the tables, what a
+[site schema]({{< relref "/authnd/schemas.md" >}}) added, and what the
+sources declare:
+
+- **the schema files and `schema` blocks loaded**, and what each adds:
+  `schema: etc/authnd/example.schema adds 3 object identifier macros, 2
+  attribute types and 2 object classes`;
+- **the classes each source declares**: `users "sql" declares exampleStaff and
+  exampleLockerHolder for its people`, with the position of the declaration;
+- **every class left off a person or group**, because it lacks a MUST of a
+  class its source declares: `ben is published without exampleStaff, which its
+  source declares: ben has no exampleEmployeeId, which exampleStaff
+  requires`, and, after the attributes' lines, those it took with it;
+- **a group for which two sources declare different classes**: the first
+  source's list is published and the second's ignored.
+
+A file that does not build, a redefinition, and a declared class that is
+undefined, STRUCTURAL or one authnd derives stop `check` and the server
+alike, with the file or configuration position.
+
 Then, about binds and searches:
 
 - **what a bind carries**: *a password*, or, with an [`mfa` block]({{< relref "/authnd/mfa.md" >}}),

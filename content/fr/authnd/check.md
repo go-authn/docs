@@ -83,6 +83,26 @@ la configuration. D'abord, au sujet [des entrées]({{< relref "/authnd/entries.m
   vérification du schéma ;
 - **qui a une clé NT et pas de `sambaSID`**, et donc pas de `sambaNTPassword`.
 
+À partir de la v0.12.0, entre la première ligne et les tableaux, ce qu'un
+[schéma de site]({{< relref "/authnd/schemas.md" >}}) a ajouté, et ce que
+déclarent les sources :
+
+- **les fichiers de schéma et les blocs `schema` chargés**, et ce que chacun ajoute :
+  `schema: etc/authnd/example.schema adds 3 object identifier macros, 2
+  attribute types and 2 object classes` ;
+- **les classes que déclare chaque source** : `users "sql" declares exampleStaff and
+  exampleLockerHolder for its people`, avec la position de la déclaration ;
+- **chaque classe retirée à une personne ou à un groupe**, parce qu'il lui
+  manque un MUST d'une classe que déclare sa source : `ben is published without exampleStaff, which its
+  source declares: ben has no exampleEmployeeId, which exampleStaff
+  requires`, puis, après les lignes des attributs, ceux qu'elle a emportés avec elle ;
+- **un groupe pour lequel deux sources déclarent des classes différentes** : la liste de
+  la première source est publiée et celle de la seconde ignorée.
+
+Un fichier qui ne se construit pas, une redéfinition, et une classe déclarée
+qui est indéfinie, STRUCTURAL ou que authnd déduit lui-même arrêtent `check` et le
+serveur de la même façon, avec la position du fichier ou de la configuration.
+
 Ensuite, au sujet des liaisons et des recherches :
 
 - **ce que porte une liaison** : *a password*, ou, avec un [bloc `mfa`]({{< relref "/authnd/mfa.md" >}}),

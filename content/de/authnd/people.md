@@ -36,6 +36,7 @@ group "staff" { members = ["alice", "carol"] }
 | `authorized_keys` | `authorized_keys`-Zeilen, veröffentlicht als `sshPublicKey` |
 | `authorized_keys_file` | dasselbe, aus einer Datei |
 | `attributes` | ab v0.11.0 das, was die Person beschreibt und nichts beweist – `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… –, als Map aus Zeichenketten oder Listen von Zeichenketten; ein `group`-Block nimmt es ebenfalls. Sie entscheiden, als was der Eintrag veröffentlicht wird: siehe [die Einträge]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
+| `object_classes` | ab v0.12.0 die Hilfsklassen (AUXILIARY), mit denen diese Person (oder, in einem `group`-Block, diese Gruppe) veröffentlicht wird, etwa `["siteMember"]`: deklariert, nie abgeleitet, und in einem [Standort-Schema]({{< relref "/authnd/schemas.md#object-classes" >}}) definiert |
 
 Beim Start abgelehnt, unter Nennung der Person:
 
@@ -115,6 +116,22 @@ nach Position: `users_attributes` (ein Name, dann eine Spalte pro Attribut) und
 `groups_attributes` (eine Gruppe, dann ebenso). Ein Alias ohne Anführungszeichen
 wird von PostgreSQL in Kleinbuchstaben umgewandelt. Siehe [die Einträge]({{< relref "/authnd/entries.md#in-a-sql-database" >}}).
 
+**Die Klassen dessen, was ein `users`-Block liefert**, werden neben seinen Abfragen
+deklariert (ab v0.12.0 dieselben beiden Schlüssel in einem `users "ldap"`-Block):
+
+```hcl
+users "sql" {
+  # ...
+  object_classes       = ["supannPerson", "eduPerson"]   # every person this block gives
+  group_object_classes = ["supannGroupe"]                # every group
+}
+```
+
+Jede muss eine Hilfsklasse (AUXILIARY) sein, die das bereitgestellte Schema definiert
+(das Standardschema, oder [`schema_files` und ein `schema`-Block]({{< relref "/authnd/schemas.md" >}})),
+und keine, die authnd selbst ableitet. Eine Person, der ein MUST einer deklarierten Klasse fehlt,
+wird ohne sie veröffentlicht, und `check` sagt es.
+
 `driver` akzeptiert `postgres` (oder `postgresql`, `pgx`), `mysql` (oder `mariadb`)
 und `sqlite` (oder `sqlite3`). Die Datenbank wird beim Start erreicht, bevor
 irgendetwas lauscht; eine, die nicht antwortet, hält den Server daher dort an, wo
@@ -162,6 +179,7 @@ Attribute sie benennen:
 | `group_member_attribute` | keiner: `memberUid` (Namen) **und** `member` (DNs); gesetzt, ist es das eine Attribut, das gelesen wird |
 | `totp_attribute` | keiner: Es gibt kein Standardattribut, und eine Vermutung würde nichts lesen und dabei so aussehen, als hätte sie nachgesehen |
 | `attributes`, `group_attributes` | keine: die Attribute, die aus dem Eintrag jeder Person und jeder Gruppe kopiert werden, etwa `["mail", "uidNumber", "homeDirectory"]` und `["gidNumber"]` ([die Einträge]({{< relref "/authnd/entries.md#adding-attributes" >}})) |
+| `object_classes`, `group_object_classes` | keine: ab v0.12.0 die Hilfsklassen (AUXILIARY), mit denen jede Person und jede Gruppe aus diesem Verzeichnis veröffentlicht wird ([Standort-Schemata]({{< relref "/authnd/schemas.md#object-classes" >}})); die Klassen, die die Einträge des Upstreams tragen, werden nie kopiert |
 | `start_tls` | `false` |
 
 Ein `member`-DN zählt nur, wenn er der DN eines Eintrags ist, den die Personensuche

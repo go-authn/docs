@@ -36,6 +36,7 @@ group "staff" { members = ["alice", "carol"] }
 | `authorized_keys` | líneas de `authorized_keys`, publicadas como `sshPublicKey` |
 | `authorized_keys_file` | lo mismo, a partir de un archivo |
 | `attributes` | desde la v0.11.0, lo que describe a la persona y no prueba nada —`sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`…—, como un mapa de cadenas o de listas de cadenas; un bloque `group` también lo admite. Deciden como qué se publica la entrada: consulte [las entradas]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
+| `object_classes` | desde la v0.12.0, las clases auxiliares con las que se publica a esta persona (o, en un bloque `group`, a este grupo), como `["siteMember"]`: declaradas, nunca deducidas, y definidas en un [esquema de un sitio]({{< relref "/authnd/schemas.md#object-classes" >}}) |
 
 Se rechaza al arrancar, nombrando a la persona:
 
@@ -115,6 +116,22 @@ atributo) y `groups_attributes` (un grupo y después lo mismo). PostgreSQL pasa 
 minúsculas un alias sin comillas. Consulte
 [las entradas]({{< relref "/authnd/entries.md#in-a-sql-database" >}}).
 
+**Las clases de lo que da un bloque `users`** se declaran junto a sus
+consultas (desde la v0.12.0, las mismas dos claves en un bloque `users "ldap"`):
+
+```hcl
+users "sql" {
+  # ...
+  object_classes       = ["supannPerson", "eduPerson"]   # every person this block gives
+  group_object_classes = ["supannGroupe"]                # every group
+}
+```
+
+Cada una debe ser una clase AUXILIARY que defina el esquema servido (el
+esquema estándar, o [`schema_files` y un bloque `schema`]({{< relref "/authnd/schemas.md" >}})),
+y no una que authnd deduzca por sí mismo. Una persona a la que le falta un MUST
+de una clase declarada se publica sin ella, y `check` lo dice.
+
 `driver` acepta `postgres` (o `postgresql`, `pgx`), `mysql` (o `mariadb`) y `sqlite`
 (o `sqlite3`). La base de datos se contacta al arrancar, antes de que nada escuche,
 así que una que no responde detiene el servidor allí donde alguien está mirando:
@@ -161,6 +178,7 @@ atributos los nombran:
 | `group_member_attribute` | ninguno: `memberUid` (nombres) **y** `member` (DN); si se define, es el único atributo que se lee |
 | `totp_attribute` | ninguno: no hay ningún atributo estándar, y uno adivinado no leería nada aparentando haber buscado |
 | `attributes`, `group_attributes` | ninguno: los atributos que se copian de la entrada de cada persona y de la de cada grupo, como `["mail", "uidNumber", "homeDirectory"]` y `["gidNumber"]` ([las entradas]({{< relref "/authnd/entries.md#adding-attributes" >}})) |
+| `object_classes`, `group_object_classes` | ninguno: desde la v0.12.0, las clases auxiliares con las que se publica a cada persona y a cada grupo leídos de este directorio ([esquemas de un sitio]({{< relref "/authnd/schemas.md#object-classes" >}})); las clases que llevan las entradas de origen nunca se copian |
 | `start_tls` | `false` |
 
 Un DN en `member` solo cuenta cuando es el DN de una entrada que devolvió la

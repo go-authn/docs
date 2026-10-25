@@ -5,22 +5,34 @@ description: "これらのページが説明するリリース、各リリース
 tags: [ステータス, リリース]
 ---
 
-これらのページはドキュメントバージョン **0.4** で、次のものを説明しています。
+これらのページはドキュメントバージョン **0.5** で、次のものを説明しています。
 
 | プログラム | リリース | モジュール |
 |---|---|---|
-| authnd | **v0.11.1** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.1** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.4** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
 
 ライブラリのバージョンは[専用ページ]({{< relref "/libraries/_index.md" >}})にあります。
 ldap は **v0.9.0** で、HCL2 のスキーマと `ldapschema` コンバーターを備えています。
-directory は **v0.14.0** で、属性とより広い ldapdir の既定値を備えています。
-authnd v0.11.1 は ldap v0.8.0 と directory v0.14.0 を組み込んでいます。
+directory は **v0.15.0** で、宣言されたオブジェクトクラスを備えています。
+authnd v0.12.0 は ldap v0.9.0 と directory v0.15.0 を組み込んでいます。
 上記のいずれかのプログラムのマイナーバージョンが新しくなると、新しいドキュメントバージョンになります。
-そのため、`/docs/0.4/` 以下のページは、読者がインストールしたものを説明し続け、
-以前のリリースのページは `/docs/0.1/`、`/docs/0.2/`、`/docs/0.3/` 以下に残ります。
+そのため、`/docs/0.5/` 以下のページは、読者がインストールしたものを説明し続け、
+以前のリリースのページは `/docs/0.1/`、`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/` 以下に残ります。
+
+{{< callout type="warning" >}}
+**セキュリティ: authnd は v0.11.1 ではなく v0.12.0 を使ってください**
+
+authnd は証明書を検証します (`x509.Certificate.Verify`。`govulncheck` によれば `main` から
+到達可能)。そして Go 1.27.2 の crypto/x509 は、GO-2026-6809 が挙げる侵害された中間証明書を
+信頼から外していませんでした。**v0.11.1 のリリースバイナリは Go 1.27.2 でビルドされており、
+影響を受けます。** v0.12.0 は Go 1.27.3 でビルドされ、その `go` ディレクティブは 1.27.3 なので、
+`go install` は修正済みのツールチェーンへ自動的に切り替わります。Go 1.27.3 での
+`govulncheck` は脆弱性なしと報告します。そのリリースバイナリは `go version -m` で
+`go1.27.3` と報告します。[アップグレードの注記]({{< relref "/authnd/_index.md" >}})を参照してください。
+{{< /callout >}}
 
 ## 各リリースで追加されたもの {#what-each-release-added}
 
@@ -48,6 +60,7 @@ authnd v0.11.1 は ldap v0.8.0 と directory v0.14.0 を組み込んでいます
 | v0.10.2 | go-authn/directory v0.12.0: 空のグループは `memberUid` のない `posixGroup` として公開される |
 | v0.11.0 | [標準スキーマのエントリ]({{< relref "/authnd/entries.md" >}})。各エントリは `cn=Subschema` で公開されるスキーマに適合しなければならない。`attributes`、`users_attributes`、`groups_attributes`。`(uidNumber>=1000)` は整数として比較する。⛔ `publish_nt_hash` には [`samba` ブロック]({{< relref "/authnd/tls.md#the-samba-block" >}})が必要で、`posixAccount` や `posixGroup` で絞り込むコンシューマーに見えるエントリが減る |
 | v0.11.1 | 起動時の行は、誰かが提供を受けているソースだけを示す: `user` ブロックがなければ設定ファイルを示さなくなった |
+| v0.12.0 | [サイトスキーマ]({{< relref "/authnd/schemas.md" >}}): `schema_files` (公開されているとおりの OpenLDAP `.schema` と cn=config LDIF。再定義は、slapd と同様に、同一であっても拒否される) と `schema { }` ブロック。ソースごとに `object_classes` で宣言する補助クラスは、起動時に検証され、スーパークラスとともに公開される。`check` はファイル、宣言、MUST が足りないために人から外されたクラス、二つのソースの意見が食い違うグループを報告する。⛔ Go 1.27.3 でビルド: v0.11.1 のバイナリ (Go 1.27.2) は GO-2026-6809 の影響を受ける |
 
 ### authn-bridge {#authn-bridge}
 
@@ -117,6 +130,7 @@ authnd v0.11.1 は ldap v0.8.0 と directory v0.14.0 を組み込んでいます
 |---|---|
 | directory v0.13.0 | [属性]({{< relref "/libraries/directory.md#attributes" >}}): 認証情報を除き、誰かを説明するだけで何も証明しないもの。属性にはなり得ない名前も定められている。`user` と `group` ブロックの `attributes`、`users_attributes` と `groups_attributes` クエリ、ldapdir の `attributes` と `group_attributes` |
 | directory v0.14.0 | ⛔ ldapdir の[既定値]({{< relref "/libraries/directory.md#ldapdir-defaults" >}})が `account` と `uidObject` の人々と `groupOfNames` のグループを読むようになり、組織のディレクトリが提供する範囲が広がる。`member` DN は、ソースがインポートした人にのみ対応付けられる |
+| directory v0.15.0 | [オブジェクトクラス]({{< relref "/libraries/directory.md#object-classes" >}})。宣言されるもので推論されない: `users` ブロックの `object_classes` と `group_object_classes`、`user` と `group` ブロックの `object_classes`、sqldir の `WithObjectClasses`、ldapdir の `Config.ObjectClasses`。グループのクラスを最初に宣言したソースが決める。`sqldir.ClosesDB` |
 | kdc v0.4.3 | 依存関係のみ: 最小バージョンとして go-authn/directory v0.12.0 |
 | keyfactor v0.4.2 | 依存関係のみ: 最小バージョンとして go-authn/fido v0.6.2 と golang.org/x/crypto v0.58.0 |
 | krb5 v0.3.1 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
