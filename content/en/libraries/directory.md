@@ -11,7 +11,7 @@ memory, a SQL database, an LDAP server, or `user` and `group` blocks in a
 configuration file — and the point of it is the second half of the question.
 
 ```sh
-go get github.com/go-authn/directory@v0.14.0
+go get github.com/go-authn/directory@v0.15.0
 ```
 
 ## What proves somebody is not one thing
@@ -237,6 +237,74 @@ A group's attributes come from `Set.GroupAttributes`, through the optional
 only the directory has comes through, and a broken source is an error even
 when another answered. A person's attributes come with the person, from the
 source that owns the name.
+
+## Object classes {#object-classes}
+
+From v0.15.0 a source can **declare** the auxiliary object classes its people
+and groups carry, so that a server such as
+[authnd]({{< relref "/authnd/schemas.md" >}}) can publish a site schema
+(SUPANN, eduPerson). A class promises the shape of every entry (RFC 4512
+§4.1.1), so it is never inferred from the attributes present, and never read
+from the data: no database column, no upstream `objectClass` value. An
+attribute appearing in a database cannot change a published class.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+
+	"github.com/go-authn/directory"
+)
+
+func main() {
+	c, err := directory.NewObjectClasses("supannPerson", "eduPerson", "EDUPERSON")
+	fmt.Println(c.Names(), err)
+	ann := directory.NewIdentity("ann", directory.WithPassword("hunter2"), directory.WithObjectClasses(c))
+	fmt.Println(ann.ObjectClasses())
+	fmt.Println(directory.NewIdentity("bob").ObjectClasses())
+
+	// A class is a name, never a number or a filter.
+	for _, name := range []string{"edu Person", "1.3.6.1.4.1.5923.1.1.2", "x)(objectClass=*"} {
+		_, err := directory.NewObjectClasses("eduPerson", name)
+		fmt.Println(errors.Is(err, directory.ErrObjectClassName), err)
+	}
+}
+```
+
+```
+[supannPerson eduPerson] <nil>
+[supannPerson eduPerson]
+[]
+true directory: not an object class name: "edu Person" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+true directory: not an object class name: "1.3.6.1.4.1.5923.1.1.2" is an OID: name the class by its descriptor, so that what is refused by name stays refused
+true directory: not an object class name: "x)(objectClass=*" is not a descriptor: a letter, then letters, digits and hyphens (RFC 4512 §1.4)
+```
+
+Names are kept in the order written, once each, ignoring case (`EDUPERSON`
+repeats `eduPerson`). This package checks the **spelling** only, an RFC 4512
+descriptor: numeric OIDs, spaces, quotes and parentheses are refused, and the
+refusal is fuzzed. Whether a class is defined, AUXILIARY and not one the
+server derives is the server's to check against the schema it serves.
+
+Where they come from:
+
+- **`hcldir`**: `object_classes` and `group_object_classes` in a `users`
+  block of either kind, and `object_classes` in a `user` and a `group` block.
+  An error carries the position in the configuration.
+- **`sqldir`**: `WithObjectClasses` and `WithGroupObjectClasses`.
+- **`ldapdir`**: `Config.ObjectClasses` and `Config.GroupObjectClasses`.
+
+`Identity.ObjectClasses()` returns a copy of a person's list. A group's come
+from `Set.GroupObjectClasses`, through the optional `GroupObjectClasser`,
+beside `GroupAttributer`. **The first source that has the group and declares
+classes decides, whole**: a source declaring nothing does not decide, and a
+later source's different list is ignored, neither merged nor an error. (authnd
+says so in `check`.)
+
+`sqldir.ClosesDB()` hands a database to its source, and `(*sqldir.Source).Close`
+closes it; `hcldir.Open` now returns the `*sqldir.Source` itself.
 
 ## ldapdir's defaults {#ldapdir-defaults}
 

@@ -36,6 +36,7 @@ group "staff" { members = ["alice", "carol"] }
 | `authorized_keys` | `authorized_keys` lines, published as `sshPublicKey` |
 | `authorized_keys_file` | the same, from a file |
 | `attributes` | from v0.11.0, what describes the person and proves nothing — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — as a map of strings or lists of strings; a `group` block takes it too. They decide what the entry is published as: see [the entries]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
+| `object_classes` | from v0.12.0, the auxiliary classes this person (or, in a `group` block, this group) is published with, such as `["siteMember"]`: declared, never inferred, and defined in a [site schema]({{< relref "/authnd/schemas.md#object-classes" >}}) |
 
 Refused at startup, naming the person:
 
@@ -113,6 +114,22 @@ by position: `users_attributes` (a name, then one column per attribute) and
 `groups_attributes` (a group, then the same). An unquoted alias is lower-cased
 by PostgreSQL. See [the entries]({{< relref "/authnd/entries.md#in-a-sql-database" >}}).
 
+**The classes of what a `users` block gives** are declared beside its queries
+(from v0.12.0, the same two keys in a `users "ldap"` block):
+
+```hcl
+users "sql" {
+  # ...
+  object_classes       = ["supannPerson", "eduPerson"]   # every person this block gives
+  group_object_classes = ["supannGroupe"]                # every group
+}
+```
+
+Each must be an AUXILIARY class that the schema served defines (the standard
+schema, or [`schema_files` and a `schema` block]({{< relref "/authnd/schemas.md" >}})),
+and not one authnd derives itself. A person missing a MUST of a declared class
+is published without it, and `check` says so.
+
 `driver` accepts `postgres` (or `postgresql`, `pgx`), `mysql` (or `mariadb`)
 and `sqlite` (or `sqlite3`). The database is reached at startup, before
 anything listens, so one that is not answering stops the server where
@@ -160,6 +177,7 @@ attributes name them:
 | `group_member_attribute` | none: `memberUid` (names) **and** `member` (DNs); set, it is the one attribute read |
 | `totp_attribute` | none: there is no standard attribute, and a guess would read nothing while looking like it had looked |
 | `attributes`, `group_attributes` | none: the attributes to copy from each person's entry and each group's, such as `["mail", "uidNumber", "homeDirectory"]` and `["gidNumber"]` ([the entries]({{< relref "/authnd/entries.md#adding-attributes" >}})) |
+| `object_classes`, `group_object_classes` | none: from v0.12.0, the auxiliary classes every person and every group read from this directory is published with ([site schemas]({{< relref "/authnd/schemas.md#object-classes" >}})); the classes the upstream entries carry are never copied |
 | `start_tls` | `false` |
 
 A `member` DN counts only when it is the DN of an entry the people search

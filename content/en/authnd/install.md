@@ -19,7 +19,7 @@ and arm64 (`.exe` on windows), built with `CGO_ENABLED=0`, a `SHA256SUMS`
 manifest, and a build provenance attestation for every binary.
 
 ```sh
-version=v0.11.1
+version=v0.12.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ something to compare:
 
 ```
 $ authnd --version
-authnd version v0.11.1
+authnd version v0.12.0
 ```
 
 ### Building only what you want
@@ -64,8 +64,8 @@ and a file it wrote would belong to a number that later means somebody else.
 
 The two files come from the `packaging/` directory of the release tag, the
 same version as the binary: copy that directory beside the binary, from a
-checkout of the tag or, for v0.11.1, from
-<https://github.com/go-authn/authnd/tree/v0.11.1/packaging>.
+checkout of the tag or, for v0.12.0, from
+<https://github.com/go-authn/authnd/tree/v0.12.0/packaging>.
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd
@@ -198,8 +198,8 @@ sudo systemctl restart authnd
 authnd --version
 ```
 
-Compare `packaging/` at the new tag with what is installed (v0.11.1's is
-v0.10.2's, unchanged). Rolling back is the same install from
+Compare `packaging/` at the new tag with what is installed (v0.12.0's is
+v0.11.1's, unchanged). Rolling back is the same install from
 `authnd.previous`, and a restart.
 
 From v0.10.x to v0.11.0 the `check` above is the step that matters: a
@@ -208,6 +208,13 @@ configuration with `publish_nt_hash = true` and no
 there rather than at the restart, and the lines after its tables say who is
 no longer a `posixAccount` and which groups are no longer `posixGroup`s
 ([the entries]({{< relref "/authnd/entries.md" >}})).
+
+⛔ From v0.11.1 to v0.12.0, upgrade whatever else you do: v0.11.1's release
+binaries were built with Go 1.27.2 and are affected by GO-2026-6809
+(crypto/x509), which v0.12.0, built with Go 1.27.3, is not. The configuration
+needs no change; to serve a site's own schema, see
+[site schemas]({{< relref "/authnd/schemas.md" >}}), and name the files by
+absolute paths, since a systemd unit's working directory is `/`.
 
 To remove it:
 

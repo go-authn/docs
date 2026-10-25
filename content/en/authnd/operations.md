@@ -118,7 +118,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.11.1
+vendorVersion: v0.12.0
 ```
 
 On a [StartTLS listener]({{< relref "/authnd/tls.md#starttls-which-refuses-until-it-is-asked-for" >}})
