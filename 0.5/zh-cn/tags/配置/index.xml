@@ -1212,10 +1212,79 @@ data-copied-label="已复制！"
 &lt;h2 data-hextra-search-id="schema-files"&gt;&lt;code&gt;schema_files&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="schema-files"&gt;&lt;/span&gt;
 &lt;a href="#schema-files" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;schema_files&lt;/code&gt; 是 OpenLDAP &lt;code&gt;.schema&lt;/code&gt; 文件或 cn=config LDIF 文件的列表。它们按&lt;strong&gt;发布时的原样&lt;/strong&gt;，依次加载到标准模式之上（如果有&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authnd/tls/#the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; 块&lt;/a&gt;，还有 Samba 的三个定义），由 go-authn/ldap 的 &lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/libraries/ldap/#hcl2-and-the-converter"&gt;slapd 兼容读取器&lt;/a&gt;处理：支持任意的项顺序、slapd 和 RFC 2849 的续行、base64、&lt;code&gt;{N}&lt;/code&gt; 长度前缀，以及 &lt;code&gt;objectidentifier&lt;/code&gt; 宏——一个文件可以定义，下一个文件可以使用，如同跨越 slapd 的 &lt;code&gt;include&lt;/code&gt;。事先不做任何转换，所以站点的 slapd 加载的文件，就是 authnd 加载的文件。这些定义由&lt;code&gt;cn=Subschema&lt;/code&gt; 提供。&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;相对路径相对于工作目录，与配置中的其他每个路径一样。在服务中请使用绝对路径：systemd 单元的工作目录是 &lt;code&gt;/&lt;/code&gt;。&lt;/li&gt;
-&lt;li&gt;每个文件必须是不超过 4 MiB 的普通文件，并且只在启动时读取一次。&lt;/li&gt;
-&lt;li&gt;这些文件决定每个条目可以包含什么。它们不是机密，但请与配置的其余部分放在一起：&lt;code&gt;root:authnd&lt;/code&gt;，权限 &lt;code&gt;0640&lt;/code&gt;，位于只有 root 可写的目录中（&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authnd/install/"&gt;安装&lt;/a&gt;）。&lt;/li&gt;
-&lt;li&gt;无法构建的文件会使启动以及 &lt;code&gt;check&lt;/code&gt; 被拒绝，并给出文件和定义所在的行：未知的父类、属性、匹配规则或语法，由辅助类派生的结构类，重复定义的 OID 或名称。&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;相对路径相对于工作目录，与配置中的其他每个路径一样。在服务中请使用绝对路径：systemd 单元的工作目录是 &lt;code&gt;/&lt;/code&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;每个文件必须是不超过 4 MiB 的普通文件，并且只在启动时读取一次。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;这些文件决定每个条目可以包含什么。它们不是机密，但请与配置的其余部分放在一起：&lt;code&gt;root:authnd&lt;/code&gt;，权限 &lt;code&gt;0640&lt;/code&gt;，位于只有 root 可写的目录中（&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authnd/install/"&gt;安装&lt;/a&gt;）。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;无法构建的文件会使启动以及 &lt;code&gt;check&lt;/code&gt; 被拒绝，并给出文件、行和定义起始的列，信息末尾是拒绝的类型：未知的父类、属性、匹配规则或语法（&lt;code&gt;unknown reference&lt;/code&gt;），由辅助类派生的结构类（&lt;code&gt;kind violation&lt;/code&gt;），重复定义的 OID 或名称（&lt;code&gt;duplicate OID&lt;/code&gt;、&lt;code&gt;duplicate name&lt;/code&gt;）。自 v0.12.1 起，位置和类型来自 go-authn/ldap 的类型化&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/libraries/ldap/#build-error"&gt;&lt;code&gt;*schema.BuildError&lt;/code&gt;&lt;/a&gt;，而不是通过解析它的错误信息。从文件读取的定义从第 1 列开始，即使其文本折叠成多行也一样。重复定义会指出它的第一个定义在哪里，重新定义则会指出原件在哪个标准文件，或更早文件的哪一行。两个示例：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cases/unknown.schema&lt;/code&gt; 有一个在任何地方都未定义的 MAY：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# exampleB has a MAY that is defined nowhere.
+objectclass ( 1.3.6.1.4.1.99999.2.9 NAME &amp;#39;exampleB&amp;#39; SUP top AUXILIARY
+MAY noSuchAttribute )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/unknown.hcl
+authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;cases/twice.schema&lt;/code&gt; 给两个属性类型赋予同一个 OID：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleA&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleB&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/twice.hcl
+authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 data-hextra-search-id="redefinition"&gt;重新定义会被拒绝，即使完全相同&lt;span class="hx:absolute hx:-mt-20" id="redefinition"&gt;&lt;/span&gt;
 &lt;a href="#redefinition" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;文件不得定义已经存在的内容：标准模式的定义、Samba 的定义，或更早的文件的定义。&lt;strong&gt;即使逐字相同&lt;/strong&gt;也会被拒绝，这正是 slapd 自己的规则：模式文件的定义要经过&lt;code&gt;parse_at&lt;/code&gt; 和 &lt;code&gt;parse_oc&lt;/code&gt;，对于已被索引的 OID 或名称，slapd 会回答&lt;em&gt;Duplicate attributeType&lt;/em&gt;（OID 和名称都相同）或 &lt;em&gt;Inconsistent duplicate
@@ -1223,7 +1292,7 @@ attributeType&lt;/em&gt;（&lt;code&gt;servers/slapd/at.c&lt;/code&gt;、&lt;cod
 &lt;p&gt;另一种解读则必须挑出一个胜者，而这会悄悄改变每个客户端被告知的某个标准属性的内容；拒绝则会指出具体的行。拒绝信息会说明文本是否相同。下面是一个用自己的定义重新定义 &lt;code&gt;cn&lt;/code&gt;（2.5.4.3）的文件：&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/dup.hcl
-authnd: schema_files: cases/cn-copy.schema:1: the attribute type cn (2.5.4.3) is already defined by the standard schema, and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too (&amp;#34;Duplicate attributeType&amp;#34;, servers/slapd/at.c and oc.c). Remove it from this file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too (&amp;#34;Duplicate attributeType&amp;#34;, servers/slapd/at.c and oc.c). Remove it from this file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="复制代码"
@@ -1511,7 +1580,7 @@ data-copied-label="已复制！"
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;关于这些记录&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;本页上的每条命令都由 v0.12.0 发布的二进制文件（&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;，已对照 &lt;code&gt;SHA256SUMS&lt;/code&gt; 核对；&lt;code&gt;go version -m&lt;/code&gt;：&lt;code&gt;go1.27.3&lt;/code&gt;，&lt;code&gt;mod github.com/go-authn/authnd v0.12.0&lt;/code&gt;，&lt;code&gt;vcs.modified=false&lt;/code&gt;）和 OpenLDAP 的 &lt;code&gt;ldapsearch&lt;/code&gt; 运行，在 127.0.0.1 上，在一个临时目录中，使用所示的文件。路径因此是相对的；服务则使用绝对路径。该模式是为本页编写的示例。&lt;/p&gt;
+&lt;p&gt;本页上的每条命令都由 v0.12.1 发布的二进制文件（&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;，已对照 &lt;code&gt;SHA256SUMS&lt;/code&gt; 核对；&lt;code&gt;go version -m&lt;/code&gt;：&lt;code&gt;go1.27.3&lt;/code&gt;，&lt;code&gt;mod github.com/go-authn/authnd v0.12.1&lt;/code&gt;，&lt;code&gt;vcs.modified=false&lt;/code&gt;）和 OpenLDAP 的 &lt;code&gt;ldapsearch&lt;/code&gt; 运行，在 127.0.0.1 上，在一个临时目录中，使用所示的文件。路径因此是相对的；服务则使用绝对路径。该模式是为本页编写的示例。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;</description></item><item><title>重启人员赖以登录的服务之前先用 check</title><link>https://go-authn.github.io/docs/0.5/zh-cn/authnd/check/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/zh-cn/authnd/check/</guid><description>

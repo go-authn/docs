@@ -1300,17 +1300,90 @@ den drei Definitionen von Samba, mit dem &lt;a href="https://go-authn.github.io/
 verwenden kann, wie über das &lt;code&gt;include&lt;/code&gt; von slapd hinweg. Nichts wird vorher umgewandelt, also
 ist die Datei, die der slapd eines Standorts lädt, die Datei, die authnd lädt. Die Definitionen werden unter&lt;code&gt;cn=Subschema&lt;/code&gt; bereitgestellt.&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Ein relativer Pfad ist relativ zum Arbeitsverzeichnis, wie jeder andere Pfad
+&lt;li&gt;
+&lt;p&gt;Ein relativer Pfad ist relativ zum Arbeitsverzeichnis, wie jeder andere Pfad
 in der Konfiguration. Verwenden Sie in einem Dienst absolute Pfade: Das Arbeitsverzeichnis
-einer systemd-Unit ist &lt;code&gt;/&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Jede Datei muss eine reguläre Datei von höchstens 4 MiB sein und wird einmal gelesen, beim
-Start.&lt;/li&gt;
-&lt;li&gt;Die Dateien entscheiden, was jeder Eintrag enthalten darf. Sie sind keine Geheimnisse, aber halten Sie
+einer systemd-Unit ist &lt;code&gt;/&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Jede Datei muss eine reguläre Datei von höchstens 4 MiB sein und wird einmal gelesen, beim
+Start.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Die Dateien entscheiden, was jeder Eintrag enthalten darf. Sie sind keine Geheimnisse, aber halten Sie
 sie bei der übrigen Konfiguration: &lt;code&gt;root:authnd&lt;/code&gt;, Modus &lt;code&gt;0640&lt;/code&gt;, in einem
-Verzeichnis, in das nur root schreibt (&lt;a href="https://go-authn.github.io/docs/0.5/de/authnd/install/"&gt;Installation&lt;/a&gt;).&lt;/li&gt;
-&lt;li&gt;Eine Datei, die sich nicht aufbauen lässt, verweigert den Start und &lt;code&gt;check&lt;/code&gt;, mit der Datei und
-der Zeile der Definition: eine unbekannte Oberklasse, ein unbekanntes Attribut, eine unbekannte Matching-Regel oder
-Syntax, eine STRUCTURAL-Klasse, die von einer AUXILIARY-Klasse abgeleitet ist, eine OID oder ein Name,der doppelt definiert ist.&lt;/li&gt;
+Verzeichnis, in das nur root schreibt (&lt;a href="https://go-authn.github.io/docs/0.5/de/authnd/install/"&gt;Installation&lt;/a&gt;).&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Eine Datei, die sich nicht aufbauen lässt, verweigert den Start und &lt;code&gt;check&lt;/code&gt;, mit der Datei, der
+Zeile und der Spalte, in der die Definition beginnt, und der Art der Ablehnung am Ende der Meldung:eine unbekannte Oberklasse, ein unbekanntes Attribut, eine unbekannte Matching-Regel oder
+Syntax (&lt;code&gt;unknown reference&lt;/code&gt;), eine STRUCTURAL-Klasse, die von einer AUXILIARY-Klasse abgeleitet ist(&lt;code&gt;kind violation&lt;/code&gt;), eine OID oder ein Name, der doppelt definiert ist (&lt;code&gt;duplicate OID&lt;/code&gt;,&lt;code&gt;duplicate name&lt;/code&gt;). Seit v0.12.1 stammen Stelle und Art aus dem typisierten&lt;a href="https://go-authn.github.io/docs/0.5/de/libraries/ldap/#build-error"&gt;&lt;code&gt;*schema.BuildError&lt;/code&gt;&lt;/a&gt; von
+go-authn/ldap, nicht aus dem Lesen seiner Meldung. Eine aus einer Datei gelesene Definition beginnt in
+Spalte 1, auch wenn ihr Text über mehrere Zeilen umgebrochen ist. Ein Duplikat sagt, wo seine
+erste Definition steht, und eine Neudefinition sagt, welche Standarddatei oder welche Zeile
+einer früheren Datei das Original enthält. Zwei Beispiele:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cases/unknown.schema&lt;/code&gt; hat ein MAY, das nirgends definiert ist:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# exampleB has a MAY that is defined nowhere.
+objectclass ( 1.3.6.1.4.1.99999.2.9 NAME &amp;#39;exampleB&amp;#39; SUP top AUXILIARY
+MAY noSuchAttribute )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/unknown.hcl
+authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;cases/twice.schema&lt;/code&gt; gibt zwei Attributtypen dieselbe OID:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleA&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleB&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/twice.hcl
+authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 data-hextra-search-id="redefinition"&gt;Eine Neudefinition wird abgelehnt, selbst eine identische&lt;span class="hx:absolute hx:-mt-20" id="redefinition"&gt;&lt;/span&gt;
 &lt;a href="#redefinition" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Eine Datei darf nicht definieren, was schon da ist: die Definitionen des Standardschemas,die von Samba oder die einer früheren Datei. Sie wird &lt;strong&gt;selbst wortgleich&lt;/strong&gt; abgelehnt, was die
@@ -1322,7 +1395,7 @@ selbst darf Ersteres. Eine Datei, die slapd ablehnt, ist eine Datei, die authnd 
 eigenen Definition neu definiert:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/dup.hcl
-authnd: schema_files: cases/cn-copy.schema:1: the attribute type cn (2.5.4.3) is already defined by the standard schema, and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too (&amp;#34;Duplicate attributeType&amp;#34;, servers/slapd/at.c and oc.c). Remove it from this file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too (&amp;#34;Duplicate attributeType&amp;#34;, servers/slapd/at.c and oc.c). Remove it from this file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Code kopieren"
@@ -1636,7 +1709,7 @@ MUST von &lt;code&gt;supannPerson&lt;/code&gt; oder &lt;code&gt;eduPerson&lt;/co
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Zu den Transkripten&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Jeder Befehl auf dieser Seite wurde mit dem Release-Binary v0.12.0 ausgeführt(&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;, gegen &lt;code&gt;SHA256SUMS&lt;/code&gt; geprüft; &lt;code&gt;go version -m&lt;/code&gt;:&lt;code&gt;go1.27.3&lt;/code&gt;, &lt;code&gt;mod github.com/go-authn/authnd v0.12.0&lt;/code&gt;,&lt;code&gt;vcs.modified=false&lt;/code&gt;) und &lt;code&gt;ldapsearch&lt;/code&gt; von OpenLDAP, auf 127.0.0.1, in einem Arbeitsverzeichnis
+&lt;p&gt;Jeder Befehl auf dieser Seite wurde mit dem Release-Binary v0.12.1 ausgeführt(&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;, gegen &lt;code&gt;SHA256SUMS&lt;/code&gt; geprüft; &lt;code&gt;go version -m&lt;/code&gt;:&lt;code&gt;go1.27.3&lt;/code&gt;, &lt;code&gt;mod github.com/go-authn/authnd v0.12.1&lt;/code&gt;,&lt;code&gt;vcs.modified=false&lt;/code&gt;) und &lt;code&gt;ldapsearch&lt;/code&gt; von OpenLDAP, auf 127.0.0.1, in einem Arbeitsverzeichnis
 zum Ausprobieren, mit den gezeigten Dateien. Die Pfade sind deshalb relativ; ein
 Dienst verwendet absolute. Das Schema ist ein für diese Seite geschriebenes Beispiel.&lt;/p&gt;
 &lt;/div&gt;

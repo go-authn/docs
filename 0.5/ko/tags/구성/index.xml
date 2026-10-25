@@ -1299,12 +1299,85 @@ data-copied-label="복사됨!"
 매크로(slapd의 &lt;code&gt;include&lt;/code&gt;를 가로지르는 것과 같습니다)를 지원합니다. 미리 변환하는 것은
 없으므로, 사이트의 slapd가 로드하는 파일이 곧 authnd가 로드하는 파일입니다. 정의는&lt;code&gt;cn=Subschema&lt;/code&gt;에서 제공됩니다.&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;상대 경로는 구성의 다른 모든 경로와 마찬가지로 작업 디렉터리를 기준으로 합니다.서비스에서는 절대 경로를 사용하십시오. systemd 유닛의 작업 디렉터리는 &lt;code&gt;/&lt;/code&gt;입니다.&lt;/li&gt;
-&lt;li&gt;각 파일은 최대 4 MiB의 일반 파일이어야 하며, 시작 시 한 번 읽습니다.&lt;/li&gt;
-&lt;li&gt;파일은 모든 엔트리가 가질 수 있는 것을 결정합니다. 비밀은 아니지만 나머지 구성과
-함께 보관하십시오. &lt;code&gt;root:authnd&lt;/code&gt;, 모드 &lt;code&gt;0640&lt;/code&gt;, root만 쓸 수 있는 디렉터리입니다(&lt;a href="https://go-authn.github.io/docs/0.5/ko/authnd/install/"&gt;설치&lt;/a&gt;).&lt;/li&gt;
-&lt;li&gt;빌드되지 않는 파일은 시작과 &lt;code&gt;check&lt;/code&gt;를 거부하며, 파일과 정의의 줄을 알려 줍니다.알 수 없는 상위 클래스, 속성, 매칭 규칙 또는 구문, AUXILIARY 클래스에서 파생된
-STRUCTURAL 클래스, 두 번 정의된 OID 또는 이름이 그 예입니다.&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;상대 경로는 구성의 다른 모든 경로와 마찬가지로 작업 디렉터리를 기준으로 합니다.서비스에서는 절대 경로를 사용하십시오. systemd 유닛의 작업 디렉터리는 &lt;code&gt;/&lt;/code&gt;입니다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;각 파일은 최대 4 MiB의 일반 파일이어야 하며, 시작 시 한 번 읽습니다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;파일은 모든 엔트리가 가질 수 있는 것을 결정합니다. 비밀은 아니지만 나머지 구성과
+함께 보관하십시오. &lt;code&gt;root:authnd&lt;/code&gt;, 모드 &lt;code&gt;0640&lt;/code&gt;, root만 쓸 수 있는 디렉터리입니다(&lt;a href="https://go-authn.github.io/docs/0.5/ko/authnd/install/"&gt;설치&lt;/a&gt;).&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;빌드되지 않는 파일은 시작과 &lt;code&gt;check&lt;/code&gt;를 거부하며, 파일, 정의가 시작되는 줄과
+열, 그리고 메시지 끝에 거부의 종류를 알려 줍니다. 알 수 없는 상위 클래스, 속성,매칭 규칙 또는 구문(&lt;code&gt;unknown reference&lt;/code&gt;), AUXILIARY 클래스에서 파생된 STRUCTURAL
+클래스(&lt;code&gt;kind violation&lt;/code&gt;), 두 번 정의된 OID 또는 이름(&lt;code&gt;duplicate OID&lt;/code&gt;,&lt;code&gt;duplicate name&lt;/code&gt;)이 그 예입니다. v0.12.1부터 위치와 종류는 메시지를 읽어서가
+아니라 go-authn/ldap의 타입이 있는&lt;a href="https://go-authn.github.io/docs/0.5/ko/libraries/ldap/#build-error"&gt;&lt;code&gt;*schema.BuildError&lt;/code&gt;&lt;/a&gt;에서 옵니다.파일에서 읽은 정의는 여러 줄에 걸쳐 접혀 있어도 1열에서 시작합니다. 중복은 첫
+번째 정의가 어디 있는지 알려 주고, 재정의는 원본이 어느 표준 파일에, 또는 앞선
+파일의 어느 줄에 있는지 알려 줍니다. 두 가지 예입니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cases/unknown.schema&lt;/code&gt;에는 어디에도 정의되지 않은 MAY가 있습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# exampleB has a MAY that is defined nowhere.
+objectclass ( 1.3.6.1.4.1.99999.2.9 NAME &amp;#39;exampleB&amp;#39; SUP top AUXILIARY
+MAY noSuchAttribute )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/unknown.hcl
+authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;cases/twice.schema&lt;/code&gt;는 하나의 OID를 두 속성 타입에 부여합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleA&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleB&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/twice.hcl
+authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 data-hextra-search-id="redefinition"&gt;재정의는 동일하더라도 거부됩니다&lt;span class="hx:absolute hx:-mt-20" id="redefinition"&gt;&lt;/span&gt;
 &lt;a href="#redefinition" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;파일은 이미 있는 것을 정의할 수 없습니다. 표준 스키마의 정의, Samba의 정의, 앞선
@@ -1318,7 +1391,7 @@ authnd도 거부합니다.&lt;/p&gt;
 파일은 다음과 같습니다.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/dup.hcl
-authnd: schema_files: cases/cn-copy.schema:1: the attribute type cn (2.5.4.3) is already defined by the standard schema, and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too (&amp;#34;Duplicate attributeType&amp;#34;, servers/slapd/at.c and oc.c). Remove it from this file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too (&amp;#34;Duplicate attributeType&amp;#34;, servers/slapd/at.c and oc.c). Remove it from this file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="코드 복사"
@@ -1633,8 +1706,8 @@ without&lt;/em&gt; 줄을 읽으십시오. &lt;code&gt;supannPerson&lt;/code&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;트랜스크립트에 대하여&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;이 페이지의 모든 명령은 v0.12.0 릴리스 바이너리(&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;, &lt;code&gt;SHA256SUMS&lt;/code&gt;와
-대조함; &lt;code&gt;go version -m&lt;/code&gt;: &lt;code&gt;go1.27.3&lt;/code&gt;, &lt;code&gt;mod github.com/go-authn/authnd v0.12.0&lt;/code&gt;,&lt;code&gt;vcs.modified=false&lt;/code&gt;)와 OpenLDAP의 &lt;code&gt;ldapsearch&lt;/code&gt;로, 127.0.0.1에서, 임시 디렉터리 안에서,보이는 파일들과 함께 실행했습니다. 그래서 경로가 상대 경로이며, 서비스는 절대 경로를
+&lt;p&gt;이 페이지의 모든 명령은 v0.12.1 릴리스 바이너리(&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;, &lt;code&gt;SHA256SUMS&lt;/code&gt;와
+대조함; &lt;code&gt;go version -m&lt;/code&gt;: &lt;code&gt;go1.27.3&lt;/code&gt;, &lt;code&gt;mod github.com/go-authn/authnd v0.12.1&lt;/code&gt;,&lt;code&gt;vcs.modified=false&lt;/code&gt;)와 OpenLDAP의 &lt;code&gt;ldapsearch&lt;/code&gt;로, 127.0.0.1에서, 임시 디렉터리 안에서,보이는 파일들과 함께 실행했습니다. 그래서 경로가 상대 경로이며, 서비스는 절대 경로를
 사용합니다. 스키마는 이 페이지를 위해 작성한 예제입니다.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
