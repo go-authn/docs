@@ -1,8 +1,6 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – 運用</title><link>https://go-authn.github.io/docs/0.4/ja/tags/%E9%81%8B%E7%94%A8/</link><description>Recent content in 運用 on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ja</language><atom:link href="https://go-authn.github.io/docs/0.4/ja/tags/%E9%81%8B%E7%94%A8/index.xml" rel="self" type="application/rss+xml"/><item><title>運用: シグナル、再起動、出力される内容</title><link>https://go-authn.github.io/docs/0.4/ja/authnd/operations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.4/ja/authnd/operations/</guid><description>
 &lt;h2 data-hextra-search-id="it-reads-everything-once"&gt;すべてを一度だけ読み込む&lt;span class="hx:absolute hx:-mt-20" id="it-reads-everything-once"&gt;&lt;/span&gt;
-&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;設定ファイル、その背後にあるすべてのソース、TLS 証明書、キータブは&lt;strong&gt;起動時に&lt;/strong&gt;読み込まれます。
-リロードはなく、パッケージ付属のユニットにも &lt;code&gt;ExecReload=&lt;/code&gt; はありません。これらのいずれかを
-変更した後は:&lt;/p&gt;
+&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;設定ファイル、その背後にあるすべてのソース、TLS 証明書、キータブは&lt;strong&gt;起動時に&lt;/strong&gt;読み込まれます。リロードはなく、パッケージ付属のユニットにも &lt;code&gt;ExecReload=&lt;/code&gt; はありません。これらのいずれかを変更した後は:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl restart authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
@@ -17,9 +15,7 @@ data-copied-label="コピーしました！"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;実行中に反映される唯一のものは、
-&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/passwords/"&gt;人が authnd を通じて変更したパスワード&lt;/a&gt;で、
-&lt;code&gt;user&lt;/code&gt; ブロックだけを再読み込みし、他は何も読みません。&lt;/p&gt;
+&lt;p&gt;実行中に反映される唯一のものは、&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/passwords/"&gt;人が authnd を通じて変更したパスワード&lt;/a&gt;で、&lt;code&gt;user&lt;/code&gt; ブロックだけを再読み込みし、他は何も読みません。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="signals"&gt;シグナル&lt;span class="hx:absolute hx:-mt-20" id="signals"&gt;&lt;/span&gt;
 &lt;a href="#signals" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
 &lt;thead&gt;
@@ -57,40 +53,20 @@ data-copied-label="コピーしました！"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;これは一回の実行です。&lt;code&gt;kill -HUP&lt;/code&gt; が一回、パスワード変更の試行が二回 (最初は拒否され、
-二回目は受け入れられました)、そして &lt;code&gt;kill -TERM&lt;/code&gt; です。&lt;code&gt;SIGHUP&lt;/code&gt; の後もプロセスは残っていました。&lt;/p&gt;
-&lt;p&gt;かつて &lt;code&gt;SIGHUP&lt;/code&gt; は authnd を&lt;strong&gt;終了させて&lt;/strong&gt;いました。誰も処理しないシグナルに対する Go の既定の
-動作です。systemd は &lt;code&gt;SIGHUP&lt;/code&gt; による終了を正常終了と数えるため、&lt;code&gt;Restart=on-failure&lt;/code&gt; では
-再起動されませんでした。一度の &lt;code&gt;kill -HUP&lt;/code&gt; や、一度の logrotate の &lt;code&gt;postrotate&lt;/code&gt; で、ディレクトリが
-そのまま落ちたのです。今では捕捉されるので、その習慣は無害であり、ログの行が代わりに何をすべきか
-を伝えます。&lt;/p&gt;
-&lt;p&gt;リスナーだけでなく確立済みの接続も閉じるのは意図的です。受け付けを止めても開いている接続に
-応答し続けるサーバーは、止まったように見えても止まっておらず、それは反映されない再起動に
-なってしまいます。&lt;/p&gt;
+&lt;p&gt;これは一回の実行です。&lt;code&gt;kill -HUP&lt;/code&gt; が一回、パスワード変更の試行が二回 (最初は拒否され、二回目は受け入れられました)、そして &lt;code&gt;kill -TERM&lt;/code&gt; です。&lt;code&gt;SIGHUP&lt;/code&gt; の後もプロセスは残っていました。&lt;/p&gt;
+&lt;p&gt;かつて &lt;code&gt;SIGHUP&lt;/code&gt; は authnd を&lt;strong&gt;終了させて&lt;/strong&gt;いました。誰も処理しないシグナルに対する Go の既定の動作です。systemd は &lt;code&gt;SIGHUP&lt;/code&gt; による終了を正常終了と数えるため、&lt;code&gt;Restart=on-failure&lt;/code&gt; では再起動されませんでした。一度の &lt;code&gt;kill -HUP&lt;/code&gt; や、一度の logrotate の &lt;code&gt;postrotate&lt;/code&gt; で、ディレクトリがそのまま落ちたのです。今では捕捉されるので、その習慣は無害であり、ログの行が代わりに何をすべきかを伝えます。&lt;/p&gt;
+&lt;p&gt;リスナーだけでなく確立済みの接続も閉じるのは意図的です。受け付けを止めても開いている接続に応答し続けるサーバーは、止まったように見えても止まっておらず、それは反映されない再起動になってしまいます。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-writes"&gt;出力される内容&lt;span class="hx:absolute hx:-mt-20" id="what-it-writes"&gt;&lt;/span&gt;
-&lt;a href="#what-it-writes" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;すべては標準出力に出力され、systemd の下ではジャーナルになります
-(&lt;code&gt;journalctl -u authnd&lt;/code&gt;)。&lt;/p&gt;
+&lt;a href="#what-it-writes" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;すべては標準出力に出力され、systemd の下ではジャーナルになります(&lt;code&gt;journalctl -u authnd&lt;/code&gt;)。&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;起動時に、待ち受け先と提供対象 — &lt;code&gt;ldap on …&lt;/code&gt;、&lt;code&gt;ldaps on …&lt;/code&gt;、&lt;code&gt;ldap+starttls on …&lt;/code&gt;。
-&lt;code&gt;kerberos&lt;/code&gt; ブロックがある場合は続けて &lt;code&gt;realm EXAMPLE.ORG on … (udp and tcp)&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;mfa&lt;/code&gt; ブロックの下で拒否されたすべてのバインド、拒否されたすべてのトークン、拒否または
-完了したすべてのパスワード変更を、&lt;strong&gt;理由とともに&lt;/strong&gt;。クライアントには決して告げられません。
-&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/mfa/#what-the-binds-look-like"&gt;第二要素&lt;/a&gt;と
-&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/tokens/#what-the-binds-look-like"&gt;トークン&lt;/a&gt;を参照&lt;/li&gt;
-&lt;li&gt;KDC が拒否したすべての要求を、&lt;code&gt;kerberos:&lt;/code&gt; を前置し、Kerberos のエラーコードとともに。
-&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/kerberos/#kinit-against-it"&gt;レルム&lt;/a&gt;を参照&lt;/li&gt;
+&lt;li&gt;起動時に、待ち受け先と提供対象 — &lt;code&gt;ldap on …&lt;/code&gt;、&lt;code&gt;ldaps on …&lt;/code&gt;、&lt;code&gt;ldap+starttls on …&lt;/code&gt;。&lt;code&gt;kerberos&lt;/code&gt; ブロックがある場合は続けて &lt;code&gt;realm EXAMPLE.ORG on … (udp and tcp)&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;mfa&lt;/code&gt; ブロックの下で拒否されたすべてのバインド、拒否されたすべてのトークン、拒否または完了したすべてのパスワード変更を、&lt;strong&gt;理由とともに&lt;/strong&gt;。クライアントには決して告げられません。&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/mfa/#what-the-binds-look-like"&gt;第二要素&lt;/a&gt;と&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/tokens/#what-the-binds-look-like"&gt;トークン&lt;/a&gt;を参照&lt;/li&gt;
+&lt;li&gt;KDC が拒否したすべての要求を、&lt;code&gt;kerberos:&lt;/code&gt; を前置し、Kerberos のエラーコードとともに。&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/kerberos/#kinit-against-it"&gt;レルム&lt;/a&gt;を参照&lt;/li&gt;
 &lt;li&gt;LDAP ライブラリ自身のログを、&lt;code&gt;slog&lt;/code&gt; のテキスト形式で、info レベルで&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;code&gt;mfa&lt;/code&gt; ブロックがない単純バインドでの単なる間違ったパスワードには &lt;code&gt;invalidCredentials&lt;/code&gt; が
-返され、authnd 自身はログに記録しません。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;mfa&lt;/code&gt; ブロックがない単純バインドでの単なる間違ったパスワードには &lt;code&gt;invalidCredentials&lt;/code&gt; が返され、authnd 自身はログに記録しません。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="when-it-does-not-start"&gt;起動しないとき&lt;span class="hx:absolute hx:-mt-20" id="when-it-does-not-start"&gt;&lt;/span&gt;
-&lt;a href="#when-it-does-not-start" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;拒否は、標準エラーへの &lt;code&gt;authnd:&lt;/code&gt; で始まる一行と、終了ステータス 1 です。ユニットの下では
-&lt;code&gt;Restart=on-failure&lt;/code&gt; が五秒ごとに再試行し、その行は毎回ジャーナルに残ります。&lt;code&gt;check&lt;/code&gt; が拒否する
-ものはここでもすべて拒否され、サーバーだけが見つけるのは、待ち受けられないアドレスです。
-&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/check/#the-certificate-the-keytab-and-the-one-thing-it-cannot-see"&gt;&lt;code&gt;check&lt;/code&gt;&lt;/a&gt;を
-参照してください。LDAP リスナー、証明書、レルムはいずれも最初の行が出力される前に開かれるので、
-起動できないサーバーは拒否のメッセージだけを出力します。ここでは二つ目のインスタンスが、
-一つ目の Kerberos ポートにぶつかっています。&lt;/p&gt;
+&lt;a href="#when-it-does-not-start" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;拒否は、標準エラーへの &lt;code&gt;authnd:&lt;/code&gt; で始まる一行と、終了ステータス 1 です。ユニットの下では&lt;code&gt;Restart=on-failure&lt;/code&gt; が五秒ごとに再試行し、その行は毎回ジャーナルに残ります。&lt;code&gt;check&lt;/code&gt; が拒否するものはここでもすべて拒否され、サーバーだけが見つけるのは、待ち受けられないアドレスです。&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/check/#the-certificate-the-keytab-and-the-one-thing-it-cannot-see"&gt;&lt;code&gt;check&lt;/code&gt;&lt;/a&gt;を参照してください。LDAP リスナー、証明書、レルムはいずれも最初の行が出力される前に開かれるので、起動できないサーバーは拒否のメッセージだけを出力します。ここでは二つ目のインスタンスが、一つ目の Kerberos ポートにぶつかっています。&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config cases/realm2
 authnd: kerberos udp 127.0.0.1:18388: listen udp 127.0.0.1:18388: bind: address already in use&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
@@ -109,8 +85,7 @@ data-copied-label="コピーしました！"
 &lt;h2 data-hextra-search-id="telling-that-it-is-up"&gt;稼働の確認&lt;span class="hx:absolute hx:-mt-20" id="telling-that-it-is-up"&gt;&lt;/span&gt;
 &lt;a href="#telling-that-it-is-up" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ヘルスエンドポイントもメトリクスもありません。あるのは次のものです。&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;プロセスとその終了ステータス&lt;/strong&gt; — systemd の下では &lt;code&gt;systemctl is-active authnd&lt;/code&gt;。LDAP リスナーまたはレルムが自ら停止した場合、そのエラーとともにプロセス全体が
-終了するので、生きているプロセスとは、二つの半分がどちらも応答するものです&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;プロセスとその終了ステータス&lt;/strong&gt; — systemd の下では &lt;code&gt;systemctl is-active authnd&lt;/code&gt;。LDAP リスナーまたはレルムが自ら停止した場合、そのエラーとともにプロセス全体が終了するので、生きているプロセスとは、二つの半分がどちらも応答するものです&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;ルート DSE&lt;/strong&gt;。匿名のクライアントに応答し、どのバージョンと話しているかを示します。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -141,10 +116,7 @@ data-copied-label="コピーしました！"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/tls/#starttls-which-refuses-until-it-is-asked-for"&gt;StartTLS リスナー&lt;/a&gt;では、
-このクエリに &lt;code&gt;-ZZ&lt;/code&gt; が必要です。より多くを証明するプローブ、つまりソースがまだ応答することの
-確認は、そのために用意した人または reader としてのバインドです。&lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt; ブロックがある
-場合、そのバインドはこの背後にあるディレクトリに到達します。&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.4/ja/authnd/tls/#starttls-which-refuses-until-it-is-asked-for"&gt;StartTLS リスナー&lt;/a&gt;では、このクエリに &lt;code&gt;-ZZ&lt;/code&gt; が必要です。より多くを証明するプローブ、つまりソースがまだ応答することの確認は、そのために用意した人または reader としてのバインドです。&lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt; ブロックがある場合、そのバインドはこの背後にあるディレクトリに到達します。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-lives-where-and-what-a-restart-loses"&gt;何がどこにあり、再起動で何が失われるか&lt;span class="hx:absolute hx:-mt-20" id="what-lives-where-and-what-a-restart-loses"&gt;&lt;/span&gt;
 &lt;a href="#what-lives-where-and-what-a-restart-loses" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
 &lt;thead&gt;

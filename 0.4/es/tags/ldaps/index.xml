@@ -16,8 +16,7 @@ data-copied-label="¡Copiado!"
 &lt;/div&gt;
 &lt;p&gt;&lt;code&gt;cert_file&lt;/code&gt; y &lt;code&gt;key_file&lt;/code&gt; juntos activan TLS; uno sin el otro se rechaza (&lt;em&gt;one
 without the other serves nothing&lt;/em&gt;). TLS 1.2 es el mínimo. authnd no tiene cliente
-ACME: los dos archivos los escribe otra cosa —
-&lt;a href="https://go-authn.github.io/docs/0.4/es/libraries/servercert/"&gt;go-authn/servercert&lt;/a&gt;, certbot, la CA propia
+ACME: los dos archivos los escribe otra cosa —&lt;a href="https://go-authn.github.io/docs/0.4/es/libraries/servercert/"&gt;go-authn/servercert&lt;/a&gt;, certbot, la CA propia
 de un sitio—, y authnd se &lt;strong&gt;reinicia&lt;/strong&gt; tras cada renovación, porque el
 certificado se lee una vez, cuando se abre la escucha.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="two-ways-one-listener-each"&gt;Dos formas, una escucha para cada una&lt;span class="hx:absolute hx:-mt-20" id="two-ways-one-listener-each"&gt;&lt;/span&gt;
@@ -46,11 +45,9 @@ certificado se lee una vez, cuando se abre la escucha.&lt;/p&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;Es una u otra, y tiene que serlo: una escucha no puede a la vez exigir un handshake
-y esperar a ver si se le pide uno. Cuál quiere un sitio depende de sus
-&lt;strong&gt;clientes&lt;/strong&gt;: &lt;code&gt;ldaps://&lt;/code&gt; en el 636 es para lo que la mayoría están configurados, y
+y esperar a ver si se le pide uno. Cuál quiere un sitio depende de sus&lt;strong&gt;clientes&lt;/strong&gt;: &lt;code&gt;ldaps://&lt;/code&gt; en el 636 es para lo que la mayoría están configurados, y
 StartTLS es lo que pedirá un cliente apuntado al 389 con «use TLS» marcado. Un sitio
-que necesita ambas ejecuta dos instancias, cada una con su propio &lt;code&gt;--config&lt;/code&gt;.
-&lt;code&gt;starttls = true&lt;/code&gt; sin certificado se rechaza:&lt;/p&gt;
+que necesita ambas ejecuta dos instancias, cada una con su propio &lt;code&gt;--config&lt;/code&gt;.&lt;code&gt;starttls = true&lt;/code&gt; sin certificado se rechaza:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/starttls-nocert.hcl
 authnd: starttls needs cert_file and key_file: there is nothing to upgrade a connection WITH&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
@@ -120,20 +117,15 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;(&lt;code&gt;-ZZ&lt;/code&gt; es «StartTLS, y fallar si falla». &lt;code&gt;LDAPTLS_REQCERT=never&lt;/code&gt; está ahí porque el
-&lt;code&gt;ldapsearch&lt;/code&gt; que incluye macOS confía en el almacén del sistema y no había forma de
-indicarle que confiara en esta CA de prueba; la cadena se comprobó aparte con
-&lt;code&gt;openssl s_client -starttls ldap -CAfile tls/ca.pem -verify_return_error&lt;/code&gt;, que
+&lt;p&gt;(&lt;code&gt;-ZZ&lt;/code&gt; es «StartTLS, y fallar si falla». &lt;code&gt;LDAPTLS_REQCERT=never&lt;/code&gt; está ahí porque el&lt;code&gt;ldapsearch&lt;/code&gt; que incluye macOS confía en el almacén del sistema y no había forma de
+indicarle que confiara en esta CA de prueba; la cadena se comprobó aparte con&lt;code&gt;openssl s_client -starttls ldap -CAfile tls/ca.pem -verify_return_error&lt;/code&gt;, que
 respondió &lt;code&gt;Verify return code: 0 (ok)&lt;/code&gt;.)&lt;/p&gt;
-&lt;p&gt;Ese rechazo es lo que convierte &lt;code&gt;cert_file&lt;/code&gt; en una garantía en lugar de una oferta,
-y es en lo que se apoya &lt;code&gt;publish_nt_hash&lt;/code&gt;. Incluye el bind anónimo que envía
-&lt;code&gt;ldapsearch -x&lt;/code&gt; antes de leer el root DSE, así que en una escucha StartTLS esa
+&lt;p&gt;Ese rechazo es lo que convierte &lt;code&gt;cert_file&lt;/code&gt; en una garantía en lugar de una oferta,y es en lo que se apoya &lt;code&gt;publish_nt_hash&lt;/code&gt;. Incluye el bind anónimo que envía&lt;code&gt;ldapsearch -x&lt;/code&gt; antes de leer el root DSE, así que en una escucha StartTLS esa
 consulta de descubrimiento también necesita &lt;code&gt;-ZZ&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="publish_nt_hash"&gt;&lt;code&gt;publish_nt_hash&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="publish_nt_hash"&gt;&lt;/span&gt;
 &lt;a href="#publish_nt_hash" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sambaNTPassword&lt;/code&gt; es lo que permite a Samba u otro servidor SMB autenticar a las
 personas a través de este directorio, y &lt;strong&gt;no&lt;/strong&gt; es un hash de contraseña en el
-sentido en que lo entiende un formulario de inicio de sesión: quien posee
-&lt;code&gt;MD4(UTF16LE(password))&lt;/code&gt; se autentica como esa persona mediante NTLMv2 sin llegar a
+sentido en que lo entiende un formulario de inicio de sesión: quien posee&lt;code&gt;MD4(UTF16LE(password))&lt;/code&gt; se autentica como esa persona mediante NTLMv2 sin llegar a
 conocer nunca la contraseña. Por eso solo se publica cuando se pide y, desde la
 v0.11.0, con el dominio al que pertenecen los SID de las personas:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -152,8 +144,7 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Pedirlo se rechaza salvo que la escucha tenga TLS, o sea de loopback
-(&lt;code&gt;127.0.0.0/8&lt;/code&gt;, &lt;code&gt;::1&lt;/code&gt;, &lt;code&gt;localhost&lt;/code&gt;) y, por tanto, no esté en ninguna red:&lt;/p&gt;
+&lt;p&gt;Pedirlo se rechaza salvo que la escucha tenga TLS, o sea de loopback(&lt;code&gt;127.0.0.0/8&lt;/code&gt;, &lt;code&gt;::1&lt;/code&gt;, &lt;code&gt;localhost&lt;/code&gt;) y, por tanto, no esté en ninguna red:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/nthash-clear.hcl
 authnd: publish_nt_hash needs cert_file and key_file: an NT hash IS the credential, and 0.0.0.0:3893 is not loopback, so it would cross a network in the clear&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
@@ -169,8 +160,7 @@ data-copied-label="¡Copiado!"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;h3 data-hextra-search-id="the-samba-block"&gt;El bloque &lt;code&gt;samba&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="the-samba-block"&gt;&lt;/span&gt;
-&lt;a href="#the-samba-block" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;sambaNTPassword&lt;/code&gt; pertenece a &lt;code&gt;sambaSamAccount&lt;/code&gt; de Samba, cuyo MUST es &lt;code&gt;uid&lt;/code&gt; y
-&lt;code&gt;sambaSID&lt;/code&gt;, y ninguna otra clase lo permite. Cada entrada que publica authnd
+&lt;a href="#the-samba-block" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;sambaNTPassword&lt;/code&gt; pertenece a &lt;code&gt;sambaSamAccount&lt;/code&gt; de Samba, cuyo MUST es &lt;code&gt;uid&lt;/code&gt; y&lt;code&gt;sambaSID&lt;/code&gt;, y ninguna otra clase lo permite. Cada entrada que publica authnd
 supera &lt;a href="https://go-authn.github.io/docs/0.4/es/authnd/entries/"&gt;el esquema que sirve&lt;/a&gt;, así que el
 atributo solo se publica en un &lt;code&gt;sambaSamAccount&lt;/code&gt;, y eso necesita un SID:&lt;/p&gt;
 &lt;table&gt;
@@ -192,15 +182,10 @@ atributo solo se publica en un &lt;code&gt;sambaSamAccount&lt;/code&gt;, y eso n
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;El &lt;code&gt;sambaSID&lt;/code&gt; de una persona es su propio atributo &lt;code&gt;sambaSID&lt;/code&gt; cuando un origen
-le da uno (&lt;a href="https://go-authn.github.io/docs/0.4/es/authnd/entries/#adding-attributes"&gt;atributos&lt;/a&gt;).
-Si no, es &lt;code&gt;domain_sid-RID&lt;/code&gt;, con RID = 2 × &lt;code&gt;uidNumber&lt;/code&gt; +
-&lt;code&gt;algorithmic_rid_base&lt;/code&gt;: la correspondencia algorítmica de Samba (smb.conf(5),
-&lt;em&gt;algorithmic rid base&lt;/em&gt;). Una persona con una clave NT y sin ninguno de los dos
+le da uno (&lt;a href="https://go-authn.github.io/docs/0.4/es/authnd/entries/#adding-attributes"&gt;atributos&lt;/a&gt;).Si no, es &lt;code&gt;domain_sid-RID&lt;/code&gt;, con RID = 2 × &lt;code&gt;uidNumber&lt;/code&gt; +&lt;code&gt;algorithmic_rid_base&lt;/code&gt;: la correspondencia algorítmica de Samba (smb.conf(5),&lt;em&gt;algorithmic rid base&lt;/em&gt;). Una persona con una clave NT y sin ninguno de los dos
 se publica &lt;strong&gt;sin&lt;/strong&gt; &lt;code&gt;sambaNTPassword&lt;/code&gt;, y &lt;code&gt;check&lt;/code&gt; y el registro de arranque dicen
-quién. Las definiciones de Samba se añaden al esquema servido en
-&lt;code&gt;cn=Subschema&lt;/code&gt; solo cuando el bloque está presente; se escribieron a partir de
-los OID, nombres y sintaxis que publica Samba, no se copiaron de su
-&lt;code&gt;samba.schema&lt;/code&gt; bajo GPL-3.0.&lt;/p&gt;
+quién. Las definiciones de Samba se añaden al esquema servido en&lt;code&gt;cn=Subschema&lt;/code&gt; solo cuando el bloque está presente; se escribieron a partir de
+los OID, nombres y sintaxis que publica Samba, no se copiaron de su&lt;code&gt;samba.schema&lt;/code&gt; bajo GPL-3.0.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-red-200 hx:bg-red-100 hx:text-red-900 hx:dark:border-red-200/30 hx:dark:bg-red-900/30 hx:dark:text-red-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
@@ -359,8 +344,7 @@ es, por tanto, la misma pregunta que quién tiene la contraseña de un reader.&l
 SMB si el &lt;em&gt;origen&lt;/em&gt; guardaba lo suficiente para ello: una contraseña, o el hash. A una
 persona que procede de un directorio que solo comprueba contraseñas —&lt;em&gt;a password
 check&lt;/em&gt; en &lt;code&gt;check&lt;/code&gt;— nunca se le puede dar un &lt;code&gt;sambaNTPassword&lt;/code&gt;, haga lo que haga
-authnd entre medias. Sin &lt;code&gt;publish_nt_hash&lt;/code&gt;, a nadie: &lt;code&gt;check&lt;/code&gt; dice entonces
-&lt;em&gt;sambaNTPassword is not published, so nothing here can authenticate an SMB
+authnd entre medias. Sin &lt;code&gt;publish_nt_hash&lt;/code&gt;, a nadie: &lt;code&gt;check&lt;/code&gt; dice entonces&lt;em&gt;sambaNTPassword is not published, so nothing here can authenticate an SMB
 session&lt;/em&gt;.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;

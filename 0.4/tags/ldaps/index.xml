@@ -15,11 +15,8 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;&lt;code&gt;cert_file&lt;/code&gt; and &lt;code&gt;key_file&lt;/code&gt; together turn TLS on; one without the other is
-refused (&lt;em&gt;one without the other serves nothing&lt;/em&gt;). TLS 1.2 is the minimum.
-authnd has no ACME client: the two files are written by something else —
-&lt;a href="https://go-authn.github.io/docs/0.4/libraries/servercert/"&gt;go-authn/servercert&lt;/a&gt;, certbot, a
-site&amp;rsquo;s own CA — and authnd is &lt;strong&gt;restarted&lt;/strong&gt; after each renewal,
-because the certificate is read once, when the listener opens.&lt;/p&gt;
+refused (&lt;em&gt;one without the other serves nothing&lt;/em&gt;). TLS 1.2 is the minimum.authnd has no ACME client: the two files are written by something else —&lt;a href="https://go-authn.github.io/docs/0.4/libraries/servercert/"&gt;go-authn/servercert&lt;/a&gt;, certbot, a
+site&amp;rsquo;s own CA — and authnd is &lt;strong&gt;restarted&lt;/strong&gt; after each renewal,because the certificate is read once, when the listener opens.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="two-ways-one-listener-each"&gt;Two ways, one listener each&lt;span class="hx:absolute hx:-mt-20" id="two-ways-one-listener-each"&gt;&lt;/span&gt;
 &lt;a href="#two-ways-one-listener-each" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
 &lt;thead&gt;
@@ -49,8 +46,7 @@ because the certificate is read once, when the listener opens.&lt;/p&gt;
 handshake and wait to see whether one is asked for. Which one a site wants is
 about its &lt;strong&gt;clients&lt;/strong&gt;: &lt;code&gt;ldaps://&lt;/code&gt; on 636 is what most of them are configured
 for, and StartTLS is what a client pointed at 389 with &amp;ldquo;use TLS&amp;rdquo; ticked will
-ask for. A site that needs both runs two instances, each with its own
-&lt;code&gt;--config&lt;/code&gt;. &lt;code&gt;starttls = true&lt;/code&gt; without a certificate is refused:&lt;/p&gt;
+ask for. A site that needs both runs two instances, each with its own&lt;code&gt;--config&lt;/code&gt;. &lt;code&gt;starttls = true&lt;/code&gt; without a certificate is refused:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/starttls-nocert.hcl
 authnd: starttls needs cert_file and key_file: there is nothing to upgrade a connection WITH&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
@@ -92,8 +88,7 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;h3 data-hextra-search-id="starttls-which-refuses-until-it-is-asked-for"&gt;StartTLS, which refuses until it is asked for&lt;span class="hx:absolute hx:-mt-20" id="starttls-which-refuses-until-it-is-asked-for"&gt;&lt;/span&gt;
 &lt;a href="#starttls-which-refuses-until-it-is-asked-for" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;StartTLS is requested by the &lt;strong&gt;client&lt;/strong&gt;, so merely offering it promises
-nothing: a client that never asks would bind in the clear. A listener with
-&lt;code&gt;starttls = true&lt;/code&gt; therefore refuses every bind and every search until the
+nothing: a client that never asks would bind in the clear. A listener with&lt;code&gt;starttls = true&lt;/code&gt; therefore refuses every bind and every search until the
 connection has been upgraded, with &lt;code&gt;confidentialityRequired&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3389 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org &amp;#39;(uid=bob)&amp;#39;
@@ -122,12 +117,9 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;p&gt;(&lt;code&gt;-ZZ&lt;/code&gt; is &amp;ldquo;StartTLS, and fail if it fails&amp;rdquo;. &lt;code&gt;LDAPTLS_REQCERT=never&lt;/code&gt; is there
 because the &lt;code&gt;ldapsearch&lt;/code&gt; macOS ships trusts the system store and could not be
-told to trust this test CA; the chain was checked separately with
-&lt;code&gt;openssl s_client -starttls ldap -CAfile tls/ca.pem -verify_return_error&lt;/code&gt;,
-which answered &lt;code&gt;Verify return code: 0 (ok)&lt;/code&gt;.)&lt;/p&gt;
+told to trust this test CA; the chain was checked separately with&lt;code&gt;openssl s_client -starttls ldap -CAfile tls/ca.pem -verify_return_error&lt;/code&gt;,which answered &lt;code&gt;Verify return code: 0 (ok)&lt;/code&gt;.)&lt;/p&gt;
 &lt;p&gt;That refusal is what makes &lt;code&gt;cert_file&lt;/code&gt; a guarantee rather than an offer — and
-it is what &lt;code&gt;publish_nt_hash&lt;/code&gt; relies on. It includes the anonymous bind
-&lt;code&gt;ldapsearch -x&lt;/code&gt; sends before reading the root DSE, so on a StartTLS listener
+it is what &lt;code&gt;publish_nt_hash&lt;/code&gt; relies on. It includes the anonymous bind&lt;code&gt;ldapsearch -x&lt;/code&gt; sends before reading the root DSE, so on a StartTLS listener
 that discovery query, too, needs &lt;code&gt;-ZZ&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="publish_nt_hash"&gt;&lt;code&gt;publish_nt_hash&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="publish_nt_hash"&gt;&lt;/span&gt;
 &lt;a href="#publish_nt_hash" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sambaNTPassword&lt;/code&gt; is what lets a Samba or another SMB server authenticate
@@ -152,8 +144,7 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Asking for it is refused unless the listener has TLS, or is loopback
-(&lt;code&gt;127.0.0.0/8&lt;/code&gt;, &lt;code&gt;::1&lt;/code&gt;, &lt;code&gt;localhost&lt;/code&gt;) and so on no network at all:&lt;/p&gt;
+&lt;p&gt;Asking for it is refused unless the listener has TLS, or is loopback(&lt;code&gt;127.0.0.0/8&lt;/code&gt;, &lt;code&gt;::1&lt;/code&gt;, &lt;code&gt;localhost&lt;/code&gt;) and so on no network at all:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/nthash-clear.hcl
 authnd: publish_nt_hash needs cert_file and key_file: an NT hash IS the credential, and 0.0.0.0:3893 is not loopback, so it would cross a network in the clear&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
@@ -192,11 +183,7 @@ attribute is published only on a &lt;code&gt;sambaSamAccount&lt;/code&gt;, and t
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;A person&amp;rsquo;s &lt;code&gt;sambaSID&lt;/code&gt; is their own &lt;code&gt;sambaSID&lt;/code&gt; attribute when a source gives
-one (&lt;a href="https://go-authn.github.io/docs/0.4/authnd/entries/#adding-attributes"&gt;attributes&lt;/a&gt;).
-Otherwise it is &lt;code&gt;domain_sid-RID&lt;/code&gt;, with RID = 2 × &lt;code&gt;uidNumber&lt;/code&gt; +
-&lt;code&gt;algorithmic_rid_base&lt;/code&gt;: Samba&amp;rsquo;s algorithmic mapping (smb.conf(5),
-&lt;em&gt;algorithmic rid base&lt;/em&gt;). A person with an NT key and neither is published
-&lt;strong&gt;without&lt;/strong&gt; &lt;code&gt;sambaNTPassword&lt;/code&gt;, and &lt;code&gt;check&lt;/code&gt; and the startup log say who. The
+one (&lt;a href="https://go-authn.github.io/docs/0.4/authnd/entries/#adding-attributes"&gt;attributes&lt;/a&gt;).Otherwise it is &lt;code&gt;domain_sid-RID&lt;/code&gt;, with RID = 2 × &lt;code&gt;uidNumber&lt;/code&gt; +&lt;code&gt;algorithmic_rid_base&lt;/code&gt;: Samba&amp;rsquo;s algorithmic mapping (smb.conf(5),&lt;em&gt;algorithmic rid base&lt;/em&gt;). A person with an NT key and neither is published&lt;strong&gt;without&lt;/strong&gt; &lt;code&gt;sambaNTPassword&lt;/code&gt;, and &lt;code&gt;check&lt;/code&gt; and the startup log say who. The
 Samba definitions are added to the schema served at &lt;code&gt;cn=Subschema&lt;/code&gt; only when
 the block is there; they were written from Samba&amp;rsquo;s published OIDs, names and
 syntaxes, not copied from its GPL-3.0 &lt;code&gt;samba.schema&lt;/code&gt;.&lt;/p&gt;
@@ -224,9 +211,7 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Run &lt;code&gt;check&lt;/code&gt; with the new binary before upgrading. Refusing is deliberate:
-the v0.10.x entry cannot pass the schema, and the two quiet alternatives —
-dropping the attribute, which takes SMB away from everybody, or dropping the
+&lt;p&gt;Run &lt;code&gt;check&lt;/code&gt; with the new binary before upgrading. Refusing is deliberate:the v0.10.x entry cannot pass the schema, and the two quiet alternatives —dropping the attribute, which takes SMB away from everybody, or dropping the
 entry, which takes the person away — would both happen with nothing on the
 console.&lt;/p&gt;
 &lt;/div&gt;
@@ -317,8 +302,7 @@ data-copied-label="Copied!"
 &lt;p&gt;and, for the StartTLS listener, &lt;em&gt;sambaNTPassword is published over TLS, once
 StartTLS has been asked for&lt;/em&gt;. alice has no NT hash written down; theirs is
 derived from the password they have. bob&amp;rsquo;s hash is published for an SMB
-server to use, and &lt;code&gt;check&lt;/code&gt; says, too, that bob cannot bind to authnd itself.
-carol&amp;rsquo;s entry is published without the attribute, and an SMB server cannot
+server to use, and &lt;code&gt;check&lt;/code&gt; says, too, that bob cannot bind to authnd itself.carol&amp;rsquo;s entry is published without the attribute, and an SMB server cannot
 serve carol until a source gives them a &lt;code&gt;uidNumber&lt;/code&gt; or a &lt;code&gt;sambaSID&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;What a reader is given, over the StartTLS listener of the same people:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -356,10 +340,8 @@ therefore the same question as who holds a reader&amp;rsquo;s password.&lt;/p&gt
 &lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;NTLMv2 needs the password or its MD4, and nothing else will do&lt;/strong&gt;&lt;/p&gt;
 &lt;p&gt;A file server asking authnd about somebody can serve them over SMB only if
 the &lt;em&gt;source&lt;/em&gt; held enough for that: a password, or the hash. A person who
-comes from a directory that only checks passwords — &lt;em&gt;a password check&lt;/em&gt; in
-&lt;code&gt;check&lt;/code&gt; — can never be given a &lt;code&gt;sambaNTPassword&lt;/code&gt;, whatever authnd does in
-between. Without &lt;code&gt;publish_nt_hash&lt;/code&gt;, nobody can: &lt;code&gt;check&lt;/code&gt; then says
-&lt;em&gt;sambaNTPassword is not published, so nothing here can authenticate an SMB
+comes from a directory that only checks passwords — &lt;em&gt;a password check&lt;/em&gt; in&lt;code&gt;check&lt;/code&gt; — can never be given a &lt;code&gt;sambaNTPassword&lt;/code&gt;, whatever authnd does in
+between. Without &lt;code&gt;publish_nt_hash&lt;/code&gt;, nobody can: &lt;code&gt;check&lt;/code&gt; then says&lt;em&gt;sambaNTPassword is not published, so nothing here can authenticate an SMB
 session&lt;/em&gt;.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
