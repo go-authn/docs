@@ -13,7 +13,7 @@ sends people to their own institution's identity provider, and reads back what
 that provider says.
 
 ```sh
-go get github.com/go-authn/saml@v0.4.1
+go get github.com/go-authn/saml@v0.5.0
 ```
 
 It is the half of [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -209,6 +209,44 @@ balancer would each accept the same assertion once, and a restart empties
 it. Implement `Replay` over shared storage; its `Use` must be atomic.
 {{< /callout >}}
 
+## Testing a program built on it: `samltest` {#samltest}
+
+`github.com/go-authn/saml/samltest` (since v0.5.0) is a federation and an IdP for
+the tests of programs built on this package, such as an OpenID provider in front of a
+federation (go-authn/bridge) or what sits behind one (go-llmflow/bench). It is pure
+Go: **xmlsec1 is not needed to use it**.
+
+```go
+fed, _ := samltest.NewParty("federation")
+key, _ := samltest.NewParty("idp")
+idp := &samltest.IdP{EntityID: "https://idp.univ-ex.example/idp/shibboleth",
+	Scope: "univ-ex.example", SSO: srv.URL + "/SSO", Signer: key}
+md, _ := (&samltest.Federation{Signer: fed, IdPs: []*samltest.IdP{idp}}).Metadata(24 * time.Hour)
+// serve md; pin fed.Fingerprint() in the program's configuration
+srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw string) ([]samltest.Attribute, bool) {
+	return []samltest.Attribute{{Name: samltest.EPPN, Values: []string{user + "@univ-ex.example"}},
+		{Name: samltest.Entitlement, Values: []string{"grp-alpha"}}}, pw == "secret"
+})
+```
+
+- **Metadata**: an `EntitiesDescriptor` signed by the federation's key, with each IdP's
+  scope, display name, signing certificate and HTTP-Redirect SSO location.
+- **Responses**: `IdP.Response` takes an `Assertion` with the request ID, audience,
+  ACS and attributes. The Response is signed with RSA-SHA256, exclusive c14n,
+  enveloped, after the Issuer. The assertion is encrypted to the SP's certificate with
+  AES-128-GCM and RSA-OAEP MGF1-SHA1 (a Shibboleth IdP v5's defaults), or signed
+  itself in the clear when `EncryptTo` is nil.
+- **The login**: `IdP.Handler` shows a username and password form for an
+  AuthnRequest and answers with the form that posts `SAMLResponse` and `RelayState`
+  to the ACS; a test's HTTP client submits it as a browser's script would.
+
+Its output is judged by parties that did not write it: **xmlsec1** verifies the
+metadata and both kinds of Response and decrypts the assertion (that test skips where
+xmlsec1 is absent, and says so; with `SAML_REQUIRE_JUDGE=1` it fails instead), and
+this package's **SP** accepts them and refuses them tampered, replayed or signed by a
+key the federation does not list. The keys are generated per call, so nothing here
+belongs in production.
+
 ## What it is checked against
 
 - **RENATER's own metadata**, as RENATER signed it on 2026-09-29, in
@@ -230,4 +268,4 @@ The coverage lane's floor is 92%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/saml@v0.4.1](https://pkg.go.dev/github.com/go-authn/saml@v0.4.1)
+[pkg.go.dev/github.com/go-authn/saml@v0.5.0](https://pkg.go.dev/github.com/go-authn/saml@v0.5.0)
