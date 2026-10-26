@@ -24,7 +24,7 @@ All of them are pure Go and build with `CGO_ENABLED=0`.
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | is this Kerberos ticket good for this service? | v0.3.1 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | how does a realm issue tickets from a directory? | v0.4.3 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | who does this bearer token say is asking, and should it be believed? | v0.4.1 | `github.com/go-authn/oidc` |
-| [saml]({{< relref "/libraries/saml.md" >}}) | what did a federation's identity provider say about this person? | v0.4.1 | `github.com/go-authn/saml` |
+| [saml]({{< relref "/libraries/saml.md" >}}) | what did a federation's identity provider say about this person? | v0.5.0 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | is this SSH certificate or key revoked, as sshd would answer? | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | where does a daemon's TLS server certificate come from? | v0.5.2 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | may this WireGuard key connect, and whose is it? | v0.1.1 | `github.com/go-authn/wireguard` |

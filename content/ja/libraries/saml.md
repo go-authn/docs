@@ -12,7 +12,7 @@ tags: [ライブラリ, saml, フェデレーション]
 そのプロバイダーが述べることを読み戻します。
 
 ```sh
-go get github.com/go-authn/saml@v0.4.1
+go get github.com/go-authn/saml@v0.5.0
 ```
 
 これは [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) のフェデレーションに面した半分で、
@@ -204,6 +204,45 @@ IdP の証明書は自己署名で期限切れのことが多いので、その�
 それぞれが同じアサーションを一度ずつ受け入れてしまい、再起動で空になります。共有ストレージ上に
 `Replay` を実装してください。その `Use` はアトミックでなければなりません。
 {{< /callout >}}
+
+## このパッケージ上に作ったプログラムをテストする: `samltest` {#samltest}
+
+`github.com/go-authn/saml/samltest`（v0.5.0 以降）は、このパッケージの上に作られた
+プログラム（フェデレーションの前に置く OpenID プロバイダー（go-authn/bridge）や、
+その背後にあるもの（go-llmflow/bench）など）のテスト用のフェデレーションと IdP です。
+純粋な Go で書かれており、**使うのに xmlsec1 は不要**です。
+
+```go
+fed, _ := samltest.NewParty("federation")
+key, _ := samltest.NewParty("idp")
+idp := &samltest.IdP{EntityID: "https://idp.univ-ex.example/idp/shibboleth",
+	Scope: "univ-ex.example", SSO: srv.URL + "/SSO", Signer: key}
+md, _ := (&samltest.Federation{Signer: fed, IdPs: []*samltest.IdP{idp}}).Metadata(24 * time.Hour)
+// serve md; pin fed.Fingerprint() in the program's configuration
+srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw string) ([]samltest.Attribute, bool) {
+	return []samltest.Attribute{{Name: samltest.EPPN, Values: []string{user + "@univ-ex.example"}},
+		{Name: samltest.Entitlement, Values: []string{"grp-alpha"}}}, pw == "secret"
+})
+```
+
+- **メタデータ**: フェデレーションの鍵で署名された `EntitiesDescriptor`。各 IdP の
+  スコープ、表示名、署名証明書、HTTP-Redirect の SSO の場所を含みます。
+- **レスポンス**: `IdP.Response` は、リクエスト ID、オーディエンス、ACS、属性を持つ
+  `Assertion` を受け取ります。Response は RSA-SHA256、排他的 c14n、enveloped で、
+  Issuer の後に署名されます。アサーションは SP の証明書宛てに AES-128-GCM と
+  RSA-OAEP MGF1-SHA1（Shibboleth IdP v5 の既定値）で暗号化されます。`EncryptTo` が
+  nil のときは、平文のままアサーション自身が署名されます。
+- **ログイン**: `IdP.Handler` は AuthnRequest に対してユーザー名とパスワードの
+  フォームを表示し、`SAMLResponse` と `RelayState` を ACS に POST するフォームで
+  応答します。テストの HTTP クライアントは、ブラウザーのスクリプトと同じように
+  それを送信します。
+
+出力は、それを書いていない当事者によって判定されます。**xmlsec1** がメタデータと
+2 種類のレスポンスを検証してアサーションを復号し（xmlsec1 がない環境ではこのテストは
+その旨を示してスキップされ、`SAML_REQUIRE_JUDGE=1` のときは失敗します）、このパッケージの
+**SP** は、それらを受け入れ、改ざんされたもの、再送されたもの、フェデレーションが
+載せていない鍵で署名されたものを拒否します。鍵は呼び出しごとに生成されるため、
+ここにあるものは本番環境のためのものではありません。
 
 ## 何に対して検証されているか {#what-it-is-checked-against}
 

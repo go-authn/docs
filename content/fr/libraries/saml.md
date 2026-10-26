@@ -13,7 +13,7 @@ signées de la fédération, envoie les personnes vers le fournisseur d'identit�
 de leur propre établissement, et relit ce que ce fournisseur affirme.
 
 ```sh
-go get github.com/go-authn/saml@v0.4.1
+go get github.com/go-authn/saml@v0.5.0
 ```
 
 C'est la moitié d'[authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -208,6 +208,46 @@ l'appelant sous forme d'erreur, destinée au journal du serveur :
 répartiteur de charge accepteraient chacune la même assertion une fois, et un
 redémarrage le vide. Implémentez `Replay` sur un stockage partagé ; son `Use` doit être atomique.
 {{< /callout >}}
+
+## Tester un programme construit dessus : `samltest` {#samltest}
+
+`github.com/go-authn/saml/samltest` (depuis v0.5.0) est une fédération et un IdP
+pour les tests des programmes construits sur ce paquet, comme un fournisseur OpenID
+devant une fédération (go-authn/bridge) ou ce qui se trouve derrière (go-llmflow/bench).
+Il est en Go pur : **xmlsec1 n'est pas nécessaire pour l'utiliser**.
+
+```go
+fed, _ := samltest.NewParty("federation")
+key, _ := samltest.NewParty("idp")
+idp := &samltest.IdP{EntityID: "https://idp.univ-ex.example/idp/shibboleth",
+	Scope: "univ-ex.example", SSO: srv.URL + "/SSO", Signer: key}
+md, _ := (&samltest.Federation{Signer: fed, IdPs: []*samltest.IdP{idp}}).Metadata(24 * time.Hour)
+// serve md; pin fed.Fingerprint() in the program's configuration
+srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw string) ([]samltest.Attribute, bool) {
+	return []samltest.Attribute{{Name: samltest.EPPN, Values: []string{user + "@univ-ex.example"}},
+		{Name: samltest.Entitlement, Values: []string{"grp-alpha"}}}, pw == "secret"
+})
+```
+
+- **Métadonnées** : un `EntitiesDescriptor` signé par la clé de la fédération, avec,
+  pour chaque IdP, son scope, son nom d'affichage, son certificat de signature et
+  l'adresse SSO HTTP-Redirect.
+- **Réponses** : `IdP.Response` prend une `Assertion` avec l'ID de la requête,
+  l'audience, l'ACS et les attributs. La Response est signée en RSA-SHA256, c14n
+  exclusive, enveloppée, après l'Issuer. L'assertion est chiffrée pour le certificat
+  du SP en AES-128-GCM et RSA-OAEP MGF1-SHA1 (valeurs par défaut d'un IdP Shibboleth
+  v5), ou signée elle-même en clair quand `EncryptTo` est nil.
+- **La connexion** : `IdP.Handler` affiche un formulaire identifiant et mot de passe
+  pour une AuthnRequest et répond par le formulaire qui poste `SAMLResponse` et
+  `RelayState` à l'ACS ; le client HTTP d'un test le soumet comme le ferait le script
+  d'un navigateur.
+
+Sa sortie est jugée par des parties qui ne l'ont pas écrite : **xmlsec1** vérifie les
+métadonnées et les deux sortes de Response et déchiffre l'assertion (ce test est
+ignoré, en le disant, là où xmlsec1 est absent ; avec `SAML_REQUIRE_JUDGE=1` il
+échoue), et le **SP** de ce paquet les accepte et les refuse altérées, rejouées ou
+signées par une clé que la fédération ne liste pas. Les clés sont générées à chaque
+appel : rien de tout cela n'a sa place en production.
 
 ## Contre quoi elle est vérifiée {#what-it-is-checked-against}
 

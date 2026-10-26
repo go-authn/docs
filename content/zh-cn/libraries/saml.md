@@ -13,7 +13,7 @@ tags: [库, saml, 联邦]
 该提供方所说的内容。
 
 ```sh
-go get github.com/go-authn/saml@v0.4.1
+go get github.com/go-authn/saml@v0.5.0
 ```
 
 它是 [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -208,6 +208,37 @@ func pendingFor(relayState string) saml.Pending { return saml.Pending{} }
 会各自接受同一个断言一次，而重启会清空
 它。请基于共享存储实现 `Replay`；其 `Use` 必须是原子的。
 {{< /callout >}}
+
+## 测试建立在它之上的程序：`samltest` {#samltest}
+
+`github.com/go-authn/saml/samltest`（自 v0.5.0 起）是一个联盟和一个 IdP，用于测试建立在本包之上的程序，
+例如位于联盟前面的 OpenID 提供方（go-authn/bridge），或位于其后的程序（go-llmflow/bench）。
+它是纯 Go：**使用它不需要 xmlsec1**。
+
+```go
+fed, _ := samltest.NewParty("federation")
+key, _ := samltest.NewParty("idp")
+idp := &samltest.IdP{EntityID: "https://idp.univ-ex.example/idp/shibboleth",
+	Scope: "univ-ex.example", SSO: srv.URL + "/SSO", Signer: key}
+md, _ := (&samltest.Federation{Signer: fed, IdPs: []*samltest.IdP{idp}}).Metadata(24 * time.Hour)
+// serve md; pin fed.Fingerprint() in the program's configuration
+srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw string) ([]samltest.Attribute, bool) {
+	return []samltest.Attribute{{Name: samltest.EPPN, Values: []string{user + "@univ-ex.example"}},
+		{Name: samltest.Entitlement, Values: []string{"grp-alpha"}}}, pw == "secret"
+})
+```
+
+- **元数据**：由联盟密钥签名的 `EntitiesDescriptor`，包含每个 IdP 的 scope、显示名称、签名证书和
+  HTTP-Redirect SSO 地址。
+- **响应**：`IdP.Response` 接收带有请求 ID、受众、ACS 和属性的 `Assertion`。Response 使用 RSA-SHA256、
+  独占 c14n、enveloped 方式，在 Issuer 之后签名。断言用 SP 的证书以 AES-128-GCM 和
+  RSA-OAEP MGF1-SHA1（Shibboleth IdP v5 的默认值）加密；当 `EncryptTo` 为 nil 时，断言本身以明文签名。
+- **登录**：`IdP.Handler` 针对 AuthnRequest 显示用户名和密码表单，并以向 ACS 提交 `SAMLResponse` 和
+  `RelayState` 的表单作答；测试的 HTTP 客户端像浏览器脚本那样提交它。
+
+它的输出由并非它的作者的各方来判定：**xmlsec1** 验证元数据和两种 Response 并解密断言（缺少 xmlsec1
+时该测试会说明并跳过；设置 `SAML_REQUIRE_JUDGE=1` 时则失败），而本包的 **SP** 接受它们，并拒绝被篡改、
+被重放或由联盟未列出的密钥签名的版本。密钥在每次调用时生成，所以这里的任何东西都不应用于生产环境。
 
 ## 它对照什么检查 {#what-it-is-checked-against}
 

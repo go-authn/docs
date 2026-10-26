@@ -289,6 +289,68 @@ recursos comprueba por su cuenta. Lo que [`RevokePerson`]({{< relref "/authn-bri
 termina es todo lo que vuelve aquí con él; el servidor de recursos se entera
 mediante [Shared Signals]({{< relref "/authn-bridge/revocation.md#shared-signals" >}}).
 
+## Rotar la clave de firma de los tokens {#rotating-the-signing-key}
+
+Cada parte confiante verifica los tokens con las claves publicadas en `/jwks`. Una clave
+cambiada en el sitio invalida todos los tokens que tienen, y una clave usada antes de que la
+hayan obtenido es rechazada. `retired_signing_key_files` hace seguras ambas cosas: una clave
+listada ahí se **publica y nunca firma**. La rotación requiere **dos reinicios**, porque el
+proveedor no recarga su configuración y un SIGHUP se ignora. Esta sección sigue el README del
+bridge tras su pull request #80 (fusionada el 2026-10-26, después de la etiqueta v0.23.4).
+
+1. **Crear la clave siguiente**, junto a la actual. El comando se niega a sobrescribir un
+   archivo:
+
+   ```sh
+   authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key
+   ```
+
+2. **Publicarla antes de que firme.** Añadirla a `retired_signing_key_files`, dejar
+   `signing_key_file` como está, ejecutar `authn-bridge check` y reiniciar:
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-04.key"   # still signing
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-10.key"] # published only
+   ```
+
+   `/jwks` lista ahora **ambos** `kid`, y los tokens nuevos aún llevan el antiguo. Esperar al
+   menos lo que tarda en cachearse el conjunto de claves la parte confiante más lenta. La que
+   lo vuelve a pedir ante un `kid` desconocido (go-authn/oidc lo hace, como mucho una vez por
+   `MinRefresh`) no necesita esperar; la que cachea un tiempo fijo necesita ese tiempo.
+
+3. **Intercambiar.** Hacer de la clave nueva el `signing_key_file` y mover la antigua a
+   `retired_signing_key_files`. Después `authn-bridge check` y reiniciar:
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-10.key"
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-04.key"]
+   ```
+
+   `/jwks` sigue listando ambos `kid`, y los tokens nuevos llevan el nuevo. Los tokens
+   firmados con la clave antigua siguen verificándose.
+
+4. **Retirar la clave antigua** cuando ya no pueda presentarse ningún token firmado con ella:
+   al menos el mayor de `token_lifetime` (1 h por defecto) e `id_token_lifetime` (5 min),
+   más el desfase de reloj de las partes confiantes y su caché de claves. Para opkssh, esperar
+   en su lugar la vida del PK Token (un día por defecto, hasta una semana). Luego quitarla de
+   la lista y reiniciar: `/jwks` lista un solo `kid`.
+
+En cada paso, `curl -s https://login.example.org/jwks` muestra los `kid` publicados, y el
+`kid` de un token recién emitido es el primer segmento de cualquier token de acceso o de ID,
+decodificado en base64url.
+
+Un `access_token_key_file` (ES256) rota igual: escribir el siguiente con
+`authn-bridge keygen --access-token-key`, y una retirada va en `retired_signing_key_files`
+como cualquier otra. Sin un bloque `state`, cada reinicio desconecta a todo el mundo, porque
+los tokens de actualización y `/userinfo` viven en memoria; los tokens de acceso ya emitidos
+siguen verificándose en los servidores de recursos.
+
+El README informa de que esto se verificó de extremo a extremo con llmflow-gateway como parte
+confiante, en go-llmflow/bench (`e2e/oidc`, `TestBridge/c/key-rotation`): tras el paso 2,
+`/jwks` lista ambos `kid` mientras los tokens llevan aún el antiguo; tras el paso 3, un token
+firmado antes del intercambio y otro firmado después se aceptan, con una sola obtención del
+conjunto de claves; y un inicio de sesión SSO justo después del intercambio funciona.
+
 ## Sin navegador: la concesión de dispositivo {#without-a-browser-the-device-grant}
 
 Un cliente WebDAV, un script o un terminal no tienen ningún navegador que enviar a

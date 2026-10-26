@@ -286,6 +286,72 @@ vérifie seul. Ce à quoi [`RevokePerson`]({{< relref "/authn-bridge/admin.md" >
 met fin, c'est tout ce qui revient ici avec lui ; le serveur de ressources l'apprend
 par [Shared Signals]({{< relref "/authn-bridge/revocation.md#shared-signals" >}}).
 
+## Renouveler la clé de signature des jetons {#rotating-the-signing-key}
+
+Chaque partie utilisatrice vérifie les jetons avec les clés publiées à `/jwks`. Une clé
+changée sur place invalide tous les jetons qu'elles détiennent, et une clé utilisée avant
+qu'elles l'aient récupérée est refusée. `retired_signing_key_files` rend les deux cas
+sûrs : une clé listée là est **publiée et ne signe jamais**. Le renouvellement demande
+**deux redémarrages**, car le fournisseur ne recharge pas sa configuration et un SIGHUP
+est ignoré. Cette section reprend le README du bridge après sa pull request #80 (fusionnée
+le 2026-10-26, après le tag v0.23.4).
+
+1. **Fabriquer la clé suivante**, à côté de l'actuelle. La commande refuse d'écraser un
+   fichier :
+
+   ```sh
+   authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key
+   ```
+
+2. **La publier avant qu'elle signe.** L'ajouter à `retired_signing_key_files`, laisser
+   `signing_key_file` tel quel, lancer `authn-bridge check`, et redémarrer :
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-04.key"   # still signing
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-10.key"] # published only
+   ```
+
+   `/jwks` liste maintenant **les deux** `kid`, et les nouveaux jetons portent encore
+   l'ancien. Attendre au moins aussi longtemps que la plus longue durée pendant laquelle
+   une partie utilisatrice garde le jeu de clés en cache. Celle qui le relit sur un `kid`
+   inconnu (go-authn/oidc le fait, au plus une fois par `MinRefresh`) n'a rien à attendre ;
+   celle qui met en cache pour une durée fixe doit attendre cette durée.
+
+3. **Basculer.** Faire de la nouvelle clé le `signing_key_file` et déplacer l'ancienne
+   dans `retired_signing_key_files`. Puis `authn-bridge check` et redémarrer :
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-10.key"
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-04.key"]
+   ```
+
+   `/jwks` liste toujours les deux `kid`, et les nouveaux jetons portent le nouveau.
+   Les jetons signés avec l'ancienne clé continuent d'être vérifiés.
+
+4. **Retirer l'ancienne clé** quand plus aucun jeton qu'elle a signé ne peut être
+   présenté : au moins la plus longue de `token_lifetime` (1 h par défaut) et
+   `id_token_lifetime` (5 min), plus le décalage d'horloge des parties utilisatrices et
+   leur cache de jeu de clés. Pour opkssh, attendre plutôt la durée de vie du PK Token
+   (un jour par défaut, jusqu'à une semaine). Puis la retirer de la liste et redémarrer :
+   `/jwks` ne liste plus qu'un `kid`.
+
+À chaque étape, `curl -s https://login.example.org/jwks` donne les `kid` publiés, et le
+`kid` d'un jeton frais est le premier segment de tout jeton d'accès ou d'identité,
+décodé en base64url.
+
+Un `access_token_key_file` (ES256) se renouvelle de la même façon : écrire le suivant avec
+`authn-bridge keygen --access-token-key`, et une clé retirée va dans
+`retired_signing_key_files` comme les autres. Sans bloc `state`, chaque redémarrage
+déconnecte tout le monde, parce que les jetons de rafraîchissement et `/userinfo` vivent en
+mémoire ; les jetons d'accès déjà émis restent vérifiés par les serveurs de ressources.
+
+Le README rapporte que cela a été vérifié de bout en bout avec llmflow-gateway comme partie
+utilisatrice, dans go-llmflow/bench (`e2e/oidc`, `TestBridge/c/key-rotation`) : après
+l'étape 2, `/jwks` liste les deux `kid` alors que les jetons portent encore l'ancien ; après
+l'étape 3, un jeton signé avant la bascule et un signé après sont tous deux acceptés, avec
+une seule récupération du jeu de clés ; et une connexion SSO juste après la bascule
+fonctionne.
+
 ## Sans navigateur : l'octroi par appareil {#without-a-browser-the-device-grant}
 
 Un client WebDAV, un script, un terminal n'a pas de navigateur à envoyer vers une université. Un
