@@ -464,10 +464,5 @@ MUST of `supannPerson` or `eduPerson` is published without the class, and
 {{< callout type="info" >}}
 **About the transcripts**
 
-Every command on this page was run with the v0.12.1 release binary
-(`authnd-darwin-arm64`, checked against `SHA256SUMS`; `go version -m`:
-`go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`,
-`vcs.modified=false`) and OpenLDAP's `ldapsearch`, on 127.0.0.1, in a scratch
-directory, with the files shown. The paths are relative for that reason; a
-service uses absolute ones. The schema is an example written for this page.
+Every command on this page was run again on 2026-10-26 with the v0.12.3 release binary (`authnd-darwin-arm64`, checked against `SHA256SUMS`; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`) and OpenLDAP's `ldapsearch`, on 127.0.0.1, in a scratch directory, with the files shown. The paths are relative for that reason; a service uses absolute ones. The schema is an example written for this page.
 {{< /callout >}}

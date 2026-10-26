@@ -119,7 +119,7 @@ Der Aussteller ist hier ein kleiner Testanbieter auf Loopback, und `oidctool` ei
 der für diese Seiten geschrieben wurde: Er signiert ein Token für den angegebenen Namen, mit
 dem angegebenen `amr`, sendet es in einem `OAUTHBEARER`-Bind (mit einer `authzid`, wenn ein
 fünftes Argument eine nennt) und gibt den Ergebniscode des Binds und die
-SASL-Zugangsdaten des Servers aus. Gegen die Konfiguration oben, über `ldaps://`:
+SASL-Zugangsdaten des Servers aus. Diese Transkripte und die Serverzeilen weiter unten wurden vom Release-Binary v0.10.0 ausgegeben und nicht erneut ausgeführt, da `oidctool` zu keinem Release gehört. Gegen die Konfiguration oben, über `ldaps://`:
 
 ```
 $ ./oidctool alice '["pwd","otp"]' 127.0.0.1:3636 tls

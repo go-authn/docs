@@ -351,7 +351,7 @@ RefPos:  false
 is UnknownReference: true
 ```
 
-空のモジュールから `github.com/go-authn/ldap` v0.10.0 で実行した例です。最初のクラスは問題なく、
+空のモジュールから `github.com/go-authn/ldap` v0.10.1 で実行した例です。最初のクラスは問題なく、
 二つ目が 4 行目から始まり、ほかに誤りはないので、`RefPos` は空です。`schema.Read` が返す
 すべての定義も `Pos` を持ち、Position の `String` は、列が分からないときは列を省きます。
 
@@ -373,7 +373,7 @@ v0.9.0 から、スキーマは slapd が読むファイルに加えて HCL2 で
 コマンド `ldapschema` は形式間を変換します。
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1
 ```
 
 - `ldapschema to-hcl [--macros] FILE...` は OpenLDAP の `.schema` ファイル、cn=config LDIF、
@@ -389,7 +389,7 @@ go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0
 base64 値、cn=config の `{N}` 接頭辞、ファイルの順序で解決される `objectidentifier` マクロです。
 エクスポートされた `Parse*` 関数と、サーバーが公開するものは、厳格な RFC 4512 のままです。
 
-`ldapschema` v0.9.0 で、空のディレクトリから実行した例です。スキーマはこのページのために作った
+`ldapschema` v0.10.1 で、空のディレクトリから実行した例です。スキーマはこのページのために作った
 もので、1.3.6.1.4.1.99999 は私的利用の例示用アークであり、誰かに割り当てられたものではありません。
 一つのマクロ、一つの属性型、一つの補助クラスです。
 

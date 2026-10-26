@@ -446,10 +446,5 @@ users "sql" {
 {{< callout type="info" >}}
 **トランスクリプトについて**
 
-このページのコマンドはすべて、v0.12.1 のリリースバイナリ
-(`authnd-darwin-arm64`、`SHA256SUMS` と照合済み、`go version -m`:
-`go1.27.3`、`mod github.com/go-authn/authnd v0.12.1`、
-`vcs.modified=false`) と OpenLDAP の `ldapsearch` で、127.0.0.1 上の作業用ディレクトリで、
-示したファイルを使って実行しました。パスが相対なのはそのためで、サービスでは絶対パスを使います。
-スキーマは、このページのために書いた例です。
+このページのコマンドはすべて、2026-10-26 に v0.12.3 のリリースバイナリ (`authnd-darwin-arm64`、`SHA256SUMS` と照合済み、`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.12.3`、`vcs.modified=false`) と OpenLDAP の `ldapsearch` で、127.0.0.1 上の作業用ディレクトリに、示したファイルを置いて再実行したものです。パスが相対なのはそのためで、サービスでは絶対パスを使います。スキーマはこのページのために書いた例です。
 {{< /callout >}}

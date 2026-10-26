@@ -472,11 +472,5 @@ grafía (PostgreSQL pasa a minúsculas uno sin comillas; consulte
 {{< callout type="info" >}}
 **Sobre las transcripciones**
 
-Cada comando de esta página se ejecutó con el binario de la versión v0.12.1
-(`authnd-darwin-arm64`, comprobado con `SHA256SUMS`; `go version -m`:
-`go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`,
-`vcs.modified=false`) y el `ldapsearch` de OpenLDAP, en 127.0.0.1, en un
-directorio temporal, con los archivos mostrados. Por eso las rutas son
-relativas; un servicio usa rutas absolutas. El esquema es un ejemplo escrito
-para esta página.
+Cada comando de esta página se volvió a ejecutar el 26 de octubre de 2026 con el binario de la versión v0.12.3 (`authnd-darwin-arm64`, comprobado con `SHA256SUMS`; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`) y el `ldapsearch` de OpenLDAP, en 127.0.0.1, en un directorio temporal, con los archivos mostrados. Las rutas son relativas por esa razón; un servicio usa rutas absolutas. El esquema es un ejemplo escrito para esta página.
 {{< /callout >}}

@@ -58,15 +58,15 @@ authn-bridge: admin: control: listen address "127.0.0.1:9443" is TCP, which requ
 ```
 $ grpcurl -plaintext -unix $PWD/run/admin.sock bridge.admin.v1.AdminService/Status
 {
-  "version": "v0.23.3",
+  "version": "v0.23.4",
   "issuer": "http://127.0.0.1:28473",
-  "started": "2026-10-25T18:44:30.210885Z",
+  "started": "2026-10-26T11:22:17.441725Z",
   "federation": {
     "metadataUrl": "file:///tmp/authn/fed/metadata.xml",
     "idps": 1,
     "usable": 1,
-    "validUntil": "2026-11-01T18:43:40Z",
-    "lastRefresh": "2026-10-25T18:44:30.211975Z"
+    "validUntil": "2026-11-02T11:22:16Z",
+    "lastRefresh": "2026-10-26T11:22:17.442875Z"
   },
   "counts": {}
 }
@@ -81,18 +81,18 @@ $ grpcurl -plaintext -unix -d '{"username":"alice@univ-example.example","reason"
     "username": "alice@univ-example.example",
     "reason": "left the lab",
     "by": "uid=501",
-    "since": "2026-10-11T09:48:39.136975Z"
+    "since": "2026-10-26T11:22:17.952680Z"
   },
   "revoked": {}
 }
-$ grpcurl -plaintext -unix -d '{"entity_id":"https://idp.univ-example.example/idp/shibboleth","reason":"compromised","until":"2026-10-12T08:00:00Z"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisableIdP
+$ grpcurl -plaintext -unix -d '{"entity_id":"https://idp.univ-example.example/idp/shibboleth","reason":"compromised","until":"2026-11-27T08:00:00Z"}' $PWD/run/admin.sock bridge.admin.v1.AdminService/DisableIdP
 {
   "disabled": {
     "entityId": "https://idp.univ-example.example/idp/shibboleth",
     "reason": "compromised",
     "by": "uid=501",
-    "since": "2026-10-11T09:48:39.192047Z",
-    "until": "2026-10-12T08:00:00Z"
+    "since": "2026-10-26T11:21:27.038956Z",
+    "until": "2026-11-27T08:00:00Z"
   },
   "revoked": {}
 }
@@ -106,7 +106,7 @@ $ grpcurl -plaintext -unix -d '{"entity_id":"https://idp.univ-example.example/id
 ```
 disabled alice@univ-example.example (0 known identities) by uid=501 until enabled again: left the lab
 revoked alice@univ-example.example: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
-disabled IdP https://idp.univ-example.example/idp/shibboleth by uid=501 until 2026-10-12T08:00:00Z: compromised
+disabled IdP https://idp.univ-example.example/idp/shibboleth by uid=501 until 2026-11-27T08:00:00Z: compromised
 revoked IdP https://idp.univ-example.example/idp/shibboleth: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
 enabled alice@univ-example.example by uid=501
 ```
@@ -164,12 +164,12 @@ KRL，这正是两者都很短的原因。
 
 ```
 $ curl -s http://127.0.0.1:28475/metrics | grep "^bridge_"
-bridge_build_info{version="v0.23.3",goversion="go1.27.3",revision="b04769c43c24f684df9e0b5a0d1cb6997ee90d95"} 1
-bridge_start_time_seconds 1792953870
+bridge_build_info{version="v0.23.4",goversion="go1.27.3",revision="6e0156cb516ace9091d4070c425258febc48f6ee"} 1
+bridge_start_time_seconds 1793013737
 bridge_ready 1
-bridge_metadata_valid_until_timestamp_seconds 1793558620
+bridge_metadata_valid_until_timestamp_seconds 1793618536
 bridge_metadata_idps 1
-bridge_metadata_last_refresh_timestamp_seconds 1792953870
+bridge_metadata_last_refresh_timestamp_seconds 1793013737
 bridge_metadata_refreshes_total{result="failed"} 0
 bridge_metadata_refreshes_total{result="ok"} 1
 bridge_logins_in_progress 0

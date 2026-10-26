@@ -18,7 +18,7 @@ go get github.com/go-authn/kdc@v0.4.3
 
 在 v0.4.3，其 `go.mod` 至少要求 `go-authn/directory` v0.12.0 和
 gokrb5 v8.4.4：这只是最低版本，因此要求 directory v0.14.0（即这些页面所
-描述的版本）的程序会用 v0.15.0 构建，authnd v0.12.0 就是如此。
+描述的版本）的程序会用 v0.15.0 构建，authnd v0.12.3 就是如此。
 接受的一半是 [krb5]({{< relref "/libraries/krb5.md" >}})，只
 验证票据的服务完全不需要本模块。
 
@@ -107,7 +107,7 @@ Credentials cache: FILE:cc
         Principal: alice@EXAMPLE.ORG
 
   Issued                Expires               Principal
-Oct 10 21:54:46 2026  Oct 11 07:54:46 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
+Oct 26 12:34:16 2026  Oct 26 22:34:16 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
 $ kinit --password-file=STDIN alice@EXAMPLE.ORG < bad.pw
 kinit: Password incorrect
 $ kinit --password-file=STDIN bob@EXAMPLE.ORG < alice.pw
@@ -118,8 +118,8 @@ Credentials cache: FILE:cc
         Principal: alice@EXAMPLE.ORG
 
   Issued                Expires               Principal
-Oct 10 21:54:46 2026  Oct 11 07:54:46 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
-Oct 10 21:54:47 2026  Oct 11 07:54:46 2026  nfs/files.example.org@EXAMPLE.ORG
+Oct 26 12:34:16 2026  Oct 26 22:34:16 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
+Oct 26 12:34:16 2026  Oct 26 22:34:16 2026  nfs/files.example.org@EXAMPLE.ORG
 ```
 
 十小时是 `Config.Lifetime` 的默认值，服务票据与换取它的票据授予票据
@@ -129,11 +129,11 @@ Oct 10 21:54:47 2026  Oct 11 07:54:46 2026  nfs/files.example.org@EXAMPLE.ORG
 ```
 kdc: the keytab has no krbtgt key for this realm: matching key not found in keytab. Looking for "krbtgt/OTHER.ORG" realm: OTHER.ORG kvno: 0 etype: 18
 EXAMPLE.ORG answers on 127.0.0.1:18088
-2026/10/10 21:54:46 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
-2026/10/10 21:54:46 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
-2026/10/10 21:54:46 the timestamp does not decrypt (client etype 18, our key type 18): error decrypting: integrity verification failed
-2026/10/10 21:54:46 refused krbtgt/EXAMPLE.ORG: pre-authentication does not decrypt (code 24)
-2026/10/10 21:54:47 refused krbtgt/EXAMPLE.ORG: no such principal in this realm (code 6)
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
+2026/10/26 12:34:16 the timestamp does not decrypt (client etype 18, our key type 18): error decrypting: integrity verification failed
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: pre-authentication does not decrypt (code 24)
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: no such principal in this realm (code 6)
 ```
 
 每次交换的第一次拒绝是协议在正常工作：要求预认证的

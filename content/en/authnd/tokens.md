@@ -119,7 +119,7 @@ The issuer here is a small test provider on loopback, and `oidctool` a test
 client written for these pages: it signs a token for the name given, with
 the `amr` given, sends it in an `OAUTHBEARER` bind (with an `authzid` when a
 fifth argument names one), and prints the bind's result code and the
-server's SASL credentials. Against the configuration above, over `ldaps://`:
+server's SASL credentials. These transcripts, and the server lines below, were printed by the v0.10.0 release binary and not run again, since `oidctool` is part of no release. Against the configuration above, over `ldaps://`:
 
 ```
 $ ./oidctool alice '["pwd","otp"]' 127.0.0.1:3636 tls

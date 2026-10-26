@@ -10,9 +10,9 @@ tags: [authnd, ldap]
 认证的系统使用的是 LDAP。** authnd 就是前端：它基于 [go-authn/directory]({{< relref "/libraries/_index.md" >}})
 的各个来源进行绑定和搜索，因此数据库中保存的内容可以被任何懂得
 如何查询目录的程序读取。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述
-v0.12.1，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
+v0.12.3，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
 提供的模式，站点可以用自己的模式对其扩展
-（[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），其下是 go-authn/ldap v0.10.0 和
+（[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），其下是 go-authn/ldap v0.10.1 和
 go-authn/directory v0.15.0；哪些已经验证、哪些尚未验证，见
 [状态]({{< relref "/status.md" >}})页面。
 
@@ -91,7 +91,7 @@ v0.10.2，无论具备什么，每个人员都是 `posixAccount`，每个组都�
 ## 谁可以绑定，谁可以读取 {#who-may-bind-and-who-may-read}
 
 LDAP 服务器的职责是证明人员身份，因此它的拒绝就是设计本身。
-以下是 v0.10.0 发布的二进制文件对 OpenLDAP 自带客户端的答复：
+以下是 v0.12.3 发布的二进制文件对 OpenLDAP 自带客户端的答复：
 
 ```
 $ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
@@ -140,7 +140,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.12.0
+vendorVersion: v0.12.3
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` 是 RFC 3062 密码修改操作。
@@ -168,28 +168,5 @@ vendorVersion: v0.12.0
 {{< callout type="info" >}}
 **关于这些记录**
 
-[站点模式]({{< relref "/authnd/schemas.md" >}})页面上的所有内容，都由
-v0.12.1 发布的二进制文件输出（`authnd-darwin-arm64`，`go version -m`：
-`go1.27.3`，`mod github.com/go-authn/authnd v0.12.1`，`vcs.modified=false`）。
-根 DSE 和 `--version` 行由 v0.12.0
-发布的二进制文件（`authnd-darwin-arm64`，已对照 `SHA256SUMS` 核对；
-`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.12.0`，
-`vcs.modified=false`）输出。其他启动行由 v0.11.1
-发布的二进制文件（`mod github.com/go-authn/authnd v0.11.1`，
-`vcs.modified=false`）输出，与启动行出现在同一份记录中的其他每条命令也是如此；
-v0.11.1 只改动了那一行，而对于没有声明任何模式文件、块或类的配置，
-v0.12.0 的发布说明没有改变任何东西，所以没有重新运行。每个 `check` 表格、用 `ldapsearch` 读回的
-条目、`cn=Subschema` 以及 `samba` 的拒绝信息，都由
-v0.11.0 发布的二进制文件输出（`mod github.com/go-authn/authnd v0.11.0`，
-`vcs.modified=false`）。这些页面上的配置拒绝信息也是如此，
-v0.11.0 输出的内容与 v0.10.0 逐字节相同。其他的绑定、`kinit`、
-密码更改和令牌交换由 v0.10.0 发布的二进制文件输出，
-没有重新运行，因为 v0.11.0 和 v0.11.1 的发布说明
-都没有改变其中任何一项。所有这些都由 macOS 自带的 OpenLDAP 和
-Heimdal 客户端发出请求，在 127.0.0.1 的非特权端口上，
-在 `/tmp` 下的临时目录中进行。这
-就是为什么其背后的配置用相对路径指名文件，例如
-`etc/authnd/passwords/alice.pw`，也是为什么密码文件的名称类似
-`alice.pwin`。示例中的 `/etc/authnd` 路径是已安装的
-服务器所使用的路径。
+这些页面上显示的每条命令，都已于 2026-10-26 用已发布的二进制文件重新运行，而不是手工重写：`authnd` v0.12.3（`authnd-darwin-arm64`，已由 `relverify` 对照 `SHA256SUMS` 及其证明（attestation）核对；`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.12.3`，`vcs.modified=false`）、`authn-bridge` v0.23.4、`authn-revokd` v0.6.6、`sshcert-authorize` v0.1.9 和 `ldapschema` v0.10.1。命令输出了什么，这里就是什么。有两份记录是例外，各自在所在之处注明：[令牌页面]({{< relref "/authnd/tokens.md" >}})上的 `oidctool` 客户端是为这些页面编写的测试客户端，不属于任何发布版本，它的记录以及旁边的服务器输出行由 v0.10.0 发布的二进制文件输出；另一份是[联邦页面]({{< relref "/authn-bridge/federation.md" >}})上 RENATER 已过期的元数据，该文件已不再发布。所有这些都由 macOS 自带的 OpenLDAP 和 Heimdal 客户端发出请求，在 127.0.0.1 的非特权端口上，在临时目录中进行。这就是为什么其背后的配置用相对路径指名文件，例如 `etc/authnd/passwords/alice.pw`，也是为什么密码文件的名称类似 `alice.pwin`。示例中的 `/etc/authnd` 路径是已安装的服务器所使用的路径。
 {{< /callout >}}

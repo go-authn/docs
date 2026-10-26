@@ -31,13 +31,13 @@ $ authn-revokd -config revokd-maxage.hcl -once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
-authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
 # Generated at 19700101T010000
 # Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
 
-hash: SHA256:Fpa/Ku2Wv1EDCR+KSsqZ2eECTM1zftiBWj01Lr+NO2Q # ssh-ed25519
+hash: SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4 # ssh-ed25519
 $ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
 ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 ```
@@ -45,7 +45,7 @@ ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 `bridge-ssh` は `not current` で、その出力はフェイルクローズされています。`bridge-x509` は
 `not fetched` にすぎず、その CRL はそのまま残されています
 ([`-once` が報告するもの]({{< relref "/authn-revokd/verification.md#what--once-reports" >}}))。
-`SHA256:Fpa/...` は bridge の SSH CA です。それが署名した証明書は、ファイルを読むものにとっては
+`SHA256:AnDb/...` は bridge の SSH CA です。それが署名した証明書は、ファイルを読むものにとっては
 失効済みとなります。上のコマンドは `out/` がある `revokd` ディレクトリで実行しました。次のものは
 その隣の、テスト用証明書を保持するディレクトリで実行します。
 [sshcert-authorize のページ]({{< relref "/sshcert/authorize.md#krl" >}})と同じなので、同じファイルは

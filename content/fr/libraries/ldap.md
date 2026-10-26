@@ -383,7 +383,7 @@ RefPos:  false
 is UnknownReference: true
 ```
 
-Lancé depuis un module vide avec `github.com/go-authn/ldap` v0.10.0. La première
+Lancé depuis un module vide avec `github.com/go-authn/ldap` v0.10.1. La première
 classe est correcte ; la seconde commence à la ligne 4, et rien d'autre n'est
 fautif, donc `RefPos` est vide. Chaque définition que renvoie `schema.Read`
 porte aussi un `Pos`, et le `String` de la Position omet la colonne quand elle
@@ -412,7 +412,7 @@ position arrivent avec le fichier, la ligne et la colonne.
 La commande `ldapschema` convertit d'un format à l'autre :
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1
 ```
 
 - `ldapschema to-hcl [--macros] FILE...` lit des fichiers `.schema` d'OpenLDAP,
@@ -432,7 +432,7 @@ valeurs en base64, préfixe `{N}` de cn=config, et macros `objectidentifier`
 résolues dans l'ordre des fichiers. Les fonctions `Parse*` exportées, et ce
 qu'un serveur publie, restent strictement RFC 4512.
 
-Un exemple, lancé depuis un répertoire vide avec `ldapschema` v0.9.0. Le
+Un exemple, lancé depuis un répertoire vide avec `ldapschema` v0.10.1. Le
 schéma est inventé pour cette page : 1.3.6.1.4.1.99999 est un arc d'exemple à
 usage privé, attribué à personne. Une macro, un type d'attribut, une classe
 auxiliaire :

@@ -11,9 +11,9 @@ qui veut les authentifier parle LDAP.** authnd est la façade : il
 se lie et cherche sur les sources de [go-authn/directory]({{< relref "/libraries/_index.md" >}}),
 si bien que ce que contient une base de données peut être lu par tout ce qui sait
 interroger un annuaire. Pur Go, `CGO_ENABLED=0`, un seul binaire. Ces pages décrivent
-la v0.12.1, dont les entrées suivent les schémas standard et respectent le schéma
+la v0.12.3, dont les entrées suivent les schémas standard et respectent le schéma
 qu'elle sert à `cn=Subschema`, qu'un site étend avec le sien
-([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), avec go-authn/ldap v0.10.0 et
+([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), avec go-authn/ldap v0.10.1 et
 go-authn/directory v0.15.0 en dessous ; ce qui est vérifié et ce qui ne l'est pas figure sur la
 page [état]({{< relref "/status.md" >}}).
 
@@ -100,7 +100,7 @@ démarre pas.
 ## Qui peut se lier, et qui peut lire {#who-may-bind-and-who-may-read}
 
 On demande à un serveur LDAP de prouver des personnes : ses refus sont donc la conception même.
-Voici les réponses du binaire de la version v0.10.0 au client propre d'OpenLDAP :
+Voici les réponses du binaire de la version v0.12.3 au client propre d'OpenLDAP :
 
 ```
 $ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
@@ -149,7 +149,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.12.0
+vendorVersion: v0.12.3
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` est l'opération de modification de mot de passe de la RFC 3062.
@@ -177,33 +177,5 @@ qui est servi aussi à un client anonyme.
 {{< callout type="info" >}}
 **À propos des transcriptions**
 
-Tout ce que montre la page
-[schémas de site]({{< relref "/authnd/schemas.md" >}}) a été affiché par le
-binaire de la version v0.12.1 (`authnd-darwin-arm64`, `go version -m` :
-`go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`, `vcs.modified=false`).
-Le root DSE et les lignes `--version` ont été affichés par le
-binaire de la version v0.12.0 (`authnd-darwin-arm64`, vérifié avec `SHA256SUMS` ;
-`go version -m` : `go1.27.3`, `mod github.com/go-authn/authnd v0.12.0`,
-`vcs.modified=false`). Les autres lignes de démarrage ont été affichées par le
-binaire de la version v0.11.1 (`mod github.com/go-authn/authnd v0.11.1`,
-`vcs.modified=false`), de même que toute autre commande montrée dans la même
-transcription qu'une ligne de démarrage ; la v0.11.1 ne change rien d'autre que
-cette ligne, et les notes de version de la v0.12.0 ne changent rien pour une
-configuration qui ne déclare ni fichier de schéma, ni bloc, ni classe : elles
-n'ont donc pas été relancées. Chaque
-tableau de `check`, les entrées relues avec `ldapsearch`,
-`cn=Subschema` et les refus liés à `samba` ont été affichés par le binaire de
-la version v0.11.0 (`mod github.com/go-authn/authnd v0.11.0`,
-`vcs.modified=false`). De même pour les refus de configuration de ces pages,
-que la v0.11.0 a affichés octet pour octet comme la v0.10.0. Les autres
-liaisons, `kinit`, changements de mot de passe et échanges de jetons ont été
-affichés par le binaire de la version v0.10.0 et n'ont pas été relancés,
-puisque ni les notes de version de la v0.11.0 ni celles de la v0.11.1 n'en
-changent aucun. Tous ont été demandés
-par les clients OpenLDAP et Heimdal livrés avec macOS, sur 127.0.0.1 sur des
-ports non privilégiés, dans un répertoire de travail sous `/tmp`. C'est
-pourquoi les configurations derrière elles nomment des fichiers par des chemins relatifs comme
-`etc/authnd/passwords/alice.pw`, et pourquoi les fichiers de mots de passe ont des noms comme
-`alice.pwin`. Les chemins `/etc/authnd` des exemples sont ceux qu'utilise un serveur
-installé.
+Chaque commande montrée sur ces pages a été relancée le 26 octobre 2026 avec les binaires publiés, et non retapée : `authnd` v0.12.3 (`authnd-darwin-arm64`, vérifié par `relverify` avec `SHA256SUMS` et son attestation ; `go version -m` : `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`), `authn-bridge` v0.23.4, `authn-revokd` v0.6.6, `sshcert-authorize` v0.1.9 et `ldapschema` v0.10.1. Ce que les commandes ont affiché est ce qui figure ici. Deux transcriptions font exception, et chacune le dit là où elle se trouve : le client `oidctool` de [la page des jetons]({{< relref "/authnd/tokens.md" >}}), un client de test écrit pour ces pages et qui ne fait partie d'aucune version publiée, dont les transcriptions et les lignes du serveur qui les accompagnent ont été affichées par le binaire de la version v0.10.0 ; et les métadonnées expirées de RENATER sur [la page de la fédération]({{< relref "/authn-bridge/federation.md" >}}), un fichier qui n'est plus publié. Toutes ont été demandées par les clients OpenLDAP et Heimdal livrés avec macOS, sur 127.0.0.1 sur des ports non privilégiés, dans un répertoire de travail jetable. C'est pourquoi les configurations derrière elles nomment des fichiers par des chemins relatifs comme `etc/authnd/passwords/alice.pw`, et pourquoi les fichiers de mots de passe ont des noms comme `alice.pwin`. Les chemins `/etc/authnd` des exemples sont ceux qu'utilise un serveur installé.
 {{< /callout >}}

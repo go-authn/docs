@@ -50,7 +50,7 @@ $ authn-bridge check --config etc/bridge.hcl
 issuer        http://127.0.0.1:28473
 SAML entity   http://127.0.0.1:28473/saml
 tls           none (a reverse proxy in front)
-federation    1 IdPs, 1 usable here, valid until 2026-10-18T09:46:24Z
+federation    1 IdPs, 1 usable here, valid until 2026-11-02T11:21:58Z
 client        sftp (public, public subject, audience [sftp])
 client        efp (public, public subject, audience [efp])
 client        nfs (public, public subject, audience [nfs])
@@ -62,7 +62,7 @@ client        nfs (public, public subject, audience [nfs])
 エントリは、サーバーならそれでも起動するのに、ここでは拒否されます。
 
 ```
-federation    1 IdPs, 0 usable here, valid until 2026-10-18T09:46:24Z
+federation    1 IdPs, 0 usable here, valid until 2026-11-02T11:30:52Z
 authn-bridge: idps names "https://idp.nowhere.example/idp", which the federation does not list
 ```
 

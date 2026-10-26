@@ -119,7 +119,7 @@ L'émetteur est ici un petit fournisseur de test en bouclage, et `oidctool` un c
 test écrit pour ces pages : il signe un jeton pour le nom donné, avec
 l'`amr` donné, l'envoie dans une liaison `OAUTHBEARER` (avec un `authzid` quand un
 cinquième argument en nomme un), et affiche le code de résultat de la liaison et les
-identifiants SASL du serveur. Contre la configuration ci-dessus, en `ldaps://` :
+identifiants SASL du serveur. Ces transcriptions et les lignes du serveur plus bas ont été affichées par le binaire de la version v0.10.0 et n'ont pas été relancées, car `oidctool` ne fait partie d'aucune version publiée. Contre la configuration ci-dessus, en `ldaps://` :
 
 ```
 $ ./oidctool alice '["pwd","otp"]' 127.0.0.1:3636 tls

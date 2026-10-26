@@ -11,7 +11,7 @@ tags: [authn-bridge, oidc, 토큰, rfc8707]
 어느 하나가 받은 토큰을 다른 서버들에 제시할 수 있습니다. RFC 8707 §3은 이것이
 audience를 제한해야 하는 이유라고 말합니다. v0.21.0부터 클라이언트는 RFC 8707의
 `resource` 파라미터로 그중 **하나**를 수신자로 하는 토큰을 요청할 수 있습니다.
-이 페이지는 v0.23.3을 설명하며, v0.22.0이 달랐던 점은 [끝](#departures)에 있습니다.
+이 페이지는 v0.23.4을 설명하며, v0.22.0이 달랐던 점은 [끝](#departures)에 있습니다.
 
 `resource`가 없으면 아무것도 바뀌지 않습니다. 액세스 토큰은
 [토큰 페이지]({{< relref "/authn-bridge/tokens.md#the-access-token" >}})가 설명하는 대로
@@ -42,7 +42,7 @@ $ authn-bridge check --config etc/bridge.hcl
 issuer        http://127.0.0.1:28473
 SAML entity   http://127.0.0.1:28473/saml
 tls           none (a reverse proxy in front)
-federation    1 IdPs, 1 usable here, valid until 2026-10-18T15:48:27Z
+federation    1 IdPs, 1 usable here, valid until 2026-11-02T11:30:50Z
 client        portal (confidential, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
 client        files-cli (public, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
 ```
@@ -301,7 +301,7 @@ $ curl -s http://127.0.0.1:28473/device_authorization -d client_id=files-cli \
 
 ## RFC 8707과 다른 점 {#departures}
 
-| RFC 8707 | authn-bridge v0.23.3 |
+| RFC 8707 | authn-bridge v0.23.4 |
 |---|---|
 | §2: "Multiple `resource` parameters MAY be used" | 인가 엔드포인트에서는 쓰인 대로. 토큰 엔드포인트에서는 하나: 두 번째 `resource`는 `invalid_request`이며, §3이 이를 허용합니다("an authorization server may be unwilling or unable to fulfill a token request with multiple resources") |
 | §2.2: 파라미터는 "for all grant types"에 적용됨 | `authorization_code`와 `refresh_token`에만. `client_credentials`나 디바이스 그랜트에서는 디바이스 인가 요청에서도 폴링할 때도 `invalid_target`으로 거부됩니다 |

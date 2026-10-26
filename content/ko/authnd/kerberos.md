@@ -148,7 +148,7 @@ Credentials cache: FILE:ccache
         Principal: alice@EXAMPLE.ORG
 
   Issued                Expires               Principal
-Oct 18 16:10:19 2026  Oct 19 02:10:19 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
+Oct 26 12:42:50 2026  Oct 26 22:42:50 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
 
 $ kinit --password-file=wrong.pwin alice@EXAMPLE.ORG
 kinit: Password incorrect

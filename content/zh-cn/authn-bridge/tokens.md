@@ -180,8 +180,8 @@ ES256 令牌为 732 个字符。
 ```
 $ authn-bridge token --issuer http://127.0.0.1:28473 --client oidc-agent --scope "openid eduperson groups" --cache var/tokens.json > at
 To log in, open http://127.0.0.1:28473/device
-and enter the code DHBT-DBZD
-(or open http://127.0.0.1:28473/device?user_code=DHBT-DBZD)
+and enter the code ZNBP-NMXM
+(or open http://127.0.0.1:28473/device?user_code=ZNBP-NMXM)
 $ tr -d '\n' < at | wc -c
      625
 ```
@@ -193,14 +193,14 @@ $ cut -d. -f2 at | tr "_-" "/+" | jq -R "@base64d | fromjson"
 {
   "aud": "ssh",
   "client_id": "oidc-agent",
-  "exp": 1791741018,
-  "iat": 1791737418,
+  "exp": 1793017858,
+  "iat": 1793014258,
   "idp": "https://idp.univ-example.example/idp/shibboleth",
   "iss": "http://127.0.0.1:28473",
-  "jti": "0zVsbDeAwcubhCCFXtj9Dh0u-93sDBza5sti7EmcSL8",
+  "jti": "T1qu1-IjIqirgQedQ6hkQCUfeM0OFANOESdXKc3yrJA",
   "preferred_username": "alice@univ-example.example",
   "scope": "openid eduperson groups",
-  "sub": "KEQ1dJYNUw8TtXF5HNbuy3EYZ3rmFMKiqaVY8RH7eLE"
+  "sub": "UmCstEtvM1rTavlxDxNPVw-jCNFAZhdRXU405Uz985o"
 }
 ```
 
@@ -227,7 +227,8 @@ $ curl -s -H @auth.hdr http://127.0.0.1:28473/userinfo | jq .
     "urn:geant:univ-example.example:group:physique#idp.univ-example.example",
     "urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example"
   ],
-  "sub": "KEQ1dJYNUw8TtXF5HNbuy3EYZ3rmFMKiqaVY8RH7eLE"
+  "sub": "UmCstEtvM1rTavlxDxNPVw-jCNFAZhdRXU405Uz985o",
+  "voperson_id": "a1b2c3@univ-example.example"
 }
 ```
 
@@ -271,7 +272,7 @@ HTTP/1.1 401 Unauthorized
 Content-Type: text/plain; charset=utf-8
 Www-Authenticate: Bearer error="invalid_token"
 X-Content-Type-Options: nosniff
-Date: Sun, 11 Oct 2026 09:48:07 GMT
+Date: Mon, 26 Oct 2026 11:36:20 GMT
 Content-Length: 23
 
 the token is not valid

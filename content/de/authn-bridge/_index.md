@@ -13,10 +13,10 @@ X.509-Client-Zertifikat für NFS über TLS ausstellen lassen, ein Anwendungspass
 setzen oder einen WireGuard-Schlüssel registrieren. Der Anbieter kann widerrufen, was er
 ausgestellt hat, und er veröffentlicht signierte Listen dessen, was er widerrufen hat; ein bereits
 ausgegebenes Zugriffstoken bleibt gültig, bis es abläuft. Reines Go,
-`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.23.3.
+`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.23.4.
 
 ```sh
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
 
 authn-bridge keygen   --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 authn-bridge metadata --config /etc/authn-bridge > sp.xml   # register this with the federation
@@ -46,9 +46,9 @@ Eine Konfiguration, die sich nicht sicher bedienen lässt, startet nicht.
 
 ```
 $ authn-bridge --config etc/bridge-admin.hcl
-authn-bridge v0.23.3: http://127.0.0.1:28473 on 127.0.0.1:28473
-metrics on 127.0.0.1:28475
 admin API on unix:///tmp/authn/run/admin.sock
+metrics on 127.0.0.1:28475
+authn-bridge v0.23.4: http://127.0.0.1:28473 on 127.0.0.1:28473
 ```
 
 Das ist ein Testanbieter auf Loopback (ein `http://`-Aussteller wird nur auf einem

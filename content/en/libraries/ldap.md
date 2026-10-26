@@ -372,7 +372,7 @@ RefPos:  false
 is UnknownReference: true
 ```
 
-Run from an empty module with `github.com/go-authn/ldap` v0.10.0. The first
+Run from an empty module with `github.com/go-authn/ldap` v0.10.1. The first
 class is fine; the second starts on line 4, and nothing else is at fault, so
 `RefPos` is empty. Every definition `schema.Read` returns carries a `Pos` too,
 and the Position's `String` leaves the column out when it is not known.
@@ -399,7 +399,7 @@ a position come with the file, line and column.
 The command `ldapschema` converts between the formats:
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1
 ```
 
 - `ldapschema to-hcl [--macros] FILE...` reads OpenLDAP `.schema` files,
@@ -419,7 +419,7 @@ of cn=config, and `objectidentifier` macros resolved in file order. The
 exported `Parse*` functions, and what a server publishes, stay strict RFC
 4512.
 
-An example, run from an empty directory with `ldapschema` v0.9.0. The
+An example, run from an empty directory with `ldapschema` v0.10.1. The
 schema is invented for this page: 1.3.6.1.4.1.99999 is a private-use example
 arc, not an allocation to anyone. One macro, one attribute type, one
 auxiliary class:

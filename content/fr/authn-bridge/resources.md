@@ -12,7 +12,7 @@ portail devant plusieurs serveurs de fichiers, obtient des jetons d'accès adres
 reçu et le présenter aux autres : c'est la raison, dit la RFC 8707 §3, de
 restreindre l'audience. Depuis la v0.21.0, le client peut demander, avec le
 paramètre `resource` de la RFC 8707, un jeton adressé à **un seul** d'entre eux.
-Cette page décrit la v0.23.3 ; ce que la v0.22.0 faisait autrement figure
+Cette page décrit la v0.23.4 ; ce que la v0.22.0 faisait autrement figure
 [à la fin](#departures).
 
 Sans `resource`, rien ne change : le jeton d'accès est pour toute l'`audience` du
@@ -43,7 +43,7 @@ $ authn-bridge check --config etc/bridge.hcl
 issuer        http://127.0.0.1:28473
 SAML entity   http://127.0.0.1:28473/saml
 tls           none (a reverse proxy in front)
-federation    1 IdPs, 1 usable here, valid until 2026-10-18T15:48:27Z
+federation    1 IdPs, 1 usable here, valid until 2026-11-02T11:30:50Z
 client        portal (confidential, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
 client        files-cli (public, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
 ```
@@ -313,7 +313,7 @@ $ curl -s http://127.0.0.1:28473/device_authorization -d client_id=files-cli \
 
 ## Là où cela s'écarte de la RFC 8707 {#departures}
 
-| RFC 8707 | authn-bridge v0.23.3 |
+| RFC 8707 | authn-bridge v0.23.4 |
 |---|---|
 | §2 : « Multiple `resource` parameters MAY be used » | au point de terminaison d'autorisation, tel quel. Au point de terminaison de jeton, un seul : un second `resource` donne `invalid_request`, ce que permet le §3 (« an authorization server may be unwilling or unable to fulfill a token request with multiple resources ») |
 | §2.2 : le paramètre s'applique « for all grant types » | seulement `authorization_code` et `refresh_token`. Avec `client_credentials` ou l'octroi par appareil, il est refusé avec `invalid_target`, dans la demande d'autorisation d'appareil comme lors de l'interrogation |

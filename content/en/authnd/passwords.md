@@ -148,7 +148,7 @@ modifying entry "uid=alice,ou=people,dc=example,dc=org"
 with the reason in the server's output:
 
 ```
-changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-863420940: permission denied
+changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-1822988247: permission denied
 ```
 
 So keep the passwords in a directory of their own, writable by the service,

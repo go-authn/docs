@@ -20,7 +20,7 @@ Kerberos 的两个部分；以及置于 SAML 联邦之前的 OpenID Connect 提�
 | [authnd]({{< relref "/authnd/_index.md" >}}) | 一个 LDAP 服务器，可选地附带一个 Kerberos 域，面向存放在别处的人员：文件、SQL 数据库、另一个目录 | v0.12.3 |
 | [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | 置于 SAML 联邦（RENATER、eduGAIN）之前的 OpenID Connect 提供方，同时签发 SSH 证书，并签署用于吊销这些证书的列表 | v0.23.4 |
 | [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | 获取这些列表，在任何服务器读取之前逐一验证，并在某个列表过期时故障即拒绝 | v0.6.6 |
-| [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`，由 sshd 调用，用于询问证书的域授权是否指明了本主机 | v0.1.7 |
+| [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`，由 sshd 调用，用于询问证书的域授权是否指明了本主机 | v0.1.9 |
 
 每个程序都是适用于 Linux、macOS 和 Windows（amd64 与 arm64）的单个静态二进制文件，
 并附带 `SHA256SUMS` 和构建溯源信息发布：

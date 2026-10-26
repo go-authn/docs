@@ -11,12 +11,12 @@ tags: [sshcert, ssh, eurohpc]
 확장 `ssh-domain-grant@core.aai.geant.org`에 기록하는데, `sshd`는 이를 무시합니다.
 go-authn/sshcert는 그 확장을 읽고 쓰며, 이 패키지의 명령 `sshcert-authorize`가
 `sshd`가 이를 강제하기 위해 실행하는 것입니다. 순수 Go, `CGO_ENABLED=0`입니다. 이
-문서는 v0.1.7을 설명합니다.
+문서는 v0.1.9을 설명합니다.
 
 ```
-$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.7
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.9
 $ sshcert-authorize -version
-sshcert-authorize v0.1.7
+sshcert-authorize v0.1.9
 ```
 
 | | |

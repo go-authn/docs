@@ -11,7 +11,7 @@ front of several file servers, gets access tokens addressed to **all** of them.
 Any one of those servers can then take a token it received and present it to the
 others: RFC 8707 §3 says this is why an audience should be restricted. Since
 v0.21.0 the client can ask, with RFC 8707's `resource` parameter, for a token
-addressed to **one** of them. This page describes v0.23.3; what v0.22.0 did
+addressed to **one** of them. This page describes v0.23.4; what v0.22.0 did
 differently is [at the end](#departures).
 
 Without `resource`, nothing changes: the access token is for the client's whole
@@ -43,7 +43,7 @@ $ authn-bridge check --config etc/bridge.hcl
 issuer        http://127.0.0.1:28473
 SAML entity   http://127.0.0.1:28473/saml
 tls           none (a reverse proxy in front)
-federation    1 IdPs, 1 usable here, valid until 2026-10-18T15:48:27Z
+federation    1 IdPs, 1 usable here, valid until 2026-11-02T11:30:50Z
 client        portal (confidential, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
 client        files-cli (public, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
 ```
@@ -307,7 +307,7 @@ $ curl -s http://127.0.0.1:28473/device_authorization -d client_id=files-cli \
 
 ## Where this departs from RFC 8707 {#departures}
 
-| RFC 8707 | authn-bridge v0.23.3 |
+| RFC 8707 | authn-bridge v0.23.4 |
 |---|---|
 | §2: "Multiple `resource` parameters MAY be used" | at the authorization endpoint, as written. At the token endpoint, one: a second `resource` is `invalid_request`, which §3 allows ("an authorization server may be unwilling or unable to fulfill a token request with multiple resources") |
 | §2.2: the parameter applies "for all grant types" | only `authorization_code` and `refresh_token`. With `client_credentials` or the device grant it is refused with `invalid_target`, at the device authorization request as when polling |

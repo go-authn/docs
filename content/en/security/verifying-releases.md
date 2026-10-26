@@ -9,11 +9,11 @@ tags: [security, releases]
 Each release of authnd, authn-bridge, authn-revokd and sshcert publishes six
 static binaries (`CGO_ENABLED=0`: linux, darwin and windows, on amd64 and
 arm64), a `SHA256SUMS` file, and a build-provenance attestation for every
-binary. The examples below use authn-bridge v0.23.3; the other programs work
+binary. The examples below use authn-bridge v0.23.4; the other programs work
 the same way with their own repository and name.
 
 ```sh
-gh release download v0.23.3 --repo go-authn/bridge
+gh release download v0.23.4 --repo go-authn/bridge
 ```
 
 ## 1. The checksum
@@ -64,27 +64,27 @@ go version -m authn-bridge-linux-amd64
 ```
 authn-bridge-linux-amd64: go1.27.3
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.23.3	
+	mod	github.com/go-authn/bridge	v0.23.4	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=b04769c43c24f684df9e0b5a0d1cb6997ee90d95
+	build	vcs.revision=6e0156cb516ace9091d4070c425258febc48f6ee
 	build	vcs.modified=false
 ```
 
 (lines shortened to the ones that matter; the first names the Go toolchain that built the binary). The `mod` line must be the tag
 exactly, and `vcs.modified` must be `false`: a build from a tree with
-uncommitted changes says `true`, and its version reads `v0.23.3+dirty`. The
+uncommitted changes says `true`, and its version reads `v0.23.4+dirty`. The
 release workflow refuses to publish unless **every one** of the six binaries
 passes both checks, and unless the program prints the tag as the last word of
 its version line:
 
 ```
 $ authnd --version
-authnd version v0.12.0
+authnd version v0.12.3
 $ authn-bridge --version
-authn-bridge version v0.23.3
+authn-bridge version v0.23.4
 $ authn-revokd -version
-authn-revokd v0.6.5
+authn-revokd v0.6.6
 ```
 
 Release binaries are linked with `-ldflags="-w"` (authnd from v0.12.2, authn-bridge from v0.23.4, authn-revokd from v0.6.6, sshcert from v0.1.8), not `-s -w`: the debug information is omitted and the symbol table is kept. Without the symbol table, `govulncheck -mode binary` cannot tell which functions are present, falls back to module level and reports vulnerabilities in code that is not linked; with it, the scan is precise. The binaries are 7 to 10 % larger.

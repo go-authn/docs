@@ -12,10 +12,10 @@ SSH 키를 인증받거나, NFS over TLS용 X.509 클라이언트 인증서를 �
 애플리케이션 비밀번호를 설정하거나, WireGuard 키를 등록할 수도 있습니다. 공급자는
 자신이 발급한 것을 폐기할 수 있고, 폐기한 것의 서명된 목록을 게시합니다. 이미
 전달된 액세스 토큰은 만료될 때까지 유효합니다. 순수 Go, `CGO_ENABLED=0`, 바이너리
-하나입니다. 이 문서는 v0.23.3을 설명합니다.
+하나입니다. 이 문서는 v0.23.4을 설명합니다.
 
 ```sh
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
 
 authn-bridge keygen   --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 authn-bridge metadata --config /etc/authn-bridge > sp.xml   # register this with the federation
@@ -45,9 +45,9 @@ authn-bridge가 그 하나의 공급자입니다. 한쪽에는 페더레이션�
 
 ```
 $ authn-bridge --config etc/bridge-admin.hcl
-authn-bridge v0.23.3: http://127.0.0.1:28473 on 127.0.0.1:28473
-metrics on 127.0.0.1:28475
 admin API on unix:///tmp/authn/run/admin.sock
+metrics on 127.0.0.1:28475
+authn-bridge v0.23.4: http://127.0.0.1:28473 on 127.0.0.1:28473
 ```
 
 루프백의 테스트 공급자입니다(`http://` 발급자는 루프백 호스트에서만 받아들여집니다).

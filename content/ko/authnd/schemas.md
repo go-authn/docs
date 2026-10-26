@@ -456,9 +456,5 @@ without* 줄을 읽으십시오. `supannPerson`이나 `eduPerson`의 MUST가 없
 {{< callout type="info" >}}
 **트랜스크립트에 대하여**
 
-이 페이지의 모든 명령은 v0.12.1 릴리스 바이너리(`authnd-darwin-arm64`, `SHA256SUMS`와
-대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.1`,
-`vcs.modified=false`)와 OpenLDAP의 `ldapsearch`로, 127.0.0.1에서, 임시 디렉터리 안에서,
-보이는 파일들과 함께 실행했습니다. 그래서 경로가 상대 경로이며, 서비스는 절대 경로를
-사용합니다. 스키마는 이 페이지를 위해 작성한 예제입니다.
+이 페이지의 모든 명령은 2026-10-26에 v0.12.3 릴리스 바이너리(`authnd-darwin-arm64`, `SHA256SUMS`와 대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`)와 OpenLDAP의 `ldapsearch`로, 127.0.0.1에서 임시 디렉터리에 보여 준 파일을 두고 다시 실행한 것입니다. 경로가 상대 경로인 것은 그 때문이며, 서비스에서는 절대 경로를 사용합니다. 스키마는 이 페이지를 위해 작성한 예제입니다.
 {{< /callout >}}

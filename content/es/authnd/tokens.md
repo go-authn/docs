@@ -120,7 +120,7 @@ El emisor aquí es un pequeño proveedor de prueba en loopback, y `oidctool` un 
 de prueba escrito para estas páginas: firma un token para el nombre indicado, con el
 `amr` indicado, lo envía en un bind `OAUTHBEARER` (con un `authzid` cuando un quinto
 argumento lo nombra), e imprime el código de resultado del bind y las credenciales
-SASL del servidor. Contra la configuración anterior, sobre `ldaps://`:
+SASL del servidor. Estas transcripciones y las líneas del servidor de más abajo las imprimió el binario de la versión v0.10.0 y no se volvieron a ejecutar, porque `oidctool` no forma parte de ninguna versión publicada. Contra la configuración anterior, sobre `ldaps://`:
 
 ```
 $ ./oidctool alice '["pwd","otp"]' 127.0.0.1:3636 tls

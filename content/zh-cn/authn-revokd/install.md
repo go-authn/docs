@@ -34,12 +34,12 @@ tags: [authn-revokd, 安装, systemd]
 每个发布版本都带有适用于 Linux、macOS 和 Windows（amd64 与
 arm64）的 `authn-revokd-<os>-<arch>`，附带 `SHA256SUMS` 和构建溯源信息
 （[验证下载]({{< relref "/security/verifying-releases.md" >}})）。或者
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.5`。
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6`。
 
 账户和单元来自发布标签的 `packaging/` 目录，与二进制文件的
 版本相同：把该目录复制到二进制文件旁边，可以来自该标签的检出副本，
-或者对于 v0.6.5，来自
-<https://github.com/go-authn/revocation/tree/v0.6.5/packaging>。
+或者对于 v0.6.6，来自
+<https://github.com/go-authn/revocation/tree/v0.6.6/packaging>。
 
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd

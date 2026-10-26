@@ -371,7 +371,7 @@ RefPos:  false
 is UnknownReference: true
 ```
 
-在空模块中用 `github.com/go-authn/ldap` v0.10.0 运行。第一个
+在空模块中用 `github.com/go-authn/ldap` v0.10.1 运行。第一个
 类没有问题；第二个从第 4 行开始，别处并无错误，因此
 `RefPos` 为空。`schema.Read` 返回的每个定义同样带有 `Pos`，
 Position 的 `String` 在列未知时会省略列。
@@ -396,7 +396,7 @@ RFC 4512 §4.1 的术语，小写并以下划线连接（`desc`、`sup`、`equal
 命令 `ldapschema` 在各种格式之间转换：
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1
 ```
 
 - `ldapschema to-hcl [--macros] FILE...` 读取 OpenLDAP `.schema` 文件、
@@ -416,7 +416,7 @@ go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0
 导出的 `Parse*` 函数以及服务器所发布的内容仍然严格遵循 RFC
 4512。
 
-一个示例，在空目录中用 `ldapschema` v0.9.0 运行。该
+一个示例，在空目录中用 `ldapschema` v0.10.1 运行。该
 模式是为本页虚构的：1.3.6.1.4.1.99999 是私用的示例
 弧，并非分配给任何人。一个宏、一个属性类型、一个
 辅助类：

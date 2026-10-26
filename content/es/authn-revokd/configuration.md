@@ -108,8 +108,8 @@ $ curl -s -D - -o /dev/null http://127.0.0.1:28474/bridge-ssh
 HTTP/1.1 200 OK
 Cache-Control: max-age=30
 Content-Type: application/octet-stream
-Etag: "83278365ecb0f44b05170bb12f151756"
-Date: Sun, 11 Oct 2026 09:51:05 GMT
+Etag: "dfd84d8513eb48d07ed72f2110316858"
+Date: Mon, 26 Oct 2026 11:27:10 GMT
 Content-Length: 130
 
 $ curl -s -o /dev/null -w "%{http_code}\n" -H 'If-Match: "stale"' http://127.0.0.1:28474/bridge-ssh.sig
