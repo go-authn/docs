@@ -19,7 +19,7 @@ tags: [authnd, 安装, systemd]
 清单，以及针对每个二进制文件的构建溯源证明。
 
 ```sh
-version=v0.12.0
+version=v0.12.3
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ gh attestation verify "authnd-linux-$arch" --repo go-authn/authnd   # built by t
 
 ```
 $ authnd --version
-authnd version v0.12.0
+authnd version v0.12.3
 ```
 
 ### 只构建你想要的部分 {#building-only-what-you-want}
@@ -64,8 +64,8 @@ u     authnd -  "authnd LDAP directory and Kerberos KDC" /var/lib/authnd -
 
 这两个文件来自发布标签的 `packaging/` 目录，与
 二进制文件的版本相同：把该目录复制到二进制文件旁边，可以来自该标签的
-检出副本，或者对于 v0.12.0，来自
-<https://github.com/go-authn/authnd/tree/v0.12.0/packaging>。
+检出副本，或者对于 v0.12.3，来自
+<https://github.com/go-authn/authnd/tree/v0.12.3/packaging>。
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd

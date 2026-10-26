@@ -151,7 +151,7 @@ modifying entry "uid=alice,ou=people,dc=example,dc=org"
 con el motivo en la salida del servidor:
 
 ```
-changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-863420940: permission denied
+changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-1822988247: permission denied
 ```
 
 Así que guarde las contraseñas en un directorio propio, en el que el servicio pueda

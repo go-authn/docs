@@ -9,11 +9,11 @@ tags: [sicherheit, releases]
 Jedes Release von authnd, authn-bridge, authn-revokd und sshcert veröffentlicht sechs
 statische Binaries (`CGO_ENABLED=0`: linux, darwin und windows, auf amd64 und
 arm64), eine Datei `SHA256SUMS` und eine Build-Provenienz-Attestierung für jedes
-Binary. Die folgenden Beispiele verwenden authn-bridge v0.23.3; die anderen Programme
+Binary. Die folgenden Beispiele verwenden authn-bridge v0.23.4; die anderen Programme
 funktionieren genauso, mit ihrem eigenen Repository und Namen.
 
 ```sh
-gh release download v0.23.3 --repo go-authn/bridge
+gh release download v0.23.4 --repo go-authn/bridge
 ```
 
 ## 1. Die Prüfsumme {#1-the-checksum}
@@ -64,27 +64,27 @@ go version -m authn-bridge-linux-amd64
 ```
 authn-bridge-linux-amd64: go1.27.3
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.23.3	
+	mod	github.com/go-authn/bridge	v0.23.4	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=b04769c43c24f684df9e0b5a0d1cb6997ee90d95
+	build	vcs.revision=6e0156cb516ace9091d4070c425258febc48f6ee
 	build	vcs.modified=false
 ```
 
 (auf die Zeilen gekürzt, auf die es ankommt; die erste nennt die Go-Toolchain, die das Binary gebaut hat). Die `mod`-Zeile muss genau der Tag sein,
 und `vcs.modified` muss `false` sein: Ein Build aus einem Baum mit nicht committeten
-Änderungen sagt `true`, und seine Version lautet `v0.23.3+dirty`. Der
+Änderungen sagt `true`, und seine Version lautet `v0.23.4+dirty`. Der
 Release-Workflow verweigert die Veröffentlichung, sofern nicht **jedes einzelne** der
 sechs Binaries beide Prüfungen besteht und das Programm den Tag als letztes Wort seiner
 Versionszeile ausgibt:
 
 ```
 $ authnd --version
-authnd version v0.12.0
+authnd version v0.12.3
 $ authn-bridge --version
-authn-bridge version v0.23.3
+authn-bridge version v0.23.4
 $ authn-revokd -version
-authn-revokd v0.6.5
+authn-revokd v0.6.6
 ```
 
 Release-Binaries werden mit `-ldflags="-w"` gelinkt (authnd ab v0.12.2, authn-bridge ab v0.23.4, authn-revokd ab v0.6.6, sshcert ab v0.1.8), nicht mit `-s -w`: die Debug-Informationen entfallen, die Symboltabelle bleibt erhalten. Ohne Symboltabelle weiß `govulncheck -mode binary` nicht, welche Funktionen vorhanden sind, fällt auf die Modulebene zurück und meldet Schwachstellen in Code, der nicht gelinkt ist; mit ihr ist die Prüfung genau. Die Binaries sind 7 bis 10 % größer.

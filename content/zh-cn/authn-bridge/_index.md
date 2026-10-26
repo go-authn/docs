@@ -12,10 +12,10 @@ tags: [authn-bridge, oidc, saml]
 为 SMB 和 S3 设置应用密码，或注册 WireGuard 密钥。提供方可以吊销其所签发的内容，并且
 会发布其已吊销内容的签名列表；已经发放的访问令牌
 在过期之前仍然有效。纯 Go，`CGO_ENABLED=0`，单个
-二进制文件。这些页面描述 v0.23.3。
+二进制文件。这些页面描述 v0.23.4。
 
 ```sh
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
 
 authn-bridge keygen   --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 authn-bridge metadata --config /etc/authn-bridge > sp.xml   # register this with the federation
@@ -45,9 +45,9 @@ authn-bridge          --config /etc/authn-bridge            # serve
 
 ```
 $ authn-bridge --config etc/bridge-admin.hcl
-authn-bridge v0.23.3: http://127.0.0.1:28473 on 127.0.0.1:28473
-metrics on 127.0.0.1:28475
 admin API on unix:///tmp/authn/run/admin.sock
+metrics on 127.0.0.1:28475
+authn-bridge v0.23.4: http://127.0.0.1:28473 on 127.0.0.1:28473
 ```
 
 这是环回地址上的测试提供方（`http://` 签发方只在

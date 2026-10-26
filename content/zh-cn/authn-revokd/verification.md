@@ -25,8 +25,8 @@ KRL 本身必须能被 `sshd` 解析，且不得带有 OpenSSH 自己的
 
 ```
 $ authn-revokd -config revokd-other.hcl -once
-bridge-ssh: revocation: the KRL's signature does not verify by SHA256:xm8VDcZUh44N+RQSiPbroPInzkMhN/KCWI/TC+9HPNQ: public key does not match
-bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-ssh: revocation: the KRL's signature does not verify by SHA256:6iM7YPhdfXxQEj/PUf7CYbqBuSiVTVMx2VADj63cAg4: public key does not match
+bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/other.krl
 output tls: wrote /tmp/authn/revokd/out/other.crl
 authn-revokd: not current: bridge-ssh
@@ -90,14 +90,14 @@ CRL Number）决定，然后是其**签发时间**（KRL 的生成日期，CRL �
 
 ```
 $ authn-revokd -config revokd.hcl -once
-bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
-bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
+bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 $ authn-revokd -config revokd-old.hcl -once
-bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-11T09:50:05Z, the copy held at 2026-10-11T09:50:24Z
-authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z)
+bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-26T11:26:49Z, the copy held at 2026-10-26T11:27:10Z
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
-# Generated at 20261011T115024
+# Generated at 20261026T122710
 # Comment: authn-revokd sshd
 ```
 
@@ -127,7 +127,7 @@ sshd 的 StrictModes 规则约束（[配置]({{< relref "/authn-revokd/configura
 $ authn-revokd -config revokd.hcl -once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
-authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-11T10:50:24Z), bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z), bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)
 ```
 
 该次运行保持 `sshd.krl` 原样。一旦所持有的列表过期，同一个来源就会

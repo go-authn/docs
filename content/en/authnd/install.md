@@ -19,7 +19,7 @@ and arm64 (`.exe` on windows), built with `CGO_ENABLED=0`, a `SHA256SUMS`
 manifest, and a build provenance attestation for every binary.
 
 ```sh
-version=v0.12.0
+version=v0.12.3
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -36,7 +36,7 @@ something to compare:
 
 ```
 $ authnd --version
-authnd version v0.12.0
+authnd version v0.12.3
 ```
 
 ### Building only what you want
@@ -64,8 +64,8 @@ and a file it wrote would belong to a number that later means somebody else.
 
 The two files come from the `packaging/` directory of the release tag, the
 same version as the binary: copy that directory beside the binary, from a
-checkout of the tag or, for v0.12.0, from
-<https://github.com/go-authn/authnd/tree/v0.12.0/packaging>.
+checkout of the tag or, for v0.12.3, from
+<https://github.com/go-authn/authnd/tree/v0.12.3/packaging>.
 
 ```sh
 sudo install -m 0755 "authnd-linux-$arch" /usr/local/bin/authnd

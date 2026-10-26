@@ -9,11 +9,11 @@ tags: [sécurité, versions]
 Chaque version d'authnd, authn-bridge, authn-revokd et sshcert publie six
 binaires statiques (`CGO_ENABLED=0` : linux, darwin et windows, sur amd64 et
 arm64), un fichier `SHA256SUMS`, et une attestation de provenance de compilation pour chaque
-binaire. Les exemples ci-dessous utilisent authn-bridge v0.23.3 ; les autres programmes fonctionnent de la même
+binaire. Les exemples ci-dessous utilisent authn-bridge v0.23.4 ; les autres programmes fonctionnent de la même
 façon avec leur propre dépôt et leur propre nom.
 
 ```sh
-gh release download v0.23.3 --repo go-authn/bridge
+gh release download v0.23.4 --repo go-authn/bridge
 ```
 
 ## 1. La somme de contrôle {#1-the-checksum}
@@ -64,27 +64,27 @@ go version -m authn-bridge-linux-amd64
 ```
 authn-bridge-linux-amd64: go1.27.3
 	path	github.com/go-authn/bridge/cmd/authn-bridge
-	mod	github.com/go-authn/bridge	v0.23.3	
+	mod	github.com/go-authn/bridge	v0.23.4	
 	build	-trimpath=true
 	build	CGO_ENABLED=0
-	build	vcs.revision=b04769c43c24f684df9e0b5a0d1cb6997ee90d95
+	build	vcs.revision=6e0156cb516ace9091d4070c425258febc48f6ee
 	build	vcs.modified=false
 ```
 
 (lignes réduites à celles qui comptent ; la première nomme la chaîne d'outils Go qui a construit le binaire). La ligne `mod` doit être exactement l'étiquette,
 et `vcs.modified` doit valoir `false` : une compilation depuis un arbre avec des
-changements non commités indique `true`, et sa version se lit `v0.23.3+dirty`. Le
+changements non commités indique `true`, et sa version se lit `v0.23.4+dirty`. Le
 workflow de publication refuse de publier à moins que **chacun** des six binaires
 ne passe les deux vérifications, et à moins que le programme n'affiche l'étiquette comme dernier mot de
 sa ligne de version :
 
 ```
 $ authnd --version
-authnd version v0.12.0
+authnd version v0.12.3
 $ authn-bridge --version
-authn-bridge version v0.23.3
+authn-bridge version v0.23.4
 $ authn-revokd -version
-authn-revokd v0.6.5
+authn-revokd v0.6.6
 ```
 
 Les binaires de release sont liés avec `-ldflags="-w"` (authnd depuis v0.12.2, authn-bridge depuis v0.23.4, authn-revokd depuis v0.6.6, sshcert depuis v0.1.8) et non `-s -w` : les informations de débogage sont omises, la table des symboles est conservée. Sans la table des symboles, `govulncheck -mode binary` ne sait pas quelles fonctions sont présentes, retombe au niveau du module et signale des vulnérabilités dans du code qui n'est pas lié ; avec elle, l'analyse est précise. Les binaires sont de 7 à 10 % plus gros.

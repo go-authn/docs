@@ -11,12 +11,12 @@ tags: [sshcert, ssh, eurohpc]
 写入一个扩展 `ssh-domain-grant@core.aai.geant.org`，而 `sshd` 会忽略它。go-authn/sshcert
 读取并写入该扩展，它的命令 `sshcert-authorize` 就是
 `sshd` 用来强制执行该扩展的程序。纯 Go，`CGO_ENABLED=0`。这些页面描述
-v0.1.7。
+v0.1.9。
 
 ```
-$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.7
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.9
 $ sshcert-authorize -version
-sshcert-authorize v0.1.7
+sshcert-authorize v0.1.9
 ```
 
 | | |

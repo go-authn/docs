@@ -31,13 +31,13 @@ $ authn-revokd -config revokd-maxage.hcl -once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
-authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
 # Generated at 19700101T010000
 # Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
 
-hash: SHA256:Fpa/Ku2Wv1EDCR+KSsqZ2eECTM1zftiBWj01Lr+NO2Q # ssh-ed25519
+hash: SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4 # ssh-ed25519
 $ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
 ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 ```
@@ -45,7 +45,7 @@ ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 `bridge-ssh`는 `not current`이며 그 출력은 실패 시 차단 상태입니다. `bridge-x509`는
 `not fetched`일 뿐이며 그 CRL은 그대로 남습니다
 ([`-once`가 보고하는 것]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
-`SHA256:Fpa/...`는 bridge의 SSH CA입니다. 그것이 서명한 인증서는 이제 파일을 읽는
+`SHA256:AnDb/...`는 bridge의 SSH CA입니다. 그것이 서명한 인증서는 이제 파일을 읽는
 모든 것에게 폐기된 것입니다. 위의 명령은 `out/`이 있는 `revokd` 디렉터리에서
 실행했고, 이것은 그 옆의 테스트 인증서가 있는 디렉터리에서
 [sshcert-authorize 페이지]({{< relref "/sshcert/authorize.md#krl" >}})처럼 실행하므로

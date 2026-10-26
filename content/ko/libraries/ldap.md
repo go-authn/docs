@@ -358,7 +358,7 @@ RefPos:  false
 is UnknownReference: true
 ```
 
-`github.com/go-authn/ldap` v0.10.0으로 빈 모듈에서 실행한 예제입니다. 첫 번째
+`github.com/go-authn/ldap` v0.10.1으로 빈 모듈에서 실행한 예제입니다. 첫 번째
 클래스는 문제가 없고, 두 번째는 4번째 줄에서 시작하며 다른 곳에는 잘못이 없으므로
 `RefPos`는 비어 있습니다. `schema.Read`가 반환하는 모든 정의에도 `Pos`가 있으며,
 Position의 `String`은 열을 알 수 없을 때 열을 생략합니다.
@@ -382,7 +382,7 @@ RFC 4512 §4.1의 항목을 소문자와 밑줄로 쓴 것(`desc`, `sup`, `equal
 `ldapschema` 명령이 형식 사이를 변환합니다.
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1
 ```
 
 - `ldapschema to-hcl [--macros] FILE...`은 OpenLDAP `.schema` 파일, cn=config LDIF,
@@ -399,7 +399,7 @@ go install github.com/go-authn/ldap/cmd/ldapschema@v0.9.0
 접기, base64 값, cn=config의 `{N}` 접두사, 파일 순서로 해석되는 `objectidentifier`
 매크로. 공개된 `Parse*` 함수와 서버가 게시하는 것은 엄격한 RFC 4512로 유지됩니다.
 
-`ldapschema` v0.9.0으로 빈 디렉터리에서 실행한 예제입니다. 스키마는 이 페이지를 위해
+`ldapschema` v0.10.1으로 빈 디렉터리에서 실행한 예제입니다. 스키마는 이 페이지를 위해
 만든 것이며, 1.3.6.1.4.1.99999는 개인 용도의 예제 아크이지 누구에게 할당된 것이
 아닙니다. 매크로 하나, 속성 타입 하나, 보조 클래스 하나:
 

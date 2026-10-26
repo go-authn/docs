@@ -25,9 +25,10 @@ arm64）的 `authn-bridge-<os>-<arch>`、一个 `SHA256SUMS` 清单，以及每�
 说明了如何检查这两者。或者自行构建，这会将版本记录在二进制文件中：
 
 ```
-$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
+$ go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
+go: github.com/go-authn/bridge@v0.23.4 requires go >= 1.27.3; switching to go1.27.3
 $ authn-bridge --version
-authn-bridge version v0.23.3
+authn-bridge version v0.23.4
 ```
 
 路径很重要：自 v0.20.0 起，程序位于 `internal/app`，而
@@ -61,7 +62,7 @@ install -d -m 0700 -o authn-bridge -g authn-bridge /var/lib/authn-bridge
 $ mkdir var/nfs-ca
 $ authn-bridge keygen --key var/oidc.key --salt var/salt --ssh-ca var/ssh-ca --x509-ca var/nfs-ca
 wrote var/ssh-ca; its public half, for go-fileshare's trusted_user_ca_file:
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBNOYvUrAPdRTB+38aml+twPN+2k1shD3l62v8NxrIje go-authn-bridge-ca
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPnW/W/MeVAMgt4fciWbbiJ/BS4vXURfwoc7K5cET1Ma go-authn-bridge-ca
 wrote var/oidc.key
 wrote var/nfs-ca/ca.crt and its key; the certificate is what go-fileshare trusts for NFS over TLS
 wrote var/salt -- keep it: a new salt is a new subject for everybody

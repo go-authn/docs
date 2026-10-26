@@ -68,6 +68,8 @@ openssl x509 -in /etc/authn-bridge/metadata-signature-2026.pem -noout -fingerpri
   authn-bridge: the federation's metadata: metadata expired at 2026-10-08T07:30:02Z
   ```
 
+  *다시 실행하지 않았습니다. 이 메타데이터는 더 이상 공개되지 않으므로, 2026년 10월 10일에 캡처한 출력입니다.*
+
 - `validUntil`이 28일보다 더 먼 경우: 수년간 유효한 문서는 재생 공격이 수년간 살려
   둘 수 있는 문서입니다
 - **사용 중인 것보다 오래된 경우**(더 이른 `validUntil`). 유효하게 서명되었고 아직
@@ -176,7 +178,7 @@ $ authn-bridge metadata --config etc/bridge.hcl
     <md:KeyDescriptor>
       <ds:KeyInfo>
         <ds:X509Data>
-          <ds:X509Certificate>MIIE…</ds:X509Certificate>
+          <ds:X509Certificate>MIID…</ds:X509Certificate>
         </ds:X509Data>
       </ds:KeyInfo>
       <md:EncryptionMethod Algorithm="http://www.w3.org/2009/xmlenc11#aes128-gcm"/>

@@ -120,7 +120,7 @@ site follows EFP's trust instructions with this provider's URL:
 
 ```
 $ curl -s http://127.0.0.1:28473/ssh/config
-{"PublicKey":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBNOYvUrAPdRTB+38aml+twPN+2k1shD3l62v8NxrIje"}
+{"PublicKey":"ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPnW/W/MeVAMgt4fciWbbiJ/BS4vXURfwoc7K5cET1Ma"}
 ```
 
 ```sh

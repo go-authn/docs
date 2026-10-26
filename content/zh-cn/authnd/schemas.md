@@ -455,10 +455,5 @@ users "sql" {
 {{< callout type="info" >}}
 **关于这些记录**
 
-本页上的每条命令都由 v0.12.1 发布的二进制文件
-（`authnd-darwin-arm64`，已对照 `SHA256SUMS` 核对；`go version -m`：
-`go1.27.3`，`mod github.com/go-authn/authnd v0.12.1`，
-`vcs.modified=false`）和 OpenLDAP 的 `ldapsearch` 运行，在 127.0.0.1 上，
-在一个临时目录中，使用所示的文件。路径因此是相对的；
-服务则使用绝对路径。该模式是为本页编写的示例。
+此页面上的每条命令都已于 2026-10-26 重新运行，使用 v0.12.3 发布的二进制文件（`authnd-darwin-arm64`，已对照 `SHA256SUMS` 核对；`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.12.3`，`vcs.modified=false`）和 OpenLDAP 的 `ldapsearch`，在 127.0.0.1 上、一个临时目录中，并使用所示的文件。路径因此是相对的；服务使用绝对路径。该模式是为此页面编写的示例。
 {{< /callout >}}

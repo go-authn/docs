@@ -18,7 +18,7 @@ go get github.com/go-authn/kdc@v0.4.3
 
 En v0.4.3, son `go.mod` requiert au moins `go-authn/directory` v0.12.0 et
 gokrb5 v8.4.4 : des minimums, si bien qu'un programme qui requiert directory v0.14.0, la
-version que décrivent ces pages, est compilé avec la v0.15.0, comme authnd v0.12.0. La
+version que décrivent ces pages, est compilé avec la v0.15.0, comme authnd v0.12.3. La
 moitié qui accepte est [krb5]({{< relref "/libraries/krb5.md" >}}), et un service
 qui ne fait que vérifier des tickets n'a nullement besoin de ce module.
 
@@ -107,7 +107,7 @@ Credentials cache: FILE:cc
         Principal: alice@EXAMPLE.ORG
 
   Issued                Expires               Principal
-Oct 10 21:54:46 2026  Oct 11 07:54:46 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
+Oct 26 12:34:16 2026  Oct 26 22:34:16 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
 $ kinit --password-file=STDIN alice@EXAMPLE.ORG < bad.pw
 kinit: Password incorrect
 $ kinit --password-file=STDIN bob@EXAMPLE.ORG < alice.pw
@@ -118,8 +118,8 @@ Credentials cache: FILE:cc
         Principal: alice@EXAMPLE.ORG
 
   Issued                Expires               Principal
-Oct 10 21:54:46 2026  Oct 11 07:54:46 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
-Oct 10 21:54:47 2026  Oct 11 07:54:46 2026  nfs/files.example.org@EXAMPLE.ORG
+Oct 26 12:34:16 2026  Oct 26 22:34:16 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
+Oct 26 12:34:16 2026  Oct 26 22:34:16 2026  nfs/files.example.org@EXAMPLE.ORG
 ```
 
 Les dix heures sont la valeur par défaut de `Config.Lifetime`, et le ticket de service se termine avec
@@ -129,11 +129,11 @@ requête, dans son propre journal :
 ```
 kdc: the keytab has no krbtgt key for this realm: matching key not found in keytab. Looking for "krbtgt/OTHER.ORG" realm: OTHER.ORG kvno: 0 etype: 18
 EXAMPLE.ORG answers on 127.0.0.1:18088
-2026/10/10 21:54:46 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
-2026/10/10 21:54:46 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
-2026/10/10 21:54:46 the timestamp does not decrypt (client etype 18, our key type 18): error decrypting: integrity verification failed
-2026/10/10 21:54:46 refused krbtgt/EXAMPLE.ORG: pre-authentication does not decrypt (code 24)
-2026/10/10 21:54:47 refused krbtgt/EXAMPLE.ORG: no such principal in this realm (code 6)
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
+2026/10/26 12:34:16 the timestamp does not decrypt (client etype 18, our key type 18): error decrypting: integrity verification failed
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: pre-authentication does not decrypt (code 24)
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: no such principal in this realm (code 6)
 ```
 
 Le premier refus de chaque échange, c'est le protocole qui fonctionne : le `KRB-ERROR`

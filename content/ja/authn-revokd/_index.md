@@ -11,12 +11,13 @@ tags: [authn-revokd, 失効, krl, crl]
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}}) が公開するリストについて、この二つの
 隙間を塞ぎます。各リストを取得し、検証に通った場合にのみ保持し、`sshd` や TLS サーバーが読む
 場所に書き込み、リストが失効したときは **CA 自体を失効させる**リストを書き込みます。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.6.5 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.6.6 を説明しています。
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.5
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6
+go: github.com/go-authn/revocation@v0.6.6 requires go >= 1.27.3; switching to go1.27.3
 $ authn-revokd -version
-authn-revokd v0.6.5
+authn-revokd v0.6.6
 $ authn-revokd -help
 Usage of authn-revokd:
   -config string
@@ -39,13 +40,13 @@ v0.6.0 より前は、コマンドは `revokd` で、既定で `/etc/revokd.hcl`
 
 ```
 $ authn-revokd -config revokd.hcl -once
-bridge-ssh: version 0, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
-bridge-x509: version 1791712224691, issued 2026-10-11T09:50:24Z, expires 2026-10-11T10:50:24Z
+bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
+bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
 output tls: wrote /tmp/authn/revokd/out/bridge.crl
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
-# Generated at 20261011T115024
+# Generated at 20261026T122710
 # Comment: authn-revokd sshd
 ```
 

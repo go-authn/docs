@@ -10,11 +10,11 @@ tags: [authnd, ldap]
 その人々を認証したいものは LDAP を話します。** authnd はその窓口です。
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) のソースに対してバインドと検索を行うので、
 データベースが保持しているものを、ディレクトリに問い合わせる方法を知っているものなら何でも読めます。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.12.1 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.12.3 を説明しています。
 そのエントリは標準スキーマに従い、`cn=Subschema` で公開するスキーマに適合します。
 サイトはこのスキーマを自前のもの
 ([SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})) で拡張できます。
-その下には go-authn/ldap v0.10.0 と go-authn/directory v0.15.0 があります。
+その下には go-authn/ldap v0.10.1 と go-authn/directory v0.15.0 があります。
 何が検証済みで何が未検証かは、[ステータス]({{< relref "/status.md" >}})のページにあります。
 
 {{< callout type="warning" >}}
@@ -94,7 +94,7 @@ v0.10.2 までは、持っているものにかかわらず、すべての人が
 ## 誰がバインドでき、誰が読めるか {#who-may-bind-and-who-may-read}
 
 LDAP サーバーは人々を証明するよう求められるので、その拒否こそが設計です。
-以下は v0.10.0 のリリースバイナリが OpenLDAP 純正のクライアントに返した応答です。
+以下は v0.12.3 のリリースバイナリが OpenLDAP 純正のクライアントに返した応答です。
 
 ```
 $ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
@@ -142,7 +142,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.12.0
+vendorVersion: v0.12.3
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` は RFC 3062 のパスワード変更操作です。
@@ -169,25 +169,5 @@ vendorVersion: v0.12.0
 {{< callout type="info" >}}
 **トランスクリプトについて**
 
-[サイトスキーマ]({{< relref "/authnd/schemas.md" >}})のページにあるものはすべて、
-v0.12.1 のリリースバイナリ (`authnd-darwin-arm64`、`go version -m`:
-`go1.27.3`、`mod github.com/go-authn/authnd v0.12.1`、`vcs.modified=false`) が
-出力したものです。ルート DSE と `--version` の行は、v0.12.0 のリリースバイナリ
-(`authnd-darwin-arm64`、`SHA256SUMS` と照合済み、
-`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.12.0`、
-`vcs.modified=false`) が出力したものです。その他の起動時の行は v0.11.1 のリリースバイナリ
-(`mod github.com/go-authn/authnd v0.11.1`、`vcs.modified=false`) が出力したもので、
-起動時の行と同じトランスクリプトに示した他のコマンドもすべて同様です。
-v0.11.1 が変更したのはその行だけであり、v0.12.0 の変更履歴は、スキーマファイル、ブロック、
-クラスを宣言しない設定には何も変えないため、再実行していません。`check` の表、`ldapsearch` で読み戻したエントリ、
-`cn=Subschema`、`samba` の拒否は、v0.11.0 のリリースバイナリ
-(`mod github.com/go-authn/authnd v0.11.0`、`vcs.modified=false`) が出力したものです。
-これらのページにある設定の拒否も同様で、v0.11.0 は v0.10.0 とバイト単位で同じ出力をしました。
-その他のバインド、`kinit`、パスワード変更、トークン交換は v0.10.0 のリリースバイナリが
-出力したもので、v0.11.0 にも v0.11.1 にもそれらを変えるリリースノートがないため、再実行して
-いません。すべて macOS に付属する OpenLDAP と Heimdal のクライアントで、127.0.0.1 の
-特権のないポートを使い、`/tmp` 以下の作業用ディレクトリで実行しました。そのため、
-これらの背後にある設定は `etc/authnd/passwords/alice.pw` のような相対パスでファイルを
-指定し、パスワードファイルには `alice.pwin` のような名前が付いています。
-例にある `/etc/authnd` のパスは、インストール済みのサーバーが使うものです。
+これらのページに示したコマンドはすべて、2026-10-26 に公開済みのリリースバイナリで再実行したもので、手で書き直したものではありません。`authnd` v0.12.3 (`authnd-darwin-arm64`、`relverify` で `SHA256SUMS` とその証明 (attestation) を照合済み、`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.12.3`、`vcs.modified=false`)、`authn-bridge` v0.23.4、`authn-revokd` v0.6.6、`sshcert-authorize` v0.1.9、`ldapschema` v0.10.1 です。コマンドが出力したものが、そのままここに載っています。例外は 2 つのトランスクリプトで、それぞれ載っている場所にその旨を書いてあります。[トークンのページ]({{< relref "/authnd/tokens.md" >}})の `oidctool` クライアントは、これらのページのために書いたテスト用クライアントでどのリリースにも含まれず、そのトランスクリプトと添えたサーバー側の行は v0.10.0 のリリースバイナリが出力したものです。もう 1 つは[フェデレーションのページ]({{< relref "/authn-bridge/federation.md" >}})にある RENATER の期限切れメタデータで、このファイルはもう公開されていません。すべて macOS に付属する OpenLDAP と Heimdal のクライアントで、127.0.0.1 の特権のないポートを使い、作業用ディレクトリで実行しました。そのため、これらの背後にある設定は `etc/authnd/passwords/alice.pw` のような相対パスでファイルを指定し、パスワードファイルには `alice.pwin` のような名前が付いています。例にある `/etc/authnd` のパスは、インストール済みのサーバーが使うものです。
 {{< /callout >}}

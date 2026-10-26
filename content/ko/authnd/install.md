@@ -18,7 +18,7 @@ tags: [authnd, 설치, systemd]
 매니페스트와 모든 바이너리에 대한 빌드 출처 증명(attestation)도 함께 게시합니다.
 
 ```sh
-version=v0.12.0
+version=v0.12.3
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -34,7 +34,7 @@ gh attestation verify "authnd-linux-$arch" --repo go-authn/authnd   # built by t
 
 ```
 $ authnd --version
-authnd version v0.12.0
+authnd version v0.12.3
 ```
 
 ### 원하는 것만 빌드하기 {#building-only-what-you-want}
@@ -61,8 +61,8 @@ sysusers.d의 정적 계정이며, `DynamicUser=`가 **아닙니다**. authnd가
 그 uid가 기록한 파일은 나중에 다른 사람을 가리키게 될 번호에 속하게 됩니다.
 
 두 파일은 바이너리와 같은 버전인 릴리스 태그의 `packaging/` 디렉터리에서
-가져옵니다. 태그의 체크아웃에서, 또는 v0.12.0의 경우
-<https://github.com/go-authn/authnd/tree/v0.12.0/packaging>에서 그 디렉터리를
+가져옵니다. 태그의 체크아웃에서, 또는 v0.12.3의 경우
+<https://github.com/go-authn/authnd/tree/v0.12.3/packaging>에서 그 디렉터리를
 바이너리 옆에 복사하십시오.
 
 ```sh

@@ -10,12 +10,12 @@ tags: [sshcert, ssh, eurohpc]
 許可ではありません。** EuroHPC Federation Platform の SSH CA は、証明書の宛先となるホストを
 拡張 `ssh-domain-grant@core.aai.geant.org` に書き込みますが、`sshd` はそれを無視します。
 go-authn/sshcert はその拡張を読み書きし、そのコマンド `sshcert-authorize` が、それを強制するために
-`sshd` が実行するものです。純粋な Go、`CGO_ENABLED=0`。これらのページは v0.1.7 を説明しています。
+`sshd` が実行するものです。純粋な Go、`CGO_ENABLED=0`。これらのページは v0.1.9 を説明しています。
 
 ```
-$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.7
+$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.9
 $ sshcert-authorize -version
-sshcert-authorize v0.1.7
+sshcert-authorize v0.1.9
 ```
 
 | | |

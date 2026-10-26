@@ -11,10 +11,10 @@ tags: [authnd, ldap]
 [go-authn/directory]({{< relref "/libraries/_index.md" >}})의 소스 위에서 바인드와
 검색을 처리하므로, 데이터베이스에 있는 내용을 디렉터리에 질의할 줄 아는 어떤
 것이든 읽을 수 있습니다. 순수 Go, `CGO_ENABLED=0`, 바이너리 하나입니다. 이 문서는
-v0.12.1을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
+v0.12.3을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
 제공하는 스키마를 통과합니다. 사이트는 이 스키마를 자신의 스키마로
 확장할 수 있습니다([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})). 그 아래에는
-go-authn/ldap v0.10.0과 go-authn/directory v0.15.0이 있습니다. 무엇이 검증되었고
+go-authn/ldap v0.10.1과 go-authn/directory v0.15.0이 있습니다. 무엇이 검증되었고
 무엇이 아닌지는 [상태]({{< relref "/status.md" >}}) 페이지에 있습니다.
 
 {{< callout type="warning" >}}
@@ -94,7 +94,7 @@ group "staff" { members = ["alice"] }
 ## 누가 바인드할 수 있고 누가 읽을 수 있는가 {#who-may-bind-and-who-may-read}
 
 LDAP 서버는 사람을 증명하도록 요청받으므로, 거부가 곧 설계입니다. 다음은
-v0.10.0 릴리스 바이너리가 OpenLDAP의 클라이언트에 대해 낸 응답입니다.
+v0.12.3 릴리스 바이너리가 OpenLDAP의 클라이언트에 대해 낸 응답입니다.
 
 ```
 $ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
@@ -143,7 +143,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.12.0
+vendorVersion: v0.12.3
 ```
 
 `1.3.6.1.4.1.4203.1.11.1`은 RFC 3062 비밀번호 변경 작업입니다.
@@ -171,26 +171,5 @@ vendorVersion: v0.12.0
 {{< callout type="info" >}}
 **트랜스크립트에 대하여**
 
-[사이트 스키마]({{< relref "/authnd/schemas.md" >}}) 페이지의 모든 내용은 v0.12.1
-릴리스 바이너리(`authnd-darwin-arm64`, `go version -m`: `go1.27.3`,
-`mod github.com/go-authn/authnd v0.12.1`, `vcs.modified=false`)가 출력한
-것입니다. 루트 DSE와 `--version` 줄은 v0.12.0 릴리스 바이너리(`authnd-darwin-arm64`,
-`SHA256SUMS`와 대조함; `go version -m`: `go1.27.3`,
-`mod github.com/go-authn/authnd v0.12.0`, `vcs.modified=false`)가 출력한
-것입니다. 나머지 시작 줄은 v0.11.1 릴리스
-바이너리(`mod github.com/go-authn/authnd v0.11.1`, `vcs.modified=false`)가 출력한
-것이며, 시작 줄과 같은 트랜스크립트에 보이는 다른 모든 명령도 마찬가지입니다.
-v0.11.1은 그 줄 외에는 아무것도 바꾸지 않았고, v0.12.0의 변경 내역은 스키마
-파일, 블록, 클래스를 선언하지 않는 구성에는 아무것도 바꾸지 않으므로 다시
-실행하지 않았습니다. 모든 `check` 표, `ldapsearch`로 되읽은 엔트리, `cn=Subschema`, `samba` 거부는
-v0.11.0 릴리스 바이너리(`mod github.com/go-authn/authnd v0.11.0`,
-`vcs.modified=false`)가 출력한 것입니다. 이 문서의 구성 거부도 마찬가지이며,
-v0.11.0은 이를 v0.10.0과 바이트 단위로 동일하게 출력했습니다. 그 밖의 바인드,
-`kinit`, 비밀번호 변경, 토큰 교환은 v0.10.0 릴리스 바이너리가 출력한 것이며,
-v0.11.0과 v0.11.1의 릴리스 노트 어디에도 이들을 바꾸는 내용이 없으므로 다시
-실행하지 않았습니다. 모두 macOS에 포함된 OpenLDAP 및 Heimdal 클라이언트로,
-127.0.0.1의 비특권 포트에서 `/tmp` 아래의 임시 디렉터리 안에서 요청했습니다.
-그래서 그 뒤의 구성이 `etc/authnd/passwords/alice.pw` 같은 상대 경로로 파일을
-지정하고, 비밀번호 파일의 이름이 `alice.pwin` 같은 것입니다. 예제의
-`/etc/authnd` 경로는 설치된 서버가 사용하는 경로입니다.
+이 문서에 보이는 모든 명령은 2026-10-26에 배포된 릴리스 바이너리로 다시 실행한 것이며, 손으로 다시 쓴 것이 아닙니다. `authnd` v0.12.3(`authnd-darwin-arm64`, `relverify`로 `SHA256SUMS` 및 그 증명(attestation)과 대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`), `authn-bridge` v0.23.4, `authn-revokd` v0.6.6, `sshcert-authorize` v0.1.9, `ldapschema` v0.10.1입니다. 명령이 출력한 것이 그대로 여기에 실려 있습니다. 예외는 두 개의 트랜스크립트이며, 각각 그것이 있는 자리에 그렇게 밝혀 두었습니다. [토큰 페이지]({{< relref "/authnd/tokens.md" >}})의 `oidctool` 클라이언트는 이 문서를 위해 작성한 테스트 클라이언트로 어떤 릴리스에도 포함되지 않으며, 그 트랜스크립트와 함께 보이는 서버 줄은 v0.10.0 릴리스 바이너리가 출력한 것입니다. 다른 하나는 [연합 페이지]({{< relref "/authn-bridge/federation.md" >}})의 RENATER 만료 메타데이터로, 이 파일은 더 이상 공개되지 않습니다. 모두 macOS에 포함된 OpenLDAP 및 Heimdal 클라이언트로, 127.0.0.1의 비특권 포트에서 임시 디렉터리 안에서 요청했습니다. 그래서 그 뒤의 구성이 `etc/authnd/passwords/alice.pw` 같은 상대 경로로 파일을 지정하고, 비밀번호 파일의 이름이 `alice.pwin` 같은 것입니다. 예제의 `/etc/authnd` 경로는 설치된 서버가 사용하는 경로입니다.
 {{< /callout >}}

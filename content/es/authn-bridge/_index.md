@@ -13,10 +13,10 @@ emitir un certificado de cliente X.509 para NFS sobre TLS, establecer una contra
 de aplicación para SMB y S3, o registrar una clave WireGuard. El proveedor puede
 revocar lo que ha emitido, y publica listas firmadas de lo que ha revocado; un
 token de acceso ya entregado sigue siendo válido hasta que caduca. Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la
-v0.23.3.
+v0.23.4.
 
 ```sh
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
 
 authn-bridge keygen   --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 authn-bridge metadata --config /etc/authn-bridge > sp.xml   # register this with the federation
@@ -49,9 +49,9 @@ forma segura no arranca.
 
 ```
 $ authn-bridge --config etc/bridge-admin.hcl
-authn-bridge v0.23.3: http://127.0.0.1:28473 on 127.0.0.1:28473
-metrics on 127.0.0.1:28475
 admin API on unix:///tmp/authn/run/admin.sock
+metrics on 127.0.0.1:28475
+authn-bridge v0.23.4: http://127.0.0.1:28473 on 127.0.0.1:28473
 ```
 
 Este es un proveedor de prueba en loopback (un emisor `http://` solo se acepta en un

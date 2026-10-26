@@ -145,7 +145,7 @@ modifying entry "uid=alice,ou=people,dc=example,dc=org"
 이유는 서버의 출력에 있습니다.
 
 ```
-changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-863420940: permission denied
+changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-1822988247: permission denied
 ```
 
 그러므로 비밀번호는 서비스가 쓸 수 있는 별도의 디렉터리에 두고, 구성은 서비스에

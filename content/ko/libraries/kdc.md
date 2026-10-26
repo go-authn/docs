@@ -17,7 +17,7 @@ go get github.com/go-authn/kdc@v0.4.3
 
 v0.4.3의 `go.mod`는 최소 `go-authn/directory` v0.12.0과 gokrb5 v8.4.4를 요구합니다.
 이는 최소 요구 버전이므로, 이 문서가 설명하는 directory v0.14.0을 요구하는 프로그램은
-authnd v0.12.0처럼 v0.15.0으로 빌드됩니다. 받아들이는 쪽 절반은
+authnd v0.12.3처럼 v0.15.0으로 빌드됩니다. 받아들이는 쪽 절반은
 [krb5]({{< relref "/libraries/krb5.md" >}})이며, 티켓을 검증하기만 하는 서비스에는 이
 모듈이 전혀 필요하지 않습니다.
 
@@ -105,7 +105,7 @@ Credentials cache: FILE:cc
         Principal: alice@EXAMPLE.ORG
 
   Issued                Expires               Principal
-Oct 10 21:54:46 2026  Oct 11 07:54:46 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
+Oct 26 12:34:16 2026  Oct 26 22:34:16 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
 $ kinit --password-file=STDIN alice@EXAMPLE.ORG < bad.pw
 kinit: Password incorrect
 $ kinit --password-file=STDIN bob@EXAMPLE.ORG < alice.pw
@@ -116,8 +116,8 @@ Credentials cache: FILE:cc
         Principal: alice@EXAMPLE.ORG
 
   Issued                Expires               Principal
-Oct 10 21:54:46 2026  Oct 11 07:54:46 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
-Oct 10 21:54:47 2026  Oct 11 07:54:46 2026  nfs/files.example.org@EXAMPLE.ORG
+Oct 26 12:34:16 2026  Oct 26 22:34:16 2026  krbtgt/EXAMPLE.ORG@EXAMPLE.ORG
+Oct 26 12:34:16 2026  Oct 26 22:34:16 2026  nfs/files.example.org@EXAMPLE.ORG
 ```
 
 10시간은 `Config.Lifetime`의 기본값이며, 서비스 티켓은 그것을 얻는 데 쓴 티켓 발급
@@ -126,11 +126,11 @@ Oct 10 21:54:47 2026  Oct 11 07:54:46 2026  nfs/files.example.org@EXAMPLE.ORG
 ```
 kdc: the keytab has no krbtgt key for this realm: matching key not found in keytab. Looking for "krbtgt/OTHER.ORG" realm: OTHER.ORG kvno: 0 etype: 18
 EXAMPLE.ORG answers on 127.0.0.1:18088
-2026/10/10 21:54:46 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
-2026/10/10 21:54:46 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
-2026/10/10 21:54:46 the timestamp does not decrypt (client etype 18, our key type 18): error decrypting: integrity verification failed
-2026/10/10 21:54:46 refused krbtgt/EXAMPLE.ORG: pre-authentication does not decrypt (code 24)
-2026/10/10 21:54:47 refused krbtgt/EXAMPLE.ORG: no such principal in this realm (code 6)
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: pre-authentication required (code 25)
+2026/10/26 12:34:16 the timestamp does not decrypt (client etype 18, our key type 18): error decrypting: integrity verification failed
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: pre-authentication does not decrypt (code 24)
+2026/10/26 12:34:16 refused krbtgt/EXAMPLE.ORG: no such principal in this realm (code 6)
 ```
 
 각 교환의 첫 번째 거부는 프로토콜이 동작하는 것입니다. 사전 인증을 요구하는

@@ -33,13 +33,13 @@ $ authn-revokd -config revokd-maxage.hcl -once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
-authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
 # Generated at 19700101T010000
 # Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
 
-hash: SHA256:Fpa/Ku2Wv1EDCR+KSsqZ2eECTM1zftiBWj01Lr+NO2Q # ssh-ed25519
+hash: SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4 # ssh-ed25519
 $ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
 ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 ```
@@ -47,7 +47,7 @@ ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 `bridge-ssh` ist `not current`, und seine Ausgabe schlägt geschlossen fehl (fail closed); `bridge-x509`
 ist nur `not fetched`, und seine CRL bleibt, wie sie war
 ([was `-once` meldet]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
-`SHA256:Fpa/...` ist die SSH-CA der Bridge. Ein Zertifikat, das sie signiert hat, ist nun
+`SHA256:AnDb/...` ist die SSH-CA der Bridge. Ein Zertifikat, das sie signiert hat, ist nun
 für alles, was die Datei liest, widerrufen. Die Befehle oben liefen im Verzeichnis `revokd`,
 in dem `out/` liegt; dieser läuft daneben, im Verzeichnis mit den Testzertifikaten, wie auf
 [der Seite von sshcert-authorize]({{< relref "/sshcert/authorize.md#krl" >}}), daher ist

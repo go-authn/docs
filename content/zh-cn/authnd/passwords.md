@@ -146,7 +146,7 @@ modifying entry "uid=alice,ou=people,dc=example,dc=org"
 原因在服务器的输出中：
 
 ```
-changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-863420940: permission denied
+changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-1822988247: permission denied
 ```
 
 因此请把密码保存在单独的目录中，使服务可以写入，

@@ -33,13 +33,13 @@ $ authn-revokd -config revokd-maxage.hcl -once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
-authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-11T10:50:24Z)
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
 # Generated at 19700101T010000
 # Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
 
-hash: SHA256:Fpa/Ku2Wv1EDCR+KSsqZ2eECTM1zftiBWj01Lr+NO2Q # ssh-ed25519
+hash: SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4 # ssh-ed25519
 $ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
 ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 ```
@@ -47,7 +47,7 @@ ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 `bridge-ssh` 是 `not current`，其输出已故障即拒绝；`bridge-x509`
 只是 `not fetched`，其 CRL 保持原样
 （[`-once` 报告什么]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})）。
-`SHA256:Fpa/...` 是 bridge 的 SSH CA。对于读取该文件的任何程序而言，
+`SHA256:AnDb/...` 是 bridge 的 SSH CA。对于读取该文件的任何程序而言，
 它签发的证书现在都已被吊销。上面的命令
 在 `revokd` 目录中运行，`out/` 就在那里；下面这条在它旁边运行，
 位于存放测试证书的目录中，如

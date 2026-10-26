@@ -141,7 +141,7 @@ modifying entry "uid=alice,ou=people,dc=example,dc=org"
 理由はサーバーの出力にあります。
 
 ```
-changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-863420940: permission denied
+changing the password for alice: etc/authnd/passwords/alice.pw: open etc/authnd/passwords/.hcldir-1822988247: permission denied
 ```
 
 そのため、パスワードはサービスが書き込める専用のディレクトリに置き、設定はサービスに対して
