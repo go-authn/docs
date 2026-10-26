@@ -813,4 +813,4 @@ nicht erreichten Zeilen im Workflow benannt sind.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.11.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.11.0)
+[pkg.go.dev/github.com/go-authn/ldap](https://pkg.go.dev/github.com/go-authn/ldap)

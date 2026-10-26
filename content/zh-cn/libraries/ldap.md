@@ -796,4 +796,4 @@ StartTLS 之后再有更多 LDAP。
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.11.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.11.0)
+[pkg.go.dev/github.com/go-authn/ldap](https://pkg.go.dev/github.com/go-authn/ldap)

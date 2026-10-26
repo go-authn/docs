@@ -822,4 +822,4 @@ con las tres líneas no alcanzadas nombradas en el workflow.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.11.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.11.0)
+[pkg.go.dev/github.com/go-authn/ldap](https://pkg.go.dev/github.com/go-authn/ldap)

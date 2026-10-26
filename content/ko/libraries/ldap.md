@@ -777,4 +777,4 @@ build: ok, 3 definitions added to schema.Standard()
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.11.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.11.0)
+[pkg.go.dev/github.com/go-authn/ldap](https://pkg.go.dev/github.com/go-authn/ldap)
