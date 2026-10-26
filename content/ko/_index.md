@@ -19,9 +19,9 @@ description: "순수 Go로 만든 인증: 누군가가 지금 있다는 것을 �
 
 | | 무엇인가 | 이 문서가 설명하는 버전 |
 |---|---|---|
-| [authnd]({{< relref "/authnd/_index.md" >}}) | 다른 곳(파일, SQL 데이터베이스, 다른 디렉터리)에 있는 사람들을 위한 LDAP 서버이며, 선택적으로 Kerberos 렐름도 제공합니다 | v0.12.1 |
-| [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | SAML 페더레이션(RENATER, eduGAIN) 앞에 놓인 OpenID Connect 공급자로, SSH 인증서를 발급하고 이를 폐기하는 목록에 서명하기도 합니다 | v0.23.3 |
-| [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | 그 목록을 가져와 서버가 읽기 전에 각각 검증하고, 목록이 만료되면 실패 시 차단(fail closed)합니다 | v0.6.5 |
+| [authnd]({{< relref "/authnd/_index.md" >}}) | 다른 곳(파일, SQL 데이터베이스, 다른 디렉터리)에 있는 사람들을 위한 LDAP 서버이며, 선택적으로 Kerberos 렐름도 제공합니다 | v0.12.3 |
+| [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | SAML 페더레이션(RENATER, eduGAIN) 앞에 놓인 OpenID Connect 공급자로, SSH 인증서를 발급하고 이를 폐기하는 목록에 서명하기도 합니다 | v0.23.4 |
+| [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | 그 목록을 가져와 서버가 읽기 전에 각각 검증하고, 목록이 만료되면 실패 시 차단(fail closed)합니다 | v0.6.6 |
 | [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`로, 인증서의 도메인 권한 부여가 이 호스트를 지정하는지 sshd가 묻는 대상입니다 | v0.1.7 |
 
 각각은 Linux, macOS, Windows의 amd64와 arm64용 정적 바이너리 하나이며,
@@ -29,9 +29,9 @@ description: "순수 Go로 만든 인증: 누군가가 지금 있다는 것을 �
 [다운로드 검증하기]({{< relref "/security/verifying-releases.md" >}}).
 
 ```sh
-go install github.com/go-authn/authnd@v0.12.1
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
-go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.5
+go install github.com/go-authn/authnd@v0.12.3
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
+go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6
 ```
 
 명령 이름이 `authn-*`(그리고 `authnd`)인 것은 다른 것들도 실행되는 머신에

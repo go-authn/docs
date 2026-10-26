@@ -19,7 +19,7 @@ tags: [ライブラリ]
 | [fido]({{< relref "/libraries/fido.md" >}}) | 64 バイトのレポートで、セキュリティキーとどう話すか | v0.6.2 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | *登録された*鍵が答えたか。人がそれに触れたか | v0.4.2 | `github.com/go-authn/keyfactor` |
 | [directory]({{< relref "/libraries/directory.md" >}}) | ある人は誰で、何がその人を証明できるか | v0.15.0 | `github.com/go-authn/directory` |
-| [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP サーバーのバイト列とは何か | v0.10.0 | `github.com/go-authn/ldap` |
+| [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP サーバーのバイト列とは何か | v0.10.1 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | この Kerberos チケットはこのサービスに有効か | v0.3.1 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | レルムはディレクトリからどうチケットを発行するか | v0.4.3 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | このベアラートークンは誰が尋ねていると述べ、それを信じるべきか | v0.4.1 | `github.com/go-authn/oidc` |

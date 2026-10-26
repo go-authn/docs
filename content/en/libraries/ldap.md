@@ -12,7 +12,7 @@ server that runs it and owns the configuration, the directory sources and the
 bind policy; this owns the bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.0
+go get github.com/go-authn/ldap@v0.10.1
 ```
 
 Written from RFC 4511 (the protocol), 4512 (the root DSE and the schema),
@@ -293,6 +293,12 @@ options other than `lang-` and `binary`.
 [authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}}) serves
 this schema and holds every entry it publishes to it.
 
+## Reading a large schema file {#reading-large-files}
+
+Up to v0.10.0, `schema.Read` took time quadratic in the number of continuation lines of the file it read: a 4 MiB file of short continuation lines took about three minutes, and 1 MiB allocated 139.6 GB. A program that reads a schema file it does not control, as authnd does for its `schema_files` at startup, could be stalled by one. From v0.10.1 the time is linear (`TestManyContinuationLinesJoinInLinearTime`), and `Read` no longer copies and splits the whole file to look at its first line.
+
+`schema.Format` wrote lines longer than 2000 bytes, which slapd and `Read` refuse; it now folds them. The strict parser is about 2.6 times faster, with 147 allocations instead of 498 on `cosine.schema`. That was measured on a loaded machine; it is not a comparison with libldap, which has not been made yet. authnd has these fixes from v0.12.3.
+
 ## A schema that does not build {#build-error}
 
 From v0.10.0, a definition `schema.Build` or `schema.BuildFrom` refuses is a
@@ -538,4 +544,4 @@ unreached lines named in the workflow.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.0)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)

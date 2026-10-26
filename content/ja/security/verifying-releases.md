@@ -84,6 +84,8 @@ $ authn-revokd -version
 authn-revokd v0.6.5
 ```
 
+リリースバイナリは `-s -w` ではなく `-ldflags="-w"` でリンクされる (authnd は v0.12.2 から、authn-bridge は v0.23.4 から、authn-revokd は v0.6.6 から、sshcert は v0.1.8 から)。デバッグ情報は省かれ、シンボルテーブルは残る。シンボルテーブルがないと `govulncheck -mode binary` はどの関数があるか判断できず、モジュール単位に戻って、リンクされていないコードの脆弱性まで報告する。残せば、スキャンは正確になる。バイナリは 7 〜 10 % 大きくなる。
+
 authnd と authn-bridge は `--version` を受け付け、authn-revokd は Go 標準のフラグ構文である
 `-version` を受け付けます。v0.6.1 からは、他の二つと同様に標準出力に表示するので、
 `v=$(authn-revokd -version)` で取得できます。

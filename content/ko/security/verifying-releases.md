@@ -85,6 +85,8 @@ $ authn-revokd -version
 authn-revokd v0.6.5
 ```
 
+릴리스 바이너리는 `-s -w`가 아니라 `-ldflags="-w"`로 링크됩니다(authnd는 v0.12.2부터, authn-bridge는 v0.23.4부터, authn-revokd는 v0.6.6부터, sshcert는 v0.1.8부터). 디버그 정보는 빠지고 심볼 테이블은 남습니다. 심볼 테이블이 없으면 `govulncheck -mode binary`는 어떤 함수가 있는지 알 수 없어 모듈 수준으로 물러나 링크되지 않은 코드의 취약점까지 보고합니다. 남겨 두면 검사가 정확합니다. 바이너리는 7~10 % 커집니다.
+
 authnd와 authn-bridge는 `--version`을 받고, authn-revokd는 Go의 표준 플래그
 문법인 `-version`을 받습니다. v0.6.1부터는 다른 둘처럼 표준 출력에 출력하므로
 `v=$(authn-revokd -version)`으로 가져올 수 있습니다.
