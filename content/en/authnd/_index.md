@@ -11,9 +11,9 @@ things that want to authenticate them speak LDAP.** authnd is the front: it
 binds and searches over [go-authn/directory]({{< relref "/libraries/_index.md" >}})'s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe
-v0.12.3, whose entries follow the standard schemas and pass the schema it
+v0.12.4, whose entries follow the standard schemas and pass the schema it
 serves at `cn=Subschema`, which a site extends with its own
-([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), with go-authn/ldap v0.10.1 and
+([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), with go-authn/ldap v0.10.2 and
 go-authn/directory v0.15.0 under it; what is verified and what is not is on
 the [status]({{< relref "/status.md" >}}) page.
 
@@ -146,7 +146,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.12.3
+vendorVersion: v0.12.4
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` is the RFC 3062 password modify operation.
@@ -174,5 +174,5 @@ which is answered to an anonymous client as well.
 {{< callout type="info" >}}
 **About the transcripts**
 
-Every command shown on these pages was run again on 2026-10-26 with the release binaries, not retyped: `authnd` v0.12.3 (`authnd-darwin-arm64`, checked by `relverify` against `SHA256SUMS` and its attestation; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`), `authn-bridge` v0.23.4, `authn-revokd` v0.6.6, `sshcert-authorize` v0.1.9 and `ldapschema` v0.10.1. What the commands printed is what stands here. Two transcripts are exceptions, and each says so where it stands: the `oidctool` client of [the token page]({{< relref "/authnd/tokens.md" >}}), a test client written for these pages and part of no release, whose transcripts and the server lines beside them were printed by the v0.10.0 release binary; and RENATER's expired metadata on [the federation page]({{< relref "/authn-bridge/federation.md" >}}), a file that is no longer published. All of them were asked by the OpenLDAP and Heimdal clients that ship with macOS, on 127.0.0.1 on unprivileged ports, in a scratch directory. That is why the configurations behind them name files by relative paths such as `etc/authnd/passwords/alice.pw`, and why the password files have names like `alice.pwin`. The `/etc/authnd` paths in the examples are what an installed server uses.
+Every command shown on these pages was run again on 2026-10-26 with the release binaries, not retyped: `authnd` v0.12.3 (`authnd-darwin-arm64`, checked by `relverify` against `SHA256SUMS` and its attestation; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`), `authn-bridge` v0.23.4, `authn-revokd` v0.6.6, `sshcert-authorize` v0.1.9 and `ldapschema` v0.10.1. What the commands printed is what stands here. Two transcripts are exceptions, and each says so where it stands: the `oidctool` client of [the token page]({{< relref "/authnd/tokens.md" >}}), a test client written for these pages and part of no release, whose transcripts and the server lines beside them were printed by the v0.10.0 release binary; and RENATER's expired metadata on [the federation page]({{< relref "/authn-bridge/federation.md" >}}), a file that is no longer published. All of them were asked by the OpenLDAP and Heimdal clients that ship with macOS, on 127.0.0.1 on unprivileged ports, in a scratch directory. That is why the configurations behind them name files by relative paths such as `etc/authnd/passwords/alice.pw`, and why the password files have names like `alice.pwin`. The `/etc/authnd` paths in the examples are what an installed server uses. The transcripts that print the version or the schema of `authnd` were run again with v0.12.4 (`authnd-darwin-arm64`, checked by `relverify` against `SHA256SUMS` and its attestation; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.4`, `vcs.modified=false`): the root DSE here and on the operations page, `authnd --version`, and the schema of the entries page.
 {{< /callout >}}

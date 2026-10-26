@@ -9,16 +9,16 @@ tags: [상태, 릴리스]
 
 | 프로그램 | 릴리스 | 모듈 |
 |---|---|---|
-| authnd | **v0.12.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.4** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 라이브러리의 버전은 [해당 페이지]({{< relref "/libraries/_index.md" >}})에
 있습니다. ldap은 빌드되지 않는 스키마를 위한 타입이 있는 `BuildError`, HCL2
-스키마, `ldapschema` 변환기를 갖춘 **v0.10.1**이고,
+스키마, `ldapschema` 변환기를 갖춘 **v0.10.2**이고,
 directory는 선언된 오브젝트 클래스를 갖춘 **v0.15.0**입니다. authnd
-v0.12.3은 ldap v0.10.1과 directory v0.15.0을 내장합니다.
+v0.12.4은 ldap v0.10.2과 directory v0.15.0을 내장합니다.
 위 프로그램 중 어느 것이든 새 마이너 버전이 나오면 새 문서 버전이 됩니다. 따라서
 독자가 `/docs/0.5/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
 페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`에 남아 있습니다.
@@ -72,6 +72,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.12.1 | 빌드되지 않는 스키마 파일이나 블록은 go-authn/ldap v0.10.0의 `BuildError`가 담고 있는 위치에서 열 번호와 함께 거부됨(`site.schema:6:`이 `site.schema:6:1:`이 됨). 메시지는 거부의 종류로 끝나며, 중복은 첫 번째 정의의 위치를 알려 줌 |
 | v0.12.2 | 릴리스 바이너리를 `-s -w` 대신 `-ldflags="-w"`로 링크함. 심볼 테이블이 남으므로 `govulncheck -mode binary`가 링크되지 않은 코드의 취약점을 보고하는 대신 정확해짐. 약 9 % 커짐(darwin/arm64에서 18.8 MB에서 20.5 MB) |
 | v0.12.3 | go-authn/ldap v0.10.1: `schema_files`를 선형 시간에 읽음. ⛔ v0.12.2까지는 짧은 이어짐 줄로 된 큰 스키마 파일(4 MiB: 약 3분)이 시작을 멈추게 했음: 통제할 수 없는 파일에 의한 서비스 거부 |
+| v0.12.4 | go-authn/ldap v0.10.2: `cn=Subschema` 의 RFC 2307 정의 13개(`uidNumber`, `gidNumber`, `ipHostNumber`, `ipNetworkNumber`, `ipNetmaskNumber`, `macAddress` 와 클래스 `ipService`, `ipProtocol`, `oncRpc`, `ipHost`, `ipNetwork`, `ieee802Device`, `bootableDevice`)의 DESC 값에 더 이상 RFC 쪽 나눔의 들여쓰기가 들어 있지 않습니다. `... in an         administrative domain'` 이 아니라 `DESC 'An integer uniquely identifying a user in an administrative domain'` 입니다 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -157,6 +158,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | ldap v0.9.0 | [HCL2 스키마]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): `schema/hclschema` 패키지와 OpenLDAP `.schema`, cn=config LDIF, HCL2 사이를 변환하는 `ldapschema` 명령(`to-hcl`, `to-schema`, `check`), 리더는 slapd처럼 파일을 읽음, DIT 콘텐츠와 구조 규칙, 이름 형식, `include`, `X-SUBST`는 지원되지 않음 |
 | ldap v0.10.0 | `Build`가 거부하는 정의에 대한 [타입이 있는 `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}), `errors.As`로 확인: `Kind`, `Element`, `OID`, `Name`, `Field`, `Pos`(정의가 시작되는 file:line:column, 접힌 또는 base64 LDIF와 HCL도 포함), 다른 정의를 위한 `Ref`, `RefOID`, `RefPos`. 읽은 모든 정의가 `Pos`를 가짐. 메시지의 "object classes" |
 | ldap v0.10.1 | [`schema.Read`]({{< relref "/libraries/ldap.md#reading-large-files" >}})가 이어짐 줄 수에 선형이 됨(이전에는 제곱 시간이어서 4 MiB 파일에 약 3분이 걸렸음). 첫 줄을 읽으려고 파일 전체를 복사하고 나누지도 않음. `schema.Format`은 2000바이트가 넘는 줄(slapd와 `Read`는 거부함)을 접음. 엄격한 파서가 약 2.6배 빠름(`cosine.schema`에서 할당 498회가 147회, 부하 상태에서 측정) |
+| ldap v0.10.2 | 내장 스키마(`schema.Standard()`)의 RFC 2307 정의 13개의 DESC 가 한 줄로 바뀌었습니다. RFC 쪽 나눔의 들여쓰기가 들어 있었고, 리더는 slapd 처럼 따옴표 안에서 이를 유지하므로 서버가 게시한 서브스키마에 연속된 공백이 있었습니다. 이제 테스트가 내장된 모든 DESC 를 이 점에서 검사하고, 같은 OID 가 정의된 곳에서는 OpenLDAP 의 `core`, `cosine`, `inetorgperson`, `nis` 스키마와 비교합니다 |
 | oidc v0.4.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | servercert v0.5.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | totp v0.4.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |

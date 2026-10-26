@@ -10,9 +10,9 @@ tags: [authnd, ldap]
 认证的系统使用的是 LDAP。** authnd 就是前端：它基于 [go-authn/directory]({{< relref "/libraries/_index.md" >}})
 的各个来源进行绑定和搜索，因此数据库中保存的内容可以被任何懂得
 如何查询目录的程序读取。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述
-v0.12.3，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
+v0.12.4，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
 提供的模式，站点可以用自己的模式对其扩展
-（[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），其下是 go-authn/ldap v0.10.1 和
+（[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），其下是 go-authn/ldap v0.10.2 和
 go-authn/directory v0.15.0；哪些已经验证、哪些尚未验证，见
 [状态]({{< relref "/status.md" >}})页面。
 
@@ -140,7 +140,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.12.3
+vendorVersion: v0.12.4
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` 是 RFC 3062 密码修改操作。
@@ -168,5 +168,5 @@ vendorVersion: v0.12.3
 {{< callout type="info" >}}
 **关于这些记录**
 
-这些页面上显示的每条命令，都已于 2026-10-26 用已发布的二进制文件重新运行，而不是手工重写：`authnd` v0.12.3（`authnd-darwin-arm64`，已由 `relverify` 对照 `SHA256SUMS` 及其证明（attestation）核对；`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.12.3`，`vcs.modified=false`）、`authn-bridge` v0.23.4、`authn-revokd` v0.6.6、`sshcert-authorize` v0.1.9 和 `ldapschema` v0.10.1。命令输出了什么，这里就是什么。有两份记录是例外，各自在所在之处注明：[令牌页面]({{< relref "/authnd/tokens.md" >}})上的 `oidctool` 客户端是为这些页面编写的测试客户端，不属于任何发布版本，它的记录以及旁边的服务器输出行由 v0.10.0 发布的二进制文件输出；另一份是[联邦页面]({{< relref "/authn-bridge/federation.md" >}})上 RENATER 已过期的元数据，该文件已不再发布。所有这些都由 macOS 自带的 OpenLDAP 和 Heimdal 客户端发出请求，在 127.0.0.1 的非特权端口上，在临时目录中进行。这就是为什么其背后的配置用相对路径指名文件，例如 `etc/authnd/passwords/alice.pw`，也是为什么密码文件的名称类似 `alice.pwin`。示例中的 `/etc/authnd` 路径是已安装的服务器所使用的路径。
+这些页面上显示的每条命令，都已于 2026-10-26 用已发布的二进制文件重新运行，而不是手工重写：`authnd` v0.12.3（`authnd-darwin-arm64`，已由 `relverify` 对照 `SHA256SUMS` 及其证明（attestation）核对；`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.12.3`，`vcs.modified=false`）、`authn-bridge` v0.23.4、`authn-revokd` v0.6.6、`sshcert-authorize` v0.1.9 和 `ldapschema` v0.10.1。命令输出了什么，这里就是什么。有两份记录是例外，各自在所在之处注明：[令牌页面]({{< relref "/authnd/tokens.md" >}})上的 `oidctool` 客户端是为这些页面编写的测试客户端，不属于任何发布版本，它的记录以及旁边的服务器输出行由 v0.10.0 发布的二进制文件输出；另一份是[联邦页面]({{< relref "/authn-bridge/federation.md" >}})上 RENATER 已过期的元数据，该文件已不再发布。所有这些都由 macOS 自带的 OpenLDAP 和 Heimdal 客户端发出请求，在 127.0.0.1 的非特权端口上，在临时目录中进行。这就是为什么其背后的配置用相对路径指名文件，例如 `etc/authnd/passwords/alice.pw`，也是为什么密码文件的名称类似 `alice.pwin`。示例中的 `/etc/authnd` 路径是已安装的服务器所使用的路径。输出 `authnd` 版本或模式的记录已用 v0.12.4 重新运行（`authnd-darwin-arm64`，由 `relverify` 对照 `SHA256SUMS` 及其证明校验；`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.12.4`，`vcs.modified=false`）：此处和运维页面的 root DSE、`authnd --version`，以及条目页面的模式。
 {{< /callout >}}

@@ -12,7 +12,7 @@ serveur qui l'exécute et qui détient la configuration, les sources d'annuaire 
 politique de liaison ; celle-ci détient les octets.
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.1
+go get github.com/go-authn/ldap@v0.10.2
 ```
 
 Écrite d'après les RFC 4511 (le protocole), 4512 (le root DSE et le schéma),
@@ -308,6 +308,8 @@ Jusqu'à v0.10.0, `schema.Read` prenait un temps quadratique en nombre de lignes
 
 `schema.Format` écrivait des lignes de plus de 2000 octets, que slapd et `Read` refusent ; il les replie désormais. L'analyseur strict est environ 2,6 fois plus rapide, avec 147 allocations au lieu de 498 sur `cosine.schema`. Face à libldap (SDK macOS, `ldap_str2attributetype` et `ldap_str2objectclass` avec `LDAP_SCHEMA_ALLOW_ALL`), sur les 54 définitions du `cosine.schema` d'OpenLDAP, mesuré le 2026-10-26 sur un Apple M4 Max à une charge de 6,5 à 7,6 (`-cpu 1 -count 10`, benchstat) : go-authn/ldap 25,65 µs ± 32 %, libldap 35,62 µs ± 2 %, soit environ 0,72 fois le temps de libldap. Côté Go : 147 allocations (20,6 Kio) par exécution ; `-benchmem` ne voit pas les allocations C de libldap, il n'y a donc pas de chiffre pour elles. Pour reproduire, lancez `go test -bench . -benchmem -cpu 1 -count 10` dans `bench/libldap` de go-authn/ldap (cgo et libldap sont nécessaires). authnd a ces correctifs depuis v0.12.3.
 
+Depuis v0.10.2, les 13 valeurs de DESC de la RFC 2307 dans `schema.Standard()` tiennent sur une ligne. Jusqu'à v0.10.1, elles étaient coupées comme la page de la RFC et, comme une ligne de continuation garde son indentation après le premier caractère (`fp_getline` de slapd, que `Read` suit), un serveur qui les publiait envoyait `DESC 'An integer uniquely identifying a user in an         administrative domain'`. authnd a la correction depuis v0.12.4.
+
 ## Un schéma qui ne se construit pas {#build-error}
 
 Depuis la v0.10.0, une définition que `schema.Build` ou `schema.BuildFrom`
@@ -412,7 +414,7 @@ position arrivent avec le fichier, la ligne et la colonne.
 La commande `ldapschema` convertit d'un format à l'autre :
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.2
 ```
 
 - `ldapschema to-hcl [--macros] FILE...` lit des fichiers `.schema` d'OpenLDAP,
@@ -559,4 +561,4 @@ lignes non atteintes nommées dans le workflow.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.2](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.2)

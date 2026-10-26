@@ -11,7 +11,7 @@ tags: [라이브러리, ldap, 디렉터리]
 바인드 정책을 소유하는 서버이며, 이 라이브러리는 바이트를 소유합니다.
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.1
+go get github.com/go-authn/ldap@v0.10.2
 ```
 
 RFC 4511(프로토콜), 4512(루트 DSE와 스키마), 4513(인증), 4514와 4515(DN과 필터 문자열
@@ -285,6 +285,8 @@ v0.10.0까지 `schema.Read`는 읽는 파일의 이어짐 줄 수에 대해 제�
 
 `schema.Format`은 2000바이트가 넘는 줄을 썼는데, slapd와 `Read`는 이를 거부합니다. 이제는 줄을 접어서 씁니다. 엄격한 파서는 약 2.6배 빠르고, `cosine.schema`에서 할당이 498회에서 147회로 줄었습니다. libldap(macOS SDK, `LDAP_SCHEMA_ALLOW_ALL`을 쓴 `ldap_str2attributetype`과 `ldap_str2objectclass`)과의 비교는 OpenLDAP `cosine.schema`의 정의 54개로, 2026-10-26에 Apple M4 Max에서 부하 6.5~7.6일 때 측정했습니다(`-cpu 1 -count 10`, benchstat). go-authn/ldap은 25.65 µs ± 32 %, libldap은 35.62 µs ± 2 %로, libldap 시간의 약 0.72배입니다. Go 쪽은 실행마다 할당 147회(20.6 KiB)입니다. `-benchmem`은 libldap의 C 할당을 볼 수 없으므로 그 수치는 없습니다. 재현하려면 go-authn/ldap의 `bench/libldap`에서 `go test -bench . -benchmem -cpu 1 -count 10`을 실행하세요(cgo와 libldap 필요). authnd는 v0.12.3부터 이 수정을 갖고 있습니다.
 
+v0.10.2 부터 `schema.Standard()` 의 RFC 2307 DESC 값 13개는 한 줄입니다. v0.10.1 까지는 RFC 쪽처럼 줄이 나뉘어 있었고, 이어지는 줄은 첫 문자 뒤의 들여쓰기를 유지하므로(`Read` 가 따르는 slapd 의 `fp_getline`) 이를 게시한 서버는 `DESC 'An integer uniquely identifying a user in an         administrative domain'` 을 보냈습니다. authnd 는 v0.12.4 부터 수정되었습니다.
+
 ## 빌드되지 않는 스키마 {#build-error}
 
 v0.10.0부터 `schema.Build` 또는 `schema.BuildFrom`이 거부하는 정의는
@@ -382,7 +384,7 @@ RFC 4512 §4.1의 항목을 소문자와 밑줄로 쓴 것(`desc`, `sup`, `equal
 `ldapschema` 명령이 형식 사이를 변환합니다.
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.2
 ```
 
 - `ldapschema to-hcl [--macros] FILE...`은 OpenLDAP `.schema` 파일, cn=config LDIF,
@@ -519,4 +521,4 @@ build: ok, 2 definitions added to schema.Standard()
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.2](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.2)

@@ -12,7 +12,7 @@ Server, der sie ausführt und dem die Konfiguration, die Verzeichnisquellen und 
 Bind-Richtlinie gehören; dieser Bibliothek gehören die Bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.1
+go get github.com/go-authn/ldap@v0.10.2
 ```
 
 Geschrieben nach RFC 4511 (das Protokoll), 4512 (das Root-DSE und das Schema),
@@ -299,6 +299,8 @@ Bis v0.10.0 brauchte `schema.Read` eine in der Zahl der Fortsetzungszeilen quadr
 
 `schema.Format` schrieb Zeilen von mehr als 2000 Bytes, die slapd und `Read` ablehnen; es bricht sie jetzt um. Der strikte Parser ist etwa 2,6-mal schneller, mit 147 statt 498 Allokationen bei `cosine.schema`. Gegen libldap (macOS-SDK, `ldap_str2attributetype` und `ldap_str2objectclass` mit `LDAP_SCHEMA_ALLOW_ALL`) auf den 54 Definitionen von OpenLDAPs `cosine.schema`, gemessen am 2026-10-26 auf einem Apple M4 Max bei einer Last von 6,5 bis 7,6 (`-cpu 1 -count 10`, benchstat): go-authn/ldap 25,65 µs ± 32 %, libldap 35,62 µs ± 2 %, also etwa das 0,72-Fache der Zeit von libldap. Die Go-Seite macht 147 Allokationen (20,6 KiB) pro Lauf; `-benchmem` sieht die C-Allokationen von libldap nicht, daher gibt es dafür keine Zahl. Zum Nachmessen führen Sie `go test -bench . -benchmem -cpu 1 -count 10` in `bench/libldap` von go-authn/ldap aus (cgo und libldap sind nötig). authnd hat diese Korrekturen ab v0.12.3.
 
+Ab v0.10.2 stehen die 13 DESC-Werte von RFC 2307 in `schema.Standard()` in einer Zeile. Bis v0.10.1 waren sie wie die RFC-Seite umbrochen, und weil eine Fortsetzungszeile ihre Einrückung nach dem ersten Zeichen behält (`fp_getline` von slapd, dem `Read` folgt), sendete ein Server, der sie veröffentlichte, `DESC 'An integer uniquely identifying a user in an         administrative domain'`. authnd hat die Korrektur ab v0.12.4.
+
 ## Ein Schema, das sich nicht aufbauen lässt {#build-error}
 
 Ab v0.10.0 ist eine Definition, die `schema.Build` oder `schema.BuildFrom`
@@ -404,7 +406,7 @@ kommen mit Datei, Zeile und Spalte.
 Der Befehl `ldapschema` konvertiert zwischen den Formaten:
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.2
 ```
 
 - `ldapschema to-hcl [--macros] FILE...` liest `.schema`-Dateien von OpenLDAP,
@@ -553,4 +555,4 @@ nicht erreichten Zeilen im Workflow benannt sind.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.2](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.2)

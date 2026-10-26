@@ -11,7 +11,7 @@ tags: [ライブラリ, ldap, ディレクトリ]
 ポリシーを所有するサーバーで、これはバイト列を所有します。
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.1
+go get github.com/go-authn/ldap@v0.10.2
 ```
 
 RFC 4511 (プロトコル)、4512 (ルート DSE とスキーマ)、4513 (認証)、4514 と 4515 (DN とフィルターの
@@ -281,6 +281,8 @@ v0.10.0 までは、`schema.Read` は読んだファイルの継続行の数に�
 
 `schema.Format` は 2000 バイトを超える行を書いていたが、slapd と `Read` はそれを拒否する。今は折り返す。厳格なパーサーは約 2.6 倍速く、`cosine.schema` での割り当ては 498 回から 147 回になった。libldap (macOS SDK、`LDAP_SCHEMA_ALLOW_ALL` 付きの `ldap_str2attributetype` と `ldap_str2objectclass`) との比較は、OpenLDAP の `cosine.schema` の 54 個の定義で、2026-10-26 に Apple M4 Max、負荷 6.5〜7.6 で計測した (`-cpu 1 -count 10`、benchstat)。go-authn/ldap は 25.65 µs ± 32 %、libldap は 35.62 µs ± 2 % で、libldap の約 0.72 倍の時間である。Go 側は 1 回あたり 147 回の割り当て (20.6 KiB)。`-benchmem` は libldap の C の割り当てを見られないため、その数値はない。再現するには、go-authn/ldap の `bench/libldap` で `go test -bench . -benchmem -cpu 1 -count 10` を実行する (cgo と libldap が必要)。authnd にはこれらの修正が v0.12.3 から入っている。
 
+v0.10.2 から、`schema.Standard()` の RFC 2307 の 13 個の DESC の値は 1 行です。v0.10.1 までは RFC のページのように折り返されており、継続行は最初の 1 文字の後のインデントを保つため(`Read` が従う slapd の `fp_getline`)、それを公開するサーバーは `DESC 'An integer uniquely identifying a user in an         administrative domain'` を送っていました。authnd では v0.12.4 から修正されています。
+
 ## ビルドできないスキーマ {#build-error}
 
 v0.10.0 から、`schema.Build` または `schema.BuildFrom` が拒否する定義は `*schema.BuildError` で、
@@ -373,7 +375,7 @@ v0.9.0 から、スキーマは slapd が読むファイルに加えて HCL2 で
 コマンド `ldapschema` は形式間を変換します。
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.2
 ```
 
 - `ldapschema to-hcl [--macros] FILE...` は OpenLDAP の `.schema` ファイル、cn=config LDIF、
@@ -508,4 +510,4 @@ build: ok, 2 definitions added to schema.Standard()
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.2](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.2)
