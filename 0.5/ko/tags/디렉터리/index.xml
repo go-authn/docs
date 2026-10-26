@@ -527,7 +527,7 @@ CI에서 검사합니다.&lt;/p&gt;
 &lt;a href="#reference" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/directory@v0.14.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/directory@v0.14.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>ldap — LDAP 서버의 바이트</title><link>https://go-authn.github.io/docs/0.5/ko/libraries/ldap/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ko/libraries/ldap/</guid><description>
 &lt;p&gt;&lt;strong&gt;LDAP 서버의 바이트는 무엇인가?&lt;/strong&gt; 데몬이 아니라 라이브러리입니다. 와이어, 필터,작업. &lt;a href="https://go-authn.github.io/docs/0.5/ko/authnd/"&gt;authnd&lt;/a&gt;는 이를 실행하고 구성, 디렉터리 소스,바인드 정책을 소유하는 서버이며, 이 라이브러리는 바이트를 소유합니다.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/ldap@v0.10.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/ldap@v0.10.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="코드 복사"
@@ -828,6 +828,9 @@ data-copied-label="복사됨!"
 이외의 옵션.&lt;/p&gt;
 &lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.5/ko/authnd/entries/#the-schema-it-serves"&gt;authnd&lt;/a&gt;는 이 스키마를
 제공하며 게시하는 모든 엔트리를 여기에 맞춥니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="reading-large-files"&gt;큰 스키마 파일 읽기&lt;span class="hx:absolute hx:-mt-20" id="reading-large-files"&gt;&lt;/span&gt;
+&lt;a href="#reading-large-files" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;v0.10.0까지 &lt;code&gt;schema.Read&lt;/code&gt;는 읽는 파일의 이어짐 줄 수에 대해 제곱 시간이 걸렸습니다. 짧은 이어짐 줄로 된 4 MiB 파일에 약 3분이 걸렸고, 1 MiB에서 139.6 GB를 할당했습니다. authnd가 시작할 때 &lt;code&gt;schema_files&lt;/code&gt;로 하듯이, 통제하지 않는 스키마 파일을 읽는 프로그램은 그런 파일 하나에 멈출 수 있었습니다. v0.10.1부터 시간은 선형이며(&lt;code&gt;TestManyContinuationLinesJoinInLinearTime&lt;/code&gt;), &lt;code&gt;Read&lt;/code&gt;는 첫 줄을 확인하려고 파일 전체를 복사하고 나누지 않습니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;schema.Format&lt;/code&gt;은 2000바이트가 넘는 줄을 썼는데, slapd와 &lt;code&gt;Read&lt;/code&gt;는 이를 거부합니다. 이제는 줄을 접어서 씁니다. 엄격한 파서는 약 2.6배 빠르고, &lt;code&gt;cosine.schema&lt;/code&gt;에서 할당이 498회에서 147회로 줄었습니다. 이는 부하가 걸린 기계에서 측정한 것이며, 아직 하지 않은 libldap과의 비교가 아닙니다. authnd는 v0.12.3부터 이 수정을 갖고 있습니다.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="build-error"&gt;빌드되지 않는 스키마&lt;span class="hx:absolute hx:-mt-20" id="build-error"&gt;&lt;/span&gt;
 &lt;a href="#build-error" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;v0.10.0부터 &lt;code&gt;schema.Build&lt;/code&gt; 또는 &lt;code&gt;schema.BuildFrom&lt;/code&gt;이 거부하는 정의는&lt;code&gt;*schema.BuildError&lt;/code&gt;이며 &lt;code&gt;errors.As&lt;/code&gt;로 찾습니다. 프로그램은 거부 사실을 메시지를
 비교해서가 아니라 필드로 보고합니다. Build는 처음 거부하는 정의에서 멈추므로
@@ -1043,7 +1046,7 @@ data-copied-label="복사됨!"
 통과시킵니다. 커버리지 하한은 99.7%이며, 도달하지 않는 세 줄은 워크플로에 이름이
 있습니다.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;참고&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/ldap@v0.10.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/ldap@v0.10.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>kdc — 디렉터리에서 Kerberos 티켓 발급하기</title><link>https://go-authn.github.io/docs/0.5/ko/libraries/kdc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ko/libraries/kdc/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/ldap@v0.10.1&lt;/a&gt;&lt;/p&gt;</description></item><item><title>kdc — 디렉터리에서 Kerberos 티켓 발급하기</title><link>https://go-authn.github.io/docs/0.5/ko/libraries/kdc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/ko/libraries/kdc/</guid><description>
 &lt;p&gt;&lt;strong&gt;렐름은 디렉터리에서 어떻게 티켓을 발급하는가?&lt;/strong&gt; &lt;a href="https://go-authn.github.io/docs/0.5/ko/libraries/directory/"&gt;디렉터리&lt;/a&gt;가
 아는 사람들과 keytab이 보유한 서비스에 대해, UDP와 TCP로 AS-REQ와 TGS-REQ를 처리하며
 암호화된 타임스탬프 사전 인증이 필수입니다. &lt;a href="https://go-authn.github.io/docs/0.5/ko/authnd/"&gt;authnd&lt;/a&gt; 아래에서
