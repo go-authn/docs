@@ -1,0 +1,272 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Metrics</title><link>https://go-authn.github.io/docs/0.6/tags/metrics/</link><description>Recent content in Metrics on go-authn</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://go-authn.github.io/docs/0.6/tags/metrics/index.xml" rel="self" type="application/rss+xml"/><item><title>The admin API, health and metrics</title><link>https://go-authn.github.io/docs/0.6/authn-bridge/admin/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.6/authn-bridge/admin/</guid><description>
+&lt;p&gt;Both are off unless the configuration asks for them, and neither is ever on the
+public listener.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;admin&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;unix:///run/authn-bridge/admin.sock&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # mode 0600
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # or over the network, mutual TLS and nothing less (loopback included):
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # listen = &amp;#34;10.0.0.5:9443&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # tls_cert_file = &amp;#34;/etc/authn-bridge/admin.crt&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # tls_key_file = &amp;#34;/etc/authn-bridge/admin.key&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # client_ca_file = &amp;#34;/etc/authn-bridge/operators-ca.crt&amp;#34;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # reflection = true # for grpcurl; off by default
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;metrics { listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:9101&amp;#34;&lt;/span&gt; }&lt;span class="c1"&gt; # /healthz /readyz /metrics
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;disabled_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/disabled.json&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The listener is grpc-transports/control&amp;rsquo;s, shared with go-fileshare. The socket
+is never reachable by another user, not even between bind and chmod, and is
+never taken from an instance still running. TCP without all three TLS files is
+refused, loopback included, since every local user can reach &lt;code&gt;127.0.0.1&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: admin: control: listen address &amp;#34;127.0.0.1:9443&amp;#34; is TCP, which requires mutual TLS (loopback included: any local user can reach it); missing TLSCertFile, TLSKeyFile, ClientCAFile&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;A binary built with &lt;code&gt;-tags nogrpc&lt;/code&gt; has no admin API, and refuses a configuration
+with an &lt;code&gt;admin&lt;/code&gt; block rather than start without it.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-service"&gt;The service&lt;span class="hx:absolute hx:-mt-20" id="the-service"&gt;&lt;/span&gt;
+&lt;a href="#the-service" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;bridge.admin.v1.AdminService&lt;/code&gt; (&lt;code&gt;proto/bridge/admin/v1/admin.proto&lt;/code&gt;), with&lt;code&gt;grpc.health.v1&lt;/code&gt; beside it, which reports &lt;code&gt;SERVING&lt;/code&gt; while the provider is ready.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Status&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;version, issuer, start time; the federation&amp;rsquo;s metadata (IdPs, usable, valid until, last refresh, last error); what is held in memory&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;RefreshMetadata&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;fetch the federation&amp;rsquo;s metadata now, and say how it went&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ListIdPs&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the federation&amp;rsquo;s IdPs, as the institution list shows them (&lt;code&gt;query&lt;/code&gt;, &lt;code&gt;limit&lt;/code&gt;, 100 by default)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ListClients&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the configured relying parties&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;RevokePerson&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;end their refresh token families, the access tokens those bought, their logins and device grants in progress and their application password, and revoke everything the certificate store holds for them: SSH and X.509 certificates (into the next KRL and CRL) and WireGuard keys&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;DisablePerson&lt;/code&gt;, &lt;code&gt;EnablePerson&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;refuse somebody here, at login and at every token, whatever their institution says, and revoke what they hold; optionally &lt;code&gt;until&lt;/code&gt; a time&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;DisableIdP&lt;/code&gt;, &lt;code&gt;EnableIdP&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the same for everybody one institution vouches for; a metadata refresh does not lift it&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ListDisabled&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;who is disabled, why, by whom, since and until when&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;With &lt;code&gt;reflection = true&lt;/code&gt;, against a test provider:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ grpcurl -plaintext -unix $PWD/run/admin.sock bridge.admin.v1.AdminService/Status
+{
+&amp;#34;version&amp;#34;: &amp;#34;v0.23.4&amp;#34;,
+&amp;#34;issuer&amp;#34;: &amp;#34;http://127.0.0.1:28473&amp;#34;,
+&amp;#34;started&amp;#34;: &amp;#34;2026-10-26T11:22:17.441725Z&amp;#34;,
+&amp;#34;federation&amp;#34;: {
+&amp;#34;metadataUrl&amp;#34;: &amp;#34;file:///tmp/authn/fed/metadata.xml&amp;#34;,
+&amp;#34;idps&amp;#34;: 1,
+&amp;#34;usable&amp;#34;: 1,
+&amp;#34;validUntil&amp;#34;: &amp;#34;2026-11-02T11:22:16Z&amp;#34;,
+&amp;#34;lastRefresh&amp;#34;: &amp;#34;2026-10-26T11:22:17.442875Z&amp;#34;
+},
+&amp;#34;counts&amp;#34;: {}
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="disabling"&gt;Disabling&lt;span class="hx:absolute hx:-mt-20" id="disabling"&gt;&lt;/span&gt;
+&lt;a href="#disabling" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ grpcurl -plaintext -unix -d &amp;#39;{&amp;#34;username&amp;#34;:&amp;#34;alice@univ-example.example&amp;#34;,&amp;#34;reason&amp;#34;:&amp;#34;left the lab&amp;#34;}&amp;#39; $PWD/run/admin.sock bridge.admin.v1.AdminService/DisablePerson
+{
+&amp;#34;disabled&amp;#34;: {
+&amp;#34;username&amp;#34;: &amp;#34;alice@univ-example.example&amp;#34;,
+&amp;#34;reason&amp;#34;: &amp;#34;left the lab&amp;#34;,
+&amp;#34;by&amp;#34;: &amp;#34;uid=501&amp;#34;,
+&amp;#34;since&amp;#34;: &amp;#34;2026-10-26T11:22:17.952680Z&amp;#34;
+},
+&amp;#34;revoked&amp;#34;: {}
+}
+$ grpcurl -plaintext -unix -d &amp;#39;{&amp;#34;entity_id&amp;#34;:&amp;#34;https://idp.univ-example.example/idp/shibboleth&amp;#34;,&amp;#34;reason&amp;#34;:&amp;#34;compromised&amp;#34;,&amp;#34;until&amp;#34;:&amp;#34;2026-11-27T08:00:00Z&amp;#34;}&amp;#39; $PWD/run/admin.sock bridge.admin.v1.AdminService/DisableIdP
+{
+&amp;#34;disabled&amp;#34;: {
+&amp;#34;entityId&amp;#34;: &amp;#34;https://idp.univ-example.example/idp/shibboleth&amp;#34;,
+&amp;#34;reason&amp;#34;: &amp;#34;compromised&amp;#34;,
+&amp;#34;by&amp;#34;: &amp;#34;uid=501&amp;#34;,
+&amp;#34;since&amp;#34;: &amp;#34;2026-10-26T11:21:27.038956Z&amp;#34;,
+&amp;#34;until&amp;#34;: &amp;#34;2026-11-27T08:00:00Z&amp;#34;
+},
+&amp;#34;revoked&amp;#34;: {}
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;revoked&lt;/code&gt; counts what each call ended (refresh families, access tokens, logins,application passwords, certificates); nothing was live here. Every call that
+changes something is logged with who made it, the peer&amp;rsquo;s &lt;code&gt;uid=&lt;/code&gt; on the socket
+or the client certificate&amp;rsquo;s &lt;code&gt;cn=&lt;/code&gt; over TLS:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;disabled alice@univ-example.example (0 known identities) by uid=501 until enabled again: left the lab
+revoked alice@univ-example.example: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
+disabled IdP https://idp.univ-example.example/idp/shibboleth by uid=501 until 2026-11-27T08:00:00Z: compromised
+revoked IdP https://idp.univ-example.example/idp/shibboleth: 0 refresh families, 0 access tokens, 0 logins, 0 app passwords, 0 certificates
+enabled alice@univ-example.example by uid=501&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;A person is disabled as who they are.&lt;/strong&gt; Usernames compare without case, as
+eppn, uid, mail and subject-id all do, so the same call with&lt;code&gt;&amp;quot;Alice@Univ-Example.example&amp;quot;&lt;/code&gt; lifts what was set for &lt;code&gt;alice@univ-example.example&lt;/code&gt;
+(&lt;code&gt;{&amp;quot;wasDisabled&amp;quot;: true}&lt;/code&gt;). The entry also records the stable identity of
+everybody known under that name, so another spelling from their IdP does not let
+them back in. A name with no &lt;code&gt;@&lt;/code&gt; is also matched as a &lt;code&gt;sub&lt;/code&gt;, for a person whose
+IdP releases no username.&lt;/p&gt;
+&lt;p&gt;The entry is recorded &lt;strong&gt;before&lt;/strong&gt; anything is revoked, so a grant racing the
+revocation meets the entry.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Disabling is kept in &lt;code&gt;disabled_file&lt;/code&gt;, and refused without one.&lt;/strong&gt; Somebody
+disabled until the next restart would be let back in by the next deployment:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ grpcurl -plaintext -unix -d &amp;#39;{&amp;#34;username&amp;#34;:&amp;#34;alice@univ-example.example&amp;#34;}&amp;#39; $PWD/run/admin.sock bridge.admin.v1.AdminService/DisablePerson
+ERROR:
+Code: FailedPrecondition
+Message: disabling needs disabled_file in the configuration: without it, a restart would forget who is disabled&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;A file that cannot be read stops the provider from starting, for the same
+reason. A disabled institution counts as not usable in &lt;code&gt;Status&lt;/code&gt;, &lt;code&gt;ListIdPs&lt;/code&gt; and&lt;a href="https://go-authn.github.io/docs/0.6/authn-bridge/configuration/#check-before-a-restart"&gt;&lt;code&gt;check&lt;/code&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;What disabling reaches beyond the provider is on&lt;a href="https://go-authn.github.io/docs/0.6/authn-bridge/revocation/"&gt;revocation&lt;/a&gt;: the KRL and the
+CRL for certificates, Shared Signals for tokens. An application password
+removed here stops working in go-fileshare when it next reads its directory;call its &lt;code&gt;ReloadDirectory&lt;/code&gt; after &lt;code&gt;DisablePerson&lt;/code&gt; for the effect to be immediate.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;What &lt;code&gt;RevokePerson&lt;/code&gt; cannot end&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;An access token already handed out is a signed statement a resource server
+checks on its own, valid there until it expires (an hour by default). An
+SSH certificate already issued lasts its validity unless the server reads
+the KRL, which is why both are short.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="health-and-metrics"&gt;Health and metrics&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
+&lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;go-net-health/endpoint&amp;rsquo;s, as in go-fileshare, on the &lt;code&gt;metrics&lt;/code&gt; listener, which
+must not be the public one (a configuration that makes it so is refused):&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/healthz&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;up while the process answers&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/readyz&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;ready while the federation&amp;rsquo;s metadata is loaded and within its &lt;code&gt;validUntil&lt;/code&gt;, and no revocation is waiting to reach the state database&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;/metrics&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;Prometheus text, &lt;code&gt;bridge_*&lt;/code&gt; families&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28475/metrics | grep &amp;#34;^bridge_&amp;#34;
+bridge_build_info{version=&amp;#34;v0.23.4&amp;#34;,goversion=&amp;#34;go1.27.3&amp;#34;,revision=&amp;#34;6e0156cb516ace9091d4070c425258febc48f6ee&amp;#34;} 1
+bridge_start_time_seconds 1793013737
+bridge_ready 1
+bridge_metadata_valid_until_timestamp_seconds 1793618536
+bridge_metadata_idps 1
+bridge_metadata_last_refresh_timestamp_seconds 1793013737
+bridge_metadata_refreshes_total{result=&amp;#34;failed&amp;#34;} 0
+bridge_metadata_refreshes_total{result=&amp;#34;ok&amp;#34;} 1
+bridge_logins_in_progress 0
+bridge_devices_waiting 0
+bridge_refresh_families 0
+bridge_access_tokens 0
+bridge_disabled{kind=&amp;#34;idp&amp;#34;} 0
+bridge_disabled{kind=&amp;#34;person&amp;#34;} 0
+bridge_ssh_certificates_total 0
+bridge_x509_certificates_total 0&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The counters of logins by outcome (&lt;code&gt;bridge_logins_total&lt;/code&gt;), of tokens by grant(&lt;code&gt;bridge_tokens_issued_total&lt;/code&gt;) and of application passwords(&lt;code&gt;bridge_app_passwords_total&lt;/code&gt;) appear only once they have counted something. &lt;strong&gt;No label names a person or an institution&lt;/strong&gt;: which
+universities&amp;rsquo; people use the service, and when, is not the provider&amp;rsquo;s to
+publish. Alert on &lt;code&gt;bridge_metadata_valid_until_timestamp_seconds&lt;/code&gt; before the
+time it gives is reached: past it, nobody can log in.&lt;/p&gt;</description></item></channel></rss>

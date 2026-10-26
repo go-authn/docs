@@ -1,0 +1,78 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – フェイルクローズ</title><link>https://go-authn.github.io/docs/0.6/ja/tags/%E3%83%95%E3%82%A7%E3%82%A4%E3%83%AB%E3%82%AF%E3%83%AD%E3%83%BC%E3%82%BA/</link><description>Recent content in フェイルクローズ on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ja</language><atom:link href="https://go-authn.github.io/docs/0.6/ja/tags/%E3%83%95%E3%82%A7%E3%82%A4%E3%83%AB%E3%82%AF%E3%83%AD%E3%83%BC%E3%82%BA/index.xml" rel="self" type="application/rss+xml"/><item><title>リストが失効したとき</title><link>https://go-authn.github.io/docs/0.6/ja/authn-revokd/lapse/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.6/ja/authn-revokd/lapse/</guid><description>
+&lt;p&gt;リストを得られないときにすべてを通してしまう失効チェックは、リストを妨害できる攻撃者に破られるものです。そのため authn-revokd がソースから現在のリストを得ていないとき、そのソースのリストが守るものは、現在のリストが再び届くまで&lt;strong&gt;拒否されます&lt;/strong&gt;。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;出力&lt;/th&gt;
+&lt;th&gt;ソースに現在のリストがない間&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sshd&lt;/code&gt; 向けの KRL&lt;/td&gt;
+&lt;td&gt;authn-revokd は、&lt;strong&gt;ソースの CA 鍵を失効させる&lt;/strong&gt; KRL を書き込む&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;TLS サーバー向けの CRL&lt;/td&gt;
+&lt;td&gt;期限切れの CRL がそのまま残される。OpenSSL が期限切れの CRL を自ら拒否する&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="for-sshd-revoking-the-ca-itself"&gt;sshd 向け: CA 自体を失効させる&lt;span class="hx:absolute hx:-mt-20" id="for-sshd-revoking-the-ca-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-sshd-revoking-the-ca-itself" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; にはリストの有効期限という概念がなく、最後に書き込まれたファイルを永遠に読み続けます。しかしすべての証明書の &lt;strong&gt;CA 鍵&lt;/strong&gt;を &lt;code&gt;RevokedKeys&lt;/code&gt; と照合します。そのため authn-revokd は、保証できないリストの代わりに、CA 自身の鍵を出力に入れ、その CA が署名したすべての証明書が拒否され、他には何も影響しません。&lt;/p&gt;
+&lt;p&gt;ここでは発行者が停止しており、KRL ソースには &lt;code&gt;max_age = &amp;quot;30s&amp;quot;&lt;/code&gt; があるため、保持しているコピーは一時間ではなく一分以内に失効します。CRL ソースには &lt;code&gt;max_age&lt;/code&gt; がなく、そのコピーはまだ現在のものです。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-revokd -config revokd-maxage.hcl -once
+bridge-ssh: revocation: Get &amp;#34;http://127.0.0.1:28473/ssh/krl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+bridge-x509: revocation: Get &amp;#34;http://127.0.0.1:28473/x509/crl&amp;#34;: dial tcp 127.0.0.1:28473: connect: connection refused
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)
+$ ssh-keygen -Q -l -f out/sshd.krl
+# KRL version 0
+# Generated at 19700101T010000
+# Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
+hash: SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4 # ssh-ed25519
+$ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
+ca-ssh.pub (go-authn/bridge SSH CA): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;bridge-ssh&lt;/code&gt; は &lt;code&gt;not current&lt;/code&gt; で、その出力はフェイルクローズされています。&lt;code&gt;bridge-x509&lt;/code&gt; は&lt;code&gt;not fetched&lt;/code&gt; にすぎず、その CRL はそのまま残されています(&lt;a href="https://go-authn.github.io/docs/0.6/ja/authn-revokd/verification/#what--once-reports"&gt;&lt;code&gt;-once&lt;/code&gt; が報告するもの&lt;/a&gt;)。&lt;code&gt;SHA256:AnDb/...&lt;/code&gt; は bridge の SSH CA です。それが署名した証明書は、ファイルを読むものにとっては失効済みとなります。上のコマンドは &lt;code&gt;out/&lt;/code&gt; がある &lt;code&gt;revokd&lt;/code&gt; ディレクトリで実行しました。次のものはその隣の、テスト用証明書を保持するディレクトリで実行します。&lt;a href="https://go-authn.github.io/docs/0.6/ja/sshcert/authorize/#krl"&gt;sshcert-authorize のページ&lt;/a&gt;と同じなので、同じファイルは&lt;code&gt;../revokd/out/sshd.krl&lt;/code&gt; です。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ssh-keygen -Q -f ../revokd/out/sshd.krl alice-cert.pub
+alice-cert.pub (alice): REVOKED&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;コメントは &lt;code&gt;FAIL CLOSED&lt;/code&gt; と述べてソースを名指しするので、&lt;code&gt;ssh-keygen -Q -l&lt;/code&gt; を読む人は理由が分かります。すべてのソースが失効した場合、ファイルの日付は 1970 年になります。出力は、同期が気づいた&lt;strong&gt;直後に&lt;/strong&gt;書き込まれます。デーモンでは次の &lt;code&gt;refresh&lt;/code&gt;、タイマーでは次のティックです。現在のリストが再び届くと、次の同期が CA の鍵の代わりにそれを書き込み、その CA の証明書は再び受け入れられます。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;最初のリストの前&lt;/strong&gt;にも同じことが起きます。一度も取得されていないソースには現在のものが何もなく、その CA は最初の書き込みから失効しています。新規のインストールは、最初のリストが検証に通るまで、CA の証明書を無検証で受け入れるのではなく、拒否します。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="each-ca-for-itself"&gt;各 CA は自分自身について&lt;span class="hx:absolute hx:-mt-20" id="each-ca-for-itself"&gt;&lt;/span&gt;
+&lt;a href="#each-ca-for-itself" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;複数のソースをマージする出力では、失効したソースの CA だけが失効されます。他のものはリストを保持します。マージできないリスト (go-authn/krl が保持するシリアル範囲を超えるもの) は自身の CA についてのみフェイルクローズし、&lt;code&gt;/healthz&lt;/code&gt; がそれを名指しします。リストが単独ではマージできるのに一緒にはできない場合にのみ、出力のすべての CA が失効され、コメントがそう述べます(&lt;code&gt;FAIL CLOSED, the output could not be rendered&lt;/code&gt;)。代わりに古いファイルを保持すると、後の失効が見過ごされてしまいます。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="for-a-tls-server-the-crl-itself"&gt;TLS サーバー向け: CRL 自体&lt;span class="hx:absolute hx:-mt-20" id="for-a-tls-server-the-crl-itself"&gt;&lt;/span&gt;
+&lt;a href="#for-a-tls-server-the-crl-itself" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;CRL はすでに有効でなくなる時刻を述べており、OpenSSL は &lt;code&gt;nextUpdate&lt;/code&gt; を過ぎたものを拒否します(&amp;ldquo;CRL has expired&amp;rdquo;)。そのため authn-revokd は最後に検証した CRL をそのまま残し、TLS サーバーが自らフェイルクローズします。CRL 出力に供給するソースで &lt;code&gt;max_age&lt;/code&gt; が拒否されるのもそのためです。CRL を読み込んだサーバーは、authn-revokd が何を書き込もうと、&lt;code&gt;nextUpdate&lt;/code&gt; までそれを保持します。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="readers-that-check-the-expiry-themselves"&gt;有効期限を自分で確認する読み手&lt;span class="hx:absolute hx:-mt-20" id="readers-that-check-the-expiry-themselves"&gt;&lt;/span&gt;
+&lt;a href="#readers-that-check-the-expiry-themselves" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;マージされた KRL は、現在の入力のうち最も早いものの有効期限を運びます。それを確認する読み手、たとえば go-fileshare の &lt;code&gt;ssh_krl_file&lt;/code&gt; や&lt;a href="https://go-authn.github.io/docs/0.6/ja/sshcert/authorize/#krl"&gt;&lt;code&gt;sshcert-authorize --krl&lt;/code&gt;&lt;/a&gt;は、発行者が停止したのと同じように、authn-revokd が停止したことが分かります。&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;これは authn-revokd が動いている間にのみ機能する&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;ファイルは authn-revokd によってフェイルクローズされます。それが停止している間、sshd は最後に書き込まれたファイルを、現在のものであろうとなかろうと読み続けます。そのためデーモンには&lt;code&gt;Restart=always&lt;/code&gt; があり、ユニット、タイマー、または &lt;code&gt;/healthz&lt;/code&gt; を監視します。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

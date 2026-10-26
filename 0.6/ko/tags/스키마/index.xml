@@ -1,0 +1,1626 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – 스키마</title><link>https://go-authn.github.io/docs/0.6/ko/tags/%EC%8A%A4%ED%82%A4%EB%A7%88/</link><description>Recent content in 스키마 on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ko</language><atom:link href="https://go-authn.github.io/docs/0.6/ko/tags/%EC%8A%A4%ED%82%A4%EB%A7%88/index.xml" rel="self" type="application/rss+xml"/><item><title>authnd가 게시하는 엔트리와 제공하는 스키마</title><link>https://go-authn.github.io/docs/0.6/ko/authnd/entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.6/ko/authnd/entries/</guid><description>
+&lt;p&gt;&lt;strong&gt;authnd가 게시하는 모든 엔트리는 자신이 제공하는 스키마를 통과합니다.&lt;/strong&gt; v0.11.0부터
+각 사람과 그룹은 소스가 제공한 것으로 만들어지는 표준 스키마 엔트리이며,검색으로 반환되기 전에 go-authn/ldap의 &lt;code&gt;schema.Validate&lt;/code&gt;로 클라이언트가&lt;code&gt;cn=Subschema&lt;/code&gt;에서 읽을 수 있는 스키마에 맞게 검사됩니다. 스키마를 읽고 믿는
+클라이언트 — LDAP 브라우저, 동기화 도구, 이 디렉터리를 복제하는 디렉터리 — 는
+들은 대로의 내용을 보게 됩니다. v0.10.2까지는 모든 사람이 &lt;code&gt;top, person, posixAccount&lt;/code&gt;였고 그 클래스가 요구하는 속성은 하나도 없었으며,&lt;code&gt;sambaNTPassword&lt;/code&gt;는 그것을 허용하는 클래스가 없는 엔트리에 붙어 있었습니다.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;posixAccount&lt;/code&gt;나 &lt;code&gt;posixGroup&lt;/code&gt;으로 필터링하는 소비자는 더 적은 엔트리를 봅니다&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;uidNumber&lt;/code&gt;, &lt;code&gt;gidNumber&lt;/code&gt;, &lt;code&gt;homeDirectory&lt;/code&gt;가 없는 사람은 더 이상&lt;code&gt;posixAccount&lt;/code&gt;가 아니고, &lt;code&gt;gidNumber&lt;/code&gt;가 없는 그룹은 더 이상 &lt;code&gt;posixGroup&lt;/code&gt;이
+아닙니다. &lt;code&gt;(objectClass=posixAccount)&lt;/code&gt;나 &lt;code&gt;(objectClass=posixGroup)&lt;/code&gt;을 검색하는
+프로그램은 더 이상 이들을 찾지 못합니다. 여기에는 v0.13.0까지의 go-authn/directory&lt;code&gt;ldapdir&lt;/code&gt;이 포함되며, 따라서 &lt;code&gt;account&lt;/code&gt;, &lt;code&gt;uidObject&lt;/code&gt;, &lt;code&gt;groupOfNames&lt;/code&gt;도 읽는 기본값을
+가진 directory v0.14.0을 요구하기 전까지의 go-fileshare도 포함됩니다(&lt;a href="https://go-authn.github.io/docs/0.6/ko/libraries/directory/#ldapdir-defaults"&gt;directory&lt;/a&gt;).사람과 그룹에 해당 속성을 부여하거나, 모든 사람이 가지고 있는&lt;code&gt;(objectClass=uidObject)&lt;/code&gt;를 소비자가 사용하도록 지정하십시오.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-shapes"&gt;형태&lt;span class="hx:absolute hx:-mt-20" id="the-shapes"&gt;&lt;/span&gt;
+&lt;a href="#the-shapes" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;RFC 4512 §3.3이 요구하는 대로 모든 상위 클래스가 나열됩니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;이런 사람은…&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;objectClass&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;cn&lt;/code&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sn&lt;/code&gt;이 없음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;account&lt;/code&gt; (RFC 4524 §3.1)&lt;/td&gt;
+&lt;td&gt;다른 클래스가 허용할 때만&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sn&lt;/code&gt;이 있음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;person&lt;/code&gt;, &lt;code&gt;organizationalPerson&lt;/code&gt;, &lt;code&gt;inetOrgPerson&lt;/code&gt; (RFC 4519, RFC 2798)&lt;/td&gt;
+&lt;td&gt;예&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… 그리고 &lt;code&gt;uidNumber&lt;/code&gt;, &lt;code&gt;gidNumber&lt;/code&gt;, &lt;code&gt;homeDirectory&lt;/code&gt; 세 가지 모두&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ posixAccount&lt;/code&gt; (RFC 2307)&lt;/td&gt;
+&lt;td&gt;예&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… 그리고 SSH 키&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ ldapPublicKey&lt;/code&gt; (openssh-lpk), &lt;code&gt;sshPublicKey&lt;/code&gt; 포함&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… 그리고 &lt;code&gt;sambaSID&lt;/code&gt;가 있는 게시된 NT 해시&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ sambaSamAccount&lt;/code&gt; (Samba), &lt;code&gt;sambaSID&lt;/code&gt;와 &lt;code&gt;sambaNTPassword&lt;/code&gt; 포함: &lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/tls/#the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; 블록&lt;/a&gt;을 참조&lt;/td&gt;
+&lt;td&gt;허용됨&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… 항상&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ uidObject&lt;/code&gt; (RFC 4519 §3.14), 그래서 &lt;code&gt;(objectClass=uidObject)&lt;/code&gt;가 모든 사람을 찾음&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;이런 그룹은…&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;objectClass&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;구성원&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;gidNumber&lt;/code&gt;가 있음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;posixGroup&lt;/code&gt; (RFC 2307)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;memberUid&lt;/code&gt;, 이름&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;gidNumber&lt;/code&gt;가 없고 구성원이 있음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;groupOfNames&lt;/code&gt; (RFC 4519 §3.5)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;member&lt;/code&gt;, 이 서버가 게시하는 DN&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;gidNumber&lt;/code&gt;가 없고 구성원도 없음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;organizationalRole&lt;/code&gt; (RFC 4519 §3.10)&lt;/td&gt;
+&lt;td&gt;없음&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;gidNumber&lt;/code&gt;가 있고 구성원이 없음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;posixGroup&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;없음: 속성에는 값이 최소 하나 있어야 함&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;code&gt;uid&lt;/code&gt;는 사람의 이름이며, 클래스가 허용하는 곳에서는 &lt;code&gt;cn&lt;/code&gt;도 그렇습니다.&lt;code&gt;account&lt;/code&gt;만으로는 &lt;code&gt;cn&lt;/code&gt;이 허용되지 않으므로(MAY는 &lt;code&gt;description&lt;/code&gt;, &lt;code&gt;seeAlso&lt;/code&gt;, &lt;code&gt;l&lt;/code&gt;,&lt;code&gt;o&lt;/code&gt;, &lt;code&gt;ou&lt;/code&gt;, &lt;code&gt;host&lt;/code&gt;), &lt;code&gt;sn&lt;/code&gt;도 POSIX 세 가지도 없는 사람은 &lt;code&gt;uid&lt;/code&gt;만 있고 &lt;code&gt;cn&lt;/code&gt;은
+없습니다.&lt;/p&gt;
+&lt;p&gt;authnd 자체의 이유로 본 이 선택들의 근거는 다음과 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;posixGroup&lt;/code&gt;은 draft-howard-rfc2307bis-02가 아니라 RFC 2307을 따릅니다.&lt;/strong&gt;
+초안은 &lt;code&gt;posixGroup&lt;/code&gt;을 AUXILIARY로 만들었고 게시되지 않은 채 만료되었습니다.AUXILIARY &lt;code&gt;posixGroup&lt;/code&gt;에는 옆에 구조 클래스인 &lt;code&gt;groupOfNames&lt;/code&gt;가 필요한데, 빈
+그룹은 그 &lt;code&gt;member&lt;/code&gt;를 줄 수 없습니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;gidNumber&lt;/code&gt;가 없는 빈 그룹에는 &lt;code&gt;organizationalRole&lt;/code&gt;.&lt;/strong&gt;
+&lt;code&gt;groupOfNames&lt;/code&gt;와 &lt;code&gt;groupOfUniqueNames&lt;/code&gt;는 둘 다 구성원을 요구하며, 구성원을
+지어내는 방법은 모두 거짓입니다. &lt;code&gt;member: &amp;quot;&amp;quot;&lt;/code&gt;는 루트 DSE를 가리키고, 그룹 자신의
+DN을 쓰면 그룹이 자기 자신의 구성원이 됩니다. &lt;code&gt;organizationalRole&lt;/code&gt;은 유일한
+MUST가 &lt;code&gt;cn&lt;/code&gt;인 표준 구조 클래스이며, &lt;code&gt;groupOfNames&lt;/code&gt;처럼 &lt;code&gt;description&lt;/code&gt;, &lt;code&gt;ou&lt;/code&gt;,&lt;code&gt;seeAlso&lt;/code&gt;를 받습니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;DIT 콘텐츠 규칙 없는 보조 클래스.&lt;/strong&gt; RFC 4512 §2.4.3은 구조 클래스에 DIT 콘텐츠
+규칙이 없는 엔트리에 보조 클래스를 두는 것을 금지합니다. 사용 중인 모든 디렉터리
+서버가 이를 허용하며 &lt;code&gt;Validate&lt;/code&gt;도 마찬가지입니다(&lt;code&gt;ValidateOptions{StrictAuxiliary: true}&lt;/code&gt;가 엄격한 해석이며, authnd는 이를
+설정하지 않습니다). 구조 클래스에 콘텐츠 규칙이 &lt;strong&gt;있는&lt;/strong&gt; 클래스는 v0.13.0부터 그
+규칙을 따라야 합니다: &lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/schemas/#rules"&gt;규칙&lt;/a&gt;을
+참조하십시오.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="adding-attributes"&gt;속성 추가하기&lt;span class="hx:absolute hx:-mt-20" id="adding-attributes"&gt;&lt;/span&gt;
+&lt;a href="#adding-attributes" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;소스가 누군가에 대해 말하는 것 중 아무것도 증명하지 않는 것 — &lt;code&gt;uidNumber&lt;/code&gt;, 홈
+디렉터리, 메일 주소 — 은 &lt;strong&gt;속성&lt;/strong&gt;이며, 주어진 대로 게시됩니다. 이것들은
+v0.13.0부터의 go-authn/directory &lt;a href="https://go-authn.github.io/docs/0.6/ko/libraries/directory/#attributes"&gt;속성&lt;/a&gt;이고
+자격 증명과 분리되어 있습니다. 비밀 값을 담는 이름이나 서버가 직접 파생하는
+이름은 아무것도 읽기 전에 거부됩니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="in-a-user-or-group-block"&gt;&lt;code&gt;user&lt;/code&gt; 또는 &lt;code&gt;group&lt;/code&gt; 블록에서&lt;span class="hx:absolute hx:-mt-20" id="in-a-user-or-group-block"&gt;&lt;/span&gt;
+&lt;a href="#in-a-user-or-group-block" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;dora&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/passwords/dora.pw&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; authorized_keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ssh-ed25519 AAAA… dora@laptop&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Explorer&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # inetOrgPerson
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; uidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1000&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the three: posixAccount
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1000&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; homeDirectory&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/home/dora&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; mail&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dora@example.org&amp;#34;, &amp;#34;d.explorer@example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;group&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;engineers&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; members&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dora&amp;#34;, &amp;#34;eli&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;2000&amp;#34;&lt;/span&gt; }&lt;span class="c1"&gt; # a posixGroup; without it, a groupOfNames
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;값은 문자열이거나 문자열 목록이며, &lt;code&gt;null&lt;/code&gt;은 그 속성을 생략합니다. 숫자는
+거부됩니다. LDAP 값은 문자열이고 authnd는 숫자를 어떻게 표기할지 선택하지
+않기 때문입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/number.hcl
+authnd: user &amp;#34;alice&amp;#34;: attributes: uidNumber is the number 1000: write it as a string, &amp;#34;1000&amp;#34; -- an LDAP value is a string, and this does not choose how a number is spelled
+$ authnd check cases/secret.hcl
+authnd: user &amp;#34;alice&amp;#34;: attributes: directory: not an attribute this package carries: &amp;#34;userPassword&amp;#34; holds a secret, and attributes are published: a credential has its own option or none&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;대소문자와 상관없이 같은 방식으로 거부되는 것: 비밀 값을 담는 모든 이름(&lt;code&gt;userPassword&lt;/code&gt;, &lt;code&gt;sambaNTPassword&lt;/code&gt;, &lt;code&gt;unicodePwd&lt;/code&gt;, &lt;code&gt;krbPrincipalKey&lt;/code&gt;와 go-authn/directory
+목록의 나머지, 또는 &lt;code&gt;password&lt;/code&gt;, &lt;code&gt;passwd&lt;/code&gt;, &lt;code&gt;pwd&lt;/code&gt;, &lt;code&gt;secret&lt;/code&gt;, &lt;code&gt;credential&lt;/code&gt;, &lt;code&gt;hash&lt;/code&gt;,&lt;code&gt;privatekey&lt;/code&gt;를 포함하는 모든 이름), &lt;code&gt;authorized_keys&lt;/code&gt;가 따로 있는 &lt;code&gt;sshPublicKey&lt;/code&gt;,서버가 파생하는 &lt;code&gt;uid&lt;/code&gt;, &lt;code&gt;cn&lt;/code&gt;, &lt;code&gt;objectClass&lt;/code&gt;, &lt;code&gt;members&lt;/code&gt;가 대신 답하는 &lt;code&gt;member&lt;/code&gt;,&lt;code&gt;memberUid&lt;/code&gt; 및 기타 구성원 속성, 서버가 유지하는 운영 속성, 그리고 숫자 형식의
+이름(&lt;code&gt;2.5.4.35&lt;/code&gt;는 &lt;code&gt;userPassword&lt;/code&gt;입니다).&lt;/p&gt;
+&lt;h3 data-hextra-search-id="in-a-sql-database"&gt;SQL 데이터베이스에서&lt;span class="hx:absolute hx:-mt-20" id="in-a-sql-database"&gt;&lt;/span&gt;
+&lt;a href="#in-a-sql-database" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; 블록의 선택적 쿼리 두 개는 &lt;strong&gt;열 별칭으로&lt;/strong&gt; 속성을 읽습니다. 첫
+번째 열은 사람 또는 그룹의 이름이고, 나머지 모든 열은 별칭이 이름이 되는
+속성입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/people.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, secret, null, ssh_keys from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, member from teams&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, uid as uidNumber, gid as gidNumber, home as homeDirectory, mail from person_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, gid as gidNumber, description from team_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;위치 기반 &lt;code&gt;users&lt;/code&gt;와 &lt;code&gt;groups&lt;/code&gt; 쿼리는 그대로이며, 여섯 번째 위치 열은 여전히
+거부됩니다. 속성은 이름으로, 자신만의 쿼리에서 가져옵니다.&lt;/li&gt;
+&lt;li&gt;별칭이 속성 설명이 아닌 열(&lt;code&gt;count(*)&lt;/code&gt;처럼 별칭 없는 표현식)이나 자격 증명을
+지정하는 열은 행을 읽기 전에 열 번호와 함께 거부됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;NULL&lt;/code&gt;과 &lt;code&gt;''&lt;/code&gt;는 없는 것으로 취급합니다. 하나의 이름이 여러 행에 나올 수 있으며
+모든 행의 값이 유지되므로, 주소 테이블을 조인하면 한 사람이 여러 개를 갖게
+됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;groups_attributes&lt;/code&gt;에서만 지정된 그룹은 구성원이 없는 채로 &lt;strong&gt;존재합니다&lt;/strong&gt;.사람 자신의 기본 그룹은 이렇게 기록합니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;별칭의 대소문자는 데이터베이스가 정합니다&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;PostgreSQL은 따옴표 없는 별칭을 소문자로 접습니다. &lt;code&gt;as uidNumber&lt;/code&gt;는&lt;code&gt;uidnumber&lt;/code&gt;로 돌아옵니다. 속성 이름은 대소문자를 구분하지 않으므로 같은 속성이고
+모든 LDAP 클라이언트에게 같은 엔트리이지만, authnd가 출력하는 표기는 데이터베이스의
+것입니다. 표기가 중요한 곳에서는 별칭에 따옴표를 쓰십시오: &lt;code&gt;gid as &amp;quot;gidNumber&amp;quot;&lt;/code&gt;.SQLite는 별칭을 쓴 그대로 유지합니다.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="from-another-ldap-directory"&gt;다른 LDAP 디렉터리에서&lt;span class="hx:absolute hx:-mt-20" id="from-another-ldap-directory"&gt;&lt;/span&gt;
+&lt;a href="#from-another-ldap-directory" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt; 블록은 지시받은 속성을 각 사람의 엔트리와 각 그룹의 엔트리에서
+복사합니다: &lt;code&gt;attributes = [&amp;quot;mail&amp;quot;, &amp;quot;uidNumber&amp;quot;, &amp;quot;homeDirectory&amp;quot;]&lt;/code&gt;와&lt;code&gt;group_attributes = [&amp;quot;gidNumber&amp;quot;]&lt;/code&gt;. &lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/people/#in-another-ldap-directory"&gt;사람들&lt;/a&gt;을
+참조하십시오.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="a-configuration-and-what-it-publishes"&gt;구성과 그것이 게시하는 것&lt;span class="hx:absolute hx:-mt-20" id="a-configuration-and-what-it-publishes"&gt;&lt;/span&gt;
+&lt;a href="#a-configuration-and-what-it-publishes" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;위의 SQL 블록에 reader를 더하고, 다섯 사람과 네 그룹이 든 SQLite 데이터베이스를
+v0.11.0 릴리스 바이너리로 검사한 결과입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/people.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, secret, null, ssh_keys from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, member from teams&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, uid as uidNumber, gid as gidNumber, home as homeDirectory, mail from person_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, gid as gidNumber, description from team_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check etc/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+dora a sqlite database a password and 1 key person, organizationalPerson, inetOrgPerson, posixAccount, ldapPublicKey, uidObject uid, cn, sn, uidNumber, gidNumber, homeDirectory, mail and sshPublicKey
+eli a sqlite database a password account, posixAccount, uidObject uid, cn, uidNumber, gidNumber and homeDirectory
+fay a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn, sn and mail
+gus a sqlite database a password account, uidObject uid
+hal a sqlite database a password account, uidObject uid
+GROUP MEMBERS PUBLISHED AS
+alumni nobody organizationalRole
+engineers dora and eli posixGroup
+nobody-yet nobody posixGroup
+readers fay and gus groupOfNames
+fay has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+gus has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+hal has no homeDirectory: not a posixAccount, published as account, uidObject
+hal is published without uidNumber: no class of the entry allows it; posixAccount would
+hal is published without gidNumber: no class of the entry allows it; posixAccount and posixGroup would
+hal is published without mail: no class of the entry allows it; inetOrgPerson would
+group alumni has no gidNumber and nobody in it: not a posixGroup, published as an organizationalRole (a groupOfNames needs a member)
+group readers has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;PUBLISHED AS&lt;/code&gt;는 &lt;code&gt;top&lt;/code&gt;을 제외한 각 엔트리의 객체 클래스이고, &lt;code&gt;WITH&lt;/code&gt;는 검색이
+반환하는 엔트리에서 읽은 속성입니다. hal은 &lt;code&gt;uidNumber&lt;/code&gt;, &lt;code&gt;gidNumber&lt;/code&gt;, &lt;code&gt;mail&lt;/code&gt;이
+있고 &lt;code&gt;homeDirectory&lt;/code&gt;와 &lt;code&gt;sn&lt;/code&gt;이 없습니다. hal은 &lt;code&gt;account&lt;/code&gt;이며 &lt;code&gt;account&lt;/code&gt;는 세 가지
+모두 허용하지 않으므로, 그 속성들은 제외되고 나머지가 게시됩니다. 서버도 시작할 때
+같은 내용을 알려 줍니다(그리고 멈추면 &lt;code&gt;stopping&lt;/code&gt;).&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd
+ldap on 127.0.0.1:3893, serving 5 people from a sqlite database
+uid=hal,ou=people,dc=example,dc=org is published without uidNumber: no class of the entry allows it; posixAccount would
+uid=hal,ou=people,dc=example,dc=org is published without gidNumber: no class of the entry allows it; posixAccount and posixGroup would
+uid=hal,ou=people,dc=example,dc=org is published without mail: no class of the entry allows it; inetOrgPerson would
+stopping&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;reader의 비밀번호를 파일에 넣고 OpenLDAP의 &lt;code&gt;ldapsearch&lt;/code&gt;로 되읽은 결과입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org &amp;#39;(|(uid=dora)(uid=eli)(uid=gus)(uid=hal))&amp;#39;
+dn: uid=dora,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: ldapPublicKey
+objectClass: uidObject
+uid: dora
+cn: dora
+sn: Explorer
+uidNumber: 1000
+gidNumber: 1000
+homeDirectory: /home/dora
+mail: dora@example.org
+sshPublicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKTfVR7FqXWE/0VEcjrUhK&amp;#43;Fz/MLqlwGPIxalr6onRMn dora@laptop
+dn: uid=eli,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: uidObject
+uid: eli
+cn: eli
+uidNumber: 1001
+gidNumber: 1001
+homeDirectory: /home/eli
+dn: uid=gus,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: uidObject
+uid: gus
+dn: uid=hal,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: uidObject
+uid: hal
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=groups,dc=example,dc=org &amp;#39;(objectClass=*)&amp;#39;
+dn: cn=alumni,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: organizationalRole
+cn: alumni
+description: people who were here
+dn: cn=engineers,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+cn: engineers
+gidNumber: 2000
+memberUid: dora
+memberUid: eli
+dn: cn=nobody-yet,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+cn: nobody-yet
+gidNumber: 2001
+dn: cn=readers,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames
+cn: readers
+description: people who read
+member: uid=fay,ou=people,dc=example,dc=org
+member: uid=gus,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;alumni&lt;/code&gt;는 &lt;code&gt;groups_attributes&lt;/code&gt;에만 지정되어 있으므로 구성원 없이 존재하며,&lt;code&gt;gidNumber&lt;/code&gt;가 없으므로 &lt;code&gt;organizationalRole&lt;/code&gt;입니다. &lt;code&gt;nobody-yet&lt;/code&gt;은 &lt;code&gt;gidNumber&lt;/code&gt;가
+있고 구성원이 없으므로 &lt;code&gt;memberUid&lt;/code&gt;가 없는 &lt;code&gt;posixGroup&lt;/code&gt;입니다.&lt;/p&gt;
+&lt;p&gt;어떤 클래스가 누구를 찾는지:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(objectClass=uidObject)&amp;#39; 1.1
+dn: uid=dora,ou=people,dc=example,dc=org
+dn: uid=eli,ou=people,dc=example,dc=org
+dn: uid=fay,ou=people,dc=example,dc=org
+dn: uid=gus,ou=people,dc=example,dc=org
+dn: uid=hal,ou=people,dc=example,dc=org
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(objectClass=posixAccount)&amp;#39; 1.1
+dn: uid=dora,ou=people,dc=example,dc=org
+dn: uid=eli,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-is-dropped-and-what-is-withheld"&gt;무엇이 제외되고 무엇이 보류되는가&lt;span class="hx:absolute hx:-mt-20" id="what-is-dropped-and-what-is-withheld"&gt;&lt;/span&gt;
+&lt;a href="#what-is-dropped-and-what-is-withheld" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;주어진 것&lt;/th&gt;
+&lt;th&gt;엔트리&lt;/th&gt;
+&lt;th&gt;이유&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;uidNumber&lt;/code&gt;, &lt;code&gt;gidNumber&lt;/code&gt;, &lt;code&gt;homeDirectory&lt;/code&gt; 없음, &lt;code&gt;sn&lt;/code&gt; 없음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;account, uidObject&lt;/code&gt;, 두 속성 제외&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;no class of the entry allows it; posixAccount would&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;mail&lt;/code&gt;, &lt;code&gt;sn&lt;/code&gt; 없음&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;account, uidObject&lt;/code&gt;, &lt;code&gt;mail&lt;/code&gt; 제외&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;no class of the entry allows it; inetOrgPerson would&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;스키마가 정의하지 않는 타입&lt;/td&gt;
+&lt;td&gt;나머지&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;the schema served here does not define it&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;gidNumber&lt;/code&gt; 없는 그룹의 &lt;code&gt;mail&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;groupOfNames&lt;/code&gt;, &lt;code&gt;mail&lt;/code&gt; 제외&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;POSIX 세 가지와 함께 &lt;code&gt;homeDirectory&lt;/code&gt; 값 두 개&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;보류&lt;/strong&gt;: SINGLE-VALUE이므로 제외할 것이 없음&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;정수가 아닌 &lt;code&gt;gidNumber&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;보류&lt;/strong&gt;: 구문에 맞지 않음&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;소스가 제공한 것만 제외되며&lt;/strong&gt;, 어떤 속성이 허용되지 않는지는 스키마를 다시
+읽은 결과가 아니라 &lt;code&gt;Validate&lt;/code&gt;의 답입니다. 제외한 뒤 엔트리를 다시 검증합니다. 그래도
+실패하는 엔트리는 &lt;strong&gt;보류됩니다&lt;/strong&gt;. 모든 검색에서 사라지고, 시작 로그가 이를 지정하며,&lt;code&gt;check&lt;/code&gt;는 &lt;code&gt;Validate&lt;/code&gt;가 찾은 모든 문제와 함께 이를 나열합니다. authnd가 직접 파생하는
+속성(&lt;code&gt;uid&lt;/code&gt;, &lt;code&gt;cn&lt;/code&gt;, &lt;code&gt;objectClass&lt;/code&gt;, &lt;code&gt;sshPublicKey&lt;/code&gt;, &lt;code&gt;sambaSID&lt;/code&gt;, &lt;code&gt;sambaNTPassword&lt;/code&gt;)을
+스키마가 거부한다면 이는 authnd의 결함이며, 그 속성 없이 게시하지 않고 엔트리를
+보류합니다.&lt;/p&gt;
+&lt;p&gt;여기서 alice의 &lt;code&gt;gidNumber&lt;/code&gt;는 단어입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/alice.pw&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; uidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1000&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; homeDirectory&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/home/alice&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;bob&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/bob.pw&amp;#34;&lt;/span&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/withheld.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password NOT PUBLISHED (see below) uid, cn, gidNumber, homeDirectory and uidNumber
+bob the configuration file a password account, uidObject uid
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+alice is NOT published: as account, posixAccount, uidObject it fails the schema:
+- the value &amp;#34;staff&amp;#34; of gidNumber is not of its syntax 1.3.6.1.4.1.1466.115.121.1.27
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;서비스를 시작하면 alice는 여전히 바인드할 수 있지만 어떤 검색에도 나타나지
+않으며, 서버는 시작할 때 그 이유를 알려 줍니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config cases/withheld.hcl
+ldap on 127.0.0.1:3893, serving 2 people from the configuration file
+uid=alice,ou=people,dc=example,dc=org is NOT published: it fails the schema: the value &amp;#34;staff&amp;#34; of gidNumber is not of its syntax 1.3.6.1.4.1.1466.115.121.1.27
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
+dn:uid=alice,ou=people,dc=example,dc=org
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(uid=alice)&amp;#39;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;보류되는 것은 검색이 반환하는 엔트리이지 신원이 아닙니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-schema-it-serves"&gt;제공하는 스키마&lt;span class="hx:absolute hx:-mt-20" id="the-schema-it-serves"&gt;&lt;/span&gt;
+&lt;a href="#the-schema-it-serves" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;루트 DSE가 이를 지정하며(&lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/#who-may-bind-and-who-may-read"&gt;루트 DSE&lt;/a&gt;의&lt;code&gt;subschemaSubentry: cn=Subschema&lt;/code&gt;), &lt;code&gt;cn=Subschema&lt;/code&gt;의 베이스 검색이 이를
+반환합니다(RFC 4512 §4.2). go-authn/ldap이 내장한 표준 정의 — RFC 4512, 4517,4519, 4523, 4524, 2798, 2307, 3672, 3045와 openssh-lpk — 에,&lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/tls/#the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; 블록&lt;/a&gt;이 있으면 Samba의&lt;code&gt;sambaSamAccount&lt;/code&gt;, &lt;code&gt;sambaSID&lt;/code&gt;, &lt;code&gt;sambaNTPassword&lt;/code&gt;가 더해집니다. 정의는 이름으로
+요청하거나 &lt;code&gt;+&lt;/code&gt;로 요청할 때만 게시됩니다. 표시한 곳은 줄였습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -s base -b cn=Subschema &amp;#39;&amp;#43;&amp;#39; &amp;#39;*&amp;#39;
+dn: cn=Subschema
+objectClass: top
+objectClass: subentry
+objectClass: subschema
+cn: Subschema
+subtreeSpecification: {}
+ldapSyntaxes: ( 1.3.6.1.4.1.1466.115.121.1.3 DESC &amp;#39;Attribute Type Description&amp;#39; )
+[...]
+matchingRules: ( 2.5.13.15 NAME &amp;#39;integerOrderingMatch&amp;#39; SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 )
+[...]
+attributeTypes: ( 1.3.6.1.1.1.1.0 NAME &amp;#39;uidNumber&amp;#39; DESC &amp;#39;An integer uniquely identifying a user in an administrative domain&amp;#39; EQUALITY integerMatch ORDERING integerOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+attributeTypes: ( 1.3.6.1.1.1.1.1 NAME &amp;#39;gidNumber&amp;#39; DESC &amp;#39;An integer uniquely identifying a group in an administrative domain&amp;#39; EQUALITY integerMatch ORDERING integerOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+[...]
+objectClasses: ( 2.5.6.9 NAME &amp;#39;groupOfNames&amp;#39; SUP top STRUCTURAL MUST ( member $ cn ) MAY ( businessCategory $ seeAlso $ owner $ ou $ o $ description ) )
+[...]
+objectClasses: ( 1.3.6.1.1.3.1 NAME &amp;#39;uidObject&amp;#39; SUP top AUXILIARY MUST uid )
+objectClasses: ( 0.9.2342.19200300.100.4.5 NAME &amp;#39;account&amp;#39; SUP top STRUCTURAL MUST uid MAY ( description $ seeAlso $ l $ o $ ou $ host ) )
+[...]
+objectClasses: ( 1.3.6.1.1.1.2.0 NAME &amp;#39;posixAccount&amp;#39; DESC &amp;#39;Abstraction of an account with POSIX attributes&amp;#39; SUP top AUXILIARY MUST ( cn $ uid $ uidNumber $ gidNumber $ homeDirectory ) MAY ( userPassword $ loginShell $ gecos $ description ) )
+[...]
+objectClasses: ( 1.3.6.1.1.1.2.2 NAME &amp;#39;posixGroup&amp;#39; DESC &amp;#39;Abstraction of a group of accounts&amp;#39; SUP top STRUCTURAL MUST ( cn $ gidNumber ) MAY ( userPassword $ memberUid $ description ) )
+[...]&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;전체 엔트리는 327줄이었습니다. 구문 49개, 매칭 규칙 40개, 매칭 규칙 사용 36개,속성 타입 143개, 객체 클래스 52개입니다. 베이스 아래의 검색과 달리, 서브스키마
+엔트리는 루트 DSE처럼 익명 클라이언트에게도 응답합니다. &lt;code&gt;-D&lt;/code&gt;와 &lt;code&gt;-y&lt;/code&gt; 없이 같은
+쿼리를 보내도 반환되었습니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;필터는 스키마의 매칭 규칙을 사용하므로&lt;/strong&gt; &lt;code&gt;(uidNumber&amp;gt;=1000)&lt;/code&gt;은 정수를
+비교합니다. &lt;code&gt;uidNumber&lt;/code&gt;와 &lt;code&gt;gidNumber&lt;/code&gt;에는 &lt;code&gt;ORDERING integerOrderingMatch&lt;/code&gt;가
+있는데, RFC 2307은 이를 주지 않습니다. slapd와 draft-howard-rfc2307bis-02는
+주며, go-authn/ldap도 줍니다(&lt;a href="https://go-authn.github.io/docs/0.6/ko/libraries/ldap/#the-schema"&gt;유일한 차이점&lt;/a&gt;).문자열로 비교하면 &lt;code&gt;1000&lt;/code&gt;이 &lt;code&gt;999&lt;/code&gt;보다 앞에 정렬됩니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(uidNumber&amp;gt;=1000)&amp;#39; uidNumber
+dn: uid=dora,ou=people,dc=example,dc=org
+uidNumber: 1000
+dn: uid=eli,ou=people,dc=example,dc=org
+uidNumber: 1001
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(uidNumber&amp;gt;=999)&amp;#39; uidNumber
+dn: uid=dora,ou=people,dc=example,dc=org
+uidNumber: 1000
+dn: uid=eli,ou=people,dc=example,dc=org
+uidNumber: 1001&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;hal은 나오지 않습니다. hal의 &lt;code&gt;uidNumber&lt;/code&gt;가 제외되었기 때문입니다. &lt;code&gt;uid&lt;/code&gt;처럼
+ORDERING 규칙이 없는 속성에 대한 범위 비교는 Undefined이며 아무것도 일치하지
+않습니다.&lt;/p&gt;</description></item><item><title>사이트 스키마와 소스가 선언하는 클래스</title><link>https://go-authn.github.io/docs/0.6/ko/authnd/schemas/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.6/ko/authnd/schemas/</guid><description>
+&lt;p&gt;&lt;strong&gt;SUPANN이나 eduPerson 속성은 엔트리의 어떤 클래스도 허용하지 않으면 제외됩니다.&lt;/strong&gt;
+authnd는 제공하는 스키마가 허용하는 것만 게시하며(&lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/entries/#what-is-dropped-and-what-is-withheld"&gt;엔트리&lt;/a&gt;를 참조),표준 스키마는 &lt;code&gt;supannEtablissement&lt;/code&gt;나 &lt;code&gt;eduPersonAffiliation&lt;/code&gt;을 알지 못합니다.v0.12.0부터 사이트는 다음 세 가지를 이 순서로 지정합니다.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;추가할 정의&lt;/strong&gt;: &lt;code&gt;schema_files&lt;/code&gt;, 즉 사이트의 slapd가 이미 불러오는 파일과,로컬에서만 쓰는 것을 위한 &lt;code&gt;schema { }&lt;/code&gt; 블록&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;사람과 그룹이 갖는 보조 클래스&lt;/strong&gt;: &lt;code&gt;object_classes&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;그 밖에는 없습니다. 클래스는 &lt;strong&gt;선언되는 것이지 추론되지 않습니다.&lt;/strong&gt; 데이터베이스에
+속성이 나타난다고 해서 엔트리가 무엇으로 게시되는지가 바뀌지는 않습니다.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;이 페이지의 예제는 예제입니다&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;아래의 &lt;code&gt;example.schema&lt;/code&gt;는 이 페이지를 위해 작성되었습니다. OID는 아무에게도 할당되지
+않은 &lt;code&gt;1.3.6.1.4.1.99999&lt;/code&gt; 아래에 있으므로, 여러분 자신의 것을 사용하고 이것을 절대
+복사하지 마십시오. SUPANN은 &lt;a href="#supann"&gt;페이지 끝&lt;/a&gt;을 참조하십시오.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="an-example"&gt;예제: 스키마, 데이터베이스, 구성&lt;span class="hx:absolute hx:-mt-20" id="an-example"&gt;&lt;/span&gt;
+&lt;a href="#an-example" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;OpenLDAP의 &lt;code&gt;.schema&lt;/code&gt; 형식으로 작성한 스키마입니다. 소스가 선언할 수 있는 클래스
+하나(&lt;code&gt;exampleStaff&lt;/code&gt;, AUXILIARY, MUST 있음)와 선언할 수 없는 클래스
+하나(&lt;code&gt;exampleUnit&lt;/code&gt;, STRUCTURAL)가 있습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;objectidentifier exampleRoot 1.3.6.1.4.1.99999
+objectidentifier exampleAttr exampleRoot:1
+objectidentifier exampleClass exampleRoot:2
+attributetype ( exampleAttr:1 NAME &amp;#39;exampleBadge&amp;#39;
+DESC &amp;#39;the number on a badge&amp;#39;
+EQUALITY caseIgnoreMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+SINGLE-VALUE )
+attributetype ( exampleAttr:2 NAME &amp;#39;exampleEmployeeId&amp;#39;
+DESC &amp;#39;a staff number&amp;#39;
+EQUALITY caseExactMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+SINGLE-VALUE )
+# AUXILIARY: it can be declared. exampleStaff has a MUST.
+objectclass ( exampleClass:1 NAME &amp;#39;exampleStaff&amp;#39; SUP top AUXILIARY
+DESC &amp;#39;somebody employed: has a staff number&amp;#39;
+MUST exampleEmployeeId
+MAY exampleBadge )
+# STRUCTURAL: it cannot be declared (an entry has one structural chain).
+objectclass ( exampleClass:2 NAME &amp;#39;exampleUnit&amp;#39; SUP top STRUCTURAL
+MUST cn )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;sn&lt;/code&gt;, 배지, 직원 번호를 가진 세 사람의 SQLite 데이터베이스입니다(&lt;code&gt;sqlite3 var/people.db &amp;lt; people.sql&lt;/code&gt;).&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sql" data-lang="sql"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;create&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;table&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;staff&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;primary&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;secret&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;create&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;table&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;person_attrs&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;primary&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sn&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;badge&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;empid&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;locker&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;insert&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;into&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;staff&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;values&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ann&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ann-password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ben&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ben-password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat-password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;insert&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;into&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;person_attrs&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;values&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ann&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Archer&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;B-0001&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;E-1001&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;L-12&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ben&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Brook&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;B-0002&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Cole&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;E-1003&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그리고 구성입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Files first, then the blocks: a definition may use anything before it.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;schema_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;etc/authnd/example.schema&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;schema&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;attribute_type&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleLocker&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.1.3&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; syntax&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.1466.115.121.1.15&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;object_class&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleLockerHolder&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.2.3&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; kind&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;auxiliary&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; may&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;exampleLocker&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/people.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, secret from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, badge as exampleBadge, empid as exampleEmployeeId, locker as exampleLocker from person_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;exampleStaff&amp;#34;, &amp;#34;exampleLockerHolder&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # declared, never inferred
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;object_classes&lt;/code&gt; 줄이 없으면, &lt;code&gt;check&lt;/code&gt;는 표준 스키마만으로 같은 사람들을 어떻게
+처리하는지 알려 줍니다. 속성이 제외되며, 각 줄은 그 속성을 유지했을 클래스를
+지정합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/nodecl.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+schema: etc/authnd/example.schema adds 3 object identifier macros, 2 attribute types and 2 object classes
+USER FROM CAN PROVE PUBLISHED AS WITH
+ann a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn and sn
+ben a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn and sn
+cat a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn and sn
+ann has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+ann is published without exampleBadge: no class of the entry allows it; exampleStaff would
+ann is published without exampleEmployeeId: no class of the entry allows it; exampleStaff would
+ben has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+ben is published without exampleBadge: no class of the entry allows it; exampleStaff would
+cat has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+cat is published without exampleEmployeeId: no class of the entry allows it; exampleStaff would
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="schema-files"&gt;&lt;code&gt;schema_files&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="schema-files"&gt;&lt;/span&gt;
+&lt;a href="#schema-files" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;schema_files&lt;/code&gt;는 OpenLDAP &lt;code&gt;.schema&lt;/code&gt; 파일 또는 cn=config LDIF 파일의 목록입니다.이 파일들은 표준 스키마(그리고 &lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/tls/#the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; 블록&lt;/a&gt;을
+쓰는 경우 Samba의 정의 세 개) 위에 &lt;strong&gt;게시된 그대로&lt;/strong&gt; 순서대로 로드되며,go-authn/ldap의 &lt;a href="https://go-authn.github.io/docs/0.6/ko/libraries/ldap/#hcl2-and-the-converter"&gt;slapd 호환 리더&lt;/a&gt;가
+읽습니다. 용어의 순서는 자유이고, slapd와 RFC 2849 연속 줄, base64, &lt;code&gt;{N}&lt;/code&gt; 길이
+접두사, 그리고 한 파일이 정의하고 다음 파일이 사용할 수 있는 &lt;code&gt;objectidentifier&lt;/code&gt;
+매크로(slapd의 &lt;code&gt;include&lt;/code&gt;를 가로지르는 것과 같습니다)를 지원합니다. 미리 변환하는 것은
+없으므로, 사이트의 slapd가 로드하는 파일이 곧 authnd가 로드하는 파일입니다. 정의는&lt;code&gt;cn=Subschema&lt;/code&gt;에서 제공됩니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;상대 경로는 구성의 다른 모든 경로와 마찬가지로 작업 디렉터리를 기준으로 합니다.서비스에서는 절대 경로를 사용하십시오. systemd 유닛의 작업 디렉터리는 &lt;code&gt;/&lt;/code&gt;입니다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;각 파일은 최대 4 MiB의 일반 파일이어야 하며, 시작 시 한 번 읽습니다.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;파일은 모든 엔트리가 가질 수 있는 것을 결정합니다. 비밀은 아니지만 나머지 구성과
+함께 보관하십시오. &lt;code&gt;root:authnd&lt;/code&gt;, 모드 &lt;code&gt;0640&lt;/code&gt;, root만 쓸 수 있는 디렉터리입니다(&lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/install/"&gt;설치&lt;/a&gt;).&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;빌드되지 않는 파일은 시작과 &lt;code&gt;check&lt;/code&gt;를 거부하며, 파일, 정의가 시작되는 줄과
+열, 그리고 메시지 끝에 거부의 종류를 알려 줍니다. 알 수 없는 상위 클래스, 속성,매칭 규칙 또는 구문(&lt;code&gt;unknown reference&lt;/code&gt;), AUXILIARY 클래스에서 파생된 STRUCTURAL
+클래스(&lt;code&gt;kind violation&lt;/code&gt;), 두 번 정의된 OID 또는 이름(&lt;code&gt;duplicate OID&lt;/code&gt;,&lt;code&gt;duplicate name&lt;/code&gt;)이 그 예입니다. v0.12.1부터 위치와 종류는 메시지를 읽어서가
+아니라 go-authn/ldap의 타입이 있는&lt;a href="https://go-authn.github.io/docs/0.6/ko/libraries/ldap/#build-error"&gt;&lt;code&gt;*schema.BuildError&lt;/code&gt;&lt;/a&gt;에서 옵니다.파일에서 읽은 정의는 여러 줄에 걸쳐 접혀 있어도 1열에서 시작합니다. 중복은 첫
+번째 정의가 어디 있는지 알려 주고, 재정의는 원본이 어느 표준 파일에, 또는 앞선
+파일의 어느 줄에 있는지 알려 줍니다. 두 가지 예입니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cases/unknown.schema&lt;/code&gt;에는 어디에도 정의되지 않은 MAY가 있습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# exampleB has a MAY that is defined nowhere.
+objectclass ( 1.3.6.1.4.1.99999.2.9 NAME &amp;#39;exampleB&amp;#39; SUP top AUXILIARY
+MAY noSuchAttribute )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/unknown.hcl
+authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;cases/twice.schema&lt;/code&gt;는 하나의 OID를 두 속성 타입에 부여합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleA&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleB&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/twice.hcl
+authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 data-hextra-search-id="redefinition"&gt;재정의는 동일하더라도 거부됩니다&lt;span class="hx:absolute hx:-mt-20" id="redefinition"&gt;&lt;/span&gt;
+&lt;a href="#redefinition" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;파일은 이미 있는 것을 정의할 수 없습니다. 표준 스키마의 정의, Samba의 정의, 앞선
+파일의 정의가 그렇습니다. &lt;strong&gt;한 글자도 다르지 않더라도&lt;/strong&gt; 거부되며, 이는 slapd 자신의
+규칙입니다. 스키마 파일의 정의는 &lt;code&gt;parse_at&lt;/code&gt;과 &lt;code&gt;parse_oc&lt;/code&gt;를 거치고, slapd는 이미
+색인된 OID나 이름에 대해 &lt;em&gt;Duplicate attributeType&lt;/em&gt;(OID와 이름이 같은 경우) 또는&lt;em&gt;Inconsistent duplicate attributeType&lt;/em&gt;으로 답합니다(&lt;code&gt;servers/slapd/at.c&lt;/code&gt;, &lt;code&gt;oc.c&lt;/code&gt;).앞의 것은 slapd 자신의 하드코딩된 스키마에만 허용됩니다. slapd가 거부하는 파일은
+authnd도 거부합니다.&lt;/p&gt;
+&lt;p&gt;다른 해석이라면 승자를 골라야 하는데, 그것은 모든 클라이언트가 표준 속성에 대해
+듣는 내용을 조용히 바꾸는 일입니다. 거부하면 해당 줄을 알려 줄 수 있습니다. 거부
+메시지는 텍스트가 같았는지도 알려 줍니다. &lt;code&gt;cn&lt;/code&gt;(2.5.4.3)을 자체 정의로 재정의하는
+파일은 다음과 같습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/dup.hcl
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too (&amp;#34;Duplicate attributeType&amp;#34;, servers/slapd/at.c and oc.c). Remove it from this file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-schema-block"&gt;&lt;code&gt;schema { }&lt;/code&gt; 블록&lt;span class="hx:absolute hx:-mt-20" id="the-schema-block"&gt;&lt;/span&gt;
+&lt;a href="#the-schema-block" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;로컬에서만 쓰는 정의를 위해, &lt;code&gt;schema&lt;/code&gt; 블록은 이를 HCL2로&lt;a href="https://go-authn.github.io/docs/0.6/ko/libraries/ldap/#hcl2-and-the-converter"&gt;hclschema의 형태&lt;/a&gt;에 맞춰
+담습니다. &lt;code&gt;attribute_type&lt;/code&gt;, &lt;code&gt;object_class&lt;/code&gt;, &lt;code&gt;object_identifier&lt;/code&gt;, &lt;code&gt;matching_rule&lt;/code&gt;,&lt;code&gt;ldap_syntax&lt;/code&gt;입니다. 파일 &lt;strong&gt;뒤에&lt;/strong&gt; 읽히므로 파일의 정의를 사용할 수 있으며, 여러 개를
+둘 수 있습니다.&lt;/p&gt;
+&lt;p&gt;값은 &lt;strong&gt;리터럴&lt;/strong&gt;이어야 합니다. 변수도, 함수도, &lt;code&gt;${...}&lt;/code&gt;나 &lt;code&gt;%{...}&lt;/code&gt;도 안 됩니다. 블록은&lt;code&gt;.hcl&lt;/code&gt; 스키마 파일을 읽는 것과 같은 디코더로, 같은 한도로 디코딩되며, 모든 오류는
+구성 자체의 줄과 열을 알려 줍니다. HCL의 네이티브 구문이 아닌 블록은 거부됩니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="object-classes"&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="object-classes"&gt;&lt;/span&gt;
+&lt;a href="#object-classes" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;스키마의 정의는 속성을 허용할 뿐이며, 클래스를 누군가에게 붙이지는 않습니다. 소스는
+자신의 사람과 그룹이 함께 게시되는 보조 클래스를 &lt;strong&gt;선언&lt;/strong&gt;합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;위치&lt;/th&gt;
+&lt;th&gt;키&lt;/th&gt;
+&lt;th&gt;선언하는 것&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;users&lt;/code&gt; 블록, 모든 종류&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;블록이 제공하는 모든 사람의 클래스&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;users&lt;/code&gt; 블록, 모든 종류&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;group_object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;모든 그룹의 클래스&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;user&lt;/code&gt; 블록&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;그 사람의 클래스&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;group&lt;/code&gt; 블록&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;그 그룹의 클래스&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # ...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannPerson&amp;#34;, &amp;#34;eduPerson&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; group_object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannGroupe&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;alice&amp;#34; { object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;siteMember&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;group &amp;#34;staff&amp;#34; { object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannGroupe&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;이 키들은 v0.15.0부터의 go-authn/directory의 것입니다(&lt;a href="https://go-authn.github.io/docs/0.6/ko/libraries/directory/#object-classes"&gt;라이브러리&lt;/a&gt;). 이름은 대소문자를
+무시하고 비교되며, 쓴 순서대로 한 번씩만 유지됩니다.&lt;/p&gt;
+&lt;p&gt;authnd가 선언된 클래스로 하는 일은 다음과 같습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;상위 클래스와 함께 게시됩니다.&lt;/strong&gt; authnd가 도출하는 클래스 뒤에 옵니다(RFC 4512§3.3: 지정된 클래스의 모든 상위 클래스가 암묵적으로 추가됨). 클래스가 허용하는
+속성은 제외되지 않고 유지됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;결코 추론되지 않습니다.&lt;/strong&gt; 소스가 아무것도 선언하지 않는 사람은, 데이터베이스에
+무엇이 있든 자신의 어떤 클래스도 허용하지 않는 속성을 계속 잃습니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;선언된 클래스의 MUST가 없는 사람은 그 클래스 없이 게시됩니다.&lt;/strong&gt; 그 속성은 어떤
+클래스도 허용하지 않는 속성처럼 제외되며, 둘 다 보고됩니다. 이것이 authnd가 어디서나
+따르는 규칙입니다. 사람은 계속 게시되고, 문제는 알려지며, 아무것도 조용히 바뀌지
+않습니다. 속성 하나가 없다고 사람을 보류하면 그 사람이 모든 검색에서 빠지게 되고,MUST 없이 클래스를 게시하면 제공하는 스키마를 통과하지 못하는 엔트리를 제공하게
+됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;두 소스가 한 그룹에 대해 서로 다른 클래스를 선언할 수 있습니다.&lt;/strong&gt; 그룹의 클래스를
+처음 선언하는 소스가 전체를 결정하고, 이후의 목록은 병합되지도 오류가 되지도 않고
+무시됩니다. &lt;code&gt;check&lt;/code&gt;가 이를 알려 줍니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;여기서 ann은 모든 것을 갖고 있고, cat은 사물함이 없으며(MAY), ben은&lt;code&gt;exampleStaff&lt;/code&gt;의 MUST인 &lt;code&gt;exampleEmployeeId&lt;/code&gt;가 없습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check etc/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+schema: etc/authnd/example.schema adds 3 object identifier macros, 2 attribute types and 2 object classes
+schema: the schema block at etc/authnd/authnd.hcl:9:1 adds 1 attribute type and 1 object class: exampleLocker and exampleLockerHolder
+etc/authnd/authnd.hcl:26:22: users &amp;#34;sql&amp;#34; declares exampleStaff and exampleLockerHolder for its people
+USER FROM CAN PROVE PUBLISHED AS WITH
+ann a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder uid, cn, sn, exampleBadge, exampleEmployeeId and exampleLocker
+ben a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject, exampleLockerHolder uid, cn and sn
+cat a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder uid, cn, sn and exampleEmployeeId
+ann has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder
+ben has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject, exampleLockerHolder
+ben is published without exampleStaff, which its source declares: ben has no exampleEmployeeId, which exampleStaff requires
+ben is published without exampleBadge: no class of the entry allows it; exampleStaff would
+cat has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;시작 로그에도 같은 줄이 DN과 함께 나옵니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd
+ldap on 127.0.0.1:3893, serving 3 people from a sqlite database
+schema: etc/authnd/example.schema adds 3 object identifier macros, 2 attribute types and 2 object classes
+schema: the schema block at etc/authnd/authnd.hcl:9:1 adds 1 attribute type and 1 object class: exampleLocker and exampleLockerHolder
+etc/authnd/authnd.hcl:26:22: users &amp;#34;sql&amp;#34; declares exampleStaff and exampleLockerHolder for its people
+uid=ben,ou=people,dc=example,dc=org is published without exampleStaff, which its source declares: uid=ben,ou=people,dc=example,dc=org has no exampleEmployeeId, which exampleStaff requires
+uid=ben,ou=people,dc=example,dc=org is published without exampleBadge: no class of the entry allows it; exampleStaff would
+stopping&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그리고 OpenLDAP의 &lt;code&gt;ldapsearch&lt;/code&gt;가 되읽는 내용입니다. reader의 비밀번호는 파일에
+있습니다. ann은 두 보조 클래스와 그것들이 허용하는 모든 속성을 갖습니다. ben은&lt;code&gt;exampleLockerHolder&lt;/code&gt;만 갖고, 그의 배지는 &lt;code&gt;exampleStaff&lt;/code&gt;와 함께 사라졌습니다. cat은
+둘 다 갖고 직원 번호도 있습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y etc/authnd/reader.pw -b ou=people,dc=example,dc=org &amp;#39;(uid=*)&amp;#39;
+dn: uid=ann,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+objectClass: exampleStaff
+objectClass: exampleLockerHolder
+uid: ann
+cn: ann
+sn: Archer
+exampleBadge: B-0001
+exampleEmployeeId: E-1001
+exampleLocker: L-12
+dn: uid=ben,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+objectClass: exampleLockerHolder
+uid: ben
+cn: ben
+sn: Brook
+dn: uid=cat,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+objectClass: exampleStaff
+objectClass: exampleLockerHolder
+uid: cat
+cn: cat
+sn: Cole
+exampleEmployeeId: E-1003
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y etc/authnd/reader.pw -b ou=people,dc=example,dc=org &amp;#39;(objectClass=exampleStaff)&amp;#39; 1.1
+dn: uid=ann,ou=people,dc=example,dc=org
+dn: uid=cat,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-is-refused"&gt;거부되는 것과 그 이유&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused"&gt;&lt;/span&gt;
+&lt;a href="#what-is-refused" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;선언된 클래스는 시작 시, 그리고 &lt;code&gt;check&lt;/code&gt;에서 제공하는 스키마와 대조해 검사됩니다.다음을 만족해야 합니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;표준 스키마, 파일 또는 블록에 의해 &lt;strong&gt;정의되어&lt;/strong&gt; 있을 것&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;AUXILIARY&lt;/strong&gt;일 것(RFC 4512 §4.1.1). 엔트리에는 정확히 하나의 구조 체인이 있으며(§2.4.2), 이는 사람이 가진 것을 보고 authnd가 고릅니다. 선언으로 두 번째 체인을
+추가할 수는 없습니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;authnd가 스스로 도출하는 클래스가 아닐 것&lt;/strong&gt;: &lt;code&gt;account&lt;/code&gt;, &lt;code&gt;inetOrgPerson&lt;/code&gt;과 그
+상위 클래스, &lt;code&gt;posixAccount&lt;/code&gt;, &lt;code&gt;posixGroup&lt;/code&gt;, &lt;code&gt;ldapPublicKey&lt;/code&gt;, &lt;code&gt;uidObject&lt;/code&gt;,&lt;code&gt;sambaSamAccount&lt;/code&gt;, &lt;code&gt;groupOfNames&lt;/code&gt;, &lt;code&gt;organizationalRole&lt;/code&gt;이며, 어떤 이름으로 쓰든
+마찬가지입니다. 이것들은 사람이나 그룹이 가진 것으로부터 정해지며, 선언이 &lt;code&gt;check&lt;/code&gt;를
+뒤집을 수는 없습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;그렇지 않으면 시작이 거부되며, 블록과 그 위치와 클래스를 알려 줍니다.&lt;code&gt;exampleUnit&lt;/code&gt;은 STRUCTURAL입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/structural.hcl
+authnd: cases/structural.hcl:10:20: users &amp;#34;sql&amp;#34; object_classes: exampleUnit is STRUCTURAL, and an entry has exactly one structural chain (RFC 4512 §2.4.2), which authnd chooses: only an AUXILIARY class (§4.1.1) can be declared&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;go-authn/directory는 그에 앞서 &lt;strong&gt;철자&lt;/strong&gt;를 검사합니다. 클래스는 디스크립터이며, OID도,공백도, 따옴표도, 괄호도 아닙니다.&lt;/p&gt;
+&lt;p&gt;스키마의 정직함을 지키려는 같은 이유로 다음도 거부됩니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;거부되는 것&lt;/th&gt;
+&lt;th&gt;이유&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;정의를 재정의하는 파일, 한 글자도 다르지 않더라도&lt;/td&gt;
+&lt;td&gt;slapd의 규칙: &lt;a href="#redefinition"&gt;위&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;일반 파일이 아니거나 4 MiB를 넘는 파일&lt;/td&gt;
+&lt;td&gt;FIFO는 시작을 막고, &lt;code&gt;/dev/zero&lt;/code&gt;는 끝나지 않음&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;변수, 함수 또는 &lt;code&gt;${...}&lt;/code&gt;가 있는 &lt;code&gt;schema&lt;/code&gt; 블록&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;.hcl&lt;/code&gt; 스키마 파일처럼 리터럴 값만&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt;의 정의되지 않은 클래스&lt;/td&gt;
+&lt;td&gt;아무것도 검사할 수 없는 약속&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;STRUCTURAL 클래스, 또는 authnd가 도출하는 클래스&lt;/td&gt;
+&lt;td&gt;위의 목록&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="what-check-prints"&gt;&lt;code&gt;check&lt;/code&gt;가 출력하는 것&lt;span class="hx:absolute hx:-mt-20" id="what-check-prints"&gt;&lt;/span&gt;
+&lt;a href="#what-check-prints" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/check/"&gt;평소의 줄&lt;/a&gt; 위에 네 종류의 줄이 더해지며, 시작 로그에도
+같은 줄이 나옵니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;**&lt;code&gt;schema: &amp;lt;file&amp;gt; adds …&lt;/code&gt;**와 &lt;strong&gt;&lt;code&gt;schema: the schema block at &amp;lt;file&amp;gt;:&amp;lt;line&amp;gt;:&amp;lt;column&amp;gt; adds …&lt;/code&gt;&lt;/strong&gt;:각 파일과 각 블록이 추가한 것을 오브젝트 식별자 매크로, 속성 타입, 오브젝트 클래스로
+센 것&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;&amp;lt;file&amp;gt;:&amp;lt;line&amp;gt;:&amp;lt;column&amp;gt;: users &amp;quot;sql&amp;quot; declares … for its people&lt;/code&gt;&lt;/strong&gt;(&lt;code&gt;user&lt;/code&gt; 또는&lt;code&gt;group&lt;/code&gt; 블록은 &lt;code&gt;user &amp;quot;ann&amp;quot; declares … for this person&lt;/code&gt;, &lt;code&gt;group &amp;quot;staff&amp;quot; declares … for this group&lt;/code&gt;이라고 함): 각 소스가 선언하는 것&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;&amp;lt;name&amp;gt; is published without &amp;lt;class&amp;gt;, which its source declares: …&lt;/code&gt;&lt;/strong&gt;: 그 사람에게
+없는 MUST를 지정함&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;group staff: the configuration file declares supannGroupe and a postgres database declares eduMember; the first is published and the second is ignored (the first source that declares classes for a group decides)&lt;/code&gt;&lt;/strong&gt;:그룹에 대해 두 소스가 일치하지 않는 경우이며, 그렇지 않으면 조용히 지나갈 것입니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;클래스가 없어서 제외된 속성은 &lt;code&gt;is published without &amp;lt;attribute&amp;gt;: no class of the entry allows it; &amp;lt;classes&amp;gt; would&lt;/code&gt; 줄이며&lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/entries/"&gt;엔트리&lt;/a&gt;가 이미 설명한 것입니다. 선언이 있으면 이
+줄은 아직 선언하지 않은 클래스를 알려 줍니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="rules"&gt;DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙&lt;span class="hx:absolute hx:-mt-20" id="rules"&gt;&lt;/span&gt;
+&lt;a href="#rules" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;v0.13.0부터 &lt;code&gt;schema_files&lt;/code&gt;와 &lt;code&gt;schema { }&lt;/code&gt; 블록은 RFC 4512 §4.1.6과 §4.1.7이 클래스와
+속성에 더하는 세 종류의 정의도 받아들이며, authnd는 이를 &lt;strong&gt;적용합니다&lt;/strong&gt;
+(go-authn/ldap v0.11.0이 이를 읽고, 빌드하고, 검사합니다.&lt;a href="https://go-authn.github.io/docs/0.6/ko/libraries/ldap/#rules"&gt;라이브러리 페이지&lt;/a&gt;에 방법이 있습니다).&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;정의&lt;/th&gt;
+&lt;th&gt;RFC 4512&lt;/th&gt;
+&lt;th&gt;내용&lt;/th&gt;
+&lt;th&gt;authnd가 하는 일&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;DIT 콘텐츠 규칙&lt;/td&gt;
+&lt;td&gt;§4.1.6&lt;/td&gt;
+&lt;td&gt;구조 클래스 하나에 대해: 추가할 수 있는 보조 클래스(&lt;code&gt;AUX&lt;/code&gt;), 필수(&lt;code&gt;MUST&lt;/code&gt;), 허용(&lt;code&gt;MAY&lt;/code&gt;), 금지(&lt;code&gt;NOT&lt;/code&gt;) 속성&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;각 엔트리의 형태를 정함&lt;/strong&gt;(데이터)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;이름 형식&lt;/td&gt;
+&lt;td&gt;§4.1.7.2&lt;/td&gt;
+&lt;td&gt;구조 클래스의 엔트리를 이름 짓는 속성(RDN)은 무엇인가&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;트리를 지킴&lt;/strong&gt;(구성)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;DIT 구조 규칙&lt;/td&gt;
+&lt;td&gt;§4.1.7.1&lt;/td&gt;
+&lt;td&gt;이름 형식을 어디에 놓을 수 있는가: &lt;code&gt;SUP&lt;/code&gt;이 지정하는 규칙이 다스리는 엔트리 아래&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;트리를 지킴&lt;/strong&gt;(구성)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;이들은 있을 때만 &lt;code&gt;cn=Subschema&lt;/code&gt;(&lt;code&gt;dITContentRules&lt;/code&gt;, &lt;code&gt;nameForms&lt;/code&gt;,&lt;code&gt;dITStructureRules&lt;/code&gt;)에 게시됩니다. 하나도 없으면 이 페이지의 어떤 내용도 적용되지
+않으며, v0.12.4와 달라지는 것이 없습니다.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;같은 예제 아크&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;아래의 &lt;code&gt;rules.schema&lt;/code&gt;는 위의 &lt;code&gt;example.schema&lt;/code&gt;처럼 이 페이지를 위해 작성했으며&lt;code&gt;1.3.6.1.4.1.99999&lt;/code&gt; 아래에 있습니다. 여러분의 아크를 사용하십시오. 콘텐츠 규칙의
+OID와 &lt;code&gt;inetOrgPerson&lt;/code&gt;의 OID는 정의상 같습니다. 콘텐츠 규칙은 그것이 대상으로 하는
+구조 클래스의 이름을 따르기 때문입니다.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="rules-example"&gt;각각 하나씩 있는 스키마와 그 HCL&lt;span class="hx:absolute hx:-mt-20" id="rules-example"&gt;&lt;/span&gt;
+&lt;a href="#rules-example" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;OpenLDAP의 &lt;code&gt;.schema&lt;/code&gt; 형식입니다. &lt;code&gt;ditcontentrule&lt;/code&gt;은 slapd.conf(5)의 지시어이고,&lt;code&gt;nameform&lt;/code&gt;과 &lt;code&gt;ditstructurerule&lt;/code&gt;은 slapd에 없어서 go-authn/ldap의 것입니다(&lt;a href="#rules-slapd"&gt;아래&lt;/a&gt;). authnd는 게시하는 트리(접미사, &lt;code&gt;ou=people&lt;/code&gt;, &lt;code&gt;ou=groups&lt;/code&gt;, 그
+아래의 계정, 사람, 그룹)도 검사하므로, 파일에는 각각 하나가 아니라 이름 형식 다섯
+개와 구조 규칙 다섯 개가 있습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# Rules for the tree authnd publishes. 1.3.6.1.4.1.99999 is an example arc:
+# nobody is assigned it, use your own.
+# A content rule belongs to a structural class and takes that class&amp;#39;s OID.
+# inetOrgPerson (2.16.840.1.113730.3.2.2): posixAccount and uidObject may be
+# added, ldapPublicKey may not; telephoneNumber is required; description is
+# precluded.
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME &amp;#39;examplePersonRule&amp;#39;
+AUX ( posixAccount $ uidObject )
+MUST telephoneNumber
+NOT description )
+# A name form says which attribute names an entry of a structural class.
+nameform ( 1.3.6.1.4.1.99999.9.1 NAME &amp;#39;exampleDomainForm&amp;#39; OC domain MUST dc )
+nameform ( 1.3.6.1.4.1.99999.9.2 NAME &amp;#39;exampleUnitForm&amp;#39; OC organizationalUnit MUST ou )
+nameform ( 1.3.6.1.4.1.99999.9.3 NAME &amp;#39;exampleAccountForm&amp;#39; OC account MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.4 NAME &amp;#39;examplePersonForm&amp;#39; OC inetOrgPerson MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.5 NAME &amp;#39;examplePosixGroupForm&amp;#39; OC posixGroup MUST cn )
+# A structure rule gives a name form a place: the rule ID is a number, SUP
+# names the rule of the parent entry.
+ditstructurerule ( 1 NAME &amp;#39;exampleSuffix&amp;#39; FORM exampleDomainForm )
+ditstructurerule ( 2 NAME &amp;#39;exampleUnit&amp;#39; FORM exampleUnitForm SUP 1 )
+ditstructurerule ( 3 NAME &amp;#39;exampleAccounts&amp;#39; FORM exampleAccountForm SUP 2 )
+ditstructurerule ( 4 NAME &amp;#39;examplePersons&amp;#39; FORM examplePersonForm SUP 2 )
+ditstructurerule ( 5 NAME &amp;#39;examplePosixGroups&amp;#39; FORM examplePosixGroupForm SUP 2 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;같은 정의를 &lt;code&gt;ldapschema&lt;/code&gt; v0.11.0이 쓰는 HCL로 나타낸 것입니다(&lt;code&gt;ldapschema to-hcl rules.schema&lt;/code&gt;). 블록 하나가 정의 하나이며 첫 번째 NAME이
+레이블입니다. 구조 규칙에는 &lt;code&gt;id&lt;/code&gt;, 그것이 배치하는 &lt;code&gt;form&lt;/code&gt;, 그리고 그 아래에 놓이는&lt;code&gt;sup&lt;/code&gt; 규칙이 있습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_content_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersonRule&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;2.16.840.1.113730.3.2.2&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; aux&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;posixAccount&amp;#34;, &amp;#34;uidObject&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;telephoneNumber&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; not&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;description&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleDomainForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.1&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;domain&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dc&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleUnitForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.2&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;organizationalUnit&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ou&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleAccountForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.3&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;account&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;uid&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersonForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.4&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;inetOrgPerson&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;uid&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePosixGroupForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.5&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;posixGroup&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;cn&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleSuffix&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleDomainForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleUnit&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;2&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleUnitForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleAccounts&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleAccountForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersons&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersonForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePosixGroups&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;5&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePosixGroupForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;이것이 &lt;code&gt;schema { }&lt;/code&gt; 블록 안에 그대로 들어가는 내용이며, &lt;code&gt;.schema&lt;/code&gt; 파일은&lt;code&gt;schema_files&lt;/code&gt;가 받는 것입니다. &lt;code&gt;ldapschema to-schema rules.hcl&lt;/code&gt;은 이를 같은 정의의&lt;code&gt;.schema&lt;/code&gt; 파일로 되돌리고, &lt;code&gt;ldapschema check&lt;/code&gt;는 표준 스키마 위에 이를 빌드합니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapschema check etc/authnd/rules.schema
+read: 0 object identifiers, 0 syntaxes, 0 matching rules, 0 attribute types, 0 object classes
+read: 1 DIT content rules, 5 name forms, 5 DIT structure rules
+build: ok, 11 definitions added to schema.Standard()&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="content-rules"&gt;콘텐츠 규칙이 엔트리에 하는 일&lt;span class="hx:absolute hx:-mt-20" id="content-rules"&gt;&lt;/span&gt;
+&lt;a href="#content-rules" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;구성은 사람 둘과 그룹 둘이며, 규칙은 &lt;code&gt;schema_files&lt;/code&gt;에서 불러옵니다. &lt;strong&gt;dave&lt;/strong&gt;에게는&lt;code&gt;sn&lt;/code&gt;(그래서 &lt;code&gt;inetOrgPerson&lt;/code&gt;), 전화번호, 설명, SSH 공개 키가 있고, &lt;strong&gt;erin&lt;/strong&gt;에게는&lt;code&gt;sn&lt;/code&gt;만 있고 다른 것은 없으며, &lt;strong&gt;staff&lt;/strong&gt;에게는 &lt;code&gt;gidNumber&lt;/code&gt;가 있고, &lt;strong&gt;team&lt;/strong&gt;에게는
+없습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;schema_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;etc/authnd/rules.schema&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;dave&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;dave-password&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; authorized_keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Dumont&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; telephoneNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;+33 1 23 45 67 89&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; description&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;on call&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;erin&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;erin-password&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { sn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Evans&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;group&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;staff&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; members&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dave&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;100&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;group &amp;#34;team&amp;#34; { members&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dave&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;규칙은 엔트리의 &lt;strong&gt;구조 클래스&lt;/strong&gt;에 적용되며, 그 결과는 시작할 때와 &lt;code&gt;check&lt;/code&gt;에서
+엔트리마다 알려 줍니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;규칙의 내용&lt;/th&gt;
+&lt;th&gt;엔트리&lt;/th&gt;
+&lt;th&gt;표시&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;AUX&lt;/code&gt;가 보조 클래스를 나열하지 않음. 선언된 것이든 authnd가 파생한 것(&lt;code&gt;posixAccount&lt;/code&gt;, &lt;code&gt;ldapPublicKey&lt;/code&gt;, &lt;code&gt;sambaSamAccount&lt;/code&gt;, &lt;code&gt;uidObject&lt;/code&gt;)이든 마찬가지&lt;/td&gt;
+&lt;td&gt;그 클래스는 그것만 허용하던 속성(그리고 authnd가 그 클래스를 위해 추가했을 &lt;code&gt;sshPublicKey&lt;/code&gt;, &lt;code&gt;sambaSID&lt;/code&gt;, &lt;code&gt;sambaNTPassword&lt;/code&gt;)과 함께 &lt;strong&gt;빠집니다&lt;/strong&gt;. 상위 클래스가 빠진 선언된 클래스도 함께 빠집니다&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;name&amp;gt; is published without &amp;lt;class&amp;gt;: the DIT content rule &amp;lt;rule&amp;gt; does not allow it (not in its AUX)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;NOT&lt;/code&gt;이 속성을 지정함&lt;/td&gt;
+&lt;td&gt;그 속성은 누가 주었든 &lt;strong&gt;제거됩니다&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;name&amp;gt; is published without &amp;lt;attribute&amp;gt;: the DIT content rule &amp;lt;rule&amp;gt; precludes it (NOT)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MUST&lt;/code&gt;가 엔트리에 없는 속성을 지정함&lt;/td&gt;
+&lt;td&gt;그 엔트리는 &lt;strong&gt;제외됩니다&lt;/strong&gt;. 규칙은 엔트리 전체에 적용되며, 클래스를 빼서 유효하게 만들 수는 없습니다&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;name&amp;gt; is NOT published: … &amp;lt;attribute&amp;gt; is required by the DIT content rule &amp;lt;rule&amp;gt; and is missing (RFC 4512 4.1.6)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;구조 클래스에 콘텐츠 규칙이 없으면, slapd가 허용하듯 엔트리의 보조 클래스는
+허용됩니다(&lt;a href="#rules-slapd"&gt;아래&lt;/a&gt;).&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check etc/authnd/authnd.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+USER FROM CAN PROVE PUBLISHED AS WITH
+dave the configuration file a password and 1 key person, organizationalPerson, inetOrgPerson, uidObject uid, cn, sn and telephoneNumber
+erin the configuration file a password NOT PUBLISHED (see below) uid, cn and sn
+GROUP MEMBERS PUBLISHED AS
+staff dave posixGroup
+team dave NOT PUBLISHED (see below)
+dave has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+dave is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+dave is published without description: the DIT content rule examplePersonRule precludes it (NOT)
+erin has no uidNumber, gidNumber or homeDirectory: not a posixAccount, and as person, organizationalPerson, inetOrgPerson, uidObject the entry fails the schema (below)
+erin is NOT published: as person, organizationalPerson, inetOrgPerson, uidObject it fails the schema:
+- telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+group team is NOT published: as groupOfNames it fails the schema:
+- no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;서버가 시작되며, 로그에는 같은 세 종류의 줄이 DN과 함께 남습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd/authnd.hcl
+ldap on 127.0.0.1:3893, serving 2 people from the configuration file
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+uid=erin,ou=people,dc=example,dc=org is NOT published: it fails the schema: telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+cn=team,ou=groups,dc=example,dc=org is NOT published: it fails the schema: no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+uid=dave,ou=people,dc=example,dc=org is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+uid=dave,ou=people,dc=example,dc=org is published without description: the DIT content rule examplePersonRule precludes it (NOT)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;OpenLDAP의 &lt;code&gt;ldapsearch&lt;/code&gt;가 &lt;code&gt;cn=Subschema&lt;/code&gt;에서 읽는 것, 즉 규칙이 게시되는 세
+속성입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b cn=Subschema -s base &amp;#39;(objectClass=subschema)&amp;#39; dITContentRules nameForms dITStructureRules
+dn: cn=Subschema
+dITContentRules: ( 2.16.840.1.113730.3.2.2 NAME &amp;#39;examplePersonRule&amp;#39; AUX ( posixAccount $ uidObject ) MUST telephoneNumber NOT description )
+nameForms: ( 1.3.6.1.4.1.99999.9.1 NAME &amp;#39;exampleDomainForm&amp;#39; OC domain MUST dc )
+nameForms: ( 1.3.6.1.4.1.99999.9.2 NAME &amp;#39;exampleUnitForm&amp;#39; OC organizationalUnit MUST ou )
+nameForms: ( 1.3.6.1.4.1.99999.9.3 NAME &amp;#39;exampleAccountForm&amp;#39; OC account MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.4 NAME &amp;#39;examplePersonForm&amp;#39; OC inetOrgPerson MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.5 NAME &amp;#39;examplePosixGroupForm&amp;#39; OC posixGroup MUST cn )
+dITStructureRules: ( 1 NAME &amp;#39;exampleSuffix&amp;#39; FORM exampleDomainForm )
+dITStructureRules: ( 2 NAME &amp;#39;exampleUnit&amp;#39; FORM exampleUnitForm SUP 1 )
+dITStructureRules: ( 3 NAME &amp;#39;exampleAccounts&amp;#39; FORM exampleAccountForm SUP 2 )
+dITStructureRules: ( 4 NAME &amp;#39;examplePersons&amp;#39; FORM examplePersonForm SUP 2 )
+dITStructureRules: ( 5 NAME &amp;#39;examplePosixGroups&amp;#39; FORM examplePosixGroupForm SUP 2 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그리고 규칙이 건드리는 것을 요청한 트리입니다. 먼저 &lt;code&gt;schema_files&lt;/code&gt;가 &lt;strong&gt;없는&lt;/strong&gt; 같은
+구성(증인: 아래의 모든 차이는 규칙 때문입니다), 그다음 규칙이 있는 구성입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(|(uid=*)(cn=*))&amp;#39; dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: ldapPublicKey
+objectClass: uidObject
+description: on call
+sshPublicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org
+dn: uid=erin,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+dn: cn=team,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(|(uid=*)(cn=*))&amp;#39; dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;dave는 &lt;code&gt;ldapPublicKey&lt;/code&gt;와 함께 &lt;code&gt;sshPublicKey&lt;/code&gt;를 잃었고(&lt;code&gt;AUX&lt;/code&gt;에 없음), &lt;code&gt;description&lt;/code&gt;도
+잃었습니다(&lt;code&gt;NOT&lt;/code&gt;). erin은 사라졌고(&lt;code&gt;MUST telephoneNumber&lt;/code&gt;), &lt;strong&gt;team&lt;/strong&gt;도 사라졌습니다.&lt;code&gt;gidNumber&lt;/code&gt;가 없으므로 &lt;code&gt;groupOfNames&lt;/code&gt;인데, &lt;code&gt;ou=groups&lt;/code&gt; 아래에 &lt;code&gt;groupOfNames&lt;/code&gt;를
+놓는 구조 규칙이 없기 때문입니다. 마지막 것은 트리의 규칙이 데이터에 적용된
+것이며, 다음 절에서 설명합니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="structure-rules"&gt;구조 규칙이 트리에 하는 일&lt;span class="hx:absolute hx:-mt-20" id="structure-rules"&gt;&lt;/span&gt;
+&lt;a href="#structure-rules" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;strong&gt;활성&lt;/strong&gt; DIT 구조 규칙이 &lt;strong&gt;하나 이상&lt;/strong&gt; 있으면, authnd는 게시할 트리를 시작할 때와&lt;code&gt;check&lt;/code&gt;에서 훑어봅니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;접미사&lt;/strong&gt;(&lt;code&gt;base_dn&lt;/code&gt;)는 그 RDN이 지정하는 클래스로 봅니다. &lt;code&gt;dc&lt;/code&gt;는 &lt;code&gt;domain&lt;/code&gt;, &lt;code&gt;o&lt;/code&gt;는&lt;code&gt;organization&lt;/code&gt;, &lt;code&gt;ou&lt;/code&gt;는 &lt;code&gt;organizationalUnit&lt;/code&gt;, &lt;code&gt;c&lt;/code&gt;는 &lt;code&gt;country&lt;/code&gt;, &lt;code&gt;l&lt;/code&gt;은 &lt;code&gt;locality&lt;/code&gt;입니다.다른 속성으로 이름 지은 접미사는 거부됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ou=people&lt;/code&gt;과 &lt;code&gt;ou=groups&lt;/code&gt;는 &lt;code&gt;organizationalUnit&lt;/code&gt;으로 봅니다.&lt;/li&gt;
+&lt;li&gt;authnd가 사람을 이름 짓는 RDN 속성(&lt;code&gt;uid&lt;/code&gt;)과 그룹을 이름 짓는 속성(&lt;code&gt;cn&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;어떤 규칙도 자리를 주지 않는 컨테이너, 이름 형식을 가진 규칙이 하나도 없는 종류의
+접미사, &lt;code&gt;uid&lt;/code&gt;나 &lt;code&gt;cn&lt;/code&gt;을 거부하는 이름 형식, 또는 authnd가 게시하는 어떤 것도 놓일 수
+없는 컨테이너는 &lt;strong&gt;시작을 거부하며, &lt;code&gt;check&lt;/code&gt;도 마찬가지입니다&lt;/strong&gt;. 모든 거부가 한꺼번에
+DN, 규칙 또는 이름 형식, 조항을 밝히며 보고되고, 비밀 값은 절대 출력되지 않습니다.구조 클래스가 데이터(&lt;code&gt;sn&lt;/code&gt;, &lt;code&gt;gidNumber&lt;/code&gt;)에 달려 있고 그 컨테이너 아래에 규칙이 없는
+사람이나 그룹은 대신 &lt;strong&gt;제외되고 알려집니다&lt;/strong&gt;. 위의 team처럼 서버는 시작됩니다.활성 구조 규칙이 없으면 달라지는 것이 없습니다.&lt;/p&gt;
+&lt;p&gt;사람을 위한 유일한 구조 규칙 &lt;code&gt;peopleByCN&lt;/code&gt;이 &lt;code&gt;cn&lt;/code&gt;을 요구하는 이름 형식(&lt;code&gt;accountByCN&lt;/code&gt;:&lt;code&gt;OC account MUST cn&lt;/code&gt;)을 배치하는 스키마입니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/bad.hcl
+authnd: DIT structure rules: authnd names its people uid=&amp;lt;name&amp;gt;,ou=people,dc=example,dc=org, and an account named so is refused: the RDN (uid) is allowed by the name form of no DIT structure rule that places account under an entry governed by the rule 2: accountByCN needs cn&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;authnd는 사람을 &lt;code&gt;uid=&amp;lt;name&amp;gt;&lt;/code&gt;으로 이름 짓습니다. 규칙이 이를 허용해야 합니다. 그리고&lt;code&gt;organizationalUnit&lt;/code&gt;의 규칙에 &lt;code&gt;SUP&lt;/code&gt;이 없어서 &lt;code&gt;organizationalUnit&lt;/code&gt;이 루트에만 있을 수
+있는 스키마는 &lt;code&gt;ou=people&lt;/code&gt;과 &lt;code&gt;ou=groups&lt;/code&gt; 둘 다 자리가 없게 되며, 둘을 한꺼번에
+알립니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/root.hcl
+authnd: DIT structure rules: ou=people,dc=example,dc=org, where authnd publishes its people, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)
+DIT structure rules: ou=groups,dc=example,dc=org, where authnd publishes its groups, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;둘 다 종료 상태 1로 끝납니다. 그 뒤의 파일(&lt;code&gt;cases/bad.schema&lt;/code&gt;와&lt;code&gt;cases/root.schema&lt;/code&gt;)에는 같은 이름 형식 다섯 개와, 요점을 보여 주는 구조 규칙만
+들어 있습니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="rules-slapd"&gt;authnd와 slapd가 다른 점&lt;span class="hx:absolute hx:-mt-20" id="rules-slapd"&gt;&lt;/span&gt;
+&lt;a href="#rules-slapd" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;go-authn/ldap은 OpenLDAP 파일을 읽으며, 규칙의 일부는 OpenLDAP의 것입니다. 차이는
+발견하게 두지 않고 밝혀 둡니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;slapd는 콘텐츠 규칙만 구현합니다.&lt;/strong&gt; 이름 형식이나 구조 규칙을 위한 지시어가
+없습니다. &lt;code&gt;Format&lt;/code&gt;은 이 라이브러리의 것인 &lt;code&gt;nameform&lt;/code&gt;과 &lt;code&gt;ditstructurerule&lt;/code&gt; 키워드를
+쓰며 slapd는 이를 거부합니다. 이들은 HCL에 두거나 authnd만 읽는 파일에 두십시오.&lt;code&gt;ditcontentrule&lt;/code&gt;은 slapd의 것입니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;OBSOLETE&lt;/code&gt; 규칙은 비활성입니다&lt;/strong&gt;(RFC 4512 §4.1.6). 그 이름 형식이나 구조 규칙도
+마찬가지입니다. slapd는 대신 엔트리를 거부합니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;콘텐츠 규칙이 없으면 보조 클래스가 허용됩니다.&lt;/strong&gt; 이것이 slapd의 동작이며(그&lt;code&gt;SLAP_DISALLOW_AUX_WO_CR&lt;/code&gt; 플래그는 어떤 &lt;code&gt;disallow&lt;/code&gt; 키워드로도 설정되지 않습니다)authnd의 동작이기도 합니다. RFC 4512 §2.4.3은 다르게 말하며, 라이브러리는 이를&lt;code&gt;ValidateOptions{StrictAuxiliary: true}&lt;/code&gt;로 제공하고 authnd는 이를 설정하지 않습니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;libldap은 구조 규칙의 &lt;code&gt;SUP&lt;/code&gt;을 읽지 못합니다.&lt;/strong&gt; &lt;code&gt;SUP&lt;/code&gt;이 있는 구조 규칙은 여기서는
+읽히지만 libldap에서는 읽히지 않으므로, 그런 파일에 대한 libldap의 거부는 파일에
+대한 판정이 아닙니다.&lt;/li&gt;
+&lt;li&gt;규칙을 &lt;strong&gt;재정의하는&lt;/strong&gt; 파일은 다른 모든 정의처럼 글자 그대로 같더라도 거부됩니다(&lt;a href="#redefinition"&gt;위&lt;/a&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 data-hextra-search-id="rules-cost"&gt;비용&lt;span class="hx:absolute hx:-mt-20" id="rules-cost"&gt;&lt;/span&gt;
+&lt;a href="#rules-cost" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;2026-10-26에 &lt;code&gt;BenchmarkPublish10k&lt;/code&gt;(go-authn/authnd, &lt;code&gt;rules_bench_test.go&lt;/code&gt;)로
+측정했습니다. 사람 10,000명을 게시할 때 &lt;code&gt;testdata/rules.schema&lt;/code&gt;의 규칙이 있으면&lt;strong&gt;엔트리당 할당 416회&lt;/strong&gt;, 없으면 &lt;strong&gt;265회&lt;/strong&gt;입니다. 여기에는 금지된 설명을 제거하고
+다시 검증하는 것이 포함됩니다. 시간은 192 ms 대 118 ms였고 부하 8~14에서 측정했으므로
+신뢰할 비율이 아니며, 할당 횟수만 신뢰할 수 있습니다.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="rules-upgrade"&gt;업그레이드&lt;span class="hx:absolute hx:-mt-20" id="rules-upgrade"&gt;&lt;/span&gt;
+&lt;a href="#rules-upgrade" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;규칙이 없는 스키마는 달라지는 것이 없습니다. v0.12.4는 세 종류를 모두 거부했으므로
+그 버전에서 시작된 구성에는 규칙이 없습니다. 예외가 하나 있습니다. &lt;strong&gt;UTF-8이 아닌&lt;/strong&gt;
+&lt;code&gt;schema { }&lt;/code&gt; 문자열(HCL이 통과시키는 과도한 인코딩)은 v0.12.4에서 시작되었지만 이제는
+거부됩니다. 쓰인 그대로는 게시할 수 없기 때문입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="supann"&gt;실제 예제로서의 SUPANN&lt;span class="hx:absolute hx:-mt-20" id="supann"&gt;&lt;/span&gt;
+&lt;a href="#supann" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;SUPANN은 프랑스 고등 교육 및 연구 기관의 속성 집합(&lt;code&gt;supannPerson&lt;/code&gt;,&lt;code&gt;supannEtablissement&lt;/code&gt;, &lt;code&gt;supannEntite&lt;/code&gt;…)이며, eduPerson이 곁에 있습니다. RENATER는 다른
+것들과 함께 기술 스키마를 문서 페이지에 게시합니다.&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://services.renater.fr/documentation/supann/supann2021/recommandations/tables_references/schemas_techniques_supann" target="_blank" rel="noopener"&gt;https://services.renater.fr/documentation/supann/supann2021/recommandations/tables_references/schemas_techniques_supann&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;파일은 거기서 내려받으십시오.&lt;/strong&gt; 이 사이트에는 복제하지 않습니다. 라이선스를
+명시하고 있지 않으므로 이 페이지는 복사하지 않으며, 여기의 사본은 RENATER가
+개정하면 낡아 버립니다. 그다음:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo install -o root -g authnd -m &lt;span class="m"&gt;0640&lt;/span&gt; supann.schema eduperson.ldif /etc/authnd/&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;schema_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/etc/authnd/supann.schema&amp;#34;, &amp;#34;/etc/authnd/eduperson.ldif&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # ...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, etab as \&amp;#34;supannEtablissement\&amp;#34; from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannPerson&amp;#34;, &amp;#34;eduPerson&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; group_object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannGroupe&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;authnd check&lt;/code&gt;를 실행하고 먼저 &lt;code&gt;schema:&lt;/code&gt; 줄을 읽으십시오. slapd가 로드하는 파일은 여기서도
+로드되며, 표준 정의를 재정의하는 파일은 그 줄과 함께 거부됩니다. 그다음 &lt;em&gt;published
+without&lt;/em&gt; 줄을 읽으십시오. &lt;code&gt;supannPerson&lt;/code&gt;이나 &lt;code&gt;eduPerson&lt;/code&gt;의 MUST가 없는 사람은 그 클래스 없이
+게시되며, &lt;code&gt;check&lt;/code&gt;가 그 MUST를 알려 줍니다. 철자가 중요한 곳에서는 별칭에 따옴표를 쓰십시오(PostgreSQL은 따옴표 없는 별칭을 소문자로 바꿉니다.&lt;a href="https://go-authn.github.io/docs/0.6/ko/authnd/entries/#in-a-sql-database"&gt;엔트리&lt;/a&gt;를 참조).&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;트랜스크립트에 대하여&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;이 페이지의 모든 명령은 2026-10-26에 v0.12.3 릴리스 바이너리(&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;, &lt;code&gt;SHA256SUMS&lt;/code&gt;와 대조함; &lt;code&gt;go version -m&lt;/code&gt;: &lt;code&gt;go1.27.3&lt;/code&gt;, &lt;code&gt;mod github.com/go-authn/authnd v0.12.3&lt;/code&gt;, &lt;code&gt;vcs.modified=false&lt;/code&gt;)와 OpenLDAP의 &lt;code&gt;ldapsearch&lt;/code&gt;로, 127.0.0.1에서 임시 디렉터리에 보여 준 파일을 두고 다시 실행한 것입니다. 경로가 상대 경로인 것은 그 때문이며, 서비스에서는 절대 경로를 사용합니다. 스키마는 이 페이지를 위해 작성한 예제입니다.&lt;/p&gt;
+&lt;p&gt;&lt;a href="#rules"&gt;DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙&lt;/a&gt; 절은 2026-10-26에 v0.13.0 릴리스 바이너리(&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;, &lt;code&gt;relverify&lt;/code&gt;로 &lt;code&gt;SHA256SUMS&lt;/code&gt; 및 그 증명과 대조함; &lt;code&gt;go version -m&lt;/code&gt;: &lt;code&gt;go1.27.3&lt;/code&gt;, &lt;code&gt;mod github.com/go-authn/authnd v0.13.0&lt;/code&gt;; &lt;code&gt;authnd --version&lt;/code&gt;: &lt;code&gt;authnd version v0.13.0&lt;/code&gt;), OpenLDAP의 &lt;code&gt;ldapsearch&lt;/code&gt;, 그리고 go-authn/ldap v0.11.0 태그로 빌드한 &lt;code&gt;ldapschema&lt;/code&gt;(&lt;code&gt;go install&lt;/code&gt;, go1.27.1, 릴리스 바이너리 없음)로 실행했습니다. 그곳의 모든 출력은 이 프로그램들이 127.0.0.1에서 임시 디렉터리에 출력한 것이며, 트랜스크립트 뒤의 파일은 그 옆에 보여 주거나 설명해 두었습니다.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>
