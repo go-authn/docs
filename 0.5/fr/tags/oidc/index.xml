@@ -464,6 +464,87 @@ data-copied-label="Copié !"
 vérifie seul. Ce à quoi &lt;a href="https://go-authn.github.io/docs/0.5/fr/authn-bridge/admin/"&gt;&lt;code&gt;RevokePerson&lt;/code&gt;&lt;/a&gt;
 met fin, c&amp;rsquo;est tout ce qui revient ici avec lui ; le serveur de ressources l&amp;rsquo;apprend
 par &lt;a href="https://go-authn.github.io/docs/0.5/fr/authn-bridge/revocation/#shared-signals"&gt;Shared Signals&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="rotating-the-signing-key"&gt;Renouveler la clé de signature des jetons&lt;span class="hx:absolute hx:-mt-20" id="rotating-the-signing-key"&gt;&lt;/span&gt;
+&lt;a href="#rotating-the-signing-key" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Chaque partie utilisatrice vérifie les jetons avec les clés publiées à &lt;code&gt;/jwks&lt;/code&gt;. Une clé
+changée sur place invalide tous les jetons qu&amp;rsquo;elles détiennent, et une clé utilisée avant
+qu&amp;rsquo;elles l&amp;rsquo;aient récupérée est refusée. &lt;code&gt;retired_signing_key_files&lt;/code&gt; rend les deux cas
+sûrs : une clé listée là est &lt;strong&gt;publiée et ne signe jamais&lt;/strong&gt;. Le renouvellement demande&lt;strong&gt;deux redémarrages&lt;/strong&gt;, car le fournisseur ne recharge pas sa configuration et un SIGHUP
+est ignoré. Cette section reprend le README du bridge après sa pull request #80 (fusionnée
+le 2026-10-26, après le tag v0.23.4).&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Fabriquer la clé suivante&lt;/strong&gt;, à côté de l&amp;rsquo;actuelle. La commande refuse d&amp;rsquo;écraser un
+fichier :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;La publier avant qu&amp;rsquo;elle signe.&lt;/strong&gt; L&amp;rsquo;ajouter à &lt;code&gt;retired_signing_key_files&lt;/code&gt;, laisser&lt;code&gt;signing_key_file&lt;/code&gt; tel quel, lancer &lt;code&gt;authn-bridge check&lt;/code&gt;, et redémarrer :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;signing_key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-04.key&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # still signing
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-10.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;published&lt;/span&gt; &lt;span class="k"&gt;only&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/jwks&lt;/code&gt; liste maintenant &lt;strong&gt;les deux&lt;/strong&gt; &lt;code&gt;kid&lt;/code&gt;, et les nouveaux jetons portent encore
+l&amp;rsquo;ancien. Attendre au moins aussi longtemps que la plus longue durée pendant laquelle
+une partie utilisatrice garde le jeu de clés en cache. Celle qui le relit sur un &lt;code&gt;kid&lt;/code&gt;
+inconnu (go-authn/oidc le fait, au plus une fois par &lt;code&gt;MinRefresh&lt;/code&gt;) n&amp;rsquo;a rien à attendre ;celle qui met en cache pour une durée fixe doit attendre cette durée.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Basculer.&lt;/strong&gt; Faire de la nouvelle clé le &lt;code&gt;signing_key_file&lt;/code&gt; et déplacer l&amp;rsquo;ancienne
+dans &lt;code&gt;retired_signing_key_files&lt;/code&gt;. Puis &lt;code&gt;authn-bridge check&lt;/code&gt; et redémarrer :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;signing_key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-10.key&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-04.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/jwks&lt;/code&gt; liste toujours les deux &lt;code&gt;kid&lt;/code&gt;, et les nouveaux jetons portent le nouveau.Les jetons signés avec l&amp;rsquo;ancienne clé continuent d&amp;rsquo;être vérifiés.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Retirer l&amp;rsquo;ancienne clé&lt;/strong&gt; quand plus aucun jeton qu&amp;rsquo;elle a signé ne peut être
+présenté : au moins la plus longue de &lt;code&gt;token_lifetime&lt;/code&gt; (1 h par défaut) et&lt;code&gt;id_token_lifetime&lt;/code&gt; (5 min), plus le décalage d&amp;rsquo;horloge des parties utilisatrices et
+leur cache de jeu de clés. Pour opkssh, attendre plutôt la durée de vie du PK Token(un jour par défaut, jusqu&amp;rsquo;à une semaine). Puis la retirer de la liste et redémarrer :&lt;code&gt;/jwks&lt;/code&gt; ne liste plus qu&amp;rsquo;un &lt;code&gt;kid&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;À chaque étape, &lt;code&gt;curl -s https://login.example.org/jwks&lt;/code&gt; donne les &lt;code&gt;kid&lt;/code&gt; publiés, et le&lt;code&gt;kid&lt;/code&gt; d&amp;rsquo;un jeton frais est le premier segment de tout jeton d&amp;rsquo;accès ou d&amp;rsquo;identité,décodé en base64url.&lt;/p&gt;
+&lt;p&gt;Un &lt;code&gt;access_token_key_file&lt;/code&gt; (ES256) se renouvelle de la même façon : écrire le suivant avec&lt;code&gt;authn-bridge keygen --access-token-key&lt;/code&gt;, et une clé retirée va dans&lt;code&gt;retired_signing_key_files&lt;/code&gt; comme les autres. Sans bloc &lt;code&gt;state&lt;/code&gt;, chaque redémarrage
+déconnecte tout le monde, parce que les jetons de rafraîchissement et &lt;code&gt;/userinfo&lt;/code&gt; vivent en
+mémoire ; les jetons d&amp;rsquo;accès déjà émis restent vérifiés par les serveurs de ressources.&lt;/p&gt;
+&lt;p&gt;Le README rapporte que cela a été vérifié de bout en bout avec llmflow-gateway comme partie
+utilisatrice, dans go-llmflow/bench (&lt;code&gt;e2e/oidc&lt;/code&gt;, &lt;code&gt;TestBridge/c/key-rotation&lt;/code&gt;) : après
+l&amp;rsquo;étape 2, &lt;code&gt;/jwks&lt;/code&gt; liste les deux &lt;code&gt;kid&lt;/code&gt; alors que les jetons portent encore l&amp;rsquo;ancien ; après
+l&amp;rsquo;étape 3, un jeton signé avant la bascule et un signé après sont tous deux acceptés, avec
+une seule récupération du jeu de clés ; et une connexion SSO juste après la bascule
+fonctionne.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="without-a-browser-the-device-grant"&gt;Sans navigateur : l&amp;rsquo;octroi par appareil&lt;span class="hx:absolute hx:-mt-20" id="without-a-browser-the-device-grant"&gt;&lt;/span&gt;
 &lt;a href="#without-a-browser-the-device-grant" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un client WebDAV, un script, un terminal n&amp;rsquo;a pas de navigateur à envoyer vers une université. Un
 client avec &lt;code&gt;device = true&lt;/code&gt; demande un code (RFC 8628), et la personne se connecte

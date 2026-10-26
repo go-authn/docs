@@ -1347,6 +1347,68 @@ data-copied-label="已复制！"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;已经发放的访问令牌是资源服务器自行检查的签名声明。&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authn-bridge/admin/"&gt;&lt;code&gt;RevokePerson&lt;/code&gt;&lt;/a&gt;终止的是带着它回到这里的一切；资源服务器通过&lt;a href="https://go-authn.github.io/docs/0.5/zh-cn/authn-bridge/revocation/#shared-signals"&gt;Shared Signals&lt;/a&gt;得知。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="rotating-the-signing-key"&gt;轮换令牌签名密钥&lt;span class="hx:absolute hx:-mt-20" id="rotating-the-signing-key"&gt;&lt;/span&gt;
+&lt;a href="#rotating-the-signing-key" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;每个依赖方都用 &lt;code&gt;/jwks&lt;/code&gt; 发布的密钥验证令牌。就地更换密钥会使它们手中的所有令牌失效，而在它们取得之前就开始使用的密钥会被拒绝。&lt;code&gt;retired_signing_key_files&lt;/code&gt; 让这两种情况都变得安全：列在其中的密钥&lt;strong&gt;只发布，从不签名&lt;/strong&gt;。轮换需要&lt;strong&gt;两次重启&lt;/strong&gt;，因为提供方不会重新加载配置，SIGHUP 也会被忽略。本节依据 bridge 的 pull request #80（2026-10-26 合并，晚于标签 v0.23.4）之后的 README。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;生成下一把密钥&lt;/strong&gt;，放在当前密钥旁边。该命令拒绝覆盖已有文件：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;在它开始签名之前先发布。&lt;/strong&gt; 把它加入 &lt;code&gt;retired_signing_key_files&lt;/code&gt;，保持 &lt;code&gt;signing_key_file&lt;/code&gt; 不变，运行 &lt;code&gt;authn-bridge check&lt;/code&gt;，然后重启：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;signing_key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-04.key&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # still signing
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-10.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;published&lt;/span&gt; &lt;span class="k"&gt;only&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/jwks&lt;/code&gt; 现在列出&lt;strong&gt;两个&lt;/strong&gt; &lt;code&gt;kid&lt;/code&gt;，而新令牌仍带旧的 &lt;code&gt;kid&lt;/code&gt;。等待的时间至少要等于依赖方缓存密钥集的最长时间。遇到未知 &lt;code&gt;kid&lt;/code&gt; 就重新获取的依赖方（go-authn/oidc 会这样做，每个 &lt;code&gt;MinRefresh&lt;/code&gt; 至多一次）无需等待；按固定时间缓存的依赖方则需要等那么久。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;切换。&lt;/strong&gt; 把新密钥设为 &lt;code&gt;signing_key_file&lt;/code&gt;，并把旧密钥移到 &lt;code&gt;retired_signing_key_files&lt;/code&gt;。然后运行&lt;code&gt;authn-bridge check&lt;/code&gt; 并重启：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;signing_key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-10.key&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-04.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/jwks&lt;/code&gt; 仍列出两个 &lt;code&gt;kid&lt;/code&gt;，新令牌带新的 &lt;code&gt;kid&lt;/code&gt;。用旧密钥签名的令牌继续可以验证。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;淘汰旧密钥&lt;/strong&gt;，要在它签名的令牌不可能再被出示之后：至少是 &lt;code&gt;token_lifetime&lt;/code&gt;（默认 1 小时）与&lt;code&gt;id_token_lifetime&lt;/code&gt;（5 分钟）中较长者，再加上依赖方的时钟偏差及其密钥集缓存。对 opkssh，则改为等待PK Token 的有效期（默认一天，最长一周）。然后把它从列表中移除并重启：&lt;code&gt;/jwks&lt;/code&gt; 只列出一个 &lt;code&gt;kid&lt;/code&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;每一步都可以用 &lt;code&gt;curl -s https://login.example.org/jwks&lt;/code&gt; 查看已发布的 &lt;code&gt;kid&lt;/code&gt;；新令牌的 &lt;code&gt;kid&lt;/code&gt; 是任一访问令牌或ID 令牌的第一段，经 base64url 解码得到。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;access_token_key_file&lt;/code&gt;（ES256）以同样方式轮换：用 &lt;code&gt;authn-bridge keygen --access-token-key&lt;/code&gt; 写出下一把，被淘汰的和其他密钥一样放入 &lt;code&gt;retired_signing_key_files&lt;/code&gt;。没有 &lt;code&gt;state&lt;/code&gt; 块时，每次重启都会让所有人退出登录，因为刷新令牌和 &lt;code&gt;/userinfo&lt;/code&gt; 保存在内存中；已经签发的访问令牌在资源服务器上仍可验证。&lt;/p&gt;
+&lt;p&gt;README 报告说，这已用 llmflow-gateway 作为依赖方，在 go-llmflow/bench（&lt;code&gt;e2e/oidc&lt;/code&gt;，&lt;code&gt;TestBridge/c/key-rotation&lt;/code&gt;）中端到端验证：第 2 步之后，&lt;code&gt;/jwks&lt;/code&gt; 列出两个 &lt;code&gt;kid&lt;/code&gt;，而令牌仍带旧的；第 3 步之后，切换前签名的令牌和切换后签名的令牌都被接受，只获取了一次密钥集；切换后立即进行 SSO 登录也能正常工作。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="without-a-browser-the-device-grant"&gt;没有浏览器：设备授权&lt;span class="hx:absolute hx:-mt-20" id="without-a-browser-the-device-grant"&gt;&lt;/span&gt;
 &lt;a href="#without-a-browser-the-device-grant" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;WebDAV 客户端、脚本、终端都没有可以把人带到大学登录页的浏览器。带有 &lt;code&gt;device = true&lt;/code&gt; 的客户端会索要代码（RFC 8628），人员在任何其他设备上登录：&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;

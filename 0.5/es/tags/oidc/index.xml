@@ -473,6 +473,85 @@ data-copied-label="¡Copiado!"
 recursos comprueba por su cuenta. Lo que &lt;a href="https://go-authn.github.io/docs/0.5/es/authn-bridge/admin/"&gt;&lt;code&gt;RevokePerson&lt;/code&gt;&lt;/a&gt;
 termina es todo lo que vuelve aquí con él; el servidor de recursos se entera
 mediante &lt;a href="https://go-authn.github.io/docs/0.5/es/authn-bridge/revocation/#shared-signals"&gt;Shared Signals&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="rotating-the-signing-key"&gt;Rotar la clave de firma de los tokens&lt;span class="hx:absolute hx:-mt-20" id="rotating-the-signing-key"&gt;&lt;/span&gt;
+&lt;a href="#rotating-the-signing-key" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Cada parte confiante verifica los tokens con las claves publicadas en &lt;code&gt;/jwks&lt;/code&gt;. Una clave
+cambiada en el sitio invalida todos los tokens que tienen, y una clave usada antes de que la
+hayan obtenido es rechazada. &lt;code&gt;retired_signing_key_files&lt;/code&gt; hace seguras ambas cosas: una clave
+listada ahí se &lt;strong&gt;publica y nunca firma&lt;/strong&gt;. La rotación requiere &lt;strong&gt;dos reinicios&lt;/strong&gt;, porque el
+proveedor no recarga su configuración y un SIGHUP se ignora. Esta sección sigue el README del
+bridge tras su pull request #80 (fusionada el 2026-10-26, después de la etiqueta v0.23.4).&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Crear la clave siguiente&lt;/strong&gt;, junto a la actual. El comando se niega a sobrescribir un
+archivo:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Publicarla antes de que firme.&lt;/strong&gt; Añadirla a &lt;code&gt;retired_signing_key_files&lt;/code&gt;, dejar&lt;code&gt;signing_key_file&lt;/code&gt; como está, ejecutar &lt;code&gt;authn-bridge check&lt;/code&gt; y reiniciar:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;signing_key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-04.key&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # still signing
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-10.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;published&lt;/span&gt; &lt;span class="k"&gt;only&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/jwks&lt;/code&gt; lista ahora &lt;strong&gt;ambos&lt;/strong&gt; &lt;code&gt;kid&lt;/code&gt;, y los tokens nuevos aún llevan el antiguo. Esperar al
+menos lo que tarda en cachearse el conjunto de claves la parte confiante más lenta. La que
+lo vuelve a pedir ante un &lt;code&gt;kid&lt;/code&gt; desconocido (go-authn/oidc lo hace, como mucho una vez por&lt;code&gt;MinRefresh&lt;/code&gt;) no necesita esperar; la que cachea un tiempo fijo necesita ese tiempo.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Intercambiar.&lt;/strong&gt; Hacer de la clave nueva el &lt;code&gt;signing_key_file&lt;/code&gt; y mover la antigua a&lt;code&gt;retired_signing_key_files&lt;/code&gt;. Después &lt;code&gt;authn-bridge check&lt;/code&gt; y reiniciar:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;signing_key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-10.key&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-04.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/jwks&lt;/code&gt; sigue listando ambos &lt;code&gt;kid&lt;/code&gt;, y los tokens nuevos llevan el nuevo. Los tokens
+firmados con la clave antigua siguen verificándose.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Retirar la clave antigua&lt;/strong&gt; cuando ya no pueda presentarse ningún token firmado con ella:al menos el mayor de &lt;code&gt;token_lifetime&lt;/code&gt; (1 h por defecto) e &lt;code&gt;id_token_lifetime&lt;/code&gt; (5 min),más el desfase de reloj de las partes confiantes y su caché de claves. Para opkssh, esperar
+en su lugar la vida del PK Token (un día por defecto, hasta una semana). Luego quitarla de
+la lista y reiniciar: &lt;code&gt;/jwks&lt;/code&gt; lista un solo &lt;code&gt;kid&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;En cada paso, &lt;code&gt;curl -s https://login.example.org/jwks&lt;/code&gt; muestra los &lt;code&gt;kid&lt;/code&gt; publicados, y el&lt;code&gt;kid&lt;/code&gt; de un token recién emitido es el primer segmento de cualquier token de acceso o de ID,decodificado en base64url.&lt;/p&gt;
+&lt;p&gt;Un &lt;code&gt;access_token_key_file&lt;/code&gt; (ES256) rota igual: escribir el siguiente con&lt;code&gt;authn-bridge keygen --access-token-key&lt;/code&gt;, y una retirada va en &lt;code&gt;retired_signing_key_files&lt;/code&gt;
+como cualquier otra. Sin un bloque &lt;code&gt;state&lt;/code&gt;, cada reinicio desconecta a todo el mundo, porque
+los tokens de actualización y &lt;code&gt;/userinfo&lt;/code&gt; viven en memoria; los tokens de acceso ya emitidos
+siguen verificándose en los servidores de recursos.&lt;/p&gt;
+&lt;p&gt;El README informa de que esto se verificó de extremo a extremo con llmflow-gateway como parte
+confiante, en go-llmflow/bench (&lt;code&gt;e2e/oidc&lt;/code&gt;, &lt;code&gt;TestBridge/c/key-rotation&lt;/code&gt;): tras el paso 2,&lt;code&gt;/jwks&lt;/code&gt; lista ambos &lt;code&gt;kid&lt;/code&gt; mientras los tokens llevan aún el antiguo; tras el paso 3, un token
+firmado antes del intercambio y otro firmado después se aceptan, con una sola obtención del
+conjunto de claves; y un inicio de sesión SSO justo después del intercambio funciona.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="without-a-browser-the-device-grant"&gt;Sin navegador: la concesión de dispositivo&lt;span class="hx:absolute hx:-mt-20" id="without-a-browser-the-device-grant"&gt;&lt;/span&gt;
 &lt;a href="#without-a-browser-the-device-grant" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un cliente WebDAV, un script o un terminal no tienen ningún navegador que enviar a
 una universidad. Un cliente con &lt;code&gt;device = true&lt;/code&gt; pide un código (RFC 8628), y la

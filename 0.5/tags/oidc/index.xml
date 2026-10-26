@@ -464,6 +464,88 @@ data-copied-label="Copied!"
 checks on its own. What &lt;a href="https://go-authn.github.io/docs/0.5/authn-bridge/admin/"&gt;&lt;code&gt;RevokePerson&lt;/code&gt;&lt;/a&gt;
 ends is everything that comes back here with it; the resource server learns
 from &lt;a href="https://go-authn.github.io/docs/0.5/authn-bridge/revocation/#shared-signals"&gt;Shared Signals&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="rotating-the-signing-key"&gt;Rotating the token signing key&lt;span class="hx:absolute hx:-mt-20" id="rotating-the-signing-key"&gt;&lt;/span&gt;
+&lt;a href="#rotating-the-signing-key" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Every relying party verifies tokens with the keys published at &lt;code&gt;/jwks&lt;/code&gt;. A key
+changed in place invalidates every token they hold, and one used before they have
+fetched it is refused. &lt;code&gt;retired_signing_key_files&lt;/code&gt; makes both safe: a key listed
+there is &lt;strong&gt;published and never signs&lt;/strong&gt;. Rotating takes &lt;strong&gt;two restarts&lt;/strong&gt;, since the
+provider does not reload its configuration and a SIGHUP is ignored. This section is
+written from the bridge&amp;rsquo;s README after its pull request #80 (merged on 2026-10-26,after the v0.23.4 tag).&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Make the next key&lt;/strong&gt;, beside the current one. The command refuses to overwrite
+a file:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Publish it before it signs.&lt;/strong&gt; Add it to &lt;code&gt;retired_signing_key_files&lt;/code&gt;, leave&lt;code&gt;signing_key_file&lt;/code&gt; alone, run &lt;code&gt;authn-bridge check&lt;/code&gt;, and restart:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;signing_key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-04.key&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # still signing
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-10.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;published&lt;/span&gt; &lt;span class="k"&gt;only&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/jwks&lt;/code&gt; now lists &lt;strong&gt;both&lt;/strong&gt; &lt;code&gt;kid&lt;/code&gt;s, and new tokens still carry the old one. Wait at
+least as long as the longest a relying party caches the key set. One that fetches
+again on an unknown &lt;code&gt;kid&lt;/code&gt; (go-authn/oidc does, at most once per its &lt;code&gt;MinRefresh&lt;/code&gt;)needs no wait; one that caches for a fixed time needs that time.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Swap.&lt;/strong&gt; Make the new key &lt;code&gt;signing_key_file&lt;/code&gt; and move the old one to&lt;code&gt;retired_signing_key_files&lt;/code&gt;. Then &lt;code&gt;authn-bridge check&lt;/code&gt; and restart:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;signing_key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-10.key&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-04.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/jwks&lt;/code&gt; still lists both &lt;code&gt;kid&lt;/code&gt;s, and new tokens carry the new one. Tokens signed
+with the old key keep verifying.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Retire the old key&lt;/strong&gt; once no token it signed can still be presented: after at
+least the longest of &lt;code&gt;token_lifetime&lt;/code&gt; (1 h by default) and &lt;code&gt;id_token_lifetime&lt;/code&gt;
+(5 min), plus the relying parties&amp;rsquo; clock skew and their key-set cache. For
+opkssh, wait the PK Token lifetime instead (a day by default, up to a week).Then remove it from the list and restart: &lt;code&gt;/jwks&lt;/code&gt; lists one &lt;code&gt;kid&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Check at each step with &lt;code&gt;curl -s https://login.example.org/jwks&lt;/code&gt; for the &lt;code&gt;kid&lt;/code&gt;s
+published, and the &lt;code&gt;kid&lt;/code&gt; of a fresh token, which is the first segment of any access
+or ID token, base64url-decoded.&lt;/p&gt;
+&lt;p&gt;An &lt;code&gt;access_token_key_file&lt;/code&gt; (ES256) rotates the same way: write the next one with&lt;code&gt;authn-bridge keygen --access-token-key&lt;/code&gt;, and a retired one goes in&lt;code&gt;retired_signing_key_files&lt;/code&gt; like any other. Without a &lt;code&gt;state&lt;/code&gt; block, each restart
+logs everybody out, because refresh tokens and &lt;code&gt;/userinfo&lt;/code&gt; live in memory; the access
+tokens already issued still verify at the resource servers.&lt;/p&gt;
+&lt;p&gt;The README reports that this was verified end to end with llmflow-gateway as the
+relying party, in go-llmflow/bench (&lt;code&gt;e2e/oidc&lt;/code&gt;, &lt;code&gt;TestBridge/c/key-rotation&lt;/code&gt;): after
+step 2 &lt;code&gt;/jwks&lt;/code&gt; lists both kids while tokens still carry the old one; after step 3 a
+token signed before the swap and one signed after are both accepted, with a single
+key-set fetch; and an SSO login right after the swap works.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="without-a-browser-the-device-grant"&gt;Without a browser: the device grant&lt;span class="hx:absolute hx:-mt-20" id="without-a-browser-the-device-grant"&gt;&lt;/span&gt;
 &lt;a href="#without-a-browser-the-device-grant" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A WebDAV client, a script, a terminal has no browser to send to a university. A
 client with &lt;code&gt;device = true&lt;/code&gt; asks for a code (RFC 8628), and the person logs in
