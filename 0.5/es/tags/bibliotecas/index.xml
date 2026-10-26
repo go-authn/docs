@@ -746,7 +746,7 @@ módulos que se publican, se versionan y se prueban por separado. Cada uno respo
 &lt;tr&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.5/es/libraries/ldap/"&gt;ldap&lt;/a&gt;&lt;/td&gt;
 &lt;td&gt;¿cuáles son los bytes de un servidor LDAP?&lt;/td&gt;
-&lt;td&gt;v0.10.1&lt;/td&gt;
+&lt;td&gt;v0.10.2&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/ldap&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -1426,7 +1426,7 @@ formato en la red, el filtro, las operaciones. &lt;a href="https://go-authn.gith
 es el servidor que la ejecuta y que es dueño de la configuración, de los orígenes del
 directorio y de la política de bind; esta es dueña de los bytes.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/ldap@v0.10.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/ldap@v0.10.2&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copiar código"
@@ -1751,6 +1751,7 @@ esquema y somete a él cada entrada que publica.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reading-large-files"&gt;Leer un archivo de esquema grande&lt;span class="hx:absolute hx:-mt-20" id="reading-large-files"&gt;&lt;/span&gt;
 &lt;a href="#reading-large-files" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Hasta v0.10.0, &lt;code&gt;schema.Read&lt;/code&gt; tardaba un tiempo cuadrático en el número de líneas de continuación del archivo leído: un archivo de 4 MiB de líneas de continuación cortas tardaba unos tres minutos, y 1 MiB reservaba 139,6 GB. Un programa que lee un archivo de esquema que no controla, como hace authnd con sus &lt;code&gt;schema_files&lt;/code&gt; al arrancar, podía quedar bloqueado por uno. Desde v0.10.1 el tiempo es lineal (&lt;code&gt;TestManyContinuationLinesJoinInLinearTime&lt;/code&gt;), y &lt;code&gt;Read&lt;/code&gt; ya no copia ni divide todo el archivo para mirar su primera línea.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;schema.Format&lt;/code&gt; escribía líneas de más de 2000 bytes, que slapd y &lt;code&gt;Read&lt;/code&gt; rechazan; ahora las pliega. El analizador estricto es unas 2,6 veces más rápido, con 147 asignaciones en lugar de 498 en &lt;code&gt;cosine.schema&lt;/code&gt;. Frente a libldap (SDK de macOS, &lt;code&gt;ldap_str2attributetype&lt;/code&gt; y &lt;code&gt;ldap_str2objectclass&lt;/code&gt; con &lt;code&gt;LDAP_SCHEMA_ALLOW_ALL&lt;/code&gt;), sobre las 54 definiciones del &lt;code&gt;cosine.schema&lt;/code&gt; de OpenLDAP, medido el 2026-10-26 en un Apple M4 Max con una carga de 6,5 a 7,6 (&lt;code&gt;-cpu 1 -count 10&lt;/code&gt;, benchstat): go-authn/ldap 25,65 µs ± 32 %, libldap 35,62 µs ± 2 %, es decir, unas 0,72 veces el tiempo de libldap. El lado Go hace 147 asignaciones (20,6 KiB) por ejecución; &lt;code&gt;-benchmem&lt;/code&gt; no ve las asignaciones en C de libldap, así que no hay cifra para ellas. Para reproducirlo, ejecute &lt;code&gt;go test -bench . -benchmem -cpu 1 -count 10&lt;/code&gt; en &lt;code&gt;bench/libldap&lt;/code&gt; de go-authn/ldap (requiere cgo y libldap). authnd tiene estas correcciones desde v0.12.3.&lt;/p&gt;
+&lt;p&gt;Desde v0.10.2, los 13 valores de DESC de RFC 2307 en &lt;code&gt;schema.Standard()&lt;/code&gt; van en una sola línea. Hasta v0.10.1 estaban partidos como la página de la RFC y, como una línea de continuación conserva su sangría después del primer carácter (&lt;code&gt;fp_getline&lt;/code&gt; de slapd, que &lt;code&gt;Read&lt;/code&gt; sigue), un servidor que los publicaba enviaba &lt;code&gt;DESC 'An integer uniquely identifying a user in an administrative domain'&lt;/code&gt;. authnd tiene la corrección desde v0.12.4.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="build-error"&gt;Un esquema que no se construye&lt;span class="hx:absolute hx:-mt-20" id="build-error"&gt;&lt;/span&gt;
 &lt;a href="#build-error" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Desde la v0.10.0, una definición que &lt;code&gt;schema.Build&lt;/code&gt; o &lt;code&gt;schema.BuildFrom&lt;/code&gt;
 rechazan es un &lt;code&gt;*schema.BuildError&lt;/code&gt;, que se obtiene con &lt;code&gt;errors.As&lt;/code&gt;. Un
@@ -1859,7 +1860,7 @@ RFC 4512, y los errores que necesitan una posición llegan con el archivo, la
 línea y la columna.&lt;/p&gt;
 &lt;p&gt;El comando &lt;code&gt;ldapschema&lt;/code&gt; convierte entre los formatos:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.2&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copiar código"
@@ -1984,7 +1985,7 @@ mecanismo arbitrario, StartTLS seguido de más LDAP.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;FuzzMessage&lt;/code&gt; hace pasar cada mensaje que puede enviar un cliente por la trama, los
 decodificadores y la ida y vuelta del filtro. El umbral de cobertura es del 99,7 %,con las tres líneas no alcanzadas nombradas en el workflow.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Referencia&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/ldap@v0.10.1&lt;/a&gt;&lt;/p&gt;</description></item><item><title>krb5: aceptar un ticket Kerberos</title><link>https://go-authn.github.io/docs/0.5/es/libraries/krb5/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/es/libraries/krb5/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/ldap@v0.10.2" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/ldap@v0.10.2&lt;/a&gt;&lt;/p&gt;</description></item><item><title>krb5: aceptar un ticket Kerberos</title><link>https://go-authn.github.io/docs/0.5/es/libraries/krb5/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.5/es/libraries/krb5/</guid><description>
 &lt;p&gt;&lt;strong&gt;¿Es válido este ticket Kerberos para este servicio?&lt;/strong&gt; La mitad &lt;strong&gt;aceptante&lt;/strong&gt; de
 Kerberos, y solo esa mitad: guarda una keytab, verifica el AP-REQ que presenta un
 cliente, responde con el AP-REP que prueba que el servicio es auténtico, y después
@@ -2140,7 +2141,7 @@ data-copied-label="¡Copiado!"
 &lt;p&gt;En la v0.4.3 su &lt;code&gt;go.mod&lt;/code&gt; requiere como mínimo &lt;code&gt;go-authn/directory&lt;/code&gt; v0.12.0 y
 gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.14.0, la
 versión que describen estas páginas, se compila con la v0.15.0, como hace authnd
-v0.12.3. La mitad que
+v0.12.4. La mitad que
 acepta es &lt;a href="https://go-authn.github.io/docs/0.5/es/libraries/krb5/"&gt;krb5&lt;/a&gt;, y un servicio que solo
 verifica tickets no necesita este módulo en absoluto.&lt;/p&gt;
 &lt;p&gt;No implementado: referencias entre reinos, PKINIT, FAST, tickets renovables o
