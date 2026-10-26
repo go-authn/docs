@@ -11,7 +11,7 @@ tags: [라이브러리, ldap, 디렉터리]
 바인드 정책을 소유하는 서버이며, 이 라이브러리는 바이트를 소유합니다.
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.0
+go get github.com/go-authn/ldap@v0.10.1
 ```
 
 RFC 4511(프로토콜), 4512(루트 DSE와 스키마), 4513(인증), 4514와 4515(DN과 필터 문자열
@@ -279,6 +279,12 @@ RFC 4523의 인증서 매칭 규칙과 `directoryStringFirstComponentMatch`(정�
 [authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}})는 이 스키마를
 제공하며 게시하는 모든 엔트리를 여기에 맞춥니다.
 
+## 큰 스키마 파일 읽기 {#reading-large-files}
+
+v0.10.0까지 `schema.Read`는 읽는 파일의 이어짐 줄 수에 대해 제곱 시간이 걸렸습니다. 짧은 이어짐 줄로 된 4 MiB 파일에 약 3분이 걸렸고, 1 MiB에서 139.6 GB를 할당했습니다. authnd가 시작할 때 `schema_files`로 하듯이, 통제하지 않는 스키마 파일을 읽는 프로그램은 그런 파일 하나에 멈출 수 있었습니다. v0.10.1부터 시간은 선형이며(`TestManyContinuationLinesJoinInLinearTime`), `Read`는 첫 줄을 확인하려고 파일 전체를 복사하고 나누지 않습니다.
+
+`schema.Format`은 2000바이트가 넘는 줄을 썼는데, slapd와 `Read`는 이를 거부합니다. 이제는 줄을 접어서 씁니다. 엄격한 파서는 약 2.6배 빠르고, `cosine.schema`에서 할당이 498회에서 147회로 줄었습니다. 이는 부하가 걸린 기계에서 측정한 것이며, 아직 하지 않은 libldap과의 비교가 아닙니다. authnd는 v0.12.3부터 이 수정을 갖고 있습니다.
+
 ## 빌드되지 않는 스키마 {#build-error}
 
 v0.10.0부터 `schema.Build` 또는 `schema.BuildFrom`이 거부하는 정의는
@@ -513,4 +519,4 @@ build: ok, 2 definitions added to schema.Standard()
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.0)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)

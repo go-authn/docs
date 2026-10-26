@@ -11,7 +11,7 @@ tags: [ライブラリ, ldap, ディレクトリ]
 ポリシーを所有するサーバーで、これはバイト列を所有します。
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.0
+go get github.com/go-authn/ldap@v0.10.1
 ```
 
 RFC 4511 (プロトコル)、4512 (ルート DSE とスキーマ)、4513 (認証)、4514 と 4515 (DN とフィルターの
@@ -275,6 +275,12 @@ RFC 2307 は `uidNumber` と `gidNumber` に EQUALITY ルールを与えるだ�
 [authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}}) はこのスキーマを提供し、公開する
 すべてのエントリをこれに適合させています。
 
+## 大きなスキーマファイルを読む {#reading-large-files}
+
+v0.10.0 までは、`schema.Read` は読んだファイルの継続行の数に対して二乗の時間がかかった。短い継続行から成る 4 MiB のファイルに約 3 分かかり、1 MiB で 139.6 GB を割り当てた。authnd が起動時に `schema_files` でするように、管理していないスキーマファイルを読むプログラムは、そのようなファイルで止められる可能性があった。v0.10.1 からは時間が線形であり (`TestManyContinuationLinesJoinInLinearTime`)、`Read` は最初の行を調べるためにファイル全体をコピーして分割することもしない。
+
+`schema.Format` は 2000 バイトを超える行を書いていたが、slapd と `Read` はそれを拒否する。今は折り返す。厳格なパーサーは約 2.6 倍速く、`cosine.schema` での割り当ては 498 回から 147 回になった。これは負荷のかかったマシンでの計測であり、まだ行っていない libldap との比較ではない。authnd にはこれらの修正が v0.12.3 から入っている。
+
 ## ビルドできないスキーマ {#build-error}
 
 v0.10.0 から、`schema.Build` または `schema.BuildFrom` が拒否する定義は `*schema.BuildError` で、
@@ -502,4 +508,4 @@ build: ok, 2 definitions added to schema.Standard()
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.0)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)

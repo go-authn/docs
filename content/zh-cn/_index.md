@@ -17,9 +17,9 @@ Kerberos 的两个部分；以及置于 SAML 联邦之前的 OpenID Connect 提�
 
 | | 它是什么 | 这些页面描述的版本 |
 |---|---|---|
-| [authnd]({{< relref "/authnd/_index.md" >}}) | 一个 LDAP 服务器，可选地附带一个 Kerberos 域，面向存放在别处的人员：文件、SQL 数据库、另一个目录 | v0.12.1 |
-| [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | 置于 SAML 联邦（RENATER、eduGAIN）之前的 OpenID Connect 提供方，同时签发 SSH 证书，并签署用于吊销这些证书的列表 | v0.23.3 |
-| [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | 获取这些列表，在任何服务器读取之前逐一验证，并在某个列表过期时故障即拒绝 | v0.6.5 |
+| [authnd]({{< relref "/authnd/_index.md" >}}) | 一个 LDAP 服务器，可选地附带一个 Kerberos 域，面向存放在别处的人员：文件、SQL 数据库、另一个目录 | v0.12.3 |
+| [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | 置于 SAML 联邦（RENATER、eduGAIN）之前的 OpenID Connect 提供方，同时签发 SSH 证书，并签署用于吊销这些证书的列表 | v0.23.4 |
+| [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | 获取这些列表，在任何服务器读取之前逐一验证，并在某个列表过期时故障即拒绝 | v0.6.6 |
 | [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`，由 sshd 调用，用于询问证书的域授权是否指明了本主机 | v0.1.7 |
 
 每个程序都是适用于 Linux、macOS 和 Windows（amd64 与 arm64）的单个静态二进制文件，
@@ -27,9 +27,9 @@ Kerberos 的两个部分；以及置于 SAML 联邦之前的 OpenID Connect 提�
 [验证下载]({{< relref "/security/verifying-releases.md" >}})。
 
 ```sh
-go install github.com/go-authn/authnd@v0.12.1
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.3
-go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.5
+go install github.com/go-authn/authnd@v0.12.3
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
+go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6
 ```
 
 这些命令命名为 `authn-*`（以及 `authnd`），是因为它们安装在还运行其他程序的机器上：

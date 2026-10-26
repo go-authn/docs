@@ -12,7 +12,7 @@ es el servidor que la ejecuta y que es dueño de la configuración, de los oríg
 directorio y de la política de bind; esta es dueña de los bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.0
+go get github.com/go-authn/ldap@v0.10.1
 ```
 
 Escrita a partir de los RFC 4511 (el protocolo), 4512 (el root DSE y el
@@ -299,6 +299,12 @@ las opciones distintas de `lang-` y `binary`.
 [authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}}) sirve este
 esquema y somete a él cada entrada que publica.
 
+## Leer un archivo de esquema grande {#reading-large-files}
+
+Hasta v0.10.0, `schema.Read` tardaba un tiempo cuadrático en el número de líneas de continuación del archivo leído: un archivo de 4 MiB de líneas de continuación cortas tardaba unos tres minutos, y 1 MiB reservaba 139,6 GB. Un programa que lee un archivo de esquema que no controla, como hace authnd con sus `schema_files` al arrancar, podía quedar bloqueado por uno. Desde v0.10.1 el tiempo es lineal (`TestManyContinuationLinesJoinInLinearTime`), y `Read` ya no copia ni divide todo el archivo para mirar su primera línea.
+
+`schema.Format` escribía líneas de más de 2000 bytes, que slapd y `Read` rechazan; ahora las pliega. El analizador estricto es unas 2,6 veces más rápido, con 147 asignaciones en lugar de 498 en `cosine.schema`. Se midió en una máquina cargada; no es una comparación con libldap, que aún no se ha hecho. authnd tiene estas correcciones desde v0.12.3.
+
 ## Un esquema que no se construye {#build-error}
 
 Desde la v0.10.0, una definición que `schema.Build` o `schema.BuildFrom`
@@ -549,4 +555,4 @@ con las tres líneas no alcanzadas nombradas en el workflow.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.0)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)

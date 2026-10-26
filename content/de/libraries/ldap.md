@@ -12,7 +12,7 @@ Server, der sie ausführt und dem die Konfiguration, die Verzeichnisquellen und 
 Bind-Richtlinie gehören; dieser Bibliothek gehören die Bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.0
+go get github.com/go-authn/ldap@v0.10.1
 ```
 
 Geschrieben nach RFC 4511 (das Protokoll), 4512 (das Root-DSE und das Schema),
@@ -293,6 +293,12 @@ andere Optionen als `lang-` und `binary`.
 [authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}}) stellt
 dieses Schema bereit und misst jeden Eintrag, den es veröffentlicht, daran.
 
+## Eine große Schemadatei lesen {#reading-large-files}
+
+Bis v0.10.0 brauchte `schema.Read` eine in der Zahl der Fortsetzungszeilen quadratische Zeit: eine Datei von 4 MiB aus kurzen Fortsetzungszeilen brauchte etwa drei Minuten, und 1 MiB belegte 139,6 GB. Ein Programm, das eine Schemadatei liest, die es nicht kontrolliert, wie authnd es beim Start mit seinen `schema_files` tut, konnte dadurch aufgehalten werden. Ab v0.10.1 ist die Zeit linear (`TestManyContinuationLinesJoinInLinearTime`), und `Read` kopiert und zerlegt nicht mehr die ganze Datei, um ihre erste Zeile anzusehen.
+
+`schema.Format` schrieb Zeilen von mehr als 2000 Bytes, die slapd und `Read` ablehnen; es bricht sie jetzt um. Der strikte Parser ist etwa 2,6-mal schneller, mit 147 statt 498 Allokationen bei `cosine.schema`. Das wurde auf einem ausgelasteten Rechner gemessen; es ist kein Vergleich mit libldap, der noch nicht gemacht wurde. authnd hat diese Korrekturen ab v0.12.3.
+
 ## Ein Schema, das sich nicht aufbauen lässt {#build-error}
 
 Ab v0.10.0 ist eine Definition, die `schema.Build` oder `schema.BuildFrom`
@@ -547,4 +553,4 @@ nicht erreichten Zeilen im Workflow benannt sind.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.0)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)

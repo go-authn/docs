@@ -9,16 +9,16 @@ These pages are documentation version **0.5**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.12.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.3** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.5** | `github.com/go-authn/revocation` |
-| sshcert-authorize | **v0.1.7** | `github.com/go-authn/sshcert` |
+| authnd | **v0.12.3** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
+| sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
-ldap is **v0.10.0**, with a typed `BuildError` for a schema that does not build,
+ldap is **v0.10.1**, with a typed `BuildError` for a schema that does not build,
 schemas in HCL2 and the `ldapschema` converter, and
 directory **v0.15.0**, with declared object classes. authnd
-v0.12.1 embeds ldap v0.10.0 and directory v0.15.0.
+v0.12.3 embeds ldap v0.10.1 and directory v0.15.0.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.5/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
@@ -71,6 +71,8 @@ dependencies are left out, except those this documentation version describes.
 | v0.11.1 | the startup line names only the sources somebody is served from: with no `user` block it no longer names the configuration file |
 | v0.12.0 | [site schemas]({{< relref "/authnd/schemas.md" >}}): `schema_files` (OpenLDAP `.schema` and cn=config LDIF, as published; a redefinition is refused, even identical, as slapd does) and a `schema { }` block; auxiliary classes declared per source with `object_classes`, validated at startup and published with their superclasses; `check` reports the files, the declarations, the classes left off a person for a missing MUST, and groups two sources disagree on. ⛔ Built with Go 1.27.3: v0.11.1's binaries (Go 1.27.2) are affected by GO-2026-6809 |
 | v0.12.1 | a schema file or block that does not build is refused at the position go-authn/ldap v0.10.0's `BuildError` carries, with a column (`site.schema:6:` becomes `site.schema:6:1:`); the message ends with the kind of refusal, and a duplicate says where its first definition is |
+| v0.12.2 | release binaries are linked with `-ldflags="-w"` instead of `-s -w`: the symbol table is kept, so `govulncheck -mode binary` is precise instead of reporting vulnerabilities in code that is not linked; about 9 % larger (18.8 MB to 20.5 MB on darwin/arm64) |
+| v0.12.3 | go-authn/ldap v0.10.1: `schema_files` are read in linear time. ⛔ Up to v0.12.2, a large schema file of short continuation lines (4 MiB: about three minutes) stalled startup: a denial of service by a file you do not control |
 
 ### authn-bridge
 
@@ -106,6 +108,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.23.1 | dependencies only: go-jose/v4 v4.1.6, golang.org/x/crypto v0.58.0, golang.org/x/net v0.61.0; go-authn/directory v0.12.0, revocation v0.6.3, saml v0.4.1, servercert v0.5.1, sshcert v0.1.6 |
 | v0.23.2 | security: go-authn/oidc v0.4.2, which refuses an `nbf` outside the int64 range (a token that was not yet valid was accepted) and an RSA key with `e = 0` (it was parsed); go-authn/wireguard v0.1.2 |
 | v0.23.3 | built with Go 1.27.3, for GO-2026-6809 (`crypto/x509`: `Certificate.Verify` did not reject known compromised intermediate certificates); the `go` directive is 1.27.3; no change in behaviour |
+| v0.23.4 | release binaries are linked with `-w` instead of `-s -w`, so the symbol table is kept for a precise `govulncheck -mode binary`; no change in behaviour |
 
 ### authn-revokd
 
@@ -122,6 +125,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.6.3 | placeholder domains in RFC 2606 names, in the examples and the documentation; no change in behaviour |
 | v0.6.4 | dependencies only: golang.org/x/crypto v0.58.0 |
 | v0.6.5 | built with Go 1.27.3, for GO-2026-6809 (`crypto/x509`: `Certificate.Verify` did not reject known compromised intermediate certificates); the `go` directive is 1.27.3; no change in behaviour |
+| v0.6.6 | release binaries are linked with `-w` instead of `-s -w`, so the symbol table is kept for a precise `govulncheck -mode binary`; no change in behaviour |
 
 ### sshcert
 
@@ -133,6 +137,8 @@ dependencies are left out, except those this documentation version describes.
 | v0.1.5 | `-version` prints the module version of a `go install` build, not `dev` |
 | v0.1.6 | placeholder domains in RFC 2606 names, in the documentation; no change in behaviour |
 | v0.1.7 | dependencies only: golang.org/x/crypto v0.58.0 |
+| v0.1.8 | release binaries are linked with `-w` instead of `-s -w`, so the symbol table is kept for a precise `govulncheck -mode binary`; no change in behaviour |
+| v0.1.9 | built with Go 1.27.3; no change in behaviour |
 
 ### The libraries
 
@@ -151,6 +157,7 @@ library's page says what earlier ones changed.
 | ldap v0.8.0 | [package `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) and `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, RFC 4517 matching rules; `uidNumber` and `gidNumber` order as integers; a paged search keeps to the requested attributes |
 | ldap v0.9.0 | [schemas in HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): package `schema/hclschema` and the `ldapschema` command (`to-hcl`, `to-schema`, `check`) between OpenLDAP `.schema`, cn=config LDIF and HCL2; the readers read files as slapd does; DIT content and structure rules, name forms, `include` and `X-SUBST` are not supported |
 | ldap v0.10.0 | [a typed `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}) for a definition `Build` refuses, matched with `errors.As`: `Kind`, `Element`, `OID`, `Name`, `Field`, `Pos` (file:line:column where the definition starts, also for folded or base64 LDIF and HCL), and `Ref`, `RefOID` and `RefPos` for the other definition; every definition read carries a `Pos`; "object classes" in a message |
+| ldap v0.10.1 | [`schema.Read`]({{< relref "/libraries/ldap.md#reading-large-files" >}}) is linear in the number of continuation lines (it was quadratic: a 4 MiB file took about three minutes) and no longer copies and splits the whole file to read its first line; `schema.Format` folds lines over 2000 bytes, which slapd and `Read` refuse; the strict parser is about 2.6 times faster (147 allocations instead of 498 on `cosine.schema`, measured under load) |
 | oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | totp v0.4.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |

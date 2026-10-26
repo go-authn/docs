@@ -12,7 +12,7 @@ tags: [库, ldap, 目录]
 绑定策略；本库拥有字节。
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.0
+go get github.com/go-authn/ldap@v0.10.1
 ```
 
 依据 RFC 4511（协议）、4512（根 DSE 和模式）、
@@ -292,6 +292,12 @@ SSSD 由 `ldap_min_id` 和 `ldap_max_id` 构建的那个。slapd 自己定义这
 [authnd]({{< relref "/authnd/entries.md#the-schema-it-serves" >}})提供
 此模式，并让它发布的每个条目都遵从它。
 
+## 读取大型模式文件 {#reading-large-files}
+
+直到 v0.10.0，`schema.Read` 的耗时与所读文件的续行数成平方关系：由短续行组成的 4 MiB 文件约需三分钟，1 MiB 就分配了 139.6 GB。读取不受自己控制的模式文件的程序，例如 authnd 在启动时读取 `schema_files`，可能被这样的文件拖住。从 v0.10.1 起耗时是线性的（`TestManyContinuationLinesJoinInLinearTime`），并且 `Read` 不再为了查看第一行而复制并拆分整个文件。
+
+`schema.Format` 过去会写出超过 2000 字节的行，而 slapd 和 `Read` 会拒绝这样的行；现在它会折行。严格解析器约快 2.6 倍，在 `cosine.schema` 上分配 147 次而非 498 次。这是在负载较高的机器上测得的，并不是与 libldap 的比较，那个比较尚未进行。authnd 从 v0.12.3 起包含这些修复。
+
 ## 无法构建的模式 {#build-error}
 
 自 v0.10.0 起，`schema.Build` 或 `schema.BuildFrom` 拒绝的定义是一个
@@ -535,4 +541,4 @@ StartTLS 之后再有更多 LDAP。
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.0)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)

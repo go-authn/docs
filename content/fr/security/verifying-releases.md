@@ -87,6 +87,8 @@ $ authn-revokd -version
 authn-revokd v0.6.5
 ```
 
+Les binaires de release sont liés avec `-ldflags="-w"` (authnd depuis v0.12.2, authn-bridge depuis v0.23.4, authn-revokd depuis v0.6.6, sshcert depuis v0.1.8) et non `-s -w` : les informations de débogage sont omises, la table des symboles est conservée. Sans la table des symboles, `govulncheck -mode binary` ne sait pas quelles fonctions sont présentes, retombe au niveau du module et signale des vulnérabilités dans du code qui n'est pas lié ; avec elle, l'analyse est précise. Les binaires sont de 7 à 10 % plus gros.
+
 authnd et authn-bridge prennent `--version` ; authn-revokd prend `-version`, la
 syntaxe de drapeaux standard de Go. Depuis la v0.6.1, il écrit sur la sortie standard, comme les deux
 autres, de sorte que `v=$(authn-revokd -version)` capture la version.
