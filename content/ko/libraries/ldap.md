@@ -11,7 +11,7 @@ tags: [라이브러리, ldap, 디렉터리]
 바인드 정책을 소유하는 서버이며, 이 라이브러리는 바이트를 소유합니다.
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.2
+go get github.com/go-authn/ldap@v0.11.0
 ```
 
 RFC 4511(프로토콜), 4512(루트 DSE와 스키마), 4513(인증), 4514와 4515(DN과 필터 문자열
@@ -271,7 +271,8 @@ RFC 2307은 `uidNumber`와 `gidNumber`에 EQUALITY 규칙을 주고 ORDERING 규
 금지하지만 사용 중인 모든 서버가 허용함)은 발견되는 것이 아니라 명시된 것입니다.
 {{< /callout >}}
 
-의도적으로 없는 것: DIT 콘텐츠 규칙, DIT 구조 규칙, 이름 형식, LDAP으로 스키마 변경,
+DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙은 [v0.11.0부터 있습니다](#rules).
+의도적으로 없는 것: LDAP으로 스키마 변경,
 RFC 4523의 인증서 매칭 규칙과 `directoryStringFirstComponentMatch`(정의는 되어 있으나
 구현되지 않았으므로 이를 쓰는 어서션은 Undefined), 컬렉티브 속성, `lang-`과 `binary`
 이외의 옵션.
@@ -365,6 +366,194 @@ is UnknownReference: true
 `RefPos`는 비어 있습니다. `schema.Read`가 반환하는 모든 정의에도 `Pos`가 있으며,
 Position의 `String`은 열을 알 수 없을 때 열을 생략합니다.
 
+## DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙 {#rules}
+
+v0.11.0부터, RFC 4512 §4.1.6(DIT 콘텐츠 규칙)과 §4.1.7(이름 형식, DIT 구조 규칙)이
+정의하는 세 종류의 정의를 이 패키지가 읽고, 빌드하고, 적용하고, 게시합니다. 그
+전에는 이 정의들을 거부했습니다.
+
+- **타입.** `schema.DITContentRule`, `schema.NameForm`, `schema.DITStructureRule`과
+  엄격한 RFC 4512 파서 `ParseDITContentRule`, `ParseNameForm`,
+  `ParseDITStructureRule`(`FuzzDefinition`으로 퍼징함), 그리고 프린터가 있습니다.
+  `schema.MaxRuleID`는 규칙 ID를 모든 플랫폼에서 2^31-1로 제한합니다.
+  `Definitions.DITContentRules`, `NameForms`, `DITStructureRules`가 `Read`가 반환하는
+  것을 담습니다.
+- **읽기와 쓰기.** `schema.Read`는 `.schema` 파일(slapd.conf(5)의 지시어인
+  `ditcontentrule`, 그리고 slapd에는 없는 이 패키지의 `nameform`과
+  `ditstructurerule`)과 LDIF(`olcDitContentRules`, `dITContentRules`, `nameForms`,
+  `dITStructureRules`)에서 이를 읽으며, libldap이 읽는 것처럼 항목은 어떤 순서든
+  됩니다. `Format`은 이를 다시 씁니다. v0.11.0 이전에는 이 속성들을 거부했습니다.
+- **빌드.** `Build`가 이들을 연결합니다. 모든 클래스, 타입, 이름 형식, 상위 규칙이
+  정의되어 있어야 하고, 콘텐츠 규칙은 구조 클래스에 대한 것이며 그 `AUX`는 보조
+  클래스여야 하고, 이름 형식은 구조 클래스를 지정해야 하며, 규칙 ID와 이름은
+  유일해야 합니다. 새 `BuildErrorKind`가 둘, `DuplicateMember`와
+  `PrecludedRequired`, 새 `Element`가 셋, `ElementDITContentRule`,
+  `ElementNameForm`, `ElementDITStructureRule` 있습니다. `Schema`에는
+  `DITContentRules`, `NameForms`, `DITStructureRules`, `DITContentRule(name)`,
+  `DITContentRuleOf(class)`, `NameForm(name)`, `DITStructureRule(id)`가 있습니다.
+- **적용.** `Validate`는 엔트리의 구조 클래스에 대한 활성 콘텐츠 규칙(`AUX`, `MUST`,
+  `MAY`, `NOT`)과 활성 이름 형식을 적용하며, 새 `ProblemKind`로
+  `AuxiliaryNotAllowed`, `Precluded`, `NameFormViolation`, `NoStructureRule`이 있습니다.
+  엔트리가 트리의 어디에 놓일 수 있는지는 그 상위 엔트리가 있어야 알 수 있으므로
+  `Schema.GoverningStructureRule(entry, superior)`가 맡습니다. 상위 엔트리의 규칙 아래에서
+  엔트리를 다스리는 구조 규칙을 반환하며, 상위가 nil이면 서브트리의 루트에서의
+  규칙을 반환합니다. 활성 구조 규칙이 없으면 nil을 반환하고 오류는 없습니다.
+  규칙이 없는 스키마에서 `Validate`는 이전과 같은 결과를 줍니다.
+- **게시.** 스키마에 있을 때 `cn=Subschema`가 `dITContentRules`, `nameForms`,
+  `dITStructureRules`를 게시합니다.
+- **그 밖에.** 구문 1.3.6.1.4.1.1466.115.121.1.16, .17, .35를 검사합니다.
+  `hclschema`에는 `dit_content_rule`, `name_form`, `dit_structure_rule` 블록이 있고,
+  `ldapschema`가 이를 변환하고 검사합니다([아래](#hcl2-and-the-converter) 참조).
+  `bench/libldap`은 세 파서를 libldap의 파서와 비교합니다.
+
+예제 OID 아크 1.3.6.1.4.1.99999 아래의 작동 예입니다. `inetOrgPerson`에 대한 콘텐츠
+규칙(`posixAccount`와 `uidObject`를 추가할 수 있고, 전화번호는 필수이며, 설명은
+금지), 접미사와 `ou=` 컨테이너와 사람의 이름 형식, 그리고 이를 배치하는 구조
+규칙입니다.
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/go-authn/ldap/schema"
+)
+
+const rules = `# rules.schema
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME 'examplePersonRule'
+	AUX ( posixAccount $ uidObject )
+	MUST telephoneNumber
+	NOT description )
+
+nameform ( 1.3.6.1.4.1.99999.9.1 NAME 'exampleDomainForm' OC domain MUST dc )
+nameform ( 1.3.6.1.4.1.99999.9.2 NAME 'exampleUnitForm' OC organizationalUnit MUST ou )
+nameform ( 1.3.6.1.4.1.99999.9.4 NAME 'examplePersonForm' OC inetOrgPerson MUST uid )
+
+ditstructurerule ( 1 NAME 'exampleSuffix' FORM exampleDomainForm )
+ditstructurerule ( 2 NAME 'exampleUnit' FORM exampleUnitForm SUP 1 )
+ditstructurerule ( 4 NAME 'examplePersons' FORM examplePersonForm SUP 2 )
+`
+
+func attr(name string, values ...string) schema.Attribute {
+	a := schema.Attribute{Description: name}
+	for _, v := range values {
+		a.Values = append(a.Values, []byte(v))
+	}
+	return a
+}
+
+func report(title string, err error) {
+	fmt.Println(title)
+	var v *schema.ValidationError
+	if errors.As(err, &v) {
+		for _, p := range v.Problems {
+			fmt.Println("  -", p)
+		}
+		return
+	}
+	fmt.Println("  ", err)
+}
+
+func main() {
+	files := append(schema.StandardFiles(), schema.File{Name: "rules.schema", Data: []byte(rules)})
+	s, err := schema.Build(files...)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	// erin: an inetOrgPerson with a public key, a description, and no telephone number.
+	erin := schema.Entry{DN: "uid=erin,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "person", "organizationalPerson", "inetOrgPerson", "ldapPublicKey"),
+		attr("uid", "erin"), attr("cn", "erin"), attr("sn", "Evans"),
+		attr("description", "on call"),
+		attr("sshPublicKey", "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl erin@example.org"),
+	}}
+	report("erin:", s.Validate(erin))
+
+	// fay: named by cn, which the name form of inetOrgPerson does not allow.
+	fay := schema.Entry{DN: "cn=fay,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "person", "organizationalPerson", "inetOrgPerson"),
+		attr("uid", "fay"), attr("cn", "fay"), attr("sn", "Fox"),
+		attr("telephoneNumber", "+33 1 23 45 67 89"),
+	}}
+	report("fay:", s.Validate(fay))
+
+	// The rule that governs each entry is the superior of the next.
+	suffix := schema.Entry{DN: "dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "domain"), attr("dc", "example"),
+	}}
+	people := schema.Entry{DN: "ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "organizationalUnit"), attr("ou", "people"),
+	}}
+	root, err := s.GoverningStructureRule(suffix, nil)
+	fmt.Println("suffix:", root.Names[0], err)
+	ou, err := s.GoverningStructureRule(people, root)
+	fmt.Println("ou=people:", ou.Names[0], err)
+	gina := schema.Entry{DN: "uid=gina,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "person", "organizationalPerson", "inetOrgPerson"),
+		attr("uid", "gina"), attr("cn", "gina"), attr("sn", "Gray"),
+		attr("telephoneNumber", "+33 1 23 45 67 89"),
+	}}
+	r, err := s.GoverningStructureRule(gina, ou)
+	fmt.Println("uid=gina:", r.Names[0], err)
+	_, err = s.GoverningStructureRule(gina, root)
+	report("uid=gina directly under the suffix:", err)
+
+	// hal: an account with posixAccount, and no content rule for account.
+	hal := schema.Entry{DN: "uid=hal,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "account", "posixAccount"),
+		attr("uid", "hal"), attr("cn", "hal"), attr("uidNumber", "1001"), attr("gidNumber", "100"),
+		attr("homeDirectory", "/home/hal"),
+	}}
+	report("hal, as slapd allows it:", s.Validate(hal))
+	report("hal, with StrictAuxiliary:", s.ValidateWith(hal, schema.ValidateOptions{StrictAuxiliary: true}))
+}
+```
+
+```
+erin:
+  - the auxiliary class ldapPublicKey is not in the AUX of the DIT content rule examplePersonRule (RFC 4512 4.1.6)
+  - description is precluded by the DIT content rule examplePersonRule (RFC 4512 4.1.6)
+  - telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+fay:
+  - the RDN (cn) is allowed by no name form of inetOrgPerson: examplePersonForm needs uid
+suffix: exampleSuffix <nil>
+ou=people: exampleUnit <nil>
+uid=gina: examplePersons <nil>
+uid=gina directly under the suffix:
+  - no DIT structure rule allows inetOrgPerson under an entry governed by the rule exampleSuffix (X.501 13.7.5)
+hal, as slapd allows it:
+   <nil>
+hal, with StrictAuxiliary:
+  - the auxiliary class posixAccount is allowed by no DIT content rule: account has none (RFC 4512 2.4.3)
+```
+
+`github.com/go-authn/ldap` v0.11.0(go1.27.1)으로 빈 모듈에서 실행했습니다.
+`Validate`는 이전처럼 **모든** 문제를 말합니다. erin은 콘텐츠 규칙을 세 가지로
+동시에 어깁니다.
+
+**slapd와 다른 점**은 발견하게 두지 않고 밝혀 둡니다.
+
+- slapd는 콘텐츠 규칙만 구현합니다. 이름 형식이나 구조 규칙을 위한 지시어가 없으므로
+  `Format`은 slapd가 거부하는 `nameform`과 `ditstructurerule` 키워드를 씁니다.
+  `ditcontentrule`은 slapd의 것입니다.
+- `OBSOLETE` 규칙은 비활성입니다(RFC 4512 §4.1.6). 아무것도 다스리지 않습니다.
+  slapd는 대신 엔트리를 거부합니다.
+- 콘텐츠 규칙이 없으면 보조 클래스가 허용됩니다. 이것이 slapd의 동작입니다.
+  `SLAP_DISALLOW_AUX_WO_CR` 플래그는 어떤 `disallow` 키워드로도 설정되지 않습니다.
+  `ValidateOptions{StrictAuxiliary: true}`는 위의 `hal`이 보여 주듯 RFC 4512
+  §2.4.3을 따릅니다.
+- libldap은 구조 규칙의 `SUP`을 읽지 못합니다.
+
+`hclschema.Decode`는 이제 UTF-8이 아닌 문자열을 거부합니다. 이전에는 받아들였고,
+그것이 다른 문자열로 인코딩되었습니다(`FuzzDecode`가 찾아냄).
+[authnd]({{< relref "/authnd/schemas.md#rules" >}})는 `schema_files`와 `schema { }`
+블록에서 이 정의들을 불러와, 게시하는 트리와 엔트리에 적용합니다.
+
 ## HCL2의 스키마와 변환기 {#hcl2-and-the-converter}
 
 v0.9.0부터 스키마는 slapd가 읽는 파일뿐 아니라 HCL2로도 쓸 수 있습니다.
@@ -384,7 +573,7 @@ RFC 4512 §4.1의 항목을 소문자와 밑줄로 쓴 것(`desc`, `sup`, `equal
 `ldapschema` 명령이 형식 사이를 변환합니다.
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.2
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.11.0
 ```
 
 - `ldapschema to-hcl [--macros] FILE...`은 OpenLDAP `.schema` 파일, cn=config LDIF,
@@ -487,6 +676,73 @@ build: ok, 2 definitions added to schema.Standard()
 `--macros`는 매크로 이름을 유지합니다. `check`는 `schema.Standard()`에 이미 있는 정의와
 아무것도 정의하지 않는 모든 참조도 보고하며, `Build`는 첫 번째에서 멈춥니다.
 
+**v0.11.0부터 `ldapschema`는 세 종류의 [규칙](#rules)도 변환합니다.** `.schema`
+파일의 `ditcontentrule`, `nameform`, `ditstructurerule`과 HCL의 `dit_content_rule`,
+`name_form`, `dit_structure_rule` 블록입니다. 구조 규칙은 첫 번째 NAME으로
+레이블이 붙고, `id`, 배치하는 `form`, 그 아래에 놓이는 `sup` 규칙(ID)을 가집니다.
+`check`는 이들이 만드는 누락된 참조를 모두 보고합니다. `ldapschema` v0.11.0(태그에서
+`go install`로 빌드)으로 빈 디렉터리에서 실행한, 각 종류가 하나씩 있는 스키마입니다.
+
+```
+$ cat site.schema
+# An example arc: 1.3.6.1.4.1.99999 is for private use.
+objectidentifier site 1.3.6.1.4.1.99999
+
+# inetOrgPerson: may carry uidObject, must have a telephone number.
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME 'sitePersonRule'
+	AUX uidObject
+	MUST telephoneNumber )
+
+nameform ( site:9.1 NAME 'siteDomainForm' OC domain MUST dc )
+
+ditstructurerule ( 1 NAME 'siteSuffix' FORM siteDomainForm )
+
+$ ldapschema to-hcl site.schema
+object_identifier "site" {
+  oid = "1.3.6.1.4.1.99999"
+}
+
+dit_content_rule "sitePersonRule" {
+  oid  = "2.16.840.1.113730.3.2.2"
+  aux  = ["uidObject"]
+  must = ["telephoneNumber"]
+}
+
+name_form "siteDomainForm" {
+  oid  = "1.3.6.1.4.1.99999.9.1"
+  oc   = "domain"
+  must = ["dc"]
+}
+
+dit_structure_rule "siteSuffix" {
+  id   = 1
+  form = "siteDomainForm"
+}
+
+$ ldapschema to-hcl site.schema > site.hcl
+$ ldapschema to-schema --macros site.hcl
+objectidentifier site 1.3.6.1.4.1.99999
+
+ditcontentrule ( 2.16.840.1.113730.3.2.2
+	NAME 'sitePersonRule'
+	AUX uidObject
+	MUST telephoneNumber )
+
+nameform ( site:9.1
+	NAME 'siteDomainForm'
+	OC domain
+	MUST dc )
+
+ditstructurerule ( 1
+	NAME 'siteSuffix'
+	FORM siteDomainForm )
+
+$ ldapschema check site.schema
+read: 1 object identifiers, 0 syntaxes, 0 matching rules, 0 attribute types, 0 object classes
+read: 1 DIT content rules, 1 name forms, 1 DIT structure rules
+build: ok, 3 definitions added to schema.Standard()
+```
+
 **`check`는 slapd가 로드하는 파일에서 1로 종료할 수 있습니다.** OpenLDAP의
 `core.schema`는 slapd가 내장하고 `schema.Standard()`는 정의하지 않는 네 가지를
 참조합니다. 구문 1.3.6.1.4.1.1466.115.121.1.42와 1.3.6.1.4.1.1466.115.121.1.43,
@@ -494,7 +750,7 @@ build: ok, 2 definitions added to schema.Standard()
 `ldapschema check core.schema`는 이를 `missing:`으로 나열하고 1로 종료합니다. 파일의
 결함이 아니라 "여기서는 정의되지 않음"으로 읽으십시오.
 
-**지원하지 않는 것:** DIT 콘텐츠 규칙, DIT 구조 규칙, 이름 형식. `include` 지시문:
+**지원하지 않는 것:** `include` 지시문:
 `.schema` 파일은 정의로 읽히며 slapd 구성으로 실행되지 않기 때문입니다.
 `ldapsyntax`의 `X-SUBST`.
 
@@ -521,4 +777,4 @@ build: ok, 2 definitions added to schema.Standard()
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.2](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.2)
+[pkg.go.dev/github.com/go-authn/ldap](https://pkg.go.dev/github.com/go-authn/ldap)

@@ -18,7 +18,7 @@ Diese Seiten beschreiben die Releases, die auf der [Seite „Stand“]({{< relre
 
 | | was es ist | diese Seiten beschreiben |
 |---|---|---|
-| [authnd]({{< relref "/authnd/_index.md" >}}) | ein LDAP-Server, und optional ein Kerberos-Realm, für Personen, die anderswo geführt werden: in einer Datei, einer SQL-Datenbank, einem anderen Verzeichnis | v0.12.4 |
+| [authnd]({{< relref "/authnd/_index.md" >}}) | ein LDAP-Server, und optional ein Kerberos-Realm, für Personen, die anderswo geführt werden: in einer Datei, einer SQL-Datenbank, einem anderen Verzeichnis | v0.13.0 |
 | [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | ein OpenID-Connect-Anbieter vor einer SAML-Föderation (RENATER, eduGAIN), der außerdem SSH-Zertifikate ausstellt und die Listen signiert, die sie widerrufen | v0.23.4 |
 | [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | ruft diese Listen ab, prüft jede, bevor ein Server sie liest, und schlägt geschlossen fehl (fail closed), wenn eine verfällt | v0.6.6 |
 | [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`, das sshd fragt, ob der Domain-Grant eines Zertifikats diesen Host nennt | v0.1.9 |
@@ -28,7 +28,7 @@ veröffentlicht mit `SHA256SUMS` und Build-Provenienz:
 [einen Download prüfen]({{< relref "/security/verifying-releases.md" >}}).
 
 ```sh
-go install github.com/go-authn/authnd@v0.12.4
+go install github.com/go-authn/authnd@v0.13.0
 go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
 go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6
 ```

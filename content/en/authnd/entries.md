@@ -69,7 +69,10 @@ Why these choices, from authnd's own reasons:
   `description`, `ou` and `seeAlso` as `groupOfNames` does.
 - **Auxiliary classes without DIT content rules.** RFC 4512 §2.4.3 forbids
   auxiliary classes on an entry whose structural class has no DIT content
-  rule. Every directory server in use allows them, and so does `Validate`.
+  rule. Every directory server in use allows them, and so does `Validate`
+  (`ValidateOptions{StrictAuxiliary: true}` is the strict reading, and authnd
+  does not set it). A class whose structural class **has** a content rule is
+  held to it from v0.13.0: see [the rules]({{< relref "/authnd/schemas.md#rules" >}}).
 
 ## Adding attributes {#adding-attributes}
 

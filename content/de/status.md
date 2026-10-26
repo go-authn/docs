@@ -5,24 +5,25 @@ description: "Welche Releases diese Seiten beschreiben, was jedes Release hinzug
 tags: [stand, releases]
 ---
 
-Diese Seiten sind die Dokumentationsversion **0.5** und beschreiben:
+Diese Seiten sind die Dokumentationsversion **0.6** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
-| authnd | **v0.12.4** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}});
-ldap ist bei **v0.10.2**, mit einem typisierten `BuildError` für ein Schema, das sich nicht aufbauen lässt,
+ldap ist bei **v0.11.0**, mit DIT-Content-Rules, Name Forms und DIT-Structure-Rules, die
+gelesen, durchgesetzt und veröffentlicht werden, einem typisierten `BuildError` für ein Schema, das sich nicht aufbauen lässt,
 Schemas in HCL2 und dem Konverter `ldapschema`,
 und directory bei **v0.15.0**, mit deklarierten Objektklassen. authnd
-v0.12.4 bettet ldap v0.10.2 und directory v0.15.0 ein.
+v0.13.0 bettet ldap v0.11.0 und directory v0.15.0 ein.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
-sodass die Seiten, die jemand unter `/docs/0.5/` findet, weiterhin beschreiben, was
+sodass die Seiten, die jemand unter `/docs/0.6/` findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`,
-`/docs/0.2/`, `/docs/0.3/` und `/docs/0.4/`.
+`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/` und `/docs/0.5/`.
 
 {{< callout type="warning" >}}
 **Sicherheit: Verwenden Sie authnd v0.12.0, nicht v0.11.1**
@@ -74,6 +75,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen, außer denen, die diese Do
 | v0.12.2 | Release-Binaries werden mit `-ldflags="-w"` statt `-s -w` gelinkt: die Symboltabelle bleibt erhalten, sodass `govulncheck -mode binary` genau ist, statt Schwachstellen in nicht gelinktem Code zu melden; etwa 9 % größer (18,8 MB auf 20,5 MB unter darwin/arm64) |
 | v0.12.3 | go-authn/ldap v0.10.1: `schema_files` werden in linearer Zeit gelesen. ⛔ Bis v0.12.2 hielt eine große Schemadatei aus kurzen Fortsetzungszeilen (4 MiB: etwa drei Minuten) den Start auf: ein Denial of Service durch eine Datei, die man nicht kontrolliert |
 | v0.12.4 | go-authn/ldap v0.10.2: die DESC-Werte von 13 RFC-2307-Definitionen in `cn=Subschema` (`uidNumber`, `gidNumber`, `ipHostNumber`, `ipNetworkNumber`, `ipNetmaskNumber`, `macAddress` und die Klassen `ipService`, `ipProtocol`, `oncRpc`, `ipHost`, `ipNetwork`, `ieee802Device`, `bootableDevice`) tragen nicht mehr die Einrückung des Seitenumbruchs der RFC: `DESC 'An integer uniquely identifying a user in an administrative domain'` statt `... in an         administrative domain'` |
+| v0.13.0 | [DIT-Content-Rules, Name Forms und DIT-Structure-Rules]({{< relref "/authnd/schemas.md#rules" >}}) (go-authn/ldap v0.11.0): `schema_files` und der `schema { }`-Block akzeptieren die drei Arten, und authnd setzt sie durch. Eine Content-Rule formt jeden Eintrag: Eine Hilfsklasse, die ihr `AUX` nicht aufführt, wird weggelassen (mit den Attributen, die nur sie erlaubte), ein `NOT`-Attribut wird verworfen, ein Eintrag, dem ein `MUST` fehlt, wird ausgelassen; jedes wird protokolliert und von `check` gemeldet. Mit einer aktiven Structure-Rule wird der Baum (Suffix, `ou=people`, `ou=groups`, das RDN `uid` oder `cn`) beim Start und von `check` geprüft, und eine Verletzung **verweigert den Start**, alle Ablehnungen auf einmal, ohne je ein Geheimnis zu wiederholen; ein Eintrag, den keine Regel platziert, wird ausgelassen. ⛔ Ein `schema { }`-String, der kein gültiges UTF-8 ist, wird jetzt abgelehnt. Das Veröffentlichen von 10.000 Personen macht 416 Allokationen pro Eintrag mit den Regeln gegenüber 265 ohne (Zeiten unter Last gemessen, nicht verlässlich) |
 
 ### authn-bridge {#authn-bridge}
 
@@ -156,10 +158,11 @@ jeder Bibliothek sagt, was frühere geändert haben.
 | krb5 v0.3.1 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | krl v0.6.1 | nur Abhängigkeiten: golang.org/x/crypto v0.58.0; mit Go 1.27.2 getestet |
 | ldap v0.8.0 | [Paket `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) und `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, Matching-Regeln nach RFC 4517; `uidNumber` und `gidNumber` werden als Ganzzahlen geordnet; eine seitenweise Suche hält sich an die angeforderten Attribute |
-| ldap v0.9.0 | [Schemas in HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): das Paket `schema/hclschema` und der Befehl `ldapschema` (`to-hcl`, `to-schema`, `check`) zwischen OpenLDAP-`.schema`, cn=config-LDIF und HCL2; die Leser lesen Dateien wie slapd; DIT-Content-Regeln, DIT-Structure-Regeln, Name Forms, `include` und `X-SUBST` werden nicht unterstützt |
+| ldap v0.9.0 | [Schemas in HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): das Paket `schema/hclschema` und der Befehl `ldapschema` (`to-hcl`, `to-schema`, `check`) zwischen OpenLDAP-`.schema`, cn=config-LDIF und HCL2; die Leser lesen Dateien wie slapd; DIT-Content-Regeln, DIT-Structure-Regeln, Name Forms, `include` und `X-SUBST` werden nicht unterstützt (v0.11.0 unterstützt die Regeln) |
 | ldap v0.10.0 | [ein typisierter `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}) für eine Definition, die `Build` ablehnt, mit `errors.As` abgeglichen: `Kind`, `Element`, `OID`, `Name`, `Field`, `Pos` (Datei:Zeile:Spalte, an der die Definition beginnt, auch für umgebrochenes oder base64-kodiertes LDIF und HCL) sowie `Ref`, `RefOID` und `RefPos` für die andere Definition; jede gelesene Definition trägt eine `Pos`; „object classes“ in einer Meldung |
 | ldap v0.10.1 | [`schema.Read`]({{< relref "/libraries/ldap.md#reading-large-files" >}}) ist linear in der Zahl der Fortsetzungszeilen (es war quadratisch: eine Datei von 4 MiB brauchte etwa drei Minuten) und kopiert und zerlegt nicht mehr die ganze Datei, um ihre erste Zeile zu lesen; `schema.Format` bricht Zeilen über 2000 Bytes um, die slapd und `Read` ablehnen; der strikte Parser ist etwa 2,6-mal schneller (147 statt 498 Allokationen bei `cosine.schema`, unter Last gemessen) |
 | ldap v0.10.2 | die DESC-Werte von 13 RFC-2307-Definitionen im eingebetteten Schema (`schema.Standard()`) stehen in einer Zeile: sie trugen die Einrückung des RFC-Seitenumbruchs, die der Leser wie slapd innerhalb der Anführungszeichen behält, sodass das von einem Server veröffentlichte Subschema Folgen von Leerzeichen enthielt; ein Test prüft jetzt jeden eingebetteten DESC darauf und, wo dieselbe OID definiert ist, gegen die Schemas `core`, `cosine`, `inetorgperson` und `nis` von OpenLDAP |
+| ldap v0.11.0 | [DIT-Content-Rules, Name Forms und DIT-Structure-Rules]({{< relref "/libraries/ldap.md#rules" >}}) (RFC 4512 §4.1.6, §4.1.7) aus `.schema` und LDIF gelesen, von `Format` geschrieben, über HCL (`dit_content_rule`, `name_form`, `dit_structure_rule`) und `ldapschema` weitergereicht, von `Build` geprüft, von `Validate` durchgesetzt (Content-Rules: AUX, MUST, MAY, NOT; Name Forms: das RDN; Structure-Rules: `GoverningStructureRule`) und nur bei Vorhandensein unter `cn=Subschema` veröffentlicht; `ValidateOptions{StrictAuxiliary}` liefert RFC 4512 §2.4.3. ⛔ slapd implementiert nur Content-Rules, daher schreibt `Format` die Schlüsselwörter `nameform` und `ditstructurerule`, die es ablehnt; eine `OBSOLETE`-Regel ist inaktiv, wo slapd den Eintrag ablehnt; libldap kann das `SUP` einer Structure-Rule nicht lesen. `hclschema.Decode` lehnt einen String ab, der kein UTF-8 ist |
 | oidc v0.4.1 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | servercert v0.5.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | totp v0.4.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |

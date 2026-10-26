@@ -2,7 +2,7 @@
 title: "사이트 스키마와 소스가 선언하는 클래스"
 linkTitle: "사이트 스키마"
 weight: 27
-description: "SUPANN, eduPerson 또는 사이트 고유의 속성을 제공합니다. schema_files와 schema 블록은 정의를 추가하고, object_classes는 소스의 사람과 그룹이 갖는 보조 클래스를 선언하며, check는 무엇이 빠졌는지 알려 줍니다."
+description: "SUPANN, eduPerson 또는 사이트 고유의 속성을 제공합니다. schema_files와 schema 블록은 정의를 추가하고, object_classes는 소스의 사람과 그룹이 갖는 보조 클래스를 선언하며, check는 무엇이 빠졌는지 알려 줍니다. v0.13.0부터 DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙이 적용됩니다."
 tags: [authnd, ldap, 스키마, 구성]
 ---
 
@@ -419,6 +419,393 @@ go-authn/directory는 그에 앞서 **철자**를 검사합니다. 클래스는 
 [엔트리]({{< relref "/authnd/entries.md" >}})가 이미 설명한 것입니다. 선언이 있으면 이
 줄은 아직 선언하지 않은 클래스를 알려 줍니다.
 
+## DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙 {#rules}
+
+v0.13.0부터 `schema_files`와 `schema { }` 블록은 RFC 4512 §4.1.6과 §4.1.7이 클래스와
+속성에 더하는 세 종류의 정의도 받아들이며, authnd는 이를 **적용합니다**
+(go-authn/ldap v0.11.0이 이를 읽고, 빌드하고, 검사합니다.
+[라이브러리 페이지]({{< relref "/libraries/ldap.md#rules" >}})에 방법이 있습니다).
+
+| 정의 | RFC 4512 | 내용 | authnd가 하는 일 |
+|---|---|---|---|
+| DIT 콘텐츠 규칙 | §4.1.6 | 구조 클래스 하나에 대해: 추가할 수 있는 보조 클래스(`AUX`), 필수(`MUST`), 허용(`MAY`), 금지(`NOT`) 속성 | **각 엔트리의 형태를 정함**(데이터) |
+| 이름 형식 | §4.1.7.2 | 구조 클래스의 엔트리를 이름 짓는 속성(RDN)은 무엇인가 | **트리를 지킴**(구성) |
+| DIT 구조 규칙 | §4.1.7.1 | 이름 형식을 어디에 놓을 수 있는가: `SUP`이 지정하는 규칙이 다스리는 엔트리 아래 | **트리를 지킴**(구성) |
+
+이들은 있을 때만 `cn=Subschema`(`dITContentRules`, `nameForms`,
+`dITStructureRules`)에 게시됩니다. 하나도 없으면 이 페이지의 어떤 내용도 적용되지
+않으며, v0.12.4와 달라지는 것이 없습니다.
+
+{{< callout type="info" >}}
+**같은 예제 아크**
+
+아래의 `rules.schema`는 위의 `example.schema`처럼 이 페이지를 위해 작성했으며
+`1.3.6.1.4.1.99999` 아래에 있습니다. 여러분의 아크를 사용하십시오. 콘텐츠 규칙의
+OID와 `inetOrgPerson`의 OID는 정의상 같습니다. 콘텐츠 규칙은 그것이 대상으로 하는
+구조 클래스의 이름을 따르기 때문입니다.
+{{< /callout >}}
+
+### 각각 하나씩 있는 스키마와 그 HCL {#rules-example}
+
+OpenLDAP의 `.schema` 형식입니다. `ditcontentrule`은 slapd.conf(5)의 지시어이고,
+`nameform`과 `ditstructurerule`은 slapd에 없어서 go-authn/ldap의 것입니다
+([아래](#rules-slapd)). authnd는 게시하는 트리(접미사, `ou=people`, `ou=groups`, 그
+아래의 계정, 사람, 그룹)도 검사하므로, 파일에는 각각 하나가 아니라 이름 형식 다섯
+개와 구조 규칙 다섯 개가 있습니다.
+
+```
+# Rules for the tree authnd publishes. 1.3.6.1.4.1.99999 is an example arc:
+# nobody is assigned it, use your own.
+
+# A content rule belongs to a structural class and takes that class's OID.
+# inetOrgPerson (2.16.840.1.113730.3.2.2): posixAccount and uidObject may be
+# added, ldapPublicKey may not; telephoneNumber is required; description is
+# precluded.
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME 'examplePersonRule'
+	AUX ( posixAccount $ uidObject )
+	MUST telephoneNumber
+	NOT description )
+
+# A name form says which attribute names an entry of a structural class.
+nameform ( 1.3.6.1.4.1.99999.9.1 NAME 'exampleDomainForm' OC domain MUST dc )
+nameform ( 1.3.6.1.4.1.99999.9.2 NAME 'exampleUnitForm' OC organizationalUnit MUST ou )
+nameform ( 1.3.6.1.4.1.99999.9.3 NAME 'exampleAccountForm' OC account MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.4 NAME 'examplePersonForm' OC inetOrgPerson MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.5 NAME 'examplePosixGroupForm' OC posixGroup MUST cn )
+
+# A structure rule gives a name form a place: the rule ID is a number, SUP
+# names the rule of the parent entry.
+ditstructurerule ( 1 NAME 'exampleSuffix' FORM exampleDomainForm )
+ditstructurerule ( 2 NAME 'exampleUnit' FORM exampleUnitForm SUP 1 )
+ditstructurerule ( 3 NAME 'exampleAccounts' FORM exampleAccountForm SUP 2 )
+ditstructurerule ( 4 NAME 'examplePersons' FORM examplePersonForm SUP 2 )
+ditstructurerule ( 5 NAME 'examplePosixGroups' FORM examplePosixGroupForm SUP 2 )
+```
+
+같은 정의를 `ldapschema` v0.11.0이 쓰는 HCL로 나타낸 것입니다
+(`ldapschema to-hcl rules.schema`). 블록 하나가 정의 하나이며 첫 번째 NAME이
+레이블입니다. 구조 규칙에는 `id`, 그것이 배치하는 `form`, 그리고 그 아래에 놓이는
+`sup` 규칙이 있습니다.
+
+```hcl
+dit_content_rule "examplePersonRule" {
+  oid  = "2.16.840.1.113730.3.2.2"
+  aux  = ["posixAccount", "uidObject"]
+  must = ["telephoneNumber"]
+  not  = ["description"]
+}
+
+name_form "exampleDomainForm" {
+  oid  = "1.3.6.1.4.1.99999.9.1"
+  oc   = "domain"
+  must = ["dc"]
+}
+
+name_form "exampleUnitForm" {
+  oid  = "1.3.6.1.4.1.99999.9.2"
+  oc   = "organizationalUnit"
+  must = ["ou"]
+}
+
+name_form "exampleAccountForm" {
+  oid  = "1.3.6.1.4.1.99999.9.3"
+  oc   = "account"
+  must = ["uid"]
+}
+
+name_form "examplePersonForm" {
+  oid  = "1.3.6.1.4.1.99999.9.4"
+  oc   = "inetOrgPerson"
+  must = ["uid"]
+}
+
+name_form "examplePosixGroupForm" {
+  oid  = "1.3.6.1.4.1.99999.9.5"
+  oc   = "posixGroup"
+  must = ["cn"]
+}
+
+dit_structure_rule "exampleSuffix" {
+  id   = 1
+  form = "exampleDomainForm"
+}
+
+dit_structure_rule "exampleUnit" {
+  id   = 2
+  form = "exampleUnitForm"
+  sup  = [1]
+}
+
+dit_structure_rule "exampleAccounts" {
+  id   = 3
+  form = "exampleAccountForm"
+  sup  = [2]
+}
+
+dit_structure_rule "examplePersons" {
+  id   = 4
+  form = "examplePersonForm"
+  sup  = [2]
+}
+
+dit_structure_rule "examplePosixGroups" {
+  id   = 5
+  form = "examplePosixGroupForm"
+  sup  = [2]
+}
+```
+
+이것이 `schema { }` 블록 안에 그대로 들어가는 내용이며, `.schema` 파일은
+`schema_files`가 받는 것입니다. `ldapschema to-schema rules.hcl`은 이를 같은 정의의
+`.schema` 파일로 되돌리고, `ldapschema check`는 표준 스키마 위에 이를 빌드합니다.
+
+```
+$ ldapschema check etc/authnd/rules.schema
+read: 0 object identifiers, 0 syntaxes, 0 matching rules, 0 attribute types, 0 object classes
+read: 1 DIT content rules, 5 name forms, 5 DIT structure rules
+build: ok, 11 definitions added to schema.Standard()
+```
+
+### 콘텐츠 규칙이 엔트리에 하는 일 {#content-rules}
+
+구성은 사람 둘과 그룹 둘이며, 규칙은 `schema_files`에서 불러옵니다. **dave**에게는
+`sn`(그래서 `inetOrgPerson`), 전화번호, 설명, SSH 공개 키가 있고, **erin**에게는
+`sn`만 있고 다른 것은 없으며, **staff**에게는 `gidNumber`가 있고, **team**에게는
+없습니다.
+
+```hcl
+listen  = "127.0.0.1:3893"
+base_dn = "dc=example,dc=org"
+
+reader "cn=reader,dc=example,dc=org" { password_file = "etc/authnd/reader.pw" }
+
+schema_files = ["etc/authnd/rules.schema"]
+
+user "dave" {
+  password        = "dave-password"
+  authorized_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org"]
+  attributes = {
+    sn              = "Dumont"
+    telephoneNumber = "+33 1 23 45 67 89"
+    description     = "on call"
+  }
+}
+
+user "erin" {
+  password   = "erin-password"
+  attributes = { sn = "Evans" }
+}
+
+group "staff" {
+  members    = ["dave"]
+  attributes = { gidNumber = "100" }
+}
+
+group "team" { members = ["dave"] }
+```
+
+규칙은 엔트리의 **구조 클래스**에 적용되며, 그 결과는 시작할 때와 `check`에서
+엔트리마다 알려 줍니다.
+
+| 규칙의 내용 | 엔트리 | 표시 |
+|---|---|---|
+| `AUX`가 보조 클래스를 나열하지 않음. 선언된 것이든 authnd가 파생한 것(`posixAccount`, `ldapPublicKey`, `sambaSamAccount`, `uidObject`)이든 마찬가지 | 그 클래스는 그것만 허용하던 속성(그리고 authnd가 그 클래스를 위해 추가했을 `sshPublicKey`, `sambaSID`, `sambaNTPassword`)과 함께 **빠집니다**. 상위 클래스가 빠진 선언된 클래스도 함께 빠집니다 | `<name> is published without <class>: the DIT content rule <rule> does not allow it (not in its AUX)` |
+| `NOT`이 속성을 지정함 | 그 속성은 누가 주었든 **제거됩니다** | `<name> is published without <attribute>: the DIT content rule <rule> precludes it (NOT)` |
+| `MUST`가 엔트리에 없는 속성을 지정함 | 그 엔트리는 **제외됩니다**. 규칙은 엔트리 전체에 적용되며, 클래스를 빼서 유효하게 만들 수는 없습니다 | `<name> is NOT published: … <attribute> is required by the DIT content rule <rule> and is missing (RFC 4512 4.1.6)` |
+
+구조 클래스에 콘텐츠 규칙이 없으면, slapd가 허용하듯 엔트리의 보조 클래스는
+허용됩니다([아래](#rules-slapd)).
+
+```
+$ authnd check etc/authnd/authnd.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+
+USER  FROM                    CAN PROVE             PUBLISHED AS                                            WITH
+dave  the configuration file  a password and 1 key  person, organizationalPerson, inetOrgPerson, uidObject  uid, cn, sn and telephoneNumber
+erin  the configuration file  a password            NOT PUBLISHED (see below)                               uid, cn and sn
+
+GROUP  MEMBERS  PUBLISHED AS
+staff  dave     posixGroup
+team   dave     NOT PUBLISHED (see below)
+
+dave has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+dave is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+dave is published without description: the DIT content rule examplePersonRule precludes it (NOT)
+erin has no uidNumber, gidNumber or homeDirectory: not a posixAccount, and as person, organizationalPerson, inetOrgPerson, uidObject the entry fails the schema (below)
+erin is NOT published: as person, organizationalPerson, inetOrgPerson, uidObject it fails the schema:
+  - telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+group team is NOT published: as groupOfNames it fails the schema:
+  - no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+
+this configuration can be served
+```
+
+서버가 시작되며, 로그에는 같은 세 종류의 줄이 DN과 함께 남습니다.
+
+```
+$ authnd --config etc/authnd/authnd.hcl
+ldap on 127.0.0.1:3893, serving 2 people from the configuration file
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+uid=erin,ou=people,dc=example,dc=org is NOT published: it fails the schema: telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+cn=team,ou=groups,dc=example,dc=org is NOT published: it fails the schema: no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+uid=dave,ou=people,dc=example,dc=org is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+uid=dave,ou=people,dc=example,dc=org is published without description: the DIT content rule examplePersonRule precludes it (NOT)
+```
+
+OpenLDAP의 `ldapsearch`가 `cn=Subschema`에서 읽는 것, 즉 규칙이 게시되는 세
+속성입니다.
+
+```
+$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b cn=Subschema -s base '(objectClass=subschema)' dITContentRules nameForms dITStructureRules
+dn: cn=Subschema
+dITContentRules: ( 2.16.840.1.113730.3.2.2 NAME 'examplePersonRule' AUX ( posixAccount $ uidObject ) MUST telephoneNumber NOT description )
+nameForms: ( 1.3.6.1.4.1.99999.9.1 NAME 'exampleDomainForm' OC domain MUST dc )
+nameForms: ( 1.3.6.1.4.1.99999.9.2 NAME 'exampleUnitForm' OC organizationalUnit MUST ou )
+nameForms: ( 1.3.6.1.4.1.99999.9.3 NAME 'exampleAccountForm' OC account MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.4 NAME 'examplePersonForm' OC inetOrgPerson MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.5 NAME 'examplePosixGroupForm' OC posixGroup MUST cn )
+dITStructureRules: ( 1 NAME 'exampleSuffix' FORM exampleDomainForm )
+dITStructureRules: ( 2 NAME 'exampleUnit' FORM exampleUnitForm SUP 1 )
+dITStructureRules: ( 3 NAME 'exampleAccounts' FORM exampleAccountForm SUP 2 )
+dITStructureRules: ( 4 NAME 'examplePersons' FORM examplePersonForm SUP 2 )
+dITStructureRules: ( 5 NAME 'examplePosixGroups' FORM examplePosixGroupForm SUP 2 )
+```
+
+그리고 규칙이 건드리는 것을 요청한 트리입니다. 먼저 `schema_files`가 **없는** 같은
+구성(증인: 아래의 모든 차이는 규칙 때문입니다), 그다음 규칙이 있는 구성입니다.
+
+```
+$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org '(|(uid=*)(cn=*))' dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: ldapPublicKey
+objectClass: uidObject
+description: on call
+sshPublicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org
+
+dn: uid=erin,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+
+dn: cn=team,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames
+```
+
+```
+$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org '(|(uid=*)(cn=*))' dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+```
+
+dave는 `ldapPublicKey`와 함께 `sshPublicKey`를 잃었고(`AUX`에 없음), `description`도
+잃었습니다(`NOT`). erin은 사라졌고(`MUST telephoneNumber`), **team**도 사라졌습니다.
+`gidNumber`가 없으므로 `groupOfNames`인데, `ou=groups` 아래에 `groupOfNames`를
+놓는 구조 규칙이 없기 때문입니다. 마지막 것은 트리의 규칙이 데이터에 적용된
+것이며, 다음 절에서 설명합니다.
+
+### 구조 규칙이 트리에 하는 일 {#structure-rules}
+
+**활성** DIT 구조 규칙이 **하나 이상** 있으면, authnd는 게시할 트리를 시작할 때와
+`check`에서 훑어봅니다.
+
+- **접미사**(`base_dn`)는 그 RDN이 지정하는 클래스로 봅니다. `dc`는 `domain`, `o`는
+  `organization`, `ou`는 `organizationalUnit`, `c`는 `country`, `l`은 `locality`입니다.
+  다른 속성으로 이름 지은 접미사는 거부됩니다.
+- `ou=people`과 `ou=groups`는 `organizationalUnit`으로 봅니다.
+- authnd가 사람을 이름 짓는 RDN 속성(`uid`)과 그룹을 이름 짓는 속성(`cn`).
+
+어떤 규칙도 자리를 주지 않는 컨테이너, 이름 형식을 가진 규칙이 하나도 없는 종류의
+접미사, `uid`나 `cn`을 거부하는 이름 형식, 또는 authnd가 게시하는 어떤 것도 놓일 수
+없는 컨테이너는 **시작을 거부하며, `check`도 마찬가지입니다**. 모든 거부가 한꺼번에
+DN, 규칙 또는 이름 형식, 조항을 밝히며 보고되고, 비밀 값은 절대 출력되지 않습니다.
+구조 클래스가 데이터(`sn`, `gidNumber`)에 달려 있고 그 컨테이너 아래에 규칙이 없는
+사람이나 그룹은 대신 **제외되고 알려집니다**. 위의 team처럼 서버는 시작됩니다.
+활성 구조 규칙이 없으면 달라지는 것이 없습니다.
+
+사람을 위한 유일한 구조 규칙 `peopleByCN`이 `cn`을 요구하는 이름 형식(`accountByCN`:
+`OC account MUST cn`)을 배치하는 스키마입니다.
+
+```
+$ authnd check cases/bad.hcl
+authnd: DIT structure rules: authnd names its people uid=<name>,ou=people,dc=example,dc=org, and an account named so is refused: the RDN (uid) is allowed by the name form of no DIT structure rule that places account under an entry governed by the rule 2: accountByCN needs cn
+```
+
+authnd는 사람을 `uid=<name>`으로 이름 짓습니다. 규칙이 이를 허용해야 합니다. 그리고
+`organizationalUnit`의 규칙에 `SUP`이 없어서 `organizationalUnit`이 루트에만 있을 수
+있는 스키마는 `ou=people`과 `ou=groups` 둘 다 자리가 없게 되며, 둘을 한꺼번에
+알립니다.
+
+```
+$ authnd check cases/root.hcl
+authnd: DIT structure rules: ou=people,dc=example,dc=org, where authnd publishes its people, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)
+DIT structure rules: ou=groups,dc=example,dc=org, where authnd publishes its groups, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)
+```
+
+둘 다 종료 상태 1로 끝납니다. 그 뒤의 파일(`cases/bad.schema`와
+`cases/root.schema`)에는 같은 이름 형식 다섯 개와, 요점을 보여 주는 구조 규칙만
+들어 있습니다.
+
+### authnd와 slapd가 다른 점 {#rules-slapd}
+
+go-authn/ldap은 OpenLDAP 파일을 읽으며, 규칙의 일부는 OpenLDAP의 것입니다. 차이는
+발견하게 두지 않고 밝혀 둡니다.
+
+- **slapd는 콘텐츠 규칙만 구현합니다.** 이름 형식이나 구조 규칙을 위한 지시어가
+  없습니다. `Format`은 이 라이브러리의 것인 `nameform`과 `ditstructurerule` 키워드를
+  쓰며 slapd는 이를 거부합니다. 이들은 HCL에 두거나 authnd만 읽는 파일에 두십시오.
+  `ditcontentrule`은 slapd의 것입니다.
+- **`OBSOLETE` 규칙은 비활성입니다**(RFC 4512 §4.1.6). 그 이름 형식이나 구조 규칙도
+  마찬가지입니다. slapd는 대신 엔트리를 거부합니다.
+- **콘텐츠 규칙이 없으면 보조 클래스가 허용됩니다.** 이것이 slapd의 동작이며(그
+  `SLAP_DISALLOW_AUX_WO_CR` 플래그는 어떤 `disallow` 키워드로도 설정되지 않습니다)
+  authnd의 동작이기도 합니다. RFC 4512 §2.4.3은 다르게 말하며, 라이브러리는 이를
+  `ValidateOptions{StrictAuxiliary: true}`로 제공하고 authnd는 이를 설정하지 않습니다.
+- **libldap은 구조 규칙의 `SUP`을 읽지 못합니다.** `SUP`이 있는 구조 규칙은 여기서는
+  읽히지만 libldap에서는 읽히지 않으므로, 그런 파일에 대한 libldap의 거부는 파일에
+  대한 판정이 아닙니다.
+- 규칙을 **재정의하는** 파일은 다른 모든 정의처럼 글자 그대로 같더라도 거부됩니다
+  ([위](#redefinition)).
+
+### 비용 {#rules-cost}
+
+2026-10-26에 `BenchmarkPublish10k`(go-authn/authnd, `rules_bench_test.go`)로
+측정했습니다. 사람 10,000명을 게시할 때 `testdata/rules.schema`의 규칙이 있으면
+**엔트리당 할당 416회**, 없으면 **265회**입니다. 여기에는 금지된 설명을 제거하고
+다시 검증하는 것이 포함됩니다. 시간은 192 ms 대 118 ms였고 부하 8~14에서 측정했으므로
+신뢰할 비율이 아니며, 할당 횟수만 신뢰할 수 있습니다.
+
+### 업그레이드 {#rules-upgrade}
+
+규칙이 없는 스키마는 달라지는 것이 없습니다. v0.12.4는 세 종류를 모두 거부했으므로
+그 버전에서 시작된 구성에는 규칙이 없습니다. 예외가 하나 있습니다. **UTF-8이 아닌**
+`schema { }` 문자열(HCL이 통과시키는 과도한 인코딩)은 v0.12.4에서 시작되었지만 이제는
+거부됩니다. 쓰인 그대로는 게시할 수 없기 때문입니다.
+
 ## 실제 예제로서의 SUPANN {#supann}
 
 SUPANN은 프랑스 고등 교육 및 연구 기관의 속성 집합(`supannPerson`,
@@ -457,4 +844,6 @@ without* 줄을 읽으십시오. `supannPerson`이나 `eduPerson`의 MUST가 없
 **트랜스크립트에 대하여**
 
 이 페이지의 모든 명령은 2026-10-26에 v0.12.3 릴리스 바이너리(`authnd-darwin-arm64`, `SHA256SUMS`와 대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`)와 OpenLDAP의 `ldapsearch`로, 127.0.0.1에서 임시 디렉터리에 보여 준 파일을 두고 다시 실행한 것입니다. 경로가 상대 경로인 것은 그 때문이며, 서비스에서는 절대 경로를 사용합니다. 스키마는 이 페이지를 위해 작성한 예제입니다.
+
+[DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙](#rules) 절은 2026-10-26에 v0.13.0 릴리스 바이너리(`authnd-darwin-arm64`, `relverify`로 `SHA256SUMS` 및 그 증명과 대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.13.0`; `authnd --version`: `authnd version v0.13.0`), OpenLDAP의 `ldapsearch`, 그리고 go-authn/ldap v0.11.0 태그로 빌드한 `ldapschema`(`go install`, go1.27.1, 릴리스 바이너리 없음)로 실행했습니다. 그곳의 모든 출력은 이 프로그램들이 127.0.0.1에서 임시 디렉터리에 출력한 것이며, 트랜스크립트 뒤의 파일은 그 옆에 보여 주거나 설명해 두었습니다.
 {{< /callout >}}

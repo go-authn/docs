@@ -12,7 +12,7 @@ tags: [库, ldap, 目录]
 绑定策略；本库拥有字节。
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.2
+go get github.com/go-authn/ldap@v0.11.0
 ```
 
 依据 RFC 4511（协议）、4512（根 DSE 和模式）、
@@ -283,8 +283,7 @@ SSSD 由 `ldap_min_id` 和 `ldap_max_id` 构建的那个。slapd 自己定义这
 都允许），都是明确说明的，而不是事后发现的。
 {{< /callout >}}
 
-有意不包含：DIT 内容规则、DIT 结构规则和名称
-形式；通过 LDAP 更改模式；RFC 4523 的证书匹配规则
+DIT 内容规则、名称形式和 DIT 结构规则[从 v0.11.0 起已包含](#rules)。有意不包含：通过 LDAP 更改模式；RFC 4523 的证书匹配规则
 和 `directoryStringFirstComponentMatch`，它们已定义但未
 实现，因此使用它们的断言是 Undefined；集合属性；
 `lang-` 和 `binary` 之外的选项。
@@ -378,6 +377,193 @@ is UnknownReference: true
 `RefPos` 为空。`schema.Read` 返回的每个定义同样带有 `Pos`，
 Position 的 `String` 在列未知时会省略列。
 
+## DIT 内容规则、名称形式和 DIT 结构规则 {#rules}
+
+从 v0.11.0 起，RFC 4512 §4.1.6（DIT 内容规则）和 §4.1.7（名称形式、
+DIT 结构规则）所定义的这三类定义——此前本包拒绝它们——会被读取、构建、强制执行并发布。
+
+- **类型。** `schema.DITContentRule`、`schema.NameForm` 和
+  `schema.DITStructureRule`，以及严格的 RFC 4512 解析器
+  `ParseDITContentRule`、`ParseNameForm` 和 `ParseDITStructureRule`（由
+  `FuzzDefinition` 做模糊测试）和打印器。`schema.MaxRuleID` 在所有平台上把规则 ID
+  限制在 2^31-1。`Definitions.DITContentRules`、`NameForms` 和
+  `DITStructureRules` 保存 `Read` 返回的内容。
+- **读取与写入。** `schema.Read` 从 `.schema` 文件读取它们
+  （`ditcontentrule` 是 slapd.conf(5) 的指令，而本包的
+  `nameform` 和 `ditstructurerule` 是 slapd 所没有的），也从 LDIF 读取
+  （`olcDitContentRules`、`dITContentRules`、`nameForms`、`dITStructureRules`），
+  各项按任意顺序，与 libldap 的读取方式一致。`Format` 把它们写回。
+  在 v0.11.0 之前这些属性会被拒绝。
+- **构建。** `Build` 把它们连接起来：每个类、类型、名称形式和上级
+  规则都必须已定义；内容规则针对结构类，其 `AUX` 是辅助类；
+  名称形式指名一个结构类；规则 ID 和名称是唯一的。新增两个
+  `BuildErrorKind`，即 `DuplicateMember` 和
+  `PrecludedRequired`，以及三个新的 `Element`，即 `ElementDITContentRule`、
+  `ElementNameForm` 和 `ElementDITStructureRule`。`Schema` 新增
+  `DITContentRules`、`NameForms`、`DITStructureRules`、`DITContentRule(name)`、
+  `DITContentRuleOf(class)`、`NameForm(name)` 和 `DITStructureRule(id)`。
+- **强制执行。** `Validate` 强制执行条目结构类的有效内容规则
+  （`AUX`、`MUST`、`MAY`、`NOT`）及其有效的名称形式，新增
+  `ProblemKind`：`AuxiliaryNotAllowed`、`Precluded`、`NameFormViolation` 和
+  `NoStructureRule`。条目在树中可以处于何处需要知道其上级，因此这是
+  `Schema.GoverningStructureRule(entry, superior)`：它返回在上级的规则之下
+  管辖该条目的结构规则；上级为 nil 时，则是子树根部的规则。
+  没有有效的结构规则时，它返回 nil 且不报错。
+  对于没有规则的模式，`Validate` 给出与以前相同的结果。
+- **发布。** 只要模式中有，`cn=Subschema` 就发布 `dITContentRules`、`nameForms` 和
+  `dITStructureRules`。
+- **另外。** 语法 1.3.6.1.4.1.1466.115.121.1.16、.17 和 .35
+  会被检查。`hclschema` 有 `dit_content_rule`、`name_form` 和
+  `dit_structure_rule` 块，`ldapschema` 转换并检查它们（见
+  [下文](#hcl2-and-the-converter)）。`bench/libldap` 把这三个解析器
+  与 libldap 的进行比较。
+
+一个完整的例子，在示例弧 1.3.6.1.4.1.99999 之下：`inetOrgPerson` 的一条内容规则
+（可以添加 `posixAccount` 和 `uidObject`；电话号码是必需的；描述被排除），
+后缀、`ou=` 容器和人员的名称形式，以及放置它们的结构规则：
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/go-authn/ldap/schema"
+)
+
+const rules = `# rules.schema
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME 'examplePersonRule'
+	AUX ( posixAccount $ uidObject )
+	MUST telephoneNumber
+	NOT description )
+
+nameform ( 1.3.6.1.4.1.99999.9.1 NAME 'exampleDomainForm' OC domain MUST dc )
+nameform ( 1.3.6.1.4.1.99999.9.2 NAME 'exampleUnitForm' OC organizationalUnit MUST ou )
+nameform ( 1.3.6.1.4.1.99999.9.4 NAME 'examplePersonForm' OC inetOrgPerson MUST uid )
+
+ditstructurerule ( 1 NAME 'exampleSuffix' FORM exampleDomainForm )
+ditstructurerule ( 2 NAME 'exampleUnit' FORM exampleUnitForm SUP 1 )
+ditstructurerule ( 4 NAME 'examplePersons' FORM examplePersonForm SUP 2 )
+`
+
+func attr(name string, values ...string) schema.Attribute {
+	a := schema.Attribute{Description: name}
+	for _, v := range values {
+		a.Values = append(a.Values, []byte(v))
+	}
+	return a
+}
+
+func report(title string, err error) {
+	fmt.Println(title)
+	var v *schema.ValidationError
+	if errors.As(err, &v) {
+		for _, p := range v.Problems {
+			fmt.Println("  -", p)
+		}
+		return
+	}
+	fmt.Println("  ", err)
+}
+
+func main() {
+	files := append(schema.StandardFiles(), schema.File{Name: "rules.schema", Data: []byte(rules)})
+	s, err := schema.Build(files...)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	// erin: an inetOrgPerson with a public key, a description, and no telephone number.
+	erin := schema.Entry{DN: "uid=erin,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "person", "organizationalPerson", "inetOrgPerson", "ldapPublicKey"),
+		attr("uid", "erin"), attr("cn", "erin"), attr("sn", "Evans"),
+		attr("description", "on call"),
+		attr("sshPublicKey", "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl erin@example.org"),
+	}}
+	report("erin:", s.Validate(erin))
+
+	// fay: named by cn, which the name form of inetOrgPerson does not allow.
+	fay := schema.Entry{DN: "cn=fay,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "person", "organizationalPerson", "inetOrgPerson"),
+		attr("uid", "fay"), attr("cn", "fay"), attr("sn", "Fox"),
+		attr("telephoneNumber", "+33 1 23 45 67 89"),
+	}}
+	report("fay:", s.Validate(fay))
+
+	// The rule that governs each entry is the superior of the next.
+	suffix := schema.Entry{DN: "dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "domain"), attr("dc", "example"),
+	}}
+	people := schema.Entry{DN: "ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "organizationalUnit"), attr("ou", "people"),
+	}}
+	root, err := s.GoverningStructureRule(suffix, nil)
+	fmt.Println("suffix:", root.Names[0], err)
+	ou, err := s.GoverningStructureRule(people, root)
+	fmt.Println("ou=people:", ou.Names[0], err)
+	gina := schema.Entry{DN: "uid=gina,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "person", "organizationalPerson", "inetOrgPerson"),
+		attr("uid", "gina"), attr("cn", "gina"), attr("sn", "Gray"),
+		attr("telephoneNumber", "+33 1 23 45 67 89"),
+	}}
+	r, err := s.GoverningStructureRule(gina, ou)
+	fmt.Println("uid=gina:", r.Names[0], err)
+	_, err = s.GoverningStructureRule(gina, root)
+	report("uid=gina directly under the suffix:", err)
+
+	// hal: an account with posixAccount, and no content rule for account.
+	hal := schema.Entry{DN: "uid=hal,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "account", "posixAccount"),
+		attr("uid", "hal"), attr("cn", "hal"), attr("uidNumber", "1001"), attr("gidNumber", "100"),
+		attr("homeDirectory", "/home/hal"),
+	}}
+	report("hal, as slapd allows it:", s.Validate(hal))
+	report("hal, with StrictAuxiliary:", s.ValidateWith(hal, schema.ValidateOptions{StrictAuxiliary: true}))
+}
+```
+
+```
+erin:
+  - the auxiliary class ldapPublicKey is not in the AUX of the DIT content rule examplePersonRule (RFC 4512 4.1.6)
+  - description is precluded by the DIT content rule examplePersonRule (RFC 4512 4.1.6)
+  - telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+fay:
+  - the RDN (cn) is allowed by no name form of inetOrgPerson: examplePersonForm needs uid
+suffix: exampleSuffix <nil>
+ou=people: exampleUnit <nil>
+uid=gina: examplePersons <nil>
+uid=gina directly under the suffix:
+  - no DIT structure rule allows inetOrgPerson under an entry governed by the rule exampleSuffix (X.501 13.7.5)
+hal, as slapd allows it:
+   <nil>
+hal, with StrictAuxiliary:
+  - the auxiliary class posixAccount is allowed by no DIT content rule: account has none (RFC 4512 2.4.3)
+```
+
+在空模块中用 `github.com/go-authn/ldap` v0.11.0（go1.27.1）运行。
+`Validate` 如以前一样指出**每一个**问题：erin 同时以三种方式违反了内容规则。
+
+**与 slapd 的不同之处**，是明确说明的，而不是事后发现的：
+
+- slapd 只实现内容规则：它没有用于名称形式或结构规则的指令，
+  因此 `Format` 写出的 `nameform` 和 `ditstructurerule`
+  关键字会被 slapd 拒绝。`ditcontentrule` 是 slapd 的。
+- `OBSOLETE` 规则无效（RFC 4512 §4.1.6）：它不管辖任何东西。slapd
+  反而会拒绝该条目。
+- 没有内容规则时，允许辅助类。这是 slapd 的行为：
+  它的 `SLAP_DISALLOW_AUX_WO_CR` 标志不会被任何 `disallow`
+  关键字设置。`ValidateOptions{StrictAuxiliary: true}` 给出 RFC 4512 §2.4.3，
+  如上面的 `hal` 所示。
+- libldap 无法读取结构规则的 `SUP`。
+
+`hclschema.Decode` 现在拒绝不是有效 UTF-8 的字符串：它曾接受
+这样的字符串，随后编码成另一个字符串（由 `FuzzDecode` 发现）。
+[authnd]({{< relref "/authnd/schemas.md#rules" >}}) 从它的 `schema_files` 和 `schema { }` 块
+加载这些定义，并对其发布的树和条目强制执行它们。
+
 ## HCL2 模式与转换器 {#hcl2-and-the-converter}
 
 自 v0.9.0 起，模式既可以用 slapd 读取的文件编写，也可以用 HCL2 编写。包 `schema/hclschema` 把 HCL2 解码为
@@ -398,7 +584,7 @@ RFC 4512 §4.1 的术语，小写并以下划线连接（`desc`、`sup`、`equal
 命令 `ldapschema` 在各种格式之间转换：
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.2
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.11.0
 ```
 
 - `ldapschema to-hcl [--macros] FILE...` 读取 OpenLDAP `.schema` 文件、
@@ -506,6 +692,74 @@ build: ok, 2 definitions added to schema.Standard()
 `schema.Standard()` 已经有的定义，以及所有无人定义的引用，
 而 `Build` 在第一个处就会停止。
 
+**从 v0.11.0 起，`ldapschema` 也转换这三类[规则](#rules)**：
+`.schema` 文件中的 `ditcontentrule`、`nameform` 和 `ditstructurerule`，以及
+HCL 中的 `dit_content_rule`、`name_form` 和 `dit_structure_rule` 块。
+结构规则以其第一个 NAME 作为标签，带有 `id`、它所放置的 `form`，
+以及它位于其下的 `sup` 规则（ID）；`check` 会报告它们造成的每一个缺失
+引用。在空目录中用 `ldapschema` v0.11.0（用 `go install` 从该标签构建）运行，
+模式中每类各一条：
+
+```
+$ cat site.schema
+# An example arc: 1.3.6.1.4.1.99999 is for private use.
+objectidentifier site 1.3.6.1.4.1.99999
+
+# inetOrgPerson: may carry uidObject, must have a telephone number.
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME 'sitePersonRule'
+	AUX uidObject
+	MUST telephoneNumber )
+
+nameform ( site:9.1 NAME 'siteDomainForm' OC domain MUST dc )
+
+ditstructurerule ( 1 NAME 'siteSuffix' FORM siteDomainForm )
+
+$ ldapschema to-hcl site.schema
+object_identifier "site" {
+  oid = "1.3.6.1.4.1.99999"
+}
+
+dit_content_rule "sitePersonRule" {
+  oid  = "2.16.840.1.113730.3.2.2"
+  aux  = ["uidObject"]
+  must = ["telephoneNumber"]
+}
+
+name_form "siteDomainForm" {
+  oid  = "1.3.6.1.4.1.99999.9.1"
+  oc   = "domain"
+  must = ["dc"]
+}
+
+dit_structure_rule "siteSuffix" {
+  id   = 1
+  form = "siteDomainForm"
+}
+
+$ ldapschema to-hcl site.schema > site.hcl
+$ ldapschema to-schema --macros site.hcl
+objectidentifier site 1.3.6.1.4.1.99999
+
+ditcontentrule ( 2.16.840.1.113730.3.2.2
+	NAME 'sitePersonRule'
+	AUX uidObject
+	MUST telephoneNumber )
+
+nameform ( site:9.1
+	NAME 'siteDomainForm'
+	OC domain
+	MUST dc )
+
+ditstructurerule ( 1
+	NAME 'siteSuffix'
+	FORM siteDomainForm )
+
+$ ldapschema check site.schema
+read: 1 object identifiers, 0 syntaxes, 0 matching rules, 0 attribute types, 0 object classes
+read: 1 DIT content rules, 1 name forms, 1 DIT structure rules
+build: ok, 3 definitions added to schema.Standard()
+```
+
 **`check` 可能对 slapd 能加载的文件以 1 退出。** OpenLDAP 的 `core.schema`
 引用了四样 slapd 内置而 `schema.Standard()` 没有
 定义的东西：语法 1.3.6.1.4.1.1466.115.121.1.42 和
@@ -514,8 +768,7 @@ build: ok, 2 definitions added to schema.Standard()
 `missing:` 并以 1 退出。请将其理解为“此处未定义”，而不是该文件的
 缺陷。
 
-**它不支持的：** DIT 内容规则、DIT 结构规则和名称
-形式；`include` 指令，因为 `.schema` 文件是作为定义读取的，
+**它不支持的：** `include` 指令，因为 `.schema` 文件是作为定义读取的，
 并不作为 slapd 配置来运行；以及 `ldapsyntax` 上的 `X-SUBST`。
 
 **已发布的模式可以转换。** 该版本在 OpenLDAP 的
@@ -543,4 +796,4 @@ StartTLS 之后再有更多 LDAP。
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.2](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.2)
+[pkg.go.dev/github.com/go-authn/ldap](https://pkg.go.dev/github.com/go-authn/ldap)

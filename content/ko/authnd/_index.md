@@ -11,10 +11,12 @@ tags: [authnd, ldap]
 [go-authn/directory]({{< relref "/libraries/_index.md" >}})의 소스 위에서 바인드와
 검색을 처리하므로, 데이터베이스에 있는 내용을 디렉터리에 질의할 줄 아는 어떤
 것이든 읽을 수 있습니다. 순수 Go, `CGO_ENABLED=0`, 바이너리 하나입니다. 이 문서는
-v0.12.4을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
+v0.13.0을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
 제공하는 스키마를 통과합니다. 사이트는 이 스키마를 자신의 스키마로
-확장할 수 있습니다([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})). 그 아래에는
-go-authn/ldap v0.10.2과 go-authn/directory v0.15.0이 있습니다. 무엇이 검증되었고
+확장할 수 있고([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})),
+[DIT 콘텐츠 규칙, 이름 형식, 구조 규칙]({{< relref "/authnd/schemas.md#rules" >}})으로
+엔트리의 형태까지 정할 수 있습니다. 그 아래에는
+go-authn/ldap v0.11.0과 go-authn/directory v0.15.0이 있습니다. 무엇이 검증되었고
 무엇이 아닌지는 [상태]({{< relref "/status.md" >}}) 페이지에 있습니다.
 
 {{< callout type="warning" >}}
@@ -143,7 +145,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.12.4
+vendorVersion: v0.13.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1`은 RFC 3062 비밀번호 변경 작업입니다.
@@ -159,7 +161,7 @@ vendorVersion: v0.12.4
 | [설치하기]({{< relref "/authnd/install.md" >}}) | 릴리스 바이너리, `authnd` 계정, systemd 유닛, 업그레이드 |
 | [사람들은 어디에서 오는가]({{< relref "/authnd/people.md" >}}) | `user`와 `group` 블록, SQL 데이터베이스, 다른 LDAP 디렉터리 |
 | [엔트리와 스키마]({{< relref "/authnd/entries.md" >}}) | 각 사람과 그룹이 무엇으로 게시되는지, `cn=Subschema`, 속성, 제외되거나 보류되는 것 |
-| [사이트 스키마]({{< relref "/authnd/schemas.md" >}}) | `schema_files`, `schema` 블록, `object_classes`: SUPANN, eduPerson 또는 사이트 고유의 속성 |
+| [사이트 스키마]({{< relref "/authnd/schemas.md" >}}) | `schema_files`, `schema` 블록, `object_classes`: SUPANN, eduPerson 또는 사이트 고유의 속성. DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙 |
 | [`check`]({{< relref "/authnd/check.md" >}}) | 다시 시작하기 전에 구성을 되읽기 |
 | [TLS]({{< relref "/authnd/tls.md" >}}) | `ldaps://` 또는 StartTLS, 그리고 `publish_nt_hash` |
 | [비밀번호 변경]({{< relref "/authnd/passwords.md" >}}) | `ldappasswd`, `ldapmodify`, 그리고 이전 비밀번호를 항상 묻는 이유 |
@@ -171,5 +173,5 @@ vendorVersion: v0.12.4
 {{< callout type="info" >}}
 **트랜스크립트에 대하여**
 
-이 문서에 보이는 모든 명령은 2026-10-26에 배포된 릴리스 바이너리로 다시 실행한 것이며, 손으로 다시 쓴 것이 아닙니다. `authnd` v0.12.3(`authnd-darwin-arm64`, `relverify`로 `SHA256SUMS` 및 그 증명(attestation)과 대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`), `authn-bridge` v0.23.4, `authn-revokd` v0.6.6, `sshcert-authorize` v0.1.9, `ldapschema` v0.10.1입니다. 명령이 출력한 것이 그대로 여기에 실려 있습니다. 예외는 두 개의 트랜스크립트이며, 각각 그것이 있는 자리에 그렇게 밝혀 두었습니다. [토큰 페이지]({{< relref "/authnd/tokens.md" >}})의 `oidctool` 클라이언트는 이 문서를 위해 작성한 테스트 클라이언트로 어떤 릴리스에도 포함되지 않으며, 그 트랜스크립트와 함께 보이는 서버 줄은 v0.10.0 릴리스 바이너리가 출력한 것입니다. 다른 하나는 [연합 페이지]({{< relref "/authn-bridge/federation.md" >}})의 RENATER 만료 메타데이터로, 이 파일은 더 이상 공개되지 않습니다. 모두 macOS에 포함된 OpenLDAP 및 Heimdal 클라이언트로, 127.0.0.1의 비특권 포트에서 임시 디렉터리 안에서 요청했습니다. 그래서 그 뒤의 구성이 `etc/authnd/passwords/alice.pw` 같은 상대 경로로 파일을 지정하고, 비밀번호 파일의 이름이 `alice.pwin` 같은 것입니다. 예제의 `/etc/authnd` 경로는 설치된 서버가 사용하는 경로입니다. `authnd` 의 버전이나 스키마를 출력하는 트랜스크립트는 v0.12.4(`authnd-darwin-arm64`, `relverify` 로 `SHA256SUMS` 와 증명에 대해 확인; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.4`, `vcs.modified=false`)로 다시 실행했습니다. 여기와 운영 페이지의 root DSE, `authnd --version`, 엔트리 페이지의 스키마입니다.
+이 문서에 보이는 모든 명령은 2026-10-26에 배포된 릴리스 바이너리로 다시 실행한 것이며, 손으로 다시 쓴 것이 아닙니다. `authnd` v0.12.3(`authnd-darwin-arm64`, `relverify`로 `SHA256SUMS` 및 그 증명(attestation)과 대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`), `authn-bridge` v0.23.4, `authn-revokd` v0.6.6, `sshcert-authorize` v0.1.9, `ldapschema` v0.10.1입니다. 명령이 출력한 것이 그대로 여기에 실려 있습니다. 예외는 두 개의 트랜스크립트이며, 각각 그것이 있는 자리에 그렇게 밝혀 두었습니다. [토큰 페이지]({{< relref "/authnd/tokens.md" >}})의 `oidctool` 클라이언트는 이 문서를 위해 작성한 테스트 클라이언트로 어떤 릴리스에도 포함되지 않으며, 그 트랜스크립트와 함께 보이는 서버 줄은 v0.10.0 릴리스 바이너리가 출력한 것입니다. 다른 하나는 [연합 페이지]({{< relref "/authn-bridge/federation.md" >}})의 RENATER 만료 메타데이터로, 이 파일은 더 이상 공개되지 않습니다. 모두 macOS에 포함된 OpenLDAP 및 Heimdal 클라이언트로, 127.0.0.1의 비특권 포트에서 임시 디렉터리 안에서 요청했습니다. 그래서 그 뒤의 구성이 `etc/authnd/passwords/alice.pw` 같은 상대 경로로 파일을 지정하고, 비밀번호 파일의 이름이 `alice.pwin` 같은 것입니다. 예제의 `/etc/authnd` 경로는 설치된 서버가 사용하는 경로입니다. `authnd` 의 버전을 출력하는 트랜스크립트는 v0.13.0(`authnd-darwin-arm64`, `relverify` 로 `SHA256SUMS` 와 증명에 대해 확인; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.13.0`)으로 다시 실행했습니다. 여기와 운영 페이지의 root DSE, 그리고 `authnd --version` 입니다. 엔트리 페이지의 스키마는 v0.12.4(`mod github.com/go-authn/authnd v0.12.4`, `vcs.modified=false`)가 출력한 것이며, v0.13.0은 규칙이 없는 스키마에 대해 `dITContentRules`, `nameForms`, `dITStructureRules` 의 값을 출력하지 않는다는 것을 확인했습니다. [사이트 스키마 페이지의 규칙 절]({{< relref "/authnd/schemas.md#rules" >}})에 그 절을 무엇으로 실행했는지 적혀 있습니다.
 {{< /callout >}}

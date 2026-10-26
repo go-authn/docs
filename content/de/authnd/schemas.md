@@ -2,7 +2,7 @@
 title: "Standort-Schemata und die Klassen, die eine Quelle deklariert"
 linkTitle: "Standort-Schemata"
 weight: 27
-description: "SUPANN, eduPerson oder die eigenen Attribute eines Standorts bereitstellen: schema_files und der schema-Block fügen Definitionen hinzu, object_classes deklariert, welche Hilfsklassen die Personen und Gruppen einer Quelle tragen, und check sagt, was weggelassen wurde."
+description: "SUPANN, eduPerson oder die eigenen Attribute eines Standorts bereitstellen: schema_files und der schema-Block fügen Definitionen hinzu, object_classes deklariert, welche Hilfsklassen die Personen und Gruppen einer Quelle tragen, und check sagt, was weggelassen wurde. Ab v0.13.0 werden DIT-Content-Rules, Name Forms und DIT-Structure-Rules durchgesetzt."
 tags: [authnd, ldap, schema, konfiguration]
 ---
 
@@ -425,6 +425,400 @@ Attribute, die mangels einer Klasse weggelassen werden, sind die Zeilen `is publ
 [die Einträge]({{< relref "/authnd/entries.md" >}}) bereits beschreiben: Mit einer
 Deklaration nennen sie die Klasse, die Sie nicht deklariert haben.
 
+## DIT-Content-Rules, Name Forms und DIT-Structure-Rules {#rules}
+
+Ab v0.13.0 akzeptieren `schema_files` und der `schema { }`-Block auch die drei
+Arten von Definitionen, die RFC 4512 §4.1.6 und §4.1.7 zu Klassen und
+Attributen hinzufügen, und authnd **setzt sie durch** (go-authn/ldap v0.11.0 liest,
+baut und prüft sie; [die Bibliotheksseite]({{< relref "/libraries/ldap.md#rules" >}})
+sagt, wie):
+
+| Definition | RFC 4512 | was sie sagt | was authnd damit tut |
+|---|---|---|---|
+| DIT-Content-Rule | §4.1.6 | für eine strukturelle Klasse: welche Hilfsklassen (`AUX`) hinzugefügt werden dürfen, welche Attribute verlangt (`MUST`), erlaubt (`MAY`) oder ausgeschlossen (`NOT`) sind | **formt jeden Eintrag** (Daten) |
+| Name Form | §4.1.7.2 | aus welchen Attributnamen (dem RDN) ein Eintrag einer strukturellen Klasse besteht | **hält den Baum** (Konfiguration) |
+| DIT-Structure-Rule | §4.1.7.1 | wo eine Name Form stehen darf: unter dem Eintrag, den die Regel regiert, die ihr `SUP` nennt | **hält den Baum** (Konfiguration) |
+
+Sie werden unter `cn=Subschema` veröffentlicht (`dITContentRules`, `nameForms`,
+`dITStructureRules`), **nur wenn es welche gibt**. Gibt es keine, gilt nichts auf dieser
+Seite, und gegenüber v0.12.4 ändert sich nichts.
+
+{{< callout type="info" >}}
+**Derselbe Beispiel-Arc**
+
+`rules.schema` unten ist, wie `example.schema` oben, für diese Seite geschrieben,
+unter `1.3.6.1.4.1.99999`. Verwenden Sie Ihren eigenen Arc. Die OIDs der Content-Rule und
+von `inetOrgPerson` sind per Definition dieselben: Eine Content-Rule trägt den Namen
+der strukturellen Klasse, für die sie gilt.
+{{< /callout >}}
+
+### Ein Schema mit je einer, und sein HCL {#rules-example}
+
+In der `.schema`-Form von OpenLDAP. `ditcontentrule` ist die Direktive von slapd.conf(5);
+`nameform` und `ditstructurerule` sind die von go-authn/ldap, da slapd keine hat
+([unten](#rules-slapd)). authnd prüft außerdem den Baum, den es veröffentlicht
+(Suffix, `ou=people`, `ou=groups`, Accounts, Personen und Gruppen darunter), sodass die
+Datei fünf Name Forms und fünf Structure-Rules enthält, nicht je eine:
+
+```
+# Rules for the tree authnd publishes. 1.3.6.1.4.1.99999 is an example arc:
+# nobody is assigned it, use your own.
+
+# A content rule belongs to a structural class and takes that class's OID.
+# inetOrgPerson (2.16.840.1.113730.3.2.2): posixAccount and uidObject may be
+# added, ldapPublicKey may not; telephoneNumber is required; description is
+# precluded.
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME 'examplePersonRule'
+	AUX ( posixAccount $ uidObject )
+	MUST telephoneNumber
+	NOT description )
+
+# A name form says which attribute names an entry of a structural class.
+nameform ( 1.3.6.1.4.1.99999.9.1 NAME 'exampleDomainForm' OC domain MUST dc )
+nameform ( 1.3.6.1.4.1.99999.9.2 NAME 'exampleUnitForm' OC organizationalUnit MUST ou )
+nameform ( 1.3.6.1.4.1.99999.9.3 NAME 'exampleAccountForm' OC account MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.4 NAME 'examplePersonForm' OC inetOrgPerson MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.5 NAME 'examplePosixGroupForm' OC posixGroup MUST cn )
+
+# A structure rule gives a name form a place: the rule ID is a number, SUP
+# names the rule of the parent entry.
+ditstructurerule ( 1 NAME 'exampleSuffix' FORM exampleDomainForm )
+ditstructurerule ( 2 NAME 'exampleUnit' FORM exampleUnitForm SUP 1 )
+ditstructurerule ( 3 NAME 'exampleAccounts' FORM exampleAccountForm SUP 2 )
+ditstructurerule ( 4 NAME 'examplePersons' FORM examplePersonForm SUP 2 )
+ditstructurerule ( 5 NAME 'examplePosixGroups' FORM examplePosixGroupForm SUP 2 )
+```
+
+Dieselben Definitionen in HCL, wie `ldapschema` v0.11.0 sie schreibt
+(`ldapschema to-hcl rules.schema`). Jeder Block ist eine Definition, benannt mit
+ihrem ersten NAME; eine Structure-Rule hat eine `id`, die `form`, die sie platziert, und die
+`sup`-Regeln, unter denen sie steht:
+
+```hcl
+dit_content_rule "examplePersonRule" {
+  oid  = "2.16.840.1.113730.3.2.2"
+  aux  = ["posixAccount", "uidObject"]
+  must = ["telephoneNumber"]
+  not  = ["description"]
+}
+
+name_form "exampleDomainForm" {
+  oid  = "1.3.6.1.4.1.99999.9.1"
+  oc   = "domain"
+  must = ["dc"]
+}
+
+name_form "exampleUnitForm" {
+  oid  = "1.3.6.1.4.1.99999.9.2"
+  oc   = "organizationalUnit"
+  must = ["ou"]
+}
+
+name_form "exampleAccountForm" {
+  oid  = "1.3.6.1.4.1.99999.9.3"
+  oc   = "account"
+  must = ["uid"]
+}
+
+name_form "examplePersonForm" {
+  oid  = "1.3.6.1.4.1.99999.9.4"
+  oc   = "inetOrgPerson"
+  must = ["uid"]
+}
+
+name_form "examplePosixGroupForm" {
+  oid  = "1.3.6.1.4.1.99999.9.5"
+  oc   = "posixGroup"
+  must = ["cn"]
+}
+
+dit_structure_rule "exampleSuffix" {
+  id   = 1
+  form = "exampleDomainForm"
+}
+
+dit_structure_rule "exampleUnit" {
+  id   = 2
+  form = "exampleUnitForm"
+  sup  = [1]
+}
+
+dit_structure_rule "exampleAccounts" {
+  id   = 3
+  form = "exampleAccountForm"
+  sup  = [2]
+}
+
+dit_structure_rule "examplePersons" {
+  id   = 4
+  form = "examplePersonForm"
+  sup  = [2]
+}
+
+dit_structure_rule "examplePosixGroups" {
+  id   = 5
+  form = "examplePosixGroupForm"
+  sup  = [2]
+}
+```
+
+Das ist, was unverändert in einen `schema { }`-Block gehört; die `.schema`-Datei ist,
+was `schema_files` nimmt. `ldapschema to-schema rules.hcl` macht daraus wieder eine
+`.schema`-Datei mit denselben Definitionen, und `ldapschema check` baut sie auf
+dem Standardschema auf:
+
+```
+$ ldapschema check etc/authnd/rules.schema
+read: 0 object identifiers, 0 syntaxes, 0 matching rules, 0 attribute types, 0 object classes
+read: 1 DIT content rules, 5 name forms, 5 DIT structure rules
+build: ok, 11 definitions added to schema.Standard()
+```
+
+### Was eine Content-Rule mit einem Eintrag macht {#content-rules}
+
+Die Konfiguration besteht aus zwei Personen und zwei Gruppen, mit den Regeln aus
+`schema_files`. **dave** hat ein `sn` (ist also ein `inetOrgPerson`), eine Telefonnummer,
+eine Beschreibung und einen öffentlichen SSH-Schlüssel; **erin** hat ein `sn` und sonst
+nichts; **staff** hat eine `gidNumber`; **team** hat keine:
+
+```hcl
+listen  = "127.0.0.1:3893"
+base_dn = "dc=example,dc=org"
+
+reader "cn=reader,dc=example,dc=org" { password_file = "etc/authnd/reader.pw" }
+
+schema_files = ["etc/authnd/rules.schema"]
+
+user "dave" {
+  password        = "dave-password"
+  authorized_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org"]
+  attributes = {
+    sn              = "Dumont"
+    telephoneNumber = "+33 1 23 45 67 89"
+    description     = "on call"
+  }
+}
+
+user "erin" {
+  password   = "erin-password"
+  attributes = { sn = "Evans" }
+}
+
+group "staff" {
+  members    = ["dave"]
+  attributes = { gidNumber = "100" }
+}
+
+group "team" { members = ["dave"] }
+```
+
+Die Regel gilt für die **strukturelle Klasse** des Eintrags, und was sie bewirkt, wird
+beim Start und von `check` Eintrag für Eintrag gesagt:
+
+| die Regel sagt | der Eintrag | gesagt als |
+|---|---|---|
+| `AUX` führt eine Hilfsklasse nicht auf, ob deklariert oder von authnd abgeleitet (`posixAccount`, `ldapPublicKey`, `sambaSamAccount`, `uidObject`) | die Klasse wird **weggelassen**, mit den Attributen, die nur sie erlaubte (und dem `sshPublicKey`, `sambaSID` und `sambaNTPassword`, die authnd für sie hinzufügen würde); eine deklarierte Klasse, deren Oberklasse weggelassen wird, geht mit ihr | `<name> is published without <class>: the DIT content rule <rule> does not allow it (not in its AUX)` |
+| `NOT` nennt ein Attribut | das Attribut wird **verworfen**, von wem auch immer es stammt | `<name> is published without <attribute>: the DIT content rule <rule> precludes it (NOT)` |
+| `MUST` nennt ein Attribut, das dem Eintrag fehlt | der Eintrag wird **ausgelassen**: Die Regel gilt für den Eintrag als Ganzes, und keine Klasse kann weggelassen werden, um ihn gültig zu machen | `<name> is NOT published: … <attribute> is required by the DIT content rule <rule> and is missing (RFC 4512 4.1.6)` |
+
+Ohne Content-Rule für ihre strukturelle Klasse sind die Hilfsklassen eines Eintrags
+erlaubt, wie slapd sie erlaubt ([unten](#rules-slapd)).
+
+```
+$ authnd check etc/authnd/authnd.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+
+USER  FROM                    CAN PROVE             PUBLISHED AS                                            WITH
+dave  the configuration file  a password and 1 key  person, organizationalPerson, inetOrgPerson, uidObject  uid, cn, sn and telephoneNumber
+erin  the configuration file  a password            NOT PUBLISHED (see below)                               uid, cn and sn
+
+GROUP  MEMBERS  PUBLISHED AS
+staff  dave     posixGroup
+team   dave     NOT PUBLISHED (see below)
+
+dave has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+dave is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+dave is published without description: the DIT content rule examplePersonRule precludes it (NOT)
+erin has no uidNumber, gidNumber or homeDirectory: not a posixAccount, and as person, organizationalPerson, inetOrgPerson, uidObject the entry fails the schema (below)
+erin is NOT published: as person, organizationalPerson, inetOrgPerson, uidObject it fails the schema:
+  - telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+group team is NOT published: as groupOfNames it fails the schema:
+  - no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+
+this configuration can be served
+```
+
+Der Server startet, und sein Log enthält dieselben drei Arten von Zeilen, mit DNs:
+
+```
+$ authnd --config etc/authnd/authnd.hcl
+ldap on 127.0.0.1:3893, serving 2 people from the configuration file
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+uid=erin,ou=people,dc=example,dc=org is NOT published: it fails the schema: telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+cn=team,ou=groups,dc=example,dc=org is NOT published: it fails the schema: no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+uid=dave,ou=people,dc=example,dc=org is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+uid=dave,ou=people,dc=example,dc=org is published without description: the DIT content rule examplePersonRule precludes it (NOT)
+```
+
+Was `ldapsearch` von OpenLDAP unter `cn=Subschema` liest, die drei Attribute, in denen die
+Regeln veröffentlicht werden:
+
+```
+$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b cn=Subschema -s base '(objectClass=subschema)' dITContentRules nameForms dITStructureRules
+dn: cn=Subschema
+dITContentRules: ( 2.16.840.1.113730.3.2.2 NAME 'examplePersonRule' AUX ( posixAccount $ uidObject ) MUST telephoneNumber NOT description )
+nameForms: ( 1.3.6.1.4.1.99999.9.1 NAME 'exampleDomainForm' OC domain MUST dc )
+nameForms: ( 1.3.6.1.4.1.99999.9.2 NAME 'exampleUnitForm' OC organizationalUnit MUST ou )
+nameForms: ( 1.3.6.1.4.1.99999.9.3 NAME 'exampleAccountForm' OC account MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.4 NAME 'examplePersonForm' OC inetOrgPerson MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.5 NAME 'examplePosixGroupForm' OC posixGroup MUST cn )
+dITStructureRules: ( 1 NAME 'exampleSuffix' FORM exampleDomainForm )
+dITStructureRules: ( 2 NAME 'exampleUnit' FORM exampleUnitForm SUP 1 )
+dITStructureRules: ( 3 NAME 'exampleAccounts' FORM exampleAccountForm SUP 2 )
+dITStructureRules: ( 4 NAME 'examplePersons' FORM examplePersonForm SUP 2 )
+dITStructureRules: ( 5 NAME 'examplePosixGroups' FORM examplePosixGroupForm SUP 2 )
+```
+
+Und der Baum, abgefragt nach dem, was die Regeln berühren. Zuerst dieselbe Konfiguration
+**ohne** `schema_files` (der Zeuge: Jeder Unterschied unten geht auf die Regeln zurück),
+dann mit ihnen:
+
+```
+$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org '(|(uid=*)(cn=*))' dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: ldapPublicKey
+objectClass: uidObject
+description: on call
+sshPublicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org
+
+dn: uid=erin,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+
+dn: cn=team,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames
+```
+
+```
+$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org '(|(uid=*)(cn=*))' dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+```
+
+dave hat `ldapPublicKey` verloren und mit ihr seinen `sshPublicKey` (nicht in `AUX`),
+und seine `description` (`NOT`). erin ist weg (`MUST telephoneNumber`), und ebenso
+**team**: Es hat keine `gidNumber`, ist also eine `groupOfNames`, und keine Structure-Rule
+platziert eine `groupOfNames` unter `ou=groups`. Das Letzte ist die Regel des Baums,
+auf Daten angewandt, was der nächste Abschnitt erklärt.
+
+### Was die Structure-Rules mit dem Baum machen {#structure-rules}
+
+Mit **mindestens einer aktiven** DIT-Structure-Rule geht authnd beim Start und in
+`check` den Baum durch, den es veröffentlichen wird:
+
+- der **Suffix** (`base_dn`), mit der Klasse, die sein RDN nennt: `dc` eine
+  `domain`, `o` eine `organization`, `ou` eine `organizationalUnit`, `c` ein
+  `country`, `l` eine `locality`. Ein Suffix, der von einem anderen Attribut benannt wird,
+  wird abgelehnt;
+- `ou=people` und `ou=groups`, als `organizationalUnit`s;
+- das RDN-Attribut, mit dem authnd seine Personen (`uid`) und seine Gruppen (`cn`) benennt.
+
+Ein Container, den keine Regel platziert, ein Suffix einer Art, für die keine Regel eine
+Name Form hat, eine Name Form, die `uid` oder `cn` ablehnt, oder ein Container, unter dem nichts
+von dem, was authnd veröffentlicht, platziert werden könnte, **verweigert den Start, und
+`check`**: alle Ablehnungen auf einmal, mit Nennung des DN, der Regel oder Name Form und der
+Klausel, und ohne je ein Geheimnis zu wiederholen. Eine Person oder Gruppe, deren strukturelle
+Klasse von ihren Daten abhängt (ein `sn`, eine `gidNumber`) und die unter ihrem Container
+keine Regel hat, wird stattdessen **ausgelassen und gesagt**, wie team oben: Der Server
+startet. Ohne aktive Structure-Rule ändert sich nichts.
+
+Ein Schema, dessen einzige Structure-Rule für Personen, `peopleByCN`, eine Name Form
+platziert, die `cn` will (`accountByCN`: `OC account MUST cn`):
+
+```
+$ authnd check cases/bad.hcl
+authnd: DIT structure rules: authnd names its people uid=<name>,ou=people,dc=example,dc=org, and an account named so is refused: the RDN (uid) is allowed by the name form of no DIT structure rule that places account under an entry governed by the rule 2: accountByCN needs cn
+```
+
+authnd benennt seine Personen `uid=<name>`: Die Regeln müssen das erlauben. Und ein
+Schema, dessen Regel für `organizationalUnit` kein `SUP` hat, sodass eine
+`organizationalUnit` nur an der Wurzel stehen kann, lässt sowohl `ou=people` als auch
+`ou=groups` ohne Platz und sagt beides auf einmal:
+
+```
+$ authnd check cases/root.hcl
+authnd: DIT structure rules: ou=people,dc=example,dc=org, where authnd publishes its people, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)
+DIT structure rules: ou=groups,dc=example,dc=org, where authnd publishes its groups, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)
+```
+
+Beide enden mit Status 1. Die Dateien dahinter (`cases/bad.schema` und
+`cases/root.schema`) enthalten dieselben fünf Name Forms und nur die Structure-Rules,
+die den Punkt machen.
+
+### Wo authnd und slapd sich unterscheiden {#rules-slapd}
+
+go-authn/ldap liest die OpenLDAP-Dateien, und einige der Regeln sind die von OpenLDAP.
+Das sind die Unterschiede, gesagt statt entdeckt:
+
+- **slapd implementiert nur Content-Rules.** Es hat keine Direktive für Name Forms
+  oder Structure-Rules. `Format` schreibt die Schlüsselwörter `nameform` und
+  `ditstructurerule`, die die dieser Bibliothek sind, und slapd lehnt sie ab: Halten Sie
+  sie im HCL oder in einer Datei, die nur authnd liest. `ditcontentrule` ist die von slapd.
+- **Eine `OBSOLETE`-Regel ist inaktiv** (RFC 4512 §4.1.6), ebenso ihre Name Form
+  oder Structure-Rule. slapd lehnt stattdessen den Eintrag ab.
+- **Ohne Content-Rule sind Hilfsklassen erlaubt.** Das ist das Verhalten von slapd
+  (sein Flag `SLAP_DISALLOW_AUX_WO_CR` wird von keinem `disallow`-Schlüsselwort gesetzt)
+  und das von authnd. RFC 4512 §2.4.3 sagt etwas anderes; die Bibliothek bietet es als
+  `ValidateOptions{StrictAuxiliary: true}` an, und authnd setzt es nicht.
+- **libldap kann das `SUP` einer Structure-Rule nicht lesen.** Eine Structure-Rule mit
+  `SUP` wird hier gelesen und von libldap nicht, sodass die Ablehnung einer solchen Datei
+  durch libldap kein Urteil über die Datei ist.
+- Eine Datei, die eine Regel **neu definiert**, wird abgelehnt, selbst wortgleich, wie
+  jede andere Definition ([oben](#redefinition)).
+
+### Was es kostet {#rules-cost}
+
+Gemessen am 26. Oktober 2026 mit `BenchmarkPublish10k` (go-authn/authnd,
+`rules_bench_test.go`): Das Veröffentlichen von 10.000 Personen macht **416 Allokationen
+pro Eintrag** mit den Regeln aus `testdata/rules.schema` und **265** ohne. Das schließt
+das Verwerfen einer ausgeschlossenen Beschreibung und die erneute Validierung ein. Die Zeiten,
+192 ms gegen 118 ms, wurden bei einer Last von 8 bis 14 gemessen und sind kein Verhältnis,
+dem man trauen sollte; nur die Allokationszahlen sind es.
+
+### Upgrade {#rules-upgrade}
+
+Für ein Schema ohne Regeln ändert sich nichts: v0.12.4 lehnte alle drei Arten ab, sodass eine
+Konfiguration, die darauf gestartet ist, keine enthält. Es gibt eine Ausnahme. Ein
+`schema { }`-String, der **kein gültiges UTF-8** ist (eine überlange Kodierung, die HCL
+durchlässt), startete auf v0.12.4 und wird jetzt abgelehnt, weil er nicht so
+veröffentlicht werden könnte, wie er geschrieben wurde.
+
 ## SUPANN, als das echte Beispiel {#supann}
 
 SUPANN ist der Attributsatz der französischen Hochschulbildung und Forschung
@@ -465,4 +859,6 @@ MUST von `supannPerson` oder `eduPerson` fehlt, wird ohne die Klasse veröffentl
 **Zu den Transkripten**
 
 Jeder Befehl auf dieser Seite wurde am 26. Oktober 2026 mit dem Release-Binary v0.12.3 (`authnd-darwin-arm64`, gegen `SHA256SUMS` geprüft; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`) und `ldapsearch` von OpenLDAP erneut ausgeführt, auf 127.0.0.1, in einem Arbeitsverzeichnis, mit den gezeigten Dateien. Die Pfade sind aus diesem Grund relativ; ein Dienst verwendet absolute. Das Schema ist ein für diese Seite geschriebenes Beispiel.
+
+Der Abschnitt zu [DIT-Content-Rules, Name Forms und DIT-Structure-Rules](#rules) wurde am 26. Oktober 2026 mit dem Release-Binary v0.13.0 ausgeführt (`authnd-darwin-arm64`, von `relverify` gegen `SHA256SUMS` und die Attestierung geprüft; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.13.0`; `authnd --version`: `authnd version v0.13.0`), mit `ldapsearch` von OpenLDAP und `ldapschema`, gebaut aus dem Tag go-authn/ldap v0.11.0 (`go install`, go1.27.1; es hat kein Release-Binary). Jede Ausgabe dort wurde von diesen Programmen ausgegeben, in einem Arbeitsverzeichnis, auf 127.0.0.1; die Dateien hinter den Transkripten sind daneben gezeigt oder beschrieben.
 {{< /callout >}}

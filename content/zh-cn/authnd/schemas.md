@@ -2,7 +2,7 @@
 title: "站点模式，以及来源声明的类"
 linkTitle: "站点模式"
 weight: 27
-description: "提供 SUPANN、eduPerson 或站点自己的属性：schema_files 和 schema 块添加定义，object_classes 声明某个来源的人员和组所带的辅助类，check 则说明哪些被丢弃。"
+description: "提供 SUPANN、eduPerson 或站点自己的属性：schema_files 和 schema 块添加定义，object_classes 声明某个来源的人员和组所带的辅助类，check 则说明哪些被丢弃。从 v0.13.0 起，DIT 内容规则、名称形式和 DIT 结构规则会被强制执行。"
 tags: [authnd, ldap, 模式, 配置]
 ---
 
@@ -417,6 +417,390 @@ go-authn/directory 会在此之前检查**拼写**：类是
 `is published without <attribute>: no class of the entry allows it; <classes> would` 这些行：
 有了声明之后，它们指明的是你尚未声明的类。
 
+## DIT 内容规则、名称形式和 DIT 结构规则 {#rules}
+
+从 v0.13.0 起，`schema_files` 和 `schema { }` 块还接受 RFC 4512 §4.1.6 和 §4.1.7
+为类和属性所增加的三类定义，并且 authnd **强制执行**它们（go-authn/ldap v0.11.0
+读取、构建并检查它们；[库页面]({{< relref "/libraries/ldap.md#rules" >}})
+说明了方式）：
+
+| 定义 | RFC 4512 | 它说明什么 | authnd 如何处理 |
+|---|---|---|---|
+| DIT 内容规则 | §4.1.6 | 针对一个结构类：可以添加哪些辅助类（`AUX`），哪些属性是必需的（`MUST`）、允许的（`MAY`）或被排除的（`NOT`） | **为每个条目塑形**（数据） |
+| 名称形式 | §4.1.7.2 | 某个结构类的条目由哪些属性命名（RDN） | **约束树**（配置） |
+| DIT 结构规则 | §4.1.7.1 | 名称形式可以放在哪里：在由其 `SUP` 所指名的规则所管辖的条目之下 | **约束树**（配置） |
+
+它们**只有在存在时**才会在 `cn=Subschema` 发布（`dITContentRules`、`nameForms`、
+`dITStructureRules`）。没有时，此页面的内容都不适用，与 v0.12.4 相比
+也没有任何变化。
+
+{{< callout type="info" >}}
+**同一个示例弧**
+
+下面的 `rules.schema` 与上面的 `example.schema` 一样，是为此页面编写的，
+位于 `1.3.6.1.4.1.99999` 之下。请使用你自己的弧。内容规则的 OID 与
+`inetOrgPerson` 的 OID 按定义是相同的：内容规则以它所针对的结构类命名。
+{{< /callout >}}
+
+### 每类各一条的模式，及其 HCL {#rules-example}
+
+采用 OpenLDAP 的 `.schema` 形式。`ditcontentrule` 是 slapd.conf(5) 的指令；
+`nameform` 和 `ditstructurerule` 是 go-authn/ldap 的，因为 slapd 没有它们
+（[见下文](#rules-slapd)）。authnd 还会检查它所发布的树
+（后缀、`ou=people`、`ou=groups`，以及其下的账户、人员和组），
+因此该文件包含五个名称形式和五条结构规则，而不是每类各一个：
+
+```
+# Rules for the tree authnd publishes. 1.3.6.1.4.1.99999 is an example arc:
+# nobody is assigned it, use your own.
+
+# A content rule belongs to a structural class and takes that class's OID.
+# inetOrgPerson (2.16.840.1.113730.3.2.2): posixAccount and uidObject may be
+# added, ldapPublicKey may not; telephoneNumber is required; description is
+# precluded.
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME 'examplePersonRule'
+	AUX ( posixAccount $ uidObject )
+	MUST telephoneNumber
+	NOT description )
+
+# A name form says which attribute names an entry of a structural class.
+nameform ( 1.3.6.1.4.1.99999.9.1 NAME 'exampleDomainForm' OC domain MUST dc )
+nameform ( 1.3.6.1.4.1.99999.9.2 NAME 'exampleUnitForm' OC organizationalUnit MUST ou )
+nameform ( 1.3.6.1.4.1.99999.9.3 NAME 'exampleAccountForm' OC account MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.4 NAME 'examplePersonForm' OC inetOrgPerson MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.5 NAME 'examplePosixGroupForm' OC posixGroup MUST cn )
+
+# A structure rule gives a name form a place: the rule ID is a number, SUP
+# names the rule of the parent entry.
+ditstructurerule ( 1 NAME 'exampleSuffix' FORM exampleDomainForm )
+ditstructurerule ( 2 NAME 'exampleUnit' FORM exampleUnitForm SUP 1 )
+ditstructurerule ( 3 NAME 'exampleAccounts' FORM exampleAccountForm SUP 2 )
+ditstructurerule ( 4 NAME 'examplePersons' FORM examplePersonForm SUP 2 )
+ditstructurerule ( 5 NAME 'examplePosixGroups' FORM examplePosixGroupForm SUP 2 )
+```
+
+同样的定义用 HCL 写出，即 `ldapschema` v0.11.0 所写的形式
+（`ldapschema to-hcl rules.schema`）。每个块是一个定义，以其第一个 NAME 作标签；
+结构规则有 `id`、它所放置的 `form`，以及它位于其下的 `sup` 规则：
+
+```hcl
+dit_content_rule "examplePersonRule" {
+  oid  = "2.16.840.1.113730.3.2.2"
+  aux  = ["posixAccount", "uidObject"]
+  must = ["telephoneNumber"]
+  not  = ["description"]
+}
+
+name_form "exampleDomainForm" {
+  oid  = "1.3.6.1.4.1.99999.9.1"
+  oc   = "domain"
+  must = ["dc"]
+}
+
+name_form "exampleUnitForm" {
+  oid  = "1.3.6.1.4.1.99999.9.2"
+  oc   = "organizationalUnit"
+  must = ["ou"]
+}
+
+name_form "exampleAccountForm" {
+  oid  = "1.3.6.1.4.1.99999.9.3"
+  oc   = "account"
+  must = ["uid"]
+}
+
+name_form "examplePersonForm" {
+  oid  = "1.3.6.1.4.1.99999.9.4"
+  oc   = "inetOrgPerson"
+  must = ["uid"]
+}
+
+name_form "examplePosixGroupForm" {
+  oid  = "1.3.6.1.4.1.99999.9.5"
+  oc   = "posixGroup"
+  must = ["cn"]
+}
+
+dit_structure_rule "exampleSuffix" {
+  id   = 1
+  form = "exampleDomainForm"
+}
+
+dit_structure_rule "exampleUnit" {
+  id   = 2
+  form = "exampleUnitForm"
+  sup  = [1]
+}
+
+dit_structure_rule "exampleAccounts" {
+  id   = 3
+  form = "exampleAccountForm"
+  sup  = [2]
+}
+
+dit_structure_rule "examplePersons" {
+  id   = 4
+  form = "examplePersonForm"
+  sup  = [2]
+}
+
+dit_structure_rule "examplePosixGroups" {
+  id   = 5
+  form = "examplePosixGroupForm"
+  sup  = [2]
+}
+```
+
+这就是 `schema { }` 块内部的内容，原样不变；`.schema` 文件则是
+`schema_files` 所接受的。`ldapschema to-schema rules.hcl` 把它转回
+定义相同的 `.schema` 文件，而 `ldapschema check` 在标准模式之上构建它：
+
+```
+$ ldapschema check etc/authnd/rules.schema
+read: 0 object identifiers, 0 syntaxes, 0 matching rules, 0 attribute types, 0 object classes
+read: 1 DIT content rules, 5 name forms, 5 DIT structure rules
+build: ok, 11 definitions added to schema.Standard()
+```
+
+### 内容规则对条目做了什么 {#content-rules}
+
+配置是两个人员和两个组，规则从 `schema_files` 加载。**dave** 有 `sn`
+（因此他是 `inetOrgPerson`）、电话号码、描述和一个 SSH 公钥；**erin** 有 `sn`，
+别无其他；**staff** 有 `gidNumber`；**team** 没有：
+
+```hcl
+listen  = "127.0.0.1:3893"
+base_dn = "dc=example,dc=org"
+
+reader "cn=reader,dc=example,dc=org" { password_file = "etc/authnd/reader.pw" }
+
+schema_files = ["etc/authnd/rules.schema"]
+
+user "dave" {
+  password        = "dave-password"
+  authorized_keys = ["ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org"]
+  attributes = {
+    sn              = "Dumont"
+    telephoneNumber = "+33 1 23 45 67 89"
+    description     = "on call"
+  }
+}
+
+user "erin" {
+  password   = "erin-password"
+  attributes = { sn = "Evans" }
+}
+
+group "staff" {
+  members    = ["dave"]
+  attributes = { gidNumber = "100" }
+}
+
+group "team" { members = ["dave"] }
+```
+
+规则适用于条目的**结构类**，它做了什么，会在启动时以及由 `check` 逐个条目说明：
+
+| 规则说 | 条目 | 表述为 |
+|---|---|---|
+| `AUX` 没有列出某个辅助类，无论是已声明的还是 authnd 派生的（`posixAccount`、`ldapPublicKey`、`sambaSamAccount`、`uidObject`） | 该类被**去掉**，连同只有它才允许的属性（以及 authnd 为它添加的 `sshPublicKey`、`sambaSID` 和 `sambaNTPassword`）；其超类被去掉的已声明类随之去掉 | `<name> is published without <class>: the DIT content rule <rule> does not allow it (not in its AUX)` |
+| `NOT` 指名某个属性 | 该属性被**丢弃**，无论由谁提供 | `<name> is published without <attribute>: the DIT content rule <rule> precludes it (NOT)` |
+| `MUST` 指名条目所缺少的属性 | 该条目被**排除在外**：规则适用于整个条目，没有哪个类可以去掉而使它有效 | `<name> is NOT published: … <attribute> is required by the DIT content rule <rule> and is missing (RFC 4512 4.1.6)` |
+
+结构类没有内容规则的条目，其辅助类是允许的，
+与 slapd 允许它们一样（[见下文](#rules-slapd)）。
+
+```
+$ authnd check etc/authnd/authnd.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+
+USER  FROM                    CAN PROVE             PUBLISHED AS                                            WITH
+dave  the configuration file  a password and 1 key  person, organizationalPerson, inetOrgPerson, uidObject  uid, cn, sn and telephoneNumber
+erin  the configuration file  a password            NOT PUBLISHED (see below)                               uid, cn and sn
+
+GROUP  MEMBERS  PUBLISHED AS
+staff  dave     posixGroup
+team   dave     NOT PUBLISHED (see below)
+
+dave has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+dave is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+dave is published without description: the DIT content rule examplePersonRule precludes it (NOT)
+erin has no uidNumber, gidNumber or homeDirectory: not a posixAccount, and as person, organizationalPerson, inetOrgPerson, uidObject the entry fails the schema (below)
+erin is NOT published: as person, organizationalPerson, inetOrgPerson, uidObject it fails the schema:
+  - telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+group team is NOT published: as groupOfNames it fails the schema:
+  - no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+
+this configuration can be served
+```
+
+服务器启动，其日志带有同样三类行，只是带有 DN：
+
+```
+$ authnd --config etc/authnd/authnd.hcl
+ldap on 127.0.0.1:3893, serving 2 people from the configuration file
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+uid=erin,ou=people,dc=example,dc=org is NOT published: it fails the schema: telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+cn=team,ou=groups,dc=example,dc=org is NOT published: it fails the schema: no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+uid=dave,ou=people,dc=example,dc=org is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+uid=dave,ou=people,dc=example,dc=org is published without description: the DIT content rule examplePersonRule precludes it (NOT)
+```
+
+OpenLDAP 的 `ldapsearch` 在 `cn=Subschema` 处读到的内容，即发布规则所用的三个属性：
+
+```
+$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b cn=Subschema -s base '(objectClass=subschema)' dITContentRules nameForms dITStructureRules
+dn: cn=Subschema
+dITContentRules: ( 2.16.840.1.113730.3.2.2 NAME 'examplePersonRule' AUX ( posixAccount $ uidObject ) MUST telephoneNumber NOT description )
+nameForms: ( 1.3.6.1.4.1.99999.9.1 NAME 'exampleDomainForm' OC domain MUST dc )
+nameForms: ( 1.3.6.1.4.1.99999.9.2 NAME 'exampleUnitForm' OC organizationalUnit MUST ou )
+nameForms: ( 1.3.6.1.4.1.99999.9.3 NAME 'exampleAccountForm' OC account MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.4 NAME 'examplePersonForm' OC inetOrgPerson MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.5 NAME 'examplePosixGroupForm' OC posixGroup MUST cn )
+dITStructureRules: ( 1 NAME 'exampleSuffix' FORM exampleDomainForm )
+dITStructureRules: ( 2 NAME 'exampleUnit' FORM exampleUnitForm SUP 1 )
+dITStructureRules: ( 3 NAME 'exampleAccounts' FORM exampleAccountForm SUP 2 )
+dITStructureRules: ( 4 NAME 'examplePersons' FORM examplePersonForm SUP 2 )
+dITStructureRules: ( 5 NAME 'examplePosixGroups' FORM examplePosixGroupForm SUP 2 )
+```
+
+再看树，查询规则所涉及的内容。先是**没有** `schema_files` 的同一配置
+（对照：下面的每一处差异都是规则造成的），然后是有它们的：
+
+```
+$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org '(|(uid=*)(cn=*))' dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: ldapPublicKey
+objectClass: uidObject
+description: on call
+sshPublicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org
+
+dn: uid=erin,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+
+dn: cn=team,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames
+```
+
+```
+$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org '(|(uid=*)(cn=*))' dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+```
+
+dave 失去了 `ldapPublicKey`，随之失去了他的 `sshPublicKey`（不在 `AUX` 中），
+还有他的 `description`（`NOT`）。erin 不见了（`MUST telephoneNumber`），
+**team** 也是：它没有 `gidNumber`，因此是 `groupOfNames`，而没有任何结构
+规则把 `groupOfNames` 放在 `ou=groups` 之下。最后这一点是树的
+规则应用于数据，下一节会加以说明。
+
+### 结构规则对树做了什么 {#structure-rules}
+
+只要有**至少一条有效的** DIT 结构规则，authnd 就会在启动时和 `check` 中
+遍历它将要发布的树：
+
+- **后缀**（`base_dn`），按其 RDN 所指名的类处理：`dc` 对应
+  `domain`，`o` 对应 `organization`，`ou` 对应 `organizationalUnit`，`c` 对应
+  `country`，`l` 对应 `locality`。以任何其他属性命名的后缀
+  都会被拒绝；
+- `ou=people` 和 `ou=groups`，作为 `organizationalUnit`；
+- authnd 用来命名人员的 RDN 属性（`uid`）和命名组的 RDN 属性（`cn`）。
+
+没有规则放置的容器、没有任何规则有名称形式与之对应的那种后缀、
+拒绝 `uid` 或 `cn` 的名称形式，或者其下无法放置 authnd 所发布的任何内容的容器，
+都会**拒绝启动，也使 `check` 失败**：每一项拒绝一并给出，指明 DN、规则或名称形式
+以及子句，并且绝不回显机密。结构类取决于其数据（`sn`、
+`gidNumber`）且其容器之下没有规则的人员或组，则会**被排除在外并加以说明**，
+如上面的 team：服务器照常启动。没有有效的结构规则时，
+一切不变。
+
+一个模式，其人员唯一的结构规则 `peopleByCN` 放置了一个需要 `cn` 的
+名称形式（`accountByCN`：`OC account MUST cn`）：
+
+```
+$ authnd check cases/bad.hcl
+authnd: DIT structure rules: authnd names its people uid=<name>,ou=people,dc=example,dc=org, and an account named so is refused: the RDN (uid) is allowed by the name form of no DIT structure rule that places account under an entry governed by the rule 2: accountByCN needs cn
+```
+
+authnd 以 `uid=<name>` 命名其人员：规则必须允许这一点。再看一个
+模式，其 `organizationalUnit` 的规则没有 `SUP`，因此
+`organizationalUnit` 只能位于根部，于是 `ou=people` 和
+`ou=groups` 都没有位置，并且两者一并给出：
+
+```
+$ authnd check cases/root.hcl
+authnd: DIT structure rules: ou=people,dc=example,dc=org, where authnd publishes its people, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)
+DIT structure rules: ou=groups,dc=example,dc=org, where authnd publishes its groups, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)
+```
+
+两者都以状态 1 退出。它们背后的文件（`cases/bad.schema` 和
+`cases/root.schema`）包含相同的五个名称形式，以及只用于说明问题的
+结构规则。
+
+### authnd 与 slapd 的不同之处 {#rules-slapd}
+
+go-authn/ldap 读取 OpenLDAP 的文件，其中有些规则是 OpenLDAP 的。
+这些是不同之处，是明确说明的，而不是事后发现的：
+
+- **slapd 只实现内容规则。** 它没有用于名称形式或结构规则的指令。
+  `Format` 写出 `nameform` 和 `ditstructurerule`
+  关键字，它们是本库的，slapd 会拒绝它们：请把这些保留在
+  HCL 中，或只由 authnd 读取的文件中。`ditcontentrule` 是 slapd 的。
+- **`OBSOLETE` 规则无效**（RFC 4512 §4.1.6），其名称形式
+  或结构规则也是如此。slapd 反而会拒绝该条目。
+- **没有内容规则时，允许辅助类。** 这是 slapd 的
+  行为（它的 `SLAP_DISALLOW_AUX_WO_CR` 标志不会被任何 `disallow`
+  关键字设置），也是 authnd 的行为。RFC 4512 §2.4.3 的说法相反；本库把它
+  提供为 `ValidateOptions{StrictAuxiliary: true}`，而 authnd 并未设置它。
+- **libldap 无法读取结构规则的 `SUP`。** 带 `SUP` 的结构规则
+  在这里可以读取，libldap 则不行，因此 libldap 拒绝这样的文件
+  并不是对该文件的裁决。
+- **重新定义**某条规则的文件会被拒绝，即使逐字相同，与其他
+  所有定义一样（[见上文](#redefinition)）。
+
+### 它的代价 {#rules-cost}
+
+于 2026-10-26 用 `BenchmarkPublish10k`（go-authn/authnd，
+`rules_bench_test.go`）测得：发布 10,000 个人员，使用 `testdata/rules.schema` 的规则时
+**每个条目 416 次分配**，不使用时为 **265** 次。
+这包括丢弃被排除的描述并再次验证。耗时
+为 192 ms 对 118 ms，是在负载 8 到 14 时测得的，其比值不可信；
+只有分配次数可信。
+
+### 升级 {#rules-upgrade}
+
+没有规则的模式不会有任何变化：v0.12.4 拒绝这三类定义，因此在它上面
+启动过的配置不含任何规则。有一个例外。**不是有效 UTF-8** 的
+`schema { }` 字符串（HCL 放行的一种过长编码）曾在 v0.12.4 上启动，
+现在会被拒绝，因为它无法按所写的内容发布。
+
 ## SUPANN，作为真实的示例 {#supann}
 
 SUPANN 是法国高等教育与研究领域的属性集
@@ -456,4 +840,6 @@ users "sql" {
 **关于这些记录**
 
 此页面上的每条命令都已于 2026-10-26 重新运行，使用 v0.12.3 发布的二进制文件（`authnd-darwin-arm64`，已对照 `SHA256SUMS` 核对；`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.12.3`，`vcs.modified=false`）和 OpenLDAP 的 `ldapsearch`，在 127.0.0.1 上、一个临时目录中，并使用所示的文件。路径因此是相对的；服务使用绝对路径。该模式是为此页面编写的示例。
+
+[DIT 内容规则、名称形式和 DIT 结构规则](#rules)一节于 2026-10-26 用 v0.13.0 发布的二进制文件运行（`authnd-darwin-arm64`，由 `relverify` 对照 `SHA256SUMS` 及其证明核对；`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.13.0`；`authnd --version`：`authnd version v0.13.0`）、OpenLDAP 的 `ldapsearch`，以及从 go-authn/ldap v0.11.0 标签构建的 `ldapschema`（`go install`，go1.27.1；它没有发布的二进制文件）。那里的每一项输出都由这些程序打印，在临时目录中、127.0.0.1 上；记录背后的文件在旁边给出或加以描述。
 {{< /callout >}}

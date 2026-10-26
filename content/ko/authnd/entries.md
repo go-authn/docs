@@ -68,7 +68,11 @@ authnd 자체의 이유로 본 이 선택들의 근거는 다음과 같습니다
   `seeAlso`를 받습니다.
 - **DIT 콘텐츠 규칙 없는 보조 클래스.** RFC 4512 §2.4.3은 구조 클래스에 DIT 콘텐츠
   규칙이 없는 엔트리에 보조 클래스를 두는 것을 금지합니다. 사용 중인 모든 디렉터리
-  서버가 이를 허용하며 `Validate`도 마찬가지입니다.
+  서버가 이를 허용하며 `Validate`도 마찬가지입니다
+  (`ValidateOptions{StrictAuxiliary: true}`가 엄격한 해석이며, authnd는 이를
+  설정하지 않습니다). 구조 클래스에 콘텐츠 규칙이 **있는** 클래스는 v0.13.0부터 그
+  규칙을 따라야 합니다: [규칙]({{< relref "/authnd/schemas.md#rules" >}})을
+  참조하십시오.
 
 ## 속성 추가하기 {#adding-attributes}
 

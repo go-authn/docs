@@ -69,7 +69,10 @@ Warum diese Entscheidungen, aus authnds eigenen Gründen:
   `description`, `ou` und `seeAlso` wie `groupOfNames`.
 - **Hilfsklassen ohne DIT-Content-Rules.** RFC 4512 §2.4.3 verbietet
   Hilfsklassen an einem Eintrag, dessen strukturelle Klasse keine DIT-Content-Rule
-  hat. Jeder verwendete Verzeichnisserver erlaubt sie, und `Validate` ebenso.
+  hat. Jeder verwendete Verzeichnisserver erlaubt sie, und `Validate` ebenso
+  (`ValidateOptions{StrictAuxiliary: true}` ist die strenge Lesart, und authnd
+  setzt sie nicht). Eine Klasse, deren strukturelle Klasse eine Content-Rule
+  **hat**, wird ab v0.13.0 daran gebunden: siehe [die Regeln]({{< relref "/authnd/schemas.md#rules" >}}).
 
 ## Attribute hinzufügen {#adding-attributes}
 

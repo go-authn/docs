@@ -20,7 +20,7 @@ tags: [라이브러리]
 | [fido]({{< relref "/libraries/fido.md" >}}) | 64바이트 리포트로 보안 키와 어떻게 통신하는가? | v0.6.2 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | *등록된* 키가 답했는가, 그리고 사람이 그것을 만졌는가? | v0.4.2 | `github.com/go-authn/keyfactor` |
 | [directory]({{< relref "/libraries/directory.md" >}}) | 누군가는 누구이며, 무엇이 그를 증명할 수 있는가? | v0.15.0 | `github.com/go-authn/directory` |
-| [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP 서버의 바이트는 무엇인가? | v0.10.2 | `github.com/go-authn/ldap` |
+| [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP 서버의 바이트는 무엇인가? | v0.11.0 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | 이 Kerberos 티켓이 이 서비스에 유효한가? | v0.3.1 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | 렐름은 디렉터리에서 어떻게 티켓을 발급하는가? | v0.4.3 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | 이 베어러 토큰은 누가 요청한다고 말하며, 믿어야 하는가? | v0.4.1 | `github.com/go-authn/oidc` |
