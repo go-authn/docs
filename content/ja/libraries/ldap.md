@@ -279,7 +279,7 @@ RFC 2307 は `uidNumber` と `gidNumber` に EQUALITY ルールを与えるだ�
 
 v0.10.0 までは、`schema.Read` は読んだファイルの継続行の数に対して二乗の時間がかかった。短い継続行から成る 4 MiB のファイルに約 3 分かかり、1 MiB で 139.6 GB を割り当てた。authnd が起動時に `schema_files` でするように、管理していないスキーマファイルを読むプログラムは、そのようなファイルで止められる可能性があった。v0.10.1 からは時間が線形であり (`TestManyContinuationLinesJoinInLinearTime`)、`Read` は最初の行を調べるためにファイル全体をコピーして分割することもしない。
 
-`schema.Format` は 2000 バイトを超える行を書いていたが、slapd と `Read` はそれを拒否する。今は折り返す。厳格なパーサーは約 2.6 倍速く、`cosine.schema` での割り当ては 498 回から 147 回になった。これは負荷のかかったマシンでの計測であり、まだ行っていない libldap との比較ではない。authnd にはこれらの修正が v0.12.3 から入っている。
+`schema.Format` は 2000 バイトを超える行を書いていたが、slapd と `Read` はそれを拒否する。今は折り返す。厳格なパーサーは約 2.6 倍速く、`cosine.schema` での割り当ては 498 回から 147 回になった。libldap (macOS SDK、`LDAP_SCHEMA_ALLOW_ALL` 付きの `ldap_str2attributetype` と `ldap_str2objectclass`) との比較は、OpenLDAP の `cosine.schema` の 54 個の定義で、2026-10-26 に Apple M4 Max、負荷 6.5〜7.6 で計測した (`-cpu 1 -count 10`、benchstat)。go-authn/ldap は 25.65 µs ± 32 %、libldap は 35.62 µs ± 2 % で、libldap の約 0.72 倍の時間である。Go 側は 1 回あたり 147 回の割り当て (20.6 KiB)。`-benchmem` は libldap の C の割り当てを見られないため、その数値はない。再現するには、go-authn/ldap の `bench/libldap` で `go test -bench . -benchmem -cpu 1 -count 10` を実行する (cgo と libldap が必要)。authnd にはこれらの修正が v0.12.3 から入っている。
 
 ## ビルドできないスキーマ {#build-error}
 

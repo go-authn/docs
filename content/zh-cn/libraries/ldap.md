@@ -296,7 +296,7 @@ SSSD 由 `ldap_min_id` 和 `ldap_max_id` 构建的那个。slapd 自己定义这
 
 直到 v0.10.0，`schema.Read` 的耗时与所读文件的续行数成平方关系：由短续行组成的 4 MiB 文件约需三分钟，1 MiB 就分配了 139.6 GB。读取不受自己控制的模式文件的程序，例如 authnd 在启动时读取 `schema_files`，可能被这样的文件拖住。从 v0.10.1 起耗时是线性的（`TestManyContinuationLinesJoinInLinearTime`），并且 `Read` 不再为了查看第一行而复制并拆分整个文件。
 
-`schema.Format` 过去会写出超过 2000 字节的行，而 slapd 和 `Read` 会拒绝这样的行；现在它会折行。严格解析器约快 2.6 倍，在 `cosine.schema` 上分配 147 次而非 498 次。这是在负载较高的机器上测得的，并不是与 libldap 的比较，那个比较尚未进行。authnd 从 v0.12.3 起包含这些修复。
+`schema.Format` 过去会写出超过 2000 字节的行，而 slapd 和 `Read` 会拒绝这样的行；现在它会折行。严格解析器约快 2.6 倍，在 `cosine.schema` 上分配 147 次而非 498 次。与 libldap（macOS SDK，带 `LDAP_SCHEMA_ALLOW_ALL` 的 `ldap_str2attributetype` 和 `ldap_str2objectclass`）的比较，使用 OpenLDAP `cosine.schema` 的 54 个定义，于 2026-10-26 在 Apple M4 Max 上、负载 6.5 到 7.6 时测得（`-cpu 1 -count 10`，benchstat）：go-authn/ldap 为 25.65 µs ± 32 %，libldap 为 35.62 µs ± 2 %，约为 libldap 耗时的 0.72 倍。Go 一侧每次运行 147 次分配（20.6 KiB）；`-benchmem` 看不到 libldap 的 C 分配，因此没有这方面的数字。要复现，请在 go-authn/ldap 的 `bench/libldap` 中运行 `go test -bench . -benchmem -cpu 1 -count 10`（需要 cgo 和 libldap）。authnd 从 v0.12.3 起包含这些修复。
 
 ## 无法构建的模式 {#build-error}
 
