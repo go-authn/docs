@@ -268,4 +268,4 @@ The coverage lane's floor is 92%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/saml@v0.5.0](https://pkg.go.dev/github.com/go-authn/saml@v0.5.0)
+[pkg.go.dev/github.com/go-authn/saml](https://pkg.go.dev/github.com/go-authn/saml) (the v0.5.0 page was not yet indexed by pkg.go.dev when this was written, which is why the link names no version)

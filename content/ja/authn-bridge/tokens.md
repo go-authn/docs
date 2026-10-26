@@ -276,6 +276,61 @@ the token is not valid
 戻ってくるすべてで、リソースサーバーは
 [Shared Signals]({{< relref "/authn-bridge/revocation.md#shared-signals" >}})から知ります。
 
+## トークン署名鍵のローテーション {#rotating-the-signing-key}
+
+すべてのリライングパーティは、`/jwks` で公開された鍵でトークンを検証します。鍵をその場で
+差し替えると、彼らが持つすべてのトークンが無効になり、取得される前に使われた鍵は拒否されます。
+`retired_signing_key_files` はこの両方を安全にします。そこに載せた鍵は**公開されるだけで、署名には使われません**。
+ローテーションには**再起動が 2 回**必要です。プロバイダーは設定を再読み込みせず、SIGHUP は無視されるためです。
+このセクションは、bridge の pull request #80（2026-10-26 にマージ、タグ v0.23.4 の後）以降の README に基づきます。
+
+1. **次の鍵を作る**（現在の鍵の隣に）。このコマンドは既存のファイルを上書きしません。
+
+   ```sh
+   authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key
+   ```
+
+2. **署名に使う前に公開する。** `retired_signing_key_files` に追加し、`signing_key_file` はそのままにして、
+   `authn-bridge check` を実行し、再起動します。
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-04.key"   # still signing
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-10.key"] # published only
+   ```
+
+   `/jwks` は**両方**の `kid` を列挙し、新しいトークンはまだ古い `kid` を持ちます。リライングパーティが
+   鍵セットをキャッシュする最長の時間以上待ちます。未知の `kid` で再取得するもの（go-authn/oidc は
+   `MinRefresh` あたり最大 1 回行います）は待つ必要がなく、固定時間キャッシュするものはその時間が必要です。
+
+3. **入れ替える。** 新しい鍵を `signing_key_file` にし、古い鍵を `retired_signing_key_files` に移します。
+   その後 `authn-bridge check` を実行して再起動します。
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-10.key"
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-04.key"]
+   ```
+
+   `/jwks` は引き続き両方の `kid` を列挙し、新しいトークンは新しい `kid` を持ちます。古い鍵で署名された
+   トークンも検証され続けます。
+
+4. **古い鍵を退役させる。** それで署名されたトークンが提示されなくなってから行います。
+   `token_lifetime`（既定 1 時間）と `id_token_lifetime`（5 分）のうち長い方に、リライングパーティの
+   クロックスキューと鍵セットのキャッシュを加えた時間が目安です。opkssh の場合は代わりに PK Token の
+   有効期間（既定 1 日、最長 1 週間）を待ちます。その後リストから外して再起動すると、`/jwks` の `kid` は 1 つになります。
+
+各ステップで、`curl -s https://login.example.org/jwks` で公開されている `kid` を確認できます。新しいトークンの
+`kid` は、アクセストークンまたは ID トークンの最初のセグメントを base64url デコードしたものです。
+
+`access_token_key_file`（ES256）も同様にローテーションします。次の鍵は `authn-bridge keygen --access-token-key` で作り、
+退役させた鍵は他の鍵と同じく `retired_signing_key_files` に入れます。`state` ブロックがないと、リフレッシュトークンと
+`/userinfo` がメモリ上にあるため、再起動のたびに全員がログアウトされます。すでに発行されたアクセストークンは
+リソースサーバーで引き続き検証されます。
+
+README によれば、これは llmflow-gateway をリライングパーティとして go-llmflow/bench（`e2e/oidc`、
+`TestBridge/c/key-rotation`）でエンドツーエンドに検証されています。ステップ 2 の後は、トークンがまだ古い `kid` を
+持つ間に `/jwks` が両方の `kid` を列挙し、ステップ 3 の後は、入れ替え前に署名されたトークンと後に署名された
+トークンの両方が、鍵セットの取得 1 回で受け入れられ、入れ替え直後の SSO ログインも機能します。
+
 ## ブラウザーなしで: デバイスグラント {#without-a-browser-the-device-grant}
 
 WebDAV クライアント、スクリプト、ターミナルには、大学へ送り出すブラウザーがありません。

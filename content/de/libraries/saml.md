@@ -13,7 +13,7 @@ schickt Personen zum Identitätsanbieter ihrer eigenen Einrichtung und liest zur
 dieser Anbieter sagt.
 
 ```sh
-go get github.com/go-authn/saml@v0.4.1
+go get github.com/go-authn/saml@v0.5.0
 ```
 
 Er ist die Hälfte von [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}),
@@ -208,6 +208,46 @@ den Aufrufer, für das Log des Servers:
 Balancer würden dieselbe Assertion jeweils einmal akzeptieren, und ein Neustart leert
 ihn. Implementieren Sie `Replay` über gemeinsamen Speicher; sein `Use` muss atomar sein.
 {{< /callout >}}
+
+## Ein darauf gebautes Programm testen: `samltest` {#samltest}
+
+`github.com/go-authn/saml/samltest` (seit v0.5.0) ist eine Föderation und ein IdP
+für die Tests von Programmen, die auf diesem Paket aufbauen, etwa ein OpenID-Anbieter
+vor einer Föderation (go-authn/bridge) oder das, was dahinter steht (go-llmflow/bench).
+Es ist reines Go: **xmlsec1 wird zur Verwendung nicht benötigt**.
+
+```go
+fed, _ := samltest.NewParty("federation")
+key, _ := samltest.NewParty("idp")
+idp := &samltest.IdP{EntityID: "https://idp.univ-ex.example/idp/shibboleth",
+	Scope: "univ-ex.example", SSO: srv.URL + "/SSO", Signer: key}
+md, _ := (&samltest.Federation{Signer: fed, IdPs: []*samltest.IdP{idp}}).Metadata(24 * time.Hour)
+// serve md; pin fed.Fingerprint() in the program's configuration
+srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw string) ([]samltest.Attribute, bool) {
+	return []samltest.Attribute{{Name: samltest.EPPN, Values: []string{user + "@univ-ex.example"}},
+		{Name: samltest.Entitlement, Values: []string{"grp-alpha"}}}, pw == "secret"
+})
+```
+
+- **Metadaten**: ein `EntitiesDescriptor`, signiert mit dem Schlüssel der Föderation,
+  mit Scope, Anzeigename, Signaturzertifikat und HTTP-Redirect-SSO-Adresse jedes IdP.
+- **Antworten**: `IdP.Response` nimmt eine `Assertion` mit Request-ID, Audience, ACS
+  und Attributen. Die Response wird mit RSA-SHA256, exklusiver c14n, enveloped, nach
+  dem Issuer signiert. Die Assertion wird für das Zertifikat des SP mit AES-128-GCM
+  und RSA-OAEP MGF1-SHA1 verschlüsselt (Standardwerte eines Shibboleth-IdP v5) oder,
+  wenn `EncryptTo` nil ist, im Klartext selbst signiert.
+- **Die Anmeldung**: `IdP.Handler` zeigt für eine AuthnRequest ein Formular für
+  Benutzername und Passwort und antwortet mit dem Formular, das `SAMLResponse` und
+  `RelayState` an den ACS sendet; der HTTP-Client eines Tests schickt es ab wie das
+  Skript eines Browsers.
+
+Seine Ausgabe wird von Parteien beurteilt, die es nicht geschrieben haben:
+**xmlsec1** prüft die Metadaten und beide Arten von Response und entschlüsselt die
+Assertion (dieser Test wird übersprungen, mit Hinweis, wo xmlsec1 fehlt; mit
+`SAML_REQUIRE_JUDGE=1` schlägt er stattdessen fehl), und der **SP** dieses Pakets
+akzeptiert sie und weist sie manipuliert, wiederholt oder mit einem Schlüssel
+signiert zurück, den die Föderation nicht aufführt. Die Schlüssel werden bei jedem
+Aufruf erzeugt; nichts davon gehört in die Produktion.
 
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
 

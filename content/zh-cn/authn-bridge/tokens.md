@@ -283,6 +283,56 @@ the token is not valid
 带着它回到这里的一切；资源服务器通过
 [Shared Signals]({{< relref "/authn-bridge/revocation.md#shared-signals" >}})得知。
 
+## 轮换令牌签名密钥 {#rotating-the-signing-key}
+
+每个依赖方都用 `/jwks` 发布的密钥验证令牌。就地更换密钥会使它们手中的所有令牌失效，而在它们取得之前
+就开始使用的密钥会被拒绝。`retired_signing_key_files` 让这两种情况都变得安全：列在其中的密钥**只发布，从不签名**。
+轮换需要**两次重启**，因为提供方不会重新加载配置，SIGHUP 也会被忽略。本节依据 bridge 的 pull request #80
+（2026-10-26 合并，晚于标签 v0.23.4）之后的 README。
+
+1. **生成下一把密钥**，放在当前密钥旁边。该命令拒绝覆盖已有文件：
+
+   ```sh
+   authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key
+   ```
+
+2. **在它开始签名之前先发布。** 把它加入 `retired_signing_key_files`，保持 `signing_key_file` 不变，
+   运行 `authn-bridge check`，然后重启：
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-04.key"   # still signing
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-10.key"] # published only
+   ```
+
+   `/jwks` 现在列出**两个** `kid`，而新令牌仍带旧的 `kid`。等待的时间至少要等于依赖方缓存密钥集的最长时间。
+   遇到未知 `kid` 就重新获取的依赖方（go-authn/oidc 会这样做，每个 `MinRefresh` 至多一次）无需等待；
+   按固定时间缓存的依赖方则需要等那么久。
+
+3. **切换。** 把新密钥设为 `signing_key_file`，并把旧密钥移到 `retired_signing_key_files`。然后运行
+   `authn-bridge check` 并重启：
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-10.key"
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-04.key"]
+   ```
+
+   `/jwks` 仍列出两个 `kid`，新令牌带新的 `kid`。用旧密钥签名的令牌继续可以验证。
+
+4. **淘汰旧密钥**，要在它签名的令牌不可能再被出示之后：至少是 `token_lifetime`（默认 1 小时）与
+   `id_token_lifetime`（5 分钟）中较长者，再加上依赖方的时钟偏差及其密钥集缓存。对 opkssh，则改为等待
+   PK Token 的有效期（默认一天，最长一周）。然后把它从列表中移除并重启：`/jwks` 只列出一个 `kid`。
+
+每一步都可以用 `curl -s https://login.example.org/jwks` 查看已发布的 `kid`；新令牌的 `kid` 是任一访问令牌或
+ID 令牌的第一段，经 base64url 解码得到。
+
+`access_token_key_file`（ES256）以同样方式轮换：用 `authn-bridge keygen --access-token-key` 写出下一把，
+被淘汰的和其他密钥一样放入 `retired_signing_key_files`。没有 `state` 块时，每次重启都会让所有人退出登录，
+因为刷新令牌和 `/userinfo` 保存在内存中；已经签发的访问令牌在资源服务器上仍可验证。
+
+README 报告说，这已用 llmflow-gateway 作为依赖方，在 go-llmflow/bench（`e2e/oidc`，
+`TestBridge/c/key-rotation`）中端到端验证：第 2 步之后，`/jwks` 列出两个 `kid`，而令牌仍带旧的；第 3 步之后，
+切换前签名的令牌和切换后签名的令牌都被接受，只获取了一次密钥集；切换后立即进行 SSO 登录也能正常工作。
+
 ## 没有浏览器：设备授权 {#without-a-browser-the-device-grant}
 
 WebDAV 客户端、脚本、终端都没有可以把人带到大学登录页的浏览器。

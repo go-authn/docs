@@ -280,6 +280,59 @@ the token is not valid
 함께 여기로 되돌아오는 모든 것이며, 리소스 서버는
 [Shared Signals]({{< relref "/authn-bridge/revocation.md#shared-signals" >}})로 알게 됩니다.
 
+## 토큰 서명 키 교체하기 {#rotating-the-signing-key}
+
+모든 의존 당사자는 `/jwks`에 게시된 키로 토큰을 검증합니다. 키를 그 자리에서 바꾸면 그들이 가진 모든 토큰이
+무효가 되고, 그들이 가져가기 전에 쓴 키는 거부됩니다. `retired_signing_key_files`는 둘 다 안전하게 만듭니다.
+거기에 나열된 키는 **게시만 되고 서명에는 쓰이지 않습니다**. 교체에는 **재시작이 두 번** 필요합니다. 공급자는
+설정을 다시 읽지 않고 SIGHUP은 무시되기 때문입니다. 이 절은 bridge의 pull request #80(2026-10-26 병합, 태그 v0.23.4 이후)
+이후의 README를 따릅니다.
+
+1. **다음 키를 만듭니다**(현재 키 옆에). 이 명령은 기존 파일을 덮어쓰지 않습니다.
+
+   ```sh
+   authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key
+   ```
+
+2. **서명하기 전에 게시합니다.** `retired_signing_key_files`에 추가하고 `signing_key_file`은 그대로 둔 채
+   `authn-bridge check`를 실행하고 재시작합니다.
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-04.key"   # still signing
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-10.key"] # published only
+   ```
+
+   `/jwks`는 이제 **두** `kid`를 모두 나열하고, 새 토큰은 아직 이전 `kid`를 가집니다. 의존 당사자가 키 집합을
+   캐시하는 가장 긴 시간만큼 이상 기다립니다. 모르는 `kid`를 만나면 다시 가져오는 쪽(go-authn/oidc는
+   `MinRefresh`당 최대 한 번 그렇게 합니다)은 기다릴 필요가 없고, 고정된 시간 동안 캐시하는 쪽은 그 시간이 필요합니다.
+
+3. **교체합니다.** 새 키를 `signing_key_file`로 만들고 이전 키를 `retired_signing_key_files`로 옮깁니다.
+   그런 다음 `authn-bridge check`를 실행하고 재시작합니다.
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-10.key"
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-04.key"]
+   ```
+
+   `/jwks`는 여전히 두 `kid`를 나열하고, 새 토큰은 새 `kid`를 가집니다. 이전 키로 서명한 토큰도 계속 검증됩니다.
+
+4. **이전 키를 폐기합니다.** 그 키로 서명한 토큰이 더는 제시될 수 없게 된 뒤에 합니다. `token_lifetime`(기본 1시간)과
+   `id_token_lifetime`(5분) 중 긴 쪽에, 의존 당사자의 시계 오차와 키 집합 캐시를 더한 시간이 기준입니다.
+   opkssh는 대신 PK Token 수명(기본 하루, 최대 일주일)을 기다립니다. 그런 다음 목록에서 제거하고 재시작하면
+   `/jwks`에는 `kid`가 하나만 나열됩니다.
+
+각 단계에서 `curl -s https://login.example.org/jwks`로 게시된 `kid`를 확인할 수 있고, 새 토큰의 `kid`는
+액세스 토큰이나 ID 토큰의 첫 세그먼트를 base64url로 디코딩한 값입니다.
+
+`access_token_key_file`(ES256)도 같은 방식으로 교체합니다. 다음 키는 `authn-bridge keygen --access-token-key`로 쓰고,
+폐기한 키는 다른 키처럼 `retired_signing_key_files`에 넣습니다. `state` 블록이 없으면 리프레시 토큰과 `/userinfo`가
+메모리에 있으므로 재시작할 때마다 모두 로그아웃됩니다. 이미 발급된 액세스 토큰은 리소스 서버에서 계속 검증됩니다.
+
+README는 이를 llmflow-gateway를 의존 당사자로 하여 go-llmflow/bench(`e2e/oidc`, `TestBridge/c/key-rotation`)에서
+끝에서 끝까지 검증했다고 보고합니다. 2단계 뒤에는 토큰이 아직 이전 `kid`를 가진 채 `/jwks`가 두 `kid`를 나열했고,
+3단계 뒤에는 교체 전에 서명한 토큰과 후에 서명한 토큰이 모두 키 집합을 한 번만 가져온 채 수락되었으며,
+교체 직후의 SSO 로그인도 동작했습니다.
+
 ## 브라우저 없이: 디바이스 그랜트 {#without-a-browser-the-device-grant}
 
 WebDAV 클라이언트, 스크립트, 터미널에는 대학으로 보낼 브라우저가 없습니다.

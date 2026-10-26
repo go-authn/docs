@@ -12,7 +12,7 @@ tags: [라이브러리, saml, 페더레이션]
 그 공급자가 말하는 것을 읽어 옵니다.
 
 ```sh
-go get github.com/go-authn/saml@v0.4.1
+go get github.com/go-authn/saml@v0.5.0
 ```
 
 이것은 [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})의 페더레이션을 마주하는
@@ -204,6 +204,41 @@ IdP 인증서는 자체 서명되었고 만료된 경우가 많으므로 그 날
 각각 같은 어서션을 한 번씩 받아들일 것이며, 재시작하면 비워집니다. 공유 저장소 위에
 `Replay`를 구현하십시오. `Use`는 원자적이어야 합니다.
 {{< /callout >}}
+
+## 이 패키지 위에 만든 프로그램 테스트하기: `samltest` {#samltest}
+
+`github.com/go-authn/saml/samltest`(v0.5.0부터)는 이 패키지 위에 만든 프로그램, 예를 들어
+페더레이션 앞의 OpenID 공급자(go-authn/bridge)나 그 뒤에 있는 것(go-llmflow/bench)을
+테스트하기 위한 페더레이션과 IdP입니다. 순수 Go이며 **사용하는 데 xmlsec1이 필요 없습니다**.
+
+```go
+fed, _ := samltest.NewParty("federation")
+key, _ := samltest.NewParty("idp")
+idp := &samltest.IdP{EntityID: "https://idp.univ-ex.example/idp/shibboleth",
+	Scope: "univ-ex.example", SSO: srv.URL + "/SSO", Signer: key}
+md, _ := (&samltest.Federation{Signer: fed, IdPs: []*samltest.IdP{idp}}).Metadata(24 * time.Hour)
+// serve md; pin fed.Fingerprint() in the program's configuration
+srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw string) ([]samltest.Attribute, bool) {
+	return []samltest.Attribute{{Name: samltest.EPPN, Values: []string{user + "@univ-ex.example"}},
+		{Name: samltest.Entitlement, Values: []string{"grp-alpha"}}}, pw == "secret"
+})
+```
+
+- **메타데이터**: 페더레이션의 키로 서명한 `EntitiesDescriptor`이며, 각 IdP의 스코프,
+  표시 이름, 서명 인증서, HTTP-Redirect SSO 위치를 담습니다.
+- **응답**: `IdP.Response`는 요청 ID, 오디언스, ACS, 속성이 담긴 `Assertion`을 받습니다.
+  Response는 RSA-SHA256, 배타적 c14n, enveloped 방식으로 Issuer 뒤에 서명됩니다.
+  어서션은 SP의 인증서로 AES-128-GCM과 RSA-OAEP MGF1-SHA1(Shibboleth IdP v5의 기본값)으로
+  암호화되며, `EncryptTo`가 nil이면 평문 상태로 어서션 자체가 서명됩니다.
+- **로그인**: `IdP.Handler`는 AuthnRequest에 대해 사용자 이름과 비밀번호 폼을 보여 주고,
+  `SAMLResponse`와 `RelayState`를 ACS로 보내는 폼으로 응답합니다. 테스트의 HTTP 클라이언트는
+  브라우저의 스크립트처럼 이를 제출합니다.
+
+출력은 그것을 작성하지 않은 쪽이 판정합니다. **xmlsec1**이 메타데이터와 두 종류의
+Response를 검증하고 어서션을 복호화하며(xmlsec1이 없으면 이 테스트는 그 사실을 밝히고
+건너뛰고, `SAML_REQUIRE_JUDGE=1`이면 실패합니다), 이 패키지의 **SP**는 이를 수락하고, 변조되었거나
+재생되었거나 페더레이션이 나열하지 않은 키로 서명된 것은 거부합니다. 키는 호출마다
+생성되므로 여기 있는 어떤 것도 프로덕션용이 아닙니다.
 
 ## 무엇과 대조해 검사하는가 {#what-it-is-checked-against}
 

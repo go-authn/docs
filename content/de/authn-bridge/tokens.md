@@ -286,6 +286,72 @@ selbst prüft. Was [`RevokePerson`]({{< relref "/authn-bridge/admin.md" >}})
 beendet, ist alles, was damit hierher zurückkommt; der Ressourcenserver erfährt es
 über [Shared Signals]({{< relref "/authn-bridge/revocation.md#shared-signals" >}}).
 
+## Den Signaturschlüssel der Token wechseln {#rotating-the-signing-key}
+
+Jede vertrauende Partei prüft Token mit den unter `/jwks` veröffentlichten Schlüsseln.
+Ein an Ort und Stelle geänderter Schlüssel macht alle Token ungültig, die sie halten, und
+ein Schlüssel, der benutzt wird, bevor sie ihn geholt haben, wird abgelehnt.
+`retired_signing_key_files` macht beides sicher: Ein dort aufgeführter Schlüssel wird
+**veröffentlicht und signiert nie**. Der Wechsel braucht **zwei Neustarts**, denn der
+Anbieter lädt seine Konfiguration nicht neu und ein SIGHUP wird ignoriert. Dieser Abschnitt
+folgt dem README des Bridge nach seinem Pull Request #80 (am 2026-10-26 gemergt, nach dem
+Tag v0.23.4).
+
+1. **Den nächsten Schlüssel erzeugen**, neben dem aktuellen. Der Befehl überschreibt keine
+   Datei:
+
+   ```sh
+   authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key
+   ```
+
+2. **Ihn veröffentlichen, bevor er signiert.** In `retired_signing_key_files` eintragen,
+   `signing_key_file` unverändert lassen, `authn-bridge check` ausführen und neu starten:
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-04.key"   # still signing
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-10.key"] # published only
+   ```
+
+   `/jwks` listet nun **beide** `kid`, und neue Token tragen noch den alten. Mindestens so
+   lange warten, wie eine vertrauende Partei den Schlüsselsatz höchstens zwischenspeichert.
+   Wer bei einem unbekannten `kid` neu lädt (go-authn/oidc tut das, höchstens einmal je
+   `MinRefresh`), muss nicht warten; wer für eine feste Zeit zwischenspeichert, braucht
+   diese Zeit.
+
+3. **Tauschen.** Den neuen Schlüssel zum `signing_key_file` machen und den alten in
+   `retired_signing_key_files` verschieben. Dann `authn-bridge check` und Neustart:
+
+   ```hcl
+   signing_key_file          = "/var/lib/authn-bridge/oidc-2026-10.key"
+   retired_signing_key_files = ["/var/lib/authn-bridge/oidc-2026-04.key"]
+   ```
+
+   `/jwks` listet weiter beide `kid`, und neue Token tragen den neuen. Mit dem alten
+   Schlüssel signierte Token werden weiter geprüft.
+
+4. **Den alten Schlüssel zurückziehen**, wenn kein damit signiertes Token mehr vorgelegt
+   werden kann: nach mindestens dem Längeren von `token_lifetime` (standardmäßig 1 h) und
+   `id_token_lifetime` (5 min), plus der Uhrabweichung der vertrauenden Parteien und ihrem
+   Schlüsselsatz-Cache. Bei opkssh stattdessen die Lebensdauer des PK Token abwarten
+   (standardmäßig einen Tag, bis zu einer Woche). Dann aus der Liste entfernen und neu
+   starten: `/jwks` listet ein `kid`.
+
+Bei jedem Schritt zeigt `curl -s https://login.example.org/jwks` die veröffentlichten
+`kid`, und das `kid` eines frischen Tokens ist das erste Segment jedes Access- oder
+ID-Tokens, base64url-dekodiert.
+
+Ein `access_token_key_file` (ES256) wird genauso gewechselt: den nächsten mit
+`authn-bridge keygen --access-token-key` schreiben, ein zurückgezogener kommt wie jeder
+andere in `retired_signing_key_files`. Ohne `state`-Block meldet jeder Neustart alle ab,
+weil Refresh-Token und `/userinfo` im Speicher leben; bereits ausgestellte Access-Token
+werden von den Ressourcenservern weiter geprüft.
+
+Das README berichtet, dies sei Ende zu Ende mit llmflow-gateway als vertrauender Partei in
+go-llmflow/bench geprüft worden (`e2e/oidc`, `TestBridge/c/key-rotation`): Nach Schritt 2
+listet `/jwks` beide `kid`, während die Token noch den alten tragen; nach Schritt 3 werden
+ein vor dem Tausch und ein danach signiertes Token beide akzeptiert, mit einem einzigen
+Abruf des Schlüsselsatzes; und eine SSO-Anmeldung direkt nach dem Tausch funktioniert.
+
 ## Ohne Browser: der Device Grant {#without-a-browser-the-device-grant}
 
 Ein WebDAV-Client, ein Skript, ein Terminal hat keinen Browser, den es zu einer Universität schicken könnte. Ein
