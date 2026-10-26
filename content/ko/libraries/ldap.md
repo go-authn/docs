@@ -283,7 +283,7 @@ RFC 4523의 인증서 매칭 규칙과 `directoryStringFirstComponentMatch`(정�
 
 v0.10.0까지 `schema.Read`는 읽는 파일의 이어짐 줄 수에 대해 제곱 시간이 걸렸습니다. 짧은 이어짐 줄로 된 4 MiB 파일에 약 3분이 걸렸고, 1 MiB에서 139.6 GB를 할당했습니다. authnd가 시작할 때 `schema_files`로 하듯이, 통제하지 않는 스키마 파일을 읽는 프로그램은 그런 파일 하나에 멈출 수 있었습니다. v0.10.1부터 시간은 선형이며(`TestManyContinuationLinesJoinInLinearTime`), `Read`는 첫 줄을 확인하려고 파일 전체를 복사하고 나누지 않습니다.
 
-`schema.Format`은 2000바이트가 넘는 줄을 썼는데, slapd와 `Read`는 이를 거부합니다. 이제는 줄을 접어서 씁니다. 엄격한 파서는 약 2.6배 빠르고, `cosine.schema`에서 할당이 498회에서 147회로 줄었습니다. 이는 부하가 걸린 기계에서 측정한 것이며, 아직 하지 않은 libldap과의 비교가 아닙니다. authnd는 v0.12.3부터 이 수정을 갖고 있습니다.
+`schema.Format`은 2000바이트가 넘는 줄을 썼는데, slapd와 `Read`는 이를 거부합니다. 이제는 줄을 접어서 씁니다. 엄격한 파서는 약 2.6배 빠르고, `cosine.schema`에서 할당이 498회에서 147회로 줄었습니다. libldap(macOS SDK, `LDAP_SCHEMA_ALLOW_ALL`을 쓴 `ldap_str2attributetype`과 `ldap_str2objectclass`)과의 비교는 OpenLDAP `cosine.schema`의 정의 54개로, 2026-10-26에 Apple M4 Max에서 부하 6.5~7.6일 때 측정했습니다(`-cpu 1 -count 10`, benchstat). go-authn/ldap은 25.65 µs ± 32 %, libldap은 35.62 µs ± 2 %로, libldap 시간의 약 0.72배입니다. Go 쪽은 실행마다 할당 147회(20.6 KiB)입니다. `-benchmem`은 libldap의 C 할당을 볼 수 없으므로 그 수치는 없습니다. 재현하려면 go-authn/ldap의 `bench/libldap`에서 `go test -bench . -benchmem -cpu 1 -count 10`을 실행하세요(cgo와 libldap 필요). authnd는 v0.12.3부터 이 수정을 갖고 있습니다.
 
 ## 빌드되지 않는 스키마 {#build-error}
 
