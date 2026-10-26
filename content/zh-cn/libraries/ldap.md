@@ -12,7 +12,7 @@ tags: [库, ldap, 目录]
 绑定策略；本库拥有字节。
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.1
+go get github.com/go-authn/ldap@v0.10.2
 ```
 
 依据 RFC 4511（协议）、4512（根 DSE 和模式）、
@@ -298,6 +298,8 @@ SSSD 由 `ldap_min_id` 和 `ldap_max_id` 构建的那个。slapd 自己定义这
 
 `schema.Format` 过去会写出超过 2000 字节的行，而 slapd 和 `Read` 会拒绝这样的行；现在它会折行。严格解析器约快 2.6 倍，在 `cosine.schema` 上分配 147 次而非 498 次。与 libldap（macOS SDK，带 `LDAP_SCHEMA_ALLOW_ALL` 的 `ldap_str2attributetype` 和 `ldap_str2objectclass`）的比较，使用 OpenLDAP `cosine.schema` 的 54 个定义，于 2026-10-26 在 Apple M4 Max 上、负载 6.5 到 7.6 时测得（`-cpu 1 -count 10`，benchstat）：go-authn/ldap 为 25.65 µs ± 32 %，libldap 为 35.62 µs ± 2 %，约为 libldap 耗时的 0.72 倍。Go 一侧每次运行 147 次分配（20.6 KiB）；`-benchmem` 看不到 libldap 的 C 分配，因此没有这方面的数字。要复现，请在 go-authn/ldap 的 `bench/libldap` 中运行 `go test -bench . -benchmem -cpu 1 -count 10`（需要 cgo 和 libldap）。authnd 从 v0.12.3 起包含这些修复。
 
+从 v0.10.2 起,`schema.Standard()` 中 RFC 2307 的 13 个 DESC 值写在一行上。v0.10.1 及之前,它们像 RFC 页面那样折行;由于续行会保留第一个字符之后的缩进(`Read` 遵循的 slapd 的 `fp_getline`),发布它们的服务器会发送 `DESC 'An integer uniquely identifying a user in an         administrative domain'`。authnd 从 v0.12.4 起包含此修复。
+
 ## 无法构建的模式 {#build-error}
 
 自 v0.10.0 起，`schema.Build` 或 `schema.BuildFrom` 拒绝的定义是一个
@@ -396,7 +398,7 @@ RFC 4512 §4.1 的术语，小写并以下划线连接（`desc`、`sup`、`equal
 命令 `ldapschema` 在各种格式之间转换：
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.1
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.2
 ```
 
 - `ldapschema to-hcl [--macros] FILE...` 读取 OpenLDAP `.schema` 文件、
@@ -541,4 +543,4 @@ StartTLS 之后再有更多 LDAP。
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.1](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.1)
+[pkg.go.dev/github.com/go-authn/ldap@v0.10.2](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.2)

@@ -80,7 +80,7 @@ superen ambas comprobaciones, y salvo que el programa muestre la etiqueta como
 
 ```
 $ authnd --version
-authnd version v0.12.3
+authnd version v0.12.4
 $ authn-bridge --version
 authn-bridge version v0.23.4
 $ authn-revokd -version

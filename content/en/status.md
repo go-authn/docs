@@ -9,16 +9,16 @@ These pages are documentation version **0.5**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.12.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.4** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
-ldap is **v0.10.1**, with a typed `BuildError` for a schema that does not build,
+ldap is **v0.10.2**, with a typed `BuildError` for a schema that does not build,
 schemas in HCL2 and the `ldapschema` converter, and
 directory **v0.15.0**, with declared object classes. authnd
-v0.12.3 embeds ldap v0.10.1 and directory v0.15.0.
+v0.12.4 embeds ldap v0.10.2 and directory v0.15.0.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.5/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
@@ -73,6 +73,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.12.1 | a schema file or block that does not build is refused at the position go-authn/ldap v0.10.0's `BuildError` carries, with a column (`site.schema:6:` becomes `site.schema:6:1:`); the message ends with the kind of refusal, and a duplicate says where its first definition is |
 | v0.12.2 | release binaries are linked with `-ldflags="-w"` instead of `-s -w`: the symbol table is kept, so `govulncheck -mode binary` is precise instead of reporting vulnerabilities in code that is not linked; about 9 % larger (18.8 MB to 20.5 MB on darwin/arm64) |
 | v0.12.3 | go-authn/ldap v0.10.1: `schema_files` are read in linear time. ⛔ Up to v0.12.2, a large schema file of short continuation lines (4 MiB: about three minutes) stalled startup: a denial of service by a file you do not control |
+| v0.12.4 | go-authn/ldap v0.10.2: the DESC values of 13 RFC 2307 definitions in `cn=Subschema` (`uidNumber`, `gidNumber`, `ipHostNumber`, `ipNetworkNumber`, `ipNetmaskNumber`, `macAddress` and the classes `ipService`, `ipProtocol`, `oncRpc`, `ipHost`, `ipNetwork`, `ieee802Device`, `bootableDevice`) no longer carry the indentation of the RFC's page layout: `DESC 'An integer uniquely identifying a user in an administrative domain'`, not `... in an         administrative domain'` |
 
 ### authn-bridge
 
@@ -158,6 +159,7 @@ library's page says what earlier ones changed.
 | ldap v0.9.0 | [schemas in HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): package `schema/hclschema` and the `ldapschema` command (`to-hcl`, `to-schema`, `check`) between OpenLDAP `.schema`, cn=config LDIF and HCL2; the readers read files as slapd does; DIT content and structure rules, name forms, `include` and `X-SUBST` are not supported |
 | ldap v0.10.0 | [a typed `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}) for a definition `Build` refuses, matched with `errors.As`: `Kind`, `Element`, `OID`, `Name`, `Field`, `Pos` (file:line:column where the definition starts, also for folded or base64 LDIF and HCL), and `Ref`, `RefOID` and `RefPos` for the other definition; every definition read carries a `Pos`; "object classes" in a message |
 | ldap v0.10.1 | [`schema.Read`]({{< relref "/libraries/ldap.md#reading-large-files" >}}) is linear in the number of continuation lines (it was quadratic: a 4 MiB file took about three minutes) and no longer copies and splits the whole file to read its first line; `schema.Format` folds lines over 2000 bytes, which slapd and `Read` refuse; the strict parser is about 2.6 times faster (147 allocations instead of 498 on `cosine.schema`, measured under load) |
+| ldap v0.10.2 | the DESC of 13 RFC 2307 definitions in the embedded schema (`schema.Standard()`) is on one line: it carried the indentation of the RFC's page layout, which the reader keeps inside quotes as slapd does, so the subschema a server published had runs of spaces in it; a test now checks every embedded DESC for that and, where the same OID is defined, against OpenLDAP's `core`, `cosine`, `inetorgperson` and `nis` schemas |
 | oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | totp v0.4.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |

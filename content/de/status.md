@@ -9,16 +9,16 @@ Diese Seiten sind die Dokumentationsversion **0.5** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
-| authnd | **v0.12.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.4** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}});
-ldap ist bei **v0.10.1**, mit einem typisierten `BuildError` für ein Schema, das sich nicht aufbauen lässt,
+ldap ist bei **v0.10.2**, mit einem typisierten `BuildError` für ein Schema, das sich nicht aufbauen lässt,
 Schemas in HCL2 und dem Konverter `ldapschema`,
 und directory bei **v0.15.0**, mit deklarierten Objektklassen. authnd
-v0.12.3 bettet ldap v0.10.1 und directory v0.15.0 ein.
+v0.12.4 bettet ldap v0.10.2 und directory v0.15.0 ein.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
 sodass die Seiten, die jemand unter `/docs/0.5/` findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`,
@@ -73,6 +73,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen, außer denen, die diese Do
 | v0.12.1 | eine Schemadatei oder ein Schemablock, der sich nicht aufbauen lässt, wird an der Stelle abgelehnt, die der `BuildError` von go-authn/ldap v0.10.0 trägt, mit einer Spalte (`site.schema:6:` wird zu `site.schema:6:1:`); die Meldung endet mit der Art der Ablehnung, und bei einem Duplikat steht, wo seine erste Definition ist |
 | v0.12.2 | Release-Binaries werden mit `-ldflags="-w"` statt `-s -w` gelinkt: die Symboltabelle bleibt erhalten, sodass `govulncheck -mode binary` genau ist, statt Schwachstellen in nicht gelinktem Code zu melden; etwa 9 % größer (18,8 MB auf 20,5 MB unter darwin/arm64) |
 | v0.12.3 | go-authn/ldap v0.10.1: `schema_files` werden in linearer Zeit gelesen. ⛔ Bis v0.12.2 hielt eine große Schemadatei aus kurzen Fortsetzungszeilen (4 MiB: etwa drei Minuten) den Start auf: ein Denial of Service durch eine Datei, die man nicht kontrolliert |
+| v0.12.4 | go-authn/ldap v0.10.2: die DESC-Werte von 13 RFC-2307-Definitionen in `cn=Subschema` (`uidNumber`, `gidNumber`, `ipHostNumber`, `ipNetworkNumber`, `ipNetmaskNumber`, `macAddress` und die Klassen `ipService`, `ipProtocol`, `oncRpc`, `ipHost`, `ipNetwork`, `ieee802Device`, `bootableDevice`) tragen nicht mehr die Einrückung des Seitenumbruchs der RFC: `DESC 'An integer uniquely identifying a user in an administrative domain'` statt `... in an         administrative domain'` |
 
 ### authn-bridge {#authn-bridge}
 
@@ -158,6 +159,7 @@ jeder Bibliothek sagt, was frühere geändert haben.
 | ldap v0.9.0 | [Schemas in HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): das Paket `schema/hclschema` und der Befehl `ldapschema` (`to-hcl`, `to-schema`, `check`) zwischen OpenLDAP-`.schema`, cn=config-LDIF und HCL2; die Leser lesen Dateien wie slapd; DIT-Content-Regeln, DIT-Structure-Regeln, Name Forms, `include` und `X-SUBST` werden nicht unterstützt |
 | ldap v0.10.0 | [ein typisierter `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}}) für eine Definition, die `Build` ablehnt, mit `errors.As` abgeglichen: `Kind`, `Element`, `OID`, `Name`, `Field`, `Pos` (Datei:Zeile:Spalte, an der die Definition beginnt, auch für umgebrochenes oder base64-kodiertes LDIF und HCL) sowie `Ref`, `RefOID` und `RefPos` für die andere Definition; jede gelesene Definition trägt eine `Pos`; „object classes“ in einer Meldung |
 | ldap v0.10.1 | [`schema.Read`]({{< relref "/libraries/ldap.md#reading-large-files" >}}) ist linear in der Zahl der Fortsetzungszeilen (es war quadratisch: eine Datei von 4 MiB brauchte etwa drei Minuten) und kopiert und zerlegt nicht mehr die ganze Datei, um ihre erste Zeile zu lesen; `schema.Format` bricht Zeilen über 2000 Bytes um, die slapd und `Read` ablehnen; der strikte Parser ist etwa 2,6-mal schneller (147 statt 498 Allokationen bei `cosine.schema`, unter Last gemessen) |
+| ldap v0.10.2 | die DESC-Werte von 13 RFC-2307-Definitionen im eingebetteten Schema (`schema.Standard()`) stehen in einer Zeile: sie trugen die Einrückung des RFC-Seitenumbruchs, die der Leser wie slapd innerhalb der Anführungszeichen behält, sodass das von einem Server veröffentlichte Subschema Folgen von Leerzeichen enthielt; ein Test prüft jetzt jeden eingebetteten DESC darauf und, wo dieselbe OID definiert ist, gegen die Schemas `core`, `cosine`, `inetorgperson` und `nis` von OpenLDAP |
 | oidc v0.4.1 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | servercert v0.5.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | totp v0.4.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |

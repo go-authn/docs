@@ -9,15 +9,15 @@ tags: [状态, 发布版本]
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.12.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.12.4** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
-ldap 为 **v0.10.1**，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
+ldap 为 **v0.10.2**，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
 directory 为 **v0.15.0**，带有已声明的对象类。authnd
-v0.12.3 内嵌 ldap v0.10.1 和 directory v0.15.0。
+v0.12.4 内嵌 ldap v0.10.2 和 directory v0.15.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
 因此读者在 `/docs/0.5/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
@@ -72,6 +72,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.12.1 | 无法构建的模式文件或块，会在 go-authn/ldap v0.10.0 的 `BuildError` 所携带的位置被拒绝，并带有列（`site.schema:6:` 变为 `site.schema:6:1:`）；信息以拒绝的类型结尾，重复定义会指出它的第一个定义在哪里 |
 | v0.12.2 | 发布的二进制文件改用 `-ldflags="-w"` 链接，不再用 `-s -w`：符号表得以保留，因此 `govulncheck -mode binary` 是精确的，不会报告未链接代码中的漏洞；约大 9 %（darwin/arm64 上从 18.8 MB 到 20.5 MB） |
 | v0.12.3 | go-authn/ldap v0.10.1：`schema_files` 以线性时间读取。⛔ 直到 v0.12.2，由短续行组成的大型模式文件（4 MiB：约三分钟）会使启动停滞：由一个不受你控制的文件造成的拒绝服务 |
+| v0.12.4 | go-authn/ldap v0.10.2:`cn=Subschema` 中 13 个 RFC 2307 定义(`uidNumber`、`gidNumber`、`ipHostNumber`、`ipNetworkNumber`、`ipNetmaskNumber`、`macAddress`,以及类 `ipService`、`ipProtocol`、`oncRpc`、`ipHost`、`ipNetwork`、`ieee802Device`、`bootableDevice`)的 DESC 值不再带有 RFC 页面排版的缩进:是 `DESC 'An integer uniquely identifying a user in an administrative domain'`,而不是 `... in an         administrative domain'` |
 
 ### authn-bridge {#authn-bridge}
 
@@ -157,6 +158,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | ldap v0.9.0 | [HCL2 模式]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}})：包 `schema/hclschema` 和 `ldapschema` 命令（`to-hcl`、`to-schema`、`check`），在 OpenLDAP `.schema`、cn=config LDIF 与 HCL2 之间转换；读取器像 slapd 一样读取文件；不支持 DIT 内容和结构规则、名称形式、`include` 和 `X-SUBST` |
 | ldap v0.10.0 | 针对 `Build` 拒绝的定义的[类型化 `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}})，用 `errors.As` 匹配：`Kind`、`Element`、`OID`、`Name`、`Field`、`Pos`（定义起始处的 file:line:column，折叠或 base64 的 LDIF 与 HCL 同样适用），以及指向另一个定义的 `Ref`、`RefOID` 和 `RefPos`；读取的每个定义都带有 `Pos`；信息中写作 "object classes" |
 | ldap v0.10.1 | [`schema.Read`]({{< relref "/libraries/ldap.md#reading-large-files" >}}) 的耗时与续行数成线性关系（此前是平方：4 MiB 的文件约需三分钟），并且不再为了读取第一行而复制并拆分整个文件；`schema.Format` 会折行超过 2000 字节的行（slapd 和 `Read` 会拒绝这样的行）；严格解析器约快 2.6 倍（`cosine.schema` 上分配 147 次而非 498 次，在负载下测得） |
+| ldap v0.10.2 | 内嵌模式(`schema.Standard()`)中 13 个 RFC 2307 定义的 DESC 写在一行上:它们带有 RFC 页面排版的缩进,读取器像 slapd 一样在引号内保留它,因此服务器发布的子模式里有成串的空格;现在有测试逐一检查内嵌的每个 DESC,并在同一 OID 已定义的地方与 OpenLDAP 的 `core`、`cosine`、`inetorgperson`、`nis` 模式比较 |
 | oidc v0.4.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | servercert v0.5.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | totp v0.4.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
