@@ -5,23 +5,23 @@ description: "这些页面描述哪些版本、每个版本新增了什么，以
 tags: [状态, 发布版本]
 ---
 
-这些页面是文档版本 **0.5**，描述的内容如下：
+这些页面是文档版本 **0.6**，描述的内容如下：
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.12.4** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
-ldap 为 **v0.10.2**，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
+ldap 为 **v0.11.0**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
 directory 为 **v0.15.0**，带有已声明的对象类。authnd
-v0.12.4 内嵌 ldap v0.10.2 和 directory v0.15.0。
+v0.13.0 内嵌 ldap v0.11.0 和 directory v0.15.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
-因此读者在 `/docs/0.5/` 下找到的页面始终描述其所安装的版本；
+因此读者在 `/docs/0.6/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
-`/docs/0.2/`、`/docs/0.3/` 和 `/docs/0.4/` 之下。
+`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/` 和 `/docs/0.5/` 之下。
 
 {{< callout type="warning" >}}
 **安全：请使用 authnd v0.12.0，而不是 v0.11.1**
@@ -73,6 +73,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.12.2 | 发布的二进制文件改用 `-ldflags="-w"` 链接，不再用 `-s -w`：符号表得以保留，因此 `govulncheck -mode binary` 是精确的，不会报告未链接代码中的漏洞；约大 9 %（darwin/arm64 上从 18.8 MB 到 20.5 MB） |
 | v0.12.3 | go-authn/ldap v0.10.1：`schema_files` 以线性时间读取。⛔ 直到 v0.12.2，由短续行组成的大型模式文件（4 MiB：约三分钟）会使启动停滞：由一个不受你控制的文件造成的拒绝服务 |
 | v0.12.4 | go-authn/ldap v0.10.2:`cn=Subschema` 中 13 个 RFC 2307 定义(`uidNumber`、`gidNumber`、`ipHostNumber`、`ipNetworkNumber`、`ipNetmaskNumber`、`macAddress`,以及类 `ipService`、`ipProtocol`、`oncRpc`、`ipHost`、`ipNetwork`、`ieee802Device`、`bootableDevice`)的 DESC 值不再带有 RFC 页面排版的缩进:是 `DESC 'An integer uniquely identifying a user in an administrative domain'`,而不是 `... in an         administrative domain'` |
+| v0.13.0 | [DIT 内容规则、名称形式和 DIT 结构规则]({{< relref "/authnd/schemas.md#rules" >}})（go-authn/ldap v0.11.0）：`schema_files` 和 `schema { }` 块接受这三类定义，authnd 会强制执行它们。内容规则为每个条目塑形：其 `AUX` 未列出的辅助类被去掉（连同只有它才允许的属性），`NOT` 属性被丢弃，缺少 `MUST` 的条目被排除在外；每一项都会记入日志并由 `check` 报告。只要有一条有效的结构规则，树（后缀、`ou=people`、`ou=groups`、`uid` 或 `cn` RDN）就会在启动时和由 `check` 检查，违规会**拒绝启动**，所有拒绝一并给出，且绝不回显机密；没有规则可放置的条目被排除在外。⛔ 不是有效 UTF-8 的 `schema { }` 字符串现在会被拒绝。发布 10,000 个人员时，有规则的每个条目 416 次分配，无规则则为 265 次（耗时是在负载下测得的，不可靠） |
 
 ### authn-bridge {#authn-bridge}
 
@@ -155,10 +156,11 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | krb5 v0.3.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | krl v0.6.1 | 仅依赖项：golang.org/x/crypto v0.58.0；已用 Go 1.27.2 测试 |
 | ldap v0.8.0 | [`schema` 包]({{< relref "/libraries/ldap.md#the-schema" >}})和 `Server.Schema`：`cn=Subschema`（RFC 4512 §4.2）、`Validate`、RFC 4517 匹配规则；`uidNumber` 和 `gidNumber` 按整数排序；分页搜索仅返回所请求的属性 |
-| ldap v0.9.0 | [HCL2 模式]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}})：包 `schema/hclschema` 和 `ldapschema` 命令（`to-hcl`、`to-schema`、`check`），在 OpenLDAP `.schema`、cn=config LDIF 与 HCL2 之间转换；读取器像 slapd 一样读取文件；不支持 DIT 内容和结构规则、名称形式、`include` 和 `X-SUBST` |
+| ldap v0.9.0 | [HCL2 模式]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}})：包 `schema/hclschema` 和 `ldapschema` 命令（`to-hcl`、`to-schema`、`check`），在 OpenLDAP `.schema`、cn=config LDIF 与 HCL2 之间转换；读取器像 slapd 一样读取文件；不支持 DIT 内容和结构规则、名称形式、`include` 和 `X-SUBST`（v0.11.0 支持这些规则） |
 | ldap v0.10.0 | 针对 `Build` 拒绝的定义的[类型化 `*schema.BuildError`]({{< relref "/libraries/ldap.md#build-error" >}})，用 `errors.As` 匹配：`Kind`、`Element`、`OID`、`Name`、`Field`、`Pos`（定义起始处的 file:line:column，折叠或 base64 的 LDIF 与 HCL 同样适用），以及指向另一个定义的 `Ref`、`RefOID` 和 `RefPos`；读取的每个定义都带有 `Pos`；信息中写作 "object classes" |
 | ldap v0.10.1 | [`schema.Read`]({{< relref "/libraries/ldap.md#reading-large-files" >}}) 的耗时与续行数成线性关系（此前是平方：4 MiB 的文件约需三分钟），并且不再为了读取第一行而复制并拆分整个文件；`schema.Format` 会折行超过 2000 字节的行（slapd 和 `Read` 会拒绝这样的行）；严格解析器约快 2.6 倍（`cosine.schema` 上分配 147 次而非 498 次，在负载下测得） |
 | ldap v0.10.2 | 内嵌模式(`schema.Standard()`)中 13 个 RFC 2307 定义的 DESC 写在一行上:它们带有 RFC 页面排版的缩进,读取器像 slapd 一样在引号内保留它,因此服务器发布的子模式里有成串的空格;现在有测试逐一检查内嵌的每个 DESC,并在同一 OID 已定义的地方与 OpenLDAP 的 `core`、`cosine`、`inetorgperson`、`nis` 模式比较 |
+| ldap v0.11.0 | [DIT 内容规则、名称形式和 DIT 结构规则]({{< relref "/libraries/ldap.md#rules" >}})（RFC 4512 §4.1.6、§4.1.7）：从 `.schema` 和 LDIF 读取，由 `Format` 写出，经 HCL（`dit_content_rule`、`name_form`、`dit_structure_rule`）和 `ldapschema` 传递，由 `Build` 检查，由 `Validate` 强制执行（内容规则：AUX、MUST、MAY、NOT；名称形式：RDN；结构规则：`GoverningStructureRule`），并且仅在存在时才在 `cn=Subschema` 发布；`ValidateOptions{StrictAuxiliary}` 给出 RFC 4512 §2.4.3。⛔ slapd 只实现内容规则，因此 `Format` 写出的 `nameform` 和 `ditstructurerule` 关键字会被它拒绝；`OBSOLETE` 规则无效，而 slapd 会拒绝该条目；libldap 无法读取结构规则的 `SUP`。`hclschema.Decode` 拒绝不是 UTF-8 的字符串 |
 | oidc v0.4.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | servercert v0.5.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | totp v0.4.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |

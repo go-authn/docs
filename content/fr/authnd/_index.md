@@ -11,9 +11,11 @@ qui veut les authentifier parle LDAP.** authnd est la façade : il
 se lie et cherche sur les sources de [go-authn/directory]({{< relref "/libraries/_index.md" >}}),
 si bien que ce que contient une base de données peut être lu par tout ce qui sait
 interroger un annuaire. Pur Go, `CGO_ENABLED=0`, un seul binaire. Ces pages décrivent
-la v0.12.4, dont les entrées suivent les schémas standard et respectent le schéma
+la v0.13.0, dont les entrées suivent les schémas standard et respectent le schéma
 qu'elle sert à `cn=Subschema`, qu'un site étend avec le sien
-([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})), avec go-authn/ldap v0.10.2 et
+([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) et façonne grâce aux
+[règles de contenu DIT, formes de noms et règles de structure]({{< relref "/authnd/schemas.md#rules" >}}),
+avec go-authn/ldap v0.11.0 et
 go-authn/directory v0.15.0 en dessous ; ce qui est vérifié et ce qui ne l'est pas figure sur la
 page [état]({{< relref "/status.md" >}}).
 
@@ -149,7 +151,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.12.4
+vendorVersion: v0.13.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` est l'opération de modification de mot de passe de la RFC 3062.
@@ -165,7 +167,7 @@ qui est servi aussi à un client anonyme.
 | [L'installer]({{< relref "/authnd/install.md" >}}) | le binaire de la version, le compte `authnd`, l'unité systemd, les mises à niveau |
 | [D'où viennent les personnes]({{< relref "/authnd/people.md" >}}) | les blocs `user` et `group`, une base de données SQL, un autre annuaire LDAP |
 | [Les entrées et le schéma]({{< relref "/authnd/entries.md" >}}) | ce sous quoi chaque personne et chaque groupe est publié, `cn=Subschema`, les attributs, ce qui est écarté ou retenu |
-| [Schémas de site]({{< relref "/authnd/schemas.md" >}}) | `schema_files`, le bloc `schema` et `object_classes` : SUPANN, eduPerson ou les attributs propres à un site |
+| [Schémas de site]({{< relref "/authnd/schemas.md" >}}) | `schema_files`, le bloc `schema` et `object_classes` : SUPANN, eduPerson ou les attributs propres à un site ; règles de contenu DIT, formes de noms et règles de structure DIT |
 | [`check`]({{< relref "/authnd/check.md" >}}) | relire la configuration avant de redémarrer |
 | [TLS]({{< relref "/authnd/tls.md" >}}) | `ldaps://` ou StartTLS, et `publish_nt_hash` |
 | [Changer un mot de passe]({{< relref "/authnd/passwords.md" >}}) | `ldappasswd`, `ldapmodify`, et pourquoi l'ancien mot de passe est toujours demandé |
@@ -177,5 +179,5 @@ qui est servi aussi à un client anonyme.
 {{< callout type="info" >}}
 **À propos des transcriptions**
 
-Chaque commande montrée sur ces pages a été relancée le 26 octobre 2026 avec les binaires publiés, et non retapée : `authnd` v0.12.3 (`authnd-darwin-arm64`, vérifié par `relverify` avec `SHA256SUMS` et son attestation ; `go version -m` : `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`), `authn-bridge` v0.23.4, `authn-revokd` v0.6.6, `sshcert-authorize` v0.1.9 et `ldapschema` v0.10.1. Ce que les commandes ont affiché est ce qui figure ici. Deux transcriptions font exception, et chacune le dit là où elle se trouve : le client `oidctool` de [la page des jetons]({{< relref "/authnd/tokens.md" >}}), un client de test écrit pour ces pages et qui ne fait partie d'aucune version publiée, dont les transcriptions et les lignes du serveur qui les accompagnent ont été affichées par le binaire de la version v0.10.0 ; et les métadonnées expirées de RENATER sur [la page de la fédération]({{< relref "/authn-bridge/federation.md" >}}), un fichier qui n'est plus publié. Toutes ont été demandées par les clients OpenLDAP et Heimdal livrés avec macOS, sur 127.0.0.1 sur des ports non privilégiés, dans un répertoire de travail jetable. C'est pourquoi les configurations derrière elles nomment des fichiers par des chemins relatifs comme `etc/authnd/passwords/alice.pw`, et pourquoi les fichiers de mots de passe ont des noms comme `alice.pwin`. Les chemins `/etc/authnd` des exemples sont ceux qu'utilise un serveur installé. Les transcriptions qui impriment la version ou le schéma d'`authnd` ont été rejouées avec v0.12.4 (`authnd-darwin-arm64`, vérifié par `relverify` contre `SHA256SUMS` et son attestation ; `go version -m` : `go1.27.3`, `mod github.com/go-authn/authnd v0.12.4`, `vcs.modified=false`) : la root DSE ici et sur la page d'exploitation, `authnd --version` et le schéma de la page des entrées.
+Chaque commande montrée sur ces pages a été relancée le 26 octobre 2026 avec les binaires publiés, et non retapée : `authnd` v0.12.3 (`authnd-darwin-arm64`, vérifié par `relverify` avec `SHA256SUMS` et son attestation ; `go version -m` : `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`), `authn-bridge` v0.23.4, `authn-revokd` v0.6.6, `sshcert-authorize` v0.1.9 et `ldapschema` v0.10.1. Ce que les commandes ont affiché est ce qui figure ici. Deux transcriptions font exception, et chacune le dit là où elle se trouve : le client `oidctool` de [la page des jetons]({{< relref "/authnd/tokens.md" >}}), un client de test écrit pour ces pages et qui ne fait partie d'aucune version publiée, dont les transcriptions et les lignes du serveur qui les accompagnent ont été affichées par le binaire de la version v0.10.0 ; et les métadonnées expirées de RENATER sur [la page de la fédération]({{< relref "/authn-bridge/federation.md" >}}), un fichier qui n'est plus publié. Toutes ont été demandées par les clients OpenLDAP et Heimdal livrés avec macOS, sur 127.0.0.1 sur des ports non privilégiés, dans un répertoire de travail jetable. C'est pourquoi les configurations derrière elles nomment des fichiers par des chemins relatifs comme `etc/authnd/passwords/alice.pw`, et pourquoi les fichiers de mots de passe ont des noms comme `alice.pwin`. Les chemins `/etc/authnd` des exemples sont ceux qu'utilise un serveur installé. Les transcriptions qui impriment la version d'`authnd` ont été rejouées avec v0.13.0 (`authnd-darwin-arm64`, vérifié par `relverify` contre `SHA256SUMS` et son attestation ; `go version -m` : `go1.27.3`, `mod github.com/go-authn/authnd v0.13.0`) : la root DSE ici et sur la page d'exploitation, et `authnd --version`. Le schéma de la page des entrées a été affiché par v0.12.4 (`mod github.com/go-authn/authnd v0.12.4`, `vcs.modified=false`) ; v0.13.0 n'affiche aucune valeur de `dITContentRules`, `nameForms` ou `dITStructureRules` pour un schéma sans règles, ce qui a été vérifié. La [section des règles de la page des schémas de site]({{< relref "/authnd/schemas.md#rules" >}}) dit avec quoi elle a été rejouée.
 {{< /callout >}}

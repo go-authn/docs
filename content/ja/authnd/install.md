@@ -18,7 +18,7 @@ tags: [authnd, インストール, systemd]
 すべてのバイナリのビルド来歴証明も付きます。
 
 ```sh
-version=v0.12.4
+version=v0.13.0
 arch=amd64          # or arm64
 base=https://github.com/go-authn/authnd/releases/download/$version
 
@@ -34,7 +34,7 @@ gh attestation verify "authnd-linux-$arch" --repo go-authn/authnd   # built by t
 
 ```
 $ authnd --version
-authnd version v0.12.4
+authnd version v0.13.0
 ```
 
 ### 必要なものだけをビルドする {#building-only-what-you-want}
@@ -60,8 +60,8 @@ sysusers.d による静的アカウントで、`DynamicUser=` では**ありま�
 番号のものになってしまいます。
 
 二つのファイルはリリースタグの `packaging/` ディレクトリにあり、バイナリと同じバージョンです。
-そのタグのチェックアウトから、または v0.12.4 の場合は
-<https://github.com/go-authn/authnd/tree/v0.12.4/packaging> から、
+そのタグのチェックアウトから、または v0.13.0 の場合は
+<https://github.com/go-authn/authnd/tree/v0.13.0/packaging> から、
 そのディレクトリをバイナリの隣にコピーしてください。
 
 ```sh

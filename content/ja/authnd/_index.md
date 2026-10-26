@@ -10,11 +10,13 @@ tags: [authnd, ldap]
 その人々を認証したいものは LDAP を話します。** authnd はその窓口です。
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) のソースに対してバインドと検索を行うので、
 データベースが保持しているものを、ディレクトリに問い合わせる方法を知っているものなら何でも読めます。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.12.4 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.13.0 を説明しています。
 そのエントリは標準スキーマに従い、`cn=Subschema` で公開するスキーマに適合します。
 サイトはこのスキーマを自前のもの
-([SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})) で拡張できます。
-その下には go-authn/ldap v0.10.2 と go-authn/directory v0.15.0 があります。
+([SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})) で拡張でき、
+[DIT コンテンツルール、ネームフォーム、DIT 構造ルール]({{< relref "/authnd/schemas.md#rules" >}})で
+形も定められます。
+その下には go-authn/ldap v0.11.0 と go-authn/directory v0.15.0 があります。
 何が検証済みで何が未検証かは、[ステータス]({{< relref "/status.md" >}})のページにあります。
 
 {{< callout type="warning" >}}
@@ -142,7 +144,7 @@ supportedFeatures: 1.3.6.1.4.1.4203.1.5.1
 supportedFeatures: 1.3.6.1.4.1.4203.1.5.3
 subschemaSubentry: cn=Subschema
 vendorName: go-authn/authnd
-vendorVersion: v0.12.4
+vendorVersion: v0.13.0
 ```
 
 `1.3.6.1.4.1.4203.1.11.1` は RFC 3062 のパスワード変更操作です。
@@ -157,7 +159,7 @@ vendorVersion: v0.12.4
 | [インストール]({{< relref "/authnd/install.md" >}}) | リリースバイナリ、`authnd` アカウント、systemd ユニット、アップグレード |
 | [人々の出どころ]({{< relref "/authnd/people.md" >}}) | `user` と `group` ブロック、SQL データベース、別の LDAP ディレクトリ |
 | [エントリとスキーマ]({{< relref "/authnd/entries.md" >}}) | 各人とグループが何として公開されるか、`cn=Subschema`、属性、破棄または保留されるもの |
-| [サイトスキーマ]({{< relref "/authnd/schemas.md" >}}) | `schema_files`、`schema` ブロック、`object_classes`: SUPANN、eduPerson、またはサイト独自の属性 |
+| [サイトスキーマ]({{< relref "/authnd/schemas.md" >}}) | `schema_files`、`schema` ブロック、`object_classes`: SUPANN、eduPerson、またはサイト独自の属性。DIT コンテンツルール、ネームフォーム、DIT 構造ルール |
 | [`check`]({{< relref "/authnd/check.md" >}}) | 再起動する前に設定を読み戻す |
 | [TLS]({{< relref "/authnd/tls.md" >}}) | `ldaps://` または StartTLS、そして `publish_nt_hash` |
 | [パスワードの変更]({{< relref "/authnd/passwords.md" >}}) | `ldappasswd`、`ldapmodify`、そして古いパスワードを常に求める理由 |
@@ -169,5 +171,5 @@ vendorVersion: v0.12.4
 {{< callout type="info" >}}
 **トランスクリプトについて**
 
-これらのページに示したコマンドはすべて、2026-10-26 に公開済みのリリースバイナリで再実行したもので、手で書き直したものではありません。`authnd` v0.12.3 (`authnd-darwin-arm64`、`relverify` で `SHA256SUMS` とその証明 (attestation) を照合済み、`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.12.3`、`vcs.modified=false`)、`authn-bridge` v0.23.4、`authn-revokd` v0.6.6、`sshcert-authorize` v0.1.9、`ldapschema` v0.10.1 です。コマンドが出力したものが、そのままここに載っています。例外は 2 つのトランスクリプトで、それぞれ載っている場所にその旨を書いてあります。[トークンのページ]({{< relref "/authnd/tokens.md" >}})の `oidctool` クライアントは、これらのページのために書いたテスト用クライアントでどのリリースにも含まれず、そのトランスクリプトと添えたサーバー側の行は v0.10.0 のリリースバイナリが出力したものです。もう 1 つは[フェデレーションのページ]({{< relref "/authn-bridge/federation.md" >}})にある RENATER の期限切れメタデータで、このファイルはもう公開されていません。すべて macOS に付属する OpenLDAP と Heimdal のクライアントで、127.0.0.1 の特権のないポートを使い、作業用ディレクトリで実行しました。そのため、これらの背後にある設定は `etc/authnd/passwords/alice.pw` のような相対パスでファイルを指定し、パスワードファイルには `alice.pwin` のような名前が付いています。例にある `/etc/authnd` のパスは、インストール済みのサーバーが使うものです。`authnd` のバージョンまたはスキーマを出力するトランスクリプトは、v0.12.4 (`authnd-darwin-arm64`、`relverify` で `SHA256SUMS` とアテステーションに照らして確認、`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.12.4`、`vcs.modified=false`)で再実行しました。ここと運用のページの root DSE、`authnd --version`、エントリのページのスキーマです。
+これらのページに示したコマンドはすべて、2026-10-26 に公開済みのリリースバイナリで再実行したもので、手で書き直したものではありません。`authnd` v0.12.3 (`authnd-darwin-arm64`、`relverify` で `SHA256SUMS` とその証明 (attestation) を照合済み、`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.12.3`、`vcs.modified=false`)、`authn-bridge` v0.23.4、`authn-revokd` v0.6.6、`sshcert-authorize` v0.1.9、`ldapschema` v0.10.1 です。コマンドが出力したものが、そのままここに載っています。例外は 2 つのトランスクリプトで、それぞれ載っている場所にその旨を書いてあります。[トークンのページ]({{< relref "/authnd/tokens.md" >}})の `oidctool` クライアントは、これらのページのために書いたテスト用クライアントでどのリリースにも含まれず、そのトランスクリプトと添えたサーバー側の行は v0.10.0 のリリースバイナリが出力したものです。もう 1 つは[フェデレーションのページ]({{< relref "/authn-bridge/federation.md" >}})にある RENATER の期限切れメタデータで、このファイルはもう公開されていません。すべて macOS に付属する OpenLDAP と Heimdal のクライアントで、127.0.0.1 の特権のないポートを使い、作業用ディレクトリで実行しました。そのため、これらの背後にある設定は `etc/authnd/passwords/alice.pw` のような相対パスでファイルを指定し、パスワードファイルには `alice.pwin` のような名前が付いています。例にある `/etc/authnd` のパスは、インストール済みのサーバーが使うものです。`authnd` のバージョンを出力するトランスクリプトは、v0.13.0 (`authnd-darwin-arm64`、`relverify` で `SHA256SUMS` とアテステーションに照らして確認、`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.13.0`)で再実行しました。ここと運用のページの root DSE、そして `authnd --version` です。エントリのページのスキーマは v0.12.4 (`mod github.com/go-authn/authnd v0.12.4`、`vcs.modified=false`) が出力したものです。v0.13.0 は、ルールのないスキーマに対して `dITContentRules`、`nameForms`、`dITStructureRules` の値を出力しないことを確認しました。何で実行したかは、[サイトスキーマのページのルールの節]({{< relref "/authnd/schemas.md#rules" >}})に書いてあります。
 {{< /callout >}}

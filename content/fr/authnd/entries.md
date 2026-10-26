@@ -73,7 +73,10 @@ Pourquoi ces choix, selon les raisons propres d'authnd :
 - **Des classes auxiliaires sans règles de contenu DIT.** La RFC 4512 §2.4.3
   interdit les classes auxiliaires sur une entrée dont la classe structurelle
   n'a pas de règle de contenu DIT. Tous les serveurs d'annuaire en usage les
-  autorisent, et `Validate` aussi.
+  autorisent, et `Validate` aussi
+  (`ValidateOptions{StrictAuxiliary: true}` est la lecture stricte, et authnd
+  ne la pose pas). Une classe dont la classe structurelle **a** une règle de
+  contenu y est soumise depuis la v0.13.0 : voir [les règles]({{< relref "/authnd/schemas.md#rules" >}}).
 
 ## Ajouter des attributs {#adding-attributes}
 

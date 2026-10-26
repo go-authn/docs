@@ -66,7 +66,10 @@ RFC 4512 §3.3 が求めるとおり、すべてのスーパークラスを列�
   標準の構造クラスで、`groupOfNames` と同様に `description`、`ou`、`seeAlso` を受け付けます。
 - **DIT コンテンツルールのない補助クラス。** RFC 4512 §2.4.3 は、構造クラスに DIT コンテンツ
   ルールがないエントリに補助クラスを付けることを禁じています。実用されているディレクトリ
-  サーバーはすべてそれを許しており、`Validate` も同様です。
+  サーバーはすべてそれを許しており、`Validate` も同様です
+  (`ValidateOptions{StrictAuxiliary: true}` が厳格な読み方で、authnd はそれを設定しません)。
+  構造クラスにコンテンツルールが**ある**場合は、v0.13.0 からそれに従わされます。
+  [ルール]({{< relref "/authnd/schemas.md#rules" >}})を参照してください。
 
 ## 属性の追加 {#adding-attributes}
 

@@ -12,7 +12,7 @@ Server, der sie ausführt und dem die Konfiguration, die Verzeichnisquellen und 
 Bind-Richtlinie gehören; dieser Bibliothek gehören die Bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.10.2
+go get github.com/go-authn/ldap@v0.11.0
 ```
 
 Geschrieben nach RFC 4511 (das Protokoll), 4512 (das Root-DSE und das Schema),
@@ -284,8 +284,8 @@ Definitionen ihnen. Das, und dass Hilfsklassen ohne DIT-Content-Rules erlaubt si
 gesagt, statt entdeckt zu werden.
 {{< /callout >}}
 
-Absichtlich nicht vorhanden: DIT-Content-Rules, DIT-Structure-Rules und Name-Forms;
-das Ändern des Schemas über LDAP; die Zertifikats-Matching-Regeln aus RFC 4523
+DIT-Content-Rules, Name Forms und DIT-Structure-Rules sind [ab
+v0.11.0 vorhanden](#rules). Absichtlich nicht vorhanden: das Ändern des Schemas über LDAP; die Zertifikats-Matching-Regeln aus RFC 4523
 und `directoryStringFirstComponentMatch`, die definiert und nicht
 implementiert sind, sodass Assertions, die sie verwenden, Undefined sind; kollektive Attribute;
 andere Optionen als `lang-` und `binary`.
@@ -383,6 +383,197 @@ nichts fehlerhaft, daher ist `RefPos` leer. Jede Definition, die `schema.Read`
 zurückgibt, trägt ebenfalls eine `Pos`, und das `String` der Position lässt die
 Spalte weg, wenn sie nicht bekannt ist.
 
+## DIT-Content-Rules, Name Forms und DIT-Structure-Rules {#rules}
+
+Ab v0.11.0 werden die drei Arten von Definitionen, die RFC 4512 §4.1.6 (DIT-Content-Rules)
+und §4.1.7 (Name Forms, DIT-Structure-Rules) definiert und die dieses Paket bis dahin
+ablehnte, gelesen, gebaut, durchgesetzt und veröffentlicht.
+
+- **Typen.** `schema.DITContentRule`, `schema.NameForm` und
+  `schema.DITStructureRule`, mit den strengen RFC-4512-Parsern
+  `ParseDITContentRule`, `ParseNameForm` und `ParseDITStructureRule` (gefuzzt von
+  `FuzzDefinition`) und Druckern. `schema.MaxRuleID` begrenzt eine Regel-ID auf 2^31-1
+  auf jeder Plattform. `Definitions.DITContentRules`, `NameForms` und
+  `DITStructureRules` halten, was `Read` zurückgibt.
+- **Lesen und Schreiben.** `schema.Read` liest sie aus `.schema`-Dateien
+  (`ditcontentrule`, die Direktive von slapd.conf(5), sowie `nameform` und
+  `ditstructurerule` dieses Pakets, für die slapd keine hat) und aus LDIF
+  (`olcDitContentRules`, `dITContentRules`, `nameForms`, `dITStructureRules`),
+  Terme in beliebiger Reihenfolge, wie libldap sie liest. `Format` schreibt sie zurück. Vor
+  v0.11.0 wurden diese Attribute abgelehnt.
+- **Bauen.** `Build` verknüpft sie: Jede Klasse, jeder Typ, jede Name Form und jede
+  übergeordnete Regel muss definiert sein; eine Content-Rule gilt für eine strukturelle Klasse, und ihre `AUX`
+  sind Hilfsklassen; eine Name Form nennt eine strukturelle Klasse; Regel-IDs und Namen sind
+  eindeutig. Es gibt zwei neue `BuildErrorKind`s, `DuplicateMember` und
+  `PrecludedRequired`, und drei neue `Element`s, `ElementDITContentRule`,
+  `ElementNameForm` und `ElementDITStructureRule`. `Schema` hat
+  `DITContentRules`, `NameForms`, `DITStructureRules`, `DITContentRule(name)`,
+  `DITContentRuleOf(class)`, `NameForm(name)` und `DITStructureRule(id)`.
+- **Durchsetzen.** `Validate` setzt die aktive Content-Rule der strukturellen Klasse des Eintrags
+  (`AUX`, `MUST`, `MAY`, `NOT`) und seine aktiven Name Forms durch, mit
+  neuen `ProblemKind`s `AuxiliaryNotAllowed`, `Precluded`, `NameFormViolation` und
+  `NoStructureRule`. Wo im Baum ein Eintrag stehen darf, braucht seinen Vorgänger, daher
+  ist es `Schema.GoverningStructureRule(entry, superior)`: die Structure-Rule, die
+  einen Eintrag unter der Regel eines Vorgängers regiert, oder, bei einem nil-Vorgänger, an der Wurzel
+  des Teilbaums. Ohne aktive Structure-Rule gibt sie nil und keinen Fehler zurück.
+  `Validate` liefert für ein Schema ohne Regeln dasselbe Ergebnis wie zuvor.
+- **Veröffentlichen.** `cn=Subschema` veröffentlicht `dITContentRules`, `nameForms` und
+  `dITStructureRules`, wenn das Schema welche hat.
+- **Außerdem.** Die Syntaxen 1.3.6.1.4.1.1466.115.121.1.16, .17 und .35 werden
+  geprüft. `hclschema` hat die Blöcke `dit_content_rule`, `name_form` und
+  `dit_structure_rule`, und `ldapschema` konvertiert und prüft sie (siehe
+  [unten](#hcl2-and-the-converter)). `bench/libldap` vergleicht die drei Parser
+  mit denen von libldap.
+
+Ein durchgespieltes Beispiel, unter dem Beispiel-Arc 1.3.6.1.4.1.99999: eine Content-Rule für
+`inetOrgPerson` (`posixAccount` und `uidObject` dürfen hinzugefügt werden; eine Telefonnummer
+ist verlangt; eine Beschreibung ist ausgeschlossen), die Name Forms eines Suffixes, von
+`ou=`-Containern und von Personen, und die Structure-Rules, die sie platzieren:
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/go-authn/ldap/schema"
+)
+
+const rules = `# rules.schema
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME 'examplePersonRule'
+	AUX ( posixAccount $ uidObject )
+	MUST telephoneNumber
+	NOT description )
+
+nameform ( 1.3.6.1.4.1.99999.9.1 NAME 'exampleDomainForm' OC domain MUST dc )
+nameform ( 1.3.6.1.4.1.99999.9.2 NAME 'exampleUnitForm' OC organizationalUnit MUST ou )
+nameform ( 1.3.6.1.4.1.99999.9.4 NAME 'examplePersonForm' OC inetOrgPerson MUST uid )
+
+ditstructurerule ( 1 NAME 'exampleSuffix' FORM exampleDomainForm )
+ditstructurerule ( 2 NAME 'exampleUnit' FORM exampleUnitForm SUP 1 )
+ditstructurerule ( 4 NAME 'examplePersons' FORM examplePersonForm SUP 2 )
+`
+
+func attr(name string, values ...string) schema.Attribute {
+	a := schema.Attribute{Description: name}
+	for _, v := range values {
+		a.Values = append(a.Values, []byte(v))
+	}
+	return a
+}
+
+func report(title string, err error) {
+	fmt.Println(title)
+	var v *schema.ValidationError
+	if errors.As(err, &v) {
+		for _, p := range v.Problems {
+			fmt.Println("  -", p)
+		}
+		return
+	}
+	fmt.Println("  ", err)
+}
+
+func main() {
+	files := append(schema.StandardFiles(), schema.File{Name: "rules.schema", Data: []byte(rules)})
+	s, err := schema.Build(files...)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	// erin: an inetOrgPerson with a public key, a description, and no telephone number.
+	erin := schema.Entry{DN: "uid=erin,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "person", "organizationalPerson", "inetOrgPerson", "ldapPublicKey"),
+		attr("uid", "erin"), attr("cn", "erin"), attr("sn", "Evans"),
+		attr("description", "on call"),
+		attr("sshPublicKey", "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl erin@example.org"),
+	}}
+	report("erin:", s.Validate(erin))
+
+	// fay: named by cn, which the name form of inetOrgPerson does not allow.
+	fay := schema.Entry{DN: "cn=fay,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "person", "organizationalPerson", "inetOrgPerson"),
+		attr("uid", "fay"), attr("cn", "fay"), attr("sn", "Fox"),
+		attr("telephoneNumber", "+33 1 23 45 67 89"),
+	}}
+	report("fay:", s.Validate(fay))
+
+	// The rule that governs each entry is the superior of the next.
+	suffix := schema.Entry{DN: "dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "domain"), attr("dc", "example"),
+	}}
+	people := schema.Entry{DN: "ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "organizationalUnit"), attr("ou", "people"),
+	}}
+	root, err := s.GoverningStructureRule(suffix, nil)
+	fmt.Println("suffix:", root.Names[0], err)
+	ou, err := s.GoverningStructureRule(people, root)
+	fmt.Println("ou=people:", ou.Names[0], err)
+	gina := schema.Entry{DN: "uid=gina,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "person", "organizationalPerson", "inetOrgPerson"),
+		attr("uid", "gina"), attr("cn", "gina"), attr("sn", "Gray"),
+		attr("telephoneNumber", "+33 1 23 45 67 89"),
+	}}
+	r, err := s.GoverningStructureRule(gina, ou)
+	fmt.Println("uid=gina:", r.Names[0], err)
+	_, err = s.GoverningStructureRule(gina, root)
+	report("uid=gina directly under the suffix:", err)
+
+	// hal: an account with posixAccount, and no content rule for account.
+	hal := schema.Entry{DN: "uid=hal,ou=people,dc=example,dc=org", Attributes: []schema.Attribute{
+		attr("objectClass", "top", "account", "posixAccount"),
+		attr("uid", "hal"), attr("cn", "hal"), attr("uidNumber", "1001"), attr("gidNumber", "100"),
+		attr("homeDirectory", "/home/hal"),
+	}}
+	report("hal, as slapd allows it:", s.Validate(hal))
+	report("hal, with StrictAuxiliary:", s.ValidateWith(hal, schema.ValidateOptions{StrictAuxiliary: true}))
+}
+```
+
+```
+erin:
+  - the auxiliary class ldapPublicKey is not in the AUX of the DIT content rule examplePersonRule (RFC 4512 4.1.6)
+  - description is precluded by the DIT content rule examplePersonRule (RFC 4512 4.1.6)
+  - telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+fay:
+  - the RDN (cn) is allowed by no name form of inetOrgPerson: examplePersonForm needs uid
+suffix: exampleSuffix <nil>
+ou=people: exampleUnit <nil>
+uid=gina: examplePersons <nil>
+uid=gina directly under the suffix:
+  - no DIT structure rule allows inetOrgPerson under an entry governed by the rule exampleSuffix (X.501 13.7.5)
+hal, as slapd allows it:
+   <nil>
+hal, with StrictAuxiliary:
+  - the auxiliary class posixAccount is allowed by no DIT content rule: account has none (RFC 4512 2.4.3)
+```
+
+Aus einem leeren Modul mit `github.com/go-authn/ldap` v0.11.0 ausgeführt (go1.27.1).
+`Validate` nennt **jedes** Problem, wie zuvor: erin verletzt die Content-Rule
+gleich auf drei Arten.
+
+**Wo sich das von slapd unterscheidet**, gesagt statt entdeckt:
+
+- slapd implementiert nur Content-Rules: Es hat keine Direktive für Name Forms oder
+  Structure-Rules, daher schreibt `Format` die Schlüsselwörter `nameform` und `ditstructurerule`,
+  die slapd ablehnt. `ditcontentrule` ist die von slapd.
+- Eine `OBSOLETE`-Regel ist inaktiv (RFC 4512 §4.1.6): Sie regiert nichts. slapd
+  lehnt stattdessen den Eintrag ab.
+- Ohne Content-Rule sind Hilfsklassen erlaubt. Das ist das Verhalten von slapd:
+  sein Flag `SLAP_DISALLOW_AUX_WO_CR` wird von keinem `disallow`-Schlüsselwort gesetzt.
+  `ValidateOptions{StrictAuxiliary: true}` liefert RFC 4512 §2.4.3,
+  wie `hal` oben zeigt.
+- libldap kann das `SUP` einer Structure-Rule nicht lesen.
+
+`hclschema.Decode` lehnt jetzt einen String ab, der kein gültiges UTF-8 ist: Es nahm
+einen an, der dann zu einem anderen String kodierte (gefunden von `FuzzDecode`).
+[authnd]({{< relref "/authnd/schemas.md#rules" >}}) lädt diese Definitionen
+aus seinen `schema_files` und dem `schema { }`-Block und setzt sie auf den Baum
+und die Einträge durch, die es veröffentlicht.
+
 ## Schemas in HCL2, und der Konverter {#hcl2-and-the-converter}
 
 Ab v0.9.0 lässt sich ein Schema auch in HCL2 schreiben, nicht nur in den
@@ -406,7 +597,7 @@ kommen mit Datei, Zeile und Spalte.
 Der Befehl `ldapschema` konvertiert zwischen den Formaten:
 
 ```sh
-go install github.com/go-authn/ldap/cmd/ldapschema@v0.10.2
+go install github.com/go-authn/ldap/cmd/ldapschema@v0.11.0
 ```
 
 - `ldapschema to-hcl [--macros] FILE...` liest `.schema`-Dateien von OpenLDAP,
@@ -515,6 +706,74 @@ sieht; `--macros` behält die Makronamen. `check` meldet außerdem die
 Definitionen, die `schema.Standard()` schon hat, und jeden Verweis, den nichts
 definiert, wo `Build` beim ersten aufhört.
 
+**Ab v0.11.0 konvertiert `ldapschema` auch die drei Arten von [Regeln](#rules)**:
+`ditcontentrule`, `nameform` und `ditstructurerule` in einer `.schema`-Datei und
+die Blöcke `dit_content_rule`, `name_form` und `dit_structure_rule` in HCL. Eine
+Structure-Rule wird mit ihrem ersten NAME benannt und hat eine `id`, die `form`, die sie
+platziert, und die `sup`-Regeln (IDs), unter denen sie steht; `check` meldet jeden fehlenden
+Verweis, den sie machen. Ausgeführt aus einem leeren Verzeichnis mit `ldapschema` v0.11.0
+(mit `go install` aus dem Tag gebaut), ein Schema mit je einer:
+
+```
+$ cat site.schema
+# An example arc: 1.3.6.1.4.1.99999 is for private use.
+objectidentifier site 1.3.6.1.4.1.99999
+
+# inetOrgPerson: may carry uidObject, must have a telephone number.
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME 'sitePersonRule'
+	AUX uidObject
+	MUST telephoneNumber )
+
+nameform ( site:9.1 NAME 'siteDomainForm' OC domain MUST dc )
+
+ditstructurerule ( 1 NAME 'siteSuffix' FORM siteDomainForm )
+
+$ ldapschema to-hcl site.schema
+object_identifier "site" {
+  oid = "1.3.6.1.4.1.99999"
+}
+
+dit_content_rule "sitePersonRule" {
+  oid  = "2.16.840.1.113730.3.2.2"
+  aux  = ["uidObject"]
+  must = ["telephoneNumber"]
+}
+
+name_form "siteDomainForm" {
+  oid  = "1.3.6.1.4.1.99999.9.1"
+  oc   = "domain"
+  must = ["dc"]
+}
+
+dit_structure_rule "siteSuffix" {
+  id   = 1
+  form = "siteDomainForm"
+}
+
+$ ldapschema to-hcl site.schema > site.hcl
+$ ldapschema to-schema --macros site.hcl
+objectidentifier site 1.3.6.1.4.1.99999
+
+ditcontentrule ( 2.16.840.1.113730.3.2.2
+	NAME 'sitePersonRule'
+	AUX uidObject
+	MUST telephoneNumber )
+
+nameform ( site:9.1
+	NAME 'siteDomainForm'
+	OC domain
+	MUST dc )
+
+ditstructurerule ( 1
+	NAME 'siteSuffix'
+	FORM siteDomainForm )
+
+$ ldapschema check site.schema
+read: 1 object identifiers, 0 syntaxes, 0 matching rules, 0 attribute types, 0 object classes
+read: 1 DIT content rules, 1 name forms, 1 DIT structure rules
+build: ok, 3 definitions added to schema.Standard()
+```
+
 **`check` kann bei einer Datei, die slapd lädt, mit Status 1 enden.** Das
 `core.schema` von OpenLDAP verweist auf vier Dinge, die slapd eingebaut hat und
 die `schema.Standard()` nicht definiert: die Syntaxen
@@ -524,8 +783,7 @@ Matching-Regeln `protocolInformationMatch` und `presentationAddressMatch`.
 Status 1. Das ist zu lesen als »hier nicht definiert«, nicht als Mangel der
 Datei.
 
-**Was nicht unterstützt wird:** DIT-Content-Regeln, DIT-Structure-Regeln und
-Name Forms; `include`-Anweisungen, denn eine `.schema`-Datei wird als
+**Was nicht unterstützt wird:** `include`-Anweisungen, denn eine `.schema`-Datei wird als
 Definitionen gelesen und nicht wie eine slapd-Konfiguration ausgeführt; und
 `X-SUBST` bei `ldapsyntax`.
 
@@ -555,4 +813,4 @@ nicht erreichten Zeilen im Workflow benannt sind.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/ldap@v0.10.2](https://pkg.go.dev/github.com/go-authn/ldap@v0.10.2)
+[pkg.go.dev/github.com/go-authn/ldap@v0.11.0](https://pkg.go.dev/github.com/go-authn/ldap@v0.11.0)

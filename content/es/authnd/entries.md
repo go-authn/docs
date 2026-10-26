@@ -71,7 +71,10 @@ Por qué estas elecciones, según las razones del propio authnd:
 - **Clases auxiliares sin reglas de contenido DIT.** El RFC 4512 §2.4.3
   prohíbe las clases auxiliares en una entrada cuya clase estructural no tiene
   regla de contenido DIT. Todos los servidores de directorio en uso las
-  permiten, y `Validate` también.
+  permiten, y `Validate` también
+  (`ValidateOptions{StrictAuxiliary: true}` es la lectura estricta, y authnd
+  no la activa). Una clase cuya clase estructural **tiene** una regla de
+  contenido queda sujeta a ella desde la v0.13.0: véanse [las reglas]({{< relref "/authnd/schemas.md#rules" >}}).
 
 ## Añadir atributos {#adding-attributes}
 

@@ -68,7 +68,10 @@ tags: [authnd, ldap, 模式, sql]
   `description`、`ou` 和 `seeAlso`。
 - **没有 DIT 内容规则的辅助类。** RFC 4512 §2.4.3 禁止在
   其结构类没有 DIT 内容规则的条目上使用辅助类。所有在用的目录服务器
-  都允许这样做，`Validate` 也是如此。
+  都允许这样做，`Validate` 也是如此
+  （`ValidateOptions{StrictAuxiliary: true}` 是严格的解读，authnd 并未设置它）。
+  结构类**有**内容规则的类，从 v0.13.0 起受该规则约束：见
+  [规则]({{< relref "/authnd/schemas.md#rules" >}})。
 
 ## 添加属性 {#adding-attributes}
 
