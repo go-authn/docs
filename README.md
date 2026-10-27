@@ -71,7 +71,6 @@ is an empty entry in the switch.
 | `i18n/<lang>.yaml` | the site's strings, beside the theme's |
 | `static/images/flags/` | the language switch's flags (lipis/flag-icons, MIT) |
 | `hugo.yaml` | `baseURL`, the documentation version and the releases it describes, the languages, the navbar (version › theme › search › GitHub), the brand mounts |
-| `layouts/_partials/custom/version-select.html` | the version selector (reads `versions.json`) |
 | `layouts/_partials/favicons.html` | the brand's favicons |
 | `assets/css/custom.css` | the brand cyan as Hextra's primary colour, and the table headers |
 | `themes/hextra` | submodule: [tannevaled/hextra](https://github.com/tannevaled/hextra), at the commit go-fileshare/docs uses (tag v0.16.0) |
@@ -105,7 +104,7 @@ came to show a startup line authnd never printed and a `check --kerberos` flag
 that does not exist.
 
 The page history at the foot of each page (created, modified, by whom) comes
-from git: `themes/hextra/scripts/page-history.sh` writes
+from git: `the theme's cmd/pagehistory` writes
 `data/pagehistory.json` before the build.
 
 ## Working locally
@@ -113,7 +112,7 @@ from git: `themes/hextra/scripts/page-history.sh` writes
 ```sh
 git clone --recurse-submodules https://github.com/go-authn/docs.git
 cd docs
-mkdir -p data && sh themes/hextra/scripts/page-history.sh > data/pagehistory.json
+mkdir -p data && go run github.com/tannevaled/hextra/cmd/pagehistory@v0.21.0 > data/pagehistory.json
 hugo server --baseURL http://localhost:1313/docs/0.1/
 ```
 
