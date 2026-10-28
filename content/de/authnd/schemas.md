@@ -804,12 +804,16 @@ Das sind die Unterschiede, gesagt statt entdeckt:
 
 ### Was es kostet {#rules-cost}
 
-Gemessen am 26. Oktober 2026 mit `BenchmarkPublish10k` (go-authn/authnd,
-`rules_bench_test.go`): Das Veröffentlichen von 10.000 Personen macht **416 Allokationen
-pro Eintrag** mit den Regeln aus `testdata/rules.schema` und **265** ohne. Das schließt
-das Verwerfen einer ausgeschlossenen Beschreibung und die erneute Validierung ein. Die Zeiten,
-192 ms gegen 118 ms, wurden bei einer Last von 8 bis 14 gemessen und sind kein Verhältnis,
-dem man trauen sollte; nur die Allokationszahlen sind es.
+Gemessen am 28. Oktober 2026 mit `BenchmarkPublish10k` (go-authn/authnd,
+`rules_bench_test.go`, `-cpu 1`) an authnd v0.13.1, das go-authn/ldap v0.11.1
+einbettet: Das Veröffentlichen von 10.000 Personen macht **364 Allokationen
+pro Eintrag** mit den Regeln aus `testdata/rules.schema` und **239** ohne
+(v0.13.0: 416 und 265); ein Lauf braucht 102,5 MiB mit den Regeln und 65,4 MiB
+ohne (v0.13.0: 147,5 und 88,0). Das schließt das Verwerfen einer ausgeschlossenen
+Beschreibung und die erneute Validierung ein. Die Zeiten, etwa 157 ms gegen
+100 ms (v0.13.0: 194 ms gegen 123 ms), wurden bei einer Last von 10 bis 16
+gemessen und sind kein Verhältnis, dem man trauen sollte; nur die
+Allokationszahlen sind es.
 
 ### Upgrade {#rules-upgrade}
 

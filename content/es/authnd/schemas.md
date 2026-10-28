@@ -818,12 +818,15 @@ OpenLDAP. Estas son las diferencias, dichas en lugar de descubiertas:
 
 ### Lo que cuesta {#rules-cost}
 
-Medido el 2026-10-26 con `BenchmarkPublish10k` (go-authn/authnd,
-`rules_bench_test.go`): publicar 10 000 personas hace **416 asignaciones por
-entrada** con las reglas de `testdata/rules.schema` y **265** sin ellas. Esto
-incluye descartar una descripción excluida y validar de nuevo. Los tiempos,
-192 ms frente a 118 ms, se midieron con una carga de 8 a 14 y no son una
-proporción fiable; solo lo son los recuentos de asignaciones.
+Medido el 2026-10-28 con `BenchmarkPublish10k` (go-authn/authnd,
+`rules_bench_test.go`, `-cpu 1`) en authnd v0.13.1, que incorpora go-authn/ldap
+v0.11.1: publicar 10 000 personas hace **364 asignaciones por entrada** con las
+reglas de `testdata/rules.schema` y **239** sin ellas (v0.13.0: 416 y 265), y
+una ejecución ocupa 102,5 MiB con las reglas y 65,4 MiB sin ellas (v0.13.0:
+147,5 y 88,0). Esto incluye descartar una descripción excluida y validar de
+nuevo. Los tiempos, unos 157 ms frente a 100 ms (v0.13.0: 194 ms frente a
+123 ms), se midieron con una carga de 10 a 16 y no son una proporción fiable;
+solo lo son los recuentos de asignaciones.
 
 ### Actualizar {#rules-upgrade}
 

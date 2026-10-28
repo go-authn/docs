@@ -775,11 +775,13 @@ go-authn/ldap は OpenLDAP のファイルを読み、ルールの一部は Open
 
 ### コスト {#rules-cost}
 
-2026-10-26 に `BenchmarkPublish10k` (go-authn/authnd、`rules_bench_test.go`) で計測しました。
-10,000 人を公開すると、`testdata/rules.schema` のルールありでは**エントリごとに 416 回の割り当て**、
-なしでは **265 回**です。これには、排除された description の破棄と再検証が含まれます。時間は
-192 ms 対 118 ms で、負荷 8〜14 で計測したため、比率としては信頼できません。信頼できるのは
-割り当て回数だけです。
+2026-10-28 に、go-authn/ldap v0.11.1 を組み込む authnd v0.13.1 で
+`BenchmarkPublish10k` (go-authn/authnd、`rules_bench_test.go`、`-cpu 1`) を使って計測しました。
+10,000 人を公開すると、`testdata/rules.schema` のルールありでは**エントリごとに 364 回の割り当て**、
+なしでは **239 回**です (v0.13.0 は 416 回と 265 回)。1 回の実行で使うメモリは、ルールありで 102.5 MiB、
+なしで 65.4 MiB です (v0.13.0 は 147.5 MiB と 88.0 MiB)。これには、排除された description の破棄と再検証が含まれます。
+時間は約 157 ms 対 100 ms (v0.13.0 は 194 ms 対 123 ms) で、負荷 10〜16 で計測したため、
+比率としては信頼できません。信頼できるのは割り当て回数だけです。
 
 ### アップグレード {#rules-upgrade}
 

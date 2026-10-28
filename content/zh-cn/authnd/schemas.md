@@ -787,11 +787,12 @@ go-authn/ldap 读取 OpenLDAP 的文件，其中有些规则是 OpenLDAP 的。
 
 ### 它的代价 {#rules-cost}
 
-于 2026-10-26 用 `BenchmarkPublish10k`（go-authn/authnd，
-`rules_bench_test.go`）测得：发布 10,000 个人员，使用 `testdata/rules.schema` 的规则时
-**每个条目 416 次分配**，不使用时为 **265** 次。
+于 2026-10-28 在内嵌 go-authn/ldap v0.11.1 的 authnd v0.13.1 上，用 `BenchmarkPublish10k`（go-authn/authnd，
+`rules_bench_test.go`，`-cpu 1`）测得：发布 10,000 个人员，使用 `testdata/rules.schema` 的规则时
+**每个条目 364 次分配**，不使用时为 **239** 次（v0.13.0：416 和 265 次），
+一次运行使用规则时占用 102.5 MiB，不使用时占用 65.4 MiB（v0.13.0：147.5 和 88.0）。
 这包括丢弃被排除的描述并再次验证。耗时
-为 192 ms 对 118 ms，是在负载 8 到 14 时测得的，其比值不可信；
+约为 157 ms 对 100 ms（v0.13.0：194 ms 对 123 ms），是在负载 10 到 16 时测得的，其比值不可信；
 只有分配次数可信。
 
 ### 升级 {#rules-upgrade}

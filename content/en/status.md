@@ -9,17 +9,17 @@ These pages are documentation version **0.6**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.13.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
-ldap is **v0.11.0**, with DIT content rules, name forms and DIT structure
+ldap is **v0.11.1**, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed `BuildError` for a schema that does
 not build, schemas in HCL2 and the `ldapschema` converter, and
 directory **v0.15.0**, with declared object classes. authnd
-v0.13.0 embeds ldap v0.11.0 and directory v0.15.0.
+v0.13.1 embeds ldap v0.11.1 and directory v0.15.0.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.6/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
@@ -76,6 +76,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.12.3 | go-authn/ldap v0.10.1: `schema_files` are read in linear time. ⛔ Up to v0.12.2, a large schema file of short continuation lines (4 MiB: about three minutes) stalled startup: a denial of service by a file you do not control |
 | v0.12.4 | go-authn/ldap v0.10.2: the DESC values of 13 RFC 2307 definitions in `cn=Subschema` (`uidNumber`, `gidNumber`, `ipHostNumber`, `ipNetworkNumber`, `ipNetmaskNumber`, `macAddress` and the classes `ipService`, `ipProtocol`, `oncRpc`, `ipHost`, `ipNetwork`, `ieee802Device`, `bootableDevice`) no longer carry the indentation of the RFC's page layout: `DESC 'An integer uniquely identifying a user in an administrative domain'`, not `... in an         administrative domain'` |
 | v0.13.0 | [DIT content rules, name forms and DIT structure rules]({{< relref "/authnd/schemas.md#rules" >}}) (go-authn/ldap v0.11.0): `schema_files` and the `schema { }` block accept the three kinds, and authnd enforces them. A content rule shapes each entry: an auxiliary class its `AUX` does not list is left off (with the attributes only it allowed), a `NOT` attribute is dropped, an entry missing a `MUST` is left out; each is logged and reported by `check`. With an active structure rule, the tree (suffix, `ou=people`, `ou=groups`, the `uid` or `cn` RDN) is checked at startup and by `check`, and a violation **refuses to start**, all refusals at once, never echoing a secret; an entry no rule places is left out. ⛔ A `schema { }` string that is not valid UTF-8 is now refused. Publishing 10,000 people makes 416 allocations per entry with the rules against 265 without (times measured under load, not reliable) |
+| v0.13.1 | Performance only, with go-authn/ldap v0.11.1: publishing 10,000 people (`BenchmarkPublish10k`, `-cpu 1`) makes 364 allocations per entry with the rules and 239 without, against 416 and 265 at v0.13.0, and 102.5 MiB per run with the rules against 147.5. Times were measured at a load of 10 to 16 and are not reliable |
 
 ### authn-bridge
 
@@ -163,6 +164,7 @@ library's page says what earlier ones changed.
 | ldap v0.10.1 | [`schema.Read`]({{< relref "/libraries/ldap.md#reading-large-files" >}}) is linear in the number of continuation lines (it was quadratic: a 4 MiB file took about three minutes) and no longer copies and splits the whole file to read its first line; `schema.Format` folds lines over 2000 bytes, which slapd and `Read` refuse; the strict parser is about 2.6 times faster (147 allocations instead of 498 on `cosine.schema`, measured under load) |
 | ldap v0.10.2 | the DESC of 13 RFC 2307 definitions in the embedded schema (`schema.Standard()`) is on one line: it carried the indentation of the RFC's page layout, which the reader keeps inside quotes as slapd does, so the subschema a server published had runs of spaces in it; a test now checks every embedded DESC for that and, where the same OID is defined, against OpenLDAP's `core`, `cosine`, `inetorgperson` and `nis` schemas |
 | ldap v0.11.0 | [DIT content rules, name forms and DIT structure rules]({{< relref "/libraries/ldap.md#rules" >}}) (RFC 4512 §4.1.6, §4.1.7) read from `.schema` and LDIF, written by `Format`, carried through HCL (`dit_content_rule`, `name_form`, `dit_structure_rule`) and `ldapschema`, checked by `Build`, enforced by `Validate` (content rules: AUX, MUST, MAY, NOT; name forms: the RDN; structure rules: `GoverningStructureRule`) and published at `cn=Subschema` only when present; `ValidateOptions{StrictAuxiliary}` gives RFC 4512 §2.4.3. ⛔ slapd implements content rules only, so `Format` writes `nameform` and `ditstructurerule` keywords it refuses; an `OBSOLETE` rule is inactive where slapd refuses the entry; libldap cannot read a structure rule's `SUP`. `hclschema.Decode` refuses a string that is not UTF-8 |
+| ldap v0.11.1 | Performance only, no change of result: a string of printable ASCII is prepared for the string matching rules (RFC 4518) with at most one allocation, none when nothing changes, and the DN parser makes 6 allocations instead of 11 for a four-RDN DN. The results are those of v0.11.0, checked against its code on every string of one or two bytes below 0x80 and by a differential fuzzer |
 | oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | totp v0.4.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |

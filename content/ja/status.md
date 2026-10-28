@@ -9,17 +9,17 @@ tags: [ステータス, リリース]
 
 | プログラム | リリース | モジュール |
 |---|---|---|
-| authnd | **v0.13.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 ライブラリのバージョンは[専用ページ]({{< relref "/libraries/_index.md" >}})にあります。
-ldap は **v0.11.0** で、DIT コンテンツルール、ネームフォーム、DIT 構造ルールの読み込み、適用、公開、
+ldap は **v0.11.1** で、DIT コンテンツルール、ネームフォーム、DIT 構造ルールの読み込み、適用、公開、
 ビルドできないスキーマのための型付きの `BuildError`、
 HCL2 のスキーマと `ldapschema` コンバーターを備えています。
 directory は **v0.15.0** で、宣言されたオブジェクトクラスを備えています。
-authnd v0.13.0 は ldap v0.11.0 と directory v0.15.0 を組み込んでいます。
+authnd v0.13.1 は ldap v0.11.1 と directory v0.15.0 を組み込んでいます。
 上記のいずれかのプログラムのマイナーバージョンが新しくなると、新しいドキュメントバージョンになります。
 そのため、`/docs/0.6/` 以下のページは、読者がインストールしたものを説明し続け、
 以前のリリースのページは `/docs/0.1/`、`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/` 以下に残ります。
@@ -74,6 +74,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | v0.12.3 | go-authn/ldap v0.10.1: `schema_files` を線形時間で読む。⛔ v0.12.2 までは、短い継続行から成る大きなスキーマファイル (4 MiB で約 3 分) が起動を止めた。管理できないファイルによるサービス拒否 |
 | v0.12.4 | go-authn/ldap v0.10.2: `cn=Subschema` の RFC 2307 の 13 個の定義(`uidNumber`、`gidNumber`、`ipHostNumber`、`ipNetworkNumber`、`ipNetmaskNumber`、`macAddress` と、クラス `ipService`、`ipProtocol`、`oncRpc`、`ipHost`、`ipNetwork`、`ieee802Device`、`bootableDevice`)の DESC の値に、RFC のページ組みのインデントが含まれなくなりました。`... in an         administrative domain'` ではなく `DESC 'An integer uniquely identifying a user in an administrative domain'` です |
 | v0.13.0 | [DIT コンテンツルール、ネームフォーム、DIT 構造ルール]({{< relref "/authnd/schemas.md#rules" >}}) (go-authn/ldap v0.11.0): `schema_files` と `schema { }` ブロックは三種類を受け付け、authnd はそれらを適用する。コンテンツルールは各エントリの形を定める。`AUX` が挙げていない補助クラスは (それだけが許していた属性とともに) 外され、`NOT` の属性は破棄され、`MUST` を欠くエントリは公開されない。いずれもログに出て `check` が報告する。有効な構造ルールがあれば、木 (サフィックス、`ou=people`、`ou=groups`、`uid` または `cn` の RDN) が起動時と `check` で検査され、違反があれば**起動を拒否し**、拒否はすべて一度に示され、シークレットは決して出力されない。どのルールも配置しないエントリは外される。⛔ 有効な UTF-8 でない `schema { }` の文字列は拒否されるようになった。10,000 人の公開は、ルールありでエントリごとに 416 回の割り当て、なしで 265 回 (時間は負荷時に計測したので信頼できない) |
+| v0.13.1 | 性能のみ、go-authn/ldap v0.11.1 を組み込む。10,000 人の公開 (`BenchmarkPublish10k`、`-cpu 1`) は、ルールありでエントリごとに 364 回の割り当て、なしで 239 回 (v0.13.0 は 416 回と 265 回)、1 回の実行でルールありは 102.5 MiB (v0.13.0 は 147.5 MiB)。時間は負荷 10〜16 で計測したので信頼できない |
 
 ### authn-bridge {#authn-bridge}
 
@@ -161,6 +162,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | ldap v0.10.1 | [`schema.Read`]({{< relref "/libraries/ldap.md#reading-large-files" >}}) は継続行の数に対して線形になった (以前は二乗時間で、4 MiB のファイルに約 3 分かかった)。最初の行を読むためにファイル全体をコピーして分割することもなくなった。`schema.Format` は 2000 バイトを超える行 (slapd と `Read` は拒否する) を折り返す。厳格なパーサーは約 2.6 倍速い (`cosine.schema` で割り当て 498 回が 147 回、負荷時に計測) |
 | ldap v0.10.2 | 組み込みスキーマ(`schema.Standard()`)の RFC 2307 の 13 個の定義の DESC を 1 行にしました。RFC のページ組みのインデントを含んでおり、リーダーは slapd と同様に引用符の中でそれを保持するため、サーバーが公開するサブスキーマに連続した空白が入っていました。テストが、組み込みの各 DESC をこの点で検査し、同じ OID が定義されている場合は OpenLDAP の `core`、`cosine`、`inetorgperson`、`nis` スキーマと比較します |
 | ldap v0.11.0 | [DIT コンテンツルール、ネームフォーム、DIT 構造ルール]({{< relref "/libraries/ldap.md#rules" >}}) (RFC 4512 §4.1.6、§4.1.7)。`.schema` と LDIF から読み、`Format` が書き、HCL (`dit_content_rule`、`name_form`、`dit_structure_rule`) と `ldapschema` を通り、`Build` が検査し、`Validate` が適用し (コンテンツルール: AUX、MUST、MAY、NOT。ネームフォーム: RDN。構造ルール: `GoverningStructureRule`)、あるときに限って `cn=Subschema` で公開される。`ValidateOptions{StrictAuxiliary}` は RFC 4512 §2.4.3 を与える。⛔ slapd が実装するのはコンテンツルールだけなので、`Format` は slapd が拒否する `nameform` と `ditstructurerule` のキーワードを書く。`OBSOLETE` のルールは無効で、slapd はそのエントリを拒否する。libldap は構造ルールの `SUP` を読めない。`hclschema.Decode` は UTF-8 でない文字列を拒否する |
+| ldap v0.11.1 | 性能のみで、結果は変わらない。印字可能な ASCII の文字列は、文字列照合ルール (RFC 4518) のために多くても 1 回の割り当てで準備され、何も変わらないときは割り当てなしで済む。4 つの RDN をもつ DN では DN パーサーの割り当ては 11 回から 6 回に減る。結果は v0.11.0 と同じで、0x80 未満の 1 バイトまたは 2 バイトのすべての文字列について v0.11.0 のコードと照合し、差分ファザーでも確かめた |
 | oidc v0.4.1 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | servercert v0.5.2 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | totp v0.4.2 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
