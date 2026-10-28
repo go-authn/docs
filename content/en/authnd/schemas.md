@@ -804,12 +804,15 @@ These are the differences, said rather than discovered:
 
 ### What it costs {#rules-cost}
 
-Measured on 2026-10-26 with `BenchmarkPublish10k` (go-authn/authnd,
-`rules_bench_test.go`): publishing 10,000 people makes **416 allocations per
-entry** with the rules of `testdata/rules.schema` and **265** without. This
-includes dropping a precluded description and validating again. The times,
-192 ms against 118 ms, were measured at a load of 8 to 14 and are not a ratio to
-trust; only the allocation counts are.
+Measured on 2026-10-28 with `BenchmarkPublish10k` (go-authn/authnd,
+`rules_bench_test.go`, `-cpu 1`) on authnd v0.13.1, which embeds go-authn/ldap
+v0.11.1: publishing 10,000 people makes **364 allocations per entry** with the
+rules of `testdata/rules.schema` and **239** without (v0.13.0: 416 and 265),
+and a run takes 102.5 MiB with the rules and 65.4 MiB without (v0.13.0: 147.5
+and 88.0). This includes dropping a precluded description and validating
+again. The times, about 157 ms against 100 ms (v0.13.0: 194 ms against 123 ms),
+were measured at a load of 10 to 16 and are not a ratio to trust; only the
+allocation counts are.
 
 ### Upgrading {#rules-upgrade}
 

@@ -20,7 +20,7 @@ All of them are pure Go and build with `CGO_ENABLED=0`.
 | [fido]({{< relref "/libraries/fido.md" >}}) | how is a security key spoken to, over 64-byte reports? | v0.6.2 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | did *the registered* key answer, and did a person touch it? | v0.4.2 | `github.com/go-authn/keyfactor` |
 | [directory]({{< relref "/libraries/directory.md" >}}) | who is somebody, and what can prove them? | v0.15.0 | `github.com/go-authn/directory` |
-| [ldap]({{< relref "/libraries/ldap.md" >}}) | what are the bytes of an LDAP server? | v0.11.0 | `github.com/go-authn/ldap` |
+| [ldap]({{< relref "/libraries/ldap.md" >}}) | what are the bytes of an LDAP server? | v0.11.1 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | is this Kerberos ticket good for this service? | v0.3.1 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | how does a realm issue tickets from a directory? | v0.4.3 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | who does this bearer token say is asking, and should it be believed? | v0.4.1 | `github.com/go-authn/oidc` |

@@ -9,17 +9,17 @@ Diese Seiten sind die Dokumentationsversion **0.6** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
-| authnd | **v0.13.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}});
-ldap ist bei **v0.11.0**, mit DIT-Content-Rules, Name Forms und DIT-Structure-Rules, die
+ldap ist bei **v0.11.1**, mit DIT-Content-Rules, Name Forms und DIT-Structure-Rules, die
 gelesen, durchgesetzt und veröffentlicht werden, einem typisierten `BuildError` für ein Schema, das sich nicht aufbauen lässt,
 Schemas in HCL2 und dem Konverter `ldapschema`,
 und directory bei **v0.15.0**, mit deklarierten Objektklassen. authnd
-v0.13.0 bettet ldap v0.11.0 und directory v0.15.0 ein.
+v0.13.1 bettet ldap v0.11.1 und directory v0.15.0 ein.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
 sodass die Seiten, die jemand unter `/docs/0.6/` findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`,
@@ -76,6 +76,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen, außer denen, die diese Do
 | v0.12.3 | go-authn/ldap v0.10.1: `schema_files` werden in linearer Zeit gelesen. ⛔ Bis v0.12.2 hielt eine große Schemadatei aus kurzen Fortsetzungszeilen (4 MiB: etwa drei Minuten) den Start auf: ein Denial of Service durch eine Datei, die man nicht kontrolliert |
 | v0.12.4 | go-authn/ldap v0.10.2: die DESC-Werte von 13 RFC-2307-Definitionen in `cn=Subschema` (`uidNumber`, `gidNumber`, `ipHostNumber`, `ipNetworkNumber`, `ipNetmaskNumber`, `macAddress` und die Klassen `ipService`, `ipProtocol`, `oncRpc`, `ipHost`, `ipNetwork`, `ieee802Device`, `bootableDevice`) tragen nicht mehr die Einrückung des Seitenumbruchs der RFC: `DESC 'An integer uniquely identifying a user in an administrative domain'` statt `... in an         administrative domain'` |
 | v0.13.0 | [DIT-Content-Rules, Name Forms und DIT-Structure-Rules]({{< relref "/authnd/schemas.md#rules" >}}) (go-authn/ldap v0.11.0): `schema_files` und der `schema { }`-Block akzeptieren die drei Arten, und authnd setzt sie durch. Eine Content-Rule formt jeden Eintrag: Eine Hilfsklasse, die ihr `AUX` nicht aufführt, wird weggelassen (mit den Attributen, die nur sie erlaubte), ein `NOT`-Attribut wird verworfen, ein Eintrag, dem ein `MUST` fehlt, wird ausgelassen; jedes wird protokolliert und von `check` gemeldet. Mit einer aktiven Structure-Rule wird der Baum (Suffix, `ou=people`, `ou=groups`, das RDN `uid` oder `cn`) beim Start und von `check` geprüft, und eine Verletzung **verweigert den Start**, alle Ablehnungen auf einmal, ohne je ein Geheimnis zu wiederholen; ein Eintrag, den keine Regel platziert, wird ausgelassen. ⛔ Ein `schema { }`-String, der kein gültiges UTF-8 ist, wird jetzt abgelehnt. Das Veröffentlichen von 10.000 Personen macht 416 Allokationen pro Eintrag mit den Regeln gegenüber 265 ohne (Zeiten unter Last gemessen, nicht verlässlich) |
+| v0.13.1 | Nur Leistung, mit go-authn/ldap v0.11.1: Das Veröffentlichen von 10.000 Personen (`BenchmarkPublish10k`, `-cpu 1`) macht 364 Allokationen pro Eintrag mit den Regeln und 239 ohne, gegenüber 416 und 265 bei v0.13.0, und 102,5 MiB pro Lauf mit den Regeln gegenüber 147,5. Die Zeiten wurden bei einer Last von 10 bis 16 gemessen und sind nicht verlässlich |
 
 ### authn-bridge {#authn-bridge}
 
@@ -163,6 +164,7 @@ jeder Bibliothek sagt, was frühere geändert haben.
 | ldap v0.10.1 | [`schema.Read`]({{< relref "/libraries/ldap.md#reading-large-files" >}}) ist linear in der Zahl der Fortsetzungszeilen (es war quadratisch: eine Datei von 4 MiB brauchte etwa drei Minuten) und kopiert und zerlegt nicht mehr die ganze Datei, um ihre erste Zeile zu lesen; `schema.Format` bricht Zeilen über 2000 Bytes um, die slapd und `Read` ablehnen; der strikte Parser ist etwa 2,6-mal schneller (147 statt 498 Allokationen bei `cosine.schema`, unter Last gemessen) |
 | ldap v0.10.2 | die DESC-Werte von 13 RFC-2307-Definitionen im eingebetteten Schema (`schema.Standard()`) stehen in einer Zeile: sie trugen die Einrückung des RFC-Seitenumbruchs, die der Leser wie slapd innerhalb der Anführungszeichen behält, sodass das von einem Server veröffentlichte Subschema Folgen von Leerzeichen enthielt; ein Test prüft jetzt jeden eingebetteten DESC darauf und, wo dieselbe OID definiert ist, gegen die Schemas `core`, `cosine`, `inetorgperson` und `nis` von OpenLDAP |
 | ldap v0.11.0 | [DIT-Content-Rules, Name Forms und DIT-Structure-Rules]({{< relref "/libraries/ldap.md#rules" >}}) (RFC 4512 §4.1.6, §4.1.7) aus `.schema` und LDIF gelesen, von `Format` geschrieben, über HCL (`dit_content_rule`, `name_form`, `dit_structure_rule`) und `ldapschema` weitergereicht, von `Build` geprüft, von `Validate` durchgesetzt (Content-Rules: AUX, MUST, MAY, NOT; Name Forms: das RDN; Structure-Rules: `GoverningStructureRule`) und nur bei Vorhandensein unter `cn=Subschema` veröffentlicht; `ValidateOptions{StrictAuxiliary}` liefert RFC 4512 §2.4.3. ⛔ slapd implementiert nur Content-Rules, daher schreibt `Format` die Schlüsselwörter `nameform` und `ditstructurerule`, die es ablehnt; eine `OBSOLETE`-Regel ist inaktiv, wo slapd den Eintrag ablehnt; libldap kann das `SUP` einer Structure-Rule nicht lesen. `hclschema.Decode` lehnt einen String ab, der kein UTF-8 ist |
+| ldap v0.11.1 | Nur Leistung, kein geändertes Ergebnis: Ein String aus druckbarem ASCII wird für die String-Vergleichsregeln (RFC 4518) mit höchstens einer Allokation aufbereitet, ohne eine, wenn sich nichts ändert, und der DN-Parser macht für einen DN mit vier RDNs 6 statt 11 Allokationen. Die Ergebnisse sind die von v0.11.0, gegen dessen Code an jedem String aus einem oder zwei Bytes unter 0x80 und mit einem differenziellen Fuzzer geprüft |
 | oidc v0.4.1 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | servercert v0.5.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | totp v0.4.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
