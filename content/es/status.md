@@ -9,17 +9,17 @@ Estas páginas son la versión **0.6** de la documentación, y describen:
 
 | programa | versión | módulo |
 |---|---|---|
-| authnd | **v0.13.1** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 Las versiones de las bibliotecas están en [su propia página]({{< relref "/libraries/_index.md" >}});
-ldap está en la **v0.11.1**, con reglas de contenido DIT, formas de nombre y
+ldap está en la **v0.11.2**, con reglas de contenido DIT, formas de nombre y
 reglas de estructura DIT leídas, aplicadas y publicadas, un `BuildError` tipado
 para un esquema que no se construye, los esquemas en HCL2 y el conversor
 `ldapschema`, y directory en la **v0.15.0**, con clases de objeto declaradas.
-authnd v0.13.1 incorpora ldap v0.11.1 y directory v0.15.0.
+authnd v0.13.2 incorpora ldap v0.11.2 y directory v0.15.0.
 Una nueva versión menor de cualquiera de los programas anteriores es una nueva
 versión de la documentación, de modo que las páginas que alguien encuentra bajo
 `/docs/0.6/` siguen describiendo lo que instaló; las de las versiones anteriores
@@ -78,6 +78,7 @@ que solo actualizaron dependencias, salvo las que describe esta versión de la d
 | v0.12.4 | go-authn/ldap v0.10.2: los valores de DESC de 13 definiciones de RFC 2307 en `cn=Subschema` (`uidNumber`, `gidNumber`, `ipHostNumber`, `ipNetworkNumber`, `ipNetmaskNumber`, `macAddress` y las clases `ipService`, `ipProtocol`, `oncRpc`, `ipHost`, `ipNetwork`, `ieee802Device`, `bootableDevice`) ya no llevan la sangría de la paginación de la RFC: `DESC 'An integer uniquely identifying a user in an administrative domain'`, y no `... in an         administrative domain'` |
 | v0.13.0 | [reglas de contenido DIT, formas de nombre y reglas de estructura DIT]({{< relref "/authnd/schemas.md#rules" >}}) (go-authn/ldap v0.11.0): `schema_files` y el bloque `schema { }` aceptan los tres tipos, y authnd los aplica. Una regla de contenido da forma a cada entrada: una clase auxiliar que su `AUX` no enumera se deja fuera (con los atributos que solo ella permitía), un atributo `NOT` se descarta, una entrada a la que le falta un `MUST` se deja fuera; cada caso se registra en el log y lo informa `check`. Con una regla de estructura activa, el árbol (el sufijo, `ou=people`, `ou=groups`, el RDN `uid` o `cn`) se comprueba al arrancar y con `check`, y una infracción **impide el arranque**, con todos los rechazos a la vez y sin repetir nunca un secreto; una entrada que ninguna regla ubica se deja fuera. ⛔ Una cadena `schema { }` que no es UTF-8 válido se rechaza ahora. Publicar 10 000 personas hace 416 asignaciones por entrada con las reglas frente a 265 sin ellas (tiempos medidos bajo carga, no fiables) |
 | v0.13.1 | Solo rendimiento, con go-authn/ldap v0.11.1: publicar 10 000 personas (`BenchmarkPublish10k`, `-cpu 1`) hace 364 asignaciones por entrada con las reglas y 239 sin ellas, frente a 416 y 265 en la v0.13.0, y 102,5 MiB por ejecución con las reglas frente a 147,5. Los tiempos se midieron con una carga de 10 a 16 y no son fiables |
+| v0.13.2 | Solo rendimiento, con go-authn/ldap v0.11.2: `Validate` hace 12 asignaciones en lugar de 76 para una entrada de diez atributos; publicar 10 000 personas (`BenchmarkPublish10k`, `-cpu 1`) hace 128 asignaciones por entrada con las reglas y 85 sin ellas, frente a 364 y 239 en la v0.13.1, y 54,8 MiB por ejecución con las reglas frente a 102,5. Tiempos (carga de 8 a 11): unos 90 ms frente a 158 ms con las reglas |
 
 ### authn-bridge {#authn-bridge}
 
@@ -167,6 +168,7 @@ anteriores.
 | ldap v0.10.2 | los DESC de 13 definiciones de RFC 2307 del esquema incorporado (`schema.Standard()`) van en una sola línea: llevaban la sangría de la paginación de la RFC, que el lector conserva dentro de las comillas como slapd, así que el subesquema que publicaba un servidor tenía series de espacios; una prueba comprueba ahora cada DESC incorporado y, donde se define el mismo OID, lo compara con los esquemas `core`, `cosine`, `inetorgperson` y `nis` de OpenLDAP |
 | ldap v0.11.0 | [reglas de contenido DIT, formas de nombre y reglas de estructura DIT]({{< relref "/libraries/ldap.md#rules" >}}) (RFC 4512 §4.1.6, §4.1.7) leídas de `.schema` y LDIF, escritas por `Format`, transportadas por HCL (`dit_content_rule`, `name_form`, `dit_structure_rule`) y por `ldapschema`, comprobadas por `Build`, aplicadas por `Validate` (reglas de contenido: AUX, MUST, MAY, NOT; formas de nombre: el RDN; reglas de estructura: `GoverningStructureRule`) y publicadas en `cn=Subschema` solo cuando existen; `ValidateOptions{StrictAuxiliary}` da el RFC 4512 §2.4.3. ⛔ slapd solo implementa las reglas de contenido, así que `Format` escribe las palabras clave `nameform` y `ditstructurerule`, que él rechaza; una regla `OBSOLETE` está inactiva donde slapd rechaza la entrada; libldap no puede leer el `SUP` de una regla de estructura. `hclschema.Decode` rechaza una cadena que no es UTF-8 |
 | ldap v0.11.1 | Solo rendimiento, sin cambio de resultado: una cadena de ASCII imprimible se prepara para las reglas de comparación de cadenas (RFC 4518) con una asignación como máximo, ninguna cuando nada cambia, y el analizador de DN hace 6 asignaciones en lugar de 11 para un DN de cuatro RDN. Los resultados son los de la v0.11.0, comprobados contra su código en cada cadena de uno o dos bytes por debajo de 0x80 y con un fuzzer diferencial |
+| ldap v0.11.2 | Solo rendimiento, sin cambio de resultado: `Validate` hace 12 asignaciones para una entrada de diez atributos en lugar de 76 (búsquedas sin copia en minúsculas, descripciones sin dividir ni volver a unir, conjuntos en el sitio en lugar de mapas). Los resultados son los de la v0.11.1, comprobados contra una copia de su `Validate` con entradas aleatorias bajo el esquema estándar y un esquema con reglas, y con un fuzzer diferencial |
 | oidc v0.4.1 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
 | servercert v0.5.2 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
 | totp v0.4.2 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |

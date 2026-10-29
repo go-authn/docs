@@ -9,7 +9,7 @@ tags: [상태, 릴리스]
 
 | 프로그램 | 릴리스 | 모듈 |
 |---|---|---|
-| authnd | **v0.13.1** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -17,9 +17,9 @@ tags: [상태, 릴리스]
 라이브러리의 버전은 [해당 페이지]({{< relref "/libraries/_index.md" >}})에
 있습니다. ldap은 DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙의 읽기, 적용, 게시와
 빌드되지 않는 스키마를 위한 타입이 있는 `BuildError`, HCL2
-스키마, `ldapschema` 변환기를 갖춘 **v0.11.1**이고,
+스키마, `ldapschema` 변환기를 갖춘 **v0.11.2**이고,
 directory는 선언된 오브젝트 클래스를 갖춘 **v0.15.0**입니다. authnd
-v0.13.1은 ldap v0.11.1과 directory v0.15.0을 내장합니다.
+v0.13.2는 ldap v0.11.2와 directory v0.15.0을 내장합니다.
 위 프로그램 중 어느 것이든 새 마이너 버전이 나오면 새 문서 버전이 됩니다. 따라서
 독자가 `/docs/0.6/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
 페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`에 남아 있습니다.
@@ -76,6 +76,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.12.4 | go-authn/ldap v0.10.2: `cn=Subschema` 의 RFC 2307 정의 13개(`uidNumber`, `gidNumber`, `ipHostNumber`, `ipNetworkNumber`, `ipNetmaskNumber`, `macAddress` 와 클래스 `ipService`, `ipProtocol`, `oncRpc`, `ipHost`, `ipNetwork`, `ieee802Device`, `bootableDevice`)의 DESC 값에 더 이상 RFC 쪽 나눔의 들여쓰기가 들어 있지 않습니다. `... in an         administrative domain'` 이 아니라 `DESC 'An integer uniquely identifying a user in an administrative domain'` 입니다 |
 | v0.13.0 | [DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙]({{< relref "/authnd/schemas.md#rules" >}})(go-authn/ldap v0.11.0): `schema_files`와 `schema { }` 블록이 세 종류를 받아들이고 authnd가 이를 적용합니다. 콘텐츠 규칙은 각 엔트리의 형태를 정합니다. `AUX`에 나열되지 않은 보조 클래스는 (그 클래스만 허용하던 속성과 함께) 빠지고, `NOT` 속성은 제거되며, `MUST`가 빠진 엔트리는 게시에서 제외됩니다. 각각 로그에 남고 `check`가 보고합니다. 활성 구조 규칙이 있으면 트리(접미사, `ou=people`, `ou=groups`, `uid` 또는 `cn` RDN)를 시작 시와 `check`에서 검사하며, 위반은 **시작을 거부**합니다. 거부 사유는 한꺼번에 모두 보고되고 비밀 값은 절대 출력되지 않습니다. 어떤 규칙도 자리를 주지 않는 엔트리는 제외됩니다. ⛔ UTF-8이 아닌 `schema { }` 문자열은 이제 거부됩니다. 10,000명을 게시할 때 엔트리당 할당은 규칙이 있으면 416회, 없으면 265회입니다(시간은 부하 상태에서 측정되어 신뢰할 수 없음) |
 | v0.13.1 | 성능만 개선, go-authn/ldap v0.11.1 내장: 10,000명을 게시할 때(`BenchmarkPublish10k`, `-cpu 1`) 엔트리당 할당은 규칙이 있으면 364회, 없으면 239회이며(v0.13.0은 416회와 265회), 한 번 실행에 규칙이 있으면 102.5 MiB를 씁니다(v0.13.0은 147.5 MiB). 시간은 부하 10~16에서 측정되어 신뢰할 수 없음 |
+| v0.13.2 | 성능만 개선, go-authn/ldap v0.11.2 내장: 속성 열 개짜리 엔트리에서 `Validate`의 할당이 76회에서 12회로 줄었습니다. 10,000명을 게시할 때(`BenchmarkPublish10k`, `-cpu 1`) 엔트리당 할당은 규칙이 있으면 128회, 없으면 85회이며(v0.13.1은 364회와 239회), 한 번 실행에 규칙이 있으면 54.8 MiB를 씁니다(v0.13.1은 102.5 MiB). 시간(부하 8~11): 규칙이 있을 때 약 158 ms에서 약 90 ms |
 
 ### authn-bridge {#authn-bridge}
 
@@ -164,6 +165,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | ldap v0.10.2 | 내장 스키마(`schema.Standard()`)의 RFC 2307 정의 13개의 DESC 가 한 줄로 바뀌었습니다. RFC 쪽 나눔의 들여쓰기가 들어 있었고, 리더는 slapd 처럼 따옴표 안에서 이를 유지하므로 서버가 게시한 서브스키마에 연속된 공백이 있었습니다. 이제 테스트가 내장된 모든 DESC 를 이 점에서 검사하고, 같은 OID 가 정의된 곳에서는 OpenLDAP 의 `core`, `cosine`, `inetorgperson`, `nis` 스키마와 비교합니다 |
 | ldap v0.11.0 | [DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙]({{< relref "/libraries/ldap.md#rules" >}})(RFC 4512 §4.1.6, §4.1.7)을 `.schema`와 LDIF에서 읽고, `Format`이 쓰고, HCL(`dit_content_rule`, `name_form`, `dit_structure_rule`)과 `ldapschema`를 거치며, `Build`가 검사하고, `Validate`가 적용하며(콘텐츠 규칙: AUX, MUST, MAY, NOT, 이름 형식: RDN, 구조 규칙: `GoverningStructureRule`), 있을 때만 `cn=Subschema`에 게시됨. `ValidateOptions{StrictAuxiliary}`는 RFC 4512 §2.4.3을 따름. ⛔ slapd는 콘텐츠 규칙만 구현하므로 `Format`이 쓰는 `nameform`과 `ditstructurerule` 키워드를 slapd는 거부하며, `OBSOLETE` 규칙은 비활성이지만 slapd는 엔트리를 거부하고, libldap은 구조 규칙의 `SUP`을 읽지 못함. `hclschema.Decode`는 UTF-8이 아닌 문자열을 거부함 |
 | ldap v0.11.1 | 성능만 개선, 결과는 그대로: 인쇄 가능한 ASCII 문자열은 문자열 비교 규칙(RFC 4518)을 위해 최대 한 번의 할당으로 준비되고 아무것도 바뀌지 않으면 할당이 없으며, DN 파서는 RDN이 네 개인 DN에서 할당을 11회에서 6회로 줄임. 결과는 v0.11.0과 같고, 0x80 미만의 1바이트·2바이트 문자열 전부에 대해 v0.11.0 코드와 대조했으며 차분 퍼저로도 확인함 |
+| ldap v0.11.2 | 성능만 개선, 결과는 그대로: 속성 열 개짜리 엔트리에서 `Validate`의 할당이 76회에서 12회로 줄어듦(소문자 복사본 없는 조회, 나누었다 다시 합치지 않는 설명, 맵 대신 제자리 집합). 결과는 v0.11.1과 같고, 표준 스키마와 규칙 스키마에서 무작위 엔트리로 v0.11.1의 `Validate` 사본과 대조했으며 차분 퍼저로도 확인함 |
 | oidc v0.4.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | servercert v0.5.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | totp v0.4.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
