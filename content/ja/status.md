@@ -9,17 +9,17 @@ tags: [ステータス, リリース]
 
 | プログラム | リリース | モジュール |
 |---|---|---|
-| authnd | **v0.13.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.3** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 ライブラリのバージョンは[専用ページ]({{< relref "/libraries/_index.md" >}})にあります。
-ldap は **v0.11.2** で、DIT コンテンツルール、ネームフォーム、DIT 構造ルールの読み込み、適用、公開、
+ldap は **v0.11.3** で、DIT コンテンツルール、ネームフォーム、DIT 構造ルールの読み込み、適用、公開、
 ビルドできないスキーマのための型付きの `BuildError`、
 HCL2 のスキーマと `ldapschema` コンバーターを備えています。
 directory は **v0.15.0** で、宣言されたオブジェクトクラスを備えています。
-authnd v0.13.2 は ldap v0.11.2 と directory v0.15.0 を組み込んでいます。
+authnd v0.13.3 は ldap v0.11.3 と directory v0.15.0 を組み込んでいます。
 上記のいずれかのプログラムのマイナーバージョンが新しくなると、新しいドキュメントバージョンになります。
 そのため、`/docs/0.6/` 以下のページは、読者がインストールしたものを説明し続け、
 以前のリリースのページは `/docs/0.1/`、`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/` 以下に残ります。
@@ -76,6 +76,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | v0.13.0 | [DIT コンテンツルール、ネームフォーム、DIT 構造ルール]({{< relref "/authnd/schemas.md#rules" >}}) (go-authn/ldap v0.11.0): `schema_files` と `schema { }` ブロックは三種類を受け付け、authnd はそれらを適用する。コンテンツルールは各エントリの形を定める。`AUX` が挙げていない補助クラスは (それだけが許していた属性とともに) 外され、`NOT` の属性は破棄され、`MUST` を欠くエントリは公開されない。いずれもログに出て `check` が報告する。有効な構造ルールがあれば、木 (サフィックス、`ou=people`、`ou=groups`、`uid` または `cn` の RDN) が起動時と `check` で検査され、違反があれば**起動を拒否し**、拒否はすべて一度に示され、シークレットは決して出力されない。どのルールも配置しないエントリは外される。⛔ 有効な UTF-8 でない `schema { }` の文字列は拒否されるようになった。10,000 人の公開は、ルールありでエントリごとに 416 回の割り当て、なしで 265 回 (時間は負荷時に計測したので信頼できない) |
 | v0.13.1 | 性能のみ、go-authn/ldap v0.11.1 を組み込む。10,000 人の公開 (`BenchmarkPublish10k`、`-cpu 1`) は、ルールありでエントリごとに 364 回の割り当て、なしで 239 回 (v0.13.0 は 416 回と 265 回)、1 回の実行でルールありは 102.5 MiB (v0.13.0 は 147.5 MiB)。時間は負荷 10〜16 で計測したので信頼できない |
 | v0.13.2 | 性能のみ、go-authn/ldap v0.11.2 を組み込む。10 属性のエントリで `Validate` の割り当ては 76 回から 12 回に減った。10,000 人の公開 (`BenchmarkPublish10k`、`-cpu 1`) は、ルールありでエントリごとに 128 回の割り当て、なしで 85 回 (v0.13.1 は 364 回と 239 回)、1 回の実行でルールありは 54.8 MiB (v0.13.1 は 102.5 MiB)。時間 (負荷 8〜11): ルールありで約 158 ms から約 90 ms |
+| v0.13.3 | 性能のみ、go-authn/ldap v0.11.3 を組み込む。`unmet` が検証したばかりのエントリは、変わっていなければ `validated` で再び検証されない。10,000 人の公開 (`BenchmarkPublish10k`、`-cpu 1`) は、ルールありでエントリごとに 97 回の割り当て、なしで 69 回 (v0.13.2 は 110 回と 72 回)。時間はルールありで約 70 ms から約 66 ms (負荷 4.8) |
 
 ### authn-bridge {#authn-bridge}
 
@@ -165,6 +166,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | ldap v0.11.0 | [DIT コンテンツルール、ネームフォーム、DIT 構造ルール]({{< relref "/libraries/ldap.md#rules" >}}) (RFC 4512 §4.1.6、§4.1.7)。`.schema` と LDIF から読み、`Format` が書き、HCL (`dit_content_rule`、`name_form`、`dit_structure_rule`) と `ldapschema` を通り、`Build` が検査し、`Validate` が適用し (コンテンツルール: AUX、MUST、MAY、NOT。ネームフォーム: RDN。構造ルール: `GoverningStructureRule`)、あるときに限って `cn=Subschema` で公開される。`ValidateOptions{StrictAuxiliary}` は RFC 4512 §2.4.3 を与える。⛔ slapd が実装するのはコンテンツルールだけなので、`Format` は slapd が拒否する `nameform` と `ditstructurerule` のキーワードを書く。`OBSOLETE` のルールは無効で、slapd はそのエントリを拒否する。libldap は構造ルールの `SUP` を読めない。`hclschema.Decode` は UTF-8 でない文字列を拒否する |
 | ldap v0.11.1 | 性能のみで、結果は変わらない。印字可能な ASCII の文字列は、文字列照合ルール (RFC 4518) のために多くても 1 回の割り当てで準備され、何も変わらないときは割り当てなしで済む。4 つの RDN をもつ DN では DN パーサーの割り当ては 11 回から 6 回に減る。結果は v0.11.0 と同じで、0x80 未満の 1 バイトまたは 2 バイトのすべての文字列について v0.11.0 のコードと照合し、差分ファザーでも確かめた |
 | ldap v0.11.2 | 性能のみで、結果は変わらない。10 属性のエントリで `Validate` の割り当ては 76 回から 12 回に減る (小文字コピーなしの検索、分割して結合し直さない description、map の代わりにその場に置く集合)。結果は v0.11.1 と同じで、標準スキーマとルール付きスキーマの下でランダムなエントリについて v0.11.1 の `Validate` のコピーと照合し、差分ファザーでも確かめた |
+| ldap v0.11.3 | 性能のみで、結果は変わらない。`GoverningStructureRule` の割り当ては、アカウントで 12 回から 5 回に減る (RDN の型だけを読む)。DN パーサーは 4 つの RDN をもつ DN で 6 回から 3 回に減る。結果は v0.11.2 と同じで、ランダムなエントリとすべての上位ルールについて v0.11.2 の `GoverningStructureRule` のコピーと照合し、差分ファザーでも確かめた |
 | oidc v0.4.1 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | servercert v0.5.2 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | totp v0.4.2 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
