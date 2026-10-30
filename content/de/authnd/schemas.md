@@ -804,17 +804,19 @@ Das sind die Unterschiede, gesagt statt entdeckt:
 
 ### Was es kostet {#rules-cost}
 
-Gemessen am 29. Oktober 2026 mit `BenchmarkPublish10k` (go-authn/authnd,
-`rules_bench_test.go`, `-cpu 1`) an authnd v0.13.2, das go-authn/ldap v0.11.2
-einbettet: Das Veröffentlichen von 10.000 Personen macht **128 Allokationen
-pro Eintrag** mit den Regeln aus `testdata/rules.schema` und **85** ohne
-(v0.13.1: 364 und 239; v0.13.0: 416 und 265); ein Lauf braucht 54,8 MiB mit den
-Regeln und 33,7 MiB ohne (v0.13.1: 102,5 und 65,4; v0.13.0: 147,5 und 88,0).
-Das schließt das Verwerfen einer ausgeschlossenen Beschreibung und die erneute
-Validierung ein. Die Zeiten, etwa 90 ms gegen 55 ms (v0.13.1: 158 ms gegen
-100 ms, wenige Minuten zuvor gemessen), wurden bei einer Last von 8 bis 11
-genommen, etwas über dem, was man gelten lässt: das Verhältnis mit Vorsicht
-lesen; die Allokationszahlen sind exakt.
+Gemessen am 30. Oktober 2026 mit `BenchmarkPublish10k` (go-authn/authnd,
+`rules_bench_test.go`, `-cpu 1`) an authnd v0.13.3, das go-authn/ldap v0.11.3
+einbettet: Das Veröffentlichen von 10.000 Personen macht **97 Allokationen
+pro Eintrag** mit den Regeln aus `testdata/rules.schema` und **69** ohne
+(v0.13.2, in derselben Sitzung gemessen: 110 und 72; v0.13.0: 416 und 265); ein
+Lauf braucht 42,6 MiB mit den Regeln und 25,7 MiB ohne (v0.13.2: 45,4 und 26,5;
+v0.13.0: 147,5 und 88,0). Das schließt das Verwerfen einer ausgeschlossenen
+Beschreibung und die erneute Validierung ein. Die Zeiten, etwa 66 ms gegen
+36 ms (v0.13.2: 70 ms gegen 38 ms), sind der Median von fünf abwechselnden
+Läufen bei einer Last von 4,8: Die Regeln kosten weiterhin etwa das 1,8-Fache.
+Die zweite Validierung, die das Verwerfen der Beschreibung verlangt, und das
+zweite Lesen des DN durch die Strukturregeln gehören zu den größten
+zugeordneten Anteilen des Unterschieds.
 
 ### Upgrade {#rules-upgrade}
 

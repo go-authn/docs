@@ -804,16 +804,18 @@ These are the differences, said rather than discovered:
 
 ### What it costs {#rules-cost}
 
-Measured on 2026-10-29 with `BenchmarkPublish10k` (go-authn/authnd,
-`rules_bench_test.go`, `-cpu 1`) on authnd v0.13.2, which embeds go-authn/ldap
-v0.11.2: publishing 10,000 people makes **128 allocations per entry** with the
-rules of `testdata/rules.schema` and **85** without (v0.13.1: 364 and 239;
-v0.13.0: 416 and 265), and a run takes 54.8 MiB with the rules and 33.7 MiB
-without (v0.13.1: 102.5 and 65.4; v0.13.0: 147.5 and 88.0). This includes
-dropping a precluded description and validating again. The times, about 90 ms
-against 55 ms (v0.13.1: 158 ms against 100 ms, measured minutes earlier), were
-taken at a load of 8 to 11, a little above what is trusted: read the ratio with
-care; the allocation counts are exact.
+Measured on 2026-10-30 with `BenchmarkPublish10k` (go-authn/authnd,
+`rules_bench_test.go`, `-cpu 1`) on authnd v0.13.3, which embeds go-authn/ldap
+v0.11.3: publishing 10,000 people makes **97 allocations per entry** with the
+rules of `testdata/rules.schema` and **69** without (v0.13.2, measured in the
+same session: 110 and 72; v0.13.0: 416 and 265), and a run takes 42.6 MiB with
+the rules and 25.7 MiB without (v0.13.2: 45.4 and 26.5; v0.13.0: 147.5 and
+88.0). This includes dropping a precluded description and validating again.
+The times, about 66 ms against 36 ms (v0.13.2: 70 ms against 38 ms), are the
+median of five interleaved runs at a load of 4.8: the rules still cost about
+1.8 times as much. The second validation that dropping the description
+requires and the structure rules' second read of the DN are among the largest
+parts of the difference that were attributed.
 
 ### Upgrading {#rules-upgrade}
 

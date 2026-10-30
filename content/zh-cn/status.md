@@ -9,15 +9,15 @@ tags: [状态, 发布版本]
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.13.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.3** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
-ldap 为 **v0.11.2**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
+ldap 为 **v0.11.3**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
 directory 为 **v0.15.0**，带有已声明的对象类。authnd
-v0.13.2 内嵌 ldap v0.11.2 和 directory v0.15.0。
+v0.13.3 内嵌 ldap v0.11.3 和 directory v0.15.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
 因此读者在 `/docs/0.6/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
@@ -76,6 +76,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.13.0 | [DIT 内容规则、名称形式和 DIT 结构规则]({{< relref "/authnd/schemas.md#rules" >}})（go-authn/ldap v0.11.0）：`schema_files` 和 `schema { }` 块接受这三类定义，authnd 会强制执行它们。内容规则为每个条目塑形：其 `AUX` 未列出的辅助类被去掉（连同只有它才允许的属性），`NOT` 属性被丢弃，缺少 `MUST` 的条目被排除在外；每一项都会记入日志并由 `check` 报告。只要有一条有效的结构规则，树（后缀、`ou=people`、`ou=groups`、`uid` 或 `cn` RDN）就会在启动时和由 `check` 检查，违规会**拒绝启动**，所有拒绝一并给出，且绝不回显机密；没有规则可放置的条目被排除在外。⛔ 不是有效 UTF-8 的 `schema { }` 字符串现在会被拒绝。发布 10,000 个人员时，有规则的每个条目 416 次分配，无规则则为 265 次（耗时是在负载下测得的，不可靠） |
 | v0.13.1 | 仅优化性能，内嵌 go-authn/ldap v0.11.1：发布 10,000 个人员（`BenchmarkPublish10k`，`-cpu 1`）时，有规则的每个条目 364 次分配，无规则为 239 次（v0.13.0 为 416 和 265 次），一次运行使用规则时占用 102.5 MiB（v0.13.0 为 147.5 MiB）。耗时是在负载 10 到 16 时测得的，不可靠 |
 | v0.13.2 | 仅优化性能，内嵌 go-authn/ldap v0.11.2：对含十个属性的条目，`Validate` 的分配从 76 次降为 12 次；发布 10,000 个人员（`BenchmarkPublish10k`，`-cpu 1`）时，有规则的每个条目 128 次分配，无规则为 85 次（v0.13.1 为 364 和 239 次），一次运行使用规则时占用 54.8 MiB（v0.13.1 为 102.5 MiB）。耗时（负载 8 到 11）：有规则时约从 158 ms 降到 90 ms |
+| v0.13.3 | 仅优化性能，内嵌 go-authn/ldap v0.11.3：`unmet` 刚验证过的条目，如果没有变化，`validated` 不再重新验证；发布 10,000 个人员（`BenchmarkPublish10k`，`-cpu 1`）时，有规则的每个条目 97 次分配，无规则为 69 次（v0.13.2 为 110 和 72 次）。耗时：有规则时约从 70 ms 降到 66 ms（负载 4.8） |
 
 ### authn-bridge {#authn-bridge}
 
@@ -165,6 +166,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | ldap v0.11.0 | [DIT 内容规则、名称形式和 DIT 结构规则]({{< relref "/libraries/ldap.md#rules" >}})（RFC 4512 §4.1.6、§4.1.7）：从 `.schema` 和 LDIF 读取，由 `Format` 写出，经 HCL（`dit_content_rule`、`name_form`、`dit_structure_rule`）和 `ldapschema` 传递，由 `Build` 检查，由 `Validate` 强制执行（内容规则：AUX、MUST、MAY、NOT；名称形式：RDN；结构规则：`GoverningStructureRule`），并且仅在存在时才在 `cn=Subschema` 发布；`ValidateOptions{StrictAuxiliary}` 给出 RFC 4512 §2.4.3。⛔ slapd 只实现内容规则，因此 `Format` 写出的 `nameform` 和 `ditstructurerule` 关键字会被它拒绝；`OBSOLETE` 规则无效，而 slapd 会拒绝该条目；libldap 无法读取结构规则的 `SUP`。`hclschema.Decode` 拒绝不是 UTF-8 的字符串 |
 | ldap v0.11.1 | 仅优化性能，结果不变：由可打印 ASCII 组成的字符串在字符串匹配规则（RFC 4518）的预处理中最多只分配一次，没有变化时不分配，对于含四个 RDN 的 DN，DN 解析器的分配从 11 次降为 6 次。结果与 v0.11.0 相同，已对 0x80 以下一个或两个字节的每个字符串用 v0.11.0 的代码核对，并用差分模糊测试检验 |
 | ldap v0.11.2 | 仅优化性能，结果不变：对含十个属性的条目，`Validate` 的分配从 76 次降为 12 次（查找不再复制小写副本，描述不再拆分再拼合，用原地集合代替映射）。结果与 v0.11.1 相同，已在标准模式和带规则的模式下用随机条目对 v0.11.1 的 `Validate` 副本核对，并用差分模糊测试检验 |
+| ldap v0.11.3 | 仅优化性能，结果不变：`GoverningStructureRule` 对一个账户的分配从 12 次降为 5 次（只读取 RDN 的类型），DN 解析器对含四个 RDN 的 DN 从 6 次降为 3 次。结果与 v0.11.2 相同，已用随机条目和每条上级规则对 v0.11.2 的 `GoverningStructureRule` 副本核对，并用差分模糊测试检验 |
 | oidc v0.4.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | servercert v0.5.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | totp v0.4.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |

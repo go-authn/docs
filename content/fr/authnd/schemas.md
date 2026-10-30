@@ -811,17 +811,18 @@ d'OpenLDAP. Voici les différences, dites plutôt que découvertes :
 
 ### Ce que cela coûte {#rules-cost}
 
-Mesuré le 2026-10-29 avec `BenchmarkPublish10k` (go-authn/authnd,
-`rules_bench_test.go`, `-cpu 1`) sur authnd v0.13.2, qui embarque go-authn/ldap
-v0.11.2 : publier 10 000 personnes fait **128 allocations par entrée** avec les
-règles de `testdata/rules.schema` et **85** sans (v0.13.1 : 364 et 239 ;
-v0.13.0 : 416 et 265), et une exécution occupe 54,8 Mio avec les règles et
-33,7 Mio sans (v0.13.1 : 102,5 et 65,4 ; v0.13.0 : 147,5 et 88,0). Cela inclut
-le retrait d'une description exclue et une nouvelle validation. Les durées,
-environ 90 ms contre 55 ms (v0.13.1 : 158 ms contre 100 ms, mesurées quelques
-minutes plus tôt), ont été prises sous une charge de 8 à 11, un peu au-dessus de
-ce qu'on tient pour fiable : lire le rapport avec prudence ; les nombres
-d'allocations sont exacts.
+Mesuré le 2026-10-30 avec `BenchmarkPublish10k` (go-authn/authnd,
+`rules_bench_test.go`, `-cpu 1`) sur authnd v0.13.3, qui embarque go-authn/ldap
+v0.11.3 : publier 10 000 personnes fait **97 allocations par entrée** avec les
+règles de `testdata/rules.schema` et **69** sans (v0.13.2, mesuré dans la même
+séance : 110 et 72 ; v0.13.0 : 416 et 265), et une exécution occupe 42,6 Mio
+avec les règles et 25,7 Mio sans (v0.13.2 : 45,4 et 26,5 ; v0.13.0 : 147,5 et
+88,0). Cela inclut le retrait d'une description exclue et une nouvelle
+validation. Les durées, environ 66 ms contre 36 ms (v0.13.2 : 70 ms contre
+38 ms), sont la médiane de cinq exécutions entrelacées sous une charge de 4,8 :
+les règles coûtent encore environ 1,8 fois plus. La seconde validation que
+demande le retrait de la description et la seconde lecture du DN par les règles
+de structure figurent parmi les plus grandes parts attribuées de l'écart.
 
 ### Mise à niveau {#rules-upgrade}
 
