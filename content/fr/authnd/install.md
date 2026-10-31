@@ -161,6 +161,8 @@ Pourquoi ce répertoire et pas le fichier est expliqué dans
 | `base_dn` | — (obligatoire) | la racine de l'arbre, par exemple `dc=example,dc=org` ; une valeur sans `=` est refusée |
 | `listen` | `127.0.0.1:3893` | une seule adresse. Boucle locale par défaut : un annuaire qui apparaît sur toutes les interfaces dès qu'il démarre est une décision que quelqu'un devrait prendre exprès. Un site qui a besoin de LDAP et de LDAPS lance deux instances |
 | `reader "<dn>"` | aucun | un compte de service qui peut chercher ; voir [qui peut lire]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
+| `refresh` | `60s` | à quelle fréquence chaque source est relue ; `0` le désactive ; voir [l'exploiter]({{< relref "/authnd/operations.md" >}}) |
+| `max_age` | non défini | refuser les données périmées (`unavailable`) dès que les données servies sont plus anciennes ; voir [l'exploiter]({{< relref "/authnd/operations.md" >}}) |
 | `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | désactivé | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [les personnes]({{< relref "/authnd/people.md" >}}) ; au moins un bloc `user` ou `users` |
 | `kerberos` | aucun | [un royaume]({{< relref "/authnd/kerberos.md" >}}) |

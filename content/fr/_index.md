@@ -18,7 +18,7 @@ Ces pages décrivent les versions listées sur la [page d'état]({{< relref "/st
 
 | | ce que c'est | ces pages décrivent |
 |---|---|---|
-| [authnd]({{< relref "/authnd/_index.md" >}}) | un serveur LDAP, et éventuellement un royaume Kerberos, pour des personnes qui vivent ailleurs : un fichier, une base de données SQL, un autre annuaire | v0.13.4 |
+| [authnd]({{< relref "/authnd/_index.md" >}}) | un serveur LDAP, et éventuellement un royaume Kerberos, pour des personnes qui vivent ailleurs : un fichier, une base de données SQL, un autre annuaire | v0.14.0 |
 | [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | un fournisseur OpenID Connect devant une fédération SAML (RENATER, eduGAIN), qui émet aussi des certificats SSH et signe les listes qui les révoquent | v0.23.4 |
 | [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | récupère ces listes, vérifie chacune avant qu'un serveur ne la lise, et refuse en cas de doute quand l'une d'elles expire | v0.6.6 |
 | [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`, à qui sshd demande si la délégation de domaine d'un certificat nomme cet hôte | v0.1.9 |

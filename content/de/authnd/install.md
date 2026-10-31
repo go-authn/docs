@@ -159,6 +159,8 @@ Warum dieses Verzeichnis und nicht die Datei, erklärt
 | `base_dn` | – (erforderlich) | die Wurzel des Baums, z. B. `dc=example,dc=org`; ein Wert ohne `=` wird abgelehnt |
 | `listen` | `127.0.0.1:3893` | eine Adresse. Standardmäßig Loopback: Ein Verzeichnis, das auf jeder Schnittstelle erscheint, sobald es startet, ist eine Entscheidung, die jemand bewusst treffen sollte. Ein Standort, der LDAP und LDAPS braucht, betreibt zwei Instanzen |
 | `reader "<dn>"` | keiner | ein Dienstkonto, das suchen darf; siehe [wer lesen darf]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
+| `refresh` | `60s` | wie oft jede Quelle erneut gelesen wird; `0` schaltet es ab; siehe [Betrieb]({{< relref "/authnd/operations.md" >}}) |
+| `max_age` | nicht gesetzt | veraltete Daten verweigern (`unavailable`), sobald die ausgelieferten Daten älter sind; siehe [Betrieb]({{< relref "/authnd/operations.md" >}}) |
 | `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | aus | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | – | [die Personen]({{< relref "/authnd/people.md" >}}); mindestens ein `user`- oder `users`-Block |
 | `kerberos` | keiner | [ein Realm]({{< relref "/authnd/kerberos.md" >}}) |

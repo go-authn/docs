@@ -8,8 +8,8 @@ tags: [authnd, operación, señales, systemd]
 
 ## Lo lee todo una sola vez {#it-reads-everything-once}
 
-Los archivos de configuración, todos los orígenes que hay detrás, el certificado TLS
-y la keytab se leen **al arrancar**. No hay recarga, y la unidad empaquetada no tiene
+Los archivos de configuración, el certificado TLS y la keytab se leen
+**al arrancar**. No hay recarga, y la unidad empaquetada no tiene
 `ExecReload=`. Después de cambiar cualquiera de ellos:
 
 ```sh
@@ -17,16 +17,20 @@ sudo -u authnd authnd check /etc/authnd
 sudo systemctl restart authnd
 ```
 
-Lo único que se aplica mientras se ejecuta es una
+Aparte de los orígenes (véase abajo), lo único que se aplica mientras se ejecuta es una
 [contraseña que una persona cambia a través de authnd]({{< relref "/authnd/passwords.md" >}}),
 que vuelve a leer los bloques `user` y nada más.
 
-Eso incluye los **grupos**. Una búsqueda no consulta ninguna base de datos: un
-cambio de un grupo en una base se recoge con un reinicio, y una base que falla
-mientras authnd se ejecuta no cambia ninguna respuesta. (Antes de v0.13.4 cada
-búsqueda volvía a consultar los grupos —4,13 s por búsqueda con 200 grupos en
-SQLite— y una consulta que fallaba quitaba el grupo de una respuesta que aun así
-decía Success.) Un origen que no se puede leer al arrancar, como una consulta de
+Los orígenes son la excepción a «se lee una vez». Las personas y los grupos se
+vuelven a leer en cada `refresh` (60 s por defecto; `refresh = "0"` lo desactiva)
+en una instantánea nueva construida fuera de la ruta de servicio e intercambiada
+de forma atómica, de modo que una persona o un miembro de grupo retirado desaparece
+en un periodo, sin reiniciar. (v0.13.4 los leía una vez y exigía reiniciar para un
+cambio en un grupo.) Un refresco fallido conserva los últimos datos buenos y se
+registra una vez por racha de fallos, nombrando el origen. Donde la revocación
+importa, defina `max_age` (por ejemplo `"10m"`): cuando los datos son más antiguos,
+las búsquedas, los binds de las personas y los cambios de contraseña responden
+`unavailable` (52) en lugar de datos obsoletos. Un origen que no se puede leer al arrancar, como una consulta de
 grupos que no se ejecuta o una de varias bases caída, rechaza el arranque y
 `check`, nombrando el origen y el grupo. Una entrada demasiado grande para un
 mensaje LDAP (unos 3 MiB, que basta un solo valor de atributo de 10 MB para

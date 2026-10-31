@@ -161,6 +161,8 @@ Why that directory and not the file is explained in
 | `base_dn` | — (required) | the root of the tree, e.g. `dc=example,dc=org`; a value with no `=` is refused |
 | `listen` | `127.0.0.1:3893` | one address. Loopback by default: a directory that appears on every interface the moment it starts is a decision somebody should make on purpose. A site that needs LDAP and LDAPS runs two instances |
 | `reader "<dn>"` | none | a service account that may search; see [who may read]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
+| `refresh` | `60s` | how often every source is read again; `0` turns it off; see [running it]({{< relref "/authnd/operations.md" >}}) |
+| `max_age` | unset | refuse stale data (`unavailable`) once the served data is older; see [running it]({{< relref "/authnd/operations.md" >}}) |
 | `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | off | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [the people]({{< relref "/authnd/people.md" >}}); at least one `user` or `users` block |
 | `kerberos` | none | [a realm]({{< relref "/authnd/kerberos.md" >}}) |

@@ -161,6 +161,8 @@ ReadWritePaths=/etc/authnd/passwords
 | `base_dn` | —（必需） | 树的根，例如 `dc=example,dc=org`；不含 `=` 的值会被拒绝 |
 | `listen` | `127.0.0.1:3893` | 一个地址。默认环回：目录一启动就出现在每个接口上，这是应当有人有意作出的决定。需要 LDAP 和 LDAPS 的站点运行两个实例 |
 | `reader "<dn>"` | 无 | 可以搜索的服务账户；参见[谁可以读取]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
+| `refresh` | `60s` | 每个来源被重新读取的频率；`0` 表示关闭；参见[运行]({{< relref "/authnd/operations.md" >}}) |
+| `max_age` | 未设置 | 一旦所提供的数据比它更旧就拒绝过期数据（`unavailable`）；参见[运行]({{< relref "/authnd/operations.md" >}}) |
 | `cert_file`、`key_file`、`starttls`、`publish_nt_hash`、`samba` | 关闭 | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`、`group`、`users` | — | [人员]({{< relref "/authnd/people.md" >}})；至少一个 `user` 或 `users` 块 |
 | `kerberos` | 无 | [域]({{< relref "/authnd/kerberos.md" >}}) |

@@ -164,6 +164,8 @@ Por qué ese directorio y no el archivo se explica en
 | `base_dn` | — (obligatorio) | la raíz del árbol, p. ej. `dc=example,dc=org`; un valor sin `=` se rechaza |
 | `listen` | `127.0.0.1:3893` | una dirección. Loopback por defecto: un directorio que aparece en todas las interfaces en cuanto arranca es una decisión que alguien debería tomar a propósito. Un sitio que necesita LDAP y LDAPS ejecuta dos instancias |
 | `reader "<dn>"` | ninguno | una cuenta de servicio que puede buscar; consulte [quién puede leer]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
+| `refresh` | `60s` | con qué frecuencia se vuelve a leer cada origen; `0` lo desactiva; consulte [ponerlo en marcha]({{< relref "/authnd/operations.md" >}}) |
+| `max_age` | sin definir | rechazar los datos obsoletos (`unavailable`) cuando los datos servidos son más antiguos; consulte [ponerlo en marcha]({{< relref "/authnd/operations.md" >}}) |
 | `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | desactivado | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [las personas]({{< relref "/authnd/people.md" >}}); al menos un bloque `user` o `users` |
 | `kerberos` | ninguno | [un reino]({{< relref "/authnd/kerberos.md" >}}) |

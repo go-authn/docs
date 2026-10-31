@@ -306,13 +306,15 @@ authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database)
 ```
 {{< /callout >}}
 
-## Lues une fois {#read-once}
+## Lues au démarrage, puis à chaque rafraîchissement {#read-once}
 
-Chaque source est lue **une fois, au démarrage**. Une personne ajoutée à la base de données, ou
-une appartenance modifiée dans l'annuaire derrière celui-ci, est servie après un
-redémarrage, pas avant. Cela inclut une colonne de mot de passe dans une base de données : elle est
-lue avec le reste de la ligne. Un annuaire derrière celui-ci ne diffère qu'en ce
+Chaque source est lue **au démarrage, puis de nouveau à chaque `refresh`**. Une personne ajoutée à
+la base de données ou retirée, ou une appartenance modifiée dans l'annuaire derrière celui-ci,
+est servie en une période, sans redémarrage. Cela inclut une colonne de mot de passe dans une
+base de données : elle est lue avec la ligne. Un annuaire derrière celui-ci ne diffère qu'en ce
 qu'une liaison est vérifiée en s'y liant, si bien qu'un mot de passe changé *là-bas* est
-celui qui fonctionne. L'autre exception est un mot de passe qu'une personne change par
-authnd lui-même, qui est [appliqué aussitôt]({{< relref "/authnd/passwords.md" >}}).
-Il n'y a pas de rechargement ; voir [le faire tourner]({{< relref "/authnd/operations.md" >}}).
+celui qui fonctionne. Un mot de passe qu'une personne change par
+authnd lui-même est [appliqué aussitôt]({{< relref "/authnd/passwords.md" >}}).
+Un rafraîchissement qui échoue garde les dernières bonnes données, et `max_age` dit quand cesser
+de les servir ; voir [le faire tourner]({{< relref "/authnd/operations.md" >}}). Les fichiers de
+configuration, le certificat et la keytab exigent toujours un redémarrage.

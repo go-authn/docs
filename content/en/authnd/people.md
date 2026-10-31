@@ -302,13 +302,15 @@ authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database)
 ```
 {{< /callout >}}
 
-## Read once
+## Read at start, then every refresh {#read-once}
 
-Every source is read **once, at startup**. A person added to the database, or
-a membership changed in the directory behind this one, is served after a
-restart, not before. That includes a password column in a database: it is
-read with the rest of the row. A directory behind this one is different only
-in that a bind is checked by binding to it, so a password changed *there* is
-the one that works. The other exception is a password a person changes through
-authnd itself, which is [applied at once]({{< relref "/authnd/passwords.md" >}}).
-There is no reload; see [running it]({{< relref "/authnd/operations.md" >}}).
+Every source is read **at startup and again every `refresh`**. A person added
+to or removed from the database, or a membership changed in the directory
+behind this one, is served within one period, with no restart. That includes a
+password column in a database: it is read with the row. A directory behind this
+one is different only in that a bind is checked by binding to it, so a password
+changed *there* is the one that works. A password a person changes through
+authnd itself is [applied at once]({{< relref "/authnd/passwords.md" >}}).
+A refresh that fails keeps the last good data, and `max_age` says when to stop
+serving it; see [running it]({{< relref "/authnd/operations.md" >}}). The
+configuration files, the certificate and the keytab still need a restart.
