@@ -21,6 +21,18 @@ Lo único que se aplica mientras se ejecuta es una
 [contraseña que una persona cambia a través de authnd]({{< relref "/authnd/passwords.md" >}}),
 que vuelve a leer los bloques `user` y nada más.
 
+Eso incluye los **grupos**. Una búsqueda no consulta ninguna base de datos: un
+cambio de un grupo en una base se recoge con un reinicio, y una base que falla
+mientras authnd se ejecuta no cambia ninguna respuesta. (Antes de v0.13.4 cada
+búsqueda volvía a consultar los grupos —4,13 s por búsqueda con 200 grupos en
+SQLite— y una consulta que fallaba quitaba el grupo de una respuesta que aun así
+decía Success.) Un origen que no se puede leer al arrancar, como una consulta de
+grupos que no se ejecuta o una de varias bases caída, rechaza el arranque y
+`check`, nombrando el origen y el grupo. Una entrada demasiado grande para un
+mensaje LDAP (unos 3 MiB, que basta un solo valor de atributo de 10 MB para
+alcanzar) no se publica, y se dice al arrancar y con `check`, como una entrada
+que no cumple el esquema.
+
 ## Señales {#signals}
 
 | señal | qué ocurre |

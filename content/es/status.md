@@ -9,7 +9,7 @@ Estas páginas son la versión **0.6** de la documentación, y describen:
 
 | programa | versión | módulo |
 |---|---|---|
-| authnd | **v0.13.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.4** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap está en la **v0.11.3**, con reglas de contenido DIT, formas de nombre y
 reglas de estructura DIT leídas, aplicadas y publicadas, un `BuildError` tipado
 para un esquema que no se construye, los esquemas en HCL2 y el conversor
 `ldapschema`, y directory en la **v0.15.0**, con clases de objeto declaradas.
-authnd v0.13.3 incorpora ldap v0.11.3 y directory v0.15.0.
+authnd v0.13.4 incorpora ldap v0.11.3 y directory v0.15.0.
 Una nueva versión menor de cualquiera de los programas anteriores es una nueva
 versión de la documentación, de modo que las páginas que alguien encuentra bajo
 `/docs/0.6/` siguen describiendo lo que instaló; las de las versiones anteriores
@@ -80,6 +80,7 @@ que solo actualizaron dependencias, salvo las que describe esta versión de la d
 | v0.13.1 | Solo rendimiento, con go-authn/ldap v0.11.1: publicar 10 000 personas (`BenchmarkPublish10k`, `-cpu 1`) hace 364 asignaciones por entrada con las reglas y 239 sin ellas, frente a 416 y 265 en la v0.13.0, y 102,5 MiB por ejecución con las reglas frente a 147,5. Los tiempos se midieron con una carga de 10 a 16 y no son fiables |
 | v0.13.2 | Solo rendimiento, con go-authn/ldap v0.11.2: `Validate` hace 12 asignaciones en lugar de 76 para una entrada de diez atributos; publicar 10 000 personas (`BenchmarkPublish10k`, `-cpu 1`) hace 128 asignaciones por entrada con las reglas y 85 sin ellas, frente a 364 y 239 en la v0.13.1, y 54,8 MiB por ejecución con las reglas frente a 102,5. Tiempos (carga de 8 a 11): unos 90 ms frente a 158 ms con las reglas |
 | v0.13.3 | Solo rendimiento, con go-authn/ldap v0.11.3: una entrada que `unmet` acaba de validar no la vuelve a validar `validated` si no ha cambiado; publicar 10 000 personas (`BenchmarkPublish10k`, `-cpu 1`) hace 97 asignaciones por entrada con las reglas y 69 sin ellas, frente a 128 y 85 en la v0.13.2 (−24 % y −19 %); unos 66 ms y 36 ms (carga 4,8) |
+| v0.13.4 | Una pasada de caos. Los grupos se leen una vez, al arrancar, como las personas: una búsqueda sobre 500 personas y 200 grupos de 50 en SQLite tardaba 4,13 s (cada búsqueda volvía a consultar los grupos) y tarda 1,2 ms, y una consulta de grupos que fallaba durante una búsqueda ya no quita el grupo de una respuesta que dice Success. Un origen que no se puede leer al arrancar (una consulta de grupos que no se ejecuta, una de varias bases caída) rechaza el arranque y `check`. Una entrada de más de unos 3 MiB (un solo valor de atributo de 10 MB) no se publica. La publicación se construye una vez por conjunto de personas. Resiste, con pruebas: archivos de esquema cortados en cada byte, una base eliminada o corrupta, filas hostiles, conexiones inactivas, longitudes BER desmesuradas, filtros anidados a 20 000 niveles |
 
 ### authn-bridge {#authn-bridge}
 

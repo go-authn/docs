@@ -9,7 +9,7 @@ Ces pages sont la version **0.6** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
-| authnd | **v0.13.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.13.4** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap est en **v0.11.3**, avec les règles de contenu DIT, les formes de noms et
 les règles de structure DIT lues, appliquées et publiées, une `BuildError` typée
 pour un schéma qui ne se construit pas, les schémas en HCL2 et le convertisseur
 `ldapschema`, et directory en **v0.15.0**, avec les classes d'objet déclarées.
-authnd v0.13.3 embarque ldap v0.11.3 et directory v0.15.0.
+authnd v0.13.4 embarque ldap v0.11.3 et directory v0.15.0.
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
 de sorte que les pages qu'une personne trouve sous `/docs/0.6/` continuent de décrire ce
 qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`,
@@ -79,6 +79,7 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.13.1 | Performance seulement, avec go-authn/ldap v0.11.1 : publier 10 000 personnes (`BenchmarkPublish10k`, `-cpu 1`) fait 364 allocations par entrée avec les règles et 239 sans, contre 416 et 265 en v0.13.0, et 102,5 Mio par exécution avec les règles contre 147,5. Les durées ont été mesurées sous une charge de 10 à 16 et ne sont pas fiables |
 | v0.13.2 | Performance seulement, avec go-authn/ldap v0.11.2 : `Validate` fait 12 allocations au lieu de 76 pour une entrée de dix attributs ; publier 10 000 personnes (`BenchmarkPublish10k`, `-cpu 1`) fait 128 allocations par entrée avec les règles et 85 sans, contre 364 et 239 en v0.13.1, et 54,8 Mio par exécution avec les règles contre 102,5. Durées (charge de 8 à 11) : environ 90 ms contre 158 ms avec les règles |
 | v0.13.3 | Performance seulement, avec go-authn/ldap v0.11.3 : une entrée que `unmet` vient de valider n'est pas validée à nouveau par `validated` si elle n'a pas changé ; publier 10 000 personnes (`BenchmarkPublish10k`, `-cpu 1`) fait 97 allocations par entrée avec les règles et 69 sans, contre 128 et 85 en v0.13.2 (−24 % et −19 %) ; environ 66 ms et 36 ms (charge 4,8) |
+| v0.13.4 | Un passage de chaos. Les groupes sont lus une fois, au démarrage, comme les personnes : une recherche sur 500 personnes et 200 groupes de 50 avec SQLite prenait 4,13 s (chaque recherche interrogeait de nouveau les groupes) et prend 1,2 ms, et une requête de groupes qui échouait pendant une recherche ne retire plus le groupe d'une réponse qui dit Success. Une source illisible au démarrage (une requête de groupes qui ne s'exécute pas, l'une de plusieurs bases hors service) refuse le démarrage et `check`. Une entrée de plus d'environ 3 Mio (une seule valeur d'attribut de 10 Mo) n'est pas publiée. La publication est construite une fois par ensemble de personnes. Tenu, avec des tests : fichiers de schéma coupés à chaque octet, base supprimée ou corrompue, lignes hostiles, connexions inactives, longueurs BER démesurées, filtres imbriqués sur 20 000 niveaux |
 
 ### authn-bridge {#authn-bridge}
 

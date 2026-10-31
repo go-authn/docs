@@ -21,6 +21,17 @@ The one thing applied while it runs is a
 [password a person changes through authnd]({{< relref "/authnd/passwords.md" >}}),
 which re-reads the `user` blocks and nothing else.
 
+That includes the **groups**. A search asks no database anything, so a change
+to a group in a database is picked up by a restart, and a database that breaks
+while authnd runs changes no answer. (Before v0.13.4 every search queried the
+groups again — 4.13 s a search over 200 groups on SQLite — and a query that
+failed dropped the group from an answer that still said Success.) A source that
+cannot be read at start, such as a groups query that does not run or one of
+several databases being down, refuses the start and `check`, naming the source
+and the group. An entry too large for one LDAP message (about 3 MiB, which one
+10 MB attribute value is enough to reach) is not published, and is said at
+start and by `check`, like an entry that fails the schema.
+
 ## Signals
 
 | signal | what happens |

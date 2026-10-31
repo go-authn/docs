@@ -21,6 +21,19 @@ La seule chose appliquée pendant qu'il tourne est un
 [mot de passe qu'une personne change via authnd]({{< relref "/authnd/passwords.md" >}}),
 qui relit les blocs `user` et rien d'autre.
 
+Cela inclut les **groupes**. Une recherche n'interroge aucune base de données :
+un changement de groupe dans une base est pris en compte par un redémarrage, et
+une base qui tombe pendant que authnd tourne ne change aucune réponse. (Avant
+v0.13.4, chaque recherche interrogeait de nouveau les groupes — 4,13 s par
+recherche sur 200 groupes avec SQLite — et une requête en échec retirait le
+groupe d'une réponse qui disait pourtant Success.) Une source illisible au
+démarrage, par exemple une requête de groupes qui ne s'exécute pas ou l'une de
+plusieurs bases hors service, refuse le démarrage et `check`, en nommant la
+source et le groupe. Une entrée trop grande pour un message LDAP (environ
+3 Mio, qu'une seule valeur d'attribut de 10 Mo suffit à atteindre) n'est pas
+publiée, et c'est dit au démarrage et par `check`, comme pour une entrée qui
+échoue au schéma.
+
 ## Signaux {#signals}
 
 | signal | ce qui se passe |
