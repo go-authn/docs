@@ -5,7 +5,7 @@ se lie et cherche sur les sources de &lt;a href="https://go-authn.github.io/docs
 interroger un annuaire. Pur Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un seul binaire. Ces pages décrivent
 la v0.13.0, dont les entrées suivent les schémas standard et respectent le schéma
 qu&amp;rsquo;elle sert à &lt;code&gt;cn=Subschema&lt;/code&gt;, qu&amp;rsquo;un site étend avec le sien(&lt;a href="https://go-authn.github.io/docs/0.6/fr/authnd/schemas/"&gt;SUPANN, eduPerson&lt;/a&gt;) et façonne grâce aux&lt;a href="https://go-authn.github.io/docs/0.6/fr/authnd/schemas/#rules"&gt;règles de contenu DIT, formes de noms et règles de structure&lt;/a&gt;,avec go-authn/ldap v0.11.0 et
-go-authn/directory v0.15.0 en dessous ; ce qui est vérifié et ce qui ne l&amp;rsquo;est pas figure sur la
+go-authn/directory v0.16.0 en dessous ; ce qui est vérifié et ce qui ne l&amp;rsquo;est pas figure sur la
 page &lt;a href="https://go-authn.github.io/docs/0.6/fr/status/"&gt;état&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
@@ -2390,7 +2390,7 @@ MUST de &lt;code&gt;supannPerson&lt;/code&gt; ou d&amp;rsquo;&lt;code&gt;eduPers
 tenue en mémoire, une base de données SQL, un serveur LDAP, ou des blocs &lt;code&gt;user&lt;/code&gt; et &lt;code&gt;group&lt;/code&gt; dans un
 fichier de configuration — et ce qui compte, c&amp;rsquo;est la seconde moitié de la question.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/directory@v0.15.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/directory@v0.16.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copier le code"
@@ -2487,7 +2487,8 @@ méthode :&lt;/p&gt;
 de service écrit localement n&amp;rsquo;a pas besoin d&amp;rsquo;être mis dans LDAP. L&amp;rsquo;appartenance aux groupes est
 l&amp;rsquo;&lt;strong&gt;union&lt;/strong&gt; de toutes les sources. Les sources sont lues au démarrage d&amp;rsquo;un serveur ; une vérification
 de mot de passe peut atteindre la source à chaque fois, parce qu&amp;rsquo;une liaison ne peut pas être mise en cache
-sans détenir le secret.&lt;/p&gt;
+sans détenir le secret. Une source qui implémente &lt;code&gt;GroupReader&lt;/code&gt; (sqldir et ldapdir
+le font) lit tous les groupes une seule fois, en bloc ; &lt;code&gt;Set.Frozen()&lt;/code&gt; répond alors à&lt;code&gt;Members&lt;/code&gt;, &lt;code&gt;GroupAttributes&lt;/code&gt;, &lt;code&gt;GroupObjectClasses&lt;/code&gt; et &lt;code&gt;GroupNames&lt;/code&gt; depuis la mémoire,avec la fusion propre au Set. Fermez le Set d&amp;rsquo;origine, pas le Set figé.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;hcldir&lt;/code&gt; ne décode pas le HCL : l&amp;rsquo;appelant décode le bloc et le lui remet.Il n&amp;rsquo;importe HCL que pour écrire, pour &lt;code&gt;SetPassword&lt;/code&gt;. Les étiquettes de compilation &lt;code&gt;nosql&lt;/code&gt; et&lt;code&gt;noldap&lt;/code&gt; retirent entièrement un type de source de &lt;code&gt;hcldir&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="example"&gt;Exemple&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
 &lt;a href="#example" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
