@@ -16,7 +16,7 @@ v0.13.0을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르�
 확장할 수 있고([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})),
 [DIT 콘텐츠 규칙, 이름 형식, 구조 규칙]({{< relref "/authnd/schemas.md#rules" >}})으로
 엔트리의 형태까지 정할 수 있습니다. 그 아래에는
-go-authn/ldap v0.11.0과 go-authn/directory v0.15.0이 있습니다. 무엇이 검증되었고
+go-authn/ldap v0.11.0과 go-authn/directory v0.16.0이 있습니다. 무엇이 검증되었고
 무엇이 아닌지는 [상태]({{< relref "/status.md" >}}) 페이지에 있습니다.
 
 {{< callout type="warning" >}}

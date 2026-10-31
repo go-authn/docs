@@ -17,7 +17,7 @@ cuyas entradas siguen los esquemas estándar y superan el esquema que sirve en
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) y, con
 [reglas de contenido DIT, formas de nombre y reglas de estructura DIT]({{< relref "/authnd/schemas.md#rules" >}}),
 da forma a las entradas, con go-authn/ldap v0.11.0 y
-go-authn/directory v0.15.0 por debajo; lo que está verificado y lo que no
+go-authn/directory v0.16.0 por debajo; lo que está verificado y lo que no
 figura en la página de [estado]({{< relref "/status.md" >}}).
 
 {{< callout type="warning" >}}

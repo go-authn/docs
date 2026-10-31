@@ -9,7 +9,7 @@ These pages are documentation version **0.6**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.14.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.14.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -18,8 +18,8 @@ The libraries' versions are on [their own page]({{< relref "/libraries/_index.md
 ldap is **v0.11.3**, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed `BuildError` for a schema that does
 not build, schemas in HCL2 and the `ldapschema` converter, and
-directory **v0.15.0**, with declared object classes. authnd
-v0.14.0 embeds ldap v0.11.3 and directory v0.15.0.
+directory **v0.16.0**, with declared object classes. authnd
+v0.14.1 embeds ldap v0.11.3 and directory v0.16.0.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.6/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
@@ -80,7 +80,8 @@ dependencies are left out, except those this documentation version describes.
 | v0.13.2 | Performance only, with go-authn/ldap v0.11.2: `Validate` makes 12 allocations instead of 76 for a ten attribute entry; publishing 10,000 people (`BenchmarkPublish10k`, `-cpu 1`) makes 128 allocations per entry with the rules and 85 without, against 364 and 239 at v0.13.1, and 54.8 MiB per run with the rules against 102.5. Times (load 8 to 11): about 90 ms against 158 ms with the rules |
 | v0.13.3 | Performance only, with go-authn/ldap v0.11.3: an entry `unmet` has just validated is not validated again by `validated` when it has not changed; publishing 10,000 people (`BenchmarkPublish10k`, `-cpu 1`) makes 97 allocations per entry with the rules and 69 without, against 128 and 85 at v0.13.2 (-24 % and -19 %); about 66 ms and 36 ms (load 4.8) |
 | v0.13.4 | A chaos pass. Groups are read once, at start, like the people: a search over 500 people and 200 groups of 50 on SQLite took 4.13 s (every search queried the groups again) and takes 1.2 ms, and a groups query that failed during a search no longer drops the group from an answer that says Success. A source that cannot be read at start (a groups query that does not run, one of several databases down) refuses the start and `check`. An entry over about 3 MiB (one 10 MB attribute value) is not published. The publication is built once per set of people. Held, with tests: schema files cut at every byte offset, a removed or corrupt database, hostile rows, idle connections, oversized BER lengths, filters 20,000 deep |
-| v0.14.0 | Changed: v0.13.4 required a restart for a change to a group, so a member removed from a database kept the access until somebody restarted authnd. v0.14.0 restores timely revocation. `refresh` (60 s by default, `0` turns it off) re-reads every source, people and groups, into a new snapshot built off the serving path and swapped in whole; a failed refresh keeps the last good snapshot and is logged once per failure streak, naming the source. `max_age` (unset by default) makes searches, people's binds and password changes answer `unavailable` once the served data is older. A password written through authnd goes through the same swap. Measured: a refresh of 500 people and 200 groups of 50 on SQLite costs about 2 s of one core, and a search 0.5 ms |
+| v0.14.0 | Changed: v0.13.4 required a restart for a change to a group, so a member removed from a database kept the access until somebody restarted authnd. v0.14.0 restores timely revocation. `refresh` (60 s by default, `0` turns it off) re-reads every source, people and groups, into a new snapshot built off the serving path and swapped in whole; a failed refresh keeps the last good snapshot and is logged once per failure streak, naming the source. `max_age` (unset by default) makes searches, people's binds and password changes answer `unavailable` once the served data is older. A password written through authnd goes through the same swap. Measured: a refresh of 500 people and 200 groups of 50 on SQLite costs about 2 s of one core, and a search 0.5 ms (the refresh cost is fixed in v0.14.1) |
+| v0.14.1 | Performance only. A refresh no longer grows with groups times membership rows: directory v0.16.0 reads each source once, in bulk. A refresh of 500 people and 200 groups of 50 on SQLite goes from 1.87 s to 0.155 s, and one of 10,000 people and 2,000 groups from 391 s (six and a half refresh periods) to 1.6 s (2.7 % of the 60 s period). Allocations fall from 39,959,235 to 3,095,482 and from 6,373,736,235 to 31,198,460. Times were measured at a load of 17 to 67 and are indicative; the allocation counts are exact |
 
 ### authn-bridge
 

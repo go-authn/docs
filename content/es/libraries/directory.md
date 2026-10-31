@@ -11,7 +11,7 @@ en memoria, una base de datos SQL, un servidor LDAP, o bloques `user` y `group` 
 archivo de configuración; y lo que importa es la segunda mitad de la pregunta.
 
 ```sh
-go get github.com/go-authn/directory@v0.15.0
+go get github.com/go-authn/directory@v0.16.0
 ```
 
 ## Lo que prueba a alguien no es una sola cosa {#what-proves-somebody-is-not-one-thing}
@@ -50,7 +50,10 @@ En un `Set`, el **primer** origen que conoce un nombre se lo queda, así que una
 de servicio anotada localmente no tiene por qué ponerse en LDAP. La pertenencia a
 grupos es la **unión** de todos los orígenes. Los orígenes se leen cuando arranca un
 servidor; una comprobación de contraseña puede llegar al origen cada vez, porque un
-bind no puede guardarse en caché sin guardar el secreto.
+bind no puede guardarse en caché sin guardar el secreto. Un origen que implementa `GroupReader` (sqldir y ldapdir lo
+hacen) lee todos los grupos una sola vez, en bloque; `Set.Frozen()` responde entonces a
+`Members`, `GroupAttributes`, `GroupObjectClasses` y `GroupNames` desde la memoria,
+con la propia fusión del Set. Cierre el Set original, no el congelado.
 
 `hcldir` no decodifica HCL: el llamante decodifica el bloque y se lo entrega. Solo
 importa HCL para escribir, para `SetPassword`. Las etiquetas de compilación `nosql` y
