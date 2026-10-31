@@ -21,6 +21,19 @@ Das Einzige, was im laufenden Betrieb angewendet wird, ist ein
 [Passwort, das eine Person über authnd ändert]({{< relref "/authnd/passwords.md" >}});
 es liest die `user`-Blöcke erneut und sonst nichts.
 
+Dazu gehören die **Gruppen**. Eine Suche fragt keine Datenbank etwas: Eine
+Änderung an einer Gruppe in einer Datenbank wird durch einen Neustart
+übernommen, und eine Datenbank, die ausfällt, während authnd läuft, ändert
+keine Antwort. (Vor v0.13.4 fragte jede Suche die Gruppen erneut ab — 4,13 s
+pro Suche bei 200 Gruppen mit SQLite —, und eine fehlgeschlagene Abfrage ließ
+die Gruppe aus einer Antwort fallen, die dennoch Success meldete.) Eine Quelle,
+die beim Start nicht gelesen werden kann, etwa eine Gruppenabfrage, die nicht
+läuft, oder eine von mehreren ausgefallenen Datenbanken, verweigert den Start
+und `check` und nennt die Quelle und die Gruppe. Ein Eintrag, der für eine
+LDAP-Nachricht zu groß ist (etwa 3 MiB, was ein einziger 10-MB-Attributwert
+erreicht), wird nicht veröffentlicht; das wird beim Start und von `check`
+gemeldet, wie bei einem Eintrag, der das Schema verletzt.
+
 ## Signale {#signals}
 
 | Signal | was geschieht |
