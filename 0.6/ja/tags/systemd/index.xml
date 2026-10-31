@@ -701,6 +701,16 @@ data-copied-label="コピーしました！"
 &lt;td&gt;検索できるサービスアカウント。&lt;a href="https://go-authn.github.io/docs/0.6/ja/authnd/#who-may-bind-and-who-may-read"&gt;誰が読めるか&lt;/a&gt;を参照&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
+&lt;td&gt;&lt;code&gt;refresh&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;60s&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;すべてのソースを読み直す間隔。&lt;code&gt;0&lt;/code&gt; で無効。&lt;a href="https://go-authn.github.io/docs/0.6/ja/authnd/operations/"&gt;運用&lt;/a&gt;を参照&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;max_age&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;未設定&lt;/td&gt;
+&lt;td&gt;提供中のデータがこれより古くなったら、古いデータを拒否 (&lt;code&gt;unavailable&lt;/code&gt;)。&lt;a href="https://go-authn.github.io/docs/0.6/ja/authnd/operations/"&gt;運用&lt;/a&gt;を参照&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
 &lt;td&gt;&lt;code&gt;cert_file&lt;/code&gt;、&lt;code&gt;key_file&lt;/code&gt;、&lt;code&gt;starttls&lt;/code&gt;、&lt;code&gt;publish_nt_hash&lt;/code&gt;、&lt;code&gt;samba&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;オフ&lt;/td&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.6/ja/authnd/tls/"&gt;TLS&lt;/a&gt;&lt;/td&gt;
@@ -788,7 +798,7 @@ data-copied-label="コピーしました！"
 &lt;/div&gt;
 &lt;p&gt;&lt;code&gt;/etc/authnd&lt;/code&gt;、&lt;code&gt;/var/lib/authnd&lt;/code&gt;、&lt;code&gt;authnd&lt;/code&gt; アカウントはそのまま残ります。前の二つには人々の認証情報が入っており、再利用された uid には他人のファイルが渡されかねないためです。削除は意図して行ってください。&lt;/p&gt;</description></item><item><title>運用: シグナル、再起動、出力される内容</title><link>https://go-authn.github.io/docs/0.6/ja/authnd/operations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.6/ja/authnd/operations/</guid><description>
 &lt;h2 data-hextra-search-id="it-reads-everything-once"&gt;すべてを一度だけ読み込む&lt;span class="hx:absolute hx:-mt-20" id="it-reads-everything-once"&gt;&lt;/span&gt;
-&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;設定ファイル、その背後にあるすべてのソース、TLS 証明書、キータブは&lt;strong&gt;起動時に&lt;/strong&gt;読み込まれます。リロードはなく、パッケージ付属のユニットにも &lt;code&gt;ExecReload=&lt;/code&gt; はありません。これらのいずれかを変更した後は:&lt;/p&gt;
+&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;設定ファイル、TLS 証明書、キータブは&lt;strong&gt;起動時に&lt;/strong&gt;読み込まれます。リロードはなく、パッケージ付属のユニットにも &lt;code&gt;ExecReload=&lt;/code&gt; はありません。これらのいずれかを変更した後は:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl restart authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
@@ -803,8 +813,8 @@ data-copied-label="コピーしました！"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;実行中に反映される唯一のものは、&lt;a href="https://go-authn.github.io/docs/0.6/ja/authnd/passwords/"&gt;人が authnd を通じて変更したパスワード&lt;/a&gt;で、&lt;code&gt;user&lt;/code&gt; ブロックだけを再読み込みし、他は何も読みません。&lt;/p&gt;
-&lt;p&gt;これには&lt;strong&gt;グループ&lt;/strong&gt;も含まれます。検索はデータベースに何も問い合わせないため、データベース内のグループの変更は再起動で反映され、authnd の実行中にデータベースが壊れても応答は変わりません。(v0.13.4 より前は、検索のたびにグループを再問い合わせしていました。SQLite で 200 グループの場合、1 回の検索に 4.13 秒かかり、失敗したクエリはSuccess を返す応答からグループを黙って落としていました。)起動時に読み込めないソース(実行できないグループクエリや、複数のデータベースのうち 1 つの停止など)は、ソースとグループの名前を挙げて起動と &lt;code&gt;check&lt;/code&gt; を拒否します。1 つの LDAP メッセージに収まらない大きさのエントリ(約 3 MiB。10 MB の属性値が 1 つあれば届きます)は公開されず、スキーマに適合しないエントリと同様に、起動時と &lt;code&gt;check&lt;/code&gt; で通知されます。&lt;/p&gt;
+&lt;p&gt;ソース (後述) を除き、実行中に反映される唯一のものは、&lt;a href="https://go-authn.github.io/docs/0.6/ja/authnd/passwords/"&gt;人が authnd を通じて変更したパスワード&lt;/a&gt;で、&lt;code&gt;user&lt;/code&gt; ブロックだけを再読み込みし、他は何も読みません。&lt;/p&gt;
+&lt;p&gt;ソースは「一度だけ読み込む」の例外です。人とグループは &lt;code&gt;refresh&lt;/code&gt; ごと(既定は 60 秒。&lt;code&gt;refresh = &amp;quot;0&amp;quot;&lt;/code&gt; で無効) に、応答経路の外で組み立てた新しいスナップショットへ読み直され、アトミックに入れ替えられます。そのため、削除された人やグループのメンバーは再起動なしで 1 周期以内に消えます。(v0.13.4 は一度だけ読み込み、グループの変更には再起動が必要でした。)失敗した更新は最後に正常だったデータを保ち、失敗が続く間に 1 回だけ、ソース名を添えてログに記録されます。失効が重要な環境では &lt;code&gt;max_age&lt;/code&gt; (例: &lt;code&gt;&amp;quot;10m&amp;quot;&lt;/code&gt;) を設定してください。データがそれより古くなると、検索、人のバインド、パスワード変更は、古いデータの代わりに &lt;code&gt;unavailable&lt;/code&gt; (52) を返します。起動時に読み込めないソース(実行できないグループクエリや、複数のデータベースのうち 1 つの停止など)は、ソースとグループの名前を挙げて起動と &lt;code&gt;check&lt;/code&gt; を拒否します。1 つの LDAP メッセージに収まらない大きさのエントリ(約 3 MiB。10 MB の属性値が 1 つあれば届きます)は公開されず、スキーマに適合しないエントリと同様に、起動時と &lt;code&gt;check&lt;/code&gt; で通知されます。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="signals"&gt;シグナル&lt;span class="hx:absolute hx:-mt-20" id="signals"&gt;&lt;/span&gt;
 &lt;a href="#signals" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
 &lt;thead&gt;

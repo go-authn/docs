@@ -777,6 +777,16 @@ data-copied-label="Copié !"
 &lt;td&gt;un compte de service qui peut chercher ; voir &lt;a href="https://go-authn.github.io/docs/0.6/fr/authnd/#who-may-bind-and-who-may-read"&gt;qui peut lire&lt;/a&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
+&lt;td&gt;&lt;code&gt;refresh&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;60s&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;à quelle fréquence chaque source est relue ; &lt;code&gt;0&lt;/code&gt; le désactive ; voir &lt;a href="https://go-authn.github.io/docs/0.6/fr/authnd/operations/"&gt;l&amp;rsquo;exploiter&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;max_age&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;non défini&lt;/td&gt;
+&lt;td&gt;refuser les données périmées (&lt;code&gt;unavailable&lt;/code&gt;) dès que les données servies sont plus anciennes ; voir &lt;a href="https://go-authn.github.io/docs/0.6/fr/authnd/operations/"&gt;l&amp;rsquo;exploiter&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
 &lt;td&gt;&lt;code&gt;cert_file&lt;/code&gt;, &lt;code&gt;key_file&lt;/code&gt;, &lt;code&gt;starttls&lt;/code&gt;, &lt;code&gt;publish_nt_hash&lt;/code&gt;, &lt;code&gt;samba&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;désactivé&lt;/td&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.6/fr/authnd/tls/"&gt;TLS&lt;/a&gt;&lt;/td&gt;
@@ -879,8 +889,7 @@ data-copied-label="Copié !"
 &lt;p&gt;&lt;code&gt;/etc/authnd&lt;/code&gt;, &lt;code&gt;/var/lib/authnd&lt;/code&gt; et le compte &lt;code&gt;authnd&lt;/code&gt; sont laissés en place :les deux premiers contiennent les identifiants des personnes, et un uid réutilisé peut se voir
 attribuer les fichiers de quelqu&amp;rsquo;un d&amp;rsquo;autre. Supprimez-les délibérément.&lt;/p&gt;</description></item><item><title>L'exploiter : signaux, redémarrages et ce qu'il dit</title><link>https://go-authn.github.io/docs/0.6/fr/authnd/operations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.6/fr/authnd/operations/</guid><description>
 &lt;h2 data-hextra-search-id="it-reads-everything-once"&gt;Il lit tout une seule fois&lt;span class="hx:absolute hx:-mt-20" id="it-reads-everything-once"&gt;&lt;/span&gt;
-&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Les fichiers de configuration, chaque source derrière eux, le certificat TLS et
-le keytab sont lus &lt;strong&gt;au démarrage&lt;/strong&gt;. Il n&amp;rsquo;y a pas de rechargement, et l&amp;rsquo;unité fournie
+&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Les fichiers de configuration, le certificat TLS et le keytab sont lus&lt;strong&gt;au démarrage&lt;/strong&gt;. Il n&amp;rsquo;y a pas de rechargement, et l&amp;rsquo;unité fournie
 n&amp;rsquo;a pas d&amp;rsquo;&lt;code&gt;ExecReload=&lt;/code&gt;. Après avoir modifié l&amp;rsquo;un d&amp;rsquo;eux :&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
@@ -896,12 +905,17 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;La seule chose appliquée pendant qu&amp;rsquo;il tourne est un&lt;a href="https://go-authn.github.io/docs/0.6/fr/authnd/passwords/"&gt;mot de passe qu&amp;rsquo;une personne change via authnd&lt;/a&gt;,qui relit les blocs &lt;code&gt;user&lt;/code&gt; et rien d&amp;rsquo;autre.&lt;/p&gt;
-&lt;p&gt;Cela inclut les &lt;strong&gt;groupes&lt;/strong&gt;. Une recherche n&amp;rsquo;interroge aucune base de données :un changement de groupe dans une base est pris en compte par un redémarrage, et
-une base qui tombe pendant que authnd tourne ne change aucune réponse. (Avant
-v0.13.4, chaque recherche interrogeait de nouveau les groupes — 4,13 s par
-recherche sur 200 groupes avec SQLite — et une requête en échec retirait le
-groupe d&amp;rsquo;une réponse qui disait pourtant Success.) Une source illisible au
+&lt;p&gt;Hors les sources (voir plus bas), la seule chose appliquée pendant qu&amp;rsquo;il tourne est un&lt;a href="https://go-authn.github.io/docs/0.6/fr/authnd/passwords/"&gt;mot de passe qu&amp;rsquo;une personne change via authnd&lt;/a&gt;,qui relit les blocs &lt;code&gt;user&lt;/code&gt; et rien d&amp;rsquo;autre.&lt;/p&gt;
+&lt;p&gt;Les sources sont l&amp;rsquo;exception à « lu une fois ». Les personnes et les groupes sont
+relus à chaque &lt;code&gt;refresh&lt;/code&gt; (60 s par défaut ; &lt;code&gt;refresh = &amp;quot;0&amp;quot;&lt;/code&gt; le désactive) dans un
+nouvel instantané construit hors du chemin de service et échangé de façon
+atomique : une personne ou un membre de groupe retiré disparaît en une période,sans redémarrage. (v0.13.4 les lisait une fois et exigeait un redémarrage pour un
+changement de groupe.) Un rafraîchissement qui échoue garde les dernières bonnes
+données et est journalisé une fois par série d&amp;rsquo;échecs, en nommant la source. Là
+où la révocation compte, définissez &lt;code&gt;max_age&lt;/code&gt; (par exemple &lt;code&gt;&amp;quot;10m&amp;quot;&lt;/code&gt;) : une fois les
+données plus anciennes, les recherches, les liaisons des personnes et les
+changements de mot de passe répondent &lt;code&gt;unavailable&lt;/code&gt; (52) au lieu de données
+périmées. Une source illisible au
 démarrage, par exemple une requête de groupes qui ne s&amp;rsquo;exécute pas ou l&amp;rsquo;une de
 plusieurs bases hors service, refuse le démarrage et &lt;code&gt;check&lt;/code&gt;, en nommant la
 source et le groupe. Une entrée trop grande pour un message LDAP (environ

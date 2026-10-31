@@ -1,7 +1,6 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Betrieb</title><link>https://go-authn.github.io/docs/0.6/de/tags/betrieb/</link><description>Recent content in Betrieb on go-authn</description><generator>Hugo -- gohugo.io</generator><language>de</language><atom:link href="https://go-authn.github.io/docs/0.6/de/tags/betrieb/index.xml" rel="self" type="application/rss+xml"/><item><title>Betrieb: Signale, Neustarts und was es ausgibt</title><link>https://go-authn.github.io/docs/0.6/de/authnd/operations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.6/de/authnd/operations/</guid><description>
 &lt;h2 data-hextra-search-id="it-reads-everything-once"&gt;Es liest alles einmal&lt;span class="hx:absolute hx:-mt-20" id="it-reads-everything-once"&gt;&lt;/span&gt;
-&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Die Konfigurationsdateien, jede Quelle dahinter, das TLS-Zertifikat und
-die Keytab werden &lt;strong&gt;beim Start&lt;/strong&gt; gelesen. Es gibt kein Neuladen, und die mitgelieferte Unit
+&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Die Konfigurationsdateien, das TLS-Zertifikat und die Keytab werden&lt;strong&gt;beim Start&lt;/strong&gt; gelesen. Es gibt kein Neuladen, und die mitgelieferte Unit
 hat kein &lt;code&gt;ExecReload=&lt;/code&gt;. Nach einer Änderung an einem davon:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
@@ -17,13 +16,14 @@ data-copied-label="Kopiert!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Das Einzige, was im laufenden Betrieb angewendet wird, ist ein&lt;a href="https://go-authn.github.io/docs/0.6/de/authnd/passwords/"&gt;Passwort, das eine Person über authnd ändert&lt;/a&gt;;es liest die &lt;code&gt;user&lt;/code&gt;-Blöcke erneut und sonst nichts.&lt;/p&gt;
-&lt;p&gt;Dazu gehören die &lt;strong&gt;Gruppen&lt;/strong&gt;. Eine Suche fragt keine Datenbank etwas: Eine
-Änderung an einer Gruppe in einer Datenbank wird durch einen Neustart
-übernommen, und eine Datenbank, die ausfällt, während authnd läuft, ändert
-keine Antwort. (Vor v0.13.4 fragte jede Suche die Gruppen erneut ab — 4,13 s
-pro Suche bei 200 Gruppen mit SQLite —, und eine fehlgeschlagene Abfrage ließ
-die Gruppe aus einer Antwort fallen, die dennoch Success meldete.) Eine Quelle,die beim Start nicht gelesen werden kann, etwa eine Gruppenabfrage, die nicht
+&lt;p&gt;Abgesehen von den Quellen (siehe unten) wird im laufenden Betrieb nur ein&lt;a href="https://go-authn.github.io/docs/0.6/de/authnd/passwords/"&gt;Passwort, das eine Person über authnd ändert&lt;/a&gt; angewendet;es liest die &lt;code&gt;user&lt;/code&gt;-Blöcke erneut und sonst nichts.&lt;/p&gt;
+&lt;p&gt;Die Quellen sind die Ausnahme von „einmal gelesen“. Personen und Gruppen werden bei
+jedem &lt;code&gt;refresh&lt;/code&gt; erneut gelesen (standardmäßig 60 s; &lt;code&gt;refresh = &amp;quot;0&amp;quot;&lt;/code&gt; schaltet es ab),in einen neuen Snapshot, der abseits des Antwortwegs gebaut und atomar ausgetauscht
+wird; eine entfernte Person oder ein entferntes Gruppenmitglied ist daher innerhalb
+einer Periode weg, ohne Neustart. (v0.13.4 las sie einmal und brauchte für eine
+Gruppenänderung einen Neustart.) Ein fehlgeschlagener Refresh behält die letzten
+guten Daten und wird einmal pro Fehlerserie protokolliert, mit Nennung der Quelle.Wo es auf Sperrung ankommt, setzen Sie &lt;code&gt;max_age&lt;/code&gt; (zum Beispiel &lt;code&gt;&amp;quot;10m&amp;quot;&lt;/code&gt;): Sind die
+Daten älter, antworten Suchen, Binds von Personen und Passwortänderungen mit&lt;code&gt;unavailable&lt;/code&gt; (52) statt mit veralteten Daten. Eine Quelle,die beim Start nicht gelesen werden kann, etwa eine Gruppenabfrage, die nicht
 läuft, oder eine von mehreren ausgefallenen Datenbanken, verweigert den Start
 und &lt;code&gt;check&lt;/code&gt; und nennt die Quelle und die Gruppe. Ein Eintrag, der für eine
 LDAP-Nachricht zu groß ist (etwa 3 MiB, was ein einziger 10-MB-Attributwert

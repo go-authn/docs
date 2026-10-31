@@ -157,7 +157,7 @@ nicht immer dasselbe: sshcert-authorize gab für einen &lt;code&gt;go install&lt
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;authnd&lt;/td&gt;
-&lt;td&gt;&lt;strong&gt;v0.13.4&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;v0.14.0&lt;/strong&gt;&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/authnd&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -179,7 +179,7 @@ nicht immer dasselbe: sshcert-authorize gab für einen &lt;code&gt;go install&lt
 &lt;/table&gt;
 &lt;p&gt;Die Versionen der Bibliotheken stehen auf &lt;a href="https://go-authn.github.io/docs/0.6/de/libraries/"&gt;ihrer eigenen Seite&lt;/a&gt;;ldap ist bei &lt;strong&gt;v0.11.3&lt;/strong&gt;, mit DIT-Content-Rules, Name Forms und DIT-Structure-Rules, die
 gelesen, durchgesetzt und veröffentlicht werden, einem typisierten &lt;code&gt;BuildError&lt;/code&gt; für ein Schema, das sich nicht aufbauen lässt,Schemas in HCL2 und dem Konverter &lt;code&gt;ldapschema&lt;/code&gt;,und directory bei &lt;strong&gt;v0.15.0&lt;/strong&gt;, mit deklarierten Objektklassen. authnd
-v0.13.4 bettet ldap v0.11.3 und directory v0.15.0 ein.Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,sodass die Seiten, die jemand unter &lt;code&gt;/docs/0.6/&lt;/code&gt; findet, weiterhin beschreiben, was
+v0.14.0 bettet ldap v0.11.3 und directory v0.15.0 ein.Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,sodass die Seiten, die jemand unter &lt;code&gt;/docs/0.6/&lt;/code&gt; findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter &lt;code&gt;/docs/0.1/&lt;/code&gt;,&lt;code&gt;/docs/0.2/&lt;/code&gt;, &lt;code&gt;/docs/0.3/&lt;/code&gt;, &lt;code&gt;/docs/0.4/&lt;/code&gt; und &lt;code&gt;/docs/0.5/&lt;/code&gt;.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
@@ -322,6 +322,10 @@ Abhängigkeiten aktualisiert haben, sind weggelassen, außer denen, die diese Do
 &lt;tr&gt;
 &lt;td&gt;v0.13.4&lt;/td&gt;
 &lt;td&gt;Ein Chaos-Durchgang. Gruppen werden einmal beim Start gelesen, wie die Personen: Eine Suche über 500 Personen und 200 Gruppen zu je 50 dauerte mit SQLite 4,13 s (jede Suche fragte die Gruppen erneut ab) und dauert 1,2 ms, und eine Gruppenabfrage, die während einer Suche fehlschlug, lässt die Gruppe nicht mehr aus einer Antwort fallen, die Success meldet. Eine beim Start nicht lesbare Quelle (eine Gruppenabfrage, die nicht läuft, eine von mehreren ausgefallenen Datenbanken) verweigert den Start und &lt;code&gt;check&lt;/code&gt;. Ein Eintrag über etwa 3 MiB (ein einziger 10-MB-Attributwert) wird nicht veröffentlicht. Die Veröffentlichung wird einmal pro Personenbestand aufgebaut. Gehalten, mit Tests: an jedem Byte abgeschnittene Schemadateien, eine entfernte oder beschädigte Datenbank, feindliche Zeilen, ruhende Verbindungen, überlange BER-Längen, 20.000 Ebenen tief verschachtelte Filter&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;v0.14.0&lt;/td&gt;
+&lt;td&gt;Geändert: v0.13.4 verlangte für eine Gruppenänderung einen Neustart, sodass ein aus einer Datenbank entferntes Mitglied den Zugriff behielt, bis jemand authnd neu startete. v0.14.0 stellt die rechtzeitige Sperrung wieder her. &lt;code&gt;refresh&lt;/code&gt; (standardmäßig 60 s, &lt;code&gt;0&lt;/code&gt; schaltet es ab) liest jede Quelle, Personen und Gruppen, in einen neuen Snapshot ein, der abseits des Antwortwegs gebaut und als Ganzes ausgetauscht wird; ein fehlgeschlagener Refresh behält den letzten guten Snapshot und wird einmal pro Fehlerserie protokolliert, mit Nennung der Quelle. &lt;code&gt;max_age&lt;/code&gt; (standardmäßig nicht gesetzt) lässt Suchen, Binds von Personen und Passwortänderungen mit &lt;code&gt;unavailable&lt;/code&gt; antworten, sobald die ausgelieferten Daten älter sind. Ein über authnd geschriebenes Passwort läuft durch denselben Austausch. Gemessen: Ein Refresh von 500 Personen und 200 Gruppen zu je 50 kostet mit SQLite etwa 2 s eines Kerns, eine Suche 0,5 ms&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;

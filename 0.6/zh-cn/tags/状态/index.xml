@@ -11,7 +11,7 @@
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;authnd&lt;/td&gt;
-&lt;td&gt;&lt;strong&gt;v0.13.4&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;v0.14.0&lt;/strong&gt;&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/authnd&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -32,7 +32,7 @@
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;各个库的版本见&lt;a href="https://go-authn.github.io/docs/0.6/zh-cn/libraries/"&gt;其自己的页面&lt;/a&gt;；ldap 为 &lt;strong&gt;v0.11.3&lt;/strong&gt;，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 &lt;code&gt;BuildError&lt;/code&gt;、HCL2 模式和 &lt;code&gt;ldapschema&lt;/code&gt; 转换器，directory 为 &lt;strong&gt;v0.15.0&lt;/strong&gt;，带有已声明的对象类。authnd
-v0.13.4 内嵌 ldap v0.11.3 和 directory v0.15.0。上述任何程序的新次版本号都对应一个新的文档版本，因此读者在 &lt;code&gt;/docs/0.6/&lt;/code&gt; 下找到的页面始终描述其所安装的版本；之前各版本的页面保留在 &lt;code&gt;/docs/0.1/&lt;/code&gt;、&lt;code&gt;/docs/0.2/&lt;/code&gt;、&lt;code&gt;/docs/0.3/&lt;/code&gt;、&lt;code&gt;/docs/0.4/&lt;/code&gt; 和 &lt;code&gt;/docs/0.5/&lt;/code&gt; 之下。&lt;/p&gt;
+v0.14.0 内嵌 ldap v0.11.3 和 directory v0.15.0。上述任何程序的新次版本号都对应一个新的文档版本，因此读者在 &lt;code&gt;/docs/0.6/&lt;/code&gt; 下找到的页面始终描述其所安装的版本；之前各版本的页面保留在 &lt;code&gt;/docs/0.1/&lt;/code&gt;、&lt;code&gt;/docs/0.2/&lt;/code&gt;、&lt;code&gt;/docs/0.3/&lt;/code&gt;、&lt;code&gt;/docs/0.4/&lt;/code&gt; 和 &lt;code&gt;/docs/0.5/&lt;/code&gt; 之下。&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
@@ -168,6 +168,10 @@ v0.13.4 内嵌 ldap v0.11.3 和 directory v0.15.0。上述任何程序的新次�
 &lt;tr&gt;
 &lt;td&gt;v0.13.4&lt;/td&gt;
 &lt;td&gt;一次混沌测试。组与人员一样，在启动时只读取一次：在 SQLite 上，对 500 人、200 个各 50 人的组做一次搜索原本要 4.13 秒（每次搜索都重新查询组），现在只要 1.2 毫秒；搜索期间失败的组查询也不再把组从仍返回 Success 的应答中悄悄丢掉。启动时无法读取的来源（无法执行的组查询、多个数据库中有一个宕机）会拒绝启动和 &lt;code&gt;check&lt;/code&gt;。超过约 3 MiB 的条目（一个 10 MB 的属性值）不会发布。发布内容按人员集合只构建一次。已用测试验证：在每个字节处截断的模式文件、被删除或损坏的数据库、恶意的行、空闲连接、过大的 BER 长度、嵌套 20,000 层的过滤器&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;v0.14.0&lt;/td&gt;
+&lt;td&gt;变更：v0.13.4 修改组需要重启，因此从数据库中移除的成员会一直保有访问权限，直到有人重启 authnd。v0.14.0 恢复了及时撤销。&lt;code&gt;refresh&lt;/code&gt;（默认 60 秒，&lt;code&gt;0&lt;/code&gt; 表示关闭）会把每个来源（人员和组）重新读入一份在服务路径之外构建的新快照，并整体替换；刷新失败时保留最近一份良好的快照，且每一轮连续失败只记录一次日志，并点名来源。设置 &lt;code&gt;max_age&lt;/code&gt;（默认不设置）后，一旦所提供的数据比它更旧，搜索、人员的 bind 和密码修改都会应答 &lt;code&gt;unavailable&lt;/code&gt;。通过 authnd 写入的密码同样经过这一替换。实测：在 SQLite 上，对 500 人、200 个各 50 人的组做一次刷新约占一个核心 2 秒，一次搜索 0.5 毫秒&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;

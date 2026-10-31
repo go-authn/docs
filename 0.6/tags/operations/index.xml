@@ -1,8 +1,8 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Operations</title><link>https://go-authn.github.io/docs/0.6/tags/operations/</link><description>Recent content in Operations on go-authn</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://go-authn.github.io/docs/0.6/tags/operations/index.xml" rel="self" type="application/rss+xml"/><item><title>Running it: signals, restarts and what it says</title><link>https://go-authn.github.io/docs/0.6/authnd/operations/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.6/authnd/operations/</guid><description>
 &lt;h2 data-hextra-search-id="it-reads-everything-once"&gt;It reads everything once&lt;span class="hx:absolute hx:-mt-20" id="it-reads-everything-once"&gt;&lt;/span&gt;
-&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The configuration files, every source behind them, the TLS certificate and
-the keytab are read &lt;strong&gt;at start&lt;/strong&gt;. There is no reload, and the packaged unit
-has no &lt;code&gt;ExecReload=&lt;/code&gt;. After changing any of them:&lt;/p&gt;
+&lt;a href="#it-reads-everything-once" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The configuration files, the TLS certificate and the keytab are read &lt;strong&gt;at
+start&lt;/strong&gt;. There is no reload, and the packaged unit has no &lt;code&gt;ExecReload=&lt;/code&gt;. After
+changing any of them:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo systemctl restart authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
@@ -17,12 +17,15 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;The one thing applied while it runs is a&lt;a href="https://go-authn.github.io/docs/0.6/authnd/passwords/"&gt;password a person changes through authnd&lt;/a&gt;,which re-reads the &lt;code&gt;user&lt;/code&gt; blocks and nothing else.&lt;/p&gt;
-&lt;p&gt;That includes the &lt;strong&gt;groups&lt;/strong&gt;. A search asks no database anything, so a change
-to a group in a database is picked up by a restart, and a database that breaks
-while authnd runs changes no answer. (Before v0.13.4 every search queried the
-groups again — 4.13 s a search over 200 groups on SQLite — and a query that
-failed dropped the group from an answer that still said Success.) A source that
+&lt;p&gt;Apart from the sources (below), the one thing applied while it runs is a&lt;a href="https://go-authn.github.io/docs/0.6/authnd/passwords/"&gt;password a person changes through authnd&lt;/a&gt;,which re-reads the &lt;code&gt;user&lt;/code&gt; blocks and nothing else.&lt;/p&gt;
+&lt;p&gt;The sources are the exception to &amp;ldquo;read once&amp;rdquo;. People and groups are read again
+every &lt;code&gt;refresh&lt;/code&gt; (60 s by default; &lt;code&gt;refresh = &amp;quot;0&amp;quot;&lt;/code&gt; turns it off) into a new
+snapshot built off the serving path and swapped in atomically, so a removed
+person or group member is gone within one period, with no restart. (v0.13.4
+read them once and needed a restart for a change to a group.) A refresh that
+fails keeps the last good data and is logged once per failure streak, naming the
+source. Where revocation matters, set &lt;code&gt;max_age&lt;/code&gt; (for example &lt;code&gt;&amp;quot;10m&amp;quot;&lt;/code&gt;): once the
+data is older, searches, people&amp;rsquo;s binds and password changes answer&lt;code&gt;unavailable&lt;/code&gt; (52) instead of stale data. A source that
 cannot be read at start, such as a groups query that does not run or one of
 several databases being down, refuses the start and &lt;code&gt;check&lt;/code&gt;, naming the source
 and the group. An entry too large for one LDAP message (about 3 MiB, which one
