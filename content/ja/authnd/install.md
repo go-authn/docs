@@ -157,6 +157,8 @@ ReadWritePaths=/etc/authnd/passwords
 | `base_dn` | — (必須) | ツリーのルート。例: `dc=example,dc=org`。`=` を含まない値は拒否されます |
 | `listen` | `127.0.0.1:3893` | 一つのアドレス。既定ではループバックです。起動した途端にすべてのインターフェースに現れるディレクトリは、誰かが意図して決めるべきことです。LDAP と LDAPS の両方が必要なサイトは、二つのインスタンスを動かします |
 | `reader "<dn>"` | なし | 検索できるサービスアカウント。[誰が読めるか]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})を参照 |
+| `refresh` | `60s` | すべてのソースを読み直す間隔。`0` で無効。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
+| `max_age` | 未設定 | 提供中のデータがこれより古くなったら、古いデータを拒否 (`unavailable`)。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
 | `cert_file`、`key_file`、`starttls`、`publish_nt_hash`、`samba` | オフ | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`、`group`、`users` | — | [人々]({{< relref "/authnd/people.md" >}})。`user` または `users` ブロックが少なくとも一つ必要 |
 | `kerberos` | なし | [レルム]({{< relref "/authnd/kerberos.md" >}}) |

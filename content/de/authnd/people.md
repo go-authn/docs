@@ -304,13 +304,15 @@ authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database)
 ```
 {{< /callout >}}
 
-## Einmal gelesen {#read-once}
+## Beim Start gelesen, dann bei jedem Refresh {#read-once}
 
-Jede Quelle wird **einmal, beim Start** gelesen. Eine Person, die der Datenbank hinzugefügt wird, oder
-eine Mitgliedschaft, die sich im Verzeichnis hinter diesem ändert, wird nach einem
-Neustart bedient, nicht vorher. Das gilt auch für eine Passwortspalte in einer Datenbank: Sie wird
-mit dem Rest der Zeile gelesen. Ein Verzeichnis hinter diesem unterscheidet sich nur
-darin, dass ein Bind geprüft wird, indem gegen es gebunden wird; ein *dort* geändertes Passwort ist
-also das, das funktioniert. Die andere Ausnahme ist ein Passwort, das eine Person über
-authnd selbst ändert und das [sofort angewendet wird]({{< relref "/authnd/passwords.md" >}}).
-Es gibt kein Neuladen; siehe [Betrieb]({{< relref "/authnd/operations.md" >}}).
+Jede Quelle wird **beim Start und danach bei jedem `refresh` erneut** gelesen. Eine Person, die der
+Datenbank hinzugefügt oder daraus entfernt wird, oder eine Mitgliedschaft, die sich im Verzeichnis
+hinter diesem ändert, wird innerhalb einer Periode bedient, ohne Neustart. Das gilt auch für eine
+Passwortspalte in einer Datenbank: Sie wird mit der Zeile gelesen. Ein Verzeichnis hinter diesem
+unterscheidet sich nur darin, dass ein Bind geprüft wird, indem gegen es gebunden wird; ein *dort*
+geändertes Passwort ist also das, das funktioniert. Ein Passwort, das eine Person über
+authnd selbst ändert, wird [sofort angewendet]({{< relref "/authnd/passwords.md" >}}).
+Ein fehlgeschlagener Refresh behält die letzten guten Daten, und `max_age` legt fest, wann man
+aufhört, sie auszuliefern; siehe [Betrieb]({{< relref "/authnd/operations.md" >}}). Die
+Konfigurationsdateien, das Zertifikat und die Keytab brauchen weiterhin einen Neustart.

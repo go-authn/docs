@@ -8,8 +8,8 @@ tags: [authnd, betrieb, signale, systemd]
 
 ## Es liest alles einmal {#it-reads-everything-once}
 
-Die Konfigurationsdateien, jede Quelle dahinter, das TLS-Zertifikat und
-die Keytab werden **beim Start** gelesen. Es gibt kein Neuladen, und die mitgelieferte Unit
+Die Konfigurationsdateien, das TLS-Zertifikat und die Keytab werden
+**beim Start** gelesen. Es gibt kein Neuladen, und die mitgelieferte Unit
 hat kein `ExecReload=`. Nach einer Änderung an einem davon:
 
 ```sh
@@ -17,16 +17,20 @@ sudo -u authnd authnd check /etc/authnd
 sudo systemctl restart authnd
 ```
 
-Das Einzige, was im laufenden Betrieb angewendet wird, ist ein
-[Passwort, das eine Person über authnd ändert]({{< relref "/authnd/passwords.md" >}});
+Abgesehen von den Quellen (siehe unten) wird im laufenden Betrieb nur ein
+[Passwort, das eine Person über authnd ändert]({{< relref "/authnd/passwords.md" >}}) angewendet;
 es liest die `user`-Blöcke erneut und sonst nichts.
 
-Dazu gehören die **Gruppen**. Eine Suche fragt keine Datenbank etwas: Eine
-Änderung an einer Gruppe in einer Datenbank wird durch einen Neustart
-übernommen, und eine Datenbank, die ausfällt, während authnd läuft, ändert
-keine Antwort. (Vor v0.13.4 fragte jede Suche die Gruppen erneut ab — 4,13 s
-pro Suche bei 200 Gruppen mit SQLite —, und eine fehlgeschlagene Abfrage ließ
-die Gruppe aus einer Antwort fallen, die dennoch Success meldete.) Eine Quelle,
+Die Quellen sind die Ausnahme von „einmal gelesen“. Personen und Gruppen werden bei
+jedem `refresh` erneut gelesen (standardmäßig 60 s; `refresh = "0"` schaltet es ab),
+in einen neuen Snapshot, der abseits des Antwortwegs gebaut und atomar ausgetauscht
+wird; eine entfernte Person oder ein entferntes Gruppenmitglied ist daher innerhalb
+einer Periode weg, ohne Neustart. (v0.13.4 las sie einmal und brauchte für eine
+Gruppenänderung einen Neustart.) Ein fehlgeschlagener Refresh behält die letzten
+guten Daten und wird einmal pro Fehlerserie protokolliert, mit Nennung der Quelle.
+Wo es auf Sperrung ankommt, setzen Sie `max_age` (zum Beispiel `"10m"`): Sind die
+Daten älter, antworten Suchen, Binds von Personen und Passwortänderungen mit
+`unavailable` (52) statt mit veralteten Daten. Eine Quelle,
 die beim Start nicht gelesen werden kann, etwa eine Gruppenabfrage, die nicht
 läuft, oder eine von mehreren ausgefallenen Datenbanken, verweigert den Start
 und `check` und nennt die Quelle und die Gruppe. Ein Eintrag, der für eine

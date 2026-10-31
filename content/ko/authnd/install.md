@@ -160,6 +160,8 @@ ReadWritePaths=/etc/authnd/passwords
 | `base_dn` | — (필수) | 트리의 루트, 예: `dc=example,dc=org`. `=`가 없는 값은 거부됩니다 |
 | `listen` | `127.0.0.1:3893` | 주소 하나. 기본값은 루프백입니다. 시작하는 순간 모든 인터페이스에 나타나는 디렉터리는 누군가 의도적으로 내려야 하는 결정입니다. LDAP과 LDAPS가 모두 필요한 사이트는 인스턴스 두 개를 실행합니다 |
 | `reader "<dn>"` | 없음 | 검색할 수 있는 서비스 계정. [누가 읽을 수 있는가]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})를 참조 |
+| `refresh` | `60s` | 모든 소스를 다시 읽는 주기. `0`이면 끔. [운영]({{< relref "/authnd/operations.md" >}})을 참조 |
+| `max_age` | 설정 안 함 | 제공 중인 데이터가 이보다 오래되면 오래된 데이터를 거부(`unavailable`). [운영]({{< relref "/authnd/operations.md" >}})을 참조 |
 | `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | 꺼짐 | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [사람들]({{< relref "/authnd/people.md" >}}). `user` 또는 `users` 블록이 최소 하나 필요 |
 | `kerberos` | 없음 | [렐름]({{< relref "/authnd/kerberos.md" >}}) |

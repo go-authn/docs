@@ -8,24 +8,28 @@ tags: [authnd, operations, signals, systemd]
 
 ## It reads everything once
 
-The configuration files, every source behind them, the TLS certificate and
-the keytab are read **at start**. There is no reload, and the packaged unit
-has no `ExecReload=`. After changing any of them:
+The configuration files, the TLS certificate and the keytab are read **at
+start**. There is no reload, and the packaged unit has no `ExecReload=`. After
+changing any of them:
 
 ```sh
 sudo -u authnd authnd check /etc/authnd
 sudo systemctl restart authnd
 ```
 
-The one thing applied while it runs is a
+Apart from the sources (below), the one thing applied while it runs is a
 [password a person changes through authnd]({{< relref "/authnd/passwords.md" >}}),
 which re-reads the `user` blocks and nothing else.
 
-That includes the **groups**. A search asks no database anything, so a change
-to a group in a database is picked up by a restart, and a database that breaks
-while authnd runs changes no answer. (Before v0.13.4 every search queried the
-groups again — 4.13 s a search over 200 groups on SQLite — and a query that
-failed dropped the group from an answer that still said Success.) A source that
+The sources are the exception to "read once". People and groups are read again
+every `refresh` (60 s by default; `refresh = "0"` turns it off) into a new
+snapshot built off the serving path and swapped in atomically, so a removed
+person or group member is gone within one period, with no restart. (v0.13.4
+read them once and needed a restart for a change to a group.) A refresh that
+fails keeps the last good data and is logged once per failure streak, naming the
+source. Where revocation matters, set `max_age` (for example `"10m"`): once the
+data is older, searches, people's binds and password changes answer
+`unavailable` (52) instead of stale data. A source that
 cannot be read at start, such as a groups query that does not run or one of
 several databases being down, refuses the start and `check`, naming the source
 and the group. An entry too large for one LDAP message (about 3 MiB, which one

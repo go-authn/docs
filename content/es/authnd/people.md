@@ -306,13 +306,15 @@ authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database)
 ```
 {{< /callout >}}
 
-## Se leen una vez {#read-once}
+## Se leen al arrancar y en cada refresco {#read-once}
 
-Cada origen se lee **una vez, al arrancar**. Una persona añadida a la base de datos,
-o una pertenencia modificada en el directorio que hay detrás de este, se sirve tras
-un reinicio, no antes. Eso incluye una columna de contraseña en una base de datos: se
-lee con el resto de la fila. Un directorio detrás de este solo se diferencia en que
+Cada origen se lee **al arrancar y de nuevo en cada `refresh`**. Una persona añadida a la base de
+datos o retirada de ella, o una pertenencia modificada en el directorio que hay detrás de este,
+se sirve en un periodo, sin reiniciar. Eso incluye una columna de contraseña en una base de datos:
+se lee con la fila. Un directorio detrás de este solo se diferencia en que
 un bind se comprueba haciendo un bind contra él, así que la contraseña que funciona
-es la cambiada *allí*. La otra excepción es una contraseña que una persona cambia a
-través del propio authnd, que se [aplica al instante]({{< relref "/authnd/passwords.md" >}}).
-No hay recarga; consulte [ejecutarlo]({{< relref "/authnd/operations.md" >}}).
+es la cambiada *allí*. Una contraseña que una persona cambia a
+través del propio authnd se [aplica al instante]({{< relref "/authnd/passwords.md" >}}).
+Un refresco fallido conserva los últimos datos buenos, y `max_age` dice cuándo dejar de
+servirlos; consulte [ejecutarlo]({{< relref "/authnd/operations.md" >}}). Los archivos de
+configuración, el certificado y la keytab siguen necesitando un reinicio.

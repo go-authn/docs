@@ -8,8 +8,8 @@ tags: [authnd, exploitation, signaux, systemd]
 
 ## Il lit tout une seule fois {#it-reads-everything-once}
 
-Les fichiers de configuration, chaque source derrière eux, le certificat TLS et
-le keytab sont lus **au démarrage**. Il n'y a pas de rechargement, et l'unité fournie
+Les fichiers de configuration, le certificat TLS et le keytab sont lus
+**au démarrage**. Il n'y a pas de rechargement, et l'unité fournie
 n'a pas d'`ExecReload=`. Après avoir modifié l'un d'eux :
 
 ```sh
@@ -17,16 +17,21 @@ sudo -u authnd authnd check /etc/authnd
 sudo systemctl restart authnd
 ```
 
-La seule chose appliquée pendant qu'il tourne est un
+Hors les sources (voir plus bas), la seule chose appliquée pendant qu'il tourne est un
 [mot de passe qu'une personne change via authnd]({{< relref "/authnd/passwords.md" >}}),
 qui relit les blocs `user` et rien d'autre.
 
-Cela inclut les **groupes**. Une recherche n'interroge aucune base de données :
-un changement de groupe dans une base est pris en compte par un redémarrage, et
-une base qui tombe pendant que authnd tourne ne change aucune réponse. (Avant
-v0.13.4, chaque recherche interrogeait de nouveau les groupes — 4,13 s par
-recherche sur 200 groupes avec SQLite — et une requête en échec retirait le
-groupe d'une réponse qui disait pourtant Success.) Une source illisible au
+Les sources sont l'exception à « lu une fois ». Les personnes et les groupes sont
+relus à chaque `refresh` (60 s par défaut ; `refresh = "0"` le désactive) dans un
+nouvel instantané construit hors du chemin de service et échangé de façon
+atomique : une personne ou un membre de groupe retiré disparaît en une période,
+sans redémarrage. (v0.13.4 les lisait une fois et exigeait un redémarrage pour un
+changement de groupe.) Un rafraîchissement qui échoue garde les dernières bonnes
+données et est journalisé une fois par série d'échecs, en nommant la source. Là
+où la révocation compte, définissez `max_age` (par exemple `"10m"`) : une fois les
+données plus anciennes, les recherches, les liaisons des personnes et les
+changements de mot de passe répondent `unavailable` (52) au lieu de données
+périmées. Une source illisible au
 démarrage, par exemple une requête de groupes qui ne s'exécute pas ou l'une de
 plusieurs bases hors service, refuse le démarrage et `check`, en nommant la
 source et le groupe. Une entrée trop grande pour un message LDAP (environ
