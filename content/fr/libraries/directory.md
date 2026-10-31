@@ -11,7 +11,7 @@ tenue en mémoire, une base de données SQL, un serveur LDAP, ou des blocs `user
 fichier de configuration — et ce qui compte, c'est la seconde moitié de la question.
 
 ```sh
-go get github.com/go-authn/directory@v0.15.0
+go get github.com/go-authn/directory@v0.16.0
 ```
 
 ## Ce qui prouve quelqu'un n'est pas une seule chose {#what-proves-somebody-is-not-one-thing}
@@ -51,7 +51,10 @@ Dans un `Set`, la **première** source qui connaît un nom en est propriétaire,
 de service écrit localement n'a pas besoin d'être mis dans LDAP. L'appartenance aux groupes est
 l'**union** de toutes les sources. Les sources sont lues au démarrage d'un serveur ; une vérification
 de mot de passe peut atteindre la source à chaque fois, parce qu'une liaison ne peut pas être mise en cache
-sans détenir le secret.
+sans détenir le secret. Une source qui implémente `GroupReader` (sqldir et ldapdir
+le font) lit tous les groupes une seule fois, en bloc ; `Set.Frozen()` répond alors à
+`Members`, `GroupAttributes`, `GroupObjectClasses` et `GroupNames` depuis la mémoire,
+avec la fusion propre au Set. Fermez le Set d'origine, pas le Set figé.
 
 `hcldir` ne décode pas le HCL : l'appelant décode le bloc et le lui remet.
 Il n'importe HCL que pour écrire, pour `SetPassword`. Les étiquettes de compilation `nosql` et

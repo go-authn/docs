@@ -16,7 +16,7 @@ tags: [authnd, ldap]
 ([SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})) で拡張でき、
 [DIT コンテンツルール、ネームフォーム、DIT 構造ルール]({{< relref "/authnd/schemas.md#rules" >}})で
 形も定められます。
-その下には go-authn/ldap v0.11.0 と go-authn/directory v0.15.0 があります。
+その下には go-authn/ldap v0.11.0 と go-authn/directory v0.16.0 があります。
 何が検証済みで何が未検証かは、[ステータス]({{< relref "/status.md" >}})のページにあります。
 
 {{< callout type="warning" >}}

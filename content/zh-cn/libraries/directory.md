@@ -11,7 +11,7 @@ tags: [库, 目录, ldap, sql]
 块——其要点在于这个问题的后半部分。
 
 ```sh
-go get github.com/go-authn/directory@v0.15.0
+go get github.com/go-authn/directory@v0.16.0
 ```
 
 ## 证明某人的依据并不单一 {#what-proves-somebody-is-not-one-thing}
@@ -51,7 +51,9 @@ go get github.com/go-authn/directory@v0.15.0
 写下的服务账户不必放进 LDAP。组成员关系是
 所有来源的**并集**。来源在服务器启动时读取；密码
 校验可以每次都访问来源，因为不持有秘密就无法缓存
-绑定。
+绑定。实现了 `GroupReader` 的来源（sqldir 和 ldapdir 都实现了）会批量一次读取所有组；
+随后 `Set.Frozen()` 以 `Set` 自身的合并规则，从内存中应答 `Members`、`GroupAttributes`、
+`GroupObjectClasses` 和 `GroupNames`。请关闭原来的 `Set`，而不是冻结后的那个。
 
 `hcldir` 不解码 HCL：调用方解码该块并交给它。
 它导入 HCL 只是为了写入，用于 `SetPassword`。构建标签 `nosql` 和

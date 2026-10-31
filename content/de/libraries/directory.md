@@ -11,7 +11,7 @@ Speicher, einer SQL-Datenbank, einem LDAP-Server oder `user`- und `group`-Blöck
 Konfigurationsdatei – und worauf es ankommt, ist die zweite Hälfte der Frage.
 
 ```sh
-go get github.com/go-authn/directory@v0.15.0
+go get github.com/go-authn/directory@v0.16.0
 ```
 
 ## Was jemanden beweist, ist nicht eine einzige Sache {#what-proves-somebody-is-not-one-thing}
@@ -51,7 +51,10 @@ In einem `Set` gehört ein Name der **ersten** Quelle, die ihn kennt; ein lokal
 eingetragenes Dienstkonto muss also nicht ins LDAP. Die Gruppenmitgliedschaft ist die
 **Vereinigung** aller Quellen. Quellen werden gelesen, wenn ein Server startet; eine Passwortprüfung
 kann jedes Mal die Quelle erreichen, denn ein Bind lässt sich nicht zwischenspeichern,
-ohne das Geheimnis zu halten.
+ohne das Geheimnis zu halten. Eine Quelle, die `GroupReader` implementiert (sqldir und
+ldapdir tun das), liest alle Gruppen einmal im Block; `Set.Frozen()` beantwortet dann
+`Members`, `GroupAttributes`, `GroupObjectClasses` und `GroupNames` aus dem Speicher,
+mit der eigenen Zusammenführung des Sets. Schließen Sie das ursprüngliche Set, nicht das eingefrorene.
 
 `hcldir` dekodiert kein HCL: Der Aufrufer dekodiert den Block und übergibt ihn.
 Es importiert HCL nur zum Schreiben, für `SetPassword`. Die Build-Tags `nosql` und

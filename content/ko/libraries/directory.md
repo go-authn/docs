@@ -11,7 +11,7 @@ tags: [라이브러리, 디렉터리, ldap, sql]
 모델이며, 요점은 질문의 후반부에 있습니다.
 
 ```sh
-go get github.com/go-authn/directory@v0.15.0
+go get github.com/go-authn/directory@v0.16.0
 ```
 
 ## 사람을 증명하는 것은 하나가 아닙니다 {#what-proves-somebody-is-not-one-thing}
@@ -49,7 +49,7 @@ go get github.com/go-authn/directory@v0.15.0
 `Set`에서는 이름을 아는 **첫 번째** 소스가 그 이름을 소유하므로, 로컬에 적어 둔 서비스
 계정을 LDAP에 넣을 필요가 없습니다. 그룹 구성원은 모든 소스의 **합집합**입니다.
 소스는 서버가 시작할 때 읽습니다. 비밀번호 확인은 매번 소스에 도달할 수 있는데,
-바인드는 비밀 값을 보유하지 않고서는 캐시할 수 없기 때문입니다.
+바인드는 비밀 값을 보유하지 않고서는 캐시할 수 없기 때문입니다. `GroupReader`를 구현하는 소스(sqldir과 ldapdir가 구현합니다)는 모든 그룹을 한 번에 일괄로 읽고, 그러면 `Set.Frozen()`은 `Members`, `GroupAttributes`, `GroupObjectClasses`, `GroupNames`를 `Set` 자체의 병합 규칙으로 메모리에서 답합니다. 닫아야 하는 것은 고정된 `Set`이 아니라 원래의 `Set`입니다.
 
 `hcldir`은 HCL을 디코딩하지 않습니다. 호출자가 블록을 디코딩해서 건넵니다. HCL은
 `SetPassword`를 위해 쓸 때만 import합니다. 빌드 태그 `nosql`과 `noldap`은 한 종류를

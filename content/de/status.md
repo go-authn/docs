@@ -9,7 +9,7 @@ Diese Seiten sind die Dokumentationsversion **0.6** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
-| authnd | **v0.14.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.14.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -18,8 +18,8 @@ Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/lib
 ldap ist bei **v0.11.3**, mit DIT-Content-Rules, Name Forms und DIT-Structure-Rules, die
 gelesen, durchgesetzt und veröffentlicht werden, einem typisierten `BuildError` für ein Schema, das sich nicht aufbauen lässt,
 Schemas in HCL2 und dem Konverter `ldapschema`,
-und directory bei **v0.15.0**, mit deklarierten Objektklassen. authnd
-v0.14.0 bettet ldap v0.11.3 und directory v0.15.0 ein.
+und directory bei **v0.16.0**, mit deklarierten Objektklassen. authnd
+v0.14.1 bettet ldap v0.11.3 und directory v0.16.0 ein.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
 sodass die Seiten, die jemand unter `/docs/0.6/` findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`,
@@ -80,7 +80,8 @@ Abhängigkeiten aktualisiert haben, sind weggelassen, außer denen, die diese Do
 | v0.13.2 | Nur Leistung, mit go-authn/ldap v0.11.2: `Validate` macht für einen Eintrag mit zehn Attributen 12 statt 76 Allokationen; das Veröffentlichen von 10.000 Personen (`BenchmarkPublish10k`, `-cpu 1`) macht 128 Allokationen pro Eintrag mit den Regeln und 85 ohne, gegenüber 364 und 239 bei v0.13.1, und 54,8 MiB pro Lauf mit den Regeln gegenüber 102,5. Zeiten (Last 8 bis 11): etwa 90 ms gegenüber 158 ms mit den Regeln |
 | v0.13.3 | Nur Leistung, mit go-authn/ldap v0.11.3: ein Eintrag, den `unmet` gerade validiert hat, wird von `validated` nicht erneut validiert, wenn er sich nicht geändert hat; das Veröffentlichen von 10.000 Personen (`BenchmarkPublish10k`, `-cpu 1`) macht 97 Allokationen pro Eintrag mit den Regeln und 69 ohne, gegenüber 128 und 85 bei v0.13.2 (−24 % und −19 %); etwa 66 ms und 36 ms (Last 4,8) |
 | v0.13.4 | Ein Chaos-Durchgang. Gruppen werden einmal beim Start gelesen, wie die Personen: Eine Suche über 500 Personen und 200 Gruppen zu je 50 dauerte mit SQLite 4,13 s (jede Suche fragte die Gruppen erneut ab) und dauert 1,2 ms, und eine Gruppenabfrage, die während einer Suche fehlschlug, lässt die Gruppe nicht mehr aus einer Antwort fallen, die Success meldet. Eine beim Start nicht lesbare Quelle (eine Gruppenabfrage, die nicht läuft, eine von mehreren ausgefallenen Datenbanken) verweigert den Start und `check`. Ein Eintrag über etwa 3 MiB (ein einziger 10-MB-Attributwert) wird nicht veröffentlicht. Die Veröffentlichung wird einmal pro Personenbestand aufgebaut. Gehalten, mit Tests: an jedem Byte abgeschnittene Schemadateien, eine entfernte oder beschädigte Datenbank, feindliche Zeilen, ruhende Verbindungen, überlange BER-Längen, 20.000 Ebenen tief verschachtelte Filter |
-| v0.14.0 | Geändert: v0.13.4 verlangte für eine Gruppenänderung einen Neustart, sodass ein aus einer Datenbank entferntes Mitglied den Zugriff behielt, bis jemand authnd neu startete. v0.14.0 stellt die rechtzeitige Sperrung wieder her. `refresh` (standardmäßig 60 s, `0` schaltet es ab) liest jede Quelle, Personen und Gruppen, in einen neuen Snapshot ein, der abseits des Antwortwegs gebaut und als Ganzes ausgetauscht wird; ein fehlgeschlagener Refresh behält den letzten guten Snapshot und wird einmal pro Fehlerserie protokolliert, mit Nennung der Quelle. `max_age` (standardmäßig nicht gesetzt) lässt Suchen, Binds von Personen und Passwortänderungen mit `unavailable` antworten, sobald die ausgelieferten Daten älter sind. Ein über authnd geschriebenes Passwort läuft durch denselben Austausch. Gemessen: Ein Refresh von 500 Personen und 200 Gruppen zu je 50 kostet mit SQLite etwa 2 s eines Kerns, eine Suche 0,5 ms |
+| v0.14.0 | Geändert: v0.13.4 verlangte für eine Gruppenänderung einen Neustart, sodass ein aus einer Datenbank entferntes Mitglied den Zugriff behielt, bis jemand authnd neu startete. v0.14.0 stellt die rechtzeitige Sperrung wieder her. `refresh` (standardmäßig 60 s, `0` schaltet es ab) liest jede Quelle, Personen und Gruppen, in einen neuen Snapshot ein, der abseits des Antwortwegs gebaut und als Ganzes ausgetauscht wird; ein fehlgeschlagener Refresh behält den letzten guten Snapshot und wird einmal pro Fehlerserie protokolliert, mit Nennung der Quelle. `max_age` (standardmäßig nicht gesetzt) lässt Suchen, Binds von Personen und Passwortänderungen mit `unavailable` antworten, sobald die ausgelieferten Daten älter sind. Ein über authnd geschriebenes Passwort läuft durch denselben Austausch. Gemessen: Ein Refresh von 500 Personen und 200 Gruppen zu je 50 kostet mit SQLite etwa 2 s eines Kerns, eine Suche 0,5 ms (die Refresh-Kosten sind in v0.14.1 behoben) |
+| v0.14.1 | Nur Performance. Ein Refresh wächst nicht mehr mit Gruppen mal Mitgliedschaftszeilen: directory v0.16.0 liest jede Quelle einmal, im Block. Ein Refresh von 500 Personen und 200 Gruppen zu je 50 mit SQLite sinkt von 1,87 s auf 0,155 s, einer von 10.000 Personen und 2.000 Gruppen von 391 s (sechseinhalb Refresh-Perioden) auf 1,6 s (2,7 % der 60-s-Periode). Die Allokationen sinken von 39.959.235 auf 3.095.482 und von 6.373.736.235 auf 31.198.460. Die Zeiten wurden bei einer Last von 17 bis 67 gemessen und sind Richtwerte; die Allokationszahlen sind exakt |
 
 ### authn-bridge {#authn-bridge}
 

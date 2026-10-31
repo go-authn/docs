@@ -11,7 +11,7 @@ memory, a SQL database, an LDAP server, or `user` and `group` blocks in a
 configuration file — and the point of it is the second half of the question.
 
 ```sh
-go get github.com/go-authn/directory@v0.15.0
+go get github.com/go-authn/directory@v0.16.0
 ```
 
 ## What proves somebody is not one thing
@@ -51,7 +51,10 @@ In a `Set`, the **first** source that knows a name owns it, so a service
 account written down locally need not be put in LDAP. Group membership is the
 **union** of every source. Sources are read when a server starts; a password
 check may reach the source every time, because a bind cannot be cached
-without holding the secret.
+without holding the secret. A source that implements `GroupReader` (sqldir and
+ldapdir do) reads every group once, in bulk; `Set.Frozen()` then answers
+`Members`, `GroupAttributes`, `GroupObjectClasses` and `GroupNames` from memory,
+with the Set's own merging. Close the original Set, not the frozen one.
 
 `hcldir` does not decode HCL: the caller decodes the block and hands it over.
 It imports HCL only to write, for `SetPassword`. The build tags `nosql` and

@@ -15,7 +15,7 @@ v0.13.0，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
 （[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），并可通过
 [DIT 内容规则、名称形式和结构规则]({{< relref "/authnd/schemas.md#rules" >}})
 为条目塑形，其下是 go-authn/ldap v0.11.0 和
-go-authn/directory v0.15.0；哪些已经验证、哪些尚未验证，见
+go-authn/directory v0.16.0；哪些已经验证、哪些尚未验证，见
 [状态]({{< relref "/status.md" >}})页面。
 
 {{< callout type="warning" >}}

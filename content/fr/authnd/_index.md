@@ -16,7 +16,7 @@ qu'elle sert à `cn=Subschema`, qu'un site étend avec le sien
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) et façonne grâce aux
 [règles de contenu DIT, formes de noms et règles de structure]({{< relref "/authnd/schemas.md#rules" >}}),
 avec go-authn/ldap v0.11.0 et
-go-authn/directory v0.15.0 en dessous ; ce qui est vérifié et ce qui ne l'est pas figure sur la
+go-authn/directory v0.16.0 en dessous ; ce qui est vérifié et ce qui ne l'est pas figure sur la
 page [état]({{< relref "/status.md" >}}).
 
 {{< callout type="warning" >}}

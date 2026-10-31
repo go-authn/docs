@@ -17,7 +17,7 @@ und das ein Standort um sein eigenes erweitert
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) und mit
 [DIT-Content-Rules, Name Forms und Structure Rules]({{< relref "/authnd/schemas.md#rules" >}})
 auch um Formvorgaben, mit go-authn/ldap v0.11.0 und
-go-authn/directory v0.15.0 darunter; was geprüft ist und
+go-authn/directory v0.16.0 darunter; was geprüft ist und
 was nicht, steht auf der Seite [Stand]({{< relref "/status.md" >}}).
 
 {{< callout type="warning" >}}

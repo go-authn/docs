@@ -16,7 +16,7 @@ serves at `cn=Subschema`, which a site extends with its own
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) and, with
 [DIT content rules, name forms and structure rules]({{< relref "/authnd/schemas.md#rules" >}}),
 shapes, with go-authn/ldap v0.11.0 and
-go-authn/directory v0.15.0 under it; what is verified and what is not is on
+go-authn/directory v0.16.0 under it; what is verified and what is not is on
 the [status]({{< relref "/status.md" >}}) page.
 
 {{< callout type="warning" >}}

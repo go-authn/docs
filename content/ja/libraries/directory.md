@@ -11,7 +11,7 @@ tags: [ライブラリ, ディレクトリ, ldap, sql]
 あります。
 
 ```sh
-go get github.com/go-authn/directory@v0.15.0
+go get github.com/go-authn/directory@v0.16.0
 ```
 
 ## 何が人を証明するかは一つではない {#what-proves-somebody-is-not-one-thing}
@@ -49,7 +49,7 @@ go get github.com/go-authn/directory@v0.15.0
 サービスアカウントを LDAP に入れる必要はありません。グループのメンバーシップは、すべてのソースの
 **和集合**です。ソースはサーバーの起動時に読まれます。パスワードの検証は、毎回ソースに到達
 してもよいことになっています。シークレットを保持せずにバインドをキャッシュすることはできない
-からです。
+からです。`GroupReader` を実装するソース (sqldir と ldapdir が実装しています) は、すべてのグループを一括で 1 回だけ読み込みます。すると `Set.Frozen()` は、`Members`、`GroupAttributes`、`GroupObjectClasses`、`GroupNames` に、`Set` 自身のマージ規則でメモリから答えます。閉じるのは凍結した `Set` ではなく、元の `Set` です。
 
 `hcldir` は HCL をデコードしません。呼び出し側がブロックをデコードして渡します。HCL を
 インポートするのは、`SetPassword` のために書き込むためだけです。ビルドタグ `nosql` と `noldap` は、
