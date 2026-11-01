@@ -1,0 +1,330 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Sshcert</title><link>https://go-authn.github.io/docs/0.7/zh-cn/tags/sshcert/</link><description>Recent content in Sshcert on go-authn</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><atom:link href="https://go-authn.github.io/docs/0.7/zh-cn/tags/sshcert/index.xml" rel="self" type="application/rss+xml"/><item><title>sshcert-authorize</title><link>https://go-authn.github.io/docs/0.7/zh-cn/sshcert/authorize/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/zh-cn/sshcert/authorize/</guid><description>
+&lt;p&gt;对于每次证书登录，&lt;code&gt;sshd&lt;/code&gt; 都会询问它：哪些 principal 可以登录该账户。只有当证书的域授权指明了本主机时，它才回答该账户的 principal；否则不回答任何内容，&lt;code&gt;sshd&lt;/code&gt; 便拒绝该证书。它采用 GÉANT 的&lt;code&gt;ssh-cert-authorize&lt;/code&gt; 的参数、标志、输出和日志格式，区别在于它拒绝的内容。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="how-sshd-calls-it"&gt;sshd 如何调用它&lt;span class="hx:absolute hx:-mt-20" id="how-sshd-calls-it"&gt;&lt;/span&gt;
+&lt;a href="#how-sshd-calls-it" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# /etc/ssh/sshd_config
+TrustedUserCAKeys /etc/ssh/efp-ssh-ca.pub
+AuthorizedPrincipalsCommand /usr/local/bin/sshcert-authorize %u %k
+AuthorizedPrincipalsCommandUser nobody&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -o root -g root -m &lt;span class="m"&gt;0755&lt;/span&gt; sshcert-authorize /usr/local/bin/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; login.example.org &amp;gt; /etc/ssh/cert-allowed-domain.conf&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;此外，对于每个本地账户，可以登录该账户的 principal 每行一个，写在 &lt;code&gt;/etc/ssh/auth_principals/&amp;lt;account&amp;gt;&lt;/code&gt; 中。sshd 只会运行位于归 root 所有且他人不可写的路径中的该命令。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;%u&lt;/code&gt; 是要登录的账户。&lt;code&gt;%k&lt;/code&gt; 是证书，base64 编码；完整的&lt;code&gt;ssh-...-cert-v01@openssh.com BASE64&lt;/code&gt; 行也可读取，而当该参数缺省时，证书从标准输入读取。若给出第三个参数（sshd 的 &lt;code&gt;%t&lt;/code&gt;），它必须是该证书的类型，否则证书被拒绝。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;退出码&lt;/th&gt;
+&lt;th&gt;输出&lt;/th&gt;
+&lt;th&gt;sshd&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;账户的 principal，每行一个&lt;/td&gt;
+&lt;td&gt;若证书的某个 principal 在其中，则放行该证书&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;1&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;无&lt;/td&gt;
+&lt;td&gt;拒绝&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;2&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;无&lt;/td&gt;
+&lt;td&gt;拒绝：参数有误&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;它不检查签名、CA 或有效期&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;该命令中没有任何内容验证证书的签名或其有效期：这由通过 &lt;code&gt;TrustedUserCAKeys&lt;/code&gt; 信任 CA 的 sshd 完成。该命令只判定一个问题：这张证书是否面向本主机和该账户。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;它拒绝什么&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;按检查顺序：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;为空、为 &lt;code&gt;.&lt;/code&gt;、为 &lt;code&gt;..&lt;/code&gt;，或包含 &lt;code&gt;/&lt;/code&gt;、&lt;code&gt;\&lt;/code&gt; 或 NUL 的账户名；&lt;/li&gt;
+&lt;li&gt;没有配置域的主机，或不是有效主机名的主机；&lt;/li&gt;
+&lt;li&gt;无法解析的证书、普通密钥，或主机证书；&lt;/li&gt;
+&lt;li&gt;与证书类型不符的 &lt;code&gt;%t&lt;/code&gt;；&lt;/li&gt;
+&lt;li&gt;使用 &lt;code&gt;--krl&lt;/code&gt; 时，列表所吊销的证书，或在列表无法读取或已过期时的&lt;strong&gt;所有&lt;/strong&gt;证书；&lt;/li&gt;
+&lt;li&gt;存在但格式错误的域授权，&lt;strong&gt;无论使用什么标志&lt;/strong&gt;；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;完全没有域授权&lt;/strong&gt;，除非使用 &lt;code&gt;--allow-no-grant&lt;/code&gt;；&lt;/li&gt;
+&lt;li&gt;其所有模式都不匹配主机任何名称的授权；&lt;/li&gt;
+&lt;li&gt;没有 principal 文件或文件为空的账户。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;主机的名称来自 &lt;code&gt;--domain&lt;/code&gt;、&lt;code&gt;--domain-env&lt;/code&gt; 所指名的变量，或&lt;code&gt;--domain-file&lt;/code&gt; 的各行（忽略空行和 &lt;code&gt;#&lt;/code&gt; 注释；多行即多个名称，其中任何一个都可以匹配）。&lt;/p&gt;
+&lt;p&gt;下面针对由测试 CA 签名的证书、账户 &lt;code&gt;alice&lt;/code&gt;（其principal 文件列出 &lt;code&gt;a1b2c3@univ-example.example&lt;/code&gt;），在名为&lt;code&gt;login.hpc.example.org&lt;/code&gt; 的主机上：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+a1b2c3@univ-example.example&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;最后一行是 sshd 读取的答复；它之前的几行是日志，此处输出到标准错误。被授权访问其他主机的证书：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-other-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1003 key_id=&amp;#34;a1b2c3@univ-example.example other host&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;domain not granted&amp;#34; grant=[&amp;#34;*.elsewhere.example.net&amp;#34;] serial=1003 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;没有授权的证书：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-nogrant-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1002 key_id=&amp;#34;a1b2c3@univ-example.example no grant&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;no domain grant&amp;#34; serial=1002 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;没有 principal 文件的账户，以及普通密钥：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals bob &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=denied user=bob domain=login.hpc.example.org reason=&amp;#34;no principals file for the user&amp;#34; serial=1001 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice.pub)&amp;#34;
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;a ssh-ed25519 key, not a certificate&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;以上每一次都以 &lt;code&gt;1&lt;/code&gt; 退出，且标准输出上没有任何内容。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-a-certificate-with-no-grant-is-refused"&gt;为什么没有授权的证书会被拒绝&lt;span class="hx:absolute hx:-mt-20" id="why-a-certificate-with-no-grant-is-refused"&gt;&lt;/span&gt;
+&lt;a href="#why-a-certificate-with-no-grant-is-refused" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;GÉANT 的 &lt;code&gt;ssh-cert-authorize&lt;/code&gt; 会放行没有域授权的证书（“might be valid for non-domain-based auth”），也会放行授权无法解析或为空的证书。于是，在 &lt;code&gt;TrustedUserCAKeys&lt;/code&gt; 中信任&lt;strong&gt;两个&lt;/strong&gt; CA 的站点（联邦的 CA，以及自己用于员工或测试的 CA），会让来自第二个 CA 的证书在每台主机上通过，可冒用 principal 文件中的任何 principal，完全没有域检查。只有拒绝没有说明可在何处使用的证书，域过滤才真正是一个过滤器。&lt;/p&gt;
+&lt;p&gt;确实想要 GÉANT 行为的站点需要明确声明，而该命令每次应用该行为时都会记录日志：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --allow-no-grant --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-nogrant-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1002 key_id=&amp;#34;a1b2c3@univ-example.example no grant&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=no_grant_allowed user=alice domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+a1b2c3@univ-example.example&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;即便如此，存在但格式错误的授权仍会被拒绝。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="krl"&gt;&lt;code&gt;--krl&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="krl"&gt;&lt;/span&gt;
+&lt;a href="#krl" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;RevokedKeys&lt;/code&gt; 是 sshd 自己的检查，在命令运行之前对每个密钥和证书进行，它也会吊销 CA 密钥；应优先使用它。&lt;code&gt;--krl FILE&lt;/code&gt; 在命令内部检查OpenSSH KRL，并补充 sshd 不做的事：列表一旦过期（其&lt;code&gt;expires@go-authn.github.io&lt;/code&gt; 扩展，sshd 会忽略它），它就拒绝&lt;strong&gt;所有&lt;/strong&gt;证书；列表无法读取时同样拒绝所有证书。没有过期时间的列表则不受过期限制地使用。&lt;/p&gt;
+&lt;p&gt;三次运行：使用 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-revokd/"&gt;authn-revokd&lt;/a&gt;
+写出的 KRL，先是当前有效的列表，然后是颁发者的列表&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-revokd/lapse/"&gt;过期&lt;/a&gt;时它写出的故障即拒绝列表；最后是&lt;code&gt;--krl&lt;/code&gt; 指名一个不存在的文件：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+a1b2c3@univ-example.example
+$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;certificate revoked&amp;#34; serial=1001 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+$ sshcert-authorize --syslog=false --krl missing.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;KRL unreadable: open missing.krl: no such file or directory&amp;#34; serial=1001 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;第二次运行被拒绝，是因为故障即拒绝的列表吊销了该证书的 &lt;strong&gt;CA 密钥&lt;/strong&gt;：检查涵盖证书自身的密钥、其序列号和密钥 ID，以及签发它的密钥。第三次被拒绝，是因为列表无法读取：没有列表不会被当作没有任何吊销。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="flags"&gt;标志&lt;span class="hx:absolute hx:-mt-20" id="flags"&gt;&lt;/span&gt;
+&lt;a href="#flags" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize -help
+usage: sshcert-authorize [flags] USER [CERTIFICATE [KEYTYPE]]
+An sshd AuthorizedPrincipalsCommand (%u %k) that refuses a certificate whose
+ssh-domain-grant@core.aai.geant.org extension does not grant this host, or that has none.
+-allow-no-grant
+let in a certificate with no domain grant (GÉANT&amp;#39;s behaviour); a malformed grant is still refused
+-debug
+log details
+-domain string
+the host&amp;#39;s domain (overrides --domain-env and --domain-file)
+-domain-env string
+environment variable holding the host&amp;#39;s domain
+-domain-file string
+file holding the host&amp;#39;s domain, one name per line (default &amp;#34;/etc/ssh/cert-allowed-domain.conf&amp;#34;)
+-extension string
+name of the domain-grant extension (default &amp;#34;ssh-domain-grant@core.aai.geant.org&amp;#34;)
+-krl string
+refuse certificates this OpenSSH KRL revokes, and every certificate once it has expired or cannot be read
+-principals-dir string
+directory of principals files, one per user (default &amp;#34;/etc/ssh/auth_principals&amp;#34;)
+-syslog
+log to syslog, facility AUTH (--syslog=false: to stderr) (default true)
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;日志&lt;/strong&gt;为 &lt;code&gt;key=value&lt;/code&gt; 行（&lt;code&gt;action=cert_processed&lt;/code&gt;、&lt;code&gt;action=denied&lt;/code&gt;、&lt;code&gt;action=authorized&lt;/code&gt;，带有 &lt;code&gt;serial&lt;/code&gt; 和 &lt;code&gt;ca_fingerprint&lt;/code&gt;），默认输出到 syslog，设施AUTH。sshd 会丢弃该命令的标准错误，因此在生产环境中请保持 syslog 开启；&lt;code&gt;--debug&lt;/code&gt; 还会将所有内容写到标准错误。来自客户端的值，例如账户名，若包含空格、&lt;code&gt;=&lt;/code&gt;、引号或控制字符，则会被加引号，因此它无法伪造日志字段。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;-version&lt;/code&gt;&lt;/strong&gt; 输出模块版本，对发布的二进制文件和通过 &lt;code&gt;go install&lt;/code&gt; 构建的文件都是如此：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.9
+$ sshcert-authorize -version
+sshcert-authorize v0.1.9&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;在 v0.1.5 之前，通过 &lt;code&gt;go install&lt;/code&gt; 得到的二进制文件输出 &lt;code&gt;sshcert-authorize dev&lt;/code&gt;。&lt;/p&gt;</description></item><item><title>sshcert</title><link>https://go-authn.github.io/docs/0.7/zh-cn/sshcert/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/zh-cn/sshcert/</guid><description>
+&lt;p&gt;&lt;strong&gt;来自联邦 CA 的证书本身并不构成对所有信任该 CA 的主机的许可。&lt;/strong&gt; EuroHPC 联邦平台的 SSH CA 将证书所面向的主机写入一个扩展 &lt;code&gt;ssh-domain-grant@core.aai.geant.org&lt;/code&gt;，而 &lt;code&gt;sshd&lt;/code&gt; 会忽略它。go-authn/sshcert读取并写入该扩展，它的命令 &lt;code&gt;sshcert-authorize&lt;/code&gt; 就是&lt;code&gt;sshd&lt;/code&gt; 用来强制执行该扩展的程序。纯 Go，&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;。这些页面描述v0.1.9。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.9
+$ sshcert-authorize -version
+sshcert-authorize v0.1.9&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/sshcert/authorize/"&gt;sshcert-authorize&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;AuthorizedPrincipalsCommand&lt;/code&gt;：它检查什么、拒绝什么，以及 sshd 如何调用它&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="the-extension"&gt;扩展&lt;span class="hx:absolute hx:-mt-20" id="the-extension"&gt;&lt;/span&gt;
+&lt;a href="#the-extension" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;其数据是主机模式的紧凑 JSON 数组，如 &lt;code&gt;[&amp;quot;login.example.org&amp;quot;]&lt;/code&gt;。&lt;code&gt;*&lt;/code&gt;
+在单个标签内匹配&lt;strong&gt;一个或多个&lt;/strong&gt;字符，名称比较时不区分大小写：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;模式&lt;/th&gt;
+&lt;th&gt;匹配&lt;/th&gt;
+&lt;th&gt;不匹配&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;login.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;login.example.org&lt;/code&gt;、&lt;code&gt;LOGIN.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;www.login.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;*.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;a.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;example.org&lt;/code&gt;、&lt;code&gt;a.b.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;prod-*.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;prod-1.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;prod-.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;*.*.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;a.b.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;a.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;读取是严格的：只接受编码器所写出的内容。不能有空白，&lt;code&gt;]&lt;/code&gt; 之后不能有任何内容，不能有 JSON 转义，不能重复，最多 64 个模式，每个模式只能由字母、数字、连字符和 &lt;code&gt;*&lt;/code&gt; 组成，标签长度为 1 到 63字节，总长最多 253 字节，并且&lt;strong&gt;最右侧的标签中不能有 &lt;code&gt;*&lt;/code&gt;&lt;/strong&gt;。&lt;code&gt;null&lt;/code&gt;、对象、数字和嵌套数组均被拒绝。&lt;code&gt;[]&lt;/code&gt; 被接受，但不授予任何主机。&lt;/p&gt;
+&lt;p&gt;存在但格式错误的授权绝不会被报告为不存在。这一差别正是该命令的全部意义所在。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="who-uses-it"&gt;谁在使用它&lt;span class="hx:absolute hx:-mt-20" id="who-uses-it"&gt;&lt;/span&gt;
+&lt;a href="#who-uses-it" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/certificates/#the-eurohpc-ssh-ca-profile"&gt;authn-bridge&lt;/a&gt;&lt;/strong&gt;
+为客户端的 &lt;code&gt;ssh_domain_grants&lt;/code&gt; 写入该扩展，并在写入前用本包的 &lt;code&gt;ValidatePattern&lt;/code&gt;
+检查每个模式。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;go-fileshare&lt;/strong&gt; 的 SFTP 服务器通过 &lt;code&gt;ssh_domains&lt;/code&gt; 读取它，并拒绝没有授权的证书，除非设置了 &lt;code&gt;ssh_accept_ungranted&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;sshcert-authorize&lt;/strong&gt; 是针对普通 &lt;code&gt;sshd&lt;/code&gt; 的同一项检查。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;许可证&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause。&lt;/p&gt;</description></item></channel></rss>

@@ -1,0 +1,268 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Sasl</title><link>https://go-authn.github.io/docs/0.7/fr/tags/sasl/</link><description>Recent content in Sasl on go-authn</description><generator>Hugo -- gohugo.io</generator><language>fr</language><atom:link href="https://go-authn.github.io/docs/0.7/fr/tags/sasl/index.xml" rel="self" type="application/rss+xml"/><item><title>Un jeton à la liaison, dans un champ qui n'est pas le mot de passe</title><link>https://go-authn.github.io/docs/0.7/fr/authnd/tokens/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/fr/authnd/tokens/</guid><description>
+&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.7/fr/libraries/"&gt;go-authn/oidc&lt;/a&gt; vérifie un jeton et en tire une
+identité. La façon évidente d&amp;rsquo;en porter un jusqu&amp;rsquo;à un serveur LDAP est le champ du mot de passe,et cela fonctionne une fois puis cesse : le champ du mot de passe est l&amp;rsquo;endroit où le&lt;a href="https://go-authn.github.io/docs/0.7/fr/authnd/mfa/"&gt;bloc &lt;code&gt;mfa&lt;/code&gt;&lt;/a&gt; retire le code au bout, et
+un jeton ne peut pas être les deux.&lt;/p&gt;
+&lt;p&gt;Le jeton va donc là où le protocole lui a prévu une place. Les identifiants d&amp;rsquo;une liaison&lt;strong&gt;SASL&lt;/strong&gt; sont une chaîne d&amp;rsquo;octets à la forme propre au mécanisme, et la forme&lt;code&gt;OAUTHBEARER&lt;/code&gt; de RFC 7628 est un en-tête GS2 suivi de paires clé/valeur, dont l&amp;rsquo;une
+est &lt;code&gt;auth=Bearer &amp;lt;token&amp;gt;&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;n,,^Aauth=Bearer eyJ…^A^A&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Le champ du mot de passe n&amp;rsquo;est pas touché. Sur un même écouteur, au même moment, une
+personne peut taper un mot de passe avec un code au bout et une autre envoyer un
+jeton.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;oidc&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; issuer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.example.org/realms/staff&amp;#34; # the &amp;#34;iss&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;a&lt;/span&gt; &lt;span class="k"&gt;token&lt;/span&gt; &lt;span class="k"&gt;must&lt;/span&gt; &lt;span class="k"&gt;carry&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;and&lt;/span&gt; &lt;span class="k"&gt;where&lt;/span&gt; &lt;span class="k"&gt;discovery&lt;/span&gt; &lt;span class="k"&gt;starts&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # this server&amp;#39;s client id at the provider
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # username_claim = &amp;#34;preferred_username&amp;#34; which claim names the person here
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # jwks_url = &amp;#34;…&amp;#34; skips discovery, for a provider that does not publish it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # allow_plaintext = true only when TLS is terminated in front of this process
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;issuer&lt;/code&gt; et &lt;code&gt;audience&lt;/code&gt; sont obligatoires. Sans &lt;code&gt;username_claim&lt;/code&gt;, le nom est&lt;code&gt;preferred_username&lt;/code&gt;, puis &lt;code&gt;email&lt;/code&gt; quand &lt;code&gt;email_verified&lt;/code&gt; est vrai, puis &lt;code&gt;sub&lt;/code&gt;.Avec le bloc, le root DSE annonce le mécanisme :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; supportedSASLMechanisms
+dn:
+supportedSASLMechanisms: OAUTHBEARER&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Sans lui, chaque liaison SASL reçoit &lt;code&gt;authMethodNotSupported&lt;/code&gt; — &lt;em&gt;pas de cette
+façon&lt;/em&gt;, ce qui envoie un client ailleurs que &lt;em&gt;mauvais mot de passe&lt;/em&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="discovery-happens-at-startup"&gt;La découverte a lieu au démarrage&lt;span class="hx:absolute hx:-mt-20" id="discovery-happens-at-startup"&gt;&lt;/span&gt;
+&lt;a href="#discovery-happens-at-startup" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Le document de découverte et les clés du fournisseur sont lus au démarrage du serveur,et par &lt;code&gt;check&lt;/code&gt;. Un fournisseur injoignable arrête le serveur là où
+quelqu&amp;rsquo;un regarde, plutôt que de refuser chaque liaison plus tard :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc.hcl
+authnd: oidc &amp;#34;https://127.0.0.1:1/realms/staff&amp;#34;: oidc: reading https://127.0.0.1:1/realms/staff/.well-known/openid-configuration: Get &amp;#34;https://127.0.0.1:1/realms/staff/.well-known/openid-configuration&amp;#34;: dial tcp 127.0.0.1:1: connect: connection refused&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Un émetteur qui n&amp;rsquo;est pas en &lt;code&gt;https&lt;/code&gt; est refusé, sauf en bouclage :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc-http.hcl
+authnd: oidc &amp;#34;http://login.example.org/realms/staff&amp;#34;: oidc: http://login.example.org/realms/staff is not https: the key set decides every signature, and over cleartext so does anybody on the way&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="how-many-factors-is-a-token"&gt;Combien de facteurs vaut un jeton ?&lt;span class="hx:absolute hx:-mt-20" id="how-many-factors-is-a-token"&gt;&lt;/span&gt;
+&lt;a href="#how-many-factors-is-a-token" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Ce que l&amp;rsquo;émetteur dit avoir vérifié, et rien de plus.&lt;/strong&gt; Un jeton porte
+l&amp;rsquo;&lt;code&gt;amr&lt;/code&gt; de RFC 8176, les méthodes que le fournisseur a utilisées. C&amp;rsquo;est la seule preuve
+qui existe, c&amp;rsquo;est donc ce que compte la politique &lt;code&gt;mfa&lt;/code&gt;, &lt;strong&gt;par nature&lt;/strong&gt; :&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;méthode &lt;code&gt;amr&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;nature&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;pwd&lt;/code&gt;, &lt;code&gt;pin&lt;/code&gt;, &lt;code&gt;kba&lt;/code&gt;, &lt;code&gt;mca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;connaissance&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;otp&lt;/code&gt;, &lt;code&gt;hwk&lt;/code&gt;, &lt;code&gt;swk&lt;/code&gt;, &lt;code&gt;sms&lt;/code&gt;, &lt;code&gt;tel&lt;/code&gt;, &lt;code&gt;sc&lt;/code&gt;, &lt;code&gt;pop&lt;/code&gt;, &lt;code&gt;user&lt;/code&gt;, &lt;code&gt;wia&lt;/code&gt;, &lt;code&gt;mfa&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;possession&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;fpt&lt;/code&gt;, &lt;code&gt;face&lt;/code&gt;, &lt;code&gt;iris&lt;/code&gt;, &lt;code&gt;retina&lt;/code&gt;, &lt;code&gt;vbm&lt;/code&gt;, &lt;code&gt;geo&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;inhérence&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;toute autre&lt;/td&gt;
+&lt;td&gt;inconnue, ce qui ne satisfait jamais &lt;code&gt;distinct_kinds&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;aucun &lt;code&gt;amr&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;un facteur, possession — le jeton lui-même&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Deux méthodes d&amp;rsquo;une même nature font un facteur. L&amp;rsquo;alternative serait que ce serveur
+invente un second facteur que personne n&amp;rsquo;a accompli ; et un serveur qui croit
+l&amp;rsquo;émetteur sur &lt;em&gt;qui&lt;/em&gt; est cette personne n&amp;rsquo;a pas de raison distincte de ne pas le croire sur&lt;em&gt;comment&lt;/em&gt; il l&amp;rsquo;a vérifié.&lt;/p&gt;
+&lt;p&gt;Avec un bloc &lt;code&gt;mfa&lt;/code&gt;, &lt;code&gt;check&lt;/code&gt; le dit :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check sasl
+ldaps://127.0.0.1:3636, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password account, uidObject uid
+tess the configuration file a password and a one-time-code secret account, uidObject uid
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+tess has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+a bind carries a password with a 6-digit code after it, of two different kinds
+or a token from http://127.0.0.1:18481, over SASL OAUTHBEARER over TLS
+a token counts for the factors its amr claim names, so one with no amr is refused by this policy
+alice has no second factor here, so a password cannot satisfy this policy; a token whose amr names two kinds still can
+no reader is declared: nothing may search, and binds are not affected
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;alice n&amp;rsquo;a pas de &lt;code&gt;totp_secret&lt;/code&gt;, si bien qu&amp;rsquo;un mot de passe avec un code ne peut jamais suffire
+dans son cas ; un jeton dont l&amp;rsquo;&lt;code&gt;amr&lt;/code&gt; nomme deux natures le peut, comme le montre la première liaison
+ci-dessous.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-the-binds-look-like"&gt;À quoi ressemblent les liaisons&lt;span class="hx:absolute hx:-mt-20" id="what-the-binds-look-like"&gt;&lt;/span&gt;
+&lt;a href="#what-the-binds-look-like" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;L&amp;rsquo;émetteur est ici un petit fournisseur de test en bouclage, et &lt;code&gt;oidctool&lt;/code&gt; un client de
+test écrit pour ces pages : il signe un jeton pour le nom donné, avec
+l&amp;rsquo;&lt;code&gt;amr&lt;/code&gt; donné, l&amp;rsquo;envoie dans une liaison &lt;code&gt;OAUTHBEARER&lt;/code&gt; (avec un &lt;code&gt;authzid&lt;/code&gt; quand un
+cinquième argument en nomme un), et affiche le code de résultat de la liaison et les
+identifiants SASL du serveur. Ces transcriptions et les lignes du serveur plus bas ont été affichées par le binaire de la version v0.10.0 et n&amp;rsquo;ont pas été relancées, car &lt;code&gt;oidctool&lt;/code&gt; ne fait partie d&amp;rsquo;aucune version publiée. Contre la configuration ci-dessus, en &lt;code&gt;ldaps://&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 0, serverSaslCreds
+$ ./oidctool alice &amp;#39;&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;kba&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls tess
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;insufficient_scope&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}
+$ ./oidctool zed &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;invalid_token&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;0 est le succès, 49 &lt;code&gt;invalidCredentials&lt;/code&gt;, 14 &lt;code&gt;saslBindInProgress&lt;/code&gt;. Un jeton&lt;code&gt;[&amp;quot;pwd&amp;quot;,&amp;quot;kba&amp;quot;]&lt;/code&gt; nomme deux méthodes d&amp;rsquo;une même nature, il compte donc une fois. Et
+vers la même configuration sans &lt;code&gt;cert_file&lt;/code&gt; ni &lt;code&gt;key_file&lt;/code&gt;, sur un écouteur
+en clair :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3893 clear
+bind result 13&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;13 est &lt;code&gt;confidentialityRequired&lt;/code&gt; : un jeton n&amp;rsquo;est pas accepté sur une connexion
+qui n&amp;rsquo;est pas chiffrée.&lt;/p&gt;
+&lt;p&gt;Ce que le serveur a écrit pour les quatre liaisons refusées sur &lt;code&gt;ldaps://&lt;/code&gt; :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: the token is for &amp;#34;alice&amp;#34; and asks to act as &amp;#34;tess&amp;#34;; this server does not delegate
+zed was refused: the token verified, and no source here publishes anybody by that name&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;et pour celle en clair :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Une liaison &lt;code&gt;OAUTHBEARER&lt;/code&gt; réussie laisse la connexion liée comme&lt;code&gt;uid=&amp;lt;name&amp;gt;,ou=people,&amp;lt;base_dn&amp;gt;&lt;/code&gt;, écrit comme l&amp;rsquo;est chaque autre entrée.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;Ce qu&amp;rsquo;il refuse&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Un jeton en clair.&lt;/strong&gt; Un jeton porteur n&amp;rsquo;a pas besoin d&amp;rsquo;autre moitié : quiconque le lit
+sur le réseau est cette personne jusqu&amp;rsquo;à son expiration. &lt;code&gt;allow_plaintext = true&lt;/code&gt;
+existe pour un déploiement qui termine TLS devant ce processus, et&lt;code&gt;check&lt;/code&gt; dit alors &lt;em&gt;a token may cross this socket in the clear&lt;/em&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Une demande d&amp;rsquo;être quelqu&amp;rsquo;un d&amp;rsquo;autre.&lt;/strong&gt; L&amp;rsquo;en-tête GS2 peut nommer un &lt;code&gt;authzid&lt;/code&gt;. Un
+jeton pour alice portant une demande d&amp;rsquo;agir en tant que tess est refusé, et non traité
+discrètement comme l&amp;rsquo;un ou l&amp;rsquo;autre.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Un jeton pour quelqu&amp;rsquo;un qu&amp;rsquo;aucune source ici ne publie.&lt;/strong&gt; Le client reçoit seulement&lt;code&gt;invalid_token&lt;/code&gt; ; quels noms existent n&amp;rsquo;est pas une information à livrer une devinette
+à la fois. La raison est dans la sortie du serveur.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;La liaison de canal (channel binding).&lt;/strong&gt; Un en-tête GS2 avec &lt;code&gt;p=&lt;/code&gt; — le client exige
+la liaison de canal — est refusé : ce serveur ne la fait pas, et accepter
+l&amp;rsquo;en-tête sans rien lier laisserait le client croire que le canal a été
+vérifié.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Un mécanisme que ce serveur ne parle pas&lt;/strong&gt;, avec &lt;code&gt;authMethodNotSupported&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Un refus du jeton lui-même est celui de RFC 7628 §3.2.3 : une erreur JSON portant&lt;code&gt;openid-configuration&lt;/code&gt;, renvoyée comme &lt;code&gt;saslBindInProgress&lt;/code&gt; pour que le client puisse
+envoyer le &lt;code&gt;^A&lt;/code&gt; qui clôt l&amp;rsquo;échange. Un jeton qui se vérifie mais ne
+satisfait pas la politique &lt;code&gt;mfa&lt;/code&gt; reçoit simplement &lt;code&gt;invalidCredentials&lt;/code&gt;, comme le montrent
+les deuxième et troisième liaisons ci-dessus.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Un jeton ne définit pas de mot de passe&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Une personne qui ne s&amp;rsquo;est jamais connectée qu&amp;rsquo;avec un jeton ne peut pas se servir de cette session pour
+se donner un premier mot de passe, et une personne qui en a un doit toujours l&amp;rsquo;envoyer
+pour le changer. Voir &lt;a href="https://go-authn.github.io/docs/0.7/fr/authnd/passwords/"&gt;changer un mot de passe&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

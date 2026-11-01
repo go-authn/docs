@@ -1,0 +1,203 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – 检查</title><link>https://go-authn.github.io/docs/0.7/zh-cn/tags/%E6%A3%80%E6%9F%A5/</link><description>Recent content in 检查 on go-authn</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><atom:link href="https://go-authn.github.io/docs/0.7/zh-cn/tags/%E6%A3%80%E6%9F%A5/index.xml" rel="self" type="application/rss+xml"/><item><title>重启人员赖以登录的服务之前先用 check</title><link>https://go-authn.github.io/docs/0.7/zh-cn/authnd/check/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/zh-cn/authnd/check/</guid><description>
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authnd check /etc/authnd
+authnd check --config a.hcl --config b.hcl&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;check&lt;/code&gt; 读取配置的方式与服务器完全相同，并&lt;strong&gt;在监听之前打开服务器所要打开的一切&lt;/strong&gt;——文件、数据库、位于此服务之后的目录、身份提供方的发现文档、TLS 证书和密钥、keytab——然后输出将要发布什么、发布给谁，&lt;strong&gt;而不进行监听&lt;/strong&gt;。它输出每个凭据来自何处，但绝不输出其中的内容。它以 0 退出并以 &lt;em&gt;this configuration
+can be served&lt;/em&gt; 结束，或者以 1 退出并给出使服务器无法启动的那一句话。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="a-configuration-that-can-be-served"&gt;可以投入服务的配置&lt;span class="hx:absolute hx:-mt-20" id="a-configuration-that-can-be-served"&gt;&lt;/span&gt;
+&lt;a href="#a-configuration-that-can-be-served" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;两个 &lt;code&gt;user&lt;/code&gt; 块、一个 reader 和一个 SQLite 数据库，位于包含两个文件（&lt;code&gt;authnd.hcl&lt;/code&gt; 和 &lt;code&gt;people.hcl&lt;/code&gt;）的目录中：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check etc/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password account, uidObject uid
+bob the configuration file an NT hash account, uidObject uid
+dora a sqlite database a password account, uidObject uid
+eli a sqlite database an NT hash account, uidObject uid
+GROUP MEMBERS PUBLISHED AS
+engineers dora and eli groupOfNames
+staff alice, bob and dora groupOfNames
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+dora has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+eli has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group engineers has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+a bind carries a password
+bob and eli cannot bind with a password: their sources hold only what an SMB server needs (an NT hash), which a bind cannot be checked against
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="reading-it"&gt;如何阅读&lt;span class="hx:absolute hx:-mt-20" id="reading-it"&gt;&lt;/span&gt;
+&lt;a href="#reading-it" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;第一行是协议方案、地址和 base：&lt;code&gt;ldap://&lt;/code&gt;、&lt;code&gt;ldaps://&lt;/code&gt; 或 &lt;code&gt;ldap+starttls://&lt;/code&gt;——参见 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/tls/"&gt;TLS&lt;/a&gt;。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;列&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;FROM&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;拥有该名称的来源：&lt;em&gt;the configuration file&lt;/em&gt;、&lt;em&gt;a sqlite database&lt;/em&gt;（或 postgres、mysql），或位于此服务之后的目录的 url&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;CAN PROVE&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;a password&lt;/em&gt;（已持有，因此可以比较并由它派生密钥）、&lt;em&gt;a password check&lt;/em&gt;（由另一个目录回答是或否）、&lt;em&gt;an NT hash&lt;/em&gt;、&lt;em&gt;N keys&lt;/em&gt;、&lt;em&gt;a one-time-code secret&lt;/em&gt;，或 &lt;em&gt;nothing&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;PUBLISHED AS&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;条目的对象类（不含 &lt;code&gt;top&lt;/code&gt;），按&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/entries/#the-shapes"&gt;各种形态&lt;/a&gt;给出——对于未通过模式检查的条目则为 &lt;em&gt;NOT PUBLISHED (see below)&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;WITH&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;条目所带的属性，取自搜索所返回的条目：&lt;code&gt;uid&lt;/code&gt;；类允许时的 &lt;code&gt;cn&lt;/code&gt;；来源所提供的内容减去被丢弃的；有密钥时的 &lt;code&gt;sshPublicKey&lt;/code&gt;；以及在 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/tls/#publish_nt_hash"&gt;&lt;code&gt;publish_nt_hash&lt;/code&gt;&lt;/a&gt;开启且此人具有 NT 密钥和 SID 时的 &lt;code&gt;sambaSID&lt;/code&gt; 和 &lt;code&gt;sambaNTPassword&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;组表也有 &lt;code&gt;PUBLISHED AS&lt;/code&gt; 列：&lt;code&gt;posixGroup&lt;/code&gt;、&lt;code&gt;groupOfNames&lt;/code&gt; 或 &lt;code&gt;organizationalRole&lt;/code&gt;。直到 v0.10.2，&lt;code&gt;PUBLISHED AS&lt;/code&gt; 是属性列表，对几乎所有人都是 &lt;em&gt;uid and cn&lt;/em&gt;，并且没有&lt;code&gt;WITH&lt;/code&gt; 列。&lt;/p&gt;
+&lt;p&gt;表格之后的各行说明了在依赖该配置之前需要知道的事。首先是关于&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/entries/"&gt;条目&lt;/a&gt;：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;谁不是 &lt;code&gt;posixAccount&lt;/code&gt;&lt;/strong&gt;，以及他们缺少 &lt;code&gt;uidNumber&lt;/code&gt;、&lt;code&gt;gidNumber&lt;/code&gt;
+和 &lt;code&gt;homeDirectory&lt;/code&gt; 中的哪一项；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;哪些组没有 &lt;code&gt;gidNumber&lt;/code&gt;&lt;/strong&gt;，以及它们改为发布成什么；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;每个被丢弃的属性&lt;/strong&gt;，因为其条目的任何类都不允许它，以及哪些类会允许它；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;每个未发布的条目&lt;/strong&gt;，以及模式检查所发现的每个问题；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;谁有 NT 密钥却没有 &lt;code&gt;sambaSID&lt;/code&gt;&lt;/strong&gt;，因而没有 &lt;code&gt;sambaNTPassword&lt;/code&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;从 v0.12.0 起，在第一行和各表格之间，会给出&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/schemas/"&gt;站点模式&lt;/a&gt;
+添加了什么，以及各来源声明了什么：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;加载的模式文件和 &lt;code&gt;schema&lt;/code&gt; 块&lt;/strong&gt;，以及每一个添加了什么：&lt;code&gt;schema: etc/authnd/example.schema adds 3 object identifier macros, 2 attribute types and 2 object classes&lt;/code&gt;；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;每个来源声明的类&lt;/strong&gt;：&lt;code&gt;users &amp;quot;sql&amp;quot; declares exampleStaff and exampleLockerHolder for its people&lt;/code&gt;，并附上该声明的位置；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;每个未加到某个人员或组上的类&lt;/strong&gt;，因为它缺少其来源所声明的某个类的MUST：&lt;code&gt;ben is published without exampleStaff, which its source declares: ben has no exampleEmployeeId, which exampleStaff requires&lt;/code&gt;，以及在各属性行之后，随之一并丢失的那些属性；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;两个来源为同一个组声明了不同的类&lt;/strong&gt;：发布第一个来源的列表，忽略第二个来源的列表。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;无法构建的文件、重新定义，以及未定义、为 STRUCTURAL 或由 authnd自行派生的已声明类，都会使 &lt;code&gt;check&lt;/code&gt; 和服务器同样停止，并给出文件或配置中的位置。&lt;/p&gt;
+&lt;p&gt;然后是关于绑定和搜索：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;绑定携带什么&lt;/strong&gt;：&lt;em&gt;a password&lt;/em&gt;，或者在有 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/mfa/"&gt;&lt;code&gt;mfa&lt;/code&gt; 块&lt;/a&gt;时是&lt;em&gt;a password with a 6-digit code after it&lt;/em&gt;；在有 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/tokens/"&gt;&lt;code&gt;oidc&lt;/code&gt; 块&lt;/a&gt;时，则说明令牌来自何处、通过什么传递；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;谁完全不能用密码绑定&lt;/strong&gt;：只以 NT哈希为人所知的人员——参见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/people/#written-in-the-configuration"&gt;人员&lt;/a&gt;；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;谁可以搜索&lt;/strong&gt;：各个 reader，或者 &lt;em&gt;no reader is declared: nothing may
+search, and binds are not affected&lt;/em&gt;；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;是否发布 &lt;code&gt;sambaNTPassword&lt;/code&gt;&lt;/strong&gt;，以及通过什么传输——参见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/tls/#publish_nt_hash"&gt;&lt;code&gt;publish_nt_hash&lt;/code&gt;&lt;/a&gt;；&lt;/li&gt;
+&lt;li&gt;有 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/kerberos/"&gt;&lt;code&gt;kerberos&lt;/code&gt; 块&lt;/a&gt;时，说明域以及&lt;strong&gt;谁可以、谁不可以获得票据&lt;/strong&gt;，并给出原因；&lt;/li&gt;
+&lt;li&gt;有 &lt;code&gt;mfa&lt;/code&gt; 块时，说明&lt;strong&gt;谁没有第二因素&lt;/strong&gt;，因而不能用密码绑定；若同时有 &lt;code&gt;oidc&lt;/code&gt; 块，该行会补充说明 &lt;code&gt;amr&lt;/code&gt; 指名两种因素的令牌仍然可以；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;指名了任何来源中都没有的人员的组&lt;/strong&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;最后一项会按原样发布——一个系统的前端合理地带有另一个系统所拥有的名称——但会予以提示，因为另一种解读是笔误。在 &lt;code&gt;posixGroup&lt;/code&gt; 中，这个陌生人是 &lt;code&gt;memberUid&lt;/code&gt;；在&lt;code&gt;groupOfNames&lt;/code&gt; 中，它是在此处没有对应条目的 &lt;code&gt;member&lt;/code&gt; DN，这里是 &lt;code&gt;member: uid=zoe,ou=people,dc=example,dc=org&lt;/code&gt;，go-authn/directory 的&lt;code&gt;ldapdir&lt;/code&gt; 从 v0.14.0 起会将其映射到无人。这里数据库的 &lt;code&gt;team_members&lt;/code&gt;
+表中有一行属于 &lt;code&gt;zoe&lt;/code&gt;，而 &lt;code&gt;zoe&lt;/code&gt; 在此处并不存在：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;GROUP MEMBERS PUBLISHED AS
+engineers dora, eli and zoe groupOfNames
+staff alice, bob and dora groupOfNames
+[...]
+engineers names zoe, who has no entry here: the group is published as it stands, and nothing here can prove them&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;（指名陌生人的 &lt;code&gt;group&lt;/code&gt; &lt;em&gt;块&lt;/em&gt;会被直接拒绝；参见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/people/#written-in-the-configuration"&gt;人员&lt;/a&gt;。）&lt;/p&gt;
+&lt;p&gt;自 v0.15.0 起，输出的第二行是 &lt;code&gt;limits:&lt;/code&gt;：authnd 将使用的连接限制、操作期限和启动期限，包括默认值。本页的记录由更早的版本打印，没有显示它。真实的例子见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/operations/#limits"&gt;限制与期限&lt;/a&gt;。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;它拒绝什么&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;下面每一项都会使 &lt;code&gt;check&lt;/code&gt; 和服务器同样停止，退出状态为 1。它们位于各自所属的页面上；下面是几个按原样输出的例子：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/nobody.hcl
+authnd: there is nobody here: name a user, or a users block reading a database or a directory
+$ authnd check cases/nthash-clear.hcl
+authnd: publish_nt_hash needs cert_file and key_file: an NT hash IS the credential, and 0.0.0.0:3893 is not loopback, so it would cross a network in the clear
+$ authnd check cases/krb-mfa.hcl
+authnd: kerberos and mfa together: the mfa block asks every bind for a password AND a code, and a kinit carries only the password -- this KDC has no second-factor pre-authentication, so a realm here would accept one factor where the mfa block demands two. Remove one of the blocks
+$ authnd check empty
+authnd: empty has no .hcl files in it
+$ authnd
+authnd: no configuration: give a .hcl file or a directory of them&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-certificate-the-keytab-and-the-one-thing-it-cannot-see"&gt;证书、keytab，以及它无法发现的那一件事&lt;span class="hx:absolute hx:-mt-20" id="the-certificate-the-keytab-and-the-one-thing-it-cannot-see"&gt;&lt;/span&gt;
+&lt;a href="#the-certificate-the-keytab-and-the-one-thing-it-cannot-see" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;无法加载的证书和没有 &lt;code&gt;krbtgt/REALM&lt;/code&gt; 的 keytab 会被&lt;code&gt;check&lt;/code&gt; 拒绝，所用措辞与服务器相同：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/badcert
+authnd: the certificate: open tls/missing.pem: no such file or directory
+$ authnd check cases/nokrbtgt
+authnd: kdc: the keytab has no krbtgt key for this realm: matching key not found in keytab. Looking for &amp;#34;krbtgt/EXAMPLE.ORG&amp;#34; realm: EXAMPLE.ORG kvno: 0 etype: 18&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;不监听就无法知道的是&lt;strong&gt;端口是否空闲&lt;/strong&gt;。同一 Kerberos 地址上的第二个服务器能通过 &lt;code&gt;check&lt;/code&gt;，却会在启动时被拒绝：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config cases/realm2
+authnd: kerberos udp 127.0.0.1:18388: listen udp 127.0.0.1:18388: bind: address already in use&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="run-it-as-the-service-account"&gt;以服务账户运行&lt;span class="hx:absolute hx:-mt-20" id="run-it-as-the-service-account"&gt;&lt;/span&gt;
+&lt;a href="#run-it-as-the-service-account" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;这样，只有 root 才能读取的文件会在这里失败，而不是在重启时失败。升级之前用&lt;strong&gt;新的&lt;/strong&gt;二进制文件运行它；参见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/install/#upgrade-roll-back-remove"&gt;安装&lt;/a&gt;。&lt;/p&gt;</description></item></channel></rss>

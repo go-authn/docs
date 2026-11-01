@@ -1,0 +1,1458 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Oidc</title><link>https://go-authn.github.io/docs/0.7/zh-cn/tags/oidc/</link><description>Recent content in Oidc on go-authn</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><atom:link href="https://go-authn.github.io/docs/0.7/zh-cn/tags/oidc/index.xml" rel="self" type="application/rss+xml"/><item><title>authn-bridge</title><link>https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/</guid><description>
+&lt;p&gt;&lt;strong&gt;人员在自己所属的大学登录，通过 RENATER 的 Fédération
+Éducation-Recherche 或 eduGAIN，而应用程序得到 OpenID Connect 令牌。&lt;/strong&gt;
+同一次登录还可以让 SSH 密钥获得认证、为基于 TLS 的 NFS 签发 X.509 客户端证书、为 SMB 和 S3 设置应用密码，或注册 WireGuard 密钥。提供方可以吊销其所签发的内容，并且会发布其已吊销内容的签名列表；已经发放的访问令牌在过期之前仍然有效。纯 Go，&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;，单个二进制文件。这些页面描述 v0.23.6。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.6
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge keygen --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge metadata --config /etc/authn-bridge &amp;gt; sp.xml &lt;span class="c1"&gt;# register this with the federation&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge check --config /etc/authn-bridge
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge --config /etc/authn-bridge &lt;span class="c1"&gt;# serve&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;在 v0.20.0 之前，该命令名为 &lt;code&gt;bridge&lt;/code&gt;。这同时也是 iproute2 的&lt;code&gt;/sbin/bridge&lt;/code&gt;，几乎每个 Linux 系统都安装了它，而在 &lt;code&gt;PATH&lt;/code&gt; 中排在前面的那个会胜出。模块路径仍然是 &lt;code&gt;github.com/go-authn/bridge&lt;/code&gt;。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-a-bridge"&gt;为什么需要 bridge&lt;span class="hx:absolute hx:-mt-20" id="why-a-bridge"&gt;&lt;/span&gt;
+&lt;a href="#why-a-bridge" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;科研联邦使用 SAML。它的成员是数百个身份提供方，每个机构一个，列在联邦发布的签名元数据文档中。今天编写的应用程序想要 OpenID Connect，并信任一个提供方。authn-bridge 就是这一个提供方：一侧是 SAML 服务提供方，向联邦注册一次；另一侧是 OpenID 提供方。&lt;/p&gt;
+&lt;p&gt;网关要为其后的每个应用程序决定每个人是谁，因此这个程序的大部分内容都是拒绝。它拒绝联邦没有签名的元数据、指称来自另一个机构域的人员的断言、IdP无权管辖的组，以及会放行其中任何一项的配置。无法安全提供服务的配置不会启动。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-prints-at-startup"&gt;启动时它输出什么&lt;span class="hx:absolute hx:-mt-20" id="what-it-prints-at-startup"&gt;&lt;/span&gt;
+&lt;a href="#what-it-prints-at-startup" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-bridge --config etc/bridge-admin.hcl
+admin API on unix:///tmp/authn/run/admin.sock
+metrics on 127.0.0.1:28475
+authn-bridge v0.23.4: http://127.0.0.1:28473 on 127.0.0.1:28473&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;这是环回地址上的测试提供方（&lt;code&gt;http://&lt;/code&gt; 签发方只在环回主机上被接受）。它在监听&lt;strong&gt;之前&lt;/strong&gt;获取联邦的元数据。无法指名任何一个机构的提供方是无人能够通过它登录的，因此没有元数据时它会退出而不是启动。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="where-to-go-next"&gt;接下来去哪里&lt;span class="hx:absolute hx:-mt-20" id="where-to-go-next"&gt;&lt;/span&gt;
+&lt;a href="#where-to-go-next" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/install/"&gt;安装&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;用户、目录、systemd 单元、密钥&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/configuration/"&gt;配置&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;每个块、&lt;code&gt;check&lt;/code&gt;，以及启动时拒绝什么&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/federation/"&gt;联邦一侧&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;元数据、其签名者的指纹、scope，以及 IdP 可以断言什么&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/tokens/"&gt;令牌&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;ID 令牌、访问令牌、设备授权、应用密码、WireGuard 密钥&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/resources/"&gt;资源指示符&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;每次针对客户端的一个资源服务器获取令牌（RFC 8707）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/certificates/"&gt;证书&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;SSH 证书、EuroHPC 配置档、用于 NFS 的 X.509 客户端证书&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/revocation/"&gt;吊销&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;已签名的 KRL 和 CRL，以及 Shared Signals 发送方&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/admin/"&gt;管理 API&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;禁用人员或机构、健康检查和指标&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;它所签署的列表由 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-revokd/"&gt;authn-revokd&lt;/a&gt;
+为普通的 &lt;code&gt;sshd&lt;/code&gt; 或 TLS 服务器读取，也由&lt;a href="https://go-fileshare.github.io/docs/latest/security/revocation-lists/" target="_blank" rel="noopener"&gt;go-fileshare&lt;/a&gt;
+读取，后者自行检查这些列表。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-is-not"&gt;它不是什么&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-not"&gt;&lt;/span&gt;
+&lt;a href="#what-it-is-not" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;单进程。&lt;/strong&gt; 有 &lt;code&gt;state&lt;/code&gt; 块时，刷新令牌以及在 &lt;code&gt;/userinfo&lt;/code&gt; 处被认可的访问令牌在重启后仍然保留。进行中的登录、授权码和设备授权则不会。状态是同步写入并在启动时读取的，因此同一数据库上的两个实例会各自错过对方写入的内容。&lt;/li&gt;
+&lt;li&gt;没有动态客户端注册，也没有前端或后端通道注销。&lt;/li&gt;
+&lt;li&gt;没有可添加的用户或组。人员之所以存在，是因为其机构为他们担保，而他们的组就是机构所断言的内容。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;许可证&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause。&lt;/p&gt;</description></item><item><title>令牌、密码和密钥</title><link>https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/tokens/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/tokens/</guid><description>
+&lt;p&gt;这里的每种凭据都始于在人员所属机构的同一次登录。不同之处在于凭据是为谁而设，以及如何收回。证书见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/certificates/"&gt;它们自己的页面&lt;/a&gt;。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-the-provider-publishes"&gt;提供方发布什么&lt;span class="hx:absolute hx:-mt-20" id="what-the-provider-publishes"&gt;&lt;/span&gt;
+&lt;a href="#what-the-provider-publishes" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/.well-known/openid-configuration | jq .
+{
+&amp;#34;authorization_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/authorize&amp;#34;,
+&amp;#34;authorization_response_iss_parameter_supported&amp;#34;: true,
+&amp;#34;claims_parameter_supported&amp;#34;: false,
+&amp;#34;claims_supported&amp;#34;: [
+&amp;#34;sub&amp;#34;,
+&amp;#34;iss&amp;#34;,
+&amp;#34;aud&amp;#34;,
+&amp;#34;exp&amp;#34;,
+&amp;#34;iat&amp;#34;,
+&amp;#34;auth_time&amp;#34;,
+&amp;#34;nonce&amp;#34;,
+&amp;#34;acr&amp;#34;,
+&amp;#34;name&amp;#34;,
+&amp;#34;given_name&amp;#34;,
+&amp;#34;family_name&amp;#34;,
+&amp;#34;preferred_username&amp;#34;,
+&amp;#34;email&amp;#34;,
+&amp;#34;groups&amp;#34;,
+&amp;#34;eduperson_principal_name&amp;#34;,
+&amp;#34;eduperson_scoped_affiliation&amp;#34;,
+&amp;#34;eduperson_entitlement&amp;#34;,
+&amp;#34;entitlements&amp;#34;,
+&amp;#34;eduperson_assurance&amp;#34;,
+&amp;#34;eduperson_orcid&amp;#34;,
+&amp;#34;schac_home_organization&amp;#34;,
+&amp;#34;voperson_id&amp;#34;
+],
+&amp;#34;code_challenge_methods_supported&amp;#34;: [
+&amp;#34;S256&amp;#34;
+],
+&amp;#34;device_authorization_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/device_authorization&amp;#34;,
+&amp;#34;grant_types_supported&amp;#34;: [
+&amp;#34;authorization_code&amp;#34;,
+&amp;#34;refresh_token&amp;#34;,
+&amp;#34;urn:ietf:params:oauth:grant-type:device_code&amp;#34;
+],
+&amp;#34;id_token_signing_alg_values_supported&amp;#34;: [
+&amp;#34;RS256&amp;#34;
+],
+&amp;#34;issuer&amp;#34;: &amp;#34;http://127.0.0.1:28473&amp;#34;,
+&amp;#34;jwks_uri&amp;#34;: &amp;#34;http://127.0.0.1:28473/jwks&amp;#34;,
+&amp;#34;request_parameter_supported&amp;#34;: false,
+&amp;#34;request_uri_parameter_supported&amp;#34;: false,
+&amp;#34;response_modes_supported&amp;#34;: [
+&amp;#34;query&amp;#34;
+],
+&amp;#34;response_types_supported&amp;#34;: [
+&amp;#34;code&amp;#34;
+],
+&amp;#34;scopes_supported&amp;#34;: [
+&amp;#34;openid&amp;#34;,
+&amp;#34;profile&amp;#34;,
+&amp;#34;email&amp;#34;,
+&amp;#34;eduperson&amp;#34;,
+&amp;#34;groups&amp;#34;
+],
+&amp;#34;subject_types_supported&amp;#34;: [
+&amp;#34;public&amp;#34;,
+&amp;#34;pairwise&amp;#34;
+],
+&amp;#34;token_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/token&amp;#34;,
+&amp;#34;token_endpoint_auth_methods_supported&amp;#34;: [
+&amp;#34;client_secret_basic&amp;#34;,
+&amp;#34;client_secret_post&amp;#34;,
+&amp;#34;none&amp;#34;
+],
+&amp;#34;userinfo_endpoint&amp;#34;: &amp;#34;http://127.0.0.1:28473/userinfo&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;授权码流程，&lt;strong&gt;每个客户端都必须使用 PKCE S256&lt;/strong&gt;。没有&lt;code&gt;code_challenge_method&lt;/code&gt; 的请求会被拒绝，而不是被当作 S256 处理，因为 RFC 7636 将 &lt;code&gt;plain&lt;/code&gt; 定为默认值。配置了&lt;code&gt;pkce = &amp;quot;or_nonce&amp;quot;&lt;/code&gt; 的机密客户端可以改为发送 OpenID &lt;code&gt;nonce&lt;/code&gt;。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-id-token"&gt;ID 令牌&lt;span class="hx:absolute hx:-mt-20" id="the-id-token"&gt;&lt;/span&gt;
+&lt;a href="#the-id-token" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;它面向客户端，关于登录而不是关于人员：RS256，&lt;code&gt;aud&lt;/code&gt; 为客户端ID，&lt;code&gt;sub&lt;/code&gt;、&lt;code&gt;auth_time&lt;/code&gt;、&lt;code&gt;at_hash&lt;/code&gt;，请求带有 &lt;code&gt;nonce&lt;/code&gt; 时的 &lt;code&gt;nonce&lt;/code&gt;，以及IdP 说明其所用认证上下文时的 &lt;code&gt;acr&lt;/code&gt;。有效期为&lt;code&gt;id_token_lifetime&lt;/code&gt;，默认五分钟。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;其中没有任何关于人员的内容。&lt;/strong&gt; scope 所释放的声明位于&lt;code&gt;/userinfo&lt;/code&gt;，这正是 OIDC Core 5.4 在签发访问令牌时的规定，而访问令牌总会签发。ID 令牌本身就是凭据的客户端（例如 opkssh）设置 &lt;code&gt;id_token_claims = true&lt;/code&gt;，以便把它们复制进去。ID 令牌只会为带有 &lt;code&gt;openid&lt;/code&gt; scope 的请求签发。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;scope&lt;/th&gt;
+&lt;th&gt;释放&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;profile&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;name&lt;/code&gt;、&lt;code&gt;given_name&lt;/code&gt;、&lt;code&gt;family_name&lt;/code&gt;、&lt;code&gt;preferred_username&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;email&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;email&lt;/code&gt;（绝不含 &lt;code&gt;email_verified&lt;/code&gt;）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;eduperson&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;eduperson_principal_name&lt;/code&gt;、&lt;code&gt;eduperson_scoped_affiliation&lt;/code&gt;、&lt;code&gt;eduperson_entitlement&lt;/code&gt; 和 &lt;code&gt;entitlements&lt;/code&gt;、&lt;code&gt;eduperson_assurance&lt;/code&gt;、&lt;code&gt;eduperson_orcid&lt;/code&gt;、&lt;code&gt;schac_home_organization&lt;/code&gt;、&lt;code&gt;voperson_id&lt;/code&gt;（SAML 的 &lt;code&gt;subject-id&lt;/code&gt;，转为小写）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;groups&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;groups&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="the-access-token"&gt;访问令牌&lt;span class="hx:absolute hx:-mt-20" id="the-access-token"&gt;&lt;/span&gt;
+&lt;a href="#the-access-token" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;面向客户端 &lt;code&gt;audience&lt;/code&gt; 中的资源服务器，如 RFC 9068 所述：用 &lt;code&gt;signing_key_file&lt;/code&gt;（RS256）或 &lt;code&gt;access_token_key_file&lt;/code&gt;（ES256）签名，&lt;code&gt;typ: at+jwt&lt;/code&gt;，有效期为 &lt;code&gt;token_lifetime&lt;/code&gt;（默认一小时）。它携带资源服务器无需询问任何人即可作出决定所需的内容：&lt;code&gt;preferred_username&lt;/code&gt;、&lt;code&gt;groups&lt;/code&gt;、&lt;code&gt;idp&lt;/code&gt;（为之担保的 IdP 的实体 ID）、&lt;code&gt;scope&lt;/code&gt;、&lt;code&gt;client_id&lt;/code&gt;，以及 IdP 说明其会话何时结束时的 &lt;code&gt;session_end&lt;/code&gt;。组可以按客户端省略：见&lt;a href="#what-it-leaves-out"&gt;下文&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;audience&lt;/code&gt; 指名多个资源服务器的客户端，可以用 RFC 8707 的 &lt;code&gt;resource&lt;/code&gt;
+请求发往其中一个的令牌：参见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/resources/"&gt;多个资源服务器&lt;/a&gt;。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="what-it-leaves-out"&gt;它省略了什么，以及原因&lt;span class="hx:absolute hx:-mt-20" id="what-it-leaves-out"&gt;&lt;/span&gt;
+&lt;a href="#what-it-leaves-out" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;strong&gt;没有 &lt;code&gt;auth_time&lt;/code&gt;，也没有 &lt;code&gt;acr&lt;/code&gt;&lt;/strong&gt;，尽管 RFC 9068 允许两者。它们仍保留在ID 令牌中，OIDC Core 把它们放在那里。没有任何程序从访问令牌中读取它们：不是本提供方（它按 &lt;code&gt;jti&lt;/code&gt; 查找令牌），也不是go-fileshare。然而，访问令牌也会被粘贴为 SSH
+keyboard-interactive 的答案（ssh-oidc 的 mccli，由 motley-cue 在&lt;code&gt;/userinfo&lt;/code&gt; 检查），而 OpenSSH 只读取其中的 1023 个字符；仅 IdP 的 &lt;code&gt;acr&lt;/code&gt;，&lt;code&gt;urn:oasis:names:tc:SAML:2.0:ac:classes:PasswordProtectedTransport&lt;/code&gt;，就占大约 90 个。在 v0.22.0 之前，访问令牌同时携带两者。&lt;/p&gt;
+&lt;p&gt;ES256 访问令牌（&lt;code&gt;access_token_key_file&lt;/code&gt;）在长 eppn 和三个 AARC entitlement情况下的长度，由 authn-bridge 的 &lt;code&gt;TestES256AccessTokens&lt;/code&gt; 测量，使用真实长度的签发方，并对照 RENATER 元数据的 &lt;code&gt;shibmd:Scope&lt;/code&gt;
+长度（743 个 scope）：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;scope 长度&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;字符数&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;13&lt;/td&gt;
+&lt;td&gt;中位数&lt;/td&gt;
+&lt;td&gt;885&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;22&lt;/td&gt;
+&lt;td&gt;第 95 百分位&lt;/td&gt;
+&lt;td&gt;945&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;29&lt;/td&gt;
+&lt;td&gt;第 99 百分位&lt;/td&gt;
+&lt;td&gt;992&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;44&lt;/td&gt;
+&lt;td&gt;最长&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;1092：超出&lt;/strong&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;在 v0.22.0 之前，同一个令牌为 1014 / 1074 / 1121 / 1221 个字符：从第 95 百分位起就超出了。仍然放不下的是最长的 scope，尤其是许多组：每个 entitlement 都会加上其完整的 URN，而且没有任何东西限制 IdP 发送多少个。用 3072 位密钥签名的 RS256 访问令牌，在没有任何组的情况下就有大约 1150 个字符，因此用于 SSH 的令牌使用 ES256 签名。超过 1023 个字符时，mccli 会改为向 motley-cue 索要一次性密码，motley-cue 默认允许这样做；粘贴到普通&lt;code&gt;ssh&lt;/code&gt; 中的令牌则必须放得下。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;对提出要求的客户端不含组&lt;/strong&gt;（v0.23.0）。每个组都会加上其完整的URN，而且没有任何东西限制 IdP 发送多少个，因此没有任何密钥和任何签名算法能够确保携带组的令牌一定放得下。&lt;code&gt;access_token_groups = false&lt;/code&gt;
+的客户端得到的访问令牌不含人员的 &lt;code&gt;groups&lt;/code&gt;：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;oidc-agent&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ssh&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; access_token_groups&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;它面向 ssh-oidc：oidc-agent 获取令牌，mccli 将其作为keyboard-interactive 的答案粘贴，而 motley-cue 在 &lt;code&gt;/userinfo&lt;/code&gt; 检查它并在那里读取组。由 authn-bridge 的 &lt;code&gt;TestAccessTokenWithoutGroups&lt;/code&gt; 测量，对于属于 50 个组的人员，在最长的 RENATER scope（44）和真实长度的签发方情况下，ES256 令牌为 732 个字符。&lt;/p&gt;
+&lt;p&gt;针对测试联邦，一个属于三个组的人员通过该客户端用设备授权登录：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-bridge token --issuer http://127.0.0.1:28473 --client oidc-agent --scope &amp;#34;openid eduperson groups&amp;#34; --cache var/tokens.json &amp;gt; at
+To log in, open http://127.0.0.1:28473/device
+and enter the code ZNBP-NMXM
+(or open http://127.0.0.1:28473/device?user_code=ZNBP-NMXM)
+$ tr -d &amp;#39;\n&amp;#39; &amp;lt; at | wc -c
+625&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;令牌指明了人员及其 IdP，但没有任何组：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ cut -d. -f2 at | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; | jq -R &amp;#34;@base64d | fromjson&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;ssh&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;oidc-agent&amp;#34;,
+&amp;#34;exp&amp;#34;: 1793017858,
+&amp;#34;iat&amp;#34;: 1793014258,
+&amp;#34;idp&amp;#34;: &amp;#34;https://idp.univ-example.example/idp/shibboleth&amp;#34;,
+&amp;#34;iss&amp;#34;: &amp;#34;http://127.0.0.1:28473&amp;#34;,
+&amp;#34;jti&amp;#34;: &amp;#34;T1qu1-IjIqirgQedQ6hkQCUfeM0OFANOESdXKc3yrJA&amp;#34;,
+&amp;#34;preferred_username&amp;#34;: &amp;#34;alice@univ-example.example&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid eduperson groups&amp;#34;,
+&amp;#34;sub&amp;#34;: &amp;#34;UmCstEtvM1rTavlxDxNPVw-jCNFAZhdRXU405Uz985o&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/userinfo&lt;/code&gt; 仍然提供这些组，作为 &lt;code&gt;groups&lt;/code&gt;（scope &lt;code&gt;groups&lt;/code&gt;）和&lt;code&gt;eduperson_entitlement&lt;/code&gt;（scope &lt;code&gt;eduperson&lt;/code&gt;）：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ { printf &amp;#39;Authorization: Bearer &amp;#39;; cat at; } &amp;gt; auth.hdr
+$ curl -s -H @auth.hdr http://127.0.0.1:28473/userinfo | jq .
+{
+&amp;#34;eduperson_entitlement&amp;#34;: [
+&amp;#34;urn:geant:univ-example.example:group:physique#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example&amp;#34;
+],
+&amp;#34;eduperson_principal_name&amp;#34;: &amp;#34;alice@univ-example.example&amp;#34;,
+&amp;#34;entitlements&amp;#34;: [
+&amp;#34;urn:geant:univ-example.example:group:physique#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example&amp;#34;
+],
+&amp;#34;groups&amp;#34;: [
+&amp;#34;urn:geant:univ-example.example:group:hpc-users#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:physique#idp.univ-example.example&amp;#34;,
+&amp;#34;urn:geant:univ-example.example:group:physique:calcul#idp.univ-example.example&amp;#34;
+],
+&amp;#34;sub&amp;#34;: &amp;#34;UmCstEtvM1rTavlxDxNPVw-jCNFAZhdRXU405Uz985o&amp;#34;,
+&amp;#34;voperson_id&amp;#34;: &amp;#34;a1b2c3@univ-example.example&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;默认值仍为 &lt;code&gt;true&lt;/code&gt;。&lt;/strong&gt; go-fileshare 与任何仅凭令牌作出决定的资源服务器一样，需要令牌中带有组：只有在令牌发往读取 &lt;code&gt;/userinfo&lt;/code&gt; 的服务器的客户端上，才省略它们。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;与证书并用时被拒绝。&lt;/strong&gt; SSH 和 X.509 证书从访问令牌中获取人员的组，因此带有 &lt;code&gt;access_token_groups = false&lt;/code&gt;
+以及 &lt;code&gt;ssh_certificates&lt;/code&gt; 或 &lt;code&gt;x509_certificates&lt;/code&gt; 的客户端，会签发不含任何组的证书，而按组授权的服务器会拒绝该人员，却没有任何地方说明原因。&lt;code&gt;check&lt;/code&gt; 与服务器在启动时一样，会拒绝这种组合：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;oidc-agent&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ssh&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; access_token_groups&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_certificates&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-bridge check --config etc/bridge.hcl
+authn-bridge: client &amp;#34;oidc-agent&amp;#34;: access_token_groups = false with ssh_certificates or x509_certificates: the certificates take the groups from the access token, and would carry none -- use one client for the certificates and another for tokens pasted into ssh
+$ echo $?
+1&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;请为证书使用一个客户端，为粘贴到 ssh 中的令牌使用另一个客户端。&lt;/p&gt;
+&lt;p&gt;带有提供方自身 scope（&lt;code&gt;ssh&lt;/code&gt;、&lt;code&gt;nfs&lt;/code&gt;、&lt;code&gt;app_password&lt;/code&gt;、&lt;code&gt;wireguard&lt;/code&gt;、&lt;code&gt;wireguard_peers&lt;/code&gt;）之一的令牌&lt;strong&gt;只发往提供方&lt;/strong&gt;：其 &lt;code&gt;aud&lt;/code&gt; 是签发方，这些端点会拒绝其他任何令牌。资源服务器收到的令牌无法在此重放：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -X POST http://127.0.0.1:28473/ssh/certificate -d x -D - -o -
+HTTP/1.1 401 Unauthorized
+Content-Type: text/plain; charset=utf-8
+Www-Authenticate: Bearer error=&amp;#34;invalid_token&amp;#34;
+X-Content-Type-Options: nosniff
+Date: Mon, 26 Oct 2026 11:36:20 GMT
+Content-Length: 23
+the token is not valid&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;已经发放的访问令牌是资源服务器自行检查的签名声明。&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/admin/"&gt;&lt;code&gt;RevokePerson&lt;/code&gt;&lt;/a&gt;终止的是带着它回到这里的一切；资源服务器通过&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/revocation/#shared-signals"&gt;Shared Signals&lt;/a&gt;得知。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="rotating-the-signing-key"&gt;轮换令牌签名密钥&lt;span class="hx:absolute hx:-mt-20" id="rotating-the-signing-key"&gt;&lt;/span&gt;
+&lt;a href="#rotating-the-signing-key" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;每个依赖方都用 &lt;code&gt;/jwks&lt;/code&gt; 发布的密钥验证令牌。就地更换密钥会使它们手中的所有令牌失效，而在它们取得之前就开始使用的密钥会被拒绝。&lt;code&gt;retired_signing_key_files&lt;/code&gt; 让这两种情况都变得安全：列在其中的密钥&lt;strong&gt;只发布，从不签名&lt;/strong&gt;。轮换需要&lt;strong&gt;两次重启&lt;/strong&gt;，因为提供方不会重新加载配置，SIGHUP 也会被忽略。本节依据 bridge 的 pull request #80（2026-10-26 合并，晚于标签 v0.23.4）之后的 README。&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;生成下一把密钥&lt;/strong&gt;，放在当前密钥旁边。该命令拒绝覆盖已有文件：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge keygen --key /var/lib/authn-bridge/oidc-2026-10.key&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;在它开始签名之前先发布。&lt;/strong&gt; 把它加入 &lt;code&gt;retired_signing_key_files&lt;/code&gt;，保持 &lt;code&gt;signing_key_file&lt;/code&gt; 不变，运行 &lt;code&gt;authn-bridge check&lt;/code&gt;，然后重启：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;signing_key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-04.key&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # still signing
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-10.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="k"&gt;published&lt;/span&gt; &lt;span class="k"&gt;only&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/jwks&lt;/code&gt; 现在列出&lt;strong&gt;两个&lt;/strong&gt; &lt;code&gt;kid&lt;/code&gt;，而新令牌仍带旧的 &lt;code&gt;kid&lt;/code&gt;。等待的时间至少要等于依赖方缓存密钥集的最长时间。遇到未知 &lt;code&gt;kid&lt;/code&gt; 就重新获取的依赖方（go-authn/oidc 会这样做，每个 &lt;code&gt;MinRefresh&lt;/code&gt; 至多一次）无需等待；按固定时间缓存的依赖方则需要等那么久。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;切换。&lt;/strong&gt; 把新密钥设为 &lt;code&gt;signing_key_file&lt;/code&gt;，并把旧密钥移到 &lt;code&gt;retired_signing_key_files&lt;/code&gt;。然后运行&lt;code&gt;authn-bridge check&lt;/code&gt; 并重启：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;signing_key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-10.key&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-04.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;/jwks&lt;/code&gt; 仍列出两个 &lt;code&gt;kid&lt;/code&gt;，新令牌带新的 &lt;code&gt;kid&lt;/code&gt;。用旧密钥签名的令牌继续可以验证。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;淘汰旧密钥&lt;/strong&gt;，要在它签名的令牌不可能再被出示之后：至少是 &lt;code&gt;token_lifetime&lt;/code&gt;（默认 1 小时）与&lt;code&gt;id_token_lifetime&lt;/code&gt;（5 分钟）中较长者，再加上依赖方的时钟偏差及其密钥集缓存。对 opkssh，则改为等待PK Token 的有效期（默认一天，最长一周）。然后把它从列表中移除并重启：&lt;code&gt;/jwks&lt;/code&gt; 只列出一个 &lt;code&gt;kid&lt;/code&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;每一步都可以用 &lt;code&gt;curl -s https://login.example.org/jwks&lt;/code&gt; 查看已发布的 &lt;code&gt;kid&lt;/code&gt;；新令牌的 &lt;code&gt;kid&lt;/code&gt; 是任一访问令牌或ID 令牌的第一段，经 base64url 解码得到。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;access_token_key_file&lt;/code&gt;（ES256）以同样方式轮换：用 &lt;code&gt;authn-bridge keygen --access-token-key&lt;/code&gt; 写出下一把，被淘汰的和其他密钥一样放入 &lt;code&gt;retired_signing_key_files&lt;/code&gt;。没有 &lt;code&gt;state&lt;/code&gt; 块时，每次重启都会让所有人退出登录，因为刷新令牌和 &lt;code&gt;/userinfo&lt;/code&gt; 保存在内存中；已经签发的访问令牌在资源服务器上仍可验证。&lt;/p&gt;
+&lt;p&gt;README 报告说，这已用 llmflow-gateway 作为依赖方，在 go-llmflow/bench（&lt;code&gt;e2e/oidc&lt;/code&gt;，&lt;code&gt;TestBridge/c/key-rotation&lt;/code&gt;）中端到端验证：第 2 步之后，&lt;code&gt;/jwks&lt;/code&gt; 列出两个 &lt;code&gt;kid&lt;/code&gt;，而令牌仍带旧的；第 3 步之后，切换前签名的令牌和切换后签名的令牌都被接受，只获取了一次密钥集；切换后立即进行 SSO 登录也能正常工作。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="without-a-browser-the-device-grant"&gt;没有浏览器：设备授权&lt;span class="hx:absolute hx:-mt-20" id="without-a-browser-the-device-grant"&gt;&lt;/span&gt;
+&lt;a href="#without-a-browser-the-device-grant" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;WebDAV 客户端、脚本、终端都没有可以把人带到大学登录页的浏览器。带有 &lt;code&gt;device = true&lt;/code&gt; 的客户端会索要代码（RFC 8628），人员在任何其他设备上登录：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;rclone&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; refresh_lifetime&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;720h&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # refresh tokens, off unless set
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;rclone (WebDAV)&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;authn-bridge token --issuer https://login.example.org --client rclone&lt;/code&gt; 输出一个访问令牌，第一次时登录，之后则刷新；它使用的是golang.org/x/oauth2 的设备客户端，而不是这里编写的。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;用户代码&lt;/td&gt;
+&lt;td&gt;取自 &lt;code&gt;BCDFGHJKLMNPQRSTVWXZ&lt;/code&gt; 的八个字母（没有元音，没有数字），有效期十分钟；在此期间每个主机（IPv4 地址、IPv6 /64）最多允许十个&lt;strong&gt;错误&lt;/strong&gt;代码，其周围的 /24 或 /48 则允许十倍之多&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;轮询&lt;/td&gt;
+&lt;td&gt;每五秒一次；轮询更快会得到 &lt;code&gt;slow_down&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;等待中的设备&lt;/td&gt;
+&lt;td&gt;最多 20,000 个；超过后最旧的会被挤出，而不是拒绝所有人&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;刷新令牌&lt;/td&gt;
+&lt;td&gt;每次使用都会轮换，位于一个在登录时由 &lt;code&gt;refresh_lifetime&lt;/code&gt; 固定其终点的族之中；已退役的令牌被再次使用会吊销该族及其所换取的访问令牌&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="application-passwords"&gt;应用密码&lt;span class="hx:absolute hx:-mt-20" id="application-passwords"&gt;&lt;/span&gt;
+&lt;a href="#application-passwords" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;NTLMv2 和 SigV4 证明的是服务器必须已经持有的秘密，因此没有任何令牌适用于 SMB 或 S3。带有 &lt;code&gt;app_passwords = true&lt;/code&gt; 的客户端允许带有&lt;code&gt;app_password&lt;/code&gt; scope 的令牌设置一个，生成后只显示一次：&lt;code&gt;authn-bridge app-password --issuer ... --client files&lt;/code&gt;（&lt;code&gt;--remove&lt;/code&gt; 将其删除）。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;app_passwords&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # sqlite, postgres or mysql
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/apppw.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; store&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;nt_hash&amp;#34;] # the default, SMB only; add &amp;#34;password&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="k"&gt;S3&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; lifetime&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;2160h&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default, 90 days
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # table = &amp;#34;app_passwords&amp;#34; # the default
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;该表在缺失时创建：&lt;code&gt;login, password, nt_hash, expires, idp&lt;/code&gt;。只存储协议所需的内容：SMB 用的 NT 哈希，仅当 &lt;code&gt;store&lt;/code&gt; 要求时才存储密码本身。go-fileshare 用 &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; 块读取它；请在其查询中写明列名，绝不要用 &lt;code&gt;*&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;禁用某人会移除其密码；禁用某机构会移除该机构所有人员的密码。被移除的密码在 go-fileshare 下次读取其目录时失效。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="wireguard-keys"&gt;WireGuard 密钥&lt;span class="hx:absolute hx:-mt-20" id="wireguard-keys"&gt;&lt;/span&gt;
+&lt;a href="#wireguard-keys" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;WireGuard 仅凭公钥认证对端，别无其他：没有证书，没有过期，没有吊销。因此提供方保存着对&lt;em&gt;这把密钥是谁的，它是否仍可连接？&lt;/em&gt; 的回答。设备的 VPN 客户端为一段租期注册公钥；私钥从不离开设备；网关读取有效密钥，其形式是仅为它签名的列表。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;certificates_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/certificates.json&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # keys are recorded beside the certificates
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;wireguard&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; lifetime&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;24h&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default: how long a key is listed; registering again renews it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; max_keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;10&lt;/span&gt;&lt;span class="c1"&gt; # the default: devices per person
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;vpn&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # what people log in with
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; wireguard_keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;vpn-gw&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # the gateway&amp;#39;s own client
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/vpn-gw.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; wireguard_peers&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;vpn&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # the clients whose keys it reads
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssf_receiver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;&lt;span class="c1"&gt; # optional: told at once when somebody is disabled
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;POST /wireguard/key&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;{&amp;quot;public_key&amp;quot;: &amp;quot;...&amp;quot;, &amp;quot;device&amp;quot;: &amp;quot;laptop&amp;quot;}&lt;/code&gt;，带有 &lt;code&gt;wireguard&lt;/code&gt; scope 的令牌；答复租期的结束时间&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;DELETE /wireguard/key&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;{&amp;quot;public_key&amp;quot;: &amp;quot;...&amp;quot;}&lt;/code&gt;：所有者收回一把密钥&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;GET /wireguard/peers&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;使用网关自己的 &lt;code&gt;client_credentials&lt;/code&gt; 令牌，scope 为 &lt;code&gt;wireguard_peers&lt;/code&gt;：一个类型为 &lt;code&gt;wireguard-peers+jwt&lt;/code&gt; 的签名 JWT，发往该网关，有效期五分钟&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;别人持有的密钥、已被收回的密钥，以及超出数量上限的密钥，都会被以 &lt;code&gt;409&lt;/code&gt; 拒绝。网关客户端必须是机密客户端，并且必须指名具有 &lt;code&gt;wireguard_keys&lt;/code&gt; 的客户端。列表的格式以及网关一侧的内容属于 go-authn/wireguard。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="openpubkey-and-opkssh"&gt;OpenPubkey 与 opkssh&lt;span class="hx:absolute hx:-mt-20" id="openpubkey-and-opkssh"&gt;&lt;/span&gt;
+&lt;a href="#openpubkey-and-opkssh" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;opkssh 把 ID 令牌变成 SSH 登录，完全不需要 CA，而它所生成的令牌（PK Token）比其中的 ID 令牌存活更久。提供方在授权码流程和设备流程中原样返回&lt;code&gt;nonce&lt;/code&gt;，使用 RS256 签名，并且只要 &lt;code&gt;retired_signing_key_files&lt;/code&gt; 指名了某把已退役的密钥，就会一直&lt;strong&gt;发布&lt;/strong&gt;它，使轮换之前签名的PK Token 仍然可以验证：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;retired_signing_key_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/oidc-2026-03.key&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;请给 opkssh 一个专属的客户端并设置 &lt;code&gt;id_token_claims = true&lt;/code&gt;：它根据 PK Token 的声明匹配人员，而它的 ID 令牌会传到它所登录的每台服务器。&lt;/p&gt;</description></item><item><title>多个资源服务器：每次获取其中一个的令牌</title><link>https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/resources/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/resources/</guid><description>
+&lt;p&gt;&lt;code&gt;audience&lt;/code&gt; 指名多个资源服务器的客户端（例如位于多个文件服务器之前的门户），得到的访问令牌是发往它们&lt;strong&gt;所有&lt;/strong&gt;服务器的。这些服务器中的任何一个都可以拿着收到的令牌去向其他服务器出示：RFC 8707 §3 说明，这正是应当限制 audience 的原因。自v0.21.0 起，客户端可以用 RFC 8707 的 &lt;code&gt;resource&lt;/code&gt; 参数请求发往其中&lt;strong&gt;一个&lt;/strong&gt;
+服务器的令牌。本页描述 v0.23.4；v0.22.0 的不同之处见&lt;a href="#departures"&gt;末尾&lt;/a&gt;。&lt;/p&gt;
+&lt;p&gt;没有 &lt;code&gt;resource&lt;/code&gt; 时，一切不变：访问令牌发往客户端的全部&lt;code&gt;audience&lt;/code&gt;，如&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authn-bridge/tokens/#the-access-token"&gt;令牌页面&lt;/a&gt;
+所述。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-client"&gt;客户端&lt;span class="hx:absolute hx:-mt-20" id="the-client"&gt;&lt;/span&gt;
+&lt;a href="#the-client" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;无需启用任何东西。客户端 &lt;code&gt;audience&lt;/code&gt; 中的每个 URI 都可以被请求。下面的示例使用带有刷新令牌的机密客户端，以及具有相同 audience 的设备客户端：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;portal&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/portal.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; redirect_uris&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;http://127.0.0.1:9/portal&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://fs-paris.example.org/&amp;#34;, &amp;#34;https://fs-lyon.example.org/&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; refresh_lifetime&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;8h&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;files-cli&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://fs-paris.example.org/&amp;#34;, &amp;#34;https://fs-lyon.example.org/&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authn-bridge check --config etc/bridge.hcl
+issuer http://127.0.0.1:28473
+SAML entity http://127.0.0.1:28473/saml
+tls none (a reverse proxy in front)
+federation 1 IdPs, 1 usable here, valid until 2026-11-02T11:30:50Z
+client portal (confidential, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])
+client files-cli (public, public subject, audience [https://fs-paris.example.org/ https://fs-lyon.example.org/])&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;check&lt;/code&gt; 列出 audience，对其不作其他说明。尤其是，它不会说明哪些条目可以被请求：只有&lt;strong&gt;不带片段的绝对 URI&lt;/strong&gt;可以。诸如 &lt;code&gt;fileshare&lt;/code&gt; 之类的逻辑名称，或带有 &lt;code&gt;#&lt;/code&gt; 的 URI，会被&lt;code&gt;audience&lt;/code&gt; 接受，并且在没有指名资源时仍然会放入令牌，但指名它的 &lt;code&gt;resource&lt;/code&gt; 会被拒绝。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="a-token-for-one-server"&gt;发往一个服务器的令牌&lt;span class="hx:absolute hx:-mt-20" id="a-token-for-one-server"&gt;&lt;/span&gt;
+&lt;a href="#a-token-for-one-server" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;人员照常登录（此处针对测试联邦，授权请求中不指名资源）。客户端随后在交换授权码时指名一个服务器：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=authorization_code -d code=&amp;#34;$(cat code)&amp;#34; \
+-d code_verifier=&amp;#34;$(cat verifier)&amp;#34; -d redirect_uri=http://127.0.0.1:9/portal \
+--data-urlencode resource=https://fs-paris.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;aud&lt;/code&gt; 就是所请求的值，与发送时完全一致，别无其他。检查其 audience 的服务器（如 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/libraries/oidc/"&gt;go-authn/oidc&lt;/a&gt;）会在巴黎接受此令牌，在里昂拒绝它。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="another-server-at-the-next-refresh"&gt;下一次刷新时换另一个服务器&lt;span class="hx:absolute hx:-mt-20" id="another-server-at-the-next-refresh"&gt;&lt;/span&gt;
+&lt;a href="#another-server-at-the-next-refresh" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;刷新令牌保留整个授权（RFC 8707 §2.2），因此下一次刷新可以请求另一个服务器：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-lyon.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-lyon.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;两个服务器的 &lt;code&gt;scope&lt;/code&gt; 相同：提供方不会按资源缩减它。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="a-server-the-client-may-not-have"&gt;客户端不可拥有的服务器&lt;span class="hx:absolute hx:-mt-20" id="a-server-the-client-may-not-have"&gt;&lt;/span&gt;
+&lt;a href="#a-server-the-client-may-not-have" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;不在客户端 &lt;code&gt;audience&lt;/code&gt; 中的资源会被拒绝，返回&lt;code&gt;invalid_target&lt;/code&gt;：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-nantes.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource \&amp;#34;https://fs-nantes.example.org/\&amp;#34; is not one this client may ask a token for&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;被拒绝的刷新不会消耗刷新令牌。&lt;/strong&gt; 请求在令牌被用掉之前就已检查，因此同一个刷新令牌仍然可用。若不请求资源，它给出的是发往客户端全部 audience 的令牌：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: [
+&amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;https://fs-lyon.example.org/&amp;#34;
+],
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;该值与 &lt;code&gt;audience&lt;/code&gt; 条目按字符串比较，不会像 URI 一样被规范化。去掉末尾 &lt;code&gt;/&lt;/code&gt; 的同一个服务器是另一个资源：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-paris.example.org \
+-w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource \&amp;#34;https://fs-paris.example.org\&amp;#34; is not one this client may ask a token for&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="bounding-the-grant-at-the-authorization-request"&gt;在授权请求处限定授权范围&lt;span class="hx:absolute hx:-mt-20" id="bounding-the-grant-at-the-authorization-request"&gt;&lt;/span&gt;
+&lt;a href="#bounding-the-grant-at-the-authorization-request" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;resource&lt;/code&gt; 也可以随授权请求一起发送。此时它限定授权范围：授权码以及随后的刷新令牌都发往该服务器，之后的令牌请求可以再次指名它，但绝不能指名另一个。在授权请求带有&lt;code&gt;resource=https://fs-paris.example.org/&lt;/code&gt; 的登录之后：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=authorization_code -d code=&amp;#34;$(cat code)&amp;#34; \
+-d code_verifier=&amp;#34;$(cat verifier)&amp;#34; -d redirect_uri=http://127.0.0.1:9/portal \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-lyon.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource \&amp;#34;https://fs-lyon.example.org/\&amp;#34; was not part of the authorization&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;授权请求可以带有&lt;strong&gt;多个&lt;/strong&gt; &lt;code&gt;resource&lt;/code&gt; 值：这是在那里唯一可以重复的参数。每个值都会被检查，重复给出的值只算一次，授权就发往所指名的那些服务器。在授权请求带有&lt;code&gt;resource=https://fs-paris.example.org/&lt;/code&gt; 和&lt;code&gt;resource=https://fs-lyon.example.org/&lt;/code&gt; 的登录之后，授权码给出发往两者的令牌，而每次刷新都可以请求其中任何一个：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=authorization_code -d code=&amp;#34;$(cat code)&amp;#34; \
+-d code_verifier=&amp;#34;$(cat verifier)&amp;#34; -d redirect_uri=http://127.0.0.1:9/portal \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: [
+&amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;https://fs-lyon.example.org/&amp;#34;
+],
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-paris.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-paris.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}
+$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-lyon.example.org/ \
+-o tokens.json -w &amp;#34;%{http_code}\n&amp;#34;
+200
+$ jq -r .access_token tokens.json | cut -d. -f2 | tr &amp;#34;_-&amp;#34; &amp;#34;/&amp;#43;&amp;#34; |
+jq -R &amp;#34;@base64d | fromjson | {aud, client_id, scope}&amp;#34;
+{
+&amp;#34;aud&amp;#34;: &amp;#34;https://fs-lyon.example.org/&amp;#34;,
+&amp;#34;client_id&amp;#34;: &amp;#34;portal&amp;#34;,
+&amp;#34;scope&amp;#34;: &amp;#34;openid profile&amp;#34;
+}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;有 &lt;code&gt;state&lt;/code&gt; 块时，授权的资源会与刷新令牌一起存储，因此重启不会使其范围变宽。&lt;/p&gt;
+&lt;p&gt;客户端不可拥有的资源在授权端点同样会被拒绝，以发回客户端重定向 URI 的错误形式。正常值之中混有一个这样的值就会拒绝整个请求：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s -o /dev/null -w &amp;#34;%{http_code} %{redirect_url}\n&amp;#34; -G http://127.0.0.1:28473/authorize \
+-d response_type=code -d client_id=portal -d scope=openid -d state=s1 \
+--data-urlencode redirect_uri=http://127.0.0.1:9/portal \
+-d code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM -d code_challenge_method=S256 \
+--data-urlencode resource=https://fs-paris.example.org/ \
+--data-urlencode resource=https://fs-nantes.example.org/
+302 http://127.0.0.1:9/portal?error=invalid_target&amp;amp;error_description=resource&amp;#43;%22https%3A%2F%2Ffs-nantes.example.org%2F%22&amp;#43;is&amp;#43;not&amp;#43;one&amp;#43;this&amp;#43;client&amp;#43;may&amp;#43;ask&amp;#43;a&amp;#43;token&amp;#43;for&amp;amp;iss=http%3A%2F%2F127.0.0.1%3A28473&amp;amp;state=s1&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;在令牌端点，每个请求一个资源。&lt;/strong&gt; 令牌发往一个服务器、发往授权所指名的那些服务器，或发往整个 &lt;code&gt;audience&lt;/code&gt;；它绝不会发往由令牌请求选择的列表。那里的第二个 &lt;code&gt;resource&lt;/code&gt; 会像任何重复的参数一样被拒绝：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=refresh_token -d refresh_token=&amp;#34;$(jq -r .refresh_token tokens.json)&amp;#34; \
+--data-urlencode resource=https://fs-paris.example.org/ \
+--data-urlencode resource=https://fs-lyon.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_request&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource appears more than once&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-rules"&gt;规则&lt;span class="hx:absolute hx:-mt-20" id="the-rules"&gt;&lt;/span&gt;
+&lt;a href="#the-rules" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;在何处&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;授权端点接受 &lt;code&gt;resource&lt;/code&gt;，令牌端点在 &lt;code&gt;authorization_code&lt;/code&gt; 和 &lt;code&gt;refresh_token&lt;/code&gt; 授权中接受它&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;多少个&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;在授权端点可以有多个：每个都会被检查，一个被拒绝就会拒绝整个请求。在令牌端点只能有一个：第二个是 &lt;code&gt;invalid_request&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;可以指名什么&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;不带片段的绝对 URI，且逐字符等于客户端 &lt;code&gt;audience&lt;/code&gt; 中的某一项&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;令牌的 &lt;code&gt;aud&lt;/code&gt;&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;令牌端点所指名的资源；若没有，则是授权请求按给定顺序所指名的资源；若两者都没有，则是客户端的整个 &lt;code&gt;audience&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;刷新&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;可以指名授权请求所指名的资源之一，或者在它没有指名任何资源时，指名客户端 &lt;code&gt;audience&lt;/code&gt; 中的任意 URI。新的刷新令牌保留整个授权&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;被拒绝&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;invalid_target&lt;/code&gt;，在授权端点发回重定向 URI，在令牌端点则作为 &lt;code&gt;400&lt;/code&gt; 错误返回。被拒绝的刷新不会消耗刷新令牌&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;其他授权&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;在 &lt;code&gt;client_credentials&lt;/code&gt;、设备授权请求或轮询设备令牌时带有 &lt;code&gt;resource&lt;/code&gt;，会被以 &lt;code&gt;invalid_target&lt;/code&gt; 拒绝而不是忽略：请求某一服务器令牌的客户端，绝不能收到发往另一个服务器的令牌。设备令牌始终发往整个 &lt;code&gt;audience&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;提供方自己的 scope&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;带有 &lt;code&gt;ssh&lt;/code&gt;、&lt;code&gt;nfs&lt;/code&gt;、&lt;code&gt;app_password&lt;/code&gt;、&lt;code&gt;wireguard&lt;/code&gt; 或 &lt;code&gt;wireguard_peers&lt;/code&gt; 的令牌只发往提供方本身，且只能指名签发方自己&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;在令牌端点和设备授权请求处对其他授权的拒绝：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s --netrc-file etc/portal.netrc http://127.0.0.1:28473/token \
+-d grant_type=client_credentials \
+--data-urlencode resource=https://fs-paris.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource indicators are taken with the authorization_code and refresh_token grants&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/device_authorization -d client_id=files-cli \
+--data-urlencode resource=https://fs-paris.example.org/ -w &amp;#34;\n%{http_code}\n&amp;#34; | jq .
+{
+&amp;#34;error&amp;#34;: &amp;#34;invalid_target&amp;#34;,
+&amp;#34;error_description&amp;#34;: &amp;#34;resource indicators are taken with the authorization_code and refresh_token grants&amp;#34;
+}
+400&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="departures"&gt;与 RFC 8707 的偏离之处&lt;span class="hx:absolute hx:-mt-20" id="departures"&gt;&lt;/span&gt;
+&lt;a href="#departures" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;RFC 8707&lt;/th&gt;
+&lt;th&gt;authn-bridge v0.23.4&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;§2：“Multiple &lt;code&gt;resource&lt;/code&gt; parameters MAY be used”&lt;/td&gt;
+&lt;td&gt;在授权端点，照此执行。在令牌端点只能有一个：第二个 &lt;code&gt;resource&lt;/code&gt; 是 &lt;code&gt;invalid_request&lt;/code&gt;，§3 允许这样做（“an authorization server may be unwilling or unable to fulfill a token request with multiple resources”）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.2：该参数适用于“for all grant types”&lt;/td&gt;
+&lt;td&gt;仅限 &lt;code&gt;authorization_code&lt;/code&gt; 和 &lt;code&gt;refresh_token&lt;/code&gt;。对于 &lt;code&gt;client_credentials&lt;/code&gt; 或设备授权，它会被以 &lt;code&gt;invalid_target&lt;/code&gt; 拒绝，在设备授权请求处和轮询时都是如此&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2：该值“SHOULD NOT include a query component”&lt;/td&gt;
+&lt;td&gt;不检查。检查的是该值为绝对 URI、没有片段，并且在客户端的 &lt;code&gt;audience&lt;/code&gt; 中&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2：服务器“may map from that value to a more general URI or abstract identifier”&lt;/td&gt;
+&lt;td&gt;不做映射：&lt;code&gt;aud&lt;/code&gt; 就是所请求的值，与 &lt;code&gt;audience&lt;/code&gt; 按字符串比较&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.2：“the authorization server should downscope the scope value”，针对每个资源&lt;/td&gt;
+&lt;td&gt;未做到：&lt;code&gt;scope&lt;/code&gt; 是授权的 scope，无论指名哪个服务器&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.1：没有 &lt;code&gt;resource&lt;/code&gt; 的请求 MAY 通过“by using a predefined default resource value”来处理&lt;/td&gt;
+&lt;td&gt;默认值是客户端的整个 &lt;code&gt;audience&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;§2.2：刷新可以限制为“to those [resources] that were originally granted”，并且刷新令牌“is bound to the full original grant”&lt;/td&gt;
+&lt;td&gt;照此执行&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;在 v0.22.1 之前&lt;/strong&gt;，v0.22.0 在授权端点会像拒绝任何其他重复的参数一样，以错误页面拒绝重复的 &lt;code&gt;resource&lt;/code&gt;，因此一个授权无法指名两个服务器；并且它的设备授权请求不读取 &lt;code&gt;resource&lt;/code&gt;，所以请求某一服务器的设备得到的是发往整个&lt;code&gt;audience&lt;/code&gt; 的令牌。&lt;/p&gt;</description></item><item><title>绑定时使用令牌，放在密码之外的字段中</title><link>https://go-authn.github.io/docs/0.7/zh-cn/authnd/tokens/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/zh-cn/authnd/tokens/</guid><description>
+&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/libraries/"&gt;go-authn/oidc&lt;/a&gt;将令牌验证为一个身份。把令牌带给 LDAP 服务器的显而易见的方法是密码字段，它能用一次，然后就不行了：密码字段正是&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/mfa/"&gt;&lt;code&gt;mfa&lt;/code&gt; 块&lt;/a&gt;从末尾取走代码的地方，而令牌不可能同时兼顾两者。&lt;/p&gt;
+&lt;p&gt;因此令牌放在协议为它预留的位置。&lt;strong&gt;SASL&lt;/strong&gt; 绑定的凭据是一个具有该机制自身形态的八位字节串，而 RFC 7628 的&lt;code&gt;OAUTHBEARER&lt;/code&gt; 形态是一个 GS2 头，后面跟着键/值对，其中之一是 &lt;code&gt;auth=Bearer &amp;lt;token&amp;gt;&lt;/code&gt;：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;n,,^Aauth=Bearer eyJ…^A^A&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;密码字段保持不动。在同一个监听器上，同一时间，有人可以输入末尾带代码的密码，另一人可以发送令牌。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;oidc&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; issuer&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;https://login.example.org/realms/staff&amp;#34; # the &amp;#34;iss&amp;#34;&lt;/span&gt; &lt;span class="k"&gt;a&lt;/span&gt; &lt;span class="k"&gt;token&lt;/span&gt; &lt;span class="k"&gt;must&lt;/span&gt; &lt;span class="k"&gt;carry&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;and&lt;/span&gt; &lt;span class="k"&gt;where&lt;/span&gt; &lt;span class="k"&gt;discovery&lt;/span&gt; &lt;span class="k"&gt;starts&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; audience&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # this server&amp;#39;s client id at the provider
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # username_claim = &amp;#34;preferred_username&amp;#34; which claim names the person here
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # jwks_url = &amp;#34;…&amp;#34; skips discovery, for a provider that does not publish it
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # allow_plaintext = true only when TLS is terminated in front of this process
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;issuer&lt;/code&gt; 和 &lt;code&gt;audience&lt;/code&gt; 是必需的。没有 &lt;code&gt;username_claim&lt;/code&gt; 时，名称取&lt;code&gt;preferred_username&lt;/code&gt;，然后是 &lt;code&gt;email&lt;/code&gt;（当 &lt;code&gt;email_verified&lt;/code&gt; 为 true 时），然后是 &lt;code&gt;sub&lt;/code&gt;。有了该块，根 DSE 会通告该机制：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; supportedSASLMechanisms
+dn:
+supportedSASLMechanisms: OAUTHBEARER&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;没有它时，每个 SASL 绑定都会得到 &lt;code&gt;authMethodNotSupported&lt;/code&gt; 的答复——&lt;em&gt;不是这种方式&lt;/em&gt;，这会把客户端引向与&lt;em&gt;密码错误&lt;/em&gt;不同的地方。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="discovery-happens-at-startup"&gt;发现在启动时进行&lt;span class="hx:absolute hx:-mt-20" id="discovery-happens-at-startup"&gt;&lt;/span&gt;
+&lt;a href="#discovery-happens-at-startup" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;提供方的发现文档和密钥在服务器启动时读取，&lt;code&gt;check&lt;/code&gt; 也会读取。无法连接的提供方会在有人关注的时候使服务器停止，而不是在之后拒绝每个绑定：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc.hcl
+authnd: oidc &amp;#34;https://127.0.0.1:1/realms/staff&amp;#34;: oidc: reading https://127.0.0.1:1/realms/staff/.well-known/openid-configuration: Get &amp;#34;https://127.0.0.1:1/realms/staff/.well-known/openid-configuration&amp;#34;: dial tcp 127.0.0.1:1: connect: connection refused&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;不是 &lt;code&gt;https&lt;/code&gt; 的签发方会被拒绝，环回地址除外：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/oidc-http.hcl
+authnd: oidc &amp;#34;http://login.example.org/realms/staff&amp;#34;: oidc: http://login.example.org/realms/staff is not https: the key set decides every signature, and over cleartext so does anybody on the way&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="how-many-factors-is-a-token"&gt;令牌算几个因素？&lt;span class="hx:absolute hx:-mt-20" id="how-many-factors-is-a-token"&gt;&lt;/span&gt;
+&lt;a href="#how-many-factors-is-a-token" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;签发方声称检查过什么就算什么，不多也不少。&lt;/strong&gt; 令牌携带RFC 8176 的 &lt;code&gt;amr&lt;/code&gt;，即提供方所使用的方法。这是仅有的证据，因此 &lt;code&gt;mfa&lt;/code&gt; 策略&lt;strong&gt;按种类&lt;/strong&gt;对其计数：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;code&gt;amr&lt;/code&gt; 方法&lt;/th&gt;
+&lt;th&gt;种类&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;pwd&lt;/code&gt;、&lt;code&gt;pin&lt;/code&gt;、&lt;code&gt;kba&lt;/code&gt;、&lt;code&gt;mca&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;知识&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;otp&lt;/code&gt;、&lt;code&gt;hwk&lt;/code&gt;、&lt;code&gt;swk&lt;/code&gt;、&lt;code&gt;sms&lt;/code&gt;、&lt;code&gt;tel&lt;/code&gt;、&lt;code&gt;sc&lt;/code&gt;、&lt;code&gt;pop&lt;/code&gt;、&lt;code&gt;user&lt;/code&gt;、&lt;code&gt;wia&lt;/code&gt;、&lt;code&gt;mfa&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;持有&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;fpt&lt;/code&gt;、&lt;code&gt;face&lt;/code&gt;、&lt;code&gt;iris&lt;/code&gt;、&lt;code&gt;retina&lt;/code&gt;、&lt;code&gt;vbm&lt;/code&gt;、&lt;code&gt;geo&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;固有&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;其他任何值&lt;/td&gt;
+&lt;td&gt;未知，永远不能满足 &lt;code&gt;distinct_kinds&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;完全没有 &lt;code&gt;amr&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;一个因素，持有——即令牌本身&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;同一种类的两种方法算一个因素。否则就等于此服务器凭空捏造了一个无人执行过的第二因素；而一个相信签发方关于&lt;em&gt;此人是谁&lt;/em&gt;的服务器，没有单独的理由不相信它关于&lt;em&gt;如何检查&lt;/em&gt;的说法。&lt;/p&gt;
+&lt;p&gt;有 &lt;code&gt;mfa&lt;/code&gt; 块时，&lt;code&gt;check&lt;/code&gt; 会这样说明：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check sasl
+ldaps://127.0.0.1:3636, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password account, uidObject uid
+tess the configuration file a password and a one-time-code secret account, uidObject uid
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+tess has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+a bind carries a password with a 6-digit code after it, of two different kinds
+or a token from http://127.0.0.1:18481, over SASL OAUTHBEARER over TLS
+a token counts for the factors its amr claim names, so one with no amr is refused by this policy
+alice has no second factor here, so a password cannot satisfy this policy; a token whose amr names two kinds still can
+no reader is declared: nothing may search, and binds are not affected
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;alice 没有 &lt;code&gt;totp_secret&lt;/code&gt;，因此带代码的密码对她永远不够；而 &lt;code&gt;amr&lt;/code&gt; 指名两种种类的令牌可以，如下面的第一个绑定所示。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-the-binds-look-like"&gt;绑定是什么样子&lt;span class="hx:absolute hx:-mt-20" id="what-the-binds-look-like"&gt;&lt;/span&gt;
+&lt;a href="#what-the-binds-look-like" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;这里的签发方是环回地址上的一个小型测试提供方，而 &lt;code&gt;oidctool&lt;/code&gt; 是为这些页面编写的测试客户端：它为给定的名称签署一个令牌，带上给定的&lt;code&gt;amr&lt;/code&gt;，将其放在 &lt;code&gt;OAUTHBEARER&lt;/code&gt; 绑定中发送（当第五个参数指名了&lt;code&gt;authzid&lt;/code&gt; 时则带上它），并输出绑定的结果代码和服务器的 SASL 凭据。这些记录以及下面的服务器输出行由 v0.10.0 发布的二进制文件输出，因为 &lt;code&gt;oidctool&lt;/code&gt; 不属于任何发布版本，所以没有重新运行。针对上述配置，通过 &lt;code&gt;ldaps://&lt;/code&gt;：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 0, serverSaslCreds
+$ ./oidctool alice &amp;#39;&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;kba&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 49
+$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls tess
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;insufficient_scope&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}
+$ ./oidctool zed &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3636 tls
+bind result 14, serverSaslCreds {&amp;#34;status&amp;#34;:&amp;#34;invalid_token&amp;#34;,&amp;#34;openid-configuration&amp;#34;:&amp;#34;http://127.0.0.1:18481/.well-known/openid-configuration&amp;#34;}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;0 表示成功，49 是 &lt;code&gt;invalidCredentials&lt;/code&gt;，14 是 &lt;code&gt;saslBindInProgress&lt;/code&gt;。&lt;code&gt;[&amp;quot;pwd&amp;quot;,&amp;quot;kba&amp;quot;]&lt;/code&gt; 令牌指名同一种类的两种方法，因此只算一次。而对于没有 &lt;code&gt;cert_file&lt;/code&gt; 和 &lt;code&gt;key_file&lt;/code&gt; 的同一配置，在明文监听器上：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ./oidctool alice &amp;#39;[&amp;#34;pwd&amp;#34;,&amp;#34;otp&amp;#34;]&amp;#39; 127.0.0.1:3893 clear
+bind result 13&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;13 是 &lt;code&gt;confidentialityRequired&lt;/code&gt;：不会通过未加密的连接接受令牌。&lt;/p&gt;
+&lt;p&gt;对于通过 &lt;code&gt;ldaps://&lt;/code&gt; 被拒绝的四个绑定，服务器写出的内容：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: mfa: the policy needs 2 factor(s) and 1 were offered
+alice was refused: the token is for &amp;#34;alice&amp;#34; and asks to act as &amp;#34;tess&amp;#34;; this server does not delegate
+zed was refused: the token verified, and no source here publishes anybody by that name&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;以及明文那一个：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;a token was refused: OAUTHBEARER was offered over a connection that is not encrypted, and allow_plaintext is not set&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;成功的 &lt;code&gt;OAUTHBEARER&lt;/code&gt; 绑定会使连接绑定为&lt;code&gt;uid=&amp;lt;name&amp;gt;,ou=people,&amp;lt;base_dn&amp;gt;&lt;/code&gt;，写法与其他每个条目相同。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;它拒绝什么&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;明文传输的令牌。&lt;/strong&gt; 持有者令牌不需要另一半：任何从线路上读到它的人，在它过期之前就是那个人。&lt;code&gt;allow_plaintext = true&lt;/code&gt;
+适用于在此进程之前终止 TLS 的部署，而&lt;code&gt;check&lt;/code&gt; 此时会提示 &lt;em&gt;a token may cross this socket in the clear&lt;/em&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;冒充他人的请求。&lt;/strong&gt; GS2 头可以指名 &lt;code&gt;authzid&lt;/code&gt;。alice 的令牌如果带有以 tess 身份行事的请求，会被拒绝，而不是悄悄地当作其中任何一个处理。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;为任何来源都未发布的人员签发的令牌。&lt;/strong&gt; 客户端只会得到&lt;code&gt;invalid_token&lt;/code&gt;；哪些名称存在，不应当一次猜一个地透露出去。原因在服务器的输出中。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;通道绑定。&lt;/strong&gt; 带有 &lt;code&gt;p=&lt;/code&gt; 的 GS2 头——客户端坚持要求通道绑定——会被拒绝：此服务器不支持它，而接受该头却不绑定任何内容，会让客户端误以为通道已经被检查。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;此服务器不支持的机制&lt;/strong&gt;，返回 &lt;code&gt;authMethodNotSupported&lt;/code&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;对令牌本身的拒绝遵循 RFC 7628 §3.2.3：一个携带&lt;code&gt;openid-configuration&lt;/code&gt; 的 JSON 错误，以 &lt;code&gt;saslBindInProgress&lt;/code&gt; 返回，使客户端可以发送结束该交换的 &lt;code&gt;^A&lt;/code&gt;。通过验证但不满足&lt;code&gt;mfa&lt;/code&gt; 策略的令牌，则直接得到 &lt;code&gt;invalidCredentials&lt;/code&gt; 的答复，如上面的第二和第三个绑定所示。&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;令牌不会设置密码&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;只用令牌登录过的人员，不能利用该会话为自己设置第一个密码，而已有密码的人员更改密码时仍然必须发送旧密码。参见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/passwords/"&gt;更改密码&lt;/a&gt;。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item><item><title>oidc — 验证持有者令牌</title><link>https://go-authn.github.io/docs/0.7/zh-cn/libraries/oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/zh-cn/libraries/oidc/</guid><description>
+&lt;p&gt;&lt;strong&gt;这个持有者令牌声称是谁在发出请求，是否应当相信？&lt;/strong&gt;
+发现、密钥集，以及资源服务器必须进行的检查——纯 Go，&lt;strong&gt;除标准库之外没有任何依赖&lt;/strong&gt;。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/oidc@v0.4.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;这里没有登录流程：没有重定向，没有授权码交换，没有客户端密钥，没有 cookie。这是&lt;strong&gt;资源服务器&lt;/strong&gt;的一半——有东西带着令牌到来，而本库说明那是谁。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="example"&gt;示例&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
+&lt;a href="#example" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;package&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;context&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;log&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;net/http&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;strings&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;github.com/go-authn/oidc&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// Discovery happens here, at startup: an issuer that does not answer is&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// a server that cannot authenticate anybody.&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;oidc&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;New&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;context&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Background&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;oidc&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Config&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Issuer&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;https://login.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Audience&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;at+jwt&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// a resource server takes access tokens, not ID tokens&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Fatal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;HandleFunc&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;/&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ResponseWriter&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;r&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Request&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;raw&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ok&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;strings&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;CutPrefix&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;r&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Header&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Get&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;Authorization&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;Bearer &amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;!&lt;/span&gt;&lt;span class="nx"&gt;ok&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Error&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;unauthorized&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;StatusUnauthorized&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;tok&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;v&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Verify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;r&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Context&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;raw&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// which check refused it: for this log only&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Error&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;unauthorized&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;StatusUnauthorized&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Fprintln&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;w&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;tok&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Subject&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;tok&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Username&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;tok&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Groups&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Fatal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;http&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;ListenAndServe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;:8080&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;Verifier&lt;/code&gt; 对并发使用是安全的，并持有密钥集：在启动时构建一个并一直保留。&lt;code&gt;Verify&lt;/code&gt; 的错误会说明是哪项检查拒绝了令牌，供服务器的日志使用；无论是哪项检查，客户端得到的都是同一种拒绝。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;New&lt;/code&gt; 在获取任何内容之前就会拒绝的三种配置：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;package&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;context&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;github.com/go-authn/oidc&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;ctx&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;context&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Background&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;cfg&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;range&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="nx"&gt;oidc&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Config&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Issuer&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;http://login.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Audience&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Issuer&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;https://login.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Audience&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fileshare&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;oidc&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;New&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;ctx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;cfg&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;oidc: http://login.example.org is not https: the key set decides every signature, and over cleartext so does anybody on the way
+oidc: no audience: a token minted for another service is a valid token, and a verifier that does not check accepts every one the issuer ever signed
+oidc: no issuer: a verifier without one accepts tokens from anybody&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;Config&lt;/code&gt; 的其余部分是可选的：&lt;code&gt;JWKSURL&lt;/code&gt; 跳过发现；&lt;code&gt;UsernameClaim&lt;/code&gt;
+和 &lt;code&gt;GroupsClaim&lt;/code&gt;（默认 &lt;code&gt;groups&lt;/code&gt;）指定声明名称；&lt;code&gt;ClockSkew&lt;/code&gt; 和&lt;code&gt;MinRefresh&lt;/code&gt; 默认为一分钟；&lt;code&gt;Client&lt;/code&gt; 是 HTTP 客户端，用于代理、私有 CA 或超时设置。&lt;code&gt;Token&lt;/code&gt; 可读取 &lt;code&gt;Subject&lt;/code&gt;、&lt;code&gt;Issuer&lt;/code&gt;、&lt;code&gt;Audience&lt;/code&gt;、&lt;code&gt;Email&lt;/code&gt;、&lt;code&gt;EmailVerified&lt;/code&gt;、&lt;code&gt;Username&lt;/code&gt;、&lt;code&gt;Groups&lt;/code&gt;、&lt;code&gt;Expiry&lt;/code&gt;、&lt;code&gt;NotBefore&lt;/code&gt; 和&lt;code&gt;IssuedAt&lt;/code&gt;；&lt;code&gt;Claim(name, &amp;amp;v)&lt;/code&gt; 解码任何其他声明，而 &lt;code&gt;Has(name)&lt;/code&gt; 说明它是否存在。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-accepts"&gt;它接受什么&lt;span class="hx:absolute hx:-mt-20" id="what-it-accepts"&gt;&lt;/span&gt;
+&lt;a href="#what-it-accepts" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;十种签名算法，作为&lt;strong&gt;允许列表&lt;/strong&gt;：&lt;code&gt;RS256&lt;/code&gt; &lt;code&gt;RS384&lt;/code&gt; &lt;code&gt;RS512&lt;/code&gt;、&lt;code&gt;PS256&lt;/code&gt; &lt;code&gt;PS384&lt;/code&gt; &lt;code&gt;PS512&lt;/code&gt;、&lt;code&gt;ES256&lt;/code&gt; &lt;code&gt;ES384&lt;/code&gt; &lt;code&gt;ES512&lt;/code&gt;，以及 &lt;code&gt;EdDSA&lt;/code&gt;（Ed25519）。&lt;code&gt;alg&lt;/code&gt;
+不在其中的令牌，会在获取任何密钥之前就被拒绝。&lt;code&gt;alg: none&lt;/code&gt; 和 HMAC 系列因不在列表中而被拒绝，并且密钥必须与算法的种类相符：声称使用 &lt;code&gt;RS256&lt;/code&gt; 的令牌要用RSA 密钥检查，否则被拒绝。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;它拒绝什么，以及原因&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;原因&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;alg: none&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;声称自己未签名的令牌，只是某人键入的 JSON 对象&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;针对公钥的 HMAC&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;HS256&lt;/code&gt; 使用共享密钥，而签发方的密钥是公开的：任何人都可以伪造令牌&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;仅仅以正确签发方&lt;strong&gt;开头&lt;/strong&gt;的签发方&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;iss&lt;/code&gt; 是整体比较的：&lt;code&gt;https://login.example.org.evil.test&lt;/code&gt; 以正确的字符串开头&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;缺失或错误的 &lt;strong&gt;audience&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;为另一个服务生成的令牌是有效的；它并不发往这一个&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;没有过期时间&lt;/strong&gt;的令牌&lt;/td&gt;
+&lt;td&gt;它是别人可以复制一次的密码&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;通过&lt;strong&gt;明文 HTTP&lt;/strong&gt; 访问的签发方、密钥集或重定向，环回地址除外&lt;/td&gt;
+&lt;td&gt;密钥集决定每一个签名&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;不足 2048 位的 RSA 密钥，或 &lt;code&gt;n&lt;/code&gt; 或 &lt;code&gt;e&lt;/code&gt; 不是最短形式的密钥；不在其曲线上的 EC 点&lt;/td&gt;
+&lt;td&gt;短密钥下的签名可以被伪造；在 v0.2.2 之前，用零字节填充的 1024 位模数会被当作 2048 位通过&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;以 &lt;code&gt;sig&lt;/code&gt; 之外的 &lt;code&gt;use&lt;/code&gt; 发布的密钥&lt;/td&gt;
+&lt;td&gt;密钥集中合理地也包含加密密钥&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;设置了 &lt;code&gt;Type&lt;/code&gt; 时，&lt;code&gt;typ&lt;/code&gt; 不同的令牌；未设置时，&lt;code&gt;typ&lt;/code&gt; 不是 &lt;code&gt;JWT&lt;/code&gt; 或 &lt;code&gt;at+jwt&lt;/code&gt;（没有 &lt;code&gt;typ&lt;/code&gt; 头的令牌可通过）&lt;/td&gt;
+&lt;td&gt;RFC 9068 §4：资源服务器要检查 &lt;code&gt;typ: at+jwt&lt;/code&gt;，否则只要 audience 一致，就会把 ID 令牌当作访问令牌&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;不是规范 base64url 的部分&lt;/td&gt;
+&lt;td&gt;令牌应当作为一个字符串通过验证&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;ECDSA 的 &lt;code&gt;s&lt;/code&gt; 和 &lt;code&gt;n − s&lt;/code&gt; 都能通过验证，算法允许这样。因此拒绝列表或重放缓存应以 &lt;code&gt;jti&lt;/code&gt; 或 &lt;code&gt;sub&lt;/code&gt; 为键，绝不以所发送的令牌本身为键。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;密钥会轮换，而未知的密钥不是敲打签发方的手段。&lt;/strong&gt; 无法用所持有的任何密钥验证的签名，每个 &lt;code&gt;MinRefresh&lt;/code&gt; 值得重新获取一次密钥集，无论是 &lt;code&gt;kid&lt;/code&gt; 为新，还是同一个 &lt;code&gt;kid&lt;/code&gt; 带着新密钥。在获取过程中需要密钥集的令牌会等待它，而失败的获取同样计数。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;Username()&lt;/code&gt; 给出哪个名称。&lt;/strong&gt; 默认是 &lt;code&gt;preferred_username&lt;/code&gt;，然后是&lt;code&gt;email&lt;/code&gt;，&lt;strong&gt;仅当 &lt;code&gt;email_verified&lt;/code&gt; 为 true 时&lt;/strong&gt;，然后是 &lt;code&gt;sub&lt;/code&gt;。未验证的电子邮件是人员自己键入的字符串（OIDC Core §5.1）。配置了 &lt;code&gt;UsernameClaim&lt;/code&gt; 时按所指名的读取，不作回退。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;它对照什么检查&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
+&lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;pyjwt&lt;/strong&gt; 为测试套件中的每个令牌签名，因此验证器从不由出自同一人之手的签名者来评判。HMAC 混淆令牌是手工伪造的，因为 pyjwt 拒绝生成它。&lt;code&gt;testdata/fixed.json&lt;/code&gt;——pyjwt 用固定密钥一次性签名的令牌——使各架构通道（包括 s390x）能够在固定时钟下验证真实的签名。Linux 测试通道、竞态检测器和覆盖率通道安装 pyjwt 并设置 &lt;code&gt;OIDC_REQUIRE_JUDGE&lt;/code&gt;，因此缺少pyjwt 会失败而不是跳过。接受 HMAC、按前缀比较签发方，以及跳过audience 检查，都曾被有意尝试过，每一种都会使一个测试变红。覆盖率通道的下限是 90%。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="reference"&gt;参考&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
+&lt;a href="#reference" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/oidc@v0.4.1&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>

@@ -1,0 +1,1491 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – 模式</title><link>https://go-authn.github.io/docs/0.7/zh-cn/tags/%E6%A8%A1%E5%BC%8F/</link><description>Recent content in 模式 on go-authn</description><generator>Hugo -- gohugo.io</generator><language>zh-cn</language><atom:link href="https://go-authn.github.io/docs/0.7/zh-cn/tags/%E6%A8%A1%E5%BC%8F/index.xml" rel="self" type="application/rss+xml"/><item><title>authnd 发布的条目，以及它提供的模式</title><link>https://go-authn.github.io/docs/0.7/zh-cn/authnd/entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/zh-cn/authnd/entries/</guid><description>
+&lt;p&gt;&lt;strong&gt;authnd 发布的每个条目都要通过它所提供的模式。&lt;/strong&gt; 从 v0.11.0 起，每个人员和组都是标准模式条目，由其来源所提供的内容构建，并在被搜索返回之前，用 go-authn/ldap 的 &lt;code&gt;schema.Validate&lt;/code&gt; 对照客户端可以在 &lt;code&gt;cn=Subschema&lt;/code&gt; 读取的模式进行检查。读取该模式并信任它的客户端——LDAP 浏览器、同步工具、复制此目录的目录——看到的就是它被告知的内容。直到 v0.10.2，每个人员都是 &lt;code&gt;top, person, posixAccount&lt;/code&gt;，却没有这些类所要求的任何属性，而且 &lt;code&gt;sambaNTPassword&lt;/code&gt; 位于没有任何类允许它的条目上。&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;按 &lt;code&gt;posixAccount&lt;/code&gt; 或 &lt;code&gt;posixGroup&lt;/code&gt; 过滤的使用方看到的条目会变少&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;没有 &lt;code&gt;uidNumber&lt;/code&gt;、&lt;code&gt;gidNumber&lt;/code&gt; 和 &lt;code&gt;homeDirectory&lt;/code&gt; 的人员不再是&lt;code&gt;posixAccount&lt;/code&gt;，没有 &lt;code&gt;gidNumber&lt;/code&gt; 的组也不再是&lt;code&gt;posixGroup&lt;/code&gt;。搜索 &lt;code&gt;(objectClass=posixAccount)&lt;/code&gt; 或&lt;code&gt;(objectClass=posixGroup)&lt;/code&gt; 的程序不再能找到它们。这包括直到 v0.13.0 的 go-authn/directory 的 &lt;code&gt;ldapdir&lt;/code&gt;，因此也包括 go-fileshare，直到它要求 directory v0.14.0，后者的默认值还会读取 &lt;code&gt;account&lt;/code&gt;、&lt;code&gt;uidObject&lt;/code&gt;
+和 &lt;code&gt;groupOfNames&lt;/code&gt;（&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/libraries/directory/#ldapdir-defaults"&gt;directory&lt;/a&gt;）。请为人员和组提供这些属性，或者让使用方改查&lt;code&gt;(objectClass=uidObject)&lt;/code&gt;，每个人员都带有该类。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-shapes"&gt;各种形态&lt;span class="hx:absolute hx:-mt-20" id="the-shapes"&gt;&lt;/span&gt;
+&lt;a href="#the-shapes" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;按 RFC 4512 §3.3 的要求，列出了每个父类。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;具有以下情形的人员…&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;objectClass&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;cn&lt;/code&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;没有 &lt;code&gt;sn&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;、&lt;code&gt;account&lt;/code&gt;（RFC 4524 §3.1）&lt;/td&gt;
+&lt;td&gt;仅当另一个类允许时&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sn&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;、&lt;code&gt;person&lt;/code&gt;、&lt;code&gt;organizationalPerson&lt;/code&gt;、&lt;code&gt;inetOrgPerson&lt;/code&gt;（RFC 4519、RFC 2798）&lt;/td&gt;
+&lt;td&gt;有&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… 以及 &lt;code&gt;uidNumber&lt;/code&gt;、&lt;code&gt;gidNumber&lt;/code&gt;、&lt;code&gt;homeDirectory&lt;/code&gt;，三者齐备&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ posixAccount&lt;/code&gt;（RFC 2307）&lt;/td&gt;
+&lt;td&gt;有&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… 以及 SSH 密钥&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ ldapPublicKey&lt;/code&gt;（openssh-lpk），带 &lt;code&gt;sshPublicKey&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… 以及带有 &lt;code&gt;sambaSID&lt;/code&gt; 的已发布 NT 哈希&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ sambaSamAccount&lt;/code&gt;（Samba），带 &lt;code&gt;sambaSID&lt;/code&gt; 和 &lt;code&gt;sambaNTPassword&lt;/code&gt;：参见 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/tls/#the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; 块&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;允许&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… 始终&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ uidObject&lt;/code&gt;（RFC 4519 §3.14），因此 &lt;code&gt;(objectClass=uidObject)&lt;/code&gt; 能找到所有人&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;具有以下情形的组…&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;objectClass&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;成员&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;有 &lt;code&gt;gidNumber&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;、&lt;code&gt;posixGroup&lt;/code&gt;（RFC 2307）&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;memberUid&lt;/code&gt;，名称&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;没有 &lt;code&gt;gidNumber&lt;/code&gt;，其中有人&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;、&lt;code&gt;groupOfNames&lt;/code&gt;（RFC 4519 §3.5）&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;member&lt;/code&gt;，即本服务器发布的 DN&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;没有 &lt;code&gt;gidNumber&lt;/code&gt;，其中无人&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;、&lt;code&gt;organizationalRole&lt;/code&gt;（RFC 4519 §3.10）&lt;/td&gt;
+&lt;td&gt;无&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;有 &lt;code&gt;gidNumber&lt;/code&gt;，其中无人&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;、&lt;code&gt;posixGroup&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;无：属性至少有一个值&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;code&gt;uid&lt;/code&gt; 是人员的名称，在类允许的地方 &lt;code&gt;cn&lt;/code&gt; 也是。单独的&lt;code&gt;account&lt;/code&gt; 不允许 &lt;code&gt;cn&lt;/code&gt;（其 MAY 是 &lt;code&gt;description&lt;/code&gt;、&lt;code&gt;seeAlso&lt;/code&gt;、&lt;code&gt;l&lt;/code&gt;、&lt;code&gt;o&lt;/code&gt;、&lt;code&gt;ou&lt;/code&gt; 和 &lt;code&gt;host&lt;/code&gt;），因此没有 &lt;code&gt;sn&lt;/code&gt; 也没有 POSIX三元组的人员带有 &lt;code&gt;uid&lt;/code&gt; 而没有 &lt;code&gt;cn&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;这些选择的原因，出自 authnd 自己的理由：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;posixGroup&lt;/code&gt; 遵循 RFC 2307，而不是 draft-howard-rfc2307bis-02。&lt;/strong&gt;
+该草案把 &lt;code&gt;posixGroup&lt;/code&gt; 定为 AUXILIARY，并且未经发布就已过期；AUXILIARY的 &lt;code&gt;posixGroup&lt;/code&gt; 需要旁边有一个结构类，即 &lt;code&gt;groupOfNames&lt;/code&gt;，而空组无法提供它的 &lt;code&gt;member&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;没有 &lt;code&gt;gidNumber&lt;/code&gt; 的空组使用 &lt;code&gt;organizationalRole&lt;/code&gt;。&lt;/strong&gt;
+&lt;code&gt;groupOfNames&lt;/code&gt; 和 &lt;code&gt;groupOfUniqueNames&lt;/code&gt; 都要求有成员，而凭空造一个成员的办法都是错误的：&lt;code&gt;member: &amp;quot;&amp;quot;&lt;/code&gt; 指向根 DSE，而组自己的 DN 会使它成为自己的成员。&lt;code&gt;organizationalRole&lt;/code&gt; 是唯一一个只有 &lt;code&gt;cn&lt;/code&gt; 为 MUST 的标准结构类，并且它像 &lt;code&gt;groupOfNames&lt;/code&gt; 一样接受&lt;code&gt;description&lt;/code&gt;、&lt;code&gt;ou&lt;/code&gt; 和 &lt;code&gt;seeAlso&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;没有 DIT 内容规则的辅助类。&lt;/strong&gt; RFC 4512 §2.4.3 禁止在其结构类没有 DIT 内容规则的条目上使用辅助类。所有在用的目录服务器都允许这样做，&lt;code&gt;Validate&lt;/code&gt; 也是如此（&lt;code&gt;ValidateOptions{StrictAuxiliary: true}&lt;/code&gt; 是严格的解读，authnd 并未设置它）。结构类&lt;strong&gt;有&lt;/strong&gt;内容规则的类，从 v0.13.0 起受该规则约束：见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/schemas/#rules"&gt;规则&lt;/a&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="adding-attributes"&gt;添加属性&lt;span class="hx:absolute hx:-mt-20" id="adding-attributes"&gt;&lt;/span&gt;
+&lt;a href="#adding-attributes" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;来源对某人所说的、不证明任何事的内容——&lt;code&gt;uidNumber&lt;/code&gt;、主目录、邮件地址——是&lt;strong&gt;属性&lt;/strong&gt;，按原样发布。它们是 go-authn/directory 从 v0.13.0 起的&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/libraries/directory/#attributes"&gt;属性&lt;/a&gt;，并且与凭据分开存放：保存机密的名称，或服务器自行派生的名称，会在读取任何内容之前被拒绝。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="in-a-user-or-group-block"&gt;在 &lt;code&gt;user&lt;/code&gt; 或 &lt;code&gt;group&lt;/code&gt; 块中&lt;span class="hx:absolute hx:-mt-20" id="in-a-user-or-group-block"&gt;&lt;/span&gt;
+&lt;a href="#in-a-user-or-group-block" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;dora&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/passwords/dora.pw&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; authorized_keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ssh-ed25519 AAAA… dora@laptop&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Explorer&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # inetOrgPerson
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; uidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1000&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the three: posixAccount
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1000&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; homeDirectory&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/home/dora&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; mail&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dora@example.org&amp;#34;, &amp;#34;d.explorer@example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;group&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;engineers&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; members&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dora&amp;#34;, &amp;#34;eli&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;2000&amp;#34;&lt;/span&gt; }&lt;span class="c1"&gt; # a posixGroup; without it, a groupOfNames
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;值是字符串或字符串列表；&lt;code&gt;null&lt;/code&gt; 表示不包含该属性。数字会被拒绝，因为 LDAP 的值是字符串，authnd 不会决定数字的写法：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/number.hcl
+authnd: user &amp;#34;alice&amp;#34;: attributes: uidNumber is the number 1000: write it as a string, &amp;#34;1000&amp;#34; -- an LDAP value is a string, and this does not choose how a number is spelled
+$ authnd check cases/secret.hcl
+authnd: user &amp;#34;alice&amp;#34;: attributes: directory: not an attribute this package carries: &amp;#34;userPassword&amp;#34; holds a secret, and attributes are published: a credential has its own option or none&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;以同样方式被拒绝的还有（无论大小写）：任何保存机密的名称（&lt;code&gt;userPassword&lt;/code&gt;、&lt;code&gt;sambaNTPassword&lt;/code&gt;、&lt;code&gt;unicodePwd&lt;/code&gt;、&lt;code&gt;krbPrincipalKey&lt;/code&gt; 以及go-authn/directory 列表中的其余名称，或任何包含 &lt;code&gt;password&lt;/code&gt;、&lt;code&gt;passwd&lt;/code&gt;、&lt;code&gt;pwd&lt;/code&gt;、&lt;code&gt;secret&lt;/code&gt;、&lt;code&gt;credential&lt;/code&gt;、&lt;code&gt;hash&lt;/code&gt; 或 &lt;code&gt;privatekey&lt;/code&gt; 的名称）；&lt;code&gt;sshPublicKey&lt;/code&gt;，它有 &lt;code&gt;authorized_keys&lt;/code&gt;；&lt;code&gt;uid&lt;/code&gt;、&lt;code&gt;cn&lt;/code&gt; 和 &lt;code&gt;objectClass&lt;/code&gt;，由服务器派生；&lt;code&gt;member&lt;/code&gt;、&lt;code&gt;memberUid&lt;/code&gt; 以及其他成员关系属性，由 &lt;code&gt;members&lt;/code&gt; 负责；服务器维护的操作属性；以及数字形式的名称（&lt;code&gt;2.5.4.35&lt;/code&gt; 即 &lt;code&gt;userPassword&lt;/code&gt;）。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="in-a-sql-database"&gt;在 SQL 数据库中&lt;span class="hx:absolute hx:-mt-20" id="in-a-sql-database"&gt;&lt;/span&gt;
+&lt;a href="#in-a-sql-database" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; 块的两个可选查询&lt;strong&gt;按列别名&lt;/strong&gt;读取属性。第一列是人员或组的名称；其他每一列都是以其别名命名的属性：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/people.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, secret, null, ssh_keys from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, member from teams&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, uid as uidNumber, gid as gidNumber, home as homeDirectory, mail from person_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, gid as gidNumber, description from team_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;按位置的 &lt;code&gt;users&lt;/code&gt; 和 &lt;code&gt;groups&lt;/code&gt; 查询不变，第六个位置列仍然被拒绝：属性按名称提供，使用它们自己的查询。&lt;/li&gt;
+&lt;li&gt;别名不是属性描述的列（没有别名的表达式，如 &lt;code&gt;count(*)&lt;/code&gt;），或指名了凭据的列，会在读取任何行之前连同其列号一起被拒绝。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;NULL&lt;/code&gt; 和 &lt;code&gt;''&lt;/code&gt; 视为不存在。一个名称可以出现在多行中，并且所有行的值都会保留，因此与地址表连接会使一个人员得到多个值。&lt;/li&gt;
+&lt;li&gt;只在 &lt;code&gt;groups_attributes&lt;/code&gt; 中出现名称的组&lt;strong&gt;存在&lt;/strong&gt;，其中无人：人员自己的主组就是这样写的。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;别名的大小写由数据库决定&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;PostgreSQL 会把不带引号的别名折叠为小写：&lt;code&gt;as uidNumber&lt;/code&gt; 返回的是 &lt;code&gt;uidnumber&lt;/code&gt;。属性名称不区分大小写，因此对每个 LDAP 客户端来说它是同一个属性、同一个条目，但 authnd 输出的写法是数据库的写法。需要在意写法时，请给别名加引号：&lt;code&gt;gid as &amp;quot;gidNumber&amp;quot;&lt;/code&gt;。SQLite 保留别名的原样。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="from-another-ldap-directory"&gt;来自另一个 LDAP 目录&lt;span class="hx:absolute hx:-mt-20" id="from-another-ldap-directory"&gt;&lt;/span&gt;
+&lt;a href="#from-another-ldap-directory" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt; 块会从每个人员和每个组的条目中复制它被告知要复制的属性：&lt;code&gt;attributes = [&amp;quot;mail&amp;quot;, &amp;quot;uidNumber&amp;quot;, &amp;quot;homeDirectory&amp;quot;]&lt;/code&gt; 以及 &lt;code&gt;group_attributes = [&amp;quot;gidNumber&amp;quot;]&lt;/code&gt;。参见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/people/#in-another-ldap-directory"&gt;人员&lt;/a&gt;。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="a-configuration-and-what-it-publishes"&gt;一份配置，以及它发布什么&lt;span class="hx:absolute hx:-mt-20" id="a-configuration-and-what-it-publishes"&gt;&lt;/span&gt;
+&lt;a href="#a-configuration-and-what-it-publishes" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;上面的 SQL 块，加上一个 reader，位于一个包含五个人员和四个组的 SQLite 数据库之上，由 v0.11.0 发布的二进制文件检查：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/people.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, secret, null, ssh_keys from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, member from teams&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, uid as uidNumber, gid as gidNumber, home as homeDirectory, mail from person_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, gid as gidNumber, description from team_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check etc/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+dora a sqlite database a password and 1 key person, organizationalPerson, inetOrgPerson, posixAccount, ldapPublicKey, uidObject uid, cn, sn, uidNumber, gidNumber, homeDirectory, mail and sshPublicKey
+eli a sqlite database a password account, posixAccount, uidObject uid, cn, uidNumber, gidNumber and homeDirectory
+fay a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn, sn and mail
+gus a sqlite database a password account, uidObject uid
+hal a sqlite database a password account, uidObject uid
+GROUP MEMBERS PUBLISHED AS
+alumni nobody organizationalRole
+engineers dora and eli posixGroup
+nobody-yet nobody posixGroup
+readers fay and gus groupOfNames
+fay has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+gus has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+hal has no homeDirectory: not a posixAccount, published as account, uidObject
+hal is published without uidNumber: no class of the entry allows it; posixAccount would
+hal is published without gidNumber: no class of the entry allows it; posixAccount and posixGroup would
+hal is published without mail: no class of the entry allows it; inetOrgPerson would
+group alumni has no gidNumber and nobody in it: not a posixGroup, published as an organizationalRole (a groupOfNames needs a member)
+group readers has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;PUBLISHED AS&lt;/code&gt; 是每个条目的对象类（不含 &lt;code&gt;top&lt;/code&gt;），&lt;code&gt;WITH&lt;/code&gt; 是其属性，取自搜索所返回的条目。hal 有 &lt;code&gt;uidNumber&lt;/code&gt;、&lt;code&gt;gidNumber&lt;/code&gt; 和 &lt;code&gt;mail&lt;/code&gt;，却没有 &lt;code&gt;homeDirectory&lt;/code&gt; 或 &lt;code&gt;sn&lt;/code&gt;：hal 是 &lt;code&gt;account&lt;/code&gt;，它不允许这三者中的任何一个，因此它们被丢弃，其余内容照常发布。服务器在启动时也会说同样的话（被停止时则输出 &lt;code&gt;stopping&lt;/code&gt;）：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd
+ldap on 127.0.0.1:3893, serving 5 people from a sqlite database
+uid=hal,ou=people,dc=example,dc=org is published without uidNumber: no class of the entry allows it; posixAccount would
+uid=hal,ou=people,dc=example,dc=org is published without gidNumber: no class of the entry allows it; posixAccount and posixGroup would
+uid=hal,ou=people,dc=example,dc=org is published without mail: no class of the entry allows it; inetOrgPerson would
+stopping&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;由 OpenLDAP 的 &lt;code&gt;ldapsearch&lt;/code&gt; 读回，reader 的密码保存在文件中：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org &amp;#39;(|(uid=dora)(uid=eli)(uid=gus)(uid=hal))&amp;#39;
+dn: uid=dora,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: ldapPublicKey
+objectClass: uidObject
+uid: dora
+cn: dora
+sn: Explorer
+uidNumber: 1000
+gidNumber: 1000
+homeDirectory: /home/dora
+mail: dora@example.org
+sshPublicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKTfVR7FqXWE/0VEcjrUhK&amp;#43;Fz/MLqlwGPIxalr6onRMn dora@laptop
+dn: uid=eli,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: uidObject
+uid: eli
+cn: eli
+uidNumber: 1001
+gidNumber: 1001
+homeDirectory: /home/eli
+dn: uid=gus,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: uidObject
+uid: gus
+dn: uid=hal,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: uidObject
+uid: hal
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=groups,dc=example,dc=org &amp;#39;(objectClass=*)&amp;#39;
+dn: cn=alumni,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: organizationalRole
+cn: alumni
+description: people who were here
+dn: cn=engineers,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+cn: engineers
+gidNumber: 2000
+memberUid: dora
+memberUid: eli
+dn: cn=nobody-yet,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+cn: nobody-yet
+gidNumber: 2001
+dn: cn=readers,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames
+cn: readers
+description: people who read
+member: uid=fay,ou=people,dc=example,dc=org
+member: uid=gus,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;alumni&lt;/code&gt; 只在 &lt;code&gt;groups_attributes&lt;/code&gt; 中出现名称，因此它存在而其中无人；没有 &lt;code&gt;gidNumber&lt;/code&gt;，它就是 &lt;code&gt;organizationalRole&lt;/code&gt;。&lt;code&gt;nobody-yet&lt;/code&gt; 有&lt;code&gt;gidNumber&lt;/code&gt; 而无人，因此它是不带 &lt;code&gt;memberUid&lt;/code&gt; 的 &lt;code&gt;posixGroup&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;哪个类能找到谁：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(objectClass=uidObject)&amp;#39; 1.1
+dn: uid=dora,ou=people,dc=example,dc=org
+dn: uid=eli,ou=people,dc=example,dc=org
+dn: uid=fay,ou=people,dc=example,dc=org
+dn: uid=gus,ou=people,dc=example,dc=org
+dn: uid=hal,ou=people,dc=example,dc=org
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(objectClass=posixAccount)&amp;#39; 1.1
+dn: uid=dora,ou=people,dc=example,dc=org
+dn: uid=eli,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-is-dropped-and-what-is-withheld"&gt;哪些被丢弃，哪些被扣留&lt;span class="hx:absolute hx:-mt-20" id="what-is-dropped-and-what-is-withheld"&gt;&lt;/span&gt;
+&lt;a href="#what-is-dropped-and-what-is-withheld" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;给出的内容&lt;/th&gt;
+&lt;th&gt;条目&lt;/th&gt;
+&lt;th&gt;原因&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;uidNumber&lt;/code&gt;、&lt;code&gt;gidNumber&lt;/code&gt;，没有 &lt;code&gt;homeDirectory&lt;/code&gt;，没有 &lt;code&gt;sn&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;account, uidObject&lt;/code&gt;，不含这两者&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;no class of the entry allows it; posixAccount would&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;mail&lt;/code&gt;，没有 &lt;code&gt;sn&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;account, uidObject&lt;/code&gt;，不含它&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;no class of the entry allows it; inetOrgPerson would&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;模式未定义的类型&lt;/td&gt;
+&lt;td&gt;其余部分&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;the schema served here does not define it&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;没有 &lt;code&gt;gidNumber&lt;/code&gt; 的组上的 &lt;code&gt;mail&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;groupOfNames&lt;/code&gt;，不含它&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;带有 POSIX 三元组的两个 &lt;code&gt;homeDirectory&lt;/code&gt; 值&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;扣留&lt;/strong&gt;：SINGLE-VALUE，没有可丢弃的内容&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;不是整数的 &lt;code&gt;gidNumber&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;扣留&lt;/strong&gt;：不符合其语法&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;只有来源所提供的内容才会被丢弃&lt;/strong&gt;，而哪个属性不被允许是 &lt;code&gt;Validate&lt;/code&gt; 的答案，而不是对模式的第二次解读。丢弃之后，条目会再次验证。仍然失败的条目会被&lt;strong&gt;扣留&lt;/strong&gt;：它不出现在任何搜索中，启动日志会指名它，而 &lt;code&gt;check&lt;/code&gt; 会列出它以及 &lt;code&gt;Validate&lt;/code&gt; 发现的每个问题。如果 authnd 自己派生的属性（&lt;code&gt;uid&lt;/code&gt;、&lt;code&gt;cn&lt;/code&gt;、&lt;code&gt;objectClass&lt;/code&gt;、&lt;code&gt;sshPublicKey&lt;/code&gt;、&lt;code&gt;sambaSID&lt;/code&gt;、&lt;code&gt;sambaNTPassword&lt;/code&gt;）被模式拒绝，那就是 authnd 的缺陷，并且它会扣留该条目，而不是在缺少该属性的情况下发布它。&lt;/p&gt;
+&lt;p&gt;这里 alice 的 &lt;code&gt;gidNumber&lt;/code&gt; 是一个单词：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/alice.pw&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; uidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1000&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; homeDirectory&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/home/alice&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;bob&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/bob.pw&amp;#34;&lt;/span&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/withheld.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password NOT PUBLISHED (see below) uid, cn, gidNumber, homeDirectory and uidNumber
+bob the configuration file a password account, uidObject uid
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+alice is NOT published: as account, posixAccount, uidObject it fails the schema:
+- the value &amp;#34;staff&amp;#34; of gidNumber is not of its syntax 1.3.6.1.4.1.1466.115.121.1.27
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;投入服务后，alice 仍然可以绑定，但不会出现在任何搜索中，服务器会在启动时说明原因：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config cases/withheld.hcl
+ldap on 127.0.0.1:3893, serving 2 people from the configuration file
+uid=alice,ou=people,dc=example,dc=org is NOT published: it fails the schema: the value &amp;#34;staff&amp;#34; of gidNumber is not of its syntax 1.3.6.1.4.1.1466.115.121.1.27
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
+dn:uid=alice,ou=people,dc=example,dc=org
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(uid=alice)&amp;#39;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;被扣留的是搜索所返回的条目，而不是身份本身。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-schema-it-serves"&gt;它提供的模式&lt;span class="hx:absolute hx:-mt-20" id="the-schema-it-serves"&gt;&lt;/span&gt;
+&lt;a href="#the-schema-it-serves" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;根 DSE 指名了它（&lt;code&gt;subschemaSubentry: cn=Subschema&lt;/code&gt;，见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/#who-may-bind-and-who-may-read"&gt;根 DSE&lt;/a&gt;），对 &lt;code&gt;cn=Subschema&lt;/code&gt; 的 base 搜索会返回它（RFC 4512 §4.2）：即go-authn/ldap 内嵌的标准定义——RFC 4512、4517、4519、4523、4524、2798、2307、3672 和 3045，以及 openssh-lpk——此外，在存在&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/tls/#the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; 块&lt;/a&gt;时，还有 Samba 的&lt;code&gt;sambaSamAccount&lt;/code&gt;、&lt;code&gt;sambaSID&lt;/code&gt; 和 &lt;code&gt;sambaNTPassword&lt;/code&gt;。这些定义只有在按名称或用 &lt;code&gt;+&lt;/code&gt; 请求时才会发布。标记之处已作删节：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -s base -b cn=Subschema &amp;#39;&amp;#43;&amp;#39; &amp;#39;*&amp;#39;
+dn: cn=Subschema
+objectClass: top
+objectClass: subentry
+objectClass: subschema
+cn: Subschema
+subtreeSpecification: {}
+ldapSyntaxes: ( 1.3.6.1.4.1.1466.115.121.1.3 DESC &amp;#39;Attribute Type Description&amp;#39; )
+[...]
+matchingRules: ( 2.5.13.15 NAME &amp;#39;integerOrderingMatch&amp;#39; SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 )
+[...]
+attributeTypes: ( 1.3.6.1.1.1.1.0 NAME &amp;#39;uidNumber&amp;#39; DESC &amp;#39;An integer uniquely identifying a user in an administrative domain&amp;#39; EQUALITY integerMatch ORDERING integerOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+attributeTypes: ( 1.3.6.1.1.1.1.1 NAME &amp;#39;gidNumber&amp;#39; DESC &amp;#39;An integer uniquely identifying a group in an administrative domain&amp;#39; EQUALITY integerMatch ORDERING integerOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+[...]
+objectClasses: ( 2.5.6.9 NAME &amp;#39;groupOfNames&amp;#39; SUP top STRUCTURAL MUST ( member $ cn ) MAY ( businessCategory $ seeAlso $ owner $ ou $ o $ description ) )
+[...]
+objectClasses: ( 1.3.6.1.1.3.1 NAME &amp;#39;uidObject&amp;#39; SUP top AUXILIARY MUST uid )
+objectClasses: ( 0.9.2342.19200300.100.4.5 NAME &amp;#39;account&amp;#39; SUP top STRUCTURAL MUST uid MAY ( description $ seeAlso $ l $ o $ ou $ host ) )
+[...]
+objectClasses: ( 1.3.6.1.1.1.2.0 NAME &amp;#39;posixAccount&amp;#39; DESC &amp;#39;Abstraction of an account with POSIX attributes&amp;#39; SUP top AUXILIARY MUST ( cn $ uid $ uidNumber $ gidNumber $ homeDirectory ) MAY ( userPassword $ loginShell $ gecos $ description ) )
+[...]
+objectClasses: ( 1.3.6.1.1.1.2.2 NAME &amp;#39;posixGroup&amp;#39; DESC &amp;#39;Abstraction of a group of accounts&amp;#39; SUP top STRUCTURAL MUST ( cn $ gidNumber ) MAY ( userPassword $ memberUid $ description ) )
+[...]&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;完整的条目有 327 行：49 个语法、40 个匹配规则、36 个匹配规则用法、143 个属性类型和 52 个对象类。与 base 之下的搜索不同，subschema 条目与根 DSE 一样会应答匿名客户端：不带 &lt;code&gt;-D&lt;/code&gt; 和 &lt;code&gt;-y&lt;/code&gt; 的相同查询也返回了它。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;过滤器使用模式的匹配规则&lt;/strong&gt;，因此 &lt;code&gt;(uidNumber&amp;gt;=1000)&lt;/code&gt;
+按整数比较。&lt;code&gt;uidNumber&lt;/code&gt; 和 &lt;code&gt;gidNumber&lt;/code&gt; 带有 &lt;code&gt;ORDERING integerOrderingMatch&lt;/code&gt;，RFC 2307 并未给予它们这一点；slapd 和draft-howard-rfc2307bis-02 给予了，go-authn/ldap 也是如此（&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/libraries/ldap/#the-schema"&gt;它唯一的偏离&lt;/a&gt;）。按字符串比较时，&lt;code&gt;1000&lt;/code&gt; 排在 &lt;code&gt;999&lt;/code&gt; 之前：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(uidNumber&amp;gt;=1000)&amp;#39; uidNumber
+dn: uid=dora,ou=people,dc=example,dc=org
+uidNumber: 1000
+dn: uid=eli,ou=people,dc=example,dc=org
+uidNumber: 1001
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(uidNumber&amp;gt;=999)&amp;#39; uidNumber
+dn: uid=dora,ou=people,dc=example,dc=org
+uidNumber: 1000
+dn: uid=eli,ou=people,dc=example,dc=org
+uidNumber: 1001&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;hal 不在其中：hal 的 &lt;code&gt;uidNumber&lt;/code&gt; 被丢弃了。对没有 ORDERING 规则的属性（如 &lt;code&gt;uid&lt;/code&gt;）进行范围比较结果为 Undefined，不匹配任何内容。&lt;/p&gt;</description></item><item><title>站点模式，以及来源声明的类</title><link>https://go-authn.github.io/docs/0.7/zh-cn/authnd/schemas/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/zh-cn/authnd/schemas/</guid><description>
+&lt;p&gt;&lt;strong&gt;除非条目的某个类允许，否则 SUPANN 或 eduPerson 属性会被丢弃。&lt;/strong&gt;
+authnd 只发布它所提供的模式允许的内容（参见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/entries/#what-is-dropped-and-what-is-withheld"&gt;条目&lt;/a&gt;），而标准模式对 &lt;code&gt;supannEtablissement&lt;/code&gt; 或&lt;code&gt;eduPersonAffiliation&lt;/code&gt; 一无所知。自 v0.12.0 起，站点按以下顺序说明三件事：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;要添加哪些定义&lt;/strong&gt;：&lt;code&gt;schema_files&lt;/code&gt;，即其 slapd 已经加载的文件，以及用于纯本地内容的 &lt;code&gt;schema { }&lt;/code&gt; 块；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;其人员和组带哪些辅助类&lt;/strong&gt;：&lt;code&gt;object_classes&lt;/code&gt;；&lt;/li&gt;
+&lt;li&gt;仅此而已。类是&lt;strong&gt;声明出来的，从不推断&lt;/strong&gt;：数据库中出现某个属性，不会改变条目发布为什么。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;本页的示例只是示例&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;下面的 &lt;code&gt;example.schema&lt;/code&gt; 是为本页编写的。它的 OID 位于&lt;code&gt;1.3.6.1.4.1.99999&lt;/code&gt; 之下，这是一个没有分配给任何人的弧：请使用你自己的，切勿照抄这些。关于 SUPANN，请参见&lt;a href="#supann"&gt;本页末尾&lt;/a&gt;。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="an-example"&gt;一个示例：模式、数据库、配置&lt;span class="hx:absolute hx:-mt-20" id="an-example"&gt;&lt;/span&gt;
+&lt;a href="#an-example" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;一份 OpenLDAP &lt;code&gt;.schema&lt;/code&gt; 形式的模式：一个来源可以声明的类（&lt;code&gt;exampleStaff&lt;/code&gt;，AUXILIARY，带一个 MUST），和一个不能声明的类（&lt;code&gt;exampleUnit&lt;/code&gt;，STRUCTURAL）。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;objectidentifier exampleRoot 1.3.6.1.4.1.99999
+objectidentifier exampleAttr exampleRoot:1
+objectidentifier exampleClass exampleRoot:2
+attributetype ( exampleAttr:1 NAME &amp;#39;exampleBadge&amp;#39;
+DESC &amp;#39;the number on a badge&amp;#39;
+EQUALITY caseIgnoreMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+SINGLE-VALUE )
+attributetype ( exampleAttr:2 NAME &amp;#39;exampleEmployeeId&amp;#39;
+DESC &amp;#39;a staff number&amp;#39;
+EQUALITY caseExactMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+SINGLE-VALUE )
+# AUXILIARY: it can be declared. exampleStaff has a MUST.
+objectclass ( exampleClass:1 NAME &amp;#39;exampleStaff&amp;#39; SUP top AUXILIARY
+DESC &amp;#39;somebody employed: has a staff number&amp;#39;
+MUST exampleEmployeeId
+MAY exampleBadge )
+# STRUCTURAL: it cannot be declared (an entry has one structural chain).
+objectclass ( exampleClass:2 NAME &amp;#39;exampleUnit&amp;#39; SUP top STRUCTURAL
+MUST cn )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;一个包含三个人的 SQLite 数据库，带有 &lt;code&gt;sn&lt;/code&gt;、工牌和员工编号（&lt;code&gt;sqlite3 var/people.db &amp;lt; people.sql&lt;/code&gt;）：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sql" data-lang="sql"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;create&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;table&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;staff&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;primary&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;secret&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;create&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;table&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;person_attrs&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;primary&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sn&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;badge&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;empid&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;locker&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;insert&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;into&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;staff&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;values&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ann&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ann-password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ben&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ben-password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat-password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;insert&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;into&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;person_attrs&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;values&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ann&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Archer&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;B-0001&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;E-1001&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;L-12&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ben&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Brook&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;B-0002&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Cole&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;E-1003&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;以及配置：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Files first, then the blocks: a definition may use anything before it.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;schema_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;etc/authnd/example.schema&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;schema&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;attribute_type&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleLocker&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.1.3&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; syntax&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.1466.115.121.1.15&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;object_class&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleLockerHolder&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.2.3&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; kind&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;auxiliary&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; may&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;exampleLocker&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/people.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, secret from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, badge as exampleBadge, empid as exampleEmployeeId, locker as exampleLocker from person_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;exampleStaff&amp;#34;, &amp;#34;exampleLockerHolder&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # declared, never inferred
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;没有 &lt;code&gt;object_classes&lt;/code&gt; 这一行时，&lt;code&gt;check&lt;/code&gt; 会说明单靠标准模式对同样的人员做了什么：这些属性被丢弃，每一行都指明了本可以保留它的类。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/nodecl.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+schema: etc/authnd/example.schema adds 3 object identifier macros, 2 attribute types and 2 object classes
+USER FROM CAN PROVE PUBLISHED AS WITH
+ann a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn and sn
+ben a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn and sn
+cat a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn and sn
+ann has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+ann is published without exampleBadge: no class of the entry allows it; exampleStaff would
+ann is published without exampleEmployeeId: no class of the entry allows it; exampleStaff would
+ben has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+ben is published without exampleBadge: no class of the entry allows it; exampleStaff would
+cat has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+cat is published without exampleEmployeeId: no class of the entry allows it; exampleStaff would
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="schema-files"&gt;&lt;code&gt;schema_files&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="schema-files"&gt;&lt;/span&gt;
+&lt;a href="#schema-files" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;schema_files&lt;/code&gt; 是 OpenLDAP &lt;code&gt;.schema&lt;/code&gt; 文件或 cn=config LDIF 文件的列表。它们按&lt;strong&gt;发布时的原样&lt;/strong&gt;，依次加载到标准模式之上（如果有&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/tls/#the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; 块&lt;/a&gt;，还有 Samba 的三个定义），由 go-authn/ldap 的 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/libraries/ldap/#hcl2-and-the-converter"&gt;slapd 兼容读取器&lt;/a&gt;处理：支持任意的项顺序、slapd 和 RFC 2849 的续行、base64、&lt;code&gt;{N}&lt;/code&gt; 长度前缀，以及 &lt;code&gt;objectidentifier&lt;/code&gt; 宏——一个文件可以定义，下一个文件可以使用，如同跨越 slapd 的 &lt;code&gt;include&lt;/code&gt;。事先不做任何转换，所以站点的 slapd 加载的文件，就是 authnd 加载的文件。这些定义由&lt;code&gt;cn=Subschema&lt;/code&gt; 提供。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;相对路径相对于工作目录，与配置中的其他每个路径一样。在服务中请使用绝对路径：systemd 单元的工作目录是 &lt;code&gt;/&lt;/code&gt;。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;每个文件必须是不超过 4 MiB 的普通文件，并且只在启动时读取一次。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;这些文件决定每个条目可以包含什么。它们不是机密，但请与配置的其余部分放在一起：&lt;code&gt;root:authnd&lt;/code&gt;，权限 &lt;code&gt;0640&lt;/code&gt;，位于只有 root 可写的目录中（&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/install/"&gt;安装&lt;/a&gt;）。&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;无法构建的文件会使启动以及 &lt;code&gt;check&lt;/code&gt; 被拒绝，并给出文件、行和定义起始的列，信息末尾是拒绝的类型：未知的父类、属性、匹配规则或语法（&lt;code&gt;unknown reference&lt;/code&gt;），由辅助类派生的结构类（&lt;code&gt;kind violation&lt;/code&gt;），重复定义的 OID 或名称（&lt;code&gt;duplicate OID&lt;/code&gt;、&lt;code&gt;duplicate name&lt;/code&gt;）。自 v0.12.1 起，位置和类型来自 go-authn/ldap 的类型化&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/libraries/ldap/#build-error"&gt;&lt;code&gt;*schema.BuildError&lt;/code&gt;&lt;/a&gt;，而不是通过解析它的错误信息。从文件读取的定义从第 1 列开始，即使其文本折叠成多行也一样。重复定义会指出它的第一个定义在哪里，重新定义则会指出原件在哪个标准文件，或更早文件的哪一行。两个示例：&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cases/unknown.schema&lt;/code&gt; 有一个在任何地方都未定义的 MAY：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# exampleB has a MAY that is defined nowhere.
+objectclass ( 1.3.6.1.4.1.99999.2.9 NAME &amp;#39;exampleB&amp;#39; SUP top AUXILIARY
+MAY noSuchAttribute )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/unknown.hcl
+authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;cases/twice.schema&lt;/code&gt; 给两个属性类型赋予同一个 OID：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleA&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleB&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/twice.hcl
+authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 data-hextra-search-id="redefinition"&gt;重新定义会被拒绝，即使完全相同&lt;span class="hx:absolute hx:-mt-20" id="redefinition"&gt;&lt;/span&gt;
+&lt;a href="#redefinition" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;文件不得定义已经存在的内容：标准模式的定义、Samba 的定义，或更早的文件的定义。&lt;strong&gt;即使逐字相同&lt;/strong&gt;也会被拒绝，这正是 slapd 自己的规则：模式文件的定义要经过&lt;code&gt;parse_at&lt;/code&gt; 和 &lt;code&gt;parse_oc&lt;/code&gt;，对于已被索引的 OID 或名称，slapd 会回答&lt;em&gt;Duplicate attributeType&lt;/em&gt;（OID 和名称都相同）或 &lt;em&gt;Inconsistent duplicate
+attributeType&lt;/em&gt;（&lt;code&gt;servers/slapd/at.c&lt;/code&gt;、&lt;code&gt;oc.c&lt;/code&gt;）。只有 slapd 自己硬编码的模式才允许前一种情形。slapd 拒绝的文件，authnd 也拒绝。&lt;/p&gt;
+&lt;p&gt;另一种解读则必须挑出一个胜者，而这会悄悄改变每个客户端被告知的某个标准属性的内容；拒绝则会指出具体的行。拒绝信息会说明文本是否相同。下面是一个用自己的定义重新定义 &lt;code&gt;cn&lt;/code&gt;（2.5.4.3）的文件：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/dup.hcl
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too (&amp;#34;Duplicate attributeType&amp;#34;, servers/slapd/at.c and oc.c). Remove it from this file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-schema-block"&gt;&lt;code&gt;schema { }&lt;/code&gt; 块&lt;span class="hx:absolute hx:-mt-20" id="the-schema-block"&gt;&lt;/span&gt;
+&lt;a href="#the-schema-block" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;对于纯本地的定义，&lt;code&gt;schema&lt;/code&gt; 块以 HCL2 保存它们，采用 &lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/libraries/ldap/#hcl2-and-the-converter"&gt;hclschema 的形态&lt;/a&gt;：&lt;code&gt;attribute_type&lt;/code&gt;、&lt;code&gt;object_class&lt;/code&gt;、&lt;code&gt;object_identifier&lt;/code&gt;、&lt;code&gt;matching_rule&lt;/code&gt; 和&lt;code&gt;ldap_syntax&lt;/code&gt;。它在文件&lt;strong&gt;之后&lt;/strong&gt;读取，因此可以使用文件中的定义，并且可以有多个。&lt;/p&gt;
+&lt;p&gt;值必须是&lt;strong&gt;字面量&lt;/strong&gt;：不能有变量、函数，也不能有 &lt;code&gt;${...}&lt;/code&gt; 或&lt;code&gt;%{...}&lt;/code&gt;。该块由读取 &lt;code&gt;.hcl&lt;/code&gt; 模式文件的同一个解码器解码，使用相同的界限，每个错误都会指明配置自己的行和列。不是 HCL 原生语法的块会被拒绝。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="object-classes"&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="object-classes"&gt;&lt;/span&gt;
+&lt;a href="#object-classes" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;模式中的定义允许某个属性；它并不会把类加到任何人身上。来源&lt;strong&gt;声明&lt;/strong&gt;
+其人员和组发布时所带的辅助类：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;位置&lt;/th&gt;
+&lt;th&gt;键&lt;/th&gt;
+&lt;th&gt;它声明什么&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;users&lt;/code&gt; 块，任意种类&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;该块给出的每个人员的类&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;users&lt;/code&gt; 块，任意种类&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;group_object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;每个组的类&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;user&lt;/code&gt; 块&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;该人员的类&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;group&lt;/code&gt; 块&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;该组的类&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # ...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannPerson&amp;#34;, &amp;#34;eduPerson&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; group_object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannGroupe&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;alice&amp;#34; { object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;siteMember&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;group &amp;#34;staff&amp;#34; { object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannGroupe&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;这些键属于 go-authn/directory，自 v0.15.0 起（&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/libraries/directory/#object-classes"&gt;库&lt;/a&gt;）。名称比较时忽略大小写，并且只保留一次，按书写顺序。&lt;/p&gt;
+&lt;p&gt;authnd 如何处理已声明的类：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;它连同其父类一起发布&lt;/strong&gt;，排在 authnd 派生的类之后（RFC 4512 §3.3：所指名的类的全部父类都被隐式加入）。该类允许的属性会被保留，而不是丢弃。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;它从不推断。&lt;/strong&gt; 来源不声明任何类的人员，无论数据库中保存了什么，都会继续失去其所有类都不允许的属性。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;缺少已声明类的某个 MUST 的人员，发布时不带该类。&lt;/strong&gt;
+其属性像任何没有类允许的属性一样被丢弃，两者都会被报告。这就是authnd 处处遵循的规则：人员仍然发布，问题被说明，不会悄悄改变任何东西。扣留该人员，会使其因为缺少一个属性而从每次搜索中消失；而发布不带 MUST 的类，则会提供一个不通过所提供模式检查的条目。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;两个来源可以为同一个组声明不同的类。&lt;/strong&gt; 第一个为某个组声明类的来源整体决定，后面的列表会被忽略：既不合并也不报错。&lt;code&gt;check&lt;/code&gt; 会说明这一点。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;这里 ann 一应俱全，cat 没有储物柜（一个 MAY），而 ben 没有&lt;code&gt;exampleEmployeeId&lt;/code&gt;，它是 &lt;code&gt;exampleStaff&lt;/code&gt; 的 MUST：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check etc/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+schema: etc/authnd/example.schema adds 3 object identifier macros, 2 attribute types and 2 object classes
+schema: the schema block at etc/authnd/authnd.hcl:9:1 adds 1 attribute type and 1 object class: exampleLocker and exampleLockerHolder
+etc/authnd/authnd.hcl:26:22: users &amp;#34;sql&amp;#34; declares exampleStaff and exampleLockerHolder for its people
+USER FROM CAN PROVE PUBLISHED AS WITH
+ann a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder uid, cn, sn, exampleBadge, exampleEmployeeId and exampleLocker
+ben a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject, exampleLockerHolder uid, cn and sn
+cat a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder uid, cn, sn and exampleEmployeeId
+ann has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder
+ben has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject, exampleLockerHolder
+ben is published without exampleStaff, which its source declares: ben has no exampleEmployeeId, which exampleStaff requires
+ben is published without exampleBadge: no class of the entry allows it; exampleStaff would
+cat has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;启动日志带有同样的行，只是使用 DN：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd
+ldap on 127.0.0.1:3893, serving 3 people from a sqlite database
+schema: etc/authnd/example.schema adds 3 object identifier macros, 2 attribute types and 2 object classes
+schema: the schema block at etc/authnd/authnd.hcl:9:1 adds 1 attribute type and 1 object class: exampleLocker and exampleLockerHolder
+etc/authnd/authnd.hcl:26:22: users &amp;#34;sql&amp;#34; declares exampleStaff and exampleLockerHolder for its people
+uid=ben,ou=people,dc=example,dc=org is published without exampleStaff, which its source declares: uid=ben,ou=people,dc=example,dc=org has no exampleEmployeeId, which exampleStaff requires
+uid=ben,ou=people,dc=example,dc=org is published without exampleBadge: no class of the entry allows it; exampleStaff would
+stopping&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;以及 OpenLDAP 的 &lt;code&gt;ldapsearch&lt;/code&gt; 读回的内容，读取器的密码放在文件中。ann 带有两个辅助类，以及它们允许的每个属性；ben只带 &lt;code&gt;exampleLockerHolder&lt;/code&gt;，他的工牌随 &lt;code&gt;exampleStaff&lt;/code&gt; 一起消失了；cat 两个类都带，并带有她的员工编号：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y etc/authnd/reader.pw -b ou=people,dc=example,dc=org &amp;#39;(uid=*)&amp;#39;
+dn: uid=ann,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+objectClass: exampleStaff
+objectClass: exampleLockerHolder
+uid: ann
+cn: ann
+sn: Archer
+exampleBadge: B-0001
+exampleEmployeeId: E-1001
+exampleLocker: L-12
+dn: uid=ben,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+objectClass: exampleLockerHolder
+uid: ben
+cn: ben
+sn: Brook
+dn: uid=cat,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+objectClass: exampleStaff
+objectClass: exampleLockerHolder
+uid: cat
+cn: cat
+sn: Cole
+exampleEmployeeId: E-1003
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y etc/authnd/reader.pw -b ou=people,dc=example,dc=org &amp;#39;(objectClass=exampleStaff)&amp;#39; 1.1
+dn: uid=ann,ou=people,dc=example,dc=org
+dn: uid=cat,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-is-refused"&gt;什么会被拒绝，以及原因&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused"&gt;&lt;/span&gt;
+&lt;a href="#what-is-refused" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;已声明的类会在启动时由 &lt;code&gt;check&lt;/code&gt; 对照所提供的模式进行检查。它必须是：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;已定义的&lt;/strong&gt;，由标准模式、文件或块定义；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;AUXILIARY&lt;/strong&gt;（RFC 4512 §4.1.1）。一个条目恰好有一条结构链（§2.4.2），由 authnd 根据此人所具有的内容选择；声明不能再添加第二条；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;不是 authnd 自行派生的类&lt;/strong&gt;：&lt;code&gt;account&lt;/code&gt;、&lt;code&gt;inetOrgPerson&lt;/code&gt; 及其父类、&lt;code&gt;posixAccount&lt;/code&gt;、&lt;code&gt;posixGroup&lt;/code&gt;、&lt;code&gt;ldapPublicKey&lt;/code&gt;、&lt;code&gt;uidObject&lt;/code&gt;、&lt;code&gt;sambaSamAccount&lt;/code&gt;、&lt;code&gt;groupOfNames&lt;/code&gt; 和 &lt;code&gt;organizationalRole&lt;/code&gt;，无论用其哪个名称。这些类取决于人员或组所具有的内容，而声明不能推翻 &lt;code&gt;check&lt;/code&gt;。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;否则启动会被拒绝，并指明块、其位置和类。&lt;code&gt;exampleUnit&lt;/code&gt; 是 STRUCTURAL：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/structural.hcl
+authnd: cases/structural.hcl:10:20: users &amp;#34;sql&amp;#34; object_classes: exampleUnit is STRUCTURAL, and an entry has exactly one structural chain (RFC 4512 §2.4.2), which authnd chooses: only an AUXILIARY class (§4.1.1) can be declared&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;go-authn/directory 会在此之前检查&lt;strong&gt;拼写&lt;/strong&gt;：类是描述符，绝不是 OID、空格、引号或括号。&lt;/p&gt;
+&lt;p&gt;同样被拒绝的，出于同样保持模式诚实的理由：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;被拒绝的&lt;/th&gt;
+&lt;th&gt;原因&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;重新定义某个定义的文件，即使逐字相同&lt;/td&gt;
+&lt;td&gt;slapd 的规则：&lt;a href="#redefinition"&gt;见上文&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;不是普通文件，或超过 4 MiB 的文件&lt;/td&gt;
+&lt;td&gt;FIFO 会阻塞启动，&lt;code&gt;/dev/zero&lt;/code&gt; 永远不会结束&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;含有变量、函数或 &lt;code&gt;${...}&lt;/code&gt; 的 &lt;code&gt;schema&lt;/code&gt; 块&lt;/td&gt;
+&lt;td&gt;只允许字面值，与 &lt;code&gt;.hcl&lt;/code&gt; 模式文件相同&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt; 中未定义的类&lt;/td&gt;
+&lt;td&gt;一个无法检验的承诺&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;STRUCTURAL 类，或 authnd 派生的类&lt;/td&gt;
+&lt;td&gt;上面的列表&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="what-check-prints"&gt;&lt;code&gt;check&lt;/code&gt; 会输出什么&lt;span class="hx:absolute hx:-mt-20" id="what-check-prints"&gt;&lt;/span&gt;
+&lt;a href="#what-check-prints" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;四类行，附加在&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/check/"&gt;通常的那些&lt;/a&gt;之上；启动日志带有同样的行：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;schema: &amp;lt;file&amp;gt; adds …&lt;/code&gt;&lt;/strong&gt; 和 &lt;strong&gt;&lt;code&gt;schema: the schema block at &amp;lt;file&amp;gt;:&amp;lt;line&amp;gt;:&amp;lt;column&amp;gt; adds …&lt;/code&gt;&lt;/strong&gt;：每个文件和每个块添加了什么，按对象标识符宏、属性类型和对象类计数；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;&amp;lt;file&amp;gt;:&amp;lt;line&amp;gt;:&amp;lt;column&amp;gt;: users &amp;quot;sql&amp;quot; declares … for its people&lt;/code&gt;&lt;/strong&gt;（&lt;code&gt;user&lt;/code&gt; 或 &lt;code&gt;group&lt;/code&gt; 块则说 &lt;code&gt;user &amp;quot;ann&amp;quot; declares … for this person&lt;/code&gt; 和&lt;code&gt;group &amp;quot;staff&amp;quot; declares … for this group&lt;/code&gt;）：每个来源声明了什么；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;&amp;lt;name&amp;gt; is published without &amp;lt;class&amp;gt;, which its source declares: …&lt;/code&gt;&lt;/strong&gt;，指明此人缺少的 MUST；&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;group staff: the configuration file declares supannGroupe and a postgres database declares eduMember; the first is published and the second is ignored (the first source that declares classes for a group decides)&lt;/code&gt;&lt;/strong&gt;：两个来源对某个组存在分歧，否则这会悄无声息。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;因缺少类而被丢弃的属性，就是&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/entries/"&gt;条目&lt;/a&gt;已经描述过的&lt;code&gt;is published without &amp;lt;attribute&amp;gt;: no class of the entry allows it; &amp;lt;classes&amp;gt; would&lt;/code&gt; 这些行：有了声明之后，它们指明的是你尚未声明的类。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="rules"&gt;DIT 内容规则、名称形式和 DIT 结构规则&lt;span class="hx:absolute hx:-mt-20" id="rules"&gt;&lt;/span&gt;
+&lt;a href="#rules" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;从 v0.13.0 起，&lt;code&gt;schema_files&lt;/code&gt; 和 &lt;code&gt;schema { }&lt;/code&gt; 块还接受 RFC 4512 §4.1.6 和 §4.1.7为类和属性所增加的三类定义，并且 authnd &lt;strong&gt;强制执行&lt;/strong&gt;它们（go-authn/ldap v0.11.0读取、构建并检查它们；&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/libraries/ldap/#rules"&gt;库页面&lt;/a&gt;
+说明了方式）：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;定义&lt;/th&gt;
+&lt;th&gt;RFC 4512&lt;/th&gt;
+&lt;th&gt;它说明什么&lt;/th&gt;
+&lt;th&gt;authnd 如何处理&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;DIT 内容规则&lt;/td&gt;
+&lt;td&gt;§4.1.6&lt;/td&gt;
+&lt;td&gt;针对一个结构类：可以添加哪些辅助类（&lt;code&gt;AUX&lt;/code&gt;），哪些属性是必需的（&lt;code&gt;MUST&lt;/code&gt;）、允许的（&lt;code&gt;MAY&lt;/code&gt;）或被排除的（&lt;code&gt;NOT&lt;/code&gt;）&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;为每个条目塑形&lt;/strong&gt;（数据）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;名称形式&lt;/td&gt;
+&lt;td&gt;§4.1.7.2&lt;/td&gt;
+&lt;td&gt;某个结构类的条目由哪些属性命名（RDN）&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;约束树&lt;/strong&gt;（配置）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;DIT 结构规则&lt;/td&gt;
+&lt;td&gt;§4.1.7.1&lt;/td&gt;
+&lt;td&gt;名称形式可以放在哪里：在由其 &lt;code&gt;SUP&lt;/code&gt; 所指名的规则所管辖的条目之下&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;约束树&lt;/strong&gt;（配置）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;它们&lt;strong&gt;只有在存在时&lt;/strong&gt;才会在 &lt;code&gt;cn=Subschema&lt;/code&gt; 发布（&lt;code&gt;dITContentRules&lt;/code&gt;、&lt;code&gt;nameForms&lt;/code&gt;、&lt;code&gt;dITStructureRules&lt;/code&gt;）。没有时，此页面的内容都不适用，与 v0.12.4 相比也没有任何变化。&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;同一个示例弧&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;下面的 &lt;code&gt;rules.schema&lt;/code&gt; 与上面的 &lt;code&gt;example.schema&lt;/code&gt; 一样，是为此页面编写的，位于 &lt;code&gt;1.3.6.1.4.1.99999&lt;/code&gt; 之下。请使用你自己的弧。内容规则的 OID 与&lt;code&gt;inetOrgPerson&lt;/code&gt; 的 OID 按定义是相同的：内容规则以它所针对的结构类命名。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="rules-example"&gt;每类各一条的模式，及其 HCL&lt;span class="hx:absolute hx:-mt-20" id="rules-example"&gt;&lt;/span&gt;
+&lt;a href="#rules-example" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;采用 OpenLDAP 的 &lt;code&gt;.schema&lt;/code&gt; 形式。&lt;code&gt;ditcontentrule&lt;/code&gt; 是 slapd.conf(5) 的指令；&lt;code&gt;nameform&lt;/code&gt; 和 &lt;code&gt;ditstructurerule&lt;/code&gt; 是 go-authn/ldap 的，因为 slapd 没有它们（&lt;a href="#rules-slapd"&gt;见下文&lt;/a&gt;）。authnd 还会检查它所发布的树（后缀、&lt;code&gt;ou=people&lt;/code&gt;、&lt;code&gt;ou=groups&lt;/code&gt;，以及其下的账户、人员和组），因此该文件包含五个名称形式和五条结构规则，而不是每类各一个：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# Rules for the tree authnd publishes. 1.3.6.1.4.1.99999 is an example arc:
+# nobody is assigned it, use your own.
+# A content rule belongs to a structural class and takes that class&amp;#39;s OID.
+# inetOrgPerson (2.16.840.1.113730.3.2.2): posixAccount and uidObject may be
+# added, ldapPublicKey may not; telephoneNumber is required; description is
+# precluded.
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME &amp;#39;examplePersonRule&amp;#39;
+AUX ( posixAccount $ uidObject )
+MUST telephoneNumber
+NOT description )
+# A name form says which attribute names an entry of a structural class.
+nameform ( 1.3.6.1.4.1.99999.9.1 NAME &amp;#39;exampleDomainForm&amp;#39; OC domain MUST dc )
+nameform ( 1.3.6.1.4.1.99999.9.2 NAME &amp;#39;exampleUnitForm&amp;#39; OC organizationalUnit MUST ou )
+nameform ( 1.3.6.1.4.1.99999.9.3 NAME &amp;#39;exampleAccountForm&amp;#39; OC account MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.4 NAME &amp;#39;examplePersonForm&amp;#39; OC inetOrgPerson MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.5 NAME &amp;#39;examplePosixGroupForm&amp;#39; OC posixGroup MUST cn )
+# A structure rule gives a name form a place: the rule ID is a number, SUP
+# names the rule of the parent entry.
+ditstructurerule ( 1 NAME &amp;#39;exampleSuffix&amp;#39; FORM exampleDomainForm )
+ditstructurerule ( 2 NAME &amp;#39;exampleUnit&amp;#39; FORM exampleUnitForm SUP 1 )
+ditstructurerule ( 3 NAME &amp;#39;exampleAccounts&amp;#39; FORM exampleAccountForm SUP 2 )
+ditstructurerule ( 4 NAME &amp;#39;examplePersons&amp;#39; FORM examplePersonForm SUP 2 )
+ditstructurerule ( 5 NAME &amp;#39;examplePosixGroups&amp;#39; FORM examplePosixGroupForm SUP 2 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;同样的定义用 HCL 写出，即 &lt;code&gt;ldapschema&lt;/code&gt; v0.11.0 所写的形式（&lt;code&gt;ldapschema to-hcl rules.schema&lt;/code&gt;）。每个块是一个定义，以其第一个 NAME 作标签；结构规则有 &lt;code&gt;id&lt;/code&gt;、它所放置的 &lt;code&gt;form&lt;/code&gt;，以及它位于其下的 &lt;code&gt;sup&lt;/code&gt; 规则：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_content_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersonRule&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;2.16.840.1.113730.3.2.2&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; aux&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;posixAccount&amp;#34;, &amp;#34;uidObject&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;telephoneNumber&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; not&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;description&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleDomainForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.1&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;domain&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dc&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleUnitForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.2&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;organizationalUnit&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ou&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleAccountForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.3&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;account&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;uid&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersonForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.4&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;inetOrgPerson&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;uid&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePosixGroupForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.5&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;posixGroup&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;cn&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleSuffix&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleDomainForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleUnit&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;2&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleUnitForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleAccounts&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleAccountForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersons&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersonForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePosixGroups&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;5&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePosixGroupForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;这就是 &lt;code&gt;schema { }&lt;/code&gt; 块内部的内容，原样不变；&lt;code&gt;.schema&lt;/code&gt; 文件则是&lt;code&gt;schema_files&lt;/code&gt; 所接受的。&lt;code&gt;ldapschema to-schema rules.hcl&lt;/code&gt; 把它转回定义相同的 &lt;code&gt;.schema&lt;/code&gt; 文件，而 &lt;code&gt;ldapschema check&lt;/code&gt; 在标准模式之上构建它：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapschema check etc/authnd/rules.schema
+read: 0 object identifiers, 0 syntaxes, 0 matching rules, 0 attribute types, 0 object classes
+read: 1 DIT content rules, 5 name forms, 5 DIT structure rules
+build: ok, 11 definitions added to schema.Standard()&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="content-rules"&gt;内容规则对条目做了什么&lt;span class="hx:absolute hx:-mt-20" id="content-rules"&gt;&lt;/span&gt;
+&lt;a href="#content-rules" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;配置是两个人员和两个组，规则从 &lt;code&gt;schema_files&lt;/code&gt; 加载。&lt;strong&gt;dave&lt;/strong&gt; 有 &lt;code&gt;sn&lt;/code&gt;
+（因此他是 &lt;code&gt;inetOrgPerson&lt;/code&gt;）、电话号码、描述和一个 SSH 公钥；&lt;strong&gt;erin&lt;/strong&gt; 有 &lt;code&gt;sn&lt;/code&gt;，别无其他；&lt;strong&gt;staff&lt;/strong&gt; 有 &lt;code&gt;gidNumber&lt;/code&gt;；&lt;strong&gt;team&lt;/strong&gt; 没有：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;schema_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;etc/authnd/rules.schema&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;dave&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;dave-password&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; authorized_keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Dumont&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; telephoneNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;+33 1 23 45 67 89&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; description&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;on call&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;erin&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;erin-password&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { sn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Evans&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;group&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;staff&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; members&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dave&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;100&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;group &amp;#34;team&amp;#34; { members&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dave&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;规则适用于条目的&lt;strong&gt;结构类&lt;/strong&gt;，它做了什么，会在启动时以及由 &lt;code&gt;check&lt;/code&gt; 逐个条目说明：&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;规则说&lt;/th&gt;
+&lt;th&gt;条目&lt;/th&gt;
+&lt;th&gt;表述为&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;AUX&lt;/code&gt; 没有列出某个辅助类，无论是已声明的还是 authnd 派生的（&lt;code&gt;posixAccount&lt;/code&gt;、&lt;code&gt;ldapPublicKey&lt;/code&gt;、&lt;code&gt;sambaSamAccount&lt;/code&gt;、&lt;code&gt;uidObject&lt;/code&gt;）&lt;/td&gt;
+&lt;td&gt;该类被&lt;strong&gt;去掉&lt;/strong&gt;，连同只有它才允许的属性（以及 authnd 为它添加的 &lt;code&gt;sshPublicKey&lt;/code&gt;、&lt;code&gt;sambaSID&lt;/code&gt; 和 &lt;code&gt;sambaNTPassword&lt;/code&gt;）；其超类被去掉的已声明类随之去掉&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;name&amp;gt; is published without &amp;lt;class&amp;gt;: the DIT content rule &amp;lt;rule&amp;gt; does not allow it (not in its AUX)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;NOT&lt;/code&gt; 指名某个属性&lt;/td&gt;
+&lt;td&gt;该属性被&lt;strong&gt;丢弃&lt;/strong&gt;，无论由谁提供&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;name&amp;gt; is published without &amp;lt;attribute&amp;gt;: the DIT content rule &amp;lt;rule&amp;gt; precludes it (NOT)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MUST&lt;/code&gt; 指名条目所缺少的属性&lt;/td&gt;
+&lt;td&gt;该条目被&lt;strong&gt;排除在外&lt;/strong&gt;：规则适用于整个条目，没有哪个类可以去掉而使它有效&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;name&amp;gt; is NOT published: … &amp;lt;attribute&amp;gt; is required by the DIT content rule &amp;lt;rule&amp;gt; and is missing (RFC 4512 4.1.6)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;结构类没有内容规则的条目，其辅助类是允许的，与 slapd 允许它们一样（&lt;a href="#rules-slapd"&gt;见下文&lt;/a&gt;）。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check etc/authnd/authnd.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+USER FROM CAN PROVE PUBLISHED AS WITH
+dave the configuration file a password and 1 key person, organizationalPerson, inetOrgPerson, uidObject uid, cn, sn and telephoneNumber
+erin the configuration file a password NOT PUBLISHED (see below) uid, cn and sn
+GROUP MEMBERS PUBLISHED AS
+staff dave posixGroup
+team dave NOT PUBLISHED (see below)
+dave has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+dave is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+dave is published without description: the DIT content rule examplePersonRule precludes it (NOT)
+erin has no uidNumber, gidNumber or homeDirectory: not a posixAccount, and as person, organizationalPerson, inetOrgPerson, uidObject the entry fails the schema (below)
+erin is NOT published: as person, organizationalPerson, inetOrgPerson, uidObject it fails the schema:
+- telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+group team is NOT published: as groupOfNames it fails the schema:
+- no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;服务器启动，其日志带有同样三类行，只是带有 DN：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd/authnd.hcl
+ldap on 127.0.0.1:3893, serving 2 people from the configuration file
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+uid=erin,ou=people,dc=example,dc=org is NOT published: it fails the schema: telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+cn=team,ou=groups,dc=example,dc=org is NOT published: it fails the schema: no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+uid=dave,ou=people,dc=example,dc=org is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+uid=dave,ou=people,dc=example,dc=org is published without description: the DIT content rule examplePersonRule precludes it (NOT)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;OpenLDAP 的 &lt;code&gt;ldapsearch&lt;/code&gt; 在 &lt;code&gt;cn=Subschema&lt;/code&gt; 处读到的内容，即发布规则所用的三个属性：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b cn=Subschema -s base &amp;#39;(objectClass=subschema)&amp;#39; dITContentRules nameForms dITStructureRules
+dn: cn=Subschema
+dITContentRules: ( 2.16.840.1.113730.3.2.2 NAME &amp;#39;examplePersonRule&amp;#39; AUX ( posixAccount $ uidObject ) MUST telephoneNumber NOT description )
+nameForms: ( 1.3.6.1.4.1.99999.9.1 NAME &amp;#39;exampleDomainForm&amp;#39; OC domain MUST dc )
+nameForms: ( 1.3.6.1.4.1.99999.9.2 NAME &amp;#39;exampleUnitForm&amp;#39; OC organizationalUnit MUST ou )
+nameForms: ( 1.3.6.1.4.1.99999.9.3 NAME &amp;#39;exampleAccountForm&amp;#39; OC account MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.4 NAME &amp;#39;examplePersonForm&amp;#39; OC inetOrgPerson MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.5 NAME &amp;#39;examplePosixGroupForm&amp;#39; OC posixGroup MUST cn )
+dITStructureRules: ( 1 NAME &amp;#39;exampleSuffix&amp;#39; FORM exampleDomainForm )
+dITStructureRules: ( 2 NAME &amp;#39;exampleUnit&amp;#39; FORM exampleUnitForm SUP 1 )
+dITStructureRules: ( 3 NAME &amp;#39;exampleAccounts&amp;#39; FORM exampleAccountForm SUP 2 )
+dITStructureRules: ( 4 NAME &amp;#39;examplePersons&amp;#39; FORM examplePersonForm SUP 2 )
+dITStructureRules: ( 5 NAME &amp;#39;examplePosixGroups&amp;#39; FORM examplePosixGroupForm SUP 2 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;再看树，查询规则所涉及的内容。先是&lt;strong&gt;没有&lt;/strong&gt; &lt;code&gt;schema_files&lt;/code&gt; 的同一配置（对照：下面的每一处差异都是规则造成的），然后是有它们的：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(|(uid=*)(cn=*))&amp;#39; dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: ldapPublicKey
+objectClass: uidObject
+description: on call
+sshPublicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org
+dn: uid=erin,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+dn: cn=team,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(|(uid=*)(cn=*))&amp;#39; dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;dave 失去了 &lt;code&gt;ldapPublicKey&lt;/code&gt;，随之失去了他的 &lt;code&gt;sshPublicKey&lt;/code&gt;（不在 &lt;code&gt;AUX&lt;/code&gt; 中），还有他的 &lt;code&gt;description&lt;/code&gt;（&lt;code&gt;NOT&lt;/code&gt;）。erin 不见了（&lt;code&gt;MUST telephoneNumber&lt;/code&gt;），&lt;strong&gt;team&lt;/strong&gt; 也是：它没有 &lt;code&gt;gidNumber&lt;/code&gt;，因此是 &lt;code&gt;groupOfNames&lt;/code&gt;，而没有任何结构规则把 &lt;code&gt;groupOfNames&lt;/code&gt; 放在 &lt;code&gt;ou=groups&lt;/code&gt; 之下。最后这一点是树的规则应用于数据，下一节会加以说明。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="structure-rules"&gt;结构规则对树做了什么&lt;span class="hx:absolute hx:-mt-20" id="structure-rules"&gt;&lt;/span&gt;
+&lt;a href="#structure-rules" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;只要有&lt;strong&gt;至少一条有效的&lt;/strong&gt; DIT 结构规则，authnd 就会在启动时和 &lt;code&gt;check&lt;/code&gt; 中遍历它将要发布的树：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;后缀&lt;/strong&gt;（&lt;code&gt;base_dn&lt;/code&gt;），按其 RDN 所指名的类处理：&lt;code&gt;dc&lt;/code&gt; 对应&lt;code&gt;domain&lt;/code&gt;，&lt;code&gt;o&lt;/code&gt; 对应 &lt;code&gt;organization&lt;/code&gt;，&lt;code&gt;ou&lt;/code&gt; 对应 &lt;code&gt;organizationalUnit&lt;/code&gt;，&lt;code&gt;c&lt;/code&gt; 对应&lt;code&gt;country&lt;/code&gt;，&lt;code&gt;l&lt;/code&gt; 对应 &lt;code&gt;locality&lt;/code&gt;。以任何其他属性命名的后缀都会被拒绝；&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ou=people&lt;/code&gt; 和 &lt;code&gt;ou=groups&lt;/code&gt;，作为 &lt;code&gt;organizationalUnit&lt;/code&gt;；&lt;/li&gt;
+&lt;li&gt;authnd 用来命名人员的 RDN 属性（&lt;code&gt;uid&lt;/code&gt;）和命名组的 RDN 属性（&lt;code&gt;cn&lt;/code&gt;）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;没有规则放置的容器、没有任何规则有名称形式与之对应的那种后缀、拒绝 &lt;code&gt;uid&lt;/code&gt; 或 &lt;code&gt;cn&lt;/code&gt; 的名称形式，或者其下无法放置 authnd 所发布的任何内容的容器，都会&lt;strong&gt;拒绝启动，也使 &lt;code&gt;check&lt;/code&gt; 失败&lt;/strong&gt;：每一项拒绝一并给出，指明 DN、规则或名称形式以及子句，并且绝不回显机密。结构类取决于其数据（&lt;code&gt;sn&lt;/code&gt;、&lt;code&gt;gidNumber&lt;/code&gt;）且其容器之下没有规则的人员或组，则会&lt;strong&gt;被排除在外并加以说明&lt;/strong&gt;，如上面的 team：服务器照常启动。没有有效的结构规则时，一切不变。&lt;/p&gt;
+&lt;p&gt;一个模式，其人员唯一的结构规则 &lt;code&gt;peopleByCN&lt;/code&gt; 放置了一个需要 &lt;code&gt;cn&lt;/code&gt; 的名称形式（&lt;code&gt;accountByCN&lt;/code&gt;：&lt;code&gt;OC account MUST cn&lt;/code&gt;）：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/bad.hcl
+authnd: DIT structure rules: authnd names its people uid=&amp;lt;name&amp;gt;,ou=people,dc=example,dc=org, and an account named so is refused: the RDN (uid) is allowed by the name form of no DIT structure rule that places account under an entry governed by the rule 2: accountByCN needs cn&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;authnd 以 &lt;code&gt;uid=&amp;lt;name&amp;gt;&lt;/code&gt; 命名其人员：规则必须允许这一点。再看一个模式，其 &lt;code&gt;organizationalUnit&lt;/code&gt; 的规则没有 &lt;code&gt;SUP&lt;/code&gt;，因此&lt;code&gt;organizationalUnit&lt;/code&gt; 只能位于根部，于是 &lt;code&gt;ou=people&lt;/code&gt; 和&lt;code&gt;ou=groups&lt;/code&gt; 都没有位置，并且两者一并给出：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/root.hcl
+authnd: DIT structure rules: ou=people,dc=example,dc=org, where authnd publishes its people, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)
+DIT structure rules: ou=groups,dc=example,dc=org, where authnd publishes its groups, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;两者都以状态 1 退出。它们背后的文件（&lt;code&gt;cases/bad.schema&lt;/code&gt; 和&lt;code&gt;cases/root.schema&lt;/code&gt;）包含相同的五个名称形式，以及只用于说明问题的结构规则。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="rules-slapd"&gt;authnd 与 slapd 的不同之处&lt;span class="hx:absolute hx:-mt-20" id="rules-slapd"&gt;&lt;/span&gt;
+&lt;a href="#rules-slapd" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;go-authn/ldap 读取 OpenLDAP 的文件，其中有些规则是 OpenLDAP 的。这些是不同之处，是明确说明的，而不是事后发现的：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;slapd 只实现内容规则。&lt;/strong&gt; 它没有用于名称形式或结构规则的指令。&lt;code&gt;Format&lt;/code&gt; 写出 &lt;code&gt;nameform&lt;/code&gt; 和 &lt;code&gt;ditstructurerule&lt;/code&gt;
+关键字，它们是本库的，slapd 会拒绝它们：请把这些保留在HCL 中，或只由 authnd 读取的文件中。&lt;code&gt;ditcontentrule&lt;/code&gt; 是 slapd 的。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;OBSOLETE&lt;/code&gt; 规则无效&lt;/strong&gt;（RFC 4512 §4.1.6），其名称形式或结构规则也是如此。slapd 反而会拒绝该条目。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;没有内容规则时，允许辅助类。&lt;/strong&gt; 这是 slapd 的行为（它的 &lt;code&gt;SLAP_DISALLOW_AUX_WO_CR&lt;/code&gt; 标志不会被任何 &lt;code&gt;disallow&lt;/code&gt;
+关键字设置），也是 authnd 的行为。RFC 4512 §2.4.3 的说法相反；本库把它提供为 &lt;code&gt;ValidateOptions{StrictAuxiliary: true}&lt;/code&gt;，而 authnd 并未设置它。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;libldap 无法读取结构规则的 &lt;code&gt;SUP&lt;/code&gt;。&lt;/strong&gt; 带 &lt;code&gt;SUP&lt;/code&gt; 的结构规则在这里可以读取，libldap 则不行，因此 libldap 拒绝这样的文件并不是对该文件的裁决。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;重新定义&lt;/strong&gt;某条规则的文件会被拒绝，即使逐字相同，与其他所有定义一样（&lt;a href="#redefinition"&gt;见上文&lt;/a&gt;）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 data-hextra-search-id="rules-cost"&gt;它的代价&lt;span class="hx:absolute hx:-mt-20" id="rules-cost"&gt;&lt;/span&gt;
+&lt;a href="#rules-cost" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;于 2026-10-30 在内嵌 go-authn/ldap v0.11.3 的 authnd v0.13.3 上，用 &lt;code&gt;BenchmarkPublish10k&lt;/code&gt;（go-authn/authnd，&lt;code&gt;rules_bench_test.go&lt;/code&gt;，&lt;code&gt;-cpu 1&lt;/code&gt;）测得：发布 10,000 个人员，使用 &lt;code&gt;testdata/rules.schema&lt;/code&gt; 的规则时&lt;strong&gt;每个条目 97 次分配&lt;/strong&gt;，不使用时为 &lt;strong&gt;69&lt;/strong&gt; 次（v0.13.2：128 和 85 次；v0.13.0：416 和 265 次），一次运行使用规则时占用 42.6 MiB，不使用时占用 25.7 MiB（v0.13.2：54.8 和 33.7；v0.13.0：147.5 和 88.0）。这包括丢弃被排除的描述并再次验证。耗时约为 66 ms 对 36 ms，是在负载 4.8 下交替运行五次的中位数：使用规则仍然约多花 1.8 倍。丢弃描述所需的第二次验证，以及结构规则对 DN 的第二次读取，是已查明的差异中较大的部分。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="rules-upgrade"&gt;升级&lt;span class="hx:absolute hx:-mt-20" id="rules-upgrade"&gt;&lt;/span&gt;
+&lt;a href="#rules-upgrade" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;没有规则的模式不会有任何变化：v0.12.4 拒绝这三类定义，因此在它上面启动过的配置不含任何规则。有一个例外。&lt;strong&gt;不是有效 UTF-8&lt;/strong&gt; 的&lt;code&gt;schema { }&lt;/code&gt; 字符串（HCL 放行的一种过长编码）曾在 v0.12.4 上启动，现在会被拒绝，因为它无法按所写的内容发布。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="supann"&gt;SUPANN，作为真实的示例&lt;span class="hx:absolute hx:-mt-20" id="supann"&gt;&lt;/span&gt;
+&lt;a href="#supann" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;SUPANN 是法国高等教育与研究领域的属性集（&lt;code&gt;supannPerson&lt;/code&gt;、&lt;code&gt;supannEtablissement&lt;/code&gt;、&lt;code&gt;supannEntite&lt;/code&gt;……），旁边还有 eduPerson。RENATER 在其文档页面上与其他模式一起发布了技术模式：&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://services.renater.fr/documentation/supann/supann2021/recommandations/tables_references/schemas_techniques_supann" target="_blank" rel="noopener"&gt;https://services.renater.fr/documentation/supann/supann2021/recommandations/tables_references/schemas_techniques_supann&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;请从那里下载文件。&lt;/strong&gt; 本站不转载它：它没有声明许可证，所以本页不复制它，而且 RENATER 修订之后，这里的副本会过时。然后：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo install -o root -g authnd -m &lt;span class="m"&gt;0640&lt;/span&gt; supann.schema eduperson.ldif /etc/authnd/&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;schema_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/etc/authnd/supann.schema&amp;#34;, &amp;#34;/etc/authnd/eduperson.ldif&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # ...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, etab as \&amp;#34;supannEtablissement\&amp;#34; from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannPerson&amp;#34;, &amp;#34;eduPerson&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; group_object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannGroupe&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;运行 &lt;code&gt;authnd check&lt;/code&gt;，先读 &lt;code&gt;schema:&lt;/code&gt; 这些行：slapd能加载的文件，在这里也能加载，而重新定义标准定义的文件会被拒绝，并给出其所在行。然后读 &lt;em&gt;published without&lt;/em&gt; 这些行：缺少&lt;code&gt;supannPerson&lt;/code&gt; 或 &lt;code&gt;eduPerson&lt;/code&gt; 的某个 MUST 的人员，发布时不带该类，&lt;code&gt;check&lt;/code&gt; 会指明该 MUST。当别名的拼写很重要时，请给它加引号（PostgreSQL 会把不带引号的别名转为小写；参见&lt;a href="https://go-authn.github.io/docs/0.7/zh-cn/authnd/entries/#in-a-sql-database"&gt;条目&lt;/a&gt;）。&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;关于这些记录&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;此页面上的每条命令都已于 2026-10-26 重新运行，使用 v0.12.3 发布的二进制文件（&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;，已对照 &lt;code&gt;SHA256SUMS&lt;/code&gt; 核对；&lt;code&gt;go version -m&lt;/code&gt;：&lt;code&gt;go1.27.3&lt;/code&gt;，&lt;code&gt;mod github.com/go-authn/authnd v0.12.3&lt;/code&gt;，&lt;code&gt;vcs.modified=false&lt;/code&gt;）和 OpenLDAP 的 &lt;code&gt;ldapsearch&lt;/code&gt;，在 127.0.0.1 上、一个临时目录中，并使用所示的文件。路径因此是相对的；服务使用绝对路径。该模式是为此页面编写的示例。&lt;/p&gt;
+&lt;p&gt;&lt;a href="#rules"&gt;DIT 内容规则、名称形式和 DIT 结构规则&lt;/a&gt;一节于 2026-10-26 用 v0.13.0 发布的二进制文件运行（&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;，由 &lt;code&gt;relverify&lt;/code&gt; 对照 &lt;code&gt;SHA256SUMS&lt;/code&gt; 及其证明核对；&lt;code&gt;go version -m&lt;/code&gt;：&lt;code&gt;go1.27.3&lt;/code&gt;，&lt;code&gt;mod github.com/go-authn/authnd v0.13.0&lt;/code&gt;；&lt;code&gt;authnd --version&lt;/code&gt;：&lt;code&gt;authnd version v0.13.0&lt;/code&gt;）、OpenLDAP 的 &lt;code&gt;ldapsearch&lt;/code&gt;，以及从 go-authn/ldap v0.11.0 标签构建的 &lt;code&gt;ldapschema&lt;/code&gt;（&lt;code&gt;go install&lt;/code&gt;，go1.27.1；它没有发布的二进制文件）。那里的每一项输出都由这些程序打印，在临时目录中、127.0.0.1 上；记录背后的文件在旁边给出或加以描述。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

@@ -1,0 +1,1652 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Schema</title><link>https://go-authn.github.io/docs/0.7/tags/schema/</link><description>Recent content in Schema on go-authn</description><generator>Hugo -- gohugo.io</generator><language>en</language><atom:link href="https://go-authn.github.io/docs/0.7/tags/schema/index.xml" rel="self" type="application/rss+xml"/><item><title>The entries authnd publishes, and the schema it serves</title><link>https://go-authn.github.io/docs/0.7/authnd/entries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/authnd/entries/</guid><description>
+&lt;p&gt;&lt;strong&gt;Every entry authnd publishes passes the schema it serves.&lt;/strong&gt; From v0.11.0
+each person and group is a standard-schema entry, built from what its source
+gave, and checked with go-authn/ldap&amp;rsquo;s &lt;code&gt;schema.Validate&lt;/code&gt; against the schema a
+client can read at &lt;code&gt;cn=Subschema&lt;/code&gt; before it is ever returned by a search. A
+client that reads the schema and believes it — an LDAP browser, a
+synchronisation tool, a directory replicating this one — is shown what it was
+told. Up to v0.10.2 every person was &lt;code&gt;top, person, posixAccount&lt;/code&gt; with none of
+the attributes those classes require, and &lt;code&gt;sambaNTPassword&lt;/code&gt; sat on an entry
+with no class that allows it.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;A consumer filtering on &lt;code&gt;posixAccount&lt;/code&gt; or &lt;code&gt;posixGroup&lt;/code&gt; sees fewer entries&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;A person without &lt;code&gt;uidNumber&lt;/code&gt;, &lt;code&gt;gidNumber&lt;/code&gt; and &lt;code&gt;homeDirectory&lt;/code&gt; is no longer a&lt;code&gt;posixAccount&lt;/code&gt;, and a group without a &lt;code&gt;gidNumber&lt;/code&gt; is no longer a&lt;code&gt;posixGroup&lt;/code&gt;. A program that searches &lt;code&gt;(objectClass=posixAccount)&lt;/code&gt; or&lt;code&gt;(objectClass=posixGroup)&lt;/code&gt; no longer finds them. That includes
+go-authn/directory&amp;rsquo;s &lt;code&gt;ldapdir&lt;/code&gt; up to v0.13.0, and so go-fileshare until it
+requires directory v0.14.0, whose defaults also read &lt;code&gt;account&lt;/code&gt;, &lt;code&gt;uidObject&lt;/code&gt;
+and &lt;code&gt;groupOfNames&lt;/code&gt; (&lt;a href="https://go-authn.github.io/docs/0.7/libraries/directory/#ldapdir-defaults"&gt;directory&lt;/a&gt;).Give people and groups those attributes, or point the consumer at&lt;code&gt;(objectClass=uidObject)&lt;/code&gt;, which every person carries.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-shapes"&gt;The shapes&lt;span class="hx:absolute hx:-mt-20" id="the-shapes"&gt;&lt;/span&gt;
+&lt;a href="#the-shapes" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Every superclass is listed, as RFC 4512 §3.3 asks.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;a person with…&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;objectClass&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;cn&lt;/code&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;no &lt;code&gt;sn&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;account&lt;/code&gt; (RFC 4524 §3.1)&lt;/td&gt;
+&lt;td&gt;only when another class allows it&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;sn&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;person&lt;/code&gt;, &lt;code&gt;organizationalPerson&lt;/code&gt;, &lt;code&gt;inetOrgPerson&lt;/code&gt; (RFC 4519, RFC 2798)&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… and &lt;code&gt;uidNumber&lt;/code&gt;, &lt;code&gt;gidNumber&lt;/code&gt;, &lt;code&gt;homeDirectory&lt;/code&gt;, all three&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ posixAccount&lt;/code&gt; (RFC 2307)&lt;/td&gt;
+&lt;td&gt;yes&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… and SSH keys&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ ldapPublicKey&lt;/code&gt; (openssh-lpk), with &lt;code&gt;sshPublicKey&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… and a published NT hash with a &lt;code&gt;sambaSID&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ sambaSamAccount&lt;/code&gt; (Samba), with &lt;code&gt;sambaSID&lt;/code&gt; and &lt;code&gt;sambaNTPassword&lt;/code&gt;: see &lt;a href="https://go-authn.github.io/docs/0.7/authnd/tls/#the-samba-block"&gt;the &lt;code&gt;samba&lt;/code&gt; block&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;allowed&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;… always&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;+ uidObject&lt;/code&gt; (RFC 4519 §3.14), so &lt;code&gt;(objectClass=uidObject)&lt;/code&gt; finds everybody&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;a group with…&lt;/th&gt;
+&lt;th&gt;&lt;code&gt;objectClass&lt;/code&gt;&lt;/th&gt;
+&lt;th&gt;members&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;a &lt;code&gt;gidNumber&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;posixGroup&lt;/code&gt; (RFC 2307)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;memberUid&lt;/code&gt;, names&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;no &lt;code&gt;gidNumber&lt;/code&gt;, somebody in it&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;groupOfNames&lt;/code&gt; (RFC 4519 §3.5)&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;member&lt;/code&gt;, the DNs this server publishes&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;no &lt;code&gt;gidNumber&lt;/code&gt;, nobody in it&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;organizationalRole&lt;/code&gt; (RFC 4519 §3.10)&lt;/td&gt;
+&lt;td&gt;none&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;a &lt;code&gt;gidNumber&lt;/code&gt;, nobody in it&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;top&lt;/code&gt;, &lt;code&gt;posixGroup&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;none: an attribute has at least one value&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;code&gt;uid&lt;/code&gt; is the person&amp;rsquo;s name, and so is &lt;code&gt;cn&lt;/code&gt; wherever a class allows it. An&lt;code&gt;account&lt;/code&gt; alone does not allow &lt;code&gt;cn&lt;/code&gt; (its MAY is &lt;code&gt;description&lt;/code&gt;, &lt;code&gt;seeAlso&lt;/code&gt;,&lt;code&gt;l&lt;/code&gt;, &lt;code&gt;o&lt;/code&gt;, &lt;code&gt;ou&lt;/code&gt; and &lt;code&gt;host&lt;/code&gt;), so a person without &lt;code&gt;sn&lt;/code&gt; and without the POSIX
+trio carries &lt;code&gt;uid&lt;/code&gt; and no &lt;code&gt;cn&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Why these choices, from authnd&amp;rsquo;s own reasons:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;posixGroup&lt;/code&gt; follows RFC 2307, not draft-howard-rfc2307bis-02.&lt;/strong&gt; The
+draft makes &lt;code&gt;posixGroup&lt;/code&gt; AUXILIARY and expired unpublished; an AUXILIARY&lt;code&gt;posixGroup&lt;/code&gt; would need a structural class beside it, &lt;code&gt;groupOfNames&lt;/code&gt;, whose&lt;code&gt;member&lt;/code&gt; an empty group cannot give.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;organizationalRole&lt;/code&gt; for an empty group without a &lt;code&gt;gidNumber&lt;/code&gt;.&lt;/strong&gt;
+&lt;code&gt;groupOfNames&lt;/code&gt; and &lt;code&gt;groupOfUniqueNames&lt;/code&gt; both require a member, and the ways
+of inventing one are false: &lt;code&gt;member: &amp;quot;&amp;quot;&lt;/code&gt; names the root DSE, and the
+group&amp;rsquo;s own DN makes it a member of itself. &lt;code&gt;organizationalRole&lt;/code&gt; is the one
+standard structural class whose only MUST is &lt;code&gt;cn&lt;/code&gt;, and it takes&lt;code&gt;description&lt;/code&gt;, &lt;code&gt;ou&lt;/code&gt; and &lt;code&gt;seeAlso&lt;/code&gt; as &lt;code&gt;groupOfNames&lt;/code&gt; does.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Auxiliary classes without DIT content rules.&lt;/strong&gt; RFC 4512 §2.4.3 forbids
+auxiliary classes on an entry whose structural class has no DIT content
+rule. Every directory server in use allows them, and so does &lt;code&gt;Validate&lt;/code&gt;
+(&lt;code&gt;ValidateOptions{StrictAuxiliary: true}&lt;/code&gt; is the strict reading, and authnd
+does not set it). A class whose structural class &lt;strong&gt;has&lt;/strong&gt; a content rule is
+held to it from v0.13.0: see &lt;a href="https://go-authn.github.io/docs/0.7/authnd/schemas/#rules"&gt;the rules&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="adding-attributes"&gt;Adding attributes&lt;span class="hx:absolute hx:-mt-20" id="adding-attributes"&gt;&lt;/span&gt;
+&lt;a href="#adding-attributes" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;What a source says about somebody that proves nothing — a &lt;code&gt;uidNumber&lt;/code&gt;, a
+home directory, a mail address — is an &lt;strong&gt;attribute&lt;/strong&gt;, published as given.They are go-authn/directory&amp;rsquo;s &lt;a href="https://go-authn.github.io/docs/0.7/libraries/directory/#attributes"&gt;attributes&lt;/a&gt;,from v0.13.0, and they are kept apart from credentials: a name that holds a
+secret, or one the server derives itself, is refused before anything is
+read.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="in-a-user-or-group-block"&gt;In a &lt;code&gt;user&lt;/code&gt; or &lt;code&gt;group&lt;/code&gt; block&lt;span class="hx:absolute hx:-mt-20" id="in-a-user-or-group-block"&gt;&lt;/span&gt;
+&lt;a href="#in-a-user-or-group-block" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;dora&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/passwords/dora.pw&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; authorized_keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ssh-ed25519 AAAA… dora@laptop&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Explorer&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # inetOrgPerson
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; uidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1000&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the three: posixAccount
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1000&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; homeDirectory&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/home/dora&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; mail&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dora@example.org&amp;#34;, &amp;#34;d.explorer@example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;group&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;engineers&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; members&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dora&amp;#34;, &amp;#34;eli&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;2000&amp;#34;&lt;/span&gt; }&lt;span class="c1"&gt; # a posixGroup; without it, a groupOfNames
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;A value is a string or a list of strings; &lt;code&gt;null&lt;/code&gt; leaves the attribute out.A number is refused, because an LDAP value is a string and authnd does not
+choose how a number is spelled:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/number.hcl
+authnd: user &amp;#34;alice&amp;#34;: attributes: uidNumber is the number 1000: write it as a string, &amp;#34;1000&amp;#34; -- an LDAP value is a string, and this does not choose how a number is spelled
+$ authnd check cases/secret.hcl
+authnd: user &amp;#34;alice&amp;#34;: attributes: directory: not an attribute this package carries: &amp;#34;userPassword&amp;#34; holds a secret, and attributes are published: a credential has its own option or none&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Refused the same way, whatever their case: any name holding a secret(&lt;code&gt;userPassword&lt;/code&gt;, &lt;code&gt;sambaNTPassword&lt;/code&gt;, &lt;code&gt;unicodePwd&lt;/code&gt;, &lt;code&gt;krbPrincipalKey&lt;/code&gt; and the
+rest of go-authn/directory&amp;rsquo;s list, or any name containing &lt;code&gt;password&lt;/code&gt;,&lt;code&gt;passwd&lt;/code&gt;, &lt;code&gt;pwd&lt;/code&gt;, &lt;code&gt;secret&lt;/code&gt;, &lt;code&gt;credential&lt;/code&gt;, &lt;code&gt;hash&lt;/code&gt; or &lt;code&gt;privatekey&lt;/code&gt;);&lt;code&gt;sshPublicKey&lt;/code&gt;, which has &lt;code&gt;authorized_keys&lt;/code&gt;; &lt;code&gt;uid&lt;/code&gt;, &lt;code&gt;cn&lt;/code&gt; and &lt;code&gt;objectClass&lt;/code&gt;,which the server derives; &lt;code&gt;member&lt;/code&gt;, &lt;code&gt;memberUid&lt;/code&gt; and the other membership
+attributes, which &lt;code&gt;members&lt;/code&gt; answers; the operational attributes a server
+maintains; and a name in numeric form (&lt;code&gt;2.5.4.35&lt;/code&gt; is &lt;code&gt;userPassword&lt;/code&gt;).&lt;/p&gt;
+&lt;h3 data-hextra-search-id="in-a-sql-database"&gt;In a SQL database&lt;span class="hx:absolute hx:-mt-20" id="in-a-sql-database"&gt;&lt;/span&gt;
+&lt;a href="#in-a-sql-database" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Two optional queries of a &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; block read attributes &lt;strong&gt;by column
+alias&lt;/strong&gt;. The first column is the person&amp;rsquo;s or the group&amp;rsquo;s name; every other
+column is an attribute named by its alias:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/people.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, secret, null, ssh_keys from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, member from teams&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, uid as uidNumber, gid as gidNumber, home as homeDirectory, mail from person_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, gid as gidNumber, description from team_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;ul&gt;
+&lt;li&gt;The positional &lt;code&gt;users&lt;/code&gt; and &lt;code&gt;groups&lt;/code&gt; queries are unchanged, and a sixth
+positional column is still refused: attributes come by name, in their own
+query.&lt;/li&gt;
+&lt;li&gt;A column whose alias is not an attribute description (an unaliased
+expression such as &lt;code&gt;count(*)&lt;/code&gt;), or names a credential, is refused with its
+column number before a row is read.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;NULL&lt;/code&gt; and &lt;code&gt;''&lt;/code&gt; are absent. A name may come back on several rows, and the
+values of all of them are kept, so a join to a table of addresses gives a
+person several.&lt;/li&gt;
+&lt;li&gt;A group named only in &lt;code&gt;groups_attributes&lt;/code&gt; &lt;strong&gt;exists&lt;/strong&gt;, with nobody in it:that is how a person&amp;rsquo;s own primary group is written.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;The case of an alias is the database&amp;rsquo;s&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;PostgreSQL folds an unquoted alias to lower case: &lt;code&gt;as uidNumber&lt;/code&gt; comes back
+as &lt;code&gt;uidnumber&lt;/code&gt;. Attribute names are case-insensitive, so it is the same
+attribute and the entry is the same entry to every LDAP client, but the
+spelling authnd prints is the database&amp;rsquo;s. Quote the alias where the spelling
+matters: &lt;code&gt;gid as &amp;quot;gidNumber&amp;quot;&lt;/code&gt;. SQLite keeps an alias as written.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="from-another-ldap-directory"&gt;From another LDAP directory&lt;span class="hx:absolute hx:-mt-20" id="from-another-ldap-directory"&gt;&lt;/span&gt;
+&lt;a href="#from-another-ldap-directory" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;A &lt;code&gt;users &amp;quot;ldap&amp;quot;&lt;/code&gt; block copies the attributes it is told to, from each
+person&amp;rsquo;s entry and each group&amp;rsquo;s: &lt;code&gt;attributes = [&amp;quot;mail&amp;quot;, &amp;quot;uidNumber&amp;quot;, &amp;quot;homeDirectory&amp;quot;]&lt;/code&gt; and &lt;code&gt;group_attributes = [&amp;quot;gidNumber&amp;quot;]&lt;/code&gt;. See&lt;a href="https://go-authn.github.io/docs/0.7/authnd/people/#in-another-ldap-directory"&gt;people&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="a-configuration-and-what-it-publishes"&gt;A configuration, and what it publishes&lt;span class="hx:absolute hx:-mt-20" id="a-configuration-and-what-it-publishes"&gt;&lt;/span&gt;
+&lt;a href="#a-configuration-and-what-it-publishes" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The SQL block above, with a reader, over a SQLite database of five people and
+four groups, as the v0.11.0 release binary checks it:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/people.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, secret, null, ssh_keys from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, member from teams&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, uid as uidNumber, gid as gidNumber, home as homeDirectory, mail from person_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; groups_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select team, gid as gidNumber, description from team_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check etc/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+dora a sqlite database a password and 1 key person, organizationalPerson, inetOrgPerson, posixAccount, ldapPublicKey, uidObject uid, cn, sn, uidNumber, gidNumber, homeDirectory, mail and sshPublicKey
+eli a sqlite database a password account, posixAccount, uidObject uid, cn, uidNumber, gidNumber and homeDirectory
+fay a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn, sn and mail
+gus a sqlite database a password account, uidObject uid
+hal a sqlite database a password account, uidObject uid
+GROUP MEMBERS PUBLISHED AS
+alumni nobody organizationalRole
+engineers dora and eli posixGroup
+nobody-yet nobody posixGroup
+readers fay and gus groupOfNames
+fay has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+gus has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+hal has no homeDirectory: not a posixAccount, published as account, uidObject
+hal is published without uidNumber: no class of the entry allows it; posixAccount would
+hal is published without gidNumber: no class of the entry allows it; posixAccount and posixGroup would
+hal is published without mail: no class of the entry allows it; inetOrgPerson would
+group alumni has no gidNumber and nobody in it: not a posixGroup, published as an organizationalRole (a groupOfNames needs a member)
+group readers has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;PUBLISHED AS&lt;/code&gt; is each entry&amp;rsquo;s object classes, without &lt;code&gt;top&lt;/code&gt;, and &lt;code&gt;WITH&lt;/code&gt; its
+attributes, read off the entries a search returns. hal has a &lt;code&gt;uidNumber&lt;/code&gt;, a&lt;code&gt;gidNumber&lt;/code&gt; and a &lt;code&gt;mail&lt;/code&gt; and no &lt;code&gt;homeDirectory&lt;/code&gt; or &lt;code&gt;sn&lt;/code&gt;: hal is an &lt;code&gt;account&lt;/code&gt;,which allows none of the three, so they are dropped and the rest is
+published. The server says the same at startup (and &lt;code&gt;stopping&lt;/code&gt; when it was
+stopped):&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd
+ldap on 127.0.0.1:3893, serving 5 people from a sqlite database
+uid=hal,ou=people,dc=example,dc=org is published without uidNumber: no class of the entry allows it; posixAccount would
+uid=hal,ou=people,dc=example,dc=org is published without gidNumber: no class of the entry allows it; posixAccount and posixGroup would
+uid=hal,ou=people,dc=example,dc=org is published without mail: no class of the entry allows it; inetOrgPerson would
+stopping&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Read back by OpenLDAP&amp;rsquo;s &lt;code&gt;ldapsearch&lt;/code&gt;, with the reader&amp;rsquo;s password in a file:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=people,dc=example,dc=org &amp;#39;(|(uid=dora)(uid=eli)(uid=gus)(uid=hal))&amp;#39;
+dn: uid=dora,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: ldapPublicKey
+objectClass: uidObject
+uid: dora
+cn: dora
+sn: Explorer
+uidNumber: 1000
+gidNumber: 1000
+homeDirectory: /home/dora
+mail: dora@example.org
+sshPublicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKTfVR7FqXWE/0VEcjrUhK&amp;#43;Fz/MLqlwGPIxalr6onRMn dora@laptop
+dn: uid=eli,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: posixAccount
+objectClass: uidObject
+uid: eli
+cn: eli
+uidNumber: 1001
+gidNumber: 1001
+homeDirectory: /home/eli
+dn: uid=gus,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: uidObject
+uid: gus
+dn: uid=hal,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: account
+objectClass: uidObject
+uid: hal
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b ou=groups,dc=example,dc=org &amp;#39;(objectClass=*)&amp;#39;
+dn: cn=alumni,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: organizationalRole
+cn: alumni
+description: people who were here
+dn: cn=engineers,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+cn: engineers
+gidNumber: 2000
+memberUid: dora
+memberUid: eli
+dn: cn=nobody-yet,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+cn: nobody-yet
+gidNumber: 2001
+dn: cn=readers,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames
+cn: readers
+description: people who read
+member: uid=fay,ou=people,dc=example,dc=org
+member: uid=gus,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;alumni&lt;/code&gt; is named only in &lt;code&gt;groups_attributes&lt;/code&gt;, so it exists with nobody in
+it; without a &lt;code&gt;gidNumber&lt;/code&gt; it is an &lt;code&gt;organizationalRole&lt;/code&gt;. &lt;code&gt;nobody-yet&lt;/code&gt; has a&lt;code&gt;gidNumber&lt;/code&gt; and nobody, so it is a &lt;code&gt;posixGroup&lt;/code&gt; without &lt;code&gt;memberUid&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Which class finds whom:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(objectClass=uidObject)&amp;#39; 1.1
+dn: uid=dora,ou=people,dc=example,dc=org
+dn: uid=eli,ou=people,dc=example,dc=org
+dn: uid=fay,ou=people,dc=example,dc=org
+dn: uid=gus,ou=people,dc=example,dc=org
+dn: uid=hal,ou=people,dc=example,dc=org
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(objectClass=posixAccount)&amp;#39; 1.1
+dn: uid=dora,ou=people,dc=example,dc=org
+dn: uid=eli,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-is-dropped-and-what-is-withheld"&gt;What is dropped, and what is withheld&lt;span class="hx:absolute hx:-mt-20" id="what-is-dropped-and-what-is-withheld"&gt;&lt;/span&gt;
+&lt;a href="#what-is-dropped-and-what-is-withheld" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;given&lt;/th&gt;
+&lt;th&gt;the entry&lt;/th&gt;
+&lt;th&gt;why&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;uidNumber&lt;/code&gt;, &lt;code&gt;gidNumber&lt;/code&gt;, no &lt;code&gt;homeDirectory&lt;/code&gt;, no &lt;code&gt;sn&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;account, uidObject&lt;/code&gt;, without the two&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;no class of the entry allows it; posixAccount would&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;mail&lt;/code&gt;, no &lt;code&gt;sn&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;account, uidObject&lt;/code&gt;, without it&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;no class of the entry allows it; inetOrgPerson would&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;a type the schema does not define&lt;/td&gt;
+&lt;td&gt;the rest&lt;/td&gt;
+&lt;td&gt;&lt;em&gt;the schema served here does not define it&lt;/em&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;mail&lt;/code&gt; on a group without a &lt;code&gt;gidNumber&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;groupOfNames&lt;/code&gt;, without it&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;two &lt;code&gt;homeDirectory&lt;/code&gt; values with the POSIX trio&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;withheld&lt;/strong&gt;: SINGLE-VALUE, nothing to drop&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;a &lt;code&gt;gidNumber&lt;/code&gt; that is not an integer&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;withheld&lt;/strong&gt;: not of its syntax&lt;/td&gt;
+&lt;td&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;Only what a source gave is dropped&lt;/strong&gt;, and which attribute is not allowed
+is &lt;code&gt;Validate&lt;/code&gt;&amp;rsquo;s answer, not a second reading of the schema. The entry is
+validated again after dropping. An entry that still fails is &lt;strong&gt;withheld&lt;/strong&gt;:it is absent from every search, the startup log names it, and &lt;code&gt;check&lt;/code&gt; lists
+it with every problem &lt;code&gt;Validate&lt;/code&gt; found. An attribute authnd derives itself(&lt;code&gt;uid&lt;/code&gt;, &lt;code&gt;cn&lt;/code&gt;, &lt;code&gt;objectClass&lt;/code&gt;, &lt;code&gt;sshPublicKey&lt;/code&gt;, &lt;code&gt;sambaSID&lt;/code&gt;, &lt;code&gt;sambaNTPassword&lt;/code&gt;)that the schema refused would be a defect in authnd, and withholds the entry
+rather than publish it without.&lt;/p&gt;
+&lt;p&gt;alice&amp;rsquo;s &lt;code&gt;gidNumber&lt;/code&gt; is a word here:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/alice.pw&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; uidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1000&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; homeDirectory&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/home/alice&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;bob&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/bob.pw&amp;#34;&lt;/span&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/withheld.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+USER FROM CAN PROVE PUBLISHED AS WITH
+alice the configuration file a password NOT PUBLISHED (see below) uid, cn, gidNumber, homeDirectory and uidNumber
+bob the configuration file a password account, uidObject uid
+bob has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+alice is NOT published: as account, posixAccount, uidObject it fails the schema:
+- the value &amp;#34;staff&amp;#34; of gidNumber is not of its syntax 1.3.6.1.4.1.1466.115.121.1.27
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Served, alice can still bind and is in no search, and the server says why
+at startup:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config cases/withheld.hcl
+ldap on 127.0.0.1:3893, serving 2 people from the configuration file
+uid=alice,ou=people,dc=example,dc=org is NOT published: it fails the schema: the value &amp;#34;staff&amp;#34; of gidNumber is not of its syntax 1.3.6.1.4.1.1466.115.121.1.27
+$ ldapwhoami -x -H ldap://127.0.0.1:3893 -D uid=alice,ou=people,dc=example,dc=org -y alice.pwin
+dn:uid=alice,ou=people,dc=example,dc=org
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(uid=alice)&amp;#39;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;What is withheld is the entry a search returns, not the identity.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-schema-it-serves"&gt;The schema it serves&lt;span class="hx:absolute hx:-mt-20" id="the-schema-it-serves"&gt;&lt;/span&gt;
+&lt;a href="#the-schema-it-serves" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The root DSE names it (&lt;code&gt;subschemaSubentry: cn=Subschema&lt;/code&gt;, on&lt;a href="https://go-authn.github.io/docs/0.7/authnd/#who-may-bind-and-who-may-read"&gt;the root DSE&lt;/a&gt;),and a base search of &lt;code&gt;cn=Subschema&lt;/code&gt; returns it (RFC 4512 §4.2): the
+standard definitions go-authn/ldap embeds — RFC 4512, 4517, 4519, 4523,4524, 2798, 2307, 3672 and 3045, and openssh-lpk — plus Samba&amp;rsquo;s&lt;code&gt;sambaSamAccount&lt;/code&gt;, &lt;code&gt;sambaSID&lt;/code&gt; and &lt;code&gt;sambaNTPassword&lt;/code&gt; when there is a&lt;a href="https://go-authn.github.io/docs/0.7/authnd/tls/#the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; block&lt;/a&gt;. The
+definitions are published only when asked for by name or with &lt;code&gt;+&lt;/code&gt;. Trimmed
+where marked:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -s base -b cn=Subschema &amp;#39;&amp;#43;&amp;#39; &amp;#39;*&amp;#39;
+dn: cn=Subschema
+objectClass: top
+objectClass: subentry
+objectClass: subschema
+cn: Subschema
+subtreeSpecification: {}
+ldapSyntaxes: ( 1.3.6.1.4.1.1466.115.121.1.3 DESC &amp;#39;Attribute Type Description&amp;#39; )
+[...]
+matchingRules: ( 2.5.13.15 NAME &amp;#39;integerOrderingMatch&amp;#39; SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 )
+[...]
+attributeTypes: ( 1.3.6.1.1.1.1.0 NAME &amp;#39;uidNumber&amp;#39; DESC &amp;#39;An integer uniquely identifying a user in an administrative domain&amp;#39; EQUALITY integerMatch ORDERING integerOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+attributeTypes: ( 1.3.6.1.1.1.1.1 NAME &amp;#39;gidNumber&amp;#39; DESC &amp;#39;An integer uniquely identifying a group in an administrative domain&amp;#39; EQUALITY integerMatch ORDERING integerOrderingMatch SYNTAX 1.3.6.1.4.1.1466.115.121.1.27 SINGLE-VALUE )
+[...]
+objectClasses: ( 2.5.6.9 NAME &amp;#39;groupOfNames&amp;#39; SUP top STRUCTURAL MUST ( member $ cn ) MAY ( businessCategory $ seeAlso $ owner $ ou $ o $ description ) )
+[...]
+objectClasses: ( 1.3.6.1.1.3.1 NAME &amp;#39;uidObject&amp;#39; SUP top AUXILIARY MUST uid )
+objectClasses: ( 0.9.2342.19200300.100.4.5 NAME &amp;#39;account&amp;#39; SUP top STRUCTURAL MUST uid MAY ( description $ seeAlso $ l $ o $ ou $ host ) )
+[...]
+objectClasses: ( 1.3.6.1.1.1.2.0 NAME &amp;#39;posixAccount&amp;#39; DESC &amp;#39;Abstraction of an account with POSIX attributes&amp;#39; SUP top AUXILIARY MUST ( cn $ uid $ uidNumber $ gidNumber $ homeDirectory ) MAY ( userPassword $ loginShell $ gecos $ description ) )
+[...]
+objectClasses: ( 1.3.6.1.1.1.2.2 NAME &amp;#39;posixGroup&amp;#39; DESC &amp;#39;Abstraction of a group of accounts&amp;#39; SUP top STRUCTURAL MUST ( cn $ gidNumber ) MAY ( userPassword $ memberUid $ description ) )
+[...]&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The whole entry was 327 lines: 49 syntaxes, 40 matching rules, 36 matching
+rule uses, 143 attribute types and 52 object classes. Unlike a search under
+the base, the subschema entry, like the root DSE, is answered to an
+anonymous client: the same query without &lt;code&gt;-D&lt;/code&gt; and &lt;code&gt;-y&lt;/code&gt; returned it.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Filters use the schema&amp;rsquo;s matching rules&lt;/strong&gt;, so &lt;code&gt;(uidNumber&amp;gt;=1000)&lt;/code&gt;
+compares integers. &lt;code&gt;uidNumber&lt;/code&gt; and &lt;code&gt;gidNumber&lt;/code&gt; have &lt;code&gt;ORDERING integerOrderingMatch&lt;/code&gt;, which RFC 2307 does not give them; slapd and
+draft-howard-rfc2307bis-02 do, and so does go-authn/ldap(&lt;a href="https://go-authn.github.io/docs/0.7/libraries/ldap/#the-schema"&gt;its one departure&lt;/a&gt;).As strings, &lt;code&gt;1000&lt;/code&gt; sorts before &lt;code&gt;999&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(uidNumber&amp;gt;=1000)&amp;#39; uidNumber
+dn: uid=dora,ou=people,dc=example,dc=org
+uidNumber: 1000
+dn: uid=eli,ou=people,dc=example,dc=org
+uidNumber: 1001
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(uidNumber&amp;gt;=999)&amp;#39; uidNumber
+dn: uid=dora,ou=people,dc=example,dc=org
+uidNumber: 1000
+dn: uid=eli,ou=people,dc=example,dc=org
+uidNumber: 1001&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;hal is not there: hal&amp;rsquo;s &lt;code&gt;uidNumber&lt;/code&gt; was dropped. A range on an attribute
+with no ORDERING rule, such as &lt;code&gt;uid&lt;/code&gt;, is Undefined and matches nothing.&lt;/p&gt;</description></item><item><title>Site schemas, and the classes a source declares</title><link>https://go-authn.github.io/docs/0.7/authnd/schemas/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/authnd/schemas/</guid><description>
+&lt;p&gt;&lt;strong&gt;A SUPANN or eduPerson attribute is dropped unless a class of its entry
+allows it.&lt;/strong&gt; authnd publishes only what the schema it serves permits (see&lt;a href="https://go-authn.github.io/docs/0.7/authnd/entries/#what-is-dropped-and-what-is-withheld"&gt;the entries&lt;/a&gt;),and the standard schema knows nothing of &lt;code&gt;supannEtablissement&lt;/code&gt; or&lt;code&gt;eduPersonAffiliation&lt;/code&gt;. From v0.12.0 a site says three things, in this order:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;which definitions to add&lt;/strong&gt;: &lt;code&gt;schema_files&lt;/code&gt;, the files its slapd already
+loads, and a &lt;code&gt;schema { }&lt;/code&gt; block for what is only local;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;which auxiliary classes its people and groups carry&lt;/strong&gt;: &lt;code&gt;object_classes&lt;/code&gt;;&lt;/li&gt;
+&lt;li&gt;nothing else. A class is &lt;strong&gt;declared, never inferred&lt;/strong&gt;: an attribute
+appearing in a database does not change what an entry is published as.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;The example on this page is an example&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;example.schema&lt;/code&gt; below was written for this page. Its OIDs are under&lt;code&gt;1.3.6.1.4.1.99999&lt;/code&gt;, an arc nobody is assigned: use your own, and never copy
+these. For SUPANN, see &lt;a href="#supann"&gt;the end of the page&lt;/a&gt;.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="an-example"&gt;An example: a schema, a database, a configuration&lt;span class="hx:absolute hx:-mt-20" id="an-example"&gt;&lt;/span&gt;
+&lt;a href="#an-example" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A schema in OpenLDAP&amp;rsquo;s &lt;code&gt;.schema&lt;/code&gt; form: one class a source can declare(&lt;code&gt;exampleStaff&lt;/code&gt;, AUXILIARY, with a MUST), and one it cannot(&lt;code&gt;exampleUnit&lt;/code&gt;, STRUCTURAL).&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;objectidentifier exampleRoot 1.3.6.1.4.1.99999
+objectidentifier exampleAttr exampleRoot:1
+objectidentifier exampleClass exampleRoot:2
+attributetype ( exampleAttr:1 NAME &amp;#39;exampleBadge&amp;#39;
+DESC &amp;#39;the number on a badge&amp;#39;
+EQUALITY caseIgnoreMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+SINGLE-VALUE )
+attributetype ( exampleAttr:2 NAME &amp;#39;exampleEmployeeId&amp;#39;
+DESC &amp;#39;a staff number&amp;#39;
+EQUALITY caseExactMatch
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15
+SINGLE-VALUE )
+# AUXILIARY: it can be declared. exampleStaff has a MUST.
+objectclass ( exampleClass:1 NAME &amp;#39;exampleStaff&amp;#39; SUP top AUXILIARY
+DESC &amp;#39;somebody employed: has a staff number&amp;#39;
+MUST exampleEmployeeId
+MAY exampleBadge )
+# STRUCTURAL: it cannot be declared (an entry has one structural chain).
+objectclass ( exampleClass:2 NAME &amp;#39;exampleUnit&amp;#39; SUP top STRUCTURAL
+MUST cn )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;A SQLite database of three people, with &lt;code&gt;sn&lt;/code&gt;, a badge and a staff number(&lt;code&gt;sqlite3 var/people.db &amp;lt; people.sql&lt;/code&gt;):&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sql" data-lang="sql"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;create&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;table&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;staff&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;primary&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;secret&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;create&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;table&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;person_attrs&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;login&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;primary&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;sn&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;badge&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;empid&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;locker&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;text&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;insert&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;into&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;staff&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;values&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ann&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ann-password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ben&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ben-password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat-password&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;insert&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;into&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;person_attrs&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;values&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ann&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Archer&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;B-0001&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;E-1001&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;L-12&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ben&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Brook&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;B-0002&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;cat&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Cole&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;E-1003&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;null&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;And the configuration:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Files first, then the blocks: a definition may use anything before it.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;schema_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;etc/authnd/example.schema&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;schema&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;attribute_type&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleLocker&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.1.3&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; syntax&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.1466.115.121.1.15&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="k"&gt;object_class&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleLockerHolder&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.2.3&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; kind&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;auxiliary&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; may&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;exampleLocker&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sqlite&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/people.dsn&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, secret from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, badge as exampleBadge, empid as exampleEmployeeId, locker as exampleLocker from person_attrs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;exampleStaff&amp;#34;, &amp;#34;exampleLockerHolder&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # declared, never inferred
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Without the &lt;code&gt;object_classes&lt;/code&gt; line, &lt;code&gt;check&lt;/code&gt; says what the standard schema
+alone does with the same people: the attributes are dropped, and each line
+names the class that would have kept it.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/nodecl.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+schema: etc/authnd/example.schema adds 3 object identifier macros, 2 attribute types and 2 object classes
+USER FROM CAN PROVE PUBLISHED AS WITH
+ann a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn and sn
+ben a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn and sn
+cat a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject uid, cn and sn
+ann has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+ann is published without exampleBadge: no class of the entry allows it; exampleStaff would
+ann is published without exampleEmployeeId: no class of the entry allows it; exampleStaff would
+ben has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+ben is published without exampleBadge: no class of the entry allows it; exampleStaff would
+cat has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+cat is published without exampleEmployeeId: no class of the entry allows it; exampleStaff would
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="schema-files"&gt;&lt;code&gt;schema_files&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="schema-files"&gt;&lt;/span&gt;
+&lt;a href="#schema-files" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;schema_files&lt;/code&gt; is a list of OpenLDAP &lt;code&gt;.schema&lt;/code&gt; files or cn=config LDIF files.They are loaded &lt;strong&gt;as published&lt;/strong&gt;, in order, on top of the standard schema (and
+Samba&amp;rsquo;s three definitions, with the &lt;a href="https://go-authn.github.io/docs/0.7/authnd/tls/#the-samba-block"&gt;&lt;code&gt;samba&lt;/code&gt; block&lt;/a&gt;), by
+go-authn/ldap&amp;rsquo;s &lt;a href="https://go-authn.github.io/docs/0.7/libraries/ldap/#hcl2-and-the-converter"&gt;slapd-compatible readers&lt;/a&gt;:any order of terms, slapd and RFC 2849 continuations, base64, &lt;code&gt;{N}&lt;/code&gt; length
+prefixes, and &lt;code&gt;objectidentifier&lt;/code&gt; macros, which one file may define and the next
+use, as across slapd&amp;rsquo;s &lt;code&gt;include&lt;/code&gt;. Nothing is converted beforehand, so the file
+a site&amp;rsquo;s slapd loads is the file authnd loads. The definitions are served at&lt;code&gt;cn=Subschema&lt;/code&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;A relative path is relative to the working directory, as every other path
+in the configuration is. Use absolute paths in a service: the working
+directory of a systemd unit is &lt;code&gt;/&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Each file must be a regular file of at most 4 MiB, and is read once, at
+startup.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;The files decide what every entry may hold. They are not secrets, but keep
+them with the rest of the configuration: &lt;code&gt;root:authnd&lt;/code&gt;, mode &lt;code&gt;0640&lt;/code&gt;, in a
+directory only root writes (&lt;a href="https://go-authn.github.io/docs/0.7/authnd/install/"&gt;install&lt;/a&gt;).&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;A file that does not build refuses startup, and &lt;code&gt;check&lt;/code&gt;, with the file, the
+line and the column where the definition starts, and the kind of refusal at
+the end of the message: an unknown superclass, attribute, matching rule or
+syntax (&lt;code&gt;unknown reference&lt;/code&gt;), a structural class derived from an auxiliary
+one (&lt;code&gt;kind violation&lt;/code&gt;), an OID or a name defined twice (&lt;code&gt;duplicate OID&lt;/code&gt;,&lt;code&gt;duplicate name&lt;/code&gt;). Since v0.12.1 the place and the kind come from
+go-authn/ldap&amp;rsquo;s typed&lt;a href="https://go-authn.github.io/docs/0.7/libraries/ldap/#build-error"&gt;&lt;code&gt;*schema.BuildError&lt;/code&gt;&lt;/a&gt;, not
+from reading its message. A definition read from a file starts at column 1,also when its text is folded over several lines. A duplicate says where its
+first definition is, and a redefinition says which standard file, or which
+line of an earlier file, holds the original. Two examples:&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cases/unknown.schema&lt;/code&gt; has a MAY that is defined nowhere:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# exampleB has a MAY that is defined nowhere.
+objectclass ( 1.3.6.1.4.1.99999.2.9 NAME &amp;#39;exampleB&amp;#39; SUP top AUXILIARY
+MAY noSuchAttribute )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/unknown.hcl
+authnd: schema_files: cases/unknown.schema:2:1: the object class exampleB has MAY noSuchAttribute, which is not a defined attribute type (unknown reference)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;cases/twice.schema&lt;/code&gt; gives one OID to two attribute types:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleA&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )
+attributetype ( 1.3.6.1.4.1.99999.1.9 NAME &amp;#39;exampleB&amp;#39;
+SYNTAX 1.3.6.1.4.1.1466.115.121.1.15 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/twice.hcl
+authnd: schema_files: cases/twice.schema:4:1: the attribute type 1.3.6.1.4.1.99999.1.9 is defined twice (first defined at cases/twice.schema:1:1) (duplicate OID)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 data-hextra-search-id="redefinition"&gt;A redefinition is refused, even an identical one&lt;span class="hx:absolute hx:-mt-20" id="redefinition"&gt;&lt;/span&gt;
+&lt;a href="#redefinition" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;A file may not define what is already there: the standard schema&amp;rsquo;s
+definitions, Samba&amp;rsquo;s, or an earlier file&amp;rsquo;s. It is refused &lt;strong&gt;even word for
+word&lt;/strong&gt;, which is slapd&amp;rsquo;s own rule: a schema file&amp;rsquo;s definitions go through&lt;code&gt;parse_at&lt;/code&gt; and &lt;code&gt;parse_oc&lt;/code&gt;, and slapd answers an OID or a name already indexed
+with &lt;em&gt;Duplicate attributeType&lt;/em&gt; (same OID and names) or &lt;em&gt;Inconsistent duplicate
+attributeType&lt;/em&gt; (&lt;code&gt;servers/slapd/at.c&lt;/code&gt;, &lt;code&gt;oc.c&lt;/code&gt;). Only slapd&amp;rsquo;s own hard-coded
+schema is allowed the first. A file slapd refuses is a file authnd refuses.&lt;/p&gt;
+&lt;p&gt;The other reading would have to pick a winner, and that is a silent change to
+what every client is told a standard attribute is; refusing names the line
+instead. The refusal says whether the text was the same. A file that
+redefines &lt;code&gt;cn&lt;/code&gt; (2.5.4.3) with a definition of its own:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/dup.hcl
+authnd: schema_files: cases/cn-copy.schema:1:1: the attribute type cn (2.5.4.3) is already defined by the standard schema (rfc4519.schema:42:1), and this is a different definition: a schema file adds definitions and never replaces one -- slapd refuses this too (&amp;#34;Duplicate attributeType&amp;#34;, servers/slapd/at.c and oc.c). Remove it from this file&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="the-schema-block"&gt;The &lt;code&gt;schema { }&lt;/code&gt; block&lt;span class="hx:absolute hx:-mt-20" id="the-schema-block"&gt;&lt;/span&gt;
+&lt;a href="#the-schema-block" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;For definitions that are only local, a &lt;code&gt;schema&lt;/code&gt; block holds them in
+HCL2, in &lt;a href="https://go-authn.github.io/docs/0.7/libraries/ldap/#hcl2-and-the-converter"&gt;hclschema&amp;rsquo;s shape&lt;/a&gt;:&lt;code&gt;attribute_type&lt;/code&gt;, &lt;code&gt;object_class&lt;/code&gt;, &lt;code&gt;object_identifier&lt;/code&gt;, &lt;code&gt;matching_rule&lt;/code&gt; and&lt;code&gt;ldap_syntax&lt;/code&gt;. It is read &lt;strong&gt;after&lt;/strong&gt; the files, so it may use their
+definitions, and there may be several.&lt;/p&gt;
+&lt;p&gt;Values must be &lt;strong&gt;literals&lt;/strong&gt;: no variables, no functions, no &lt;code&gt;${...}&lt;/code&gt; or&lt;code&gt;%{...}&lt;/code&gt;. The block is decoded by the same decoder that reads an &lt;code&gt;.hcl&lt;/code&gt;
+schema file, with the same bounds, and every error names the configuration&amp;rsquo;s
+own line and column. A block that is not in HCL&amp;rsquo;s native syntax is refused.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="object-classes"&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="object-classes"&gt;&lt;/span&gt;
+&lt;a href="#object-classes" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A definition in the schema allows an attribute; it does not put the class on
+anybody. A source &lt;strong&gt;declares&lt;/strong&gt; the auxiliary classes its people and groups
+are published with:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;where&lt;/th&gt;
+&lt;th&gt;key&lt;/th&gt;
+&lt;th&gt;what it declares&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;users&lt;/code&gt; block, any kind&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the classes of every person the block gives&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;users&lt;/code&gt; block, any kind&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;group_object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the classes of every group&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;user&lt;/code&gt; block&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the classes of that person&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;group&lt;/code&gt; block&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the classes of that group&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # ...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannPerson&amp;#34;, &amp;#34;eduPerson&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; group_object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannGroupe&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;alice&amp;#34; { object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;siteMember&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;group &amp;#34;staff&amp;#34; { object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannGroupe&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;These keys are go-authn/directory&amp;rsquo;s, from v0.15.0(&lt;a href="https://go-authn.github.io/docs/0.7/libraries/directory/#object-classes"&gt;library&lt;/a&gt;). Names
+are compared ignoring case, and kept once, in the order written.&lt;/p&gt;
+&lt;p&gt;What authnd does with a declared class:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;It is published with its superclasses&lt;/strong&gt;, after the classes authnd derives(RFC 4512 §3.3: all the superclasses of the named classes are implicitly
+added). The attributes the class allows are kept instead of dropped.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;It is never inferred.&lt;/strong&gt; A person whose source declares nothing keeps
+losing the attributes no class of theirs allows, whatever the database holds.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A person missing a MUST of a declared class is published without that
+class.&lt;/strong&gt; Its attributes are dropped like any attribute no class allows, and
+both are reported. That is the rule authnd follows everywhere: the person
+stays published, the problem is said, nothing is changed silently.Withholding the person would take them out of every search for one missing
+attribute; publishing the class without its MUST would serve an entry that
+fails the schema served.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Two sources may declare different classes for one group.&lt;/strong&gt; The first
+source that declares classes for a group decides, whole, and a later list is
+ignored: neither merged nor an error. &lt;code&gt;check&lt;/code&gt; says so.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Here ann has everything, cat has no locker (a MAY), and ben has no&lt;code&gt;exampleEmployeeId&lt;/code&gt;, a MUST of &lt;code&gt;exampleStaff&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check etc/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+schema: etc/authnd/example.schema adds 3 object identifier macros, 2 attribute types and 2 object classes
+schema: the schema block at etc/authnd/authnd.hcl:9:1 adds 1 attribute type and 1 object class: exampleLocker and exampleLockerHolder
+etc/authnd/authnd.hcl:26:22: users &amp;#34;sql&amp;#34; declares exampleStaff and exampleLockerHolder for its people
+USER FROM CAN PROVE PUBLISHED AS WITH
+ann a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder uid, cn, sn, exampleBadge, exampleEmployeeId and exampleLocker
+ben a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject, exampleLockerHolder uid, cn and sn
+cat a sqlite database a password person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder uid, cn, sn and exampleEmployeeId
+ann has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder
+ben has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject, exampleLockerHolder
+ben is published without exampleStaff, which its source declares: ben has no exampleEmployeeId, which exampleStaff requires
+ben is published without exampleBadge: no class of the entry allows it; exampleStaff would
+cat has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject, exampleStaff, exampleLockerHolder
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The startup log carries the same lines, with DNs:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd
+ldap on 127.0.0.1:3893, serving 3 people from a sqlite database
+schema: etc/authnd/example.schema adds 3 object identifier macros, 2 attribute types and 2 object classes
+schema: the schema block at etc/authnd/authnd.hcl:9:1 adds 1 attribute type and 1 object class: exampleLocker and exampleLockerHolder
+etc/authnd/authnd.hcl:26:22: users &amp;#34;sql&amp;#34; declares exampleStaff and exampleLockerHolder for its people
+uid=ben,ou=people,dc=example,dc=org is published without exampleStaff, which its source declares: uid=ben,ou=people,dc=example,dc=org has no exampleEmployeeId, which exampleStaff requires
+uid=ben,ou=people,dc=example,dc=org is published without exampleBadge: no class of the entry allows it; exampleStaff would
+stopping&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;And what OpenLDAP&amp;rsquo;s &lt;code&gt;ldapsearch&lt;/code&gt; reads back, with the reader&amp;rsquo;s password in a
+file. ann carries both auxiliary classes, and every attribute they allow; ben
+carries only &lt;code&gt;exampleLockerHolder&lt;/code&gt;, and his badge is gone with&lt;code&gt;exampleStaff&lt;/code&gt;; cat carries both, with her staff number:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y etc/authnd/reader.pw -b ou=people,dc=example,dc=org &amp;#39;(uid=*)&amp;#39;
+dn: uid=ann,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+objectClass: exampleStaff
+objectClass: exampleLockerHolder
+uid: ann
+cn: ann
+sn: Archer
+exampleBadge: B-0001
+exampleEmployeeId: E-1001
+exampleLocker: L-12
+dn: uid=ben,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+objectClass: exampleLockerHolder
+uid: ben
+cn: ben
+sn: Brook
+dn: uid=cat,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+objectClass: exampleStaff
+objectClass: exampleLockerHolder
+uid: cat
+cn: cat
+sn: Cole
+exampleEmployeeId: E-1003
+$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y etc/authnd/reader.pw -b ou=people,dc=example,dc=org &amp;#39;(objectClass=exampleStaff)&amp;#39; 1.1
+dn: uid=ann,ou=people,dc=example,dc=org
+dn: uid=cat,ou=people,dc=example,dc=org&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-is-refused"&gt;What is refused, and why&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused"&gt;&lt;/span&gt;
+&lt;a href="#what-is-refused" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A declared class is checked at startup, and by &lt;code&gt;check&lt;/code&gt;, against the schema
+served. It must be:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;defined&lt;/strong&gt;, by the standard schema, a file or a block;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;AUXILIARY&lt;/strong&gt; (RFC 4512 §4.1.1). An entry has exactly one structural chain(§2.4.2), which authnd chooses from what the person has; a declaration
+cannot add a second one;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;not one authnd derives itself&lt;/strong&gt;: &lt;code&gt;account&lt;/code&gt;, &lt;code&gt;inetOrgPerson&lt;/code&gt; and its
+superclasses, &lt;code&gt;posixAccount&lt;/code&gt;, &lt;code&gt;posixGroup&lt;/code&gt;, &lt;code&gt;ldapPublicKey&lt;/code&gt;, &lt;code&gt;uidObject&lt;/code&gt;,&lt;code&gt;sambaSamAccount&lt;/code&gt;, &lt;code&gt;groupOfNames&lt;/code&gt; and &lt;code&gt;organizationalRole&lt;/code&gt;, under any of
+their names. Those follow from what a person or group has, and a
+declaration cannot overrule &lt;code&gt;check&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Otherwise startup is refused, naming the block, its position and the class.&lt;code&gt;exampleUnit&lt;/code&gt; is STRUCTURAL:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/structural.hcl
+authnd: cases/structural.hcl:10:20: users &amp;#34;sql&amp;#34; object_classes: exampleUnit is STRUCTURAL, and an entry has exactly one structural chain (RFC 4512 §2.4.2), which authnd chooses: only an AUXILIARY class (§4.1.1) can be declared&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;go-authn/directory checks the &lt;strong&gt;spelling&lt;/strong&gt; before that: a class is a
+descriptor, never an OID, a space, a quote or a parenthesis.&lt;/p&gt;
+&lt;p&gt;Refused too, and for the same reason of keeping the schema honest:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;refused&lt;/th&gt;
+&lt;th&gt;why&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;a file that redefines a definition, even word for word&lt;/td&gt;
+&lt;td&gt;slapd&amp;rsquo;s rule: &lt;a href="#redefinition"&gt;above&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;a file that is not a regular file, or is over 4 MiB&lt;/td&gt;
+&lt;td&gt;a FIFO would block startup, &lt;code&gt;/dev/zero&lt;/code&gt; would never end&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;a &lt;code&gt;schema&lt;/code&gt; block with a variable, a function or &lt;code&gt;${...}&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;literal values only, as in an &lt;code&gt;.hcl&lt;/code&gt; schema file&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;an undefined class in &lt;code&gt;object_classes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;a promise nothing can check&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;a STRUCTURAL class, or one authnd derives&lt;/td&gt;
+&lt;td&gt;the list above&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="what-check-prints"&gt;What &lt;code&gt;check&lt;/code&gt; prints&lt;span class="hx:absolute hx:-mt-20" id="what-check-prints"&gt;&lt;/span&gt;
+&lt;a href="#what-check-prints" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Four kinds of lines, on top of &lt;a href="https://go-authn.github.io/docs/0.7/authnd/check/"&gt;the usual ones&lt;/a&gt;; the startup log carries the same:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;schema: &amp;lt;file&amp;gt; adds …&lt;/code&gt;&lt;/strong&gt; and &lt;strong&gt;&lt;code&gt;schema: the schema block at &amp;lt;file&amp;gt;:&amp;lt;line&amp;gt;:&amp;lt;column&amp;gt; adds …&lt;/code&gt;&lt;/strong&gt;:what each file and each block added, counted as object identifier
+macros, attribute types and object classes;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;&amp;lt;file&amp;gt;:&amp;lt;line&amp;gt;:&amp;lt;column&amp;gt;: users &amp;quot;sql&amp;quot; declares … for its people&lt;/code&gt;&lt;/strong&gt; (a&lt;code&gt;user&lt;/code&gt; or &lt;code&gt;group&lt;/code&gt; block says &lt;code&gt;user &amp;quot;ann&amp;quot; declares … for this person&lt;/code&gt; and&lt;code&gt;group &amp;quot;staff&amp;quot; declares … for this group&lt;/code&gt;): what each source declares;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;&amp;lt;name&amp;gt; is published without &amp;lt;class&amp;gt;, which its source declares: …&lt;/code&gt;&lt;/strong&gt;,naming the MUST the person lacks;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;group staff: the configuration file declares supannGroupe and a postgres database declares eduMember; the first is published and the second is ignored (the first source that declares classes for a group decides)&lt;/code&gt;&lt;/strong&gt;:two sources disagreeing about a group, which would otherwise be silent.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Attributes dropped for want of a class are the lines &lt;code&gt;is published without &amp;lt;attribute&amp;gt;: no class of the entry allows it; &amp;lt;classes&amp;gt; would&lt;/code&gt; that&lt;a href="https://go-authn.github.io/docs/0.7/authnd/entries/"&gt;the entries&lt;/a&gt; already describe: with a
+declaration they name the class you have not declared.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="rules"&gt;DIT content rules, name forms and DIT structure rules&lt;span class="hx:absolute hx:-mt-20" id="rules"&gt;&lt;/span&gt;
+&lt;a href="#rules" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;From v0.13.0, &lt;code&gt;schema_files&lt;/code&gt; and the &lt;code&gt;schema { }&lt;/code&gt; block also accept the three
+kinds of definition that RFC 4512 §4.1.6 and §4.1.7 add to classes and
+attributes, and authnd &lt;strong&gt;enforces&lt;/strong&gt; them (go-authn/ldap v0.11.0 reads, builds
+and checks them; &lt;a href="https://go-authn.github.io/docs/0.7/libraries/ldap/#rules"&gt;the library page&lt;/a&gt;
+says how):&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;definition&lt;/th&gt;
+&lt;th&gt;RFC 4512&lt;/th&gt;
+&lt;th&gt;what it says&lt;/th&gt;
+&lt;th&gt;what authnd does with it&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;DIT content rule&lt;/td&gt;
+&lt;td&gt;§4.1.6&lt;/td&gt;
+&lt;td&gt;for one structural class: which auxiliary classes (&lt;code&gt;AUX&lt;/code&gt;) may be added, which attributes are required (&lt;code&gt;MUST&lt;/code&gt;), allowed (&lt;code&gt;MAY&lt;/code&gt;) or precluded (&lt;code&gt;NOT&lt;/code&gt;)&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;shapes each entry&lt;/strong&gt; (data)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;name form&lt;/td&gt;
+&lt;td&gt;§4.1.7.2&lt;/td&gt;
+&lt;td&gt;which attribute names (the RDN) an entry of a structural class&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;holds the tree&lt;/strong&gt; (configuration)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;DIT structure rule&lt;/td&gt;
+&lt;td&gt;§4.1.7.1&lt;/td&gt;
+&lt;td&gt;where a name form may be placed: under the entry governed by the rule its &lt;code&gt;SUP&lt;/code&gt; names&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;holds the tree&lt;/strong&gt; (configuration)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;They are published at &lt;code&gt;cn=Subschema&lt;/code&gt; (&lt;code&gt;dITContentRules&lt;/code&gt;, &lt;code&gt;nameForms&lt;/code&gt;,&lt;code&gt;dITStructureRules&lt;/code&gt;) &lt;strong&gt;only when there are some&lt;/strong&gt;. With none, nothing on this
+page applies, and nothing changes from v0.12.4.&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Same example arc&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;rules.schema&lt;/code&gt; below is, like &lt;code&gt;example.schema&lt;/code&gt; above, written for this page,under &lt;code&gt;1.3.6.1.4.1.99999&lt;/code&gt;. Use your own arc. The OIDs of the content rule and
+of &lt;code&gt;inetOrgPerson&lt;/code&gt; are the same by definition: a content rule is named after
+the structural class it is for.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="rules-example"&gt;A schema with one of each, and its HCL&lt;span class="hx:absolute hx:-mt-20" id="rules-example"&gt;&lt;/span&gt;
+&lt;a href="#rules-example" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;In OpenLDAP&amp;rsquo;s &lt;code&gt;.schema&lt;/code&gt; form. &lt;code&gt;ditcontentrule&lt;/code&gt; is slapd.conf(5)&amp;rsquo;s directive;&lt;code&gt;nameform&lt;/code&gt; and &lt;code&gt;ditstructurerule&lt;/code&gt; are go-authn/ldap&amp;rsquo;s, since slapd has none(&lt;a href="#rules-slapd"&gt;below&lt;/a&gt;). authnd also checks the tree it publishes(suffix, &lt;code&gt;ou=people&lt;/code&gt;, &lt;code&gt;ou=groups&lt;/code&gt;, accounts, people and groups under them), so
+the file holds five name forms and five structure rules, not one of each:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# Rules for the tree authnd publishes. 1.3.6.1.4.1.99999 is an example arc:
+# nobody is assigned it, use your own.
+# A content rule belongs to a structural class and takes that class&amp;#39;s OID.
+# inetOrgPerson (2.16.840.1.113730.3.2.2): posixAccount and uidObject may be
+# added, ldapPublicKey may not; telephoneNumber is required; description is
+# precluded.
+ditcontentrule ( 2.16.840.1.113730.3.2.2 NAME &amp;#39;examplePersonRule&amp;#39;
+AUX ( posixAccount $ uidObject )
+MUST telephoneNumber
+NOT description )
+# A name form says which attribute names an entry of a structural class.
+nameform ( 1.3.6.1.4.1.99999.9.1 NAME &amp;#39;exampleDomainForm&amp;#39; OC domain MUST dc )
+nameform ( 1.3.6.1.4.1.99999.9.2 NAME &amp;#39;exampleUnitForm&amp;#39; OC organizationalUnit MUST ou )
+nameform ( 1.3.6.1.4.1.99999.9.3 NAME &amp;#39;exampleAccountForm&amp;#39; OC account MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.4 NAME &amp;#39;examplePersonForm&amp;#39; OC inetOrgPerson MUST uid )
+nameform ( 1.3.6.1.4.1.99999.9.5 NAME &amp;#39;examplePosixGroupForm&amp;#39; OC posixGroup MUST cn )
+# A structure rule gives a name form a place: the rule ID is a number, SUP
+# names the rule of the parent entry.
+ditstructurerule ( 1 NAME &amp;#39;exampleSuffix&amp;#39; FORM exampleDomainForm )
+ditstructurerule ( 2 NAME &amp;#39;exampleUnit&amp;#39; FORM exampleUnitForm SUP 1 )
+ditstructurerule ( 3 NAME &amp;#39;exampleAccounts&amp;#39; FORM exampleAccountForm SUP 2 )
+ditstructurerule ( 4 NAME &amp;#39;examplePersons&amp;#39; FORM examplePersonForm SUP 2 )
+ditstructurerule ( 5 NAME &amp;#39;examplePosixGroups&amp;#39; FORM examplePosixGroupForm SUP 2 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The same definitions in HCL, as &lt;code&gt;ldapschema&lt;/code&gt; v0.11.0 writes them(&lt;code&gt;ldapschema to-hcl rules.schema&lt;/code&gt;). Each block is one definition, labelled with
+its first NAME; a structure rule has an &lt;code&gt;id&lt;/code&gt;, the &lt;code&gt;form&lt;/code&gt; it places and the&lt;code&gt;sup&lt;/code&gt; rules it goes under:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_content_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersonRule&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;2.16.840.1.113730.3.2.2&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; aux&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;posixAccount&amp;#34;, &amp;#34;uidObject&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;telephoneNumber&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; not&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;description&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleDomainForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.1&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;domain&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dc&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleUnitForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.2&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;organizationalUnit&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ou&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleAccountForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.3&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;account&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;uid&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersonForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.4&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;inetOrgPerson&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;uid&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;name_form&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePosixGroupForm&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oid&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1.3.6.1.4.1.99999.9.5&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; oc&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;posixGroup&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; must&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;cn&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleSuffix&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;1&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleDomainForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleUnit&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;2&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleUnitForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleAccounts&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;3&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;exampleAccountForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersons&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;4&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePersonForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;dit_structure_rule&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePosixGroups&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; id&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="m"&gt;5&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; form&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;examplePosixGroupForm&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sup&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;That is what goes inside a &lt;code&gt;schema { }&lt;/code&gt; block, unchanged; the &lt;code&gt;.schema&lt;/code&gt; file is
+what &lt;code&gt;schema_files&lt;/code&gt; takes. &lt;code&gt;ldapschema to-schema rules.hcl&lt;/code&gt; turns it back into a&lt;code&gt;.schema&lt;/code&gt; file with the same definitions, and &lt;code&gt;ldapschema check&lt;/code&gt; builds it on
+top of the standard schema:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapschema check etc/authnd/rules.schema
+read: 0 object identifiers, 0 syntaxes, 0 matching rules, 0 attribute types, 0 object classes
+read: 1 DIT content rules, 5 name forms, 5 DIT structure rules
+build: ok, 11 definitions added to schema.Standard()&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="content-rules"&gt;What a content rule does to an entry&lt;span class="hx:absolute hx:-mt-20" id="content-rules"&gt;&lt;/span&gt;
+&lt;a href="#content-rules" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;The configuration is two people and two groups, with the rules loaded from&lt;code&gt;schema_files&lt;/code&gt;. &lt;strong&gt;dave&lt;/strong&gt; has an &lt;code&gt;sn&lt;/code&gt; (so he is an &lt;code&gt;inetOrgPerson&lt;/code&gt;), a telephone
+number, a description and an SSH public key; &lt;strong&gt;erin&lt;/strong&gt; has an &lt;code&gt;sn&lt;/code&gt; and nothing
+else; &lt;strong&gt;staff&lt;/strong&gt; has a &lt;code&gt;gidNumber&lt;/code&gt;; &lt;strong&gt;team&lt;/strong&gt; has none:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;schema_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;etc/authnd/rules.schema&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;dave&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;dave-password&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; authorized_keys&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; sn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Dumont&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; telephoneNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;+33 1 23 45 67 89&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; description&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;on call&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;erin&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;erin-password&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { sn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;Evans&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;group&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;staff&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; members&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dave&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; { gidNumber&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;100&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;group &amp;#34;team&amp;#34; { members&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;dave&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; }&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The rule applies to the entry&amp;rsquo;s &lt;strong&gt;structural class&lt;/strong&gt;, and what it does is said,at startup and by &lt;code&gt;check&lt;/code&gt;, entry by entry:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;the rule says&lt;/th&gt;
+&lt;th&gt;the entry&lt;/th&gt;
+&lt;th&gt;said as&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;AUX&lt;/code&gt; does not list an auxiliary class, whether declared or one authnd derives (&lt;code&gt;posixAccount&lt;/code&gt;, &lt;code&gt;ldapPublicKey&lt;/code&gt;, &lt;code&gt;sambaSamAccount&lt;/code&gt;, &lt;code&gt;uidObject&lt;/code&gt;)&lt;/td&gt;
+&lt;td&gt;the class is &lt;strong&gt;left off&lt;/strong&gt;, with the attributes only it allowed (and the &lt;code&gt;sshPublicKey&lt;/code&gt;, &lt;code&gt;sambaSID&lt;/code&gt; and &lt;code&gt;sambaNTPassword&lt;/code&gt; authnd would add for it); a declared class whose superclass is left off goes with it&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;name&amp;gt; is published without &amp;lt;class&amp;gt;: the DIT content rule &amp;lt;rule&amp;gt; does not allow it (not in its AUX)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;NOT&lt;/code&gt; names an attribute&lt;/td&gt;
+&lt;td&gt;the attribute is &lt;strong&gt;dropped&lt;/strong&gt;, whoever gave it&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;name&amp;gt; is published without &amp;lt;attribute&amp;gt;: the DIT content rule &amp;lt;rule&amp;gt; precludes it (NOT)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MUST&lt;/code&gt; names an attribute the entry lacks&lt;/td&gt;
+&lt;td&gt;the entry is &lt;strong&gt;left out&lt;/strong&gt;: the rule applies to the entry as a whole, and no class can be left off to make it valid&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;&amp;lt;name&amp;gt; is NOT published: … &amp;lt;attribute&amp;gt; is required by the DIT content rule &amp;lt;rule&amp;gt; and is missing (RFC 4512 4.1.6)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Without a content rule for its structural class, an entry&amp;rsquo;s auxiliary classes
+are allowed, as slapd allows them (&lt;a href="#rules-slapd"&gt;below&lt;/a&gt;).&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check etc/authnd/authnd.hcl
+ldap://127.0.0.1:3893, base dc=example,dc=org
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+USER FROM CAN PROVE PUBLISHED AS WITH
+dave the configuration file a password and 1 key person, organizationalPerson, inetOrgPerson, uidObject uid, cn, sn and telephoneNumber
+erin the configuration file a password NOT PUBLISHED (see below) uid, cn and sn
+GROUP MEMBERS PUBLISHED AS
+staff dave posixGroup
+team dave NOT PUBLISHED (see below)
+dave has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as person, organizationalPerson, inetOrgPerson, uidObject
+dave is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+dave is published without description: the DIT content rule examplePersonRule precludes it (NOT)
+erin has no uidNumber, gidNumber or homeDirectory: not a posixAccount, and as person, organizationalPerson, inetOrgPerson, uidObject the entry fails the schema (below)
+erin is NOT published: as person, organizationalPerson, inetOrgPerson, uidObject it fails the schema:
+- telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+group team is NOT published: as groupOfNames it fails the schema:
+- no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+this configuration can be served&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The server starts, and its log carries the same three kinds of line, with DNs:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd --config etc/authnd/authnd.hcl
+ldap on 127.0.0.1:3893, serving 2 people from the configuration file
+schema: etc/authnd/rules.schema adds 1 DIT content rule, 5 name forms and 5 DIT structure rules
+uid=erin,ou=people,dc=example,dc=org is NOT published: it fails the schema: telephoneNumber is required by the DIT content rule examplePersonRule and is missing (RFC 4512 4.1.6)
+cn=team,ou=groups,dc=example,dc=org is NOT published: it fails the schema: no active DIT structure rule has a name form for groupOfNames (X.501 13.7.5)
+uid=dave,ou=people,dc=example,dc=org is published without ldapPublicKey: the DIT content rule examplePersonRule does not allow it (not in its AUX)
+uid=dave,ou=people,dc=example,dc=org is published without description: the DIT content rule examplePersonRule precludes it (NOT)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;What OpenLDAP&amp;rsquo;s &lt;code&gt;ldapsearch&lt;/code&gt; reads at &lt;code&gt;cn=Subschema&lt;/code&gt;, the three attributes the
+rules are published in:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b cn=Subschema -s base &amp;#39;(objectClass=subschema)&amp;#39; dITContentRules nameForms dITStructureRules
+dn: cn=Subschema
+dITContentRules: ( 2.16.840.1.113730.3.2.2 NAME &amp;#39;examplePersonRule&amp;#39; AUX ( posixAccount $ uidObject ) MUST telephoneNumber NOT description )
+nameForms: ( 1.3.6.1.4.1.99999.9.1 NAME &amp;#39;exampleDomainForm&amp;#39; OC domain MUST dc )
+nameForms: ( 1.3.6.1.4.1.99999.9.2 NAME &amp;#39;exampleUnitForm&amp;#39; OC organizationalUnit MUST ou )
+nameForms: ( 1.3.6.1.4.1.99999.9.3 NAME &amp;#39;exampleAccountForm&amp;#39; OC account MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.4 NAME &amp;#39;examplePersonForm&amp;#39; OC inetOrgPerson MUST uid )
+nameForms: ( 1.3.6.1.4.1.99999.9.5 NAME &amp;#39;examplePosixGroupForm&amp;#39; OC posixGroup MUST cn )
+dITStructureRules: ( 1 NAME &amp;#39;exampleSuffix&amp;#39; FORM exampleDomainForm )
+dITStructureRules: ( 2 NAME &amp;#39;exampleUnit&amp;#39; FORM exampleUnitForm SUP 1 )
+dITStructureRules: ( 3 NAME &amp;#39;exampleAccounts&amp;#39; FORM exampleAccountForm SUP 2 )
+dITStructureRules: ( 4 NAME &amp;#39;examplePersons&amp;#39; FORM examplePersonForm SUP 2 )
+dITStructureRules: ( 5 NAME &amp;#39;examplePosixGroups&amp;#39; FORM examplePosixGroupForm SUP 2 )&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;And the tree, asked for what the rules touch. First the same configuration&lt;strong&gt;without&lt;/strong&gt; &lt;code&gt;schema_files&lt;/code&gt; (the witness: every difference below is the rules'doing), then with them:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(|(uid=*)(cn=*))&amp;#39; dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: ldapPublicKey
+objectClass: uidObject
+description: on call
+sshPublicKey: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl dave@example.org
+dn: uid=erin,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup
+dn: cn=team,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: groupOfNames&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -o ldif-wrap=no -H ldap://127.0.0.1:3893 -D cn=reader,dc=example,dc=org -y reader.pwin -b dc=example,dc=org &amp;#39;(|(uid=*)(cn=*))&amp;#39; dn objectClass description sshPublicKey
+dn: uid=dave,ou=people,dc=example,dc=org
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: uidObject
+dn: cn=staff,ou=groups,dc=example,dc=org
+objectClass: top
+objectClass: posixGroup&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;dave has lost &lt;code&gt;ldapPublicKey&lt;/code&gt; and with it his &lt;code&gt;sshPublicKey&lt;/code&gt; (not in &lt;code&gt;AUX&lt;/code&gt;),and his &lt;code&gt;description&lt;/code&gt; (&lt;code&gt;NOT&lt;/code&gt;). erin is gone (&lt;code&gt;MUST telephoneNumber&lt;/code&gt;), and so is&lt;strong&gt;team&lt;/strong&gt;: it has no &lt;code&gt;gidNumber&lt;/code&gt;, so it is a &lt;code&gt;groupOfNames&lt;/code&gt;, and no structure
+rule places a &lt;code&gt;groupOfNames&lt;/code&gt; under &lt;code&gt;ou=groups&lt;/code&gt;. That last one is the tree&amp;rsquo;s
+rule applied to data, which the next section explains.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="structure-rules"&gt;What the structure rules do to the tree&lt;span class="hx:absolute hx:-mt-20" id="structure-rules"&gt;&lt;/span&gt;
+&lt;a href="#structure-rules" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;With &lt;strong&gt;at least one active&lt;/strong&gt; DIT structure rule, authnd walks the tree it will
+publish, at startup and in &lt;code&gt;check&lt;/code&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;the &lt;strong&gt;suffix&lt;/strong&gt; (&lt;code&gt;base_dn&lt;/code&gt;), given the class its RDN names: &lt;code&gt;dc&lt;/code&gt; a&lt;code&gt;domain&lt;/code&gt;, &lt;code&gt;o&lt;/code&gt; an &lt;code&gt;organization&lt;/code&gt;, &lt;code&gt;ou&lt;/code&gt; an &lt;code&gt;organizationalUnit&lt;/code&gt;, &lt;code&gt;c&lt;/code&gt; a&lt;code&gt;country&lt;/code&gt;, &lt;code&gt;l&lt;/code&gt; a &lt;code&gt;locality&lt;/code&gt;. A suffix named by any other attribute is
+refused;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ou=people&lt;/code&gt; and &lt;code&gt;ou=groups&lt;/code&gt;, as &lt;code&gt;organizationalUnit&lt;/code&gt;s;&lt;/li&gt;
+&lt;li&gt;the RDN attribute authnd names its people by (&lt;code&gt;uid&lt;/code&gt;) and its groups by (&lt;code&gt;cn&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;A container no rule places, a suffix of a kind no rule has a name form for, a
+name form that refuses &lt;code&gt;uid&lt;/code&gt; or &lt;code&gt;cn&lt;/code&gt;, or a container under which nothing authnd
+publishes could be placed, &lt;strong&gt;refuses startup, and &lt;code&gt;check&lt;/code&gt;&lt;/strong&gt;: every refusal at
+once, naming the DN, the rule or name form and the clause, and never echoing a
+secret. A person or group whose structural class depends on its data (an &lt;code&gt;sn&lt;/code&gt;,a &lt;code&gt;gidNumber&lt;/code&gt;) and has no rule under its container is &lt;strong&gt;left out and said&lt;/strong&gt;
+instead, as team was above: the server starts. With no active structure rule,nothing changes.&lt;/p&gt;
+&lt;p&gt;A schema whose only structure rule for people, &lt;code&gt;peopleByCN&lt;/code&gt;, places a name form
+that wants &lt;code&gt;cn&lt;/code&gt; (&lt;code&gt;accountByCN&lt;/code&gt;: &lt;code&gt;OC account MUST cn&lt;/code&gt;):&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/bad.hcl
+authnd: DIT structure rules: authnd names its people uid=&amp;lt;name&amp;gt;,ou=people,dc=example,dc=org, and an account named so is refused: the RDN (uid) is allowed by the name form of no DIT structure rule that places account under an entry governed by the rule 2: accountByCN needs cn&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;authnd names its people &lt;code&gt;uid=&amp;lt;name&amp;gt;&lt;/code&gt;: the rules have to allow it. And a
+schema whose rule for &lt;code&gt;organizationalUnit&lt;/code&gt; has no &lt;code&gt;SUP&lt;/code&gt;, so that an&lt;code&gt;organizationalUnit&lt;/code&gt; can only be at the root, leaves both &lt;code&gt;ou=people&lt;/code&gt; and&lt;code&gt;ou=groups&lt;/code&gt; without a place, and says both at once:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/root.hcl
+authnd: DIT structure rules: ou=people,dc=example,dc=org, where authnd publishes its people, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)
+DIT structure rules: ou=groups,dc=example,dc=org, where authnd publishes its groups, as an organizationalUnit: no DIT structure rule allows organizationalUnit under an entry governed by the rule suffix (X.501 13.7.5)&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Both exit with status 1. The files behind them (&lt;code&gt;cases/bad.schema&lt;/code&gt; and&lt;code&gt;cases/root.schema&lt;/code&gt;) hold the same five name forms and only the structure rules
+that make the point.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="rules-slapd"&gt;Where authnd and slapd differ&lt;span class="hx:absolute hx:-mt-20" id="rules-slapd"&gt;&lt;/span&gt;
+&lt;a href="#rules-slapd" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;go-authn/ldap reads the OpenLDAP files, and some of the rules are OpenLDAP&amp;rsquo;s.These are the differences, said rather than discovered:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;slapd implements content rules only.&lt;/strong&gt; It has no directive for name forms
+or structure rules. &lt;code&gt;Format&lt;/code&gt; writes &lt;code&gt;nameform&lt;/code&gt; and &lt;code&gt;ditstructurerule&lt;/code&gt;
+keywords, which are this library&amp;rsquo;s, and slapd refuses them: keep those in the
+HCL, or in a file only authnd reads. &lt;code&gt;ditcontentrule&lt;/code&gt; is slapd&amp;rsquo;s.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;An &lt;code&gt;OBSOLETE&lt;/code&gt; rule is inactive&lt;/strong&gt; (RFC 4512 §4.1.6), as is its name form
+or structure rule. slapd refuses the entry instead.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Without a content rule, auxiliary classes are allowed.&lt;/strong&gt; That is slapd&amp;rsquo;s
+behaviour (its &lt;code&gt;SLAP_DISALLOW_AUX_WO_CR&lt;/code&gt; flag is set by no &lt;code&gt;disallow&lt;/code&gt;
+keyword), and authnd&amp;rsquo;s. RFC 4512 §2.4.3 says otherwise; the library offers it
+as &lt;code&gt;ValidateOptions{StrictAuxiliary: true}&lt;/code&gt;, and authnd does not set it.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;libldap cannot read a structure rule&amp;rsquo;s &lt;code&gt;SUP&lt;/code&gt;.&lt;/strong&gt; A structure rule with a&lt;code&gt;SUP&lt;/code&gt; is read here and not by libldap, so libldap&amp;rsquo;s refusal of such a file
+is not a verdict on the file.&lt;/li&gt;
+&lt;li&gt;A file that &lt;strong&gt;redefines&lt;/strong&gt; a rule is refused, even word for word, like every
+other definition (&lt;a href="#redefinition"&gt;above&lt;/a&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 data-hextra-search-id="rules-cost"&gt;What it costs&lt;span class="hx:absolute hx:-mt-20" id="rules-cost"&gt;&lt;/span&gt;
+&lt;a href="#rules-cost" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Measured on 2026-10-30 with &lt;code&gt;BenchmarkPublish10k&lt;/code&gt; (go-authn/authnd,&lt;code&gt;rules_bench_test.go&lt;/code&gt;, &lt;code&gt;-cpu 1&lt;/code&gt;) on authnd v0.13.3, which embeds go-authn/ldap
+v0.11.3: publishing 10,000 people makes &lt;strong&gt;97 allocations per entry&lt;/strong&gt; with the
+rules of &lt;code&gt;testdata/rules.schema&lt;/code&gt; and &lt;strong&gt;69&lt;/strong&gt; without (v0.13.2: 128 and 85; v0.13.0: 416 and 265), and a run takes 42.6 MiB with
+the rules and 25.7 MiB without (v0.13.2: 54.8 and 33.7; v0.13.0: 147.5 and
+88.0). This includes dropping a precluded description and validating again.The times, about 66 ms against 36 ms, are the
+median of five interleaved runs at a load of 4.8: the rules still cost about
+1.8 times as much. The second validation that dropping the description
+requires and the structure rules&amp;rsquo; second read of the DN are among the largest
+parts of the difference that were attributed.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="rules-upgrade"&gt;Upgrading&lt;span class="hx:absolute hx:-mt-20" id="rules-upgrade"&gt;&lt;/span&gt;
+&lt;a href="#rules-upgrade" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Nothing changes for a schema without rules: v0.12.4 refused all three kinds, so a
+configuration that started on it holds none. There is one exception. A&lt;code&gt;schema { }&lt;/code&gt; string that is &lt;strong&gt;not valid UTF-8&lt;/strong&gt; (an overlong encoding HCL lets
+through) started on v0.12.4 and is refused now, because it could not be
+published as it was written.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="supann"&gt;SUPANN, as the real example&lt;span class="hx:absolute hx:-mt-20" id="supann"&gt;&lt;/span&gt;
+&lt;a href="#supann" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;SUPANN is the attribute set of French higher education and research(&lt;code&gt;supannPerson&lt;/code&gt;, &lt;code&gt;supannEtablissement&lt;/code&gt;, &lt;code&gt;supannEntite&lt;/code&gt;…), with eduPerson
+beside it. RENATER publishes the technical schema, with the others, on its
+documentation page:&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://services.renater.fr/documentation/supann/supann2021/recommandations/tables_references/schemas_techniques_supann" target="_blank" rel="noopener"&gt;https://services.renater.fr/documentation/supann/supann2021/recommandations/tables_references/schemas_techniques_supann&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Download the file from there.&lt;/strong&gt; It is not reproduced on this site: it
+states no licence, so this page does not copy it, and a copy here would go
+stale when RENATER revises it. Then:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo install -o root -g authnd -m &lt;span class="m"&gt;0640&lt;/span&gt; supann.schema eduperson.ldif /etc/authnd/&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;schema_files&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;/etc/authnd/supann.schema&amp;#34;, &amp;#34;/etc/authnd/eduperson.ldif&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # ...
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users_attributes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, sn, etab as \&amp;#34;supannEtablissement\&amp;#34; from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannPerson&amp;#34;, &amp;#34;eduPerson&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; group_object_classes&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;supannGroupe&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Run &lt;code&gt;authnd check&lt;/code&gt; and read the &lt;code&gt;schema:&lt;/code&gt; lines first: a file that slapd
+loads loads here, and one that redefines a standard definition is refused
+with its line. Then read the &lt;em&gt;published without&lt;/em&gt; lines: a person lacking a
+MUST of &lt;code&gt;supannPerson&lt;/code&gt; or &lt;code&gt;eduPerson&lt;/code&gt; is published without the class, and&lt;code&gt;check&lt;/code&gt; names the MUST. Quote an alias where its spelling matters(PostgreSQL lower-cases an unquoted one; see&lt;a href="https://go-authn.github.io/docs/0.7/authnd/entries/#in-a-sql-database"&gt;the entries&lt;/a&gt;).&lt;/p&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;About the transcripts&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Every command on this page was run again on 2026-10-26 with the v0.12.3 release binary (&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;, checked against &lt;code&gt;SHA256SUMS&lt;/code&gt;; &lt;code&gt;go version -m&lt;/code&gt;: &lt;code&gt;go1.27.3&lt;/code&gt;, &lt;code&gt;mod github.com/go-authn/authnd v0.12.3&lt;/code&gt;, &lt;code&gt;vcs.modified=false&lt;/code&gt;) and OpenLDAP&amp;rsquo;s &lt;code&gt;ldapsearch&lt;/code&gt;, on 127.0.0.1, in a scratch directory, with the files shown. The paths are relative for that reason; a service uses absolute ones. The schema is an example written for this page.&lt;/p&gt;
+&lt;p&gt;The section on &lt;a href="#rules"&gt;DIT content rules, name forms and DIT structure rules&lt;/a&gt; was run on 2026-10-26 with the v0.13.0 release binary (&lt;code&gt;authnd-darwin-arm64&lt;/code&gt;, checked by &lt;code&gt;relverify&lt;/code&gt; against &lt;code&gt;SHA256SUMS&lt;/code&gt; and its attestation; &lt;code&gt;go version -m&lt;/code&gt;: &lt;code&gt;go1.27.3&lt;/code&gt;, &lt;code&gt;mod github.com/go-authn/authnd v0.13.0&lt;/code&gt;; &lt;code&gt;authnd --version&lt;/code&gt;: &lt;code&gt;authnd version v0.13.0&lt;/code&gt;), OpenLDAP&amp;rsquo;s &lt;code&gt;ldapsearch&lt;/code&gt; and &lt;code&gt;ldapschema&lt;/code&gt; built from the go-authn/ldap v0.11.0 tag (&lt;code&gt;go install&lt;/code&gt;, go1.27.1; it has no release binary). Every output there was printed by those programs, in a scratch directory, on 127.0.0.1; the files behind the transcripts are shown or described beside them.&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;</description></item></channel></rss>

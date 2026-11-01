@@ -1,0 +1,530 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Eurohpc</title><link>https://go-authn.github.io/docs/0.7/ja/tags/eurohpc/</link><description>Recent content in Eurohpc on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ja</language><atom:link href="https://go-authn.github.io/docs/0.7/ja/tags/eurohpc/index.xml" rel="self" type="application/rss+xml"/><item><title>sshcert-authorize</title><link>https://go-authn.github.io/docs/0.7/ja/sshcert/authorize/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/ja/sshcert/authorize/</guid><description>
+&lt;p&gt;&lt;code&gt;sshd&lt;/code&gt; は証明書ログインのたびに、どのプリンシパルがそのアカウントにログインしてよいかをこれに問い合わせます。証明書のドメイン許可がこのホストを指している場合にのみ、アカウントのプリンシパルを返し、そうでなければ何も返さず、&lt;code&gt;sshd&lt;/code&gt; は証明書を拒否します。GÉANT の &lt;code&gt;ssh-cert-authorize&lt;/code&gt; の引数、フラグ、出力、ログ形式を引き継ぎ、何を拒否するかが異なります。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="how-sshd-calls-it"&gt;sshd からの呼び出し方&lt;span class="hx:absolute hx:-mt-20" id="how-sshd-calls-it"&gt;&lt;/span&gt;
+&lt;a href="#how-sshd-calls-it" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;# /etc/ssh/sshd_config
+TrustedUserCAKeys /etc/ssh/efp-ssh-ca.pub
+AuthorizedPrincipalsCommand /usr/local/bin/sshcert-authorize %u %k
+AuthorizedPrincipalsCommandUser nobody&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;install -o root -g root -m &lt;span class="m"&gt;0755&lt;/span&gt; sshcert-authorize /usr/local/bin/
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; login.example.org &amp;gt; /etc/ssh/cert-allowed-domain.conf&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;そして各ローカルアカウントについて、そこにログインしてよいプリンシパルを一行に一つずつ&lt;code&gt;/etc/ssh/auth_principals/&amp;lt;account&amp;gt;&lt;/code&gt; に書きます。sshd がコマンドを実行するのは、root が所有し、他の誰にも書き込めないパスからに限られます。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;%u&lt;/code&gt; はログイン先のアカウントです。&lt;code&gt;%k&lt;/code&gt; は証明書の base64 です。&lt;code&gt;ssh-...-cert-v01@openssh.com BASE64&lt;/code&gt; の行全体も読まれ、引数がない場合は証明書が標準入力から読まれます。三番目の引数がある場合 (sshd の &lt;code&gt;%t&lt;/code&gt;)、それは証明書の種類でなければならず、そうでなければ証明書は拒否されます。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;終了コード&lt;/th&gt;
+&lt;th&gt;出力&lt;/th&gt;
+&lt;th&gt;sshd&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;0&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;アカウントのプリンシパルを一行に一つ&lt;/td&gt;
+&lt;td&gt;証明書のプリンシパルのいずれかがそこにあれば通す&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;1&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;なし&lt;/td&gt;
+&lt;td&gt;拒否する&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;2&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;なし&lt;/td&gt;
+&lt;td&gt;拒否する: 引数が間違っていた&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-blue-200 hx:bg-blue-100 hx:text-blue-900 hx:dark:border-blue-200/30 hx:dark:bg-blue-900/30 hx:dark:text-blue-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;署名、CA、有効期間は確認しない&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;コマンドには、証明書の署名や有効期間を検証するものはありません。&lt;code&gt;TrustedUserCAKeys&lt;/code&gt; で CA を信頼する sshd がそれを行います。このコマンドが判断するのは、証明書がこのホストとこのアカウント向けかどうかという一点です。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="what-it-refuses"&gt;拒否するもの&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-it-refuses" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;確認する順序で:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;空、&lt;code&gt;.&lt;/code&gt;、&lt;code&gt;..&lt;/code&gt; のアカウント名、または &lt;code&gt;/&lt;/code&gt;、&lt;code&gt;\&lt;/code&gt;、NUL を含むもの&lt;/li&gt;
+&lt;li&gt;ドメインが設定されていないホスト、または有効なホスト名でないもの&lt;/li&gt;
+&lt;li&gt;解析できない証明書、単なる鍵、またはホスト証明書&lt;/li&gt;
+&lt;li&gt;証明書の種類ではない &lt;code&gt;%t&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--krl&lt;/code&gt; がある場合、リストが失効させた証明書、またはリストが読めない、もしくは期限切れのときは&lt;strong&gt;すべての&lt;/strong&gt;証明書&lt;/li&gt;
+&lt;li&gt;存在するが不正な形式のドメイン許可。&lt;strong&gt;フラグにかかわらず&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--allow-no-grant&lt;/code&gt; でない限り、&lt;strong&gt;ドメイン許可がまったくないもの&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;どのパターンもホストの名前のどれにも一致しない許可&lt;/li&gt;
+&lt;li&gt;プリンシパルファイルがない、または空のアカウント&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;ホストの名前は、&lt;code&gt;--domain&lt;/code&gt;、&lt;code&gt;--domain-env&lt;/code&gt; が名指しする変数、または &lt;code&gt;--domain-file&lt;/code&gt; の行です(空行と &lt;code&gt;#&lt;/code&gt; コメントは無視され、複数の行は複数の名前で、どれが一致してもよい)。&lt;/p&gt;
+&lt;p&gt;テスト用 CA が署名した、アカウント &lt;code&gt;alice&lt;/code&gt; 向けの証明書に対して、プリンシパルファイルに&lt;code&gt;a1b2c3@univ-example.example&lt;/code&gt; が列挙され、ホスト名が &lt;code&gt;login.hpc.example.org&lt;/code&gt; の場合:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+a1b2c3@univ-example.example&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;最後の行が sshd の読む応答で、それより前の行はログで、ここでは標準エラーに出ています。他のホストに許可された証明書:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-other-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1003 key_id=&amp;#34;a1b2c3@univ-example.example other host&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;domain not granted&amp;#34; grant=[&amp;#34;*.elsewhere.example.net&amp;#34;] serial=1003 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;許可のない証明書:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-nogrant-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1002 key_id=&amp;#34;a1b2c3@univ-example.example no grant&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;no domain grant&amp;#34; serial=1002 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;プリンシパルファイルのないアカウントと、単なる鍵:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals bob &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=denied user=bob domain=login.hpc.example.org reason=&amp;#34;no principals file for the user&amp;#34; serial=1001 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+$ sshcert-authorize --syslog=false --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice.pub)&amp;#34;
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;a ssh-ed25519 key, not a certificate&amp;#34;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;これらはいずれも &lt;code&gt;1&lt;/code&gt; で終了し、標準出力には何も出力しませんでした。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="why-a-certificate-with-no-grant-is-refused"&gt;許可のない証明書を拒否する理由&lt;span class="hx:absolute hx:-mt-20" id="why-a-certificate-with-no-grant-is-refused"&gt;&lt;/span&gt;
+&lt;a href="#why-a-certificate-with-no-grant-is-refused" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;GÉANT の &lt;code&gt;ssh-cert-authorize&lt;/code&gt; は、ドメイン許可のない証明書を通します(&amp;ldquo;might be valid for non-domain-based auth&amp;rdquo;)。解析できない許可や空の許可のものも通します。そうすると、&lt;code&gt;TrustedUserCAKeys&lt;/code&gt; で&lt;strong&gt;二つ&lt;/strong&gt;の CA (フェデレーションのものと、職員用やテスト用の自サイトのもの) を信頼するサイトは、二つ目の CA の証明書を、プリンシパルファイルにあるどのプリンシパルについても、ドメインのチェックなしで、すべてのホストで通してしまいます。使える場所を述べない証明書が拒否されて初めて、ドメインフィルターはフィルターになります。&lt;/p&gt;
+&lt;p&gt;GÉANT の動作を本当に望むサイトは、そう宣言し、コマンドはそれを適用するたびにログに記録します。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --allow-no-grant --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-nogrant-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1002 key_id=&amp;#34;a1b2c3@univ-example.example no grant&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=no_grant_allowed user=alice domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] domain=login.hpc.example.org serial=1002 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+a1b2c3@univ-example.example&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;その場合でも、存在するが不正な形式の許可は拒否されます。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="krl"&gt;&lt;code&gt;--krl&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="krl"&gt;&lt;/span&gt;
+&lt;a href="#krl" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;RevokedKeys&lt;/code&gt; は sshd 自身のチェックで、コマンドが実行される前に、すべての鍵と証明書に対して行われ、CA 鍵も失効させます。そちらを優先してください。&lt;code&gt;--krl FILE&lt;/code&gt; は OpenSSH の KRL をコマンド内で確認し、sshd が行わないことを加えます。リストの期限が切れた場合(&lt;code&gt;expires@go-authn.github.io&lt;/code&gt; 拡張。sshd は無視する) には&lt;strong&gt;すべての&lt;/strong&gt;証明書を拒否し、リストが読めない場合にもすべての証明書を拒否します。有効期限のないリストは、期限なしで使われます。&lt;/p&gt;
+&lt;p&gt;三回の実行です。&lt;a href="https://go-authn.github.io/docs/0.7/ja/authn-revokd/"&gt;authn-revokd&lt;/a&gt;が書き込む KRL で、まず現在のもの、次に発行者のリストが&lt;a href="https://go-authn.github.io/docs/0.7/ja/authn-revokd/lapse/"&gt;失効した&lt;/a&gt;ときに書き込まれるフェイルクローズのもの、最後に存在しないファイルを指す &lt;code&gt;--krl&lt;/code&gt; です。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+INFO: action=authorized user=alice cert_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] server_principals=[&amp;#34;a1b2c3@univ-example.example&amp;#34;] domain=login.hpc.example.org serial=1001 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+a1b2c3@univ-example.example
+$ sshcert-authorize --syslog=false --krl ../revokd/out/sshd.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;certificate revoked&amp;#34; serial=1001 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+$ sshcert-authorize --syslog=false --krl missing.krl --domain-file cert-allowed-domain.conf --principals-dir auth_principals alice &amp;#34;$(cut -d&amp;#39; &amp;#39; -f2 alice-cert.pub)&amp;#34;
+INFO: action=cert_processed serial=1001 key_id=&amp;#34;a1b2c3@univ-example.example granted&amp;#34; extension=ssh-domain-grant@core.aai.geant.org ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4
+WARNING: action=denied user=alice domain=login.hpc.example.org reason=&amp;#34;KRL unreadable: open missing.krl: no such file or directory&amp;#34; serial=1001 ca_fingerprint=SHA256:AnDb/hVURvKYmNr3UBTfpWL0OVGHgKRMbSFicCNn/O4&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;二回目の実行が拒否されるのは、フェイルクローズのリストが証明書の &lt;strong&gt;CA 鍵&lt;/strong&gt;を失効させているからです。チェックは、証明書自身の鍵、そのシリアルとキー ID、そしてそれに署名した鍵を対象とします。三回目が拒否されるのは、リストが読めないからです。リストがないことは、何も失効していないという意味とは受け取られません。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="flags"&gt;フラグ&lt;span class="hx:absolute hx:-mt-20" id="flags"&gt;&lt;/span&gt;
+&lt;a href="#flags" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ sshcert-authorize -help
+usage: sshcert-authorize [flags] USER [CERTIFICATE [KEYTYPE]]
+An sshd AuthorizedPrincipalsCommand (%u %k) that refuses a certificate whose
+ssh-domain-grant@core.aai.geant.org extension does not grant this host, or that has none.
+-allow-no-grant
+let in a certificate with no domain grant (GÉANT&amp;#39;s behaviour); a malformed grant is still refused
+-debug
+log details
+-domain string
+the host&amp;#39;s domain (overrides --domain-env and --domain-file)
+-domain-env string
+environment variable holding the host&amp;#39;s domain
+-domain-file string
+file holding the host&amp;#39;s domain, one name per line (default &amp;#34;/etc/ssh/cert-allowed-domain.conf&amp;#34;)
+-extension string
+name of the domain-grant extension (default &amp;#34;ssh-domain-grant@core.aai.geant.org&amp;#34;)
+-krl string
+refuse certificates this OpenSSH KRL revokes, and every certificate once it has expired or cannot be read
+-principals-dir string
+directory of principals files, one per user (default &amp;#34;/etc/ssh/auth_principals&amp;#34;)
+-syslog
+log to syslog, facility AUTH (--syslog=false: to stderr) (default true)
+-version
+print the version and exit&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;ログ&lt;/strong&gt;は &lt;code&gt;key=value&lt;/code&gt; の行 (&lt;code&gt;action=cert_processed&lt;/code&gt;、&lt;code&gt;action=denied&lt;/code&gt;、&lt;code&gt;action=authorized&lt;/code&gt;。&lt;code&gt;serial&lt;/code&gt; と &lt;code&gt;ca_fingerprint&lt;/code&gt; を伴う) で、既定では syslog のファシリティ AUTH に出力されます。sshd はコマンドの標準エラーを破棄するので、本番では syslog を有効にしておいてください。&lt;code&gt;--debug&lt;/code&gt; はすべてを標準エラーにも書きます。アカウント名のようにクライアント由来の値は、空白、&lt;code&gt;=&lt;/code&gt;、引用符、制御文字を含む場合は引用符で囲まれるので、ログのフィールドを偽造することはできません。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;-version&lt;/code&gt;&lt;/strong&gt; は、リリースバイナリでも &lt;code&gt;go install&lt;/code&gt; でビルドしたものでも同様に、モジュールバージョンを表示します。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.9
+$ sshcert-authorize -version
+sshcert-authorize v0.1.9&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;v0.1.5 より前は、&lt;code&gt;go install&lt;/code&gt; のバイナリは &lt;code&gt;sshcert-authorize dev&lt;/code&gt; と表示していました。&lt;/p&gt;</description></item><item><title>sshcert</title><link>https://go-authn.github.io/docs/0.7/ja/sshcert/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/ja/sshcert/</guid><description>
+&lt;p&gt;&lt;strong&gt;フェデレーションの CA が発行した証明書は、それだけではその CA を信頼するすべてのホストに対する許可ではありません。&lt;/strong&gt; EuroHPC Federation Platform の SSH CA は、証明書の宛先となるホストを拡張 &lt;code&gt;ssh-domain-grant@core.aai.geant.org&lt;/code&gt; に書き込みますが、&lt;code&gt;sshd&lt;/code&gt; はそれを無視します。go-authn/sshcert はその拡張を読み書きし、そのコマンド &lt;code&gt;sshcert-authorize&lt;/code&gt; が、それを強制するために&lt;code&gt;sshd&lt;/code&gt; が実行するものです。純粋な Go、&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;。これらのページは v0.1.9 を説明しています。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ go install github.com/go-authn/sshcert/cmd/sshcert-authorize@v0.1.9
+$ sshcert-authorize -version
+sshcert-authorize v0.1.9&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/ja/sshcert/authorize/"&gt;sshcert-authorize&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;AuthorizedPrincipalsCommand&lt;/code&gt;: 何を確認し、何を拒否し、sshd がどう呼び出すか&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h2 data-hextra-search-id="the-extension"&gt;拡張&lt;span class="hx:absolute hx:-mt-20" id="the-extension"&gt;&lt;/span&gt;
+&lt;a href="#the-extension" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;そのデータは、ホストパターンのコンパクトな JSON 配列、&lt;code&gt;[&amp;quot;login.example.org&amp;quot;]&lt;/code&gt; です。&lt;code&gt;*&lt;/code&gt; は単一のラベル内の&lt;strong&gt;一文字以上&lt;/strong&gt;に一致し、名前は大文字小文字を区別せずに比較されます。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;パターン&lt;/th&gt;
+&lt;th&gt;一致するもの&lt;/th&gt;
+&lt;th&gt;一致しないもの&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;login.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;login.example.org&lt;/code&gt;、&lt;code&gt;LOGIN.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;www.login.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;*.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;a.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;example.org&lt;/code&gt;、&lt;code&gt;a.b.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;prod-*.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;prod-1.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;prod-.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;*.*.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;a.b.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;a.example.org&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;読み取りは厳格で、エンコーダーが書くものだけが受け入れられます。空白なし、&lt;code&gt;]&lt;/code&gt; の後に何もなし、JSON エスケープなし、重複なし、パターンは最大 64 個、それぞれ英字、数字、ハイフン、&lt;code&gt;*&lt;/code&gt; からなり、ラベルは 1 から 63 バイト、全体で最大 253 バイトで、&lt;strong&gt;一番右のラベルに &lt;code&gt;*&lt;/code&gt; は置けません&lt;/strong&gt;。&lt;code&gt;null&lt;/code&gt;、オブジェクト、数値、入れ子の配列は拒否されます。&lt;code&gt;[]&lt;/code&gt; は受け入れられ、どのホストも許可しません。&lt;/p&gt;
+&lt;p&gt;存在するが不正な形式の許可は、決して不在として報告されません。この違いがこのコマンドの要点のすべてです。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="who-uses-it"&gt;誰が使うか&lt;span class="hx:absolute hx:-mt-20" id="who-uses-it"&gt;&lt;/span&gt;
+&lt;a href="#who-uses-it" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href="https://go-authn.github.io/docs/0.7/ja/authn-bridge/certificates/#the-eurohpc-ssh-ca-profile"&gt;authn-bridge&lt;/a&gt;&lt;/strong&gt; は、クライアントの &lt;code&gt;ssh_domain_grants&lt;/code&gt; のために拡張を書き込みます。その前に、このパッケージの&lt;code&gt;ValidatePattern&lt;/code&gt; で各パターンを確認します。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;go-fileshare&lt;/strong&gt; の SFTP サーバーは &lt;code&gt;ssh_domains&lt;/code&gt; でそれを読み、許可のない証明書は&lt;code&gt;ssh_accept_ungranted&lt;/code&gt; が設定されていない限り拒否します。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;sshcert-authorize&lt;/strong&gt; は、通常の &lt;code&gt;sshd&lt;/code&gt; のための同じチェックです。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="licence"&gt;ライセンス&lt;span class="hx:absolute hx:-mt-20" id="licence"&gt;&lt;/span&gt;
+&lt;a href="#licence" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;BSD-3-Clause。&lt;/p&gt;</description></item><item><title>証明書</title><link>https://go-authn.github.io/docs/0.7/ja/authn-bridge/certificates/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/ja/authn-bridge/certificates/</guid><description>
+&lt;p&gt;ログインした人は、SSH 公開鍵に数時間有効な証明書を発行してもらったり、X.509 クライアント証明書を発行してもらったりできます。プロバイダーの CA を信頼するサーバーは、そこで編集すべきアカウントファイルがなくても、その人を通します。すべての証明書は、&lt;strong&gt;渡される前に&lt;code&gt;certificates_file&lt;/code&gt; に記録されます&lt;/strong&gt;。記録できない証明書は発行されません。失効させることができなくなるからです。失効した証明書は&lt;a href="https://go-authn.github.io/docs/0.7/ja/authn-bridge/revocation/"&gt;KRL と CRL&lt;/a&gt; で公開されます。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="ssh-certificates"&gt;SSH 証明書&lt;span class="hx:absolute hx:-mt-20" id="ssh-certificates"&gt;&lt;/span&gt;
+&lt;a href="#ssh-certificates" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;certificates_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/certificates.json&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;ssh_ca&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/ssh-ca&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # authn-bridge keygen --ssh-ca; Ed25519
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; validity&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;12h&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default; a week at most
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sftp&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_certificates&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;authn-bridge ssh-cert --issuer https://login.example.org --client sftp&lt;/code&gt; は、コードでログインし、&lt;code&gt;~/.ssh/id_ed25519.pub&lt;/code&gt; (または &lt;code&gt;--key&lt;/code&gt;) を &lt;code&gt;ssh&lt;/code&gt; スコープのトークンとともに&lt;code&gt;/ssh/certificate&lt;/code&gt; に POST し、&lt;code&gt;ssh&lt;/code&gt; と &lt;code&gt;sftp&lt;/code&gt; が見つける場所である鍵の隣に&lt;code&gt;&amp;lt;key&amp;gt;-cert.pub&lt;/code&gt; を書き込みます。&lt;/p&gt;
+&lt;p&gt;CA 鍵は Ed25519 でなければなりません。RSA の CA 鍵は、別途指定しない限り SHA-1 で署名しますが、OpenSSH は 8.8 以降、既定でこれを拒否しています。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;証明書が述べること。&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;ちょうど一つのプリンシパル&lt;/strong&gt;。クライアントのプロファイルが別のクレームを指定しない限り、その人の &lt;code&gt;preferred_username&lt;/code&gt; です。プリンシパルのない証明書は&lt;em&gt;どの&lt;/em&gt;ユーザーにも有効(PROTOCOL.certkeys) なので、ユーザー名のない人には発行されません。カンマ、空白、引用符、バックスラッシュ、制御文字を含む名前は拒否されます (&lt;code&gt;403&lt;/code&gt;)。&lt;code&gt;sshd&lt;/code&gt; は &lt;code&gt;principals=&amp;quot;a,b&amp;quot;&lt;/code&gt; や&lt;code&gt;AuthorizedPrincipalsFile&lt;/code&gt; のエントリをリストとして読むため、そのような名前は二つになってしまいます。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;キー ID&lt;/strong&gt; &lt;code&gt;&amp;lt;principal&amp;gt; sub=&amp;lt;sub&amp;gt; jti=&amp;lt;token id&amp;gt;&lt;/code&gt;: &lt;code&gt;sshd&lt;/code&gt; がログに記録するもの。&lt;/li&gt;
+&lt;li&gt;既定では &lt;strong&gt;&lt;code&gt;permit-*&lt;/code&gt; 拡張はありません&lt;/strong&gt;。SFTP には不要で、pty、フォワーディング、rc ファイルを許可しない証明書は、ファイルアクセスだけを許可します。&lt;/li&gt;
+&lt;li&gt;トークンがグループを運ぶ場合は、&lt;code&gt;groups@go-authn.org&lt;/code&gt; 拡張に&lt;strong&gt;その人のグループ&lt;/strong&gt;を一行に一つ入れます。OpenSSH は無視しますが、署名されているので、グループで認可するサーバーはそれを信じることができます。&lt;/li&gt;
+&lt;li&gt;五分前 (時計のずれに備えて) から、現在から &lt;code&gt;validity&lt;/code&gt; 後まで、または IdP のセッションがそれより早く終わる場合はそこまで&lt;strong&gt;有効&lt;/strong&gt;です。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;鍵&lt;/strong&gt;は Ed25519、ECDSA P-256/384/521、セキュリティキー (&lt;code&gt;sk-&lt;/code&gt;)、または 2048 ビット以上のRSA でなければなりません。証明書は鍵としては拒否されます。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="the-eurohpc-ssh-ca-profile"&gt;EuroHPC SSH CA プロファイル&lt;span class="hx:absolute hx:-mt-20" id="the-eurohpc-ssh-ca-profile"&gt;&lt;/span&gt;
+&lt;a href="#the-eurohpc-ssh-ca-profile" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;EuroHPC Federation Platform の SSH CA (GÉANT / MyAccessID) は、有効期間一時間の Ed25519証明書を発行します。プリンシパルは一つで、フェデレーション全体でその人を指し、宛先のホストはGÉANT の &lt;code&gt;ssh-domain-grant@core.aai.geant.org&lt;/code&gt; 拡張に入ります。クライアントは、その形で証明書を発行してもらうことができます。すべてのキーはクライアントごとの任意指定で、何も設定しないクライアントは上記の証明書を受け取ります。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;efp&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_certificates&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_principal_claim&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;voperson_id&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default is preferred_username
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_validity&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;1h&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # never longer than ssh_ca&amp;#39;s, nor the IdP&amp;#39;s session
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_extensions&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;permit-pty&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # none by default
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; ssh_domain_grants&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;login.hpc.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # the hosting entity&amp;#39;s hosts
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # ssh_source_address = [&amp;#34;192.0.2.0/24&amp;#34;] # the source-address critical option
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;キー&lt;/th&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ssh_principal_claim&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;preferred_username&lt;/code&gt;、&lt;code&gt;sub&lt;/code&gt;、&lt;code&gt;voperson_id&lt;/code&gt;、&lt;code&gt;eduperson_principal_name&lt;/code&gt;。後の二つは &lt;code&gt;eduperson&lt;/code&gt; スコープで公開され、トークンがそれを持っていなければなりません (&lt;code&gt;authn-bridge ssh-cert --scope eduperson&lt;/code&gt;)。そうでない場合、または IdP がそのような属性を出さなかった場合は、どれかを述べる &lt;code&gt;403&lt;/code&gt; が返ります&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ssh_extensions&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;permit-pty&lt;/code&gt;、&lt;code&gt;permit-user-rc&lt;/code&gt;、&lt;code&gt;permit-port-forwarding&lt;/code&gt;、&lt;code&gt;permit-agent-forwarding&lt;/code&gt;、&lt;code&gt;permit-X11-forwarding&lt;/code&gt; のうち&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ssh_source_address&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;アドレスまたは CIDR プレフィックス。正規形で &lt;code&gt;source-address&lt;/code&gt; に書き込まれる&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ssh_validity&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;このクライアントについて、&lt;code&gt;ssh_ca&lt;/code&gt; の &lt;code&gt;validity&lt;/code&gt; を超えない (同じ値は可)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ssh_domain_grants&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;ドメインパターン。&lt;a href="https://go-authn.github.io/docs/0.7/ja/sshcert/"&gt;go-authn/sshcert&lt;/a&gt; の &lt;code&gt;ValidatePattern&lt;/code&gt; で検証され、&lt;code&gt;EncodeDomainGrant&lt;/code&gt; でエンコードされる&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h3 data-hextra-search-id="what-the-profile-refuses"&gt;プロファイルが拒否するもの&lt;span class="hx:absolute hx:-mt-20" id="what-the-profile-refuses"&gt;&lt;/span&gt;
+&lt;a href="#what-the-profile-refuses" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;いずれも起動時に、&lt;code&gt;authn-bridge check&lt;/code&gt; から:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: client &amp;#34;efp&amp;#34;: ssh_validity = 24h0m0s: longer than the ssh_ca validity, 12h0m0s
+authn-bridge: client &amp;#34;efp&amp;#34;: ssh_extensions: &amp;#34;no-touch-required&amp;#34; is not one of permit-X11-forwarding, permit-agent-forwarding, permit-port-forwarding, permit-pty, permit-user-rc
+authn-bridge: client &amp;#34;src&amp;#34;: ssh_source_address: &amp;#34;192.0.2.1/24&amp;#34; has bits set under its mask: 192.0.2.0/24?
+authn-bridge: client &amp;#34;x&amp;#34;: ssh_principal_claim, ssh_extensions, ssh_source_address, ssh_validity and ssh_domain_grants shape SSH certificates: they need ssh_certificates = true&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;no-touch-required&lt;/code&gt; は提供されません。これは、その人&lt;strong&gt;自身の&lt;/strong&gt;セキュリティキーのユーザー在席確認を免除するもので、あるクライアントの全員のためにプロバイダーが手放してよいものではありません。&lt;/p&gt;
+&lt;p&gt;ドメイン許可は、仕様の構文、続いてこのプロバイダー自身のポリシーに照らして検証されます。小文字であること、ラベルが二つ以上あること、ワイルドカードは登録可能なドメインの下にのみ置けること、です。最後のワイルドカードの右側に固定されているものは、パブリックサフィックス(Public Suffix List) であってはなりません。&lt;code&gt;*.ac.uk&lt;/code&gt; は、その下のすべての機関に許可を与えてしまうからです。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;authn-bridge: client &amp;#34;efp&amp;#34;: ssh_domain_grants: &amp;#34;*.ac.uk&amp;#34;: a wildcard over the public suffix &amp;#34;ac.uk&amp;#34; grants every domain under it
+authn-bridge: client &amp;#34;efp&amp;#34;: ssh_domain_grants: &amp;#34;Login.hpc.example.org&amp;#34;: written in lower case, as hosting entities&amp;#39; domains are compared
+authn-bridge: client &amp;#34;efp&amp;#34;: ssh_domain_grants: &amp;#34;login.hpc.*&amp;#34;: sshcert: invalid domain pattern: pattern &amp;#34;login.hpc.*&amp;#34; has a wildcard in its rightmost label&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h3 data-hextra-search-id="trusting-it-from-a-site"&gt;サイト側から信頼する&lt;span class="hx:absolute hx:-mt-20" id="trusting-it-from-a-site"&gt;&lt;/span&gt;
+&lt;a href="#trusting-it-from-a-site" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;GET /ssh/config&lt;/code&gt; は CA 鍵を EFP が自身のものを公開するのと同じ形で公開するので、サイトはこのプロバイダーの URL で EFP の信頼手順に従えます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ curl -s http://127.0.0.1:28473/ssh/config
+{&amp;#34;PublicKey&amp;#34;:&amp;#34;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPnW/W/MeVAMgt4fciWbbiJ/BS4vXURfwoc7K5cET1Ma&amp;#34;}&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;curl -s https://login.example.org/ssh/config &lt;span class="p"&gt;|&lt;/span&gt; jq -r &lt;span class="s1"&gt;&amp;#39;.PublicKey&amp;#39;&lt;/span&gt; &amp;gt; /etc/ssh/bridge-ssh-ca.pub
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;TrustedUserCAKeys /etc/ssh/bridge-ssh-ca.pub&amp;#34;&lt;/span&gt; &amp;gt;&amp;gt; /etc/ssh/sshd_config&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;sshd はドメイン許可を無視します。サイトは &lt;code&gt;AuthorizedPrincipalsCommand&lt;/code&gt; でそれによって絞り込みます。&lt;a href="https://go-authn.github.io/docs/0.7/ja/sshcert/authorize/"&gt;sshcert-authorize&lt;/a&gt; は、許可がそのホストを指していない証明書と、許可がまったくない証明書を拒否します。CA は OpenID ディスカバリードキュメントにはありません。SSH CA を指す OpenID Connect メタデータはないからです。&lt;/p&gt;
+&lt;p&gt;EFP 自身の CA との違いとして残るのは次のとおりです。上記のように&lt;code&gt;ssh_principal_claim = &amp;quot;voperson_id&amp;quot;&lt;/code&gt; とすると、プリンシパルは MyAccessID の識別子ではなく、その人の機関が出した &lt;code&gt;subject-id&lt;/code&gt; を小文字にしたものです。トークンがグループを運ぶ場合はグループ拡張があります。そして&lt;strong&gt;KRL があり&lt;/strong&gt;、&lt;code&gt;GET /ssh/krl&lt;/code&gt; がここで無効化された人々の証明書を列挙します。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="x509-client-certificates-for-nfs-over-tls"&gt;NFS over TLS 向けの X.509 クライアント証明書&lt;span class="hx:absolute hx:-mt-20" id="x509-client-certificates-for-nfs-over-tls"&gt;&lt;/span&gt;
+&lt;a href="#x509-client-certificates-for-nfs-over-tls" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;NFS over TLS (RFC 9289) は、クライアントを証明書で指名できます。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;certificates_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/certificates.json&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;x509_ca&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; key_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/nfs-ca/ca.key&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # authn-bridge keygen --x509-ca /var/lib/authn-bridge/nfs-ca
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; cert_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/nfs-ca/ca.crt&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # what go-fileshare trusts
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; validity&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;12h&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default; a week at most
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;nfs&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; device&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; x509_certificates&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="kt"&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;authn-bridge nfs-cert --issuer ... --client nfs&lt;/code&gt; は、その人のマシン上で P-256 鍵を作り、証明書要求を &lt;code&gt;nfs&lt;/code&gt; スコープのトークンとともに &lt;code&gt;/x509/cert&lt;/code&gt; に POST し、証明書と鍵を書き込みます。CA 鍵は P-256 でなければならず、その証明書は証明書と CRL に署名する CA でなければなりません。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;証明書が述べること。&lt;/strong&gt; 要求のサブジェクトと拡張は無視されます。証明されるのはトークンの人であって、本人が求めたものではありません。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;その人、&lt;code&gt;user@domain&lt;/code&gt; が、UTF8String を保持する&lt;strong&gt;一つの&lt;/strong&gt; subjectAltName &lt;code&gt;otherName&lt;/code&gt;
+&lt;code&gt;1.3.6.1.4.1.2238.1.1.1&lt;/code&gt; として入ります。FreeBSD の &lt;code&gt;rpc.tlsservd -u&lt;/code&gt; がそこを読みます。&lt;code&gt;@&lt;/code&gt; のないユーザー名や、三バイト未満のものは拒否されます。&lt;/li&gt;
+&lt;li&gt;各グループは、その隣の URI 名として入ります:&lt;code&gt;tag:go-authn.github.io,2026:group:&amp;lt;the group, percent-encoded&amp;gt;&lt;/code&gt;。&lt;/li&gt;
+&lt;li&gt;CN はユーザー名です。64 文字を超えるとサブジェクトは空になり、subjectAltName がクリティカルになります (RFC 5280)。&lt;/li&gt;
+&lt;li&gt;クライアント認証のみで、CRL 配布ポイントは &lt;code&gt;&amp;lt;issuer&amp;gt;/x509/crl&lt;/code&gt; です。&lt;/li&gt;
+&lt;li&gt;五分前から、&lt;code&gt;validity&lt;/code&gt;、IdP のセッション、CA 自身の証明書のうち、最も早く終わるものまで有効です。&lt;/li&gt;
+&lt;li&gt;P-256 または RSA (2048 ビット以上) の鍵と、それで署名された要求。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
+&lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
+&lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;証明書が指名するのはマシンであり、その利用者ではない&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;RFC 9289: サーバーは &amp;ldquo;cannot utilize the remote TLS peer identity to
+authenticate RPC users&amp;rdquo;。Linux ではクライアント証明書がマウントごとに設定されるので、そのマウントを使うすべての人が、証明書が指名する人になります。これは一人が使うマシンのためであり、&lt;code&gt;authn-bridge nfs-cert&lt;/code&gt; もそう述べます。&lt;/p&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="a-certificate-request-held-open-across-a-disabling"&gt;無効化をまたいで開いたままの証明書要求&lt;span class="hx:absolute hx:-mt-20" id="a-certificate-request-held-open-across-a-disabling"&gt;&lt;/span&gt;
+&lt;a href="#a-certificate-request-held-open-across-a-disabling" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;トークンは要求の開始時に検証され、本文はその後、クライアントが送る速さで読まれます。そのため証明書はまず記録され、その後でトークンと人が再度検証されます。その間に人が無効化されたかトークンが失効していれば、記録したばかりの証明書は失効され、応答は &lt;code&gt;401&lt;/code&gt; になります。失効が証明書を見たか、証明書が失効を見たか、そのどちらかです。&lt;/p&gt;</description></item></channel></rss>
