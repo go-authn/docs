@@ -12,7 +12,7 @@ server that runs it and owns the configuration, the directory sources and the
 bind policy; this owns the bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.11.0
+go get github.com/go-authn/ldap@v0.12.0
 ```
 
 Written from RFC 4511 (the protocol), 4512 (the root DSE and the schema),
@@ -179,6 +179,31 @@ aliases or referrals, so a critical ManageDsaIT is refused with
 | `IdleTimeout` | 5 minutes | the whole message must arrive in time, not its first byte; negative means never |
 | `MaxPending`, `MaxPendingAuth` | 100, 1000 | operations one connection may have in flight before it has bound (`MaxPending`) and after (`MaxPendingAuth`), as slapd's `conn_max_pending` and `conn_max_pending_auth`; a connection that goes over is sent a notice of disconnection and closed |
 | `MaxPagedSearches` | 4 | paged searches open per connection, each a goroutine parked on its next entry |
+| `MaxConnections` | 0 (no limit) | connections held at once; one over is sent a notice of disconnection with result code `busy` (51, RFC 4511 4.4.1) and closed at once, never queued. Added in v0.12.0 |
+| `MaxConnectionsPerIP` | 0 (no limit) | connections one remote address may hold; a listener that is not TCP (a unix socket) is not subject to it. Added in v0.12.0 |
+
+**A deadline the handler cannot ignore.** `Server.Timeout` (zero: none) is the
+deadline of the handler's context, and since v0.12.0 the *server* enforces it:
+at the deadline the client is answered `timeLimitExceeded` (3) for any operation
+(a bind, a compare or a write as well as a search), whether or not the handler
+returns. Before v0.12.0 a handler that ignored its context left the client
+waiting for ever, and only a search mapped a deadline to code 3, a bind, compare
+or write answering `other`. The goroutine of a handler that does not return
+cannot be killed: it keeps counting against `MaxPending` and `MaxPendingAuth`
+until it returns, its late result is dropped, and its message id is refused
+(`protocolError`) meanwhile, so leaked goroutines are bounded per connection and
+a connection whose operations all expire this way reaches the pending limit and
+is closed. **A handler must honour its context to release what it holds.** The
+client's search `timeLimit` now applies to the handler's context too. A handler
+error that wraps `context.DeadlineExceeded` is mapped to code 3 only when the
+operation's own context has expired; otherwise it stays `other`. No handler
+interface changed.
+
+The cost, in allocations per operation (`BenchmarkRun`, exact): 3 before and
+now with no `Timeout`; with a `Timeout`, 10 before and 16 now, for the deadline
+watcher. Times are not reportable: the load was 65 (454 ns and 444 ns without a
+`Timeout`, 981 ns and 1455 ns with one, indicative only). Coverage is 99.9%,
+against a floor of 99.7%, and no parser or decoder was touched.
 
 Filter nesting is bounded as well: a stack overflow in Go kills the process.
 Nothing logs an assertion *value* — a filter carries what somebody typed — only

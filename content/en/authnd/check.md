@@ -58,6 +58,7 @@ this configuration can be served
 The first line is the scheme, the address and the base: `ldap://`,
 `ldaps://`, or `ldap+starttls://` — see [TLS]({{< relref "/authnd/tls.md" >}}).
 
+
 | column | |
 |---|---|
 | `FROM` | the source that owns the name: *the configuration file*, *a sqlite database* (or postgres, mysql), or the url of a directory behind this one |
@@ -138,6 +139,12 @@ engineers names zoe, who has no entry here: the group is published as it stands,
 
 (A `group` *block* naming a stranger is refused outright; see
 [people]({{< relref "/authnd/people.md#written-in-the-configuration" >}}).)
+
+From v0.15.0 the second line of the output is `limits:`: the connection limits,
+the operation deadline and the startup deadline authnd will run with, defaults
+included. The transcripts on this page were printed by earlier releases and do
+not show it. A real one is in
+[limits and deadlines]({{< relref "/authnd/operations.md#limits" >}}).
 
 ## What it refuses
 

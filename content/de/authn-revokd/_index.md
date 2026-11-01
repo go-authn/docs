@@ -12,7 +12,7 @@ aktuelle Liste. authn-revokd schließt beide Lücken für die Listen, die
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}}) veröffentlicht: Es
 ruft jede Liste ab, behält sie nur, wenn sie die Prüfung besteht, schreibt sie dorthin, wo `sshd` oder ein
 TLS-Server sie liest, und schreibt, wenn eine Liste verfällt, eine, die **die CA selbst
-widerruft**. Reines Go, `CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.6.6.
+widerruft**. Reines Go, `CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.6.7.
 
 ```
 $ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6

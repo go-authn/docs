@@ -19,16 +19,16 @@ All of them are pure Go and build with `CGO_ENABLED=0`.
 | [totp]({{< relref "/libraries/totp.md" >}}) | is this six-digit code right, and has it been used before? | v0.4.2 | `github.com/go-authn/totp` |
 | [fido]({{< relref "/libraries/fido.md" >}}) | how is a security key spoken to, over 64-byte reports? | v0.6.2 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | did *the registered* key answer, and did a person touch it? | v0.4.2 | `github.com/go-authn/keyfactor` |
-| [directory]({{< relref "/libraries/directory.md" >}}) | who is somebody, and what can prove them? | v0.16.0 | `github.com/go-authn/directory` |
-| [ldap]({{< relref "/libraries/ldap.md" >}}) | what are the bytes of an LDAP server? | v0.11.3 | `github.com/go-authn/ldap` |
-| [krb5]({{< relref "/libraries/krb5.md" >}}) | is this Kerberos ticket good for this service? | v0.3.1 | `github.com/go-authn/krb5` |
-| [kdc]({{< relref "/libraries/kdc.md" >}}) | how does a realm issue tickets from a directory? | v0.4.3 | `github.com/go-authn/kdc` |
+| [directory]({{< relref "/libraries/directory.md" >}}) | who is somebody, and what can prove them? | v0.17.0 | `github.com/go-authn/directory` |
+| [ldap]({{< relref "/libraries/ldap.md" >}}) | what are the bytes of an LDAP server? | v0.12.0 | `github.com/go-authn/ldap` |
+| [krb5]({{< relref "/libraries/krb5.md" >}}) | is this Kerberos ticket good for this service? | v0.3.3 | `github.com/go-authn/krb5` |
+| [kdc]({{< relref "/libraries/kdc.md" >}}) | how does a realm issue tickets from a directory? | v0.4.5 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | who does this bearer token say is asking, and should it be believed? | v0.4.1 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | what did a federation's identity provider say about this person? | v0.5.0 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | is this SSH certificate or key revoked, as sshd would answer? | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | where does a daemon's TLS server certificate come from? | v0.5.2 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | may this WireGuard key connect, and whose is it? | v0.1.1 | `github.com/go-authn/wireguard` |
-| [scim]({{< relref "/libraries/scim.md" >}}) | who has the identity provider just created, changed or deleted? | v0.1.0 | `github.com/go-authn/scim` |
+| [scim]({{< relref "/libraries/scim.md" >}}) | who has the identity provider just created, changed or deleted? | v0.2.0 | `github.com/go-authn/scim` |
 
 ## How they group
 
@@ -80,7 +80,8 @@ would carry a ticket-issuing code path it never runs, and the directory module
 a KDC reads people from, which it never uses.
 
 This is measured, not intended. In a scratch module that imports only
-`github.com/go-authn/krb5@v0.3.1`:
+`github.com/go-authn/krb5@v0.3.1` (v0.3.3 changes only indirect dependencies, not
+the go-authn modules it requires):
 
 ```sh
 $ GOWORK=off go list -deps . | grep go-authn

@@ -16,8 +16,9 @@ key_file  = "/etc/authnd/key.pem"
 without the other serves nothing*). TLS 1.2 es el mínimo. authnd no tiene cliente
 ACME: los dos archivos los escribe otra cosa —
 [go-authn/servercert]({{< relref "/libraries/servercert.md" >}}), certbot, la CA propia
-de un sitio—, y authnd se **reinicia** tras cada renovación, porque el
-certificado se lee una vez, cuando se abre la escucha.
+de un sitio—, y desde la v0.15.0 authnd los vuelve a leer cuando cambian, sin reinicio: consulte
+[renovar el certificado](#renewal). Hasta la v0.14.1, authnd se **reiniciaba** tras
+cada renovación, porque el certificado se leía una vez, cuando se abría la escucha.
 
 ## Dos formas, una escucha para cada una {#two-ways-one-listener-each}
 
@@ -91,6 +92,24 @@ Ese rechazo es lo que convierte `cert_file` en una garantía en lugar de una ofe
 y es en lo que se apoya `publish_nt_hash`. Incluye el bind anónimo que envía
 `ldapsearch -x` antes de leer el root DSE, así que en una escucha StartTLS esa
 consulta de descubrimiento también necesita `-ZZ`.
+
+## Renovar el certificado {#renewal}
+
+Desde la v0.15.0 un certificado renovado no necesita reinicio. authnd compara
+`cert_file` y `key_file` con lo que sirve en el primer handshake TLS tras 5 segundos
+desde que miró por última vez, y de inmediato con `SIGHUP` (`kill -HUP`, o
+`systemctl kill -s HUP authnd`). La identidad de un archivo es el SHA-256 de su
+contenido, así que se ven tanto un renovador que renombra un archivo nuevo sobre el
+antiguo como uno que lo reescribe en el sitio, y un par del mismo tamaño escrito
+dentro de un mismo tic de marca de tiempo no se toma por el antiguo.
+
+Un par nuevo que no se carga (a medio escribir, una clave que no corresponde al
+certificado, un archivo basura) no cambia nada: authnd sigue sirviendo el certificado
+que tiene, registra el fallo **una sola vez** para ese estado de los archivos y lo
+intenta de nuevo cuando vuelven a cambiar. Antes de la v0.15.0 un certificado que
+caducaba de madrugada dejaba de ser de confianza para todos los clientes hasta que
+alguien reiniciaba authnd. La configuración y la keytab se siguen leyendo solo al
+arrancar.
 
 ## `publish_nt_hash` {#publish_nt_hash}
 

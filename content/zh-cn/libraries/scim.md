@@ -13,7 +13,7 @@ tags: [库, scim, 账户开通]
 编写的 `Backend`。纯 Go，`CGO_ENABLED=0`，仅依赖标准库。
 
 ```sh
-go get github.com/go-authn/scim@v0.1.0
+go get github.com/go-authn/scim@v0.2.0
 ```
 
 ## 示例 {#example}
@@ -57,6 +57,38 @@ id 的 get、`PUT`、`PATCH` 和 `DELETE`，带 `ETag` 和 `If-Match`）、`/Use
 **不支持：** 批量操作、排序、密码更改、`/Me`
 （已在 `/ServiceProviderConfig` 中如此声明）。
 
+## v0.2.0 改变了什么 {#v020}
+
+经过审计、模糊测试和混沌测试以及性能改进。调用方能看到的：
+
+- **`Server.ReadTimeout`**（新增，默认 30 秒）：到达时间过长的请求体会被以 400 切断。它对该请求取代 `http.Server`
+  自己的 `ReadTimeout`；负值则保持 `http.Server` 的设置不变。
+- **`ConditionalDeleter`**：`Backend` 可以实现的新的可选接口（`DeleteUserIf`、`DeleteGroupIf`），`Memory` 已实现。
+  带 `If-Match` 的 `DELETE` 过去先检查版本再分两步删除，所以在两步之间落地的写入会在未被看到的情况下被删除。
+- **输掉的竞争会被重做。** 没有 `If-Match` 的 `PATCH` 或 `PUT` 在与另一个写入者的竞争中失败时，即使客户端没有要求
+  任何前置条件，也会收到 412；现在它会在较新的版本上重做，最多 32 次。有 `If-Match` 时答复仍是 412。24 个没有
+  `If-Match` 的并发 PATCH，过去有 9 个以 412 失败，现在为 0 个。
+- 通过一个不匹配任何内容的过滤器移除成员（或任何元素）会成功；过去是 400 `noTarget`（RFC 7644 §3.5.2.2）。
+- 没有路径的 PATCH 按排序顺序应用其键；过去使用映射的顺序，所以同一对象中的 `name` 和 `name.givenName`
+  每次运行得到不同的资源。
+- `BearerAuth` 接受任意大小写的方案名（`bearer <token>`，RFC 7235 §2.1）。
+- `startIndex` 和 `count` 无论 `int` 的大小都会被限定：超出的值过去在 32 位目标上是 400，在 64 位目标上是被限定的页面。
+- `Filter.Equality()` 把解码后的字符串交给 `Backend`。它是数据：作为参数传给数据库，绝不要拼接进查询。
+
+批量操作、排序和密码更改仍不受支持。
+
+在 `Memory` 上，针对 10,000 个用户和 200 个组的一次列表请求的**分配**，精确，来自 `go test -bench`，Apple M4 Max：
+
+| 列表请求 | 之前 | 之后 |
+|---|---|---|
+| 100 条的一页 | 789,417 次分配，47.7 MB | 14,952 次分配，6.0 MB |
+| `userName eq` | 797,979 次分配，47.7 MB | 90 次分配，12.6 KB |
+| 扫描每个用户的过滤器（`name.givenName eq` 和 `emails[...]`） | 818,847 次分配，48 MB | 361,098 次分配，29.7 MB |
+
+没有测量挂钟时间：负载为 65，而规则要求低于 9。嘈杂的单次运行（扫描过滤器约 1.7 秒对 0.06 秒）不算结果。
+`FuzzPatchPath`、`FuzzPatchThenDecode`、`FuzzFilter` 和 `FuzzServer` 各运行 45 秒，16 个工作线程，130 万到 240 万次执行，
+没有发现失败。
+
 ## 它对照什么检查 {#what-it-is-checked-against}
 
 **身份提供方实际发送的内容**，使用它们的载荷进行测试：Entra
@@ -67,4 +99,4 @@ ID 的 `"Replace"`、其字符串形式的布尔值（`"active": "False"`）、�
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.1.0](https://pkg.go.dev/github.com/go-authn/scim@v0.1.0)
+[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)

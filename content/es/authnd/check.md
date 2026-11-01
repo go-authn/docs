@@ -140,6 +140,12 @@ engineers names zoe, who has no entry here: the group is published as it stands,
 (Un *bloque* `group` que nombra a un desconocido se rechaza directamente; consulte
 [personas]({{< relref "/authnd/people.md#written-in-the-configuration" >}}).)
 
+Desde la v0.15.0 la segunda línea de la salida es `limits:`: los límites de
+conexiones, el plazo de una operación y el plazo del arranque con los que funcionará
+authnd, valores por defecto incluidos. Las transcripciones de esta página las imprimieron
+versiones anteriores y no la muestran. Hay una real en
+[límites y plazos]({{< relref "/authnd/operations.md#limits" >}}).
+
 ## Lo que rechaza {#what-it-refuses}
 
 Cada uno de estos casos detiene tanto `check` como el servidor, con el código de

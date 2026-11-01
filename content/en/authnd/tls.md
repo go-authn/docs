@@ -16,8 +16,10 @@ key_file  = "/etc/authnd/key.pem"
 refused (*one without the other serves nothing*). TLS 1.2 is the minimum.
 authnd has no ACME client: the two files are written by something else —
 [go-authn/servercert]({{< relref "/libraries/servercert.md" >}}), certbot, a
-site's own CA — and authnd is **restarted** after each renewal,
-because the certificate is read once, when the listener opens.
+site's own CA — and from v0.15.0 authnd reads them again when they change, with
+no restart: see [renewing the certificate](#renewal). Up to v0.14.1 it was
+**restarted** after each renewal, because the certificate was read once, when
+the listener opened.
 
 ## Two ways, one listener each
 
@@ -91,6 +93,23 @@ That refusal is what makes `cert_file` a guarantee rather than an offer — and
 it is what `publish_nt_hash` relies on. It includes the anonymous bind
 `ldapsearch -x` sends before reading the root DSE, so on a StartTLS listener
 that discovery query, too, needs `-ZZ`.
+
+## Renewing the certificate {#renewal}
+
+From v0.15.0 a renewed certificate needs no restart. authnd compares
+`cert_file` and `key_file` with what it serves on the first TLS handshake
+after 5 seconds since it last looked, and at once on `SIGHUP`
+(`kill -HUP`, or `systemctl kill -s HUP authnd`). A file's identity is the
+SHA-256 of its content, so a renewer that renames a new file over the old one
+and one that rewrites it in place are both seen, and a pair of the same size
+written within one timestamp tick is not mistaken for the old one.
+
+A new pair that does not load (half written, a key that does not match the
+certificate, a garbage file) changes nothing: authnd keeps serving the
+certificate it has, logs the failure **once** for that state of the files, and
+tries again when they change again. Before v0.15.0 a certificate that expired
+at night stopped being trusted by every client until somebody restarted authnd.
+The configuration and the keytab are still read at start only.
 
 ## `publish_nt_hash`
 

@@ -83,14 +83,32 @@ openssl x509 -in /etc/authn-bridge/metadata-signature-2026.pem -noout -fingerpri
 
 ## Die Aktualisierung {#refreshing-it}
 
-Die Metadaten werden abgerufen, bevor der Anbieter lauscht, dann erneut nach drei
-Vierteln der `cacheDuration` des Dokuments, nie früher als nach fünf Minuten und nie
-später als nach zwölf Stunden, und immer dann, wenn `RefreshMetadata` der Admin-API es verlangt.
+Die Metadaten werden abgerufen, bevor der Anbieter lauscht, dann erneut nach dem
+Zeitplan von `Federation.Run` aus go-authn/saml (ab v0.23.6): nie über die Hälfte
+dessen hinaus, was vom `validUntil` des Dokuments übrig ist, und zwischen fünf
+Minuten und zwölf Stunden (sonst drei Viertel seiner `cacheDuration`), und immer
+dann, wenn `RefreshMetadata` der Admin-API es verlangt. Ist keine gültige Metadaten
+mehr übrig, wird der Abruf nach einer Minute wiederholt, dann im doppelten
+Abstand bis zu einer Stunde. Bis v0.23.5 wartete die Schleife weiter drei Viertel
+der `cacheDuration` (zwölf Stunden ohne eine), gleichgültig was von der Gültigkeit
+übrig war: Eine fehlgeschlagene Aktualisierung kurz vor ihrem Ende konnte den
+Anbieter bis zu zwölf Stunden, nachdem der Föderationsserver wieder da war, ohne
+IdP lassen.
 Eine fehlgeschlagene Aktualisierung behält die letzte gute Kopie, **aber nur bis zu deren eigenem
-`validUntil`**. Danach wird für nichts mehr gebürgt, jeder IdP verschwindet, und
-`/readyz` meldet, dass der Anbieter nicht bereit ist. Ein kurzzeitig nicht erreichbarer
-Föderationsserver meldet niemanden ab; einer, der tagelang nicht erreichbar ist, lässt den
-Anbieter nicht veralteten Schlüsseln vertrauen.
+`validUntil`**: bis dahin laufen die Anmeldungen auf ihr weiter, ob der Föderationsserver
+langsam ist, ausfällt oder ein Dokument liefert, das sich nicht prüfen lässt. Danach wird für
+nichts mehr gebürgt, jeder IdP verschwindet, und `/readyz` meldet, dass der Anbieter nicht
+bereit ist. Ein kurzzeitig nicht erreichbarer Föderationsserver meldet niemanden ab; einer, der
+tagelang nicht erreichbar ist, lässt den Anbieter nicht veralteten Schlüsseln vertrauen.
+
+Die Uhr der Bridge darf von der eines IdP um drei Minuten in jede Richtung abweichen: Eine
+Assertion, deren Zeiten innerhalb davon liegen, wird akzeptiert, und eine, die eine Stunde
+daneben liegt, wird mit einer 400-Seite abgelehnt. Der Schlüssel, unter dem eine Assertion
+gemerkt wird, damit sie nicht zweimal akzeptiert wird, wird als ihr SHA-256 gespeichert (ab
+v0.23.6): Eine lange `entityID` eines IdP oder Assertion-ID war länger als die Spalte
+`VARCHAR(128)` der Zustandsdatenbank, die PostgreSQL und MySQL im Strict-Modus ablehnen, sodass
+der Schreibvorgang ausstand und der Anbieter nicht bereit blieb. SQLite war nicht betroffen.
+Keine Konfiguration ändert sich.
 
 Innerhalb des Dokuments wird ein IdP nur behalten, wenn er SAML 2.0 spricht und einen
 HTTP-Redirect-`SingleSignOnService` veröffentlicht. Eine zweimal beschriebene Entität wird
@@ -231,3 +249,19 @@ sie alle auflistet und nicht eingeschränkt werden kann:
 ```
 authn-bridge: saml: an external discovery service lists every IdP; with `idps` restricted, leave `discovery` out and this provider lists them itself
 ```
+
+### Was getestet wird {#tested}
+
+Ab v0.23.6 listet der README-Abschnitt „What it refuses“ auf, was getestet wird, von Ende zu
+Ende durch den ACS: XML Signature Wrapping (XSW1 bis XSW8 und ihre Varianten mit gleicher ID),
+Kommentar-Kürzung (CVE-2017-11427), DOCTYPE und Entity-Expansion, Assertions für eine andere
+Audience, einen anderen Empfänger, eine andere Anfrage oder ein anderes Ziel, und Replay. Es
+gibt Fuzzer für den ACS (`FuzzACSAccept`), die Föderations-Metadaten, die Prüfung von
+Access-Tokens (mit `alg`-Confusion-Seeds), das Login-Cookie und den Abgleich von
+Redirect-URIs: `FuzzACSAccept` lief 992.517 Ausführungen in drei Minuten mit 595
+Korpuseinträgen und ohne Fehler, die übrigen vier je etwa 90 Sekunden, ohne Fehler. Die
+Chaos-Tests verschieben die Uhr der Bridge um zwei Minuten (akzeptiert) und um eine Stunde
+(abgelehnt) und lassen den Metadaten-Server langsam sein, ausfallen, 500 antworten, Müll, HTML,
+ein abgeschnittenes oder manipuliertes Dokument liefern oder nichts. Der Rate Limiter behandelt
+eine rückwärts springende Uhr nicht mehr als negative Zeit (er leerte jeden Bucket um die Größe
+des Sprungs; Produktionsuhren springen nicht zurück, das ist also Defense in Depth).

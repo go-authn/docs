@@ -13,12 +13,12 @@ services a keytab holds. It runs under
 [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.3
+go get github.com/go-authn/kdc@v0.4.5
 ```
 
-At v0.4.3 its `go.mod` requires at least `go-authn/directory` v0.12.0 and
-gokrb5 v8.4.4: minimums, so a program that requires directory v0.14.0, the
-version these pages describe, builds with v0.15.0, as authnd v0.13.0 does. The
+At v0.4.5 its `go.mod` requires at least `go-authn/directory` v0.16.1 and
+gokrb5 v8.4.4: minimums, so a program that requires directory v0.16.1 builds
+with v0.17.0, as authnd v0.15.0 does. The
 accepting half is [krb5]({{< relref "/libraries/krb5.md" >}}), and a service
 that only verifies tickets needs this module not at all.
 
@@ -184,10 +184,33 @@ mistyped password.
   the session key (`KRB_AP_ERR_INAPP_CKSUM` when missing or unkeyed,
   `KRB_AP_ERR_MODIFIED` when wrong);
 - the TGT is not past its end (`KRB_AP_ERR_TKT_EXPIRED`), not before its start
-  and not flagged invalid (`KRB_AP_ERR_TKT_NYV`), with no skew allowed: this
-  KDC's clock wrote those times;
+  and not flagged invalid (`KRB_AP_ERR_TKT_NYV`), with no skew allowed at its
+  end: this KDC's clock wrote those times. Since v0.4.5 a TGT whose start is
+  within `MaxSkew` in the future is accepted (a clock step);
 - the client is of this realm and still in the directory
   (`KDC_ERR_C_PRINCIPAL_UNKNOWN`).
+
+**Since v0.4.5**, from a security audit and a fuzzing and chaos pass:
+
+- a request for another realm is answered `KDC_ERR_WRONG_REALM`, at the AS and at
+  the TGS, instead of being served;
+- a directory that cannot be read is answered `KDC_ERR_SVC_UNAVAILABLE`, no
+  longer `KDC_ERR_C_PRINCIPAL_UNKNOWN`;
+- **one malformed AS-REQ or TGS-REQ could crash the process**: gokrb5 v8.4.4's
+  `unmarshalTicketsSequence` panics before any authentication. A request that
+  panics the decoder is now dropped, and the panic and its stack are logged;
+- a principal name from the network is quoted in the log, so that it cannot forge
+  a line;
+- the dependencies are golang.org/x/net v0.62.0 (GO-2026-6866, GO-2026-6860) and
+  go-authn/directory v0.16.1. GO-2026-5932 (`golang.org/x/crypto/openpgp`) has
+  no fix upstream and is not called.
+
+`FuzzHandle` ran about 14 million executions in two runs (90 s and 150 s) with no
+panic escaping. `BenchmarkASNoPreauth`, 10,000 people and the last one asked for,
+without pre-authentication: 508 allocations, 18,999 bytes and 112 µs per
+request; there is no earlier figure, since no code on that path changed. The
+time is indicative only: the load was 65, so nothing was compared with MIT's
+`krb5kdc`.
 
 **Lifetimes.** `Config.Lifetime` caps a ticket, ten hours when zero; a client
 asking for less gets less, and a ticket bought with a TGT ends no later than
@@ -213,4 +236,4 @@ The coverage lane's floor is 80%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.3](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.3)
+[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)

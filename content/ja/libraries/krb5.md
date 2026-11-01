@@ -11,8 +11,13 @@ tags: [ライブラリ, kerberos]
 AP-REP で応答し、その交換が確立した鍵の下でメッセージの署名、検証、封印、開封を行います。
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.1
+go get github.com/go-authn/krb5@v0.3.3
 ```
+
+v0.3.3 は API もコードも変えません。間接依存の golang.org/x/net を v0.62.0、golang.org/x/crypto を v0.58.0、
+github.com/hashicorp/go-uuid を v1.0.4 に上げます。`govulncheck` は、必要としていても呼び出していないモジュールで 46 件を
+報告していましたが、今は 1 件、GO-2026-5932 (`golang.org/x/crypto/openpgp`) だけです。これには修正版がなく、go-authn の
+どれもインポートしていません。コードから到達できる検出は、前も後も 0 です。
 
 KDC とは決して話さず、チケットを発行することもないので、誰のチケットを受け入れるかは他の誰かの
 判断です。発行側は [kdc]({{< relref "/libraries/kdc.md" >}}) で、このモジュールはそれに依存しません。
@@ -125,4 +130,4 @@ macOS、Windows、クロスアーキテクチャのレーンにはレルムが�
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.1](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.1)
+[pkg.go.dev/github.com/go-authn/krb5@v0.3.3](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3)

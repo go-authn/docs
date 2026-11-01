@@ -13,12 +13,12 @@ services qu'un keytab détient. Il fonctionne sous
 [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.3
+go get github.com/go-authn/kdc@v0.4.5
 ```
 
-En v0.4.3, son `go.mod` requiert au moins `go-authn/directory` v0.12.0 et
-gokrb5 v8.4.4 : des minimums, si bien qu'un programme qui requiert directory v0.14.0, la
-version que décrivent ces pages, est compilé avec la v0.15.0, comme authnd v0.13.0. La
+En v0.4.5, son `go.mod` requiert au moins `go-authn/directory` v0.16.1 et
+gokrb5 v8.4.4 : des minimums, si bien qu'un programme qui requiert directory v0.16.1
+est compilé avec la v0.17.0, comme authnd v0.15.0. La
 moitié qui accepte est [krb5]({{< relref "/libraries/krb5.md" >}}), et un service
 qui ne fait que vérifier des tickets n'a nullement besoin de ce module.
 
@@ -189,6 +189,31 @@ mot de passe mal tapé.
 - le client est de ce royaume et toujours dans l'annuaire
   (`KDC_ERR_C_PRINCIPAL_UNKNOWN`).
 
+**Depuis la v0.4.5**, après un audit de sécurité et une passe de fuzzing et de chaos :
+
+- une requête pour un autre royaume reçoit `KDC_ERR_WRONG_REALM`, à l'AS et au
+  TGS, au lieu d'être servie ;
+- un annuaire illisible reçoit `KDC_ERR_SVC_UNAVAILABLE`, et non plus
+  `KDC_ERR_C_PRINCIPAL_UNKNOWN` ;
+- un TGT dont le début tombe dans `MaxSkew` dans le futur est accepté (un saut
+  d'horloge), alors que le début d'un TGT n'admettait aucun écart auparavant ;
+- **une seule AS-REQ ou TGS-REQ mal formée pouvait faire planter le processus** :
+  `unmarshalTicketsSequence` de gokrb5 v8.4.4 panique avant toute authentification.
+  Une requête qui fait paniquer le décodeur est désormais abandonnée, et la panique
+  et sa pile sont journalisées ;
+- un nom de principal venu du réseau est mis entre guillemets dans le journal, pour
+  qu'il ne puisse pas forger une ligne ;
+- les dépendances sont golang.org/x/net v0.62.0 (GO-2026-6866, GO-2026-6860) et
+  go-authn/directory v0.16.1. GO-2026-5932 (`golang.org/x/crypto/openpgp`) n'a pas
+  de correctif amont et n'est pas appelé.
+
+`FuzzHandle` a fait environ 14 millions d'exécutions en deux passes (90 s et 150 s)
+sans qu'aucune panique ne s'échappe. `BenchmarkASNoPreauth`, 10 000 personnes et la
+dernière demandée, sans pré-authentification : 508 allocations, 18 999 octets et
+112 µs par requête ; il n'y a pas de chiffre antérieur, aucun code de ce chemin n'ayant
+changé. Le temps n'est qu'indicatif : la charge était de 65, rien n'a donc été comparé
+au `krb5kdc` de MIT.
+
 **Durées de vie.** `Config.Lifetime` plafonne un ticket, dix heures quand elle vaut zéro ; un client
 qui demande moins obtient moins, et un ticket obtenu avec un TGT ne se termine pas plus tard que
 ce TGT, si bien que redemander `krbtgt` ne peut pas prolonger un identifiant.
@@ -213,4 +238,4 @@ Le plancher de la voie de couverture est de 80 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.3](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.3)
+[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)

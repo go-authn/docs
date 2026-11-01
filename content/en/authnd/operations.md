@@ -8,14 +8,18 @@ tags: [authnd, operations, signals, systemd]
 
 ## It reads everything once
 
-The configuration files, the TLS certificate and the keytab are read **at
-start**. There is no reload, and the packaged unit has no `ExecReload=`. After
-changing any of them:
+The configuration files and the keytab are read **at start**. There is no
+reload of them, and the packaged unit has no `ExecReload=`. After changing
+either:
 
 ```sh
 sudo -u authnd authnd check /etc/authnd
 sudo systemctl restart authnd
 ```
+
+The TLS certificate is the exception since v0.15.0: authnd looks at
+`cert_file` and `key_file` again, so a renewal needs no restart. See
+[renewing the certificate]({{< relref "/authnd/tls.md#renewal" >}}).
 
 Apart from the sources (below), the one thing applied while it runs is a
 [password a person changes through authnd]({{< relref "/authnd/passwords.md" >}}),
@@ -41,20 +45,20 @@ start and by `check`, like an entry that fails the schema.
 | signal | what happens |
 |---|---|
 | `SIGTERM`, `SIGINT` | it prints `stopping`, closes the listeners **and every established connection**, stops the realm, closes the sources, and exits 0 once the server has really finished |
-| `SIGHUP` | it is caught and logged, and authnd **stays up** without reloading anything |
+| `SIGHUP` | it is caught and logged, and authnd **stays up**. It reads the TLS certificate again at once (v0.15.0); the configuration and the keytab are not reloaded |
 
 ```
 $ authnd --config etc/authnd
-ldap on 127.0.0.1:3893, serving 4 people from the configuration file, then a sqlite database
-hangup: authnd does not reload; restart it to apply a changed configuration, certificate or keytab
+ldap on 127.0.0.1:3893, serving 1 person from the configuration file
+hangup: authnd does not reload its configuration or keytab; restart it to apply those (the TLS certificate is read again)
 alice's password change was refused: the old password did not verify: directory: wrong password
 alice changed their own password
 
 stopping
 ```
 
-That is one run: a `kill -HUP`, two attempts to change a password (the first
-refused, the second accepted), then a `kill -TERM`.
+That is one run of the v0.15.0 binary: a `kill -HUP`, two attempts to change a
+password (the first refused, the second accepted), then a `kill -TERM`.
 The process was still there after the `SIGHUP`.
 
 A `SIGHUP` used to **kill** authnd — Go's default for a signal nobody handles
@@ -85,6 +89,70 @@ Everything goes to standard output, which under systemd is the journal
 
 A plain wrong password on a simple bind, with no `mfa` block, is answered
 `invalidCredentials` and not logged by authnd itself.
+
+## Limits and deadlines {#limits}
+
+From v0.15.0 authnd bounds what a client, a slow source or a flood can make it
+hold. Four optional keys, at the top level of the configuration:
+
+| key | default | meaning |
+|---|---|---|
+| `max_connections` | `4096` (it was unlimited) | the most connections open at once; `0` is unlimited |
+| `max_connections_per_ip` | none | the most from one address; it may not exceed `max_connections` |
+| `operation_timeout` | `30s` (it was none) | the longest one LDAP operation may take; `"0"` is none, otherwise at least `100ms` |
+| `startup_timeout` | `60s` | the longest opening and first reading of every source may take; `"0"` is none |
+
+A connection over a cap is sent `busy` (51) in a notice of disconnection and
+closed, never queued (RFC 4511 4.4.1). An operation still running at
+`operation_timeout` is answered `timeLimitExceeded` (3), **even when its handler
+is blocked and ignores the deadline**: the late result is dropped. A source that
+does not answer at start makes authnd refuse to start after `startup_timeout`,
+with an error that names the stage and the source. A negative number, or a
+duration that does not parse, is refused at start and by `check`. Set
+`max_connections = 0` and `operation_timeout = "0"` for v0.14's behaviour.
+
+`check` prints the limits it will serve with, so that nobody runs the defaults
+without knowing:
+
+```
+$ authnd check etc2/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+limits: 200 connections, 20 per address; an operation may take 10s; startup may take no limit
+
+USER   FROM                    CAN PROVE   PUBLISHED AS        WITH
+alice  the configuration file  a password  account, uidObject  uid
+
+GROUP  MEMBERS  PUBLISHED AS
+staff  alice    groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+
+this configuration can be served
+```
+
+That configuration says `max_connections = 200`, `max_connections_per_ip = 20`,
+`operation_timeout = "10s"` and `startup_timeout = "0"`. Without those four
+keys the line reads `limits: 4096 connections, no limit per address; an
+operation may take 30s; startup may take 1m0s`, which the same binary printed
+too.
+
+### An outage is not a wrong password {#outage}
+
+When the people are checked against another directory (an `ldap` source) and
+that directory cannot be asked, because the connection is refused or reset, it
+answers `busy`, `unavailable` or `other`, or it does not answer within
+`operation_timeout`, authnd answers LDAP `unavailable` (52), **never**
+`invalidCredentials` (49). That holds for a simple bind, for the old password of
+a password change and for the password factor of an `mfa` bind. Before v0.15.0
+it was reported as a wrong password, so a client such as a login form told the
+person the password was wrong while the directory was down. A wrong password is
+still 49. The cause is in the log, not in what the client is told, and an
+outage is not counted as a failed guess.
 
 ## When it does not start
 

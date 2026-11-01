@@ -11,8 +11,16 @@ tags: [라이브러리, 디렉터리, ldap, sql]
 모델이며, 요점은 질문의 후반부에 있습니다.
 
 ```sh
-go get github.com/go-authn/directory@v0.16.0
+go get github.com/go-authn/directory@v0.17.0
 ```
+
+v0.17.0의 새 기능: [`ErrUnavailable`](#unavailable)은 장애를 틀린 비밀번호와 구별하며, 멤버 DN은 훑어 보는 대신
+한 번의 조회로 사람에게 대응됩니다(결과는 같음). `ldaptest`(같은 프로세스의 서버)에 대해 `Frozen`을 통해 읽은,
+DN 50개씩의 2,000개 그룹과 10,000명에서 `ldapdir`의 `ReadGroups`는 2.20 M 객체에 50.6 MB를 할당하던 것이 0.38 M에
+13.1 MB를 할당합니다(pprof, 비율 4096). 연결 양쪽의 `go-ldap/ber` 라이브러리까지 센 전체 새로 고침은 9.72 M회·537 MB에서
+7.17 M회·481 MB로 줄었습니다. DN 조회는 아무것도 할당하지 않습니다(0회, 0 B. 이전에는 사람 목록의 선형 탐색이었습니다).
+`sqldir` 새로 고침은 1.138 M회·45.3 MB에서 1.114 M회·42.2 MB로 줄었습니다. 할당 횟수는 정확하며, 시간은 측정하지
+않았습니다. 부하는 65에서 105였습니다.
 
 ## 사람을 증명하는 것은 하나가 아닙니다 {#what-proves-somebody-is-not-one-thing}
 
@@ -347,6 +355,32 @@ v0.13.0까지는 member 속성의 DN이 누구의 것이든 첫 RDN의 값으로
 `posixAccount`) `groupOfNames` 그룹(`GroupsOfNames`)을 갖습니다. 그래서 클라이언트의
 필터에 대한 테스트가 실패할 수 있습니다.
 
+## 장애는 틀린 비밀번호가 아닙니다 {#unavailable}
+
+v0.17.0부터 `directory.ErrUnavailable`은 소스가 "아니오"라고 답한 것이 아니라 *물어볼 수 없었다*는 것을 나타냅니다.
+`ldapdir`는 LDAP 서버가 busy(51), unavailable(52), other(80), timeLimitExceeded(3)로 응답할 때, 연결이 끊기거나 거부될
+때, 연결이나 TLS 핸드셰이크가 실패할 때, 원인을 감싸고 메시지는 바꾸지 않은 채 이를 반환합니다. `Verify`와 모든 읽기
+(`ldapdir.New`, `Identities`, `Members`, `ReadGroups`, `GroupNames`, `GroupAttributes`, `GroupObjectClasses`)에 해당합니다.
+LDAP 결과 49는 `ErrWrongPassword`로 남으며, **둘이 동시에 참인 일은 없습니다**. `AsUnavailable(err)`는 오류를 같은
+방식으로 표시하고, `TransportFailure(err)`는 오류가 소스의 응답이 아니라 네트워크나 연결의 실패인지 알려 줍니다.
+`ldaptest.Server.FailBindsWith(code)`는 테스트 서버가 모든 바인드에 결과 코드로 응답하게 하여 호출자를 그에 맞서
+테스트할 수 있게 합니다.
+
+소스 앞에 있는 서버는 세 경우를 구분합니다.
+
+```go
+switch {
+case errors.Is(err, directory.ErrWrongPassword):
+	// the credentials are wrong: count a failed guess, answer 49
+case errors.Is(err, directory.ErrUnavailable):
+	// the directory could not be asked: answer unavailable (52), count nothing
+default:
+	// anything else
+}
+```
+
+authnd v0.15.0은 [운영 페이지]({{< relref "/authnd/operations.md#limits" >}})에 나온 대로 바인드에 이렇게 응답합니다.
+
 ## 거부하는 것과 그 이유 {#what-it-refuses-and-why}
 
 - **구성원이 없는 그룹**, 그리고 **어떤 소스에도 없는 그룹**을 `Expand`가 `@group`을
@@ -367,7 +401,8 @@ v0.13.0까지는 member 속성의 DN이 누구의 것이든 첫 RDN의 값으로
   `ldapdir: the directory did not answer the bind: …`로 반환되며 LDAP 오류를 감쌉니다.
   비밀번호는 어느 쪽이든 거부됩니다. 달라지는 것은 서버의 로그가 올바르게 입력한
   사람에게 *wrong password*라고 말하지 않는다는 점입니다. v0.11.2 이전에는 실패한 모든
-  바인드가 `ErrWrongPassword`였습니다.
+  바인드가 `ErrWrongPassword`였습니다. v0.17.0부터 그런 오류는 [`ErrUnavailable`](#unavailable)이기도 하여,
+  서버가 *잘못된 자격 증명* 대신 *나중에 다시 시도*로 응답할 수 있습니다.
 - **LDAP URL 안의 자격 증명** — URL은 출력됩니다. `BindDN`과 `BindPassword`는
   필드입니다.
 - **16바이트가 아닌 NT 해시**(`ParseNTHash`). 모든 로그인을 잘못된 비밀번호로
@@ -409,4 +444,4 @@ CI에서 검사합니다.
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.14.0](https://pkg.go.dev/github.com/go-authn/directory@v0.14.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)

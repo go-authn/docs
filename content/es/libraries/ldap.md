@@ -12,7 +12,7 @@ es el servidor que la ejecuta y que es dueño de la configuración, de los oríg
 directorio y de la política de bind; esta es dueña de los bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.11.0
+go get github.com/go-authn/ldap@v0.12.0
 ```
 
 Escrita a partir de los RFC 4511 (el protocolo), 4512 (el root DSE y el
@@ -179,6 +179,30 @@ ManageDsaIT crítico se rechaza con `unavailableCriticalExtension`.
 | `IdleTimeout` | 5 minutos | el mensaje entero debe llegar a tiempo, no su primer byte; un valor negativo significa nunca |
 | `MaxPending`, `MaxPendingAuth` | 100, 1000 | operaciones que una conexión puede tener en curso antes de su bind (`MaxPending`) y después (`MaxPendingAuth`), como `conn_max_pending` y `conn_max_pending_auth` de slapd; una conexión que se pasa recibe un aviso de desconexión y se cierra |
 | `MaxPagedSearches` | 4 | búsquedas paginadas abiertas por conexión, cada una una goroutine detenida a la espera de su siguiente entrada |
+| `MaxConnections` | 0 (sin límite) | conexiones que se mantienen a la vez; una por encima recibe un aviso de desconexión con el código de resultado `busy` (51, RFC 4511 4.4.1) y se cierra de inmediato, nunca se pone en cola. Añadido en la v0.12.0 |
+| `MaxConnectionsPerIP` | 0 (sin límite) | conexiones que puede mantener una dirección remota; un oyente que no es TCP (un socket unix) no está sujeto a esto. Añadido en la v0.12.0 |
+
+**Un plazo que el manejador no puede ignorar.** `Server.Timeout` (cero: ninguno) es el
+plazo del contexto del manejador, y desde la v0.12.0 lo aplica el *servidor*: al vencer el
+plazo el cliente recibe `timeLimitExceeded` (3) en cualquier operación (un bind, una
+comparación o una escritura además de una búsqueda), vuelva o no el manejador. Antes de la
+v0.12.0 un manejador que ignoraba su contexto dejaba al cliente esperando para siempre, y
+solo una búsqueda traducía un plazo al código 3, mientras un bind, una comparación o una
+escritura respondían `other`. La goroutine de un manejador que no vuelve no se puede matar:
+sigue contando contra `MaxPending` y `MaxPendingAuth` hasta que vuelve, su resultado tardío
+se descarta y su identificador de mensaje se rechaza entretanto (`protocolError`), de modo
+que las goroutines perdidas están acotadas por conexión, y una conexión cuyas operaciones
+vencen todas así alcanza el límite de pendientes y se cierra. **Un manejador debe respetar
+su contexto para liberar lo que retiene.** El `timeLimit` de búsqueda del cliente se aplica
+ahora también al contexto del manejador. Un error de manejador que envuelve
+`context.DeadlineExceeded` se traduce al código 3 solo cuando el contexto propio de la
+operación ha vencido; si no, sigue siendo `other`. No cambió ninguna interfaz de manejador.
+
+El coste, en asignaciones por operación (`BenchmarkRun`, exacto): 3 antes y ahora sin
+`Timeout`; con un `Timeout`, 10 antes y 16 ahora, por el vigilante del plazo. Los tiempos no
+son publicables: la carga era de 65 (454 ns y 444 ns sin `Timeout`, 981 ns y 1455 ns con
+uno, solo indicativo). La cobertura es del 99,9 %, con un mínimo del 99,7 %, y no se tocó
+ningún analizador ni decodificador.
 
 El anidamiento de los filtros también está acotado: un desbordamiento de pila en Go
 mata el proceso. Nada registra el *valor* de una aserción —un filtro lleva lo que

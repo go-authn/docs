@@ -11,8 +11,21 @@ Speicher, einer SQL-Datenbank, einem LDAP-Server oder `user`- und `group`-Blöck
 Konfigurationsdatei – und worauf es ankommt, ist die zweite Hälfte der Frage.
 
 ```sh
-go get github.com/go-authn/directory@v0.16.0
+go get github.com/go-authn/directory@v0.17.0
 ```
+
+Neu in v0.17.0: [`ErrUnavailable`](#unavailable), ein Ausfall, der von einem falschen
+Passwort unterschieden wird, und ein Member-DN, der einer Person mit einem einzigen
+Nachschlagen statt eines Durchlaufs zugeordnet wird (gleiche Ergebnisse). Bei 10.000
+Personen und 2.000 Gruppen mit je 50 DNs, über `Frozen` gegen `ldaptest` gelesen (ein
+Server im selben Prozess), allozierte `ReadGroups` von `ldapdir` 50,6 MB in 2,20 Mio.
+Objekten und alloziert 13,1 MB in 0,38 Mio. (pprof, Rate 4096); die gesamte
+Aktualisierung, die auch die Bibliothek `go-ldap/ber` auf beiden Seiten der Verbindung
+mitzählt, ging von 9,72 Mio. Allokationen und 537 MB auf 7,17 Mio. und 481 MB zurück.
+Ein DN-Nachschlagen alloziert nichts (0 Allokationen, 0 B; es war ein linearer Durchlauf
+der Personen), und die `sqldir`-Aktualisierung ging von 1,138 Mio. Allokationen und
+45,3 MB auf 1,114 Mio. und 42,2 MB zurück. Die Allokationszahlen sind exakt; Zeiten
+wurden nicht gemessen, die Last lag bei 65 bis 105.
 
 ## Was jemanden beweist, ist nicht eine einzige Sache {#what-proves-somebody-is-not-one-thing}
 
@@ -363,6 +376,38 @@ gibt jeder Person eine `objectClass` (`Person.ObjectClasses`, standardmäßig
 `top`, `account`, `posixAccount`) und hat `groupOfNames`-Gruppen
 (`GroupsOfNames`), sodass ein Test der Filter eines Clients fehlschlagen kann.
 
+## Ein Ausfall ist kein falsches Passwort {#unavailable}
+
+Ab v0.17.0 sagt `directory.ErrUnavailable`, dass eine Quelle nicht *gefragt* werden
+konnte, im Gegensatz zu einer Antwort „nein“. `ldapdir` gibt ihn zurück, die Ursache
+umhüllend und die Meldung unverändert lassend, wenn der LDAP-Server busy (51),
+unavailable (52), other (80) oder timeLimitExceeded (3) antwortet, wenn die Verbindung
+abbricht oder abgelehnt wird und wenn der Verbindungsaufbau oder der TLS-Handshake
+scheitert, bei `Verify` und bei jedem Lesen (`ldapdir.New`, `Identities`, `Members`,
+`ReadGroups`, `GroupNames`, `GroupAttributes`, `GroupObjectClasses`). LDAP-Ergebnis 49
+bleibt `ErrWrongPassword`, und **die beiden sind nie zugleich wahr**.
+`AsUnavailable(err)` markiert einen Fehler auf dieselbe Weise, und
+`TransportFailure(err)` sagt, ob ein Fehler das Netz oder die Verbindung ist, die
+versagt, statt dass eine Quelle antwortet. `ldaptest.Server.FailBindsWith(code)` lässt
+einen Testserver jeden Bind mit einem Ergebniscode beantworten, um einen Aufrufer
+dagegen zu testen.
+
+Ein Server vor der Quelle entscheidet zwischen drei Fällen:
+
+```go
+switch {
+case errors.Is(err, directory.ErrWrongPassword):
+	// the credentials are wrong: count a failed guess, answer 49
+case errors.Is(err, directory.ErrUnavailable):
+	// the directory could not be asked: answer unavailable (52), count nothing
+default:
+	// anything else
+}
+```
+
+So beantwortet authnd v0.15.0 einen Bind, wie
+[die Betriebsseite]({{< relref "/authnd/operations.md#limits" >}}) sagt.
+
 ## Was es ablehnt und warum {#what-it-refuses-and-why}
 
 - **Eine Gruppe, in der niemand ist**, und **eine Gruppe, die keine Quelle
@@ -388,7 +433,9 @@ gibt jeder Person eine `objectClass` (`Person.ObjectClasses`, standardmäßig
   `ldapdir: the directory did not answer the bind: …` zurückgegeben, das den LDAP-Fehler umhüllt.
   Das Passwort wird in jedem Fall abgelehnt; was sich ändert, ist, dass das Log eines Servers
   nicht mehr *falsches Passwort* zu jemandem sagt, der es richtig eingegeben hat. Vor v0.11.2
-  war jeder fehlgeschlagene Bind `ErrWrongPassword`.
+  war jeder fehlgeschlagene Bind `ErrWrongPassword`. Ab v0.17.0 ist ein solcher Fehler
+  auch [`ErrUnavailable`](#unavailable), damit ein Server *später erneut versuchen*
+  antworten kann statt *ungültige Zugangsdaten*.
 - **Anmeldedaten in einer LDAP-URL** – eine URL wird ausgegeben; `BindDN` und
   `BindPassword` sind Felder.
 - **Ein NT-Hash, der nicht 16 Bytes lang ist** (`ParseNTHash`), statt ihn zu einem Hash
@@ -433,4 +480,4 @@ Builds mit `nosql` und `noldap` werden in der CI geprüft.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.14.0](https://pkg.go.dev/github.com/go-authn/directory@v0.14.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)

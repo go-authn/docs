@@ -12,8 +12,13 @@ tags: [库, kerberos]
 签名、验证、加密和解密消息。
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.1
+go get github.com/go-authn/krb5@v0.3.3
 ```
+
+v0.3.3 不改变 API，也不改变代码：它把间接依赖 golang.org/x/net 提升到 v0.62.0，golang.org/x/crypto 提升到 v0.58.0，
+github.com/hashicorp/go-uuid 提升到 v1.0.4。`govulncheck` 过去在它所需要但不调用的模块中列出 46 项发现，现在列出 1 项，
+GO-2026-5932（`golang.org/x/crypto/openpgp`），它没有修复版本，且 go-authn 中没有任何东西导入它。从代码可达的发现，
+之前是 0，之后也是 0。
 
 它从不与 KDC 通信，也从不签发票据，因此接受谁的票据是
 别人的决定。签发的一半是
@@ -135,4 +140,4 @@ macOS、Windows 和跨架构通道没有域，在那里
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.1](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.1)
+[pkg.go.dev/github.com/go-authn/krb5@v0.3.3](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3)

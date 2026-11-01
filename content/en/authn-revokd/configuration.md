@@ -87,6 +87,43 @@ Each list is first merged alone. One that cannot be merged fails closed **for
 its own CA only**; the merged file expires with the first of its current
 inputs, so a reader that checks expiry sees authn-revokd stop.
 
+## What one sync does {#sync}
+
+Since v0.6.7, in the order a sync meets them:
+
+- **Sources are fetched together**, at most 16 at once, each within two minutes
+  (a fetch makes up to four requests). One upstream that never answers no longer
+  delays every other source, and the outputs with them.
+- **Each output file is compared with the disk at every sync** and written
+  again if it differs, with `on_change` run: a file deleted, truncated or
+  replaced behind the agent's back used to stay that way until the list next
+  changed, and sshd refuses every login when its `RevokedKeys` is unreadable.
+- **`on_change` is killed after one minute**, with the children that hold its
+  output, and run again at the next sync like any other failure. It no longer
+  runs with the agent's lock held, so `/healthz` and the next sync do not hang
+  with it.
+- **A list that lapses is refused when it lapses**, not at the next refresh: the
+  agent wakes at the first expiry (or `max_age`) of a current list and fails
+  closed then. With `refresh = "1h"` the last KRL used to stay on disk, current
+  as far as sshd could tell, for up to an hour after the issuer stopped.
+- **A `file://` source must be a regular file.** One naming a FIFO blocked the
+  agent for ever in `open(2)`.
+- **A URL in an error is shown without its password, query and fragment**, so
+  that a token in a query does not reach the logs, nor the unauthenticated
+  `/healthz` of a mirror.
+- **A CRL number outside `0..2^159` is refused**: RFC 5280 5.2.3 defines
+  `CRLNumber ::= INTEGER (0..MAX)` of at most 20 octets. The number `-1` was
+  accepted until a fuzzer found it.
+- **Temporary files** of a write killed between creating and renaming them are
+  removed at start.
+
+Bytes identical to the list already held are not verified and parsed again
+(currency is still judged), which is what makes a source that sends no `ETag`
+cheap to poll: a 100,000-entry CRL (2.1 MB) cost 300,138 allocations and
+96,956,946 bytes per poll in v0.6.6 and costs 37 allocations and 4,776,864
+bytes in v0.6.7 (`BenchmarkFetchUnchangedCRL`, allocations exact). Times were
+not measured: the machine's load was 53 to 65.
+
 ## The mirror
 
 With `listen`, authn-revokd serves what it holds, from memory, never from the
@@ -115,7 +152,10 @@ $ curl -s -o /dev/null -w "%{http_code}\n" -H 'If-Match: "stale"' http://127.0.0
 
 A CRL source has no `.sig` (`404`). Mirrors chain: a mirror's source can be
 another mirror, since every list verifies by itself. A slow upstream never
-blocks the mirror's answers.
+blocks the mirror's answers. From v0.6.7 the mirror's own connections have
+deadlines: 10 s to read the request headers, 30 s the whole request, 2 minutes
+to write the answer and 1 minute idle. A client that asked for a list and never
+read it held its connection for good before.
 
 ## What is refused at start
 

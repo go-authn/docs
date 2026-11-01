@@ -33,11 +33,11 @@ tags: [authn-revokd, 설치, systemd]
 릴리스에는 amd64와 arm64의 Linux, macOS, Windows용 `authn-revokd-<os>-<arch>`가
 `SHA256SUMS`와 빌드 출처 증명과 함께 들어 있습니다
 ([다운로드 검증하기]({{< relref "/security/verifying-releases.md" >}})). 또는
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6`.
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.7`.
 
 계정과 유닛은 바이너리와 같은 버전인 릴리스 태그의 `packaging/` 디렉터리에서
-가져옵니다. 태그의 체크아웃에서, 또는 v0.6.6의 경우
-<https://github.com/go-authn/revocation/tree/v0.6.6/packaging>에서 그 디렉터리를
+가져옵니다. 태그의 체크아웃에서, 또는 v0.6.7의 경우
+<https://github.com/go-authn/revocation/tree/v0.6.7/packaging>에서 그 디렉터리를
 바이너리 옆에 복사하십시오.
 
 ```sh

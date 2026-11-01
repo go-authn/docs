@@ -12,8 +12,15 @@ cliente, responde con el AP-REP que prueba que el servicio es auténtico, y desp
 firma, verifica, sella y abre mensajes con la clave que estableció ese intercambio.
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.1
+go get github.com/go-authn/krb5@v0.3.3
 ```
+
+La v0.3.3 no cambia ni la API ni el código: sube las dependencias indirectas
+golang.org/x/net a v0.62.0, golang.org/x/crypto a v0.58.0 y
+github.com/hashicorp/go-uuid a v1.0.4. `govulncheck` listaba 46 hallazgos en módulos que
+requiere y no llama; ahora lista 1, GO-2026-5932 (`golang.org/x/crypto/openpgp`), que no
+tiene versión corregida y que nada en go-authn importa. Los hallazgos alcanzables desde el
+código eran 0 antes y son 0 después.
 
 Nunca habla con un KDC y nunca emite un ticket, así que de quién acepta tickets es una
 decisión de otro. La mitad emisora es [kdc]({{< relref "/libraries/kdc.md" >}}), y
@@ -139,4 +146,4 @@ se omite. El mínimo de la línea de cobertura es el 90%.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.1](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.1)
+[pkg.go.dev/github.com/go-authn/krb5@v0.3.3](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3)

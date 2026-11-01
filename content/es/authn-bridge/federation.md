@@ -85,15 +85,33 @@ openssl x509 -in /etc/authn-bridge/metadata-signature-2026.pem -noout -fingerpri
 
 ## Su actualización {#refreshing-it}
 
-Los metadatos se descargan antes de que el proveedor escuche, y de nuevo a los
-tres cuartos del `cacheDuration` del documento, nunca antes de cinco minutos ni
-después de doce horas, y siempre que lo pida `RefreshMetadata` de la API de
-administración. Una actualización que falla conserva la última copia buena,
-**pero solo hasta su propio `validUntil`**. A partir de ahí no se avala nada,
+Los metadatos se descargan antes de que el proveedor escuche, y de nuevo según el
+calendario de `Federation.Run` de go-authn/saml (desde la v0.23.6): nunca programado
+más allá de la mitad de lo que queda del `validUntil` del documento, y entre cinco
+minutos y doce horas (si no, tres cuartos de su `cacheDuration`), y siempre que lo
+pida `RefreshMetadata` de la API de administración. Cuando no queda ningún metadato
+válido, la descarga se reintenta al cabo de un minuto, y luego al doble de intervalo
+hasta una hora. Hasta la v0.23.5 el bucle seguía esperando tres cuartos del
+`cacheDuration` (doce horas sin uno) fuera cual fuese lo que quedaba de la vigencia:
+una actualización fallida cerca del final podía dejar al proveedor sin IdP hasta doce
+horas después de que el servidor de la federación volviera.
+Una actualización que falla conserva la última copia buena,
+**pero solo hasta su propio `validUntil`**: hasta entonces los inicios de sesión
+continúan con ella, tanto si el servidor de la federación está lento, caído o sirve un
+documento que no se verifica. A partir de ahí no se avala nada,
 todos los IdP desaparecen, y `/readyz` indica que el proveedor no está listo. Un
 servidor de la federación inalcanzable durante poco tiempo no cierra la sesión de
 nadie; uno inalcanzable durante días no deja al proveedor confiando en claves
 obsoletas.
+
+El reloj del puente puede diferir del de un IdP en tres minutos en cualquier sentido: una
+aserción cuyas horas caen dentro de ese margen se acepta, y una desfasada una hora se
+rechaza con una página 400. La clave bajo la que se recuerda una aserción, para que no se
+acepte dos veces, se guarda como su SHA-256 (desde la v0.23.6): un `entityID` de IdP o un
+identificador de aserción largos superaban la columna `VARCHAR(128)` de la base de datos
+de estado, que PostgreSQL y MySQL en modo estricto rechazan, de modo que la escritura
+quedaba pendiente y el proveedor seguía sin estar listo. SQLite no se veía afectado.
+Ninguna configuración cambia.
 
 Dentro del documento, un IdP solo se conserva si habla SAML 2.0 y publica un
 `SingleSignOnService` HTTP-Redirect. Una entidad descrita dos veces se descarta
@@ -237,3 +255,20 @@ que los enumera todos y no se puede restringir:
 ```
 authn-bridge: saml: an external discovery service lists every IdP; with `idps` restricted, leave `discovery` out and this provider lists them itself
 ```
+
+### Lo que se prueba {#tested}
+
+Desde la v0.23.6 la sección «What it refuses» del README enumera lo que se prueba, de
+extremo a extremo a través del ACS: el envoltorio de firma XML (XSW1 a XSW8 y sus
+variantes con el mismo ID), el truncamiento por comentario (CVE-2017-11427), DOCTYPE y la
+expansión de entidades, aserciones para otra audiencia, otro destinatario, otra petición
+u otro destino, y la repetición. Hay fuzzers para el ACS (`FuzzACSAccept`), los metadatos
+de la federación, la verificación de tokens de acceso (con semillas de confusión de
+`alg`), la cookie de inicio de sesión y la coincidencia de URI de redirección:
+`FuzzACSAccept` hizo 992 517 ejecuciones en tres minutos con 595 entradas de corpus y
+ningún fallo, y los otros cuatro unos 90 segundos cada uno, sin fallos. Las pruebas de
+caos desplazan el reloj del puente dos minutos (aceptado) y una hora (rechazado), y hacen
+que el servidor de metadatos sea lento, esté caído, responda 500, basura, HTML, un
+documento truncado o manipulado, o nada. El limitador de tasa ya no trata un reloj que
+retrocede como tiempo negativo (vaciaba cada cubo en el tamaño del salto; los relojes de
+producción no retroceden, así que es defensa en profundidad).

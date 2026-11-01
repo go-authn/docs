@@ -10,14 +10,29 @@ tags: [authnd, ldap]
 その人々を認証したいものは LDAP を話します。** authnd はその窓口です。
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) のソースに対してバインドと検索を行うので、
 データベースが保持しているものを、ディレクトリに問い合わせる方法を知っているものなら何でも読めます。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.13.0 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.15.0 を説明しています。
 そのエントリは標準スキーマに従い、`cn=Subschema` で公開するスキーマに適合します。
 サイトはこのスキーマを自前のもの
 ([SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})) で拡張でき、
 [DIT コンテンツルール、ネームフォーム、DIT 構造ルール]({{< relref "/authnd/schemas.md#rules" >}})で
 形も定められます。
-その下には go-authn/ldap v0.11.0 と go-authn/directory v0.16.0 があります。
+その下には go-authn/ldap v0.12.0 と go-authn/directory v0.17.0 があります。
 何が検証済みで何が未検証かは、[ステータス]({{< relref "/status.md" >}})のページにあります。
+
+{{< callout type="warning" >}}
+**v0.14.x からのアップグレード**
+
+- ⛔ **既定値が二つ変わります。** `max_connections` は `4096` (以前は無制限)、`operation_timeout` は
+  `30s` (以前はなし) です。より多くの接続を開いたままにするサイトや、30 秒を超える操作を実行するサイトは
+  キーを設定してください。`0` (期間では `"0"`) が以前の動作です。[制限]({{< relref "/authnd/operations.md#limits" >}})を参照してください。
+- 新規 (すべて省略可能): `max_connections_per_ip` と `startup_timeout` (`60s`)。
+- 上流のディレクトリが落ちているときは `unavailable` (52) が返り、`invalidCredentials` (49) ではなくなります。
+  49 を「パスワードが違う」、52 を「あとでやり直す」と読むクライアントは、両者を区別できるようになります。
+- 更新された TLS 証明書は再起動なしで提供されます。
+  [証明書の更新]({{< relref "/authnd/tls.md#renewal" >}})を参照してください。
+
+`authnd check` は、これから使う制限を表示します。
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **v0.11.x からのアップグレード**
@@ -166,10 +181,12 @@ vendorVersion: v0.13.0
 | [Kerberos レルム]({{< relref "/authnd/kerberos.md" >}}) | キータブ、そしてチケットを発行できる人 |
 | [第二要素]({{< relref "/authnd/mfa.md" >}}) | パスワードの末尾に付けるワンタイムコード |
 | [バインド時のトークン]({{< relref "/authnd/tokens.md" >}}) | SASL `OAUTHBEARER` 上の OIDC |
-| [運用]({{< relref "/authnd/operations.md" >}}) | シグナル、再起動、ログの内容、稼働しているかの確認方法 |
+| [運用]({{< relref "/authnd/operations.md" >}}) | シグナル、再起動、接続の制限と期限、ログの内容、稼働しているかの確認方法 |
 
 {{< callout type="info" >}}
 **トランスクリプトについて**
 
 これらのページに示したコマンドはすべて、2026-10-26 に公開済みのリリースバイナリで再実行したもので、手で書き直したものではありません。`authnd` v0.12.3 (`authnd-darwin-arm64`、`relverify` で `SHA256SUMS` とその証明 (attestation) を照合済み、`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.12.3`、`vcs.modified=false`)、`authn-bridge` v0.23.4、`authn-revokd` v0.6.6、`sshcert-authorize` v0.1.9、`ldapschema` v0.10.1 です。コマンドが出力したものが、そのままここに載っています。例外は 2 つのトランスクリプトで、それぞれ載っている場所にその旨を書いてあります。[トークンのページ]({{< relref "/authnd/tokens.md" >}})の `oidctool` クライアントは、これらのページのために書いたテスト用クライアントでどのリリースにも含まれず、そのトランスクリプトと添えたサーバー側の行は v0.10.0 のリリースバイナリが出力したものです。もう 1 つは[フェデレーションのページ]({{< relref "/authn-bridge/federation.md" >}})にある RENATER の期限切れメタデータで、このファイルはもう公開されていません。すべて macOS に付属する OpenLDAP と Heimdal のクライアントで、127.0.0.1 の特権のないポートを使い、作業用ディレクトリで実行しました。そのため、これらの背後にある設定は `etc/authnd/passwords/alice.pw` のような相対パスでファイルを指定し、パスワードファイルには `alice.pwin` のような名前が付いています。例にある `/etc/authnd` のパスは、インストール済みのサーバーが使うものです。`authnd` のバージョンを出力するトランスクリプトは、v0.13.0 (`authnd-darwin-arm64`、`relverify` で `SHA256SUMS` とアテステーションに照らして確認、`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.13.0`)で再実行しました。ここと運用のページの root DSE、そして `authnd --version` です。エントリのページのスキーマは v0.12.4 (`mod github.com/go-authn/authnd v0.12.4`、`vcs.modified=false`) が出力したものです。v0.13.0 は、ルールのないスキーマに対して `dITContentRules`、`nameForms`、`dITStructureRules` の値を出力しないことを確認しました。何で実行したかは、[サイトスキーマのページのルールの節]({{< relref "/authnd/schemas.md#rules" >}})に書いてあります。
+
+ドキュメントバージョン 0.7 で新しいトランスクリプト (`check` の `limits:` 行と、運用のページのシグナルを送った実行) は、2026-11-01 に `authnd` v0.15.0 (タグから `go install` でビルド。`go version -m`: `go1.27.3`、`mod github.com/go-authn/authnd v0.15.0`。`authnd --version`: `authnd version v0.15.0`) と OpenLDAP の `ldappasswd` が、127.0.0.1 上の作業ディレクトリで出力したものです。`authn-bridge --version` は `authn-bridge version v0.23.6`、`authn-revokd -version` は `authn-revokd v0.6.7` を出力しました (同じ方法でビルド)。そのほかのトランスクリプトはこのバージョンのために再実行していません。それぞれ、本文が名指しするリリースが出力したものであり、authn-bridge と authn-revokd のページが説明する動作は、v0.23.6 と v0.6.7 でもトランスクリプトに見える範囲では変わりません。
 {{< /callout >}}

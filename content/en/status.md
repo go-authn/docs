@@ -5,25 +5,35 @@ description: "Which releases these pages describe, what each release added, and 
 tags: [status, releases]
 ---
 
-These pages are documentation version **0.6**, and describe:
+These pages are documentation version **0.7**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.14.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
+| authnd | **v0.15.0** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.23.6** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
-ldap is **v0.11.3**, with DIT content rules, name forms and DIT structure
+ldap is **v0.12.0**, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed `BuildError` for a schema that does
 not build, schemas in HCL2 and the `ldapschema` converter, and
-directory **v0.16.0**, with declared object classes. authnd
-v0.14.1 embeds ldap v0.11.3 and directory v0.16.0.
+directory **v0.17.0**, with declared object classes. authnd
+v0.15.0 embeds ldap v0.12.0 and directory v0.17.0.
 A new minor version of any program above is a new documentation version, so
-the pages a reader finds under `/docs/0.6/` keep describing what they
+the pages a reader finds under `/docs/0.7/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
-`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/` and `/docs/0.5/`.
+`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/` and `/docs/0.6/`.
+
+{{< callout type="warning" >}}
+**Upgrading authnd from v0.14.x: two defaults change**
+
+`max_connections` is `4096` (it was unlimited) and `operation_timeout` is `30s`
+(it was none); an upstream directory that is down is answered `unavailable` (52)
+and no longer `invalidCredentials` (49). `max_connections = 0` and
+`operation_timeout = "0"` give the old behaviour. See
+[limits and deadlines]({{< relref "/authnd/operations.md#limits" >}}).
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Security: use authnd v0.12.0, not v0.11.1**
@@ -82,6 +92,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.13.4 | A chaos pass. Groups are read once, at start, like the people: a search over 500 people and 200 groups of 50 on SQLite took 4.13 s (every search queried the groups again) and takes 1.2 ms, and a groups query that failed during a search no longer drops the group from an answer that says Success. A source that cannot be read at start (a groups query that does not run, one of several databases down) refuses the start and `check`. An entry over about 3 MiB (one 10 MB attribute value) is not published. The publication is built once per set of people. Held, with tests: schema files cut at every byte offset, a removed or corrupt database, hostile rows, idle connections, oversized BER lengths, filters 20,000 deep |
 | v0.14.0 | Changed: v0.13.4 required a restart for a change to a group, so a member removed from a database kept the access until somebody restarted authnd. v0.14.0 restores timely revocation. `refresh` (60 s by default, `0` turns it off) re-reads every source, people and groups, into a new snapshot built off the serving path and swapped in whole; a failed refresh keeps the last good snapshot and is logged once per failure streak, naming the source. `max_age` (unset by default) makes searches, people's binds and password changes answer `unavailable` once the served data is older. A password written through authnd goes through the same swap. Measured: a refresh of 500 people and 200 groups of 50 on SQLite costs about 2 s of one core, and a search 0.5 ms (the refresh cost is fixed in v0.14.1) |
 | v0.14.1 | Performance only. A refresh no longer grows with groups times membership rows: directory v0.16.0 reads each source once, in bulk. A refresh of 500 people and 200 groups of 50 on SQLite goes from 1.87 s to 0.155 s, and one of 10,000 people and 2,000 groups from 391 s (six and a half refresh periods) to 1.6 s (2.7 % of the 60 s period). Allocations fall from 39,959,235 to 3,095,482 and from 6,373,736,235 to 31,198,460. Times were measured at a load of 17 to 67 and are indicative; the allocation counts are exact |
+| v0.15.0 | Availability and security, with go-authn/ldap v0.12.0 and go-authn/directory v0.17.0. ⛔ **Two defaults change**: `max_connections` is `4096` (it was unlimited) and `operation_timeout` is `30s` (it was none). New, optional: `max_connections_per_ip` and `startup_timeout` (`60s`); [`check` prints the limits]({{< relref "/authnd/operations.md#limits" >}}). A connection over the cap is sent `busy` and closed; an operation past the deadline is answered `timeLimitExceeded`, even when its handler is blocked. An upstream outage during a bind (simple bind, password change, the password factor of `mfa`) is `unavailable` (52), never `invalidCredentials` (49); a wrong password is still 49. Startup against a slow source fails after `startup_timeout`, naming the stage and the source. [The TLS certificate is read again]({{< relref "/authnd/tls.md#renewal" >}}) when `cert_file` or `key_file` change (first handshake after 5 s, and on `SIGHUP`); a pair that does not load keeps the served certificate and is logged once. Allocation counts are in the libraries below; wall-clock was not measured (load 21 at the start) |
 
 ### authn-bridge
 
@@ -118,6 +129,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.23.2 | security: go-authn/oidc v0.4.2, which refuses an `nbf` outside the int64 range (a token that was not yet valid was accepted) and an RSA key with `e = 0` (it was parsed); go-authn/wireguard v0.1.2 |
 | v0.23.3 | built with Go 1.27.3, for GO-2026-6809 (`crypto/x509`: `Certificate.Verify` did not reject known compromised intermediate certificates); the `go` directive is 1.27.3; no change in behaviour |
 | v0.23.4 | release binaries are linked with `-w` instead of `-s -w`, so the symbol table is kept for a precise `govulncheck -mode binary`; no change in behaviour |
+| v0.23.6 | an audit, fuzzing and chaos pass, with go-authn/saml v0.5.1; no configuration key added or changed. [Metadata is refreshed in time]({{< relref "/authn-bridge/federation.md#refreshing-it" >}}): never scheduled past half of the remaining `validUntil`, and with no valid metadata left retried after a minute, doubling to an hour, so one failed refresh near expiry no longer leaves the provider without an IdP for up to twelve hours. The assertion replay key is stored as its SHA-256: a long IdP `entityID` made PostgreSQL and MySQL refuse the write and wedged the state database. The clock may differ from an IdP's by three minutes; an hour is refused with a 400 page. [What is tested]({{< relref "/authn-bridge/federation.md#tested" >}}): XML signature wrapping XSW1 to XSW8, CVE-2017-11427, DOCTYPE, foreign audience, recipient, request and destination, five fuzzers. One SHA-256 per login costs 0 to 2 allocations more (`BenchmarkReplayUse`: 0 allocations and 183 B, now 2 and 326 B); wall-clock not measured, load 53 to 75 |
 
 ### authn-revokd
 
@@ -135,6 +147,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.6.4 | dependencies only: golang.org/x/crypto v0.58.0 |
 | v0.6.5 | built with Go 1.27.3, for GO-2026-6809 (`crypto/x509`: `Certificate.Verify` did not reject known compromised intermediate certificates); the `go` directive is 1.27.3; no change in behaviour |
 | v0.6.6 | release binaries are linked with `-w` instead of `-s -w`, so the symbol table is kept for a precise `govulncheck -mode binary`; no change in behaviour |
+| v0.6.7 | an audit, fuzzing, chaos and performance pass ([what one sync does]({{< relref "/authn-revokd/configuration.md#sync" >}})). A list that lapses is refused when it lapses, not at the next refresh; sources are fetched in parallel (16 at most, two minutes each); `on_change` is killed after a minute and retried; an output file changed behind the agent's back is rewritten at the next sync; a `file://` source must be a regular file; an error shows a URL without its password, query and fragment; a CRL number outside `0..2^159` is refused; the mirror has read, write and idle timeouts; stale temporary files are removed at start. A 100,000-entry CRL polled again: 300,138 allocations and 96,956,946 B per poll, now 37 and 4,776,864 B (exact; times not measured, load 53 to 65). govulncheck still lists GO-2026-5932 (`golang.org/x/crypto/openpgp`), which has no fixed version and is not called |
 
 ### sshcert
 
@@ -159,9 +172,13 @@ library's page says what earlier ones changed.
 | directory v0.13.0 | [attributes]({{< relref "/libraries/directory.md#attributes" >}}): what describes somebody and proves nothing, apart from credentials, with the names that can never be one; `attributes` in `user` and `group` blocks, `users_attributes` and `groups_attributes` queries, ldapdir's `attributes` and `group_attributes` |
 | directory v0.14.0 | ⛔ ldapdir's [defaults]({{< relref "/libraries/directory.md#ldapdir-defaults" >}}) read `account` and `uidObject` people and `groupOfNames` groups, which widens what an institution's directory gives; a `member` DN maps only to a person the source imported |
 | directory v0.15.0 | [object classes]({{< relref "/libraries/directory.md#object-classes" >}}), declared and never inferred: `object_classes` and `group_object_classes` in `users` blocks, `object_classes` in `user` and `group` blocks, `WithObjectClasses` for sqldir and `Config.ObjectClasses` for ldapdir; the first source that declares a group's classes decides; `sqldir.ClosesDB` |
+| directory v0.16.0 | [every group read once]({{< relref "/libraries/directory.md" >}}): `GroupReader` and `Set.Frozen`, so a refresh no longer grows with groups times membership rows |
+| directory v0.17.0 | [`ErrUnavailable`]({{< relref "/libraries/directory.md#unavailable" >}}), with `AsUnavailable` and `TransportFailure`: ldapdir returns it for busy (51), unavailable (52), other (80), timeLimitExceeded (3), dropped or refused connections and TLS or dial failures, on `Verify` and every read; it is never also `ErrWrongPassword`, and `invalidCredentials` (49) stays that. `ldaptest.Server.FailBindsWith(code)`. A member DN maps to a person by one lookup instead of a scan, with the same results: `ReadGroups` on 10,000 people and 2,000 groups of 50 DNs allocates 13.1 MB in 0.38 M objects instead of 50.6 MB in 2.20 M, a DN lookup 0 allocations; the whole refresh 7.17 M allocations instead of 9.72 M (exact; times not measured, load 65 to 105) |
 | kdc v0.4.3 | dependencies only: go-authn/directory v0.12.0 as its minimum |
+| kdc v0.4.5 | a security audit, fuzzing and chaos pass ([what it refuses]({{< relref "/libraries/kdc.md" >}})): a request for another realm is answered `KDC_ERR_WRONG_REALM`, an unreadable directory `KDC_ERR_SVC_UNAVAILABLE` (it was `KDC_ERR_C_PRINCIPAL_UNKNOWN`), a TGT whose start is within `MaxSkew` in the future is accepted, and a decoder panic drops one request instead of crashing the process (a single malformed AS-REQ or TGS-REQ could crash it); principal names are quoted in the log. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | keyfactor v0.4.2 | dependencies only: go-authn/fido v0.6.2 and golang.org/x/crypto v0.58.0 as its minimums |
 | krb5 v0.3.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
+| krb5 v0.3.3 | dependencies only: golang.org/x/net v0.62.0, golang.org/x/crypto v0.58.0 and go-uuid v1.0.4 clear 45 of 46 `govulncheck` findings in modules that are required and not called; GO-2026-5932 (`x/crypto/openpgp`) has no fix and is not imported by any go-authn module; no API change |
 | krl v0.6.1 | dependencies only: golang.org/x/crypto v0.58.0; tested with Go 1.27.2 |
 | ldap v0.8.0 | [package `schema`]({{< relref "/libraries/ldap.md#the-schema" >}}) and `Server.Schema`: `cn=Subschema` (RFC 4512 §4.2), `Validate`, RFC 4517 matching rules; `uidNumber` and `gidNumber` order as integers; a paged search keeps to the requested attributes |
 | ldap v0.9.0 | [schemas in HCL2]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): package `schema/hclschema` and the `ldapschema` command (`to-hcl`, `to-schema`, `check`) between OpenLDAP `.schema`, cn=config LDIF and HCL2; the readers read files as slapd does; DIT content and structure rules, name forms, `include` and `X-SUBST` are not supported (v0.11.0 supports the rules) |
@@ -172,7 +189,9 @@ library's page says what earlier ones changed.
 | ldap v0.11.1 | Performance only, no change of result: a string of printable ASCII is prepared for the string matching rules (RFC 4518) with at most one allocation, none when nothing changes, and the DN parser makes 6 allocations instead of 11 for a four-RDN DN. The results are those of v0.11.0, checked against its code on every string of one or two bytes below 0x80 and by a differential fuzzer |
 | ldap v0.11.2 | Performance only, no change of result: `Validate` allocates 12 times for a ten attribute entry instead of 76 (lookups without a lower-case copy, descriptions not split and re-joined, in-place sets instead of maps). The results are those of v0.11.1, checked against a copy of its `Validate` on random entries under the standard schema and a rules schema, and by a differential fuzzer |
 | ldap v0.11.3 | Performance only, no change of result: `GoverningStructureRule` allocates 5 times instead of 12 for an account (it reads only the RDN's types), and the DN parser 3 times instead of 6 for a four-RDN DN. The results are those of v0.11.2, checked against a copy of its `GoverningStructureRule` on random entries and every superior rule, and by a differential fuzzer |
+| ldap v0.12.0 | [resource bounds for the server]({{< relref "/libraries/ldap.md" >}}): `Server.MaxConnections` and `Server.MaxConnectionsPerIP` (default 0, no limit; a connection over a cap gets a `busy` (51) notice of disconnection, RFC 4511 4.4.1, and is closed); `Server.Timeout` is enforced by the server, which answers `timeLimitExceeded` (3) for any operation at the deadline even when the handler is blocked and ignores its context (the late result is dropped, and the goroutine counts against `MaxPending` and `MaxPendingAuth` until it returns); the client's search `timeLimit` applies to the handler's context; a handler's `DeadlineExceeded` maps to code 3 only when the operation's own context has expired. Allocations per operation (exact): 3 before and after without a `Timeout`; 10 before and 16 now with one |
 | oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
+| scim v0.2.0 | [an audit, fuzzing, chaos and performance pass]({{< relref "/libraries/scim.md#v020" >}}): `Server.ReadTimeout` (30 s), the optional `ConditionalDeleter`, a PATCH or PUT without `If-Match` redone up to 32 times on a lost race instead of answered 412, removal through a filter that matches nothing succeeds, keys of a PATCH without a path applied in sorted order, `BearerAuth` accepts the scheme in any case, `startIndex` and `count` clamped on every word size. A list request over 10,000 users: a page of 100 from 789,417 to 14,952 allocations, `userName eq` from 797,979 to 90, a full scan from 818,847 to 361,098 (exact; times not measured, load 65) |
 | servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | totp v0.4.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | wireguard v0.1.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |

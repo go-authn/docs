@@ -107,7 +107,7 @@ The rest of the unit is the usual hardening (`ProtectHome`, `PrivateTmp`,
 
 | | |
 |---|---|
-| `ExecReload=` | authnd has no reload. It reads its configuration, certificate and keytab once; see [running it]({{< relref "/authnd/operations.md" >}}) |
+| `ExecReload=` | authnd has no reload. It reads its configuration and keytab once, and its certificate again when the files change (`SIGHUP` asks at once); see [running it]({{< relref "/authnd/operations.md" >}}) |
 | `PrivateUsers=` | inside a user namespace `CAP_NET_BIND_SERVICE` no longer applies to the host's network, and the bind to 389 is refused |
 | `ProcSubset=pid` | it hides `/proc/sys`, where Go reads `net/core/somaxconn`, and every listener's backlog falls to Go's fallback of 128 |
 
@@ -163,6 +163,10 @@ Why that directory and not the file is explained in
 | `reader "<dn>"` | none | a service account that may search; see [who may read]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | how often every source is read again; `0` turns it off; see [running it]({{< relref "/authnd/operations.md" >}}) |
 | `max_age` | unset | refuse stale data (`unavailable`) once the served data is older; see [running it]({{< relref "/authnd/operations.md" >}}) |
+| `max_connections` | `4096` | the most connections open at once, `0` for no limit; over it, a connection is sent `busy` and closed; see [limits]({{< relref "/authnd/operations.md#limits" >}}) |
+| `max_connections_per_ip` | none | the most connections from one address |
+| `operation_timeout` | `30s` | the longest one operation may take, `"0"` for none; past it the client is answered `timeLimitExceeded` |
+| `startup_timeout` | `60s` | the longest opening and first reading of the sources may take, `"0"` for none |
 | `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | off | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [the people]({{< relref "/authnd/people.md" >}}); at least one `user` or `users` block |
 | `kerberos` | none | [a realm]({{< relref "/authnd/kerberos.md" >}}) |

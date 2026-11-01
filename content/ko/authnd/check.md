@@ -135,6 +135,10 @@ engineers names zoe, who has no entry here: the group is published as it stands,
 (낯선 사람을 지정하는 `group` *블록*은 즉시 거부됩니다.
 [사람들]({{< relref "/authnd/people.md#written-in-the-configuration" >}})을 참조하십시오.)
 
+v0.15.0부터 출력의 두 번째 줄은 `limits:`입니다. authnd가 적용할 연결 제한, 작업 기한, 시작 기한이 기본값을 포함해
+출력됩니다. 이 페이지의 트랜스크립트는 이전 릴리스가 출력한 것이어서 이 줄이 보이지 않습니다. 실제 예는
+[제한과 기한]({{< relref "/authnd/operations.md#limits" >}})에 있습니다.
+
 ## 거부하는 것 {#what-it-refuses}
 
 다음은 각각 `check`와 서버를 똑같이 종료 상태 1로 멈추게 합니다. 각각 해당하는

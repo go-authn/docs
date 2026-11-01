@@ -13,8 +13,16 @@ signe, vérifie, scelle et ouvre des messages sous la clé que cet échange
 a établie.
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.1
+go get github.com/go-authn/krb5@v0.3.3
 ```
+
+La v0.3.3 ne change ni l'API ni le code : elle relève les dépendances indirectes
+golang.org/x/net à v0.62.0, golang.org/x/crypto à v0.58.0 et
+github.com/hashicorp/go-uuid à v1.0.4. `govulncheck` listait 46 résultats dans des
+modules requis et non appelés ; il en liste 1 maintenant, GO-2026-5932
+(`golang.org/x/crypto/openpgp`), qui n'a pas de version corrigée et que rien dans
+go-authn n'importe. Les résultats atteignables depuis le code étaient 0 avant et
+sont 0 après.
 
 Il ne parle jamais à un KDC et ne délivre jamais de ticket, donc de qui il accepte les tickets
 est la décision de quelqu'un d'autre. La moitié qui délivre est
@@ -138,4 +146,4 @@ juge est sauté. Le plancher de la voie de couverture est de 90 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.1](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.1)
+[pkg.go.dev/github.com/go-authn/krb5@v0.3.3](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3)

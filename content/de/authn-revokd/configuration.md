@@ -87,6 +87,45 @@ Jede Liste wird zuerst allein zusammengeführt. Eine, die sich nicht zusammenfü
 ihre eigene CA** geschlossen fehl (fail closed); die zusammengeführte Datei läuft mit der ersten ihrer aktuellen
 Eingaben ab, sodass ein Leser, der den Ablauf prüft, sieht, wenn authn-revokd anhält.
 
+## Was ein Sync tut {#sync}
+
+Seit v0.6.7, in der Reihenfolge, in der ein Sync sie antrifft:
+
+- **Quellen werden gemeinsam abgerufen**, höchstens 16 gleichzeitig, jede innerhalb
+  von zwei Minuten (ein Abruf macht bis zu vier Anfragen). Ein Upstream, der nie
+  antwortet, verzögert nicht mehr alle anderen Quellen und mit ihnen die Ausgaben.
+- **Jede Ausgabedatei wird bei jedem Sync mit der Platte verglichen** und neu
+  geschrieben, wenn sie abweicht, wobei `on_change` läuft: Eine Datei, die hinter dem
+  Rücken des Agenten gelöscht, gekürzt oder ersetzt wurde, blieb so, bis sich die Liste
+  das nächste Mal änderte, und sshd lehnt jede Anmeldung ab, wenn sein `RevokedKeys`
+  unlesbar ist.
+- **`on_change` wird nach einer Minute beendet**, samt der Kindprozesse, die seine
+  Ausgabe halten, und beim nächsten Sync wie jeder andere Fehlschlag erneut
+  ausgeführt. Es läuft nicht mehr mit gehaltener Sperre des Agenten, sodass
+  `/healthz` und der nächste Sync nicht mit ihm hängen.
+- **Eine Liste, die abläuft, wird abgelehnt, wenn sie abläuft**, nicht erst bei der
+  nächsten Aktualisierung: Der Agent wacht beim ersten Ablauf (oder `max_age`) einer
+  aktuellen Liste auf und schließt dann fehlersicher. Mit `refresh = "1h"` blieb die
+  letzte KRL bis zu einer Stunde, nachdem der Aussteller aufgehört hatte, auf der
+  Platte, für sshd aktuell.
+- **Eine `file://`-Quelle muss eine reguläre Datei sein.** Eine, die eine FIFO nannte,
+  blockierte den Agenten für immer in `open(2)`.
+- **Eine URL in einem Fehler wird ohne Passwort, Query und Fragment angezeigt**, damit
+  ein Token in der Query weder in die Logs noch in das unauthentifizierte `/healthz`
+  eines Spiegels gelangt.
+- **Eine CRL-Nummer außerhalb von `0..2^159` wird abgelehnt**: RFC 5280 5.2.3
+  definiert `CRLNumber ::= INTEGER (0..MAX)` mit höchstens 20 Oktetten. Die Nummer
+  `-1` wurde akzeptiert, bis ein Fuzzer sie fand.
+- **Temporäre Dateien** eines Schreibvorgangs, der zwischen Anlegen und Umbenennen
+  beendet wurde, werden beim Start entfernt.
+
+Bytes, die der gehaltenen Liste gleichen, werden nicht erneut geprüft und geparst
+(die Gültigkeit wird weiter beurteilt), was das Abfragen einer Quelle ohne `ETag`
+billig macht: Eine CRL mit 100.000 Einträgen (2,1 MB) kostete in v0.6.6 300.138
+Allokationen und 96.956.946 Bytes pro Abfrage und kostet in v0.6.7 37 Allokationen
+und 4.776.864 Bytes (`BenchmarkFetchUnchangedCRL`, Allokationen exakt). Zeiten
+wurden nicht gemessen: Die Last der Maschine lag bei 53 bis 65.
+
 ## Der Spiegel {#the-mirror}
 
 Mit `listen` stellt authn-revokd bereit, was es hält, aus dem Speicher, nie aus den
@@ -116,6 +155,11 @@ $ curl -s -o /dev/null -w "%{http_code}\n" -H 'If-Match: "stale"' http://127.0.0
 Eine CRL-Quelle hat kein `.sig` (`404`). Spiegel lassen sich verketten: Die Quelle eines Spiegels kann
 ein anderer Spiegel sein, da jede Liste sich selbst prüft. Ein langsamer Upstream blockiert
 die Antworten des Spiegels nie.
+
+Ab v0.6.7 haben die Verbindungen des Spiegels eigene Fristen: 10 s zum Lesen der
+Request-Header, 30 s für die ganze Anfrage, 2 Minuten zum Schreiben der Antwort und
+1 Minute im Leerlauf. Ein Client, der eine Liste angefordert hatte und sie nie las,
+hielt seine Verbindung vorher für immer.
 
 ## Was beim Start abgelehnt wird {#what-is-refused-at-start}
 

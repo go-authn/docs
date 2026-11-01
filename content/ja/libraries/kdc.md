@@ -12,12 +12,12 @@ tags: [ライブラリ, kerberos, ディレクトリ]
 [authnd]({{< relref "/authnd/_index.md" >}}) の下で動作します。
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.3
+go get github.com/go-authn/kdc@v0.4.5
 ```
 
-v0.4.3 では、その `go.mod` が少なくとも `go-authn/directory` v0.12.0 と gokrb5 v8.4.4 を要求します。
-これは最小バージョンなので、これらのページが説明するバージョンである directory v0.14.0 を要求する
-プログラムは、authnd v0.13.0 と同様に v0.15.0 でビルドされます。受け入れ側の半分は
+v0.4.5 では、その `go.mod` が少なくとも `go-authn/directory` v0.16.1 と gokrb5 v8.4.4 を要求します。
+これは最小バージョンなので、directory v0.16.1 を要求する
+プログラムは、authnd v0.15.0 と同様に v0.17.0 でビルドされます。受け入れ側の半分は
 [krb5]({{< relref "/libraries/krb5.md" >}}) で、チケットを検証するだけのサービスは、このモジュールを
 まったく必要としません。
 
@@ -179,6 +179,23 @@ Unix エポックを本物の終了時刻と受け取り、`klist` で `>>>Expir
   書いたものだから
 - クライアントがこのレルムのもので、まだディレクトリにいる (`KDC_ERR_C_PRINCIPAL_UNKNOWN`)
 
+**v0.4.5 から**、セキュリティ監査とファジング・カオスの実施を経て:
+
+- 別のレルム向けのリクエストは、AS でも TGS でも、処理されずに `KDC_ERR_WRONG_REALM` で答えられます。
+- 読み取れないディレクトリは `KDC_ERR_SVC_UNAVAILABLE` で答えられ、`KDC_ERR_C_PRINCIPAL_UNKNOWN` ではなくなりました。
+- 開始が `MaxSkew` 以内の未来にある TGT は受け入れられます (時計のステップ)。以前は TGT の開始に許容のずれはありませんでした。
+- **不正な AS-REQ または TGS-REQ 一つでプロセスがクラッシュし得ました**。gokrb5 v8.4.4 の
+  `unmarshalTicketsSequence` が、認証の前にパニックします。デコーダーをパニックさせるリクエストは破棄され、
+  パニックとそのスタックがログに記録されます。
+- ネットワークから来たプリンシパル名は、行を偽造できないようにログで引用符で囲まれます。
+- 依存関係は golang.org/x/net v0.62.0 (GO-2026-6866、GO-2026-6860) と go-authn/directory v0.16.1 です。
+  GO-2026-5932 (`golang.org/x/crypto/openpgp`) は上流に修正がなく、呼び出されていません。
+
+`FuzzHandle` は二回の実行 (90 秒と 150 秒) で約 1,400 万回実行され、パニックが外へ出ることはありませんでした。
+`BenchmarkASNoPreauth`、10,000 人のうち最後の一人を事前認証なしで: 1 リクエストあたり 508 回のアロケーション、
+18,999 バイト、112 µs です。この経路のコードは変わっていないため、以前の数字はありません。時間は目安にすぎません。
+負荷が 65 だったので、MIT の `krb5kdc` との比較は行っていません。
+
 **有効期間。** `Config.Lifetime` がチケットの上限で、ゼロのときは十時間です。それより短いものを
 求めたクライアントはそれを得ます。TGT で得たチケットはその TGT より後に終わらないので、`krbtgt` を
 再度求めても認証情報を延長できません。
@@ -200,4 +217,4 @@ Unix エポックを本物の終了時刻と受け取り、`klist` で `>>>Expir
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.3](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.3)
+[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)

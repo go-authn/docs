@@ -83,14 +83,29 @@ openssl x509 -in /etc/authn-bridge/metadata-signature-2026.pem -noout -fingerpri
 
 ## Le rafraîchir {#refreshing-it}
 
-Les métadonnées sont récupérées avant que le fournisseur n'écoute, puis de nouveau aux trois
-quarts de la `cacheDuration` du document, jamais avant cinq minutes ni
-après douze heures, et chaque fois que le `RefreshMetadata` de l'API d'administration le demande.
+Les métadonnées sont récupérées avant que le fournisseur n'écoute, puis de nouveau selon le
+calendrier de `Federation.Run` de go-authn/saml (depuis la v0.23.6) : jamais programmées
+au-delà de la moitié de ce qui reste du `validUntil` du document, entre cinq minutes et douze
+heures (sinon trois quarts de sa `cacheDuration`), et chaque fois que le `RefreshMetadata` de
+l'API d'administration le demande. Quand il ne reste aucune métadonnée valide, la récupération
+est retentée après une minute, puis à intervalle doublé jusqu'à une heure. Jusqu'à la v0.23.5,
+la boucle continuait d'attendre les trois quarts de la `cacheDuration` (douze heures sans elle),
+quoi qu'il reste de la validité : un rafraîchissement échoué près de la fin pouvait laisser le
+fournisseur sans IdP jusqu'à douze heures après le retour du serveur de fédération.
 Un rafraîchissement qui échoue garde la dernière copie valide, **mais seulement jusqu'à son propre
-`validUntil`**. Passé ce délai, plus rien n'est garanti, tous les IdP disparaissent, et
-`/readyz` dit que le fournisseur n'est pas prêt. Un serveur de fédération brièvement
-injoignable ne déconnecte personne ; un serveur injoignable pendant des jours ne laisse pas le
-fournisseur se fier à des clés périmées.
+`validUntil`** : jusque-là les connexions continuent sur elle, que le serveur de fédération soit
+lent, hors service, ou serve un document qui ne se vérifie pas. Passé ce délai, plus rien n'est
+garanti, tous les IdP disparaissent, et `/readyz` dit que le fournisseur n'est pas prêt. Un
+serveur de fédération brièvement injoignable ne déconnecte personne ; un serveur injoignable
+pendant des jours ne laisse pas le fournisseur se fier à des clés périmées.
+
+L'horloge du pont peut différer de celle d'un IdP de trois minutes dans un sens ou dans l'autre :
+une assertion dont les dates sont dans cet écart est acceptée, et une assertion décalée d'une heure
+est refusée avec une page 400. La clé sous laquelle une assertion est mémorisée, pour qu'elle ne
+soit pas acceptée deux fois, est stockée sous forme de SHA-256 (depuis la v0.23.6) : un `entityID`
+d'IdP ou un identifiant d'assertion long dépassait la colonne `VARCHAR(128)` de la base d'état,
+que PostgreSQL et MySQL en mode strict refusent, si bien que l'écriture restait en attente et que le
+fournisseur restait non prêt. SQLite n'était pas touché. Aucune configuration ne change.
 
 Au sein du document, un IdP n'est conservé que s'il parle SAML 2.0 et publie un
 `SingleSignOnService` HTTP-Redirect. Une entité décrite deux fois est entièrement
@@ -231,3 +246,19 @@ les liste tous et ne peut pas être restreint :
 ```
 authn-bridge: saml: an external discovery service lists every IdP; with `idps` restricted, leave `discovery` out and this provider lists them itself
 ```
+
+### Ce qui est testé {#tested}
+
+Depuis la v0.23.6, la section « ce qu'il refuse » du README liste ce qui est testé, de bout en
+bout par l'ACS : l'enveloppement de signature XML (XSW1 à XSW8 et leurs variantes à identifiant
+identique), la troncature par commentaire (CVE-2017-11427), DOCTYPE et l'expansion d'entités, les
+assertions destinées à une autre audience, un autre destinataire, une autre requête ou une autre
+destination, et le rejeu. Il y a des fuzzers pour l'ACS (`FuzzACSAccept`), les métadonnées de la
+fédération, la vérification des jetons d'accès (avec des graines de confusion d'`alg`), le cookie
+de connexion et la correspondance des URI de redirection : `FuzzACSAccept` a fait 992 517 exécutions
+en trois minutes avec 595 entrées de corpus et aucun échec, et les quatre autres environ 90
+secondes chacun, sans échec. Les tests de chaos décalent l'horloge du pont de
+deux minutes (acceptée) et d'une heure (refusée), et rendent le serveur de métadonnées lent, hors
+service, répondant 500, du bruit, du HTML, un document tronqué ou altéré, ou rien. Le limiteur de
+débit ne traite plus une horloge qui recule comme un temps négatif (il vidait chaque seau de la
+taille du saut ; les horloges de production ne reculent pas, c'est donc une défense en profondeur).

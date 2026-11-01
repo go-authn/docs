@@ -12,7 +12,7 @@ tags: [authn-revokd, 吊销, krl, crl]
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}})发布的列表：它
 获取每个列表，只有验证通过才保留，将其写到 `sshd` 或 TLS
 服务器读取的位置，并且在列表过期时写出一个**吊销 CA
-本身**的列表。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述 v0.6.6。
+本身**的列表。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述 v0.6.7。
 
 ```
 $ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6

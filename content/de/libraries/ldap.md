@@ -12,7 +12,7 @@ Server, der sie ausführt und dem die Konfiguration, die Verzeichnisquellen und 
 Bind-Richtlinie gehören; dieser Bibliothek gehören die Bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.11.0
+go get github.com/go-authn/ldap@v0.12.0
 ```
 
 Geschrieben nach RFC 4511 (das Protokoll), 4512 (das Root-DSE und das Schema),
@@ -179,6 +179,32 @@ Aliasen oder Referrals, daher wird ein kritisches ManageDsaIT mit
 | `IdleTimeout` | 5 Minuten | die ganze Nachricht muss rechtzeitig ankommen, nicht ihr erstes Byte; negativ bedeutet nie |
 | `MaxPending`, `MaxPendingAuth` | 100, 1000 | Operationen, die eine Verbindung vor ihrem Bind (`MaxPending`) und danach (`MaxPendingAuth`) gleichzeitig laufen haben darf, wie `conn_max_pending` und `conn_max_pending_auth` von slapd; eine Verbindung, die darüber geht, erhält eine Notice of Disconnection und wird geschlossen |
 | `MaxPagedSearches` | 4 | offene seitenweise Suchen pro Verbindung, jede eine Goroutine, die auf ihren nächsten Eintrag wartet |
+| `MaxConnections` | 0 (keine Grenze) | gleichzeitig gehaltene Verbindungen; eine darüber erhält eine Notice of Disconnection mit dem Ergebniscode `busy` (51, RFC 4511 4.4.1) und wird sofort geschlossen, nie in eine Warteschlange gestellt. Neu in v0.12.0 |
+| `MaxConnectionsPerIP` | 0 (keine Grenze) | Verbindungen, die eine entfernte Adresse halten darf; ein Listener, der nicht TCP ist (ein Unix-Socket), unterliegt dem nicht. Neu in v0.12.0 |
+
+**Eine Frist, die der Handler nicht ignorieren kann.** `Server.Timeout` (null: keine)
+ist die Frist des Kontexts des Handlers, und seit v0.12.0 setzt der *Server* sie durch:
+Zur Frist wird der Client bei jeder Operation (auch bei einem Bind, einem Compare oder
+einem Schreibvorgang, nicht nur bei einer Suche) mit `timeLimitExceeded` (3)
+beantwortet, ob der Handler zurückkehrt oder nicht. Vor v0.12.0 ließ ein Handler, der
+seinen Kontext ignorierte, den Client für immer warten, und nur eine Suche bildete eine
+Frist auf Code 3 ab, während ein Bind, Compare oder Schreibvorgang `other` antwortete.
+Die Goroutine eines Handlers, der nicht zurückkehrt, lässt sich nicht beenden: Sie zählt
+weiter gegen `MaxPending` und `MaxPendingAuth`, bis sie zurückkehrt, ihr spätes Ergebnis
+wird verworfen, und ihre Message-ID wird inzwischen abgelehnt (`protocolError`); so sind
+verwaiste Goroutinen pro Verbindung begrenzt, und eine Verbindung, deren Operationen
+alle so ablaufen, erreicht die Pending-Grenze und wird geschlossen. **Ein Handler muss
+seinen Kontext beachten, um freizugeben, was er hält.** Das `timeLimit` der Client-Suche
+gilt jetzt auch für den Kontext des Handlers. Ein Handler-Fehler, der
+`context.DeadlineExceeded` umhüllt, wird nur dann auf Code 3 abgebildet, wenn der eigene
+Kontext der Operation abgelaufen ist; sonst bleibt er `other`. Keine Handler-Schnittstelle
+hat sich geändert.
+
+Die Kosten, in Allokationen pro Operation (`BenchmarkRun`, exakt): 3 vorher und jetzt
+ohne `Timeout`; mit einem `Timeout` 10 vorher und 16 jetzt, für den Frist-Beobachter.
+Zeiten sind nicht berichtbar: Die Last lag bei 65 (454 ns und 444 ns ohne `Timeout`,
+981 ns und 1455 ns mit einem, nur als Anhaltspunkt). Die Abdeckung beträgt 99,9 % bei
+einer Untergrenze von 99,7 %, und es wurde kein Parser und kein Decoder angefasst.
 
 Auch die Verschachtelung von Filtern ist begrenzt: Ein Stack-Überlauf in Go beendet den Prozess.
 Nichts loggt einen Assertion-*Wert* – ein Filter trägt, was jemand eingetippt hat –, nur

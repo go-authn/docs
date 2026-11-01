@@ -107,7 +107,7 @@ ProtectSystem=strict
 
 | | |
 |---|---|
-| `ExecReload=` | authnd 没有重新加载功能。它只读取一次配置、证书和 keytab；参见[运行]({{< relref "/authnd/operations.md" >}}) |
+| `ExecReload=` | authnd 没有重新加载功能。它只读取一次配置和 keytab，并在文件变化时重新读取证书（`SIGHUP` 会立即触发）；参见[运行]({{< relref "/authnd/operations.md" >}}) |
 | `PrivateUsers=` | 在用户命名空间内，`CAP_NET_BIND_SERVICE` 不再适用于主机的网络，对 389 的绑定会被拒绝 |
 | `ProcSubset=pid` | 它会隐藏 `/proc/sys`（Go 在那里读取 `net/core/somaxconn`），使每个监听器的 backlog 退回到 Go 的后备值 128 |
 
@@ -163,6 +163,10 @@ ReadWritePaths=/etc/authnd/passwords
 | `reader "<dn>"` | 无 | 可以搜索的服务账户；参见[谁可以读取]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | 每个来源被重新读取的频率；`0` 表示关闭；参见[运行]({{< relref "/authnd/operations.md" >}}) |
 | `max_age` | 未设置 | 一旦所提供的数据比它更旧就拒绝过期数据（`unavailable`）；参见[运行]({{< relref "/authnd/operations.md" >}}) |
+| `max_connections` | `4096` | 同时打开的连接数上限，`0` 表示不限；超出的连接会收到 `busy` 并被关闭；参见[限制]({{< relref "/authnd/operations.md#limits" >}}) |
+| `max_connections_per_ip` | 无 | 来自同一地址的连接数上限 |
+| `operation_timeout` | `30s` | 一次操作最多可以花的时间，`"0"` 表示无；超过后客户端会收到 `timeLimitExceeded` |
+| `startup_timeout` | `60s` | 打开并首次读取来源最多可以花的时间，`"0"` 表示无 |
 | `cert_file`、`key_file`、`starttls`、`publish_nt_hash`、`samba` | 关闭 | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`、`group`、`users` | — | [人员]({{< relref "/authnd/people.md" >}})；至少一个 `user` 或 `users` 块 |
 | `kerberos` | 无 | [域]({{< relref "/authnd/kerberos.md" >}}) |

@@ -315,4 +315,5 @@ geändertes Passwort ist also das, das funktioniert. Ein Passwort, das eine Pers
 authnd selbst ändert, wird [sofort angewendet]({{< relref "/authnd/passwords.md" >}}).
 Ein fehlgeschlagener Refresh behält die letzten guten Daten, und `max_age` legt fest, wann man
 aufhört, sie auszuliefern; siehe [Betrieb]({{< relref "/authnd/operations.md" >}}). Die
-Konfigurationsdateien, das Zertifikat und die Keytab brauchen weiterhin einen Neustart.
+Konfigurationsdateien und die Keytab brauchen weiterhin einen Neustart; das
+Zertifikat seit v0.15.0 nicht mehr.

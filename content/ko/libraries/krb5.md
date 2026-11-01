@@ -12,8 +12,13 @@ tags: [라이브러리, kerberos]
 검증하고, 봉인하고, 엽니다.
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.1
+go get github.com/go-authn/krb5@v0.3.3
 ```
+
+v0.3.3은 API도 코드도 바꾸지 않습니다. 간접 의존성 golang.org/x/net을 v0.62.0, golang.org/x/crypto를 v0.58.0,
+github.com/hashicorp/go-uuid를 v1.0.4로 올립니다. `govulncheck`는 요구하지만 호출하지 않는 모듈에서 46건을 보고했으나
+지금은 1건, GO-2026-5932(`golang.org/x/crypto/openpgp`)뿐입니다. 이것은 수정된 버전이 없고 go-authn의 어느 것도
+가져오지 않습니다. 코드에서 도달 가능한 결과는 전후 모두 0입니다.
 
 KDC와 통신하지 않으며 티켓을 발급하지 않으므로, 누구의 티켓을 받아들일지는 다른 쪽의
 결정입니다. 발급 측 절반은 [kdc]({{< relref "/libraries/kdc.md" >}})이며 이 모듈은
@@ -129,4 +134,4 @@ macOS, Windows, 크로스 아키텍처 레인에는 렐름이 없으며, 거기�
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.1](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.1)
+[pkg.go.dev/github.com/go-authn/krb5@v0.3.3](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3)

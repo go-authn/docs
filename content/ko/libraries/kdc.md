@@ -12,12 +12,12 @@ tags: [라이브러리, kerberos, 디렉터리]
 실행됩니다.
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.3
+go get github.com/go-authn/kdc@v0.4.5
 ```
 
-v0.4.3의 `go.mod`는 최소 `go-authn/directory` v0.12.0과 gokrb5 v8.4.4를 요구합니다.
-이는 최소 요구 버전이므로, 이 문서가 설명하는 directory v0.14.0을 요구하는 프로그램은
-authnd v0.13.0처럼 v0.15.0으로 빌드됩니다. 받아들이는 쪽 절반은
+v0.4.5의 `go.mod`는 최소 `go-authn/directory` v0.16.1과 gokrb5 v8.4.4를 요구합니다.
+이는 최소 요구 버전이므로, directory v0.16.1을 요구하는 프로그램은
+authnd v0.15.0처럼 v0.17.0으로 빌드됩니다. 받아들이는 쪽 절반은
 [krb5]({{< relref "/libraries/krb5.md" >}})이며, 티켓을 검증하기만 하는 서비스에는 이
 모듈이 전혀 필요하지 않습니다.
 
@@ -181,6 +181,23 @@ etype 목록에 18이 없는 요청은 누구를 조회하기 전에 `KDC_ERR_ET
 - 클라이언트가 이 렐름의 것이고 여전히 디렉터리에 있을 때
   (`KDC_ERR_C_PRINCIPAL_UNKNOWN`)
 
+**v0.4.5부터**, 보안 감사와 퍼징·카오스 실행을 거쳐:
+
+- 다른 렐름에 대한 요청은 처리되지 않고 AS와 TGS 모두에서 `KDC_ERR_WRONG_REALM`으로 응답합니다.
+- 읽을 수 없는 디렉터리는 `KDC_ERR_SVC_UNAVAILABLE`로 응답하며, 더 이상 `KDC_ERR_C_PRINCIPAL_UNKNOWN`이 아닙니다.
+- 시작이 `MaxSkew` 안의 미래인 TGT는 받아들입니다(시계 단계). 이전에는 TGT의 시작에 허용 오차가 없었습니다.
+- **잘못된 AS-REQ나 TGS-REQ 하나로 프로세스가 크래시할 수 있었습니다**. gokrb5 v8.4.4의
+  `unmarshalTicketsSequence`가 인증 이전에 패닉합니다. 디코더를 패닉시키는 요청은 이제 버려지고, 패닉과 그 스택이
+  기록됩니다.
+- 네트워크에서 온 프린시펄 이름은 줄을 위조할 수 없도록 로그에서 따옴표로 묶입니다.
+- 의존성은 golang.org/x/net v0.62.0(GO-2026-6866, GO-2026-6860)과 go-authn/directory v0.16.1입니다.
+  GO-2026-5932(`golang.org/x/crypto/openpgp`)는 업스트림에 수정이 없고 호출되지 않습니다.
+
+`FuzzHandle`은 두 번의 실행(90초와 150초)에서 약 1,400만 회 실행되었고 빠져나온 패닉은 없었습니다.
+`BenchmarkASNoPreauth`, 10,000명 중 마지막 사람, 사전 인증 없이: 요청당 할당 508회, 18,999바이트, 112 µs입니다. 이 경로의
+코드는 바뀌지 않았으므로 이전 수치는 없습니다. 시간은 참고용일 뿐입니다. 부하가 65였으므로 MIT의 `krb5kdc`와는
+비교하지 않았습니다.
+
 **수명.** `Config.Lifetime`이 티켓의 상한이며 0이면 10시간입니다. 더 적게 요청하는
 클라이언트는 더 적게 받고, TGT로 얻은 티켓은 그 TGT보다 늦게 끝나지 않으므로
 `krbtgt`를 다시 요청해도 자격 증명을 늘릴 수 없습니다.
@@ -203,4 +220,4 @@ MIT KDC는 관여하지 않으며 클라이언트만 빌려 옵니다.
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.3](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.3)
+[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)

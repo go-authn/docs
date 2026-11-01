@@ -11,13 +11,28 @@ tags: [authnd, ldap]
 [go-authn/directory]({{< relref "/libraries/_index.md" >}})의 소스 위에서 바인드와
 검색을 처리하므로, 데이터베이스에 있는 내용을 디렉터리에 질의할 줄 아는 어떤
 것이든 읽을 수 있습니다. 순수 Go, `CGO_ENABLED=0`, 바이너리 하나입니다. 이 문서는
-v0.13.0을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
+v0.15.0을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
 제공하는 스키마를 통과합니다. 사이트는 이 스키마를 자신의 스키마로
 확장할 수 있고([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})),
 [DIT 콘텐츠 규칙, 이름 형식, 구조 규칙]({{< relref "/authnd/schemas.md#rules" >}})으로
 엔트리의 형태까지 정할 수 있습니다. 그 아래에는
-go-authn/ldap v0.11.0과 go-authn/directory v0.16.0이 있습니다. 무엇이 검증되었고
+go-authn/ldap v0.12.0과 go-authn/directory v0.17.0이 있습니다. 무엇이 검증되었고
 무엇이 아닌지는 [상태]({{< relref "/status.md" >}}) 페이지에 있습니다.
+
+{{< callout type="warning" >}}
+**v0.14.x에서 업그레이드**
+
+- ⛔ **기본값 두 개가 바뀝니다.** `max_connections`는 `4096`(이전에는 무제한), `operation_timeout`은 `30s`
+  (이전에는 없음)입니다. 더 많은 연결을 열어 두거나 30초를 넘는 작업을 실행하는 사이트는 키를 설정하십시오.
+  `0`(기간은 `"0"`)이 이전 동작입니다. [제한]({{< relref "/authnd/operations.md#limits" >}})을 참조하십시오.
+- 새 항목(모두 선택): `max_connections_per_ip`와 `startup_timeout`(`60s`).
+- 상위 디렉터리가 내려가 있으면 `unavailable`(52)로 응답하며, 더 이상 `invalidCredentials`(49)가 아닙니다.
+  49를 "비밀번호 틀림", 52를 "나중에 다시 시도"로 읽는 클라이언트는 이제 둘을 구별할 수 있습니다.
+- 갱신된 TLS 인증서는 재시작 없이 제공됩니다.
+  [인증서 갱신]({{< relref "/authnd/tls.md#renewal" >}})을 참조하십시오.
+
+`authnd check`는 앞으로 적용할 제한을 출력합니다.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **v0.11.x에서 업그레이드하는 경우**
@@ -168,10 +183,12 @@ vendorVersion: v0.13.0
 | [Kerberos 렐름]({{< relref "/authnd/kerberos.md" >}}) | keytab, 그리고 누가 티켓을 발급받을 수 있는가 |
 | [두 번째 인증 요소]({{< relref "/authnd/mfa.md" >}}) | 비밀번호 끝에 붙는 일회용 코드 |
 | [바인드 시의 토큰]({{< relref "/authnd/tokens.md" >}}) | SASL `OAUTHBEARER` 위의 OIDC |
-| [운영하기]({{< relref "/authnd/operations.md" >}}) | 시그널, 재시작, 로그 내용, 가동 여부 확인 방법 |
+| [운영하기]({{< relref "/authnd/operations.md" >}}) | 시그널, 재시작, 연결 제한과 기한, 로그 내용, 가동 여부 확인 방법 |
 
 {{< callout type="info" >}}
 **트랜스크립트에 대하여**
 
 이 문서에 보이는 모든 명령은 2026-10-26에 배포된 릴리스 바이너리로 다시 실행한 것이며, 손으로 다시 쓴 것이 아닙니다. `authnd` v0.12.3(`authnd-darwin-arm64`, `relverify`로 `SHA256SUMS` 및 그 증명(attestation)과 대조함; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`), `authn-bridge` v0.23.4, `authn-revokd` v0.6.6, `sshcert-authorize` v0.1.9, `ldapschema` v0.10.1입니다. 명령이 출력한 것이 그대로 여기에 실려 있습니다. 예외는 두 개의 트랜스크립트이며, 각각 그것이 있는 자리에 그렇게 밝혀 두었습니다. [토큰 페이지]({{< relref "/authnd/tokens.md" >}})의 `oidctool` 클라이언트는 이 문서를 위해 작성한 테스트 클라이언트로 어떤 릴리스에도 포함되지 않으며, 그 트랜스크립트와 함께 보이는 서버 줄은 v0.10.0 릴리스 바이너리가 출력한 것입니다. 다른 하나는 [연합 페이지]({{< relref "/authn-bridge/federation.md" >}})의 RENATER 만료 메타데이터로, 이 파일은 더 이상 공개되지 않습니다. 모두 macOS에 포함된 OpenLDAP 및 Heimdal 클라이언트로, 127.0.0.1의 비특권 포트에서 임시 디렉터리 안에서 요청했습니다. 그래서 그 뒤의 구성이 `etc/authnd/passwords/alice.pw` 같은 상대 경로로 파일을 지정하고, 비밀번호 파일의 이름이 `alice.pwin` 같은 것입니다. 예제의 `/etc/authnd` 경로는 설치된 서버가 사용하는 경로입니다. `authnd` 의 버전을 출력하는 트랜스크립트는 v0.13.0(`authnd-darwin-arm64`, `relverify` 로 `SHA256SUMS` 와 증명에 대해 확인; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.13.0`)으로 다시 실행했습니다. 여기와 운영 페이지의 root DSE, 그리고 `authnd --version` 입니다. 엔트리 페이지의 스키마는 v0.12.4(`mod github.com/go-authn/authnd v0.12.4`, `vcs.modified=false`)가 출력한 것이며, v0.13.0은 규칙이 없는 스키마에 대해 `dITContentRules`, `nameForms`, `dITStructureRules` 의 값을 출력하지 않는다는 것을 확인했습니다. [사이트 스키마 페이지의 규칙 절]({{< relref "/authnd/schemas.md#rules" >}})에 그 절을 무엇으로 실행했는지 적혀 있습니다.
+
+문서 버전 0.7에서 새로 추가된 트랜스크립트(`check`의 `limits:` 줄과 운영 페이지의 시그널 실행)는 2026-11-01에 `authnd` v0.15.0(태그에서 `go install`로 빌드. `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.15.0`. `authnd --version`: `authnd version v0.15.0`)과 OpenLDAP의 `ldappasswd`가 127.0.0.1의 작업 디렉터리에서 출력한 것입니다. `authn-bridge --version`은 `authn-bridge version v0.23.6`을, `authn-revokd -version`은 `authn-revokd v0.6.7`을 출력했으며, 같은 방식으로 빌드했습니다. 나머지 트랜스크립트는 이 버전을 위해 다시 실행하지 않았습니다. 각각 본문이 지목하는 릴리스가 출력한 것이며, authn-bridge와 authn-revokd 페이지가 설명하는 동작은 v0.23.6과 v0.6.7에서도 트랜스크립트에 보이는 범위에서는 바뀌지 않습니다.
 {{< /callout >}}

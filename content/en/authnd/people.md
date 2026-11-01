@@ -313,4 +313,5 @@ changed *there* is the one that works. A password a person changes through
 authnd itself is [applied at once]({{< relref "/authnd/passwords.md" >}}).
 A refresh that fails keeps the last good data, and `max_age` says when to stop
 serving it; see [running it]({{< relref "/authnd/operations.md" >}}). The
-configuration files, the certificate and the keytab still need a restart.
+configuration files and the keytab still need a restart; the certificate does
+not, from v0.15.0.

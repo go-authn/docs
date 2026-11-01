@@ -16,8 +16,10 @@ key_file  = "/etc/authnd/key.pem"
 refusé (*one without the other serves nothing*). TLS 1.2 est le minimum.
 authnd n'a pas de client ACME : les deux fichiers sont écrits par autre chose —
 [go-authn/servercert]({{< relref "/libraries/servercert.md" >}}), certbot, l'AC
-(autorité de certification) propre d'un site — et authnd est **redémarré** après chaque renouvellement,
-car le certificat est lu une seule fois, à l'ouverture de l'écouteur.
+(autorité de certification) propre d'un site — et depuis la v0.15.0 authnd les relit quand ils changent, sans redémarrage : voir
+[renouveler le certificat](#renewal). Jusqu'à la v0.14.1, authnd était
+**redémarré** après chaque renouvellement, car le certificat était lu une seule
+fois, à l'ouverture de l'écouteur.
 
 ## Deux façons, un écouteur chacune {#two-ways-one-listener-each}
 
@@ -91,6 +93,25 @@ C'est ce refus qui fait de `cert_file` une garantie plutôt qu'une offre — et
 c'est sur lui que s'appuie `publish_nt_hash`. Il inclut la liaison anonyme
 qu'envoie `ldapsearch -x` avant de lire le root DSE, si bien que sur un écouteur StartTLS
 cette requête de découverte, elle aussi, a besoin de `-ZZ`.
+
+## Renouveler le certificat {#renewal}
+
+Depuis la v0.15.0, un certificat renouvelé n'exige pas de redémarrage. authnd
+compare `cert_file` et `key_file` à ce qu'il sert au premier handshake TLS qui
+suit un délai de 5 secondes depuis son dernier examen, et aussitôt sur `SIGHUP`
+(`kill -HUP`, ou `systemctl kill -s HUP authnd`). L'identité d'un fichier est le
+SHA-256 de son contenu : un outil de renouvellement qui renomme un nouveau
+fichier par-dessus l'ancien et un qui le réécrit sur place sont donc tous deux
+vus, et une paire de même taille écrite dans le même tic d'horloge n'est pas
+prise pour l'ancienne.
+
+Une nouvelle paire qui ne se charge pas (à moitié écrite, clé qui ne correspond
+pas au certificat, fichier corrompu) ne change rien : authnd continue de servir
+le certificat qu'il a, journalise l'échec **une seule fois** pour cet état des
+fichiers, et réessaie quand ils changent de nouveau. Avant la v0.15.0, un
+certificat expiré la nuit n'était plus approuvé par aucun client jusqu'à ce que
+quelqu'un redémarre authnd. La configuration et le keytab ne sont toujours lus
+qu'au démarrage.
 
 ## `publish_nt_hash` {#publish_nt_hash}
 

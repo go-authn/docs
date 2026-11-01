@@ -105,7 +105,7 @@ ProtectSystem=strict
 
 | | |
 |---|---|
-| `ExecReload=` | authnd에는 다시 불러오기가 없습니다. 구성, 인증서, keytab을 한 번만 읽습니다. [운영하기]({{< relref "/authnd/operations.md" >}})를 참조하십시오 |
+| `ExecReload=` | authnd에는 다시 불러오기가 없습니다. 구성과 keytab을 한 번만 읽고, 인증서는 파일이 바뀌면 다시 읽습니다(`SIGHUP`이 즉시 요청합니다). [운영하기]({{< relref "/authnd/operations.md" >}})를 참조하십시오 |
 | `PrivateUsers=` | 사용자 네임스페이스 안에서는 `CAP_NET_BIND_SERVICE`가 호스트의 네트워크에 더 이상 적용되지 않아 389에 대한 바인드가 거부됩니다 |
 | `ProcSubset=pid` | Go가 `net/core/somaxconn`을 읽는 `/proc/sys`를 숨겨서, 모든 리스너의 백로그가 Go의 대체값인 128로 떨어집니다 |
 
@@ -162,6 +162,10 @@ ReadWritePaths=/etc/authnd/passwords
 | `reader "<dn>"` | 없음 | 검색할 수 있는 서비스 계정. [누가 읽을 수 있는가]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})를 참조 |
 | `refresh` | `60s` | 모든 소스를 다시 읽는 주기. `0`이면 끔. [운영]({{< relref "/authnd/operations.md" >}})을 참조 |
 | `max_age` | 설정 안 함 | 제공 중인 데이터가 이보다 오래되면 오래된 데이터를 거부(`unavailable`). [운영]({{< relref "/authnd/operations.md" >}})을 참조 |
+| `max_connections` | `4096` | 동시에 열려 있는 연결의 최대 수, `0`은 제한 없음. 넘은 연결은 `busy`를 받고 닫힘. [제한]({{< relref "/authnd/operations.md#limits" >}})을 참조 |
+| `max_connections_per_ip` | 없음 | 한 주소에서의 연결 최대 수 |
+| `operation_timeout` | `30s` | 작업 하나가 걸릴 수 있는 최대 시간, `"0"`은 없음. 넘으면 클라이언트는 `timeLimitExceeded`를 받음 |
+| `startup_timeout` | `60s` | 소스를 열고 처음 읽는 데 걸릴 수 있는 최대 시간, `"0"`은 없음 |
 | `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | 꺼짐 | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [사람들]({{< relref "/authnd/people.md" >}}). `user` 또는 `users` 블록이 최소 하나 필요 |
 | `kerberos` | 없음 | [렐름]({{< relref "/authnd/kerberos.md" >}}) |

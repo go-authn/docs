@@ -5,23 +5,31 @@ description: "这些页面描述哪些版本、每个版本新增了什么，以
 tags: [状态, 发布版本]
 ---
 
-这些页面是文档版本 **0.6**，描述的内容如下：
+这些页面是文档版本 **0.7**，描述的内容如下：
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.14.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
+| authnd | **v0.15.0** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.23.6** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
-ldap 为 **v0.11.3**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
-directory 为 **v0.16.0**，带有已声明的对象类。authnd
-v0.14.1 内嵌 ldap v0.11.3 和 directory v0.16.0。
+ldap 为 **v0.12.0**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
+directory 为 **v0.17.0**，带有已声明的对象类。authnd
+v0.15.0 内嵌 ldap v0.12.0 和 directory v0.17.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
-因此读者在 `/docs/0.6/` 下找到的页面始终描述其所安装的版本；
+因此读者在 `/docs/0.7/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
-`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/` 和 `/docs/0.5/` 之下。
+`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/` 和 `/docs/0.6/` 之下。
+
+{{< callout type="warning" >}}
+**从 v0.14.x 升级 authnd：两个默认值发生变化**
+
+`max_connections` 为 `4096`（以前不限），`operation_timeout` 为 `30s`（以前无）；上游目录宕机时回答
+`unavailable`（52），不再回答 `invalidCredentials`（49）。`max_connections = 0` 和 `operation_timeout = "0"`
+恢复旧的行为。参见[限制与期限]({{< relref "/authnd/operations.md#limits" >}})。
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **安全：请使用 authnd v0.12.0，而不是 v0.11.1**
@@ -80,6 +88,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.13.4 | 一次混沌测试。组与人员一样，在启动时只读取一次：在 SQLite 上，对 500 人、200 个各 50 人的组做一次搜索原本要 4.13 秒（每次搜索都重新查询组），现在只要 1.2 毫秒；搜索期间失败的组查询也不再把组从仍返回 Success 的应答中悄悄丢掉。启动时无法读取的来源（无法执行的组查询、多个数据库中有一个宕机）会拒绝启动和 `check`。超过约 3 MiB 的条目（一个 10 MB 的属性值）不会发布。发布内容按人员集合只构建一次。已用测试验证：在每个字节处截断的模式文件、被删除或损坏的数据库、恶意的行、空闲连接、过大的 BER 长度、嵌套 20,000 层的过滤器 |
 | v0.14.0 | 变更：v0.13.4 修改组需要重启，因此从数据库中移除的成员会一直保有访问权限，直到有人重启 authnd。v0.14.0 恢复了及时撤销。`refresh`（默认 60 秒，`0` 表示关闭）会把每个来源（人员和组）重新读入一份在服务路径之外构建的新快照，并整体替换；刷新失败时保留最近一份良好的快照，且每一轮连续失败只记录一次日志，并点名来源。设置 `max_age`（默认不设置）后，一旦所提供的数据比它更旧，搜索、人员的 bind 和密码修改都会应答 `unavailable`。通过 authnd 写入的密码同样经过这一替换。实测：在 SQLite 上，对 500 人、200 个各 50 人的组做一次刷新约占一个核心 2 秒，一次搜索 0.5 毫秒（刷新开销已在 v0.14.1 修复） |
 | v0.14.1 | 仅性能。刷新的开销不再随“组数 × 成员关系行数”增长：directory v0.16.0 对每个来源只批量读取一次。在 SQLite 上，对 500 人、200 个各 50 人的组做一次刷新由 1.87 秒降到 0.155 秒；对 10,000 人、2,000 个组做一次刷新由 391 秒（六个半刷新周期）降到 1.6 秒（60 秒周期的 2.7 %）。内存分配次数由 39,959,235 降到 3,095,482，以及由 6,373,736,235 降到 31,198,460。时间是在负载 17 至 67 下测得的，仅供参考；分配次数是精确的 |
+| v0.15.0 | 可用性与安全，使用 go-authn/ldap v0.12.0 和 go-authn/directory v0.17.0。⛔ **两个默认值发生变化**：`max_connections` 为 `4096`（以前不限），`operation_timeout` 为 `30s`（以前无）。新增，可选：`max_connections_per_ip` 和 `startup_timeout`（`60s`）；[`check` 会打印限制]({{< relref "/authnd/operations.md#limits" >}})。超出上限的连接会收到 `busy` 并被关闭；超过期限的操作会收到 `timeLimitExceeded`，即使其处理程序被阻塞。绑定期间的上游故障（简单绑定、密码更改、`mfa` 的密码因素）回答 `unavailable`（52），绝不回答 `invalidCredentials`（49）；密码错误仍是 49。针对缓慢来源的启动会在 `startup_timeout` 之后失败，并指出阶段和来源。[TLS 证书会被重新读取]({{< relref "/authnd/tls.md#renewal" >}})，当 `cert_file` 或 `key_file` 变化时（5 秒后的第一次握手，以及 `SIGHUP`）；无法加载的证书对保持正在提供的证书，并只记录一次。分配次数见下面的库；挂钟时间未测量（开始时负载为 21） |
 
 ### authn-bridge {#authn-bridge}
 
@@ -116,6 +125,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.23.2 | 安全：go-authn/oidc v0.4.2，它拒绝超出 int64 范围的 `nbf`（尚未生效的令牌曾被接受）以及 `e = 0` 的 RSA 密钥（它曾被解析）；go-authn/wireguard v0.1.2 |
 | v0.23.3 | 使用 Go 1.27.3 构建，针对 GO-2026-6809（`crypto/x509`：`Certificate.Verify` 未拒绝已知被攻破的中间证书）；`go` 指令为 1.27.3；行为没有变化 |
 | v0.23.4 | 发布的二进制文件改用 `-w` 链接，不再用 `-s -w`，符号表得以保留，使 `govulncheck -mode binary` 精确；行为不变 |
+| v0.23.6 | 审计、模糊测试和混沌测试，使用 go-authn/saml v0.5.1；没有增加或改变任何配置键。[元数据按时刷新]({{< relref "/authn-bridge/federation.md#refreshing-it" >}})：绝不安排在剩余 `validUntil` 的一半之后，没有有效元数据时一分钟后重试，间隔加倍直到一小时，所以临近到期时的一次刷新失败不再让提供方最长十二小时没有 IdP。断言重放键以其 SHA-256 存储：过长的 IdP `entityID` 曾使 PostgreSQL 和 MySQL 拒绝写入并卡住状态数据库。时钟可与 IdP 相差三分钟；相差一小时则以 400 页面拒绝。[测试了什么]({{< relref "/authn-bridge/federation.md#tested" >}})：XML 签名包装 XSW1 到 XSW8、CVE-2017-11427、DOCTYPE、外来的受众、接收方、请求和目的地，五个模糊测试器。每次登录一次 SHA-256 多花 0 到 2 次分配（`BenchmarkReplayUse`：0 次分配和 183 B，现在 2 次和 326 B）；挂钟时间未测量，负载 53 到 75 |
 
 ### authn-revokd {#authn-revokd}
 
@@ -133,6 +143,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.6.4 | 仅依赖项：golang.org/x/crypto v0.58.0 |
 | v0.6.5 | 使用 Go 1.27.3 构建，针对 GO-2026-6809（`crypto/x509`：`Certificate.Verify` 未拒绝已知被攻破的中间证书）；`go` 指令为 1.27.3；行为没有变化 |
 | v0.6.6 | 发布的二进制文件改用 `-w` 链接，不再用 `-s -w`，符号表得以保留，使 `govulncheck -mode binary` 精确；行为不变 |
+| v0.6.7 | 审计、模糊测试、混沌测试和性能改进（[一次同步做什么]({{< relref "/authn-revokd/configuration.md#sync" >}})）。失效的列表在失效时就被拒绝，而不是等到下次刷新；来源并行获取（最多 16 个，每个两分钟）；`on_change` 在一分钟后被终止并重试；在代理背后被改动的输出文件会在下次同步时重写；`file://` 来源必须是普通文件；错误显示不带密码、查询和片段的 URL；`0..2^159` 之外的 CRL 编号被拒绝；镜像有读取、写入和空闲期限；过期的临时文件在启动时清除。再次轮询一个含 100,000 条记录的 CRL：每次轮询 300,138 次分配和 96,956,946 B，现在 37 次和 4,776,864 B（精确；时间未测量，负载 53 到 65）。govulncheck 仍列出 GO-2026-5932（`golang.org/x/crypto/openpgp`），它没有修复版本，也不会被调用 |
 
 ### sshcert {#sshcert}
 
@@ -157,9 +168,13 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | directory v0.13.0 | [属性]({{< relref "/libraries/directory.md#attributes" >}})：除凭据之外，描述某人但不证明任何事的内容，以及永远不能作为属性的名称；`user` 和 `group` 块中的 `attributes`、`users_attributes` 和 `groups_attributes` 查询、ldapdir 的 `attributes` 和 `group_attributes` |
 | directory v0.14.0 | ⛔ ldapdir 的[默认值]({{< relref "/libraries/directory.md#ldapdir-defaults" >}})读取 `account` 和 `uidObject` 人员以及 `groupOfNames` 组，这扩大了机构目录所提供的内容；`member` DN 只映射到来源已导入的人员 |
 | directory v0.15.0 | [对象类]({{< relref "/libraries/directory.md#object-classes" >}})，声明出来而从不推断：`users` 块中的 `object_classes` 和 `group_object_classes`，`user` 和 `group` 块中的 `object_classes`，sqldir 的 `WithObjectClasses` 和 ldapdir 的 `Config.ObjectClasses`；第一个声明某组的类的来源决定；`sqldir.ClosesDB` |
+| directory v0.16.0 | [每个组只读取一次]({{< relref "/libraries/directory.md" >}})：`GroupReader` 和 `Set.Frozen`，使刷新不再随组数乘以成员行数增长 |
+| directory v0.17.0 | [`ErrUnavailable`]({{< relref "/libraries/directory.md#unavailable" >}})，附带 `AsUnavailable` 和 `TransportFailure`：ldapdir 在 busy（51）、unavailable（52）、other（80）、timeLimitExceeded（3）、断开或被拒绝的连接以及连接或 TLS 失败时，对 `Verify` 和每次读取返回它；它绝不同时是 `ErrWrongPassword`，而 `invalidCredentials`（49）仍是后者。`ldaptest.Server.FailBindsWith(code)`。成员 DN 通过一次查找而不是一次扫描映射到人员，结果相同：在 10,000 人和 2,000 个各含 50 个 DN 的组上，`ReadGroups` 在 0.38 M 个对象中分配 13.1 MB，而不是 2.20 M 个对象 50.6 MB，DN 查找 0 次分配；整个刷新 7.17 M 次分配，而不是 9.72 M（精确；时间未测量，负载 65 到 105） |
 | kdc v0.4.3 | 仅依赖项：以 go-authn/directory v0.12.0 为最低版本 |
+| kdc v0.4.5 | 安全审计、模糊测试和混沌测试（[它拒绝什么]({{< relref "/libraries/kdc.md" >}})）：针对另一个域的请求回答 `KDC_ERR_WRONG_REALM`，无法读取的目录回答 `KDC_ERR_SVC_UNAVAILABLE`（以前是 `KDC_ERR_C_PRINCIPAL_UNKNOWN`），开始时间在 `MaxSkew` 之内的未来的 TGT 会被接受，解码器 panic 只丢弃一个请求，而不是使进程崩溃（一个格式错误的 AS-REQ 或 TGS-REQ 就能使其崩溃）；主体名称在日志中加引号。golang.org/x/net v0.62.0，go-authn/directory v0.16.1 |
 | keyfactor v0.4.2 | 仅依赖项：以 go-authn/fido v0.6.2 和 golang.org/x/crypto v0.58.0 为最低版本 |
 | krb5 v0.3.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
+| krb5 v0.3.3 | 仅依赖项：golang.org/x/net v0.62.0、golang.org/x/crypto v0.58.0 和 go-uuid v1.0.4 清除了 `govulncheck` 在所需但不调用的模块中的 46 项发现中的 45 项；GO-2026-5932（`x/crypto/openpgp`）没有修复，且没有任何 go-authn 模块导入它；API 无变化 |
 | krl v0.6.1 | 仅依赖项：golang.org/x/crypto v0.58.0；已用 Go 1.27.2 测试 |
 | ldap v0.8.0 | [`schema` 包]({{< relref "/libraries/ldap.md#the-schema" >}})和 `Server.Schema`：`cn=Subschema`（RFC 4512 §4.2）、`Validate`、RFC 4517 匹配规则；`uidNumber` 和 `gidNumber` 按整数排序；分页搜索仅返回所请求的属性 |
 | ldap v0.9.0 | [HCL2 模式]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}})：包 `schema/hclschema` 和 `ldapschema` 命令（`to-hcl`、`to-schema`、`check`），在 OpenLDAP `.schema`、cn=config LDIF 与 HCL2 之间转换；读取器像 slapd 一样读取文件；不支持 DIT 内容和结构规则、名称形式、`include` 和 `X-SUBST`（v0.11.0 支持这些规则） |
@@ -170,7 +185,9 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | ldap v0.11.1 | 仅优化性能，结果不变：由可打印 ASCII 组成的字符串在字符串匹配规则（RFC 4518）的预处理中最多只分配一次，没有变化时不分配，对于含四个 RDN 的 DN，DN 解析器的分配从 11 次降为 6 次。结果与 v0.11.0 相同，已对 0x80 以下一个或两个字节的每个字符串用 v0.11.0 的代码核对，并用差分模糊测试检验 |
 | ldap v0.11.2 | 仅优化性能，结果不变：对含十个属性的条目，`Validate` 的分配从 76 次降为 12 次（查找不再复制小写副本，描述不再拆分再拼合，用原地集合代替映射）。结果与 v0.11.1 相同，已在标准模式和带规则的模式下用随机条目对 v0.11.1 的 `Validate` 副本核对，并用差分模糊测试检验 |
 | ldap v0.11.3 | 仅优化性能，结果不变：`GoverningStructureRule` 对一个账户的分配从 12 次降为 5 次（只读取 RDN 的类型），DN 解析器对含四个 RDN 的 DN 从 6 次降为 3 次。结果与 v0.11.2 相同，已用随机条目和每条上级规则对 v0.11.2 的 `GoverningStructureRule` 副本核对，并用差分模糊测试检验 |
+| ldap v0.12.0 | [服务器的资源上限]({{< relref "/libraries/ldap.md" >}})：`Server.MaxConnections` 和 `Server.MaxConnectionsPerIP`（默认 0，不限；超出上限的连接会收到 `busy`（51）断开通知，RFC 4511 4.4.1，并被关闭）；`Server.Timeout` 由服务器强制执行，到期时即使处理程序被阻塞并忽略其上下文，对任何操作都回答 `timeLimitExceeded`（3）（迟到的结果被丢弃，goroutine 在返回之前计入 `MaxPending` 和 `MaxPendingAuth`）；客户端的搜索 `timeLimit` 适用于处理程序的上下文；处理程序的 `DeadlineExceeded` 只有在该操作自身的上下文已到期时才映射为代码 3。每次操作的分配次数（精确）：没有 `Timeout` 时之前和之后都是 3；有 `Timeout` 时之前 10，现在 16 |
 | oidc v0.4.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
+| scim v0.2.0 | [审计、模糊测试、混沌测试和性能改进]({{< relref "/libraries/scim.md#v020" >}})：`Server.ReadTimeout`（30 秒）、可选接口 `ConditionalDeleter`、没有 `If-Match` 的 PATCH 或 PUT 在输掉竞争后最多重做 32 次而不是回答 412、通过不匹配任何内容的过滤器移除会成功、没有路径的 PATCH 的键按排序顺序应用、`BearerAuth` 接受任意大小写的方案、`startIndex` 和 `count` 无论字长都被限定。针对 10,000 个用户的列表请求：100 条的一页从 789,417 次分配降到 14,952 次，`userName eq` 从 797,979 次降到 90 次，完整扫描从 818,847 次降到 361,098 次（精确；时间未测量，负载 65） |
 | servercert v0.5.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | totp v0.4.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | wireguard v0.1.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |

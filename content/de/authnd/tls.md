@@ -16,8 +16,10 @@ key_file  = "/etc/authnd/key.pem"
 abgelehnt (*one without the other serves nothing*). TLS 1.2 ist das Minimum.
 authnd hat keinen ACME-Client: Die beiden Dateien schreibt etwas anderes –
 [go-authn/servercert]({{< relref "/libraries/servercert.md" >}}), certbot, die
-eigene CA einer Installation –, und authnd wird nach jeder Erneuerung **neu gestartet**,
-weil das Zertifikat einmal gelesen wird, wenn der Listener öffnet.
+eigene CA einer Installation –, und ab v0.15.0 liest authnd sie erneut, wenn sie sich ändern, ohne Neustart: siehe
+[das Zertifikat erneuern](#renewal). Bis v0.14.1 wurde authnd nach jeder
+Erneuerung **neu gestartet**, weil das Zertifikat einmal gelesen wurde, wenn der
+Listener öffnete.
 
 ## Zwei Wege, je ein Listener {#two-ways-one-listener-each}
 
@@ -91,6 +93,25 @@ Diese Ablehnung macht `cert_file` zu einer Garantie statt zu einem Angebot – u
 auf sie verlässt sich `publish_nt_hash`. Sie umfasst den anonymen Bind, den
 `ldapsearch -x` vor dem Lesen des Root-DSE sendet; auf einem StartTLS-Listener
 braucht daher auch diese Erkundungsabfrage `-ZZ`.
+
+## Das Zertifikat erneuern {#renewal}
+
+Ab v0.15.0 braucht ein erneuertes Zertifikat keinen Neustart. authnd vergleicht
+`cert_file` und `key_file` mit dem, was es ausliefert, beim ersten TLS-Handshake
+nach 5 Sekunden seit der letzten Prüfung und sofort bei `SIGHUP` (`kill -HUP`
+oder `systemctl kill -s HUP authnd`). Die Identität einer Datei ist der SHA-256
+ihres Inhalts: ein Erneuerer, der eine neue Datei über die alte umbenennt, und
+einer, der sie an Ort und Stelle neu schreibt, werden beide erkannt, und ein Paar
+gleicher Größe, das im selben Zeitstempeltakt geschrieben wurde, wird nicht für
+das alte gehalten.
+
+Ein neues Paar, das sich nicht laden lässt (halb geschrieben, ein Schlüssel, der
+nicht zum Zertifikat passt, eine kaputte Datei), ändert nichts: authnd liefert
+weiter das Zertifikat aus, das es hat, protokolliert den Fehler **einmal** für
+diesen Zustand der Dateien und versucht es erneut, wenn sie sich wieder ändern.
+Vor v0.15.0 wurde ein Zertifikat, das nachts ablief, von jedem Client nicht mehr
+akzeptiert, bis jemand authnd neu startete. Die Konfiguration und die Keytab
+werden weiterhin nur beim Start gelesen.
 
 ## `publish_nt_hash` {#publish_nt_hash}
 

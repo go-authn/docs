@@ -13,7 +13,7 @@ ID プロバイダー (Entra ID、Okta、Keycloak、…) は、あなたのア�
 標準ライブラリのみ。
 
 ```sh
-go get github.com/go-authn/scim@v0.1.0
+go get github.com/go-authn/scim@v0.2.0
 ```
 
 ## 例 {#example}
@@ -54,6 +54,44 @@ Server は ID、タイムスタンプ、バージョンを割り当て、入力�
 **サポートしないもの**: 一括操作、並べ替え、パスワード変更、`/Me`
 (`/ServiceProviderConfig` でそう通知される)。
 
+## v0.2.0 で変わったこと {#v020}
+
+監査、ファジングとカオス、性能の実施を経て。呼び出し側に見えるもの:
+
+- **`Server.ReadTimeout`** (新規、既定 30 秒): 到着に時間がかかりすぎるリクエストボディは 400 で打ち切られます。
+  そのリクエストについて `http.Server` 自身の `ReadTimeout` を置き換えます。負の値なら `http.Server` のものがそのまま
+  使われます。
+- **`ConditionalDeleter`**: `Backend` が実装できる新しい省略可能なインターフェース (`DeleteUserIf`、`DeleteGroupIf`)。
+  `Memory` は実装しています。`If-Match` 付きの `DELETE` はバージョンを確認してから二段階で削除していたため、その間に
+  入った書き込みが見られずに削除されました。
+- **負けた競合はやり直されます。** `If-Match` なしの `PATCH` や `PUT` が別の書き込み側との競合に負けると、クライアントは
+  前提条件を求めていないのに 412 が返っていました。今は新しいバージョンでやり直され、最大 32 回です。`If-Match` が
+  あれば応答は今も 412 です。`If-Match` なしの 24 並行 PATCH のうち、以前は 9 件が 412 で失敗し、今は 0 件です。
+- 何にも一致しないフィルターでメンバー (や任意の要素) を削除すると成功します。以前は 400 `noTarget` でした
+  (RFC 7644 §3.5.2.2)。
+- パスなしの PATCH は、キーをソート順に適用します。以前はマップの順序だったため、一つのオブジェクトの `name` と
+  `name.givenName` が実行のたびに異なるリソースになりました。
+- `BearerAuth` はスキーム名を大文字小文字を問わず受け入れます (`bearer <token>`、RFC 7235 §2.1)。
+- `startIndex` と `count` は `int` の大きさにかかわらず上限に丸められます。以前は 32 ビットのターゲットでは 400、
+  64 ビットでは丸められたページでした。
+- `Filter.Equality()` は `Backend` にデコード済みの文字列を渡します。これはデータです。パラメーターとしてデータベースに
+  渡し、決してクエリに埋め込まないでください。
+
+バルク操作、ソート、パスワード変更は引き続きサポートされません。
+
+`Memory` での、10,000 ユーザーと 200 グループに対する一回のリスト要求の**アロケーション**。`go test -bench` による正確な値、
+Apple M4 Max:
+
+| リスト要求 | 以前 | 以後 |
+|---|---|---|
+| 100 件のページ | 789,417 回、47.7 MB | 14,952 回、6.0 MB |
+| `userName eq` | 797,979 回、47.7 MB | 90 回、12.6 KB |
+| すべてのユーザーを走査するフィルター (`name.givenName eq` と `emails[...]`) | 818,847 回、48 MB | 361,098 回、29.7 MB |
+
+実時間は測定していません。負荷が 65 で、規則は 9 未満です。ノイズの多い単発の実行 (走査するフィルターで約 1.7 秒から
+0.06 秒) は結果ではありません。`FuzzPatchPath`、`FuzzPatchThenDecode`、`FuzzFilter`、`FuzzServer` をそれぞれ 45 秒、
+16 ワーカーで実行し、130 万から 240 万回の実行で失敗は見つかりませんでした。
+
 ## 何に対して検証されているか {#what-it-is-checked-against}
 
 **ID プロバイダーが実際に送るもの**を、そのペイロードでテストしています。Entra ID の `"Replace"`、
@@ -63,4 +101,4 @@ Server は ID、タイムスタンプ、バージョンを割り当て、入力�
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.1.0](https://pkg.go.dev/github.com/go-authn/scim@v0.1.0)
+[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)

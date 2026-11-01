@@ -84,14 +84,24 @@ openssl x509 -in /etc/authn-bridge/metadata-signature-2026.pem -noout -fingerpri
 
 ## 刷新 {#refreshing-it}
 
-元数据在提供方监听之前获取，然后在文档 `cacheDuration`
-的四分之三处再次获取，间隔不短于五分钟、也不长于
-十二小时，并且每当管理 API 的 `RefreshMetadata` 要求时也会获取。
+元数据在提供方监听之前获取，然后按 go-authn/saml 的 `Federation.Run` 的计划
+（自 v0.23.6 起）再次获取：绝不安排在文档 `validUntil` 剩余时间的一半之后，
+并介于五分钟与十二小时之间（否则取其 `cacheDuration` 的四分之三），
+并且每当管理 API 的 `RefreshMetadata` 要求时也会获取。没有剩余的有效元数据时，
+获取在一分钟后重试，之后间隔加倍，直到一小时。直到 v0.23.5，循环无论有效期还剩多少，
+都继续等待 `cacheDuration` 的四分之三（没有则十二小时），所以临近有效期结束时的一次刷新失败，
+可能让提供方在联邦服务器恢复之后仍有最长十二小时没有任何 IdP。
 刷新失败时保留上一份良好的副本，**但只保留到其自身的
-`validUntil`**。此后不再为任何内容担保，每个 IdP 都会消失，
+`validUntil`**：在此之前登录继续使用它，无论联邦服务器是缓慢、宕机，还是提供了无法验证的文档。
+此后不再为任何内容担保，每个 IdP 都会消失，
 `/readyz` 会表明提供方尚未就绪。联邦服务器短暂
 无法访问不会使任何人退出登录；无法访问数日也不会让
 提供方继续信任过期的密钥。
+
+网桥的时钟与 IdP 的时钟可以在任一方向上相差三分钟：时间在此范围内的断言会被接受，相差一小时的则被拒绝并返回
+400 页面。用来记住断言以免它被接受两次的键，以其 SHA-256 存储（自 v0.23.6 起）：过长的 IdP `entityID`
+或断言 ID 超过了状态数据库的 `VARCHAR(128)` 列，严格模式下的 PostgreSQL 和 MySQL 会拒绝它，
+所以写入一直处于挂起状态，提供方一直未就绪。SQLite 不受影响。配置不发生任何变化。
 
 在文档之内，IdP 只有在支持 SAML 2.0 并发布
 HTTP-Redirect `SingleSignOnService` 时才会保留。被描述了两次的实体
@@ -231,3 +241,13 @@ $ authn-bridge metadata --config etc/bridge.hcl
 ```
 authn-bridge: saml: an external discovery service lists every IdP; with `idps` restricted, leave `discovery` out and this provider lists them itself
 ```
+
+### 测试了什么 {#tested}
+
+自 v0.23.6 起，README 的 “What it refuses” 列出了通过 ACS 端到端测试的内容：XML 签名包装（XSW1 到 XSW8 及其相同 ID
+的变体）、注释截断（CVE-2017-11427）、DOCTYPE 和实体展开、面向其他受众、接收方、请求或目的地的断言，以及重放。
+有针对 ACS（`FuzzACSAccept`）、联邦元数据、访问令牌验证（含 `alg` 混淆种子）、登录 Cookie 和重定向 URI 匹配的模糊测试器：
+`FuzzACSAccept` 在三分钟内运行了 992,517 次，有 595 个语料条目，没有失败，其余四个各运行约 90 秒，没有失败。
+混沌测试把网桥的时钟移动两分钟（接受）和一小时（拒绝），并让元数据服务器缓慢、宕机、回答 500、返回乱码、HTML、被截断
+或被篡改的文档，或什么都不返回。速率限制器不再把倒退的时钟当作负时间（它过去会按跳变的大小清空每个桶；生产环境的时钟
+不会倒退，所以这是纵深防御）。

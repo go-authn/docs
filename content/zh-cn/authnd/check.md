@@ -137,6 +137,10 @@ engineers names zoe, who has no entry here: the group is published as it stands,
 （指名陌生人的 `group` *块*会被直接拒绝；参见
 [人员]({{< relref "/authnd/people.md#written-in-the-configuration" >}})。）
 
+自 v0.15.0 起，输出的第二行是 `limits:`：authnd 将使用的连接限制、操作期限和启动期限，包括默认值。
+本页的记录由更早的版本打印，没有显示它。真实的例子见
+[限制与期限]({{< relref "/authnd/operations.md#limits" >}})。
+
 ## 它拒绝什么 {#what-it-refuses}
 
 下面每一项都会使 `check` 和服务器同样停止，退出状态为 1。它们
