@@ -317,4 +317,5 @@ celui qui fonctionne. Un mot de passe qu'une personne change par
 authnd lui-même est [appliqué aussitôt]({{< relref "/authnd/passwords.md" >}}).
 Un rafraîchissement qui échoue garde les dernières bonnes données, et `max_age` dit quand cesser
 de les servir ; voir [le faire tourner]({{< relref "/authnd/operations.md" >}}). Les fichiers de
-configuration, le certificat et la keytab exigent toujours un redémarrage.
+configuration et la keytab exigent toujours un redémarrage ; le certificat, non,
+depuis la v0.15.0.

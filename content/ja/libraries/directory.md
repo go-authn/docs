@@ -11,8 +11,16 @@ tags: [ライブラリ, ディレクトリ, ldap, sql]
 あります。
 
 ```sh
-go get github.com/go-authn/directory@v0.16.0
+go get github.com/go-authn/directory@v0.17.0
 ```
+
+v0.17.0 の新機能: [`ErrUnavailable`](#unavailable)。障害を間違ったパスワードと区別します。また、メンバーの DN は
+走査ではなく一回の検索で人に対応づけられます (結果は同じ)。`ldaptest` (同じプロセス内のサーバー) に対して `Frozen`
+経由で読んだ、10,000 人と 50 DN ずつの 2,000 グループで、`ldapdir` の `ReadGroups` は 2.20 M オブジェクトで 50.6 MB
+を確保していたものが、0.38 M で 13.1 MB になりました (pprof、レート 4096)。接続の両側の `go-ldap/ber` ライブラリも
+数える更新全体は、9.72 M 回・537 MB から 7.17 M 回・481 MB になりました。DN の検索は何も確保しません (0 回、0 B。以前は
+人の線形走査でした)。`sqldir` の更新は 1.138 M 回・45.3 MB から 1.114 M 回・42.2 MB になりました。アロケーション数は
+正確です。時間は測定していません。負荷は 65 から 105 でした。
 
 ## 何が人を証明するかは一つではない {#what-proves-somebody-is-not-one-thing}
 
@@ -340,6 +348,32 @@ alice、zed という名前のメンバーになっていました。
 `groupOfNames` のグループ (`GroupsOfNames`) を持つので、クライアントのフィルターのテストが失敗
 できるようになりました。
 
+## 障害は間違ったパスワードではない {#unavailable}
+
+v0.17.0 から、`directory.ErrUnavailable` は、ソースが「いいえ」と答えたのではなく、*問い合わせられなかった*ことを
+表します。`ldapdir` は、LDAP サーバーが busy (51)・unavailable (52)・other (80)・timeLimitExceeded (3) を返したとき、
+接続が切れたり拒否されたとき、接続や TLS ハンドシェイクが失敗したときに、原因をラップし、メッセージは変えずに、これを
+返します。`Verify` と、すべての読み取り (`ldapdir.New`、`Identities`、`Members`、`ReadGroups`、`GroupNames`、
+`GroupAttributes`、`GroupObjectClasses`) が対象です。LDAP の結果 49 は `ErrWrongPassword` のままで、**両者が同時に
+真になることはありません**。`AsUnavailable(err)` は同じようにエラーに印を付け、`TransportFailure(err)` は、エラーが
+ソースの回答ではなくネットワークや接続の失敗かどうかを答えます。`ldaptest.Server.FailBindsWith(code)` は、テスト用
+サーバーにすべてのバインドへ結果コードで答えさせ、呼び出し側をそれに対してテストできます。
+
+ソースの手前にあるサーバーは、三つの場合を分けます。
+
+```go
+switch {
+case errors.Is(err, directory.ErrWrongPassword):
+	// the credentials are wrong: count a failed guess, answer 49
+case errors.Is(err, directory.ErrUnavailable):
+	// the directory could not be asked: answer unavailable (52), count nothing
+default:
+	// anything else
+}
+```
+
+authnd v0.15.0 は、[運用のページ]({{< relref "/authnd/operations.md#limits" >}})にあるとおり、バインドにこのように答えます。
+
 ## 拒否するものと、その理由 {#what-it-refuses-and-why}
 
 - **メンバーのいないグループ**と**どのソースにもないグループ**を、`Expand` が `@group` を人々に
@@ -359,7 +393,8 @@ alice、zed という名前のメンバーになっていました。
   利用不可 (52) と答えるディレクトリは、LDAP エラーをラップした
   `ldapdir: the directory did not answer the bind: …` として返されます。パスワードはどちらの場合も
   拒否されますが、正しく入力した人に対して、サーバーのログが*間違ったパスワード*と述べることは
-  なくなります。v0.11.2 より前は、失敗したバインドはすべて `ErrWrongPassword` でした。
+  なくなります。v0.11.2 より前は、失敗したバインドはすべて `ErrWrongPassword` でした。v0.17.0 から、そのようなエラーは
+  [`ErrUnavailable`](#unavailable) でもあり、サーバーは*無効な認証情報*ではなく*あとでやり直す*と答えられます。
 - **LDAP URL 内の認証情報** — URL は出力されます。`BindDN` と `BindPassword` はフィールドです。
 - **16 バイトでない NT ハッシュ** (`ParseNTHash`)。パディングして、あらゆるログインを間違った
   パスワードとして失敗させるハッシュにするのではなく、拒否します。
@@ -398,4 +433,4 @@ CI で確認されます。
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.14.0](https://pkg.go.dev/github.com/go-authn/directory@v0.14.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)

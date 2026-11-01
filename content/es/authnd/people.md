@@ -317,4 +317,5 @@ es la cambiada *allí*. Una contraseña que una persona cambia a
 través del propio authnd se [aplica al instante]({{< relref "/authnd/passwords.md" >}}).
 Un refresco fallido conserva los últimos datos buenos, y `max_age` dice cuándo dejar de
 servirlos; consulte [ejecutarlo]({{< relref "/authnd/operations.md" >}}). Los archivos de
-configuración, el certificado y la keytab siguen necesitando un reinicio.
+configuración y la keytab siguen necesitando un reinicio; el certificado ya no, desde
+la v0.15.0.

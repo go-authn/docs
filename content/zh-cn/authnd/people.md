@@ -307,4 +307,4 @@ authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database)
 才是有效的。人员通过
 authnd 本身更改的密码会[立即生效]({{< relref "/authnd/passwords.md" >}})。
 刷新失败时会保留最近一份良好的数据，何时停止提供则由 `max_age` 决定；参见[运行]({{< relref "/authnd/operations.md" >}})。
-配置文件、证书和 keytab 仍然需要重启。
+配置文件和 keytab 仍然需要重启；证书自 v0.15.0 起不再需要。

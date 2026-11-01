@@ -8,14 +8,18 @@ tags: [authnd, betrieb, signale, systemd]
 
 ## Es liest alles einmal {#it-reads-everything-once}
 
-Die Konfigurationsdateien, das TLS-Zertifikat und die Keytab werden
-**beim Start** gelesen. Es gibt kein Neuladen, und die mitgelieferte Unit
-hat kein `ExecReload=`. Nach einer Änderung an einem davon:
+Die Konfigurationsdateien und die Keytab werden **beim Start** gelesen. Es gibt
+kein Neuladen dieser Dateien, und die mitgelieferte Unit hat kein `ExecReload=`.
+Nach einer Änderung an einer davon:
 
 ```sh
 sudo -u authnd authnd check /etc/authnd
 sudo systemctl restart authnd
 ```
+
+Das TLS-Zertifikat ist seit v0.15.0 die Ausnahme: authnd sieht `cert_file` und
+`key_file` erneut an, sodass eine Erneuerung keinen Neustart braucht. Siehe
+[das Zertifikat erneuern]({{< relref "/authnd/tls.md#renewal" >}}).
 
 Abgesehen von den Quellen (siehe unten) wird im laufenden Betrieb nur ein
 [Passwort, das eine Person über authnd ändert]({{< relref "/authnd/passwords.md" >}}) angewendet;
@@ -43,19 +47,19 @@ gemeldet, wie bei einem Eintrag, der das Schema verletzt.
 | Signal | was geschieht |
 |---|---|
 | `SIGTERM`, `SIGINT` | es gibt `stopping` aus, schließt die Listener **und jede bestehende Verbindung**, hält den Realm an, schließt die Quellen und beendet sich mit 0, sobald der Server wirklich fertig ist |
-| `SIGHUP` | es wird abgefangen und protokolliert, und authnd **bleibt in Betrieb**, ohne etwas neu zu laden |
+| `SIGHUP` | es wird abgefangen und protokolliert, und authnd **bleibt in Betrieb**. Es liest das TLS-Zertifikat sofort erneut (v0.15.0); die Konfiguration und die Keytab werden nicht neu geladen |
 
 ```
 $ authnd --config etc/authnd
-ldap on 127.0.0.1:3893, serving 4 people from the configuration file, then a sqlite database
-hangup: authnd does not reload; restart it to apply a changed configuration, certificate or keytab
+ldap on 127.0.0.1:3893, serving 1 person from the configuration file
+hangup: authnd does not reload its configuration or keytab; restart it to apply those (the TLS certificate is read again)
 alice's password change was refused: the old password did not verify: directory: wrong password
 alice changed their own password
 
 stopping
 ```
 
-Das ist ein einziger Lauf: ein `kill -HUP`, zwei Versuche, ein Passwort zu ändern (der erste
+Das ist ein einziger Lauf des Binaries v0.15.0: ein `kill -HUP`, zwei Versuche, ein Passwort zu ändern (der erste
 abgelehnt, der zweite angenommen), dann ein `kill -TERM`.
 Der Prozess war nach dem `SIGHUP` noch da.
 
@@ -87,6 +91,71 @@ Alles geht auf die Standardausgabe, die unter systemd das Journal ist
 
 Ein schlicht falsches Passwort bei einem einfachen Bind, ohne `mfa`-Block, wird mit
 `invalidCredentials` beantwortet und von authnd selbst nicht protokolliert.
+
+## Grenzen und Fristen {#limits}
+
+Ab v0.15.0 begrenzt authnd, was ein Client, eine langsame Quelle oder eine Flut
+es festhalten lassen können. Vier optionale Schlüssel, auf der obersten Ebene
+der Konfiguration:
+
+| Schlüssel | Standard | Bedeutung |
+|---|---|---|
+| `max_connections` | `4096` (war unbegrenzt) | die meisten gleichzeitig offenen Verbindungen; `0` ist unbegrenzt |
+| `max_connections_per_ip` | keiner | die meisten von einer Adresse; er darf `max_connections` nicht übersteigen |
+| `operation_timeout` | `30s` (war keiner) | wie lange eine LDAP-Operation höchstens dauern darf; `"0"` ist keiner, sonst mindestens `100ms` |
+| `startup_timeout` | `60s` | wie lange das Öffnen und erste Lesen aller Quellen höchstens dauern darf; `"0"` ist keiner |
+
+Eine Verbindung über einer Grenze erhält `busy` (51) in einer Notice of
+Disconnection und wird geschlossen, nie in eine Warteschlange gestellt
+(RFC 4511 4.4.1). Eine Operation, die bei `operation_timeout` noch läuft, wird mit
+`timeLimitExceeded` (3) beantwortet, **auch wenn ihr Handler blockiert ist und die
+Frist ignoriert**: das späte Ergebnis wird verworfen. Antwortet eine Quelle beim
+Start nicht, verweigert authnd den Start nach `startup_timeout`, mit einem Fehler,
+der die Phase und die Quelle nennt. Eine negative Zahl oder eine Dauer, die sich
+nicht lesen lässt, wird beim Start und von `check` abgelehnt. Mit
+`max_connections = 0` und `operation_timeout = "0"` gilt das Verhalten von v0.14.
+
+`check` gibt die Grenzen aus, mit denen es bedienen wird, damit niemand die
+Standardwerte betreibt, ohne es zu wissen:
+
+```
+$ authnd check etc2/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+limits: 200 connections, 20 per address; an operation may take 10s; startup may take no limit
+
+USER   FROM                    CAN PROVE   PUBLISHED AS        WITH
+alice  the configuration file  a password  account, uidObject  uid
+
+GROUP  MEMBERS  PUBLISHED AS
+staff  alice    groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+
+this configuration can be served
+```
+
+Diese Konfiguration sagt `max_connections = 200`, `max_connections_per_ip = 20`,
+`operation_timeout = "10s"` und `startup_timeout = "0"`. Ohne diese vier Schlüssel
+lautet die Zeile `limits: 4096 connections, no limit per address; an operation may
+take 30s; startup may take 1m0s`, die dasselbe Binary ebenfalls ausgegeben hat.
+
+### Ein Ausfall ist kein falsches Passwort {#outage}
+
+Werden die Personen gegen ein anderes Verzeichnis geprüft (eine `ldap`-Quelle) und
+lässt sich dieses Verzeichnis nicht fragen, weil die Verbindung abgelehnt oder
+zurückgesetzt wird, es `busy`, `unavailable` oder `other` antwortet oder nicht
+innerhalb von `operation_timeout` antwortet, antwortet authnd LDAP `unavailable`
+(52), **nie** `invalidCredentials` (49). Das gilt für einen einfachen Bind, für das
+alte Passwort einer Passwortänderung und für den Passwortfaktor eines `mfa`-Binds.
+Vor v0.15.0 wurde das als falsches Passwort gemeldet, sodass ein Anmeldeformular
+der Person sagte, ihr Passwort sei falsch, während das Verzeichnis ausgefallen war.
+Ein falsches Passwort ergibt weiterhin 49. Die Ursache steht im Log, nicht in dem,
+was der Client erfährt, und ein Ausfall zählt nicht als fehlgeschlagener Versuch.
 
 ## Wenn es nicht startet {#when-it-does-not-start}
 

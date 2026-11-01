@@ -83,14 +83,30 @@ openssl x509 -in /etc/authn-bridge/metadata-signature-2026.pem -noout -fingerpri
 
 ## Refreshing it
 
-The metadata is fetched before the provider listens, then again at three
-quarters of the document's `cacheDuration`, never sooner than five minutes nor
-later than twelve hours, and whenever the admin API's `RefreshMetadata` asks.
+The metadata is fetched before the provider listens, then again by the schedule
+of go-authn/saml's `Federation.Run` (from v0.23.6): never scheduled past half of
+what remains of the document's `validUntil`, and between five minutes and twelve
+hours (otherwise three quarters of its `cacheDuration`), and whenever the admin API's `RefreshMetadata` asks. When
+no valid metadata is left, the fetch is tried again after one minute, then at
+twice that interval up to one hour. Up to v0.23.5 the loop kept waiting three
+quarters of `cacheDuration` (twelve hours without one) whatever was left of the
+validity, so one failed refresh near the end of it could leave the provider
+with no IdP for up to twelve hours after the federation server was back.
 A refresh that fails keeps the last good copy, **but only until its own
-`validUntil`**. After that nothing is vouched for, every IdP disappears, and
-`/readyz` says the provider is not ready. A federation server briefly
-unreachable logs nobody out; one unreachable for days does not leave the
-provider trusting stale keys.
+`validUntil`**: until then logins continue on it, whether the federation server
+is slow, down, or serves a document that does not verify. After that nothing is
+vouched for, every IdP disappears, and `/readyz` says the provider is not
+ready. A federation server briefly unreachable logs nobody out; one
+unreachable for days does not leave the provider trusting stale keys.
+
+The bridge's clock may differ from an IdP's by three minutes either way: an
+assertion whose times are within that is accepted, and one an hour off is
+refused with a 400 page. The key under which an assertion is remembered, so
+that it is not accepted twice, is stored as its SHA-256 (from v0.23.6): a long
+IdP `entityID` or assertion ID used to be longer than the `VARCHAR(128)` column
+of the state database, which PostgreSQL and MySQL in strict mode refuse, so the
+write stayed pending and the provider stayed not ready. SQLite was not
+affected. No configuration changes.
 
 Within the document, an IdP is kept only if it speaks SAML 2.0 and publishes an
 HTTP-Redirect `SingleSignOnService`. An entity described twice is dropped
@@ -231,3 +247,20 @@ lists them all and cannot be restricted:
 ```
 authn-bridge: saml: an external discovery service lists every IdP; with `idps` restricted, leave `discovery` out and this provider lists them itself
 ```
+
+### What is tested {#tested}
+
+From v0.23.6 the README's "What it refuses" lists what is tested, end to end
+through the ACS: XML signature wrapping (XSW1 to XSW8 and their same-ID
+variants), comment truncation (CVE-2017-11427), DOCTYPE and entity expansion,
+assertions for another audience, recipient, request or destination, and replay.
+There are fuzzers for the ACS (`FuzzACSAccept`), the federation metadata, access
+token verification (with `alg` confusion seeds), the login cookie and redirect
+URI matching: `FuzzACSAccept` ran 992,517 executions in three minutes with 595
+corpus entries and no failure, and the other four about 90 seconds each with
+none. The chaos tests move the bridge's clock by two minutes (accepted) and by
+an hour (refused), and make the metadata server slow, down, answer 500, garbage,
+HTML, a truncated or a tampered document, or nothing. The rate limiter no longer
+treats a clock stepping back as negative time (it drained every bucket by the
+size of the step; production clocks do not step back, so this is defence in
+depth).

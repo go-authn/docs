@@ -11,8 +11,15 @@ tags: [库, 目录, ldap, sql]
 块——其要点在于这个问题的后半部分。
 
 ```sh
-go get github.com/go-authn/directory@v0.16.0
+go get github.com/go-authn/directory@v0.17.0
 ```
+
+v0.17.0 的新内容：[`ErrUnavailable`](#unavailable)，把故障与密码错误区分开；以及成员 DN 通过一次查找而不是一次扫描
+映射到人员（结果相同）。在针对 `ldaptest`（同一进程内的服务器）通过 `Frozen` 读取的 10,000 人和 2,000 个各含 50 个 DN
+的组上，`ldapdir` 的 `ReadGroups` 过去在 2.20 M 个对象中分配 50.6 MB，现在在 0.38 M 个对象中分配 13.1 MB
+（pprof，采样率 4096）；整个刷新（还计入连接两侧的 `go-ldap/ber` 库）从 9.72 M 次分配和 537 MB 降到 7.17 M 次和 481 MB。
+DN 查找不分配任何东西（0 次分配，0 B；过去是对人员的线性扫描），`sqldir` 的刷新从 1.138 M 次分配和 45.3 MB 降到
+1.114 M 次和 42.2 MB。分配次数是精确的；时间没有测量，负载为 65 到 105。
 
 ## 证明某人的依据并不单一 {#what-proves-somebody-is-not-one-thing}
 
@@ -357,6 +364,30 @@ distinguishedNameMatch（RFC 4517 §4.2.15）是人员搜索所返回条目的 D
 `top`、`account`、`posixAccount`），并支持 `groupOfNames` 组
 （`GroupsOfNames`），因此针对客户端过滤器的测试可以失败。
 
+## 故障不是密码错误 {#unavailable}
+
+自 v0.17.0 起，`directory.ErrUnavailable` 表示某个来源无法被*询问*，而不是它回答了“不”。`ldapdir` 在 LDAP 服务器回答
+busy（51）、unavailable（52）、other（80）或 timeLimitExceeded（3）、连接断开或被拒绝，以及连接或 TLS 握手失败时返回它，
+包装原因，消息保持不变，适用于 `Verify` 和每一次读取（`ldapdir.New`、`Identities`、`Members`、`ReadGroups`、
+`GroupNames`、`GroupAttributes`、`GroupObjectClasses`）。LDAP 结果 49 仍是 `ErrWrongPassword`，**两者绝不会同时为真**。
+`AsUnavailable(err)` 以同样方式标记一个错误，`TransportFailure(err)` 说明一个错误是网络或连接失败，而不是来源作出了回答。
+`ldaptest.Server.FailBindsWith(code)` 让测试服务器用一个结果码回答每一次绑定，以便针对这种情况测试调用方。
+
+位于来源前面的服务器在三种情况之间作出判断：
+
+```go
+switch {
+case errors.Is(err, directory.ErrWrongPassword):
+	// the credentials are wrong: count a failed guess, answer 49
+case errors.Is(err, directory.ErrUnavailable):
+	// the directory could not be asked: answer unavailable (52), count nothing
+default:
+	// anything else
+}
+```
+
+authnd v0.15.0 就是这样回答绑定的，如[运维页面]({{< relref "/authnd/operations.md#limits" >}})所述。
+
 ## 它拒绝什么，以及原因 {#what-it-refuses-and-why}
 
 - **没有人的组**，以及**没有任何来源拥有的组**，当 `Expand`
@@ -380,7 +411,8 @@ distinguishedNameMatch（RFC 4517 §4.2.15）是人员搜索所返回条目的 D
   `ldapdir: the directory did not answer the bind: …` 返回，并包装 LDAP 错误。
   两种情况下密码都被拒绝；不同的是，服务器的日志不再向
   输对了密码的人说*密码错误*。在 v0.11.2 之前，
-  每个失败的绑定都是 `ErrWrongPassword`。
+  每个失败的绑定都是 `ErrWrongPassword`。自 v0.17.0 起，这样的错误同时也是
+  [`ErrUnavailable`](#unavailable)，这样服务器就可以回答*稍后再试*，而不是*凭据无效*。
 - **LDAP URL 中的凭据**——URL 会被打印出来；`BindDN` 和
   `BindPassword` 是字段。
 - **不是 16 字节的 NT 哈希**（`ParseNTHash`），而不是将其填充
@@ -425,4 +457,4 @@ CI 中还会检查 `nosql` 和 `noldap` 构建。
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.14.0](https://pkg.go.dev/github.com/go-authn/directory@v0.14.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)

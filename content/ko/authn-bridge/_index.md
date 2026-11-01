@@ -12,10 +12,10 @@ SSH 키를 인증받거나, NFS over TLS용 X.509 클라이언트 인증서를 �
 애플리케이션 비밀번호를 설정하거나, WireGuard 키를 등록할 수도 있습니다. 공급자는
 자신이 발급한 것을 폐기할 수 있고, 폐기한 것의 서명된 목록을 게시합니다. 이미
 전달된 액세스 토큰은 만료될 때까지 유효합니다. 순수 Go, `CGO_ENABLED=0`, 바이너리
-하나입니다. 이 문서는 v0.23.4을 설명합니다.
+하나입니다. 이 문서는 v0.23.6을 설명합니다.
 
 ```sh
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.6
 
 authn-bridge keygen   --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 authn-bridge metadata --config /etc/authn-bridge > sp.xml   # register this with the federation

@@ -134,6 +134,10 @@ engineers names zoe, who has no entry here: the group is published as it stands,
 (見知らぬ人を名指しする `group` *ブロック*は、完全に拒否されます。
 [人々]({{< relref "/authnd/people.md#written-in-the-configuration" >}})を参照してください。)
 
+v0.15.0 から、出力の二行目は `limits:` です。authnd が使う接続の制限、操作の期限、起動の期限が、既定値も含めて
+表示されます。このページのトランスクリプトは以前のリリースが出力したもので、この行は表示されません。実際のものは
+[制限と期限]({{< relref "/authnd/operations.md#limits" >}})にあります。
+
 ## 拒否されるもの {#what-it-refuses}
 
 以下のいずれも、`check` とサーバーの両方を、終了ステータス 1 で止めます。それぞれ

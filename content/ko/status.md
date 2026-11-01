@@ -5,24 +5,33 @@ description: "이 문서가 설명하는 릴리스, 각 릴리스에서 추가�
 tags: [상태, 릴리스]
 ---
 
-이 문서는 문서 버전 **0.6**이며 다음을 설명합니다.
+이 문서는 문서 버전 **0.7**이며 다음을 설명합니다.
 
 | 프로그램 | 릴리스 | 모듈 |
 |---|---|---|
-| authnd | **v0.14.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.4** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.6** | `github.com/go-authn/revocation` |
+| authnd | **v0.15.0** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.23.6** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 라이브러리의 버전은 [해당 페이지]({{< relref "/libraries/_index.md" >}})에
 있습니다. ldap은 DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙의 읽기, 적용, 게시와
 빌드되지 않는 스키마를 위한 타입이 있는 `BuildError`, HCL2
-스키마, `ldapschema` 변환기를 갖춘 **v0.11.3**이고,
-directory는 선언된 오브젝트 클래스를 갖춘 **v0.16.0**입니다. authnd
-v0.14.1은 ldap v0.11.3과 directory v0.16.0을 내장합니다.
+스키마, `ldapschema` 변환기를 갖춘 **v0.12.0**이고,
+directory는 선언된 오브젝트 클래스를 갖춘 **v0.17.0**입니다. authnd
+v0.15.0은 ldap v0.12.0과 directory v0.17.0을 내장합니다.
 위 프로그램 중 어느 것이든 새 마이너 버전이 나오면 새 문서 버전이 됩니다. 따라서
-독자가 `/docs/0.6/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
-페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`에 남아 있습니다.
+독자가 `/docs/0.7/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
+페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`에 남아 있습니다.
+
+{{< callout type="warning" >}}
+**authnd를 v0.14.x에서 업그레이드: 기본값 두 개가 바뀝니다**
+
+`max_connections`는 `4096`(이전에는 무제한), `operation_timeout`은 `30s`(이전에는 없음)입니다. 상위 디렉터리가
+내려가 있으면 `unavailable`(52)로 응답하며 더 이상 `invalidCredentials`(49)가 아닙니다.
+`max_connections = 0`과 `operation_timeout = "0"`은 이전 동작을 줍니다.
+[제한과 기한]({{< relref "/authnd/operations.md#limits" >}})을 참조하십시오.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **보안: v0.11.1이 아니라 authnd v0.12.0을 사용하십시오**
@@ -81,6 +90,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.13.4 | 카오스 점검. 그룹은 사람과 마찬가지로 시작할 때 한 번만 읽습니다. SQLite에서 500명과 50명씩 200개 그룹에 대한 검색은 4.13초가 걸렸고(검색할 때마다 그룹을 다시 조회했습니다) 이제 1.2밀리초가 걸리며, 검색 중 실패한 그룹 쿼리가 Success라고 답하는 응답에서 그룹을 조용히 빼는 일도 없어졌습니다. 시작할 때 읽을 수 없는 소스(실행되지 않는 그룹 쿼리, 여러 데이터베이스 중 하나의 중단)는 시작과 `check`를 거부합니다. 약 3 MiB를 넘는 항목(10 MB짜리 속성 값 하나)은 게시되지 않습니다. 게시 내용은 사람 집합마다 한 번만 만듭니다. 테스트로 확인: 모든 바이트 위치에서 자른 스키마 파일, 삭제되거나 손상된 데이터베이스, 악의적인 행, 유휴 연결, 과도한 BER 길이, 20,000단계 중첩 필터 |
 | v0.14.0 | 변경: v0.13.4는 그룹을 바꾸면 재시작이 필요해서, 데이터베이스에서 뺀 구성원이 누군가 authnd를 재시작할 때까지 접근 권한을 유지했습니다. v0.14.0은 제때의 권한 회수를 되살립니다. `refresh`(기본 60초, `0`이면 끔)가 사람과 그룹의 모든 소스를 서비스 경로 밖에서 만든 새 스냅숏으로 다시 읽고 통째로 교체합니다. 실패한 새로 고침은 마지막 정상 스냅숏을 유지하며, 실패가 이어지는 동안 소스 이름과 함께 한 번만 로그에 남습니다. `max_age`(기본값은 설정 안 함)를 지정하면 제공 중인 데이터가 그보다 오래된 시점부터 검색, 사람의 bind, 비밀번호 변경이 `unavailable`로 응답합니다. authnd를 통해 쓴 비밀번호도 같은 교체를 거칩니다. 측정: SQLite에서 500명과 50명씩 200개 그룹의 새로 고침은 코어 하나로 약 2초, 검색은 0.5밀리초 (새로 고침 비용은 v0.14.1에서 해결) |
 | v0.14.1 | 성능만 개선. 새로 고침 비용이 더 이상 그룹 수 × 구성원 행 수에 따라 늘지 않습니다. directory v0.16.0이 각 소스를 한 번에 일괄로 읽습니다. SQLite에서 500명과 50명씩 200개 그룹의 새로 고침은 1.87초에서 0.155초로, 10,000명과 2,000개 그룹의 새로 고침은 391초(새로 고침 주기의 여섯 배 반)에서 1.6초(60초 주기의 2.7 %)로 줄었습니다. 할당 횟수는 39,959,235에서 3,095,482로, 6,373,736,235에서 31,198,460으로 줄었습니다. 시간은 부하 17~67에서 잰 참고값이고, 할당 횟수는 정확합니다 |
+| v0.15.0 | 가용성과 보안. go-authn/ldap v0.12.0과 go-authn/directory v0.17.0 사용. ⛔ **기본값 두 개가 바뀝니다**: `max_connections`는 `4096`(이전에는 무제한), `operation_timeout`은 `30s`(이전에는 없음). 새 선택 항목: `max_connections_per_ip`와 `startup_timeout`(`60s`). [`check`는 제한을 출력합니다]({{< relref "/authnd/operations.md#limits" >}}). 상한을 넘은 연결은 `busy`를 받고 닫히며, 기한을 넘긴 작업은 핸들러가 막혀 있어도 `timeLimitExceeded`로 응답받습니다. 바인드 중 업스트림 장애(단순 바인드, 비밀번호 변경, `mfa`의 비밀번호 요소)는 `unavailable`(52)이며 `invalidCredentials`(49)가 아닙니다. 틀린 비밀번호는 여전히 49입니다. 느린 소스에 대한 시작은 `startup_timeout` 뒤에 실패하고 단계와 소스를 밝힙니다. [TLS 인증서를 다시 읽습니다]({{< relref "/authnd/tls.md#renewal" >}})(`cert_file`이나 `key_file`이 바뀔 때. 5초 뒤 첫 핸드셰이크와 `SIGHUP`). 로드되지 않는 쌍은 제공 중인 인증서를 유지하고 한 번만 기록됩니다. 할당 횟수는 아래 라이브러리에 있습니다. 실제 시간은 측정하지 않음(시작 시 부하 21) |
 
 ### authn-bridge {#authn-bridge}
 
@@ -117,6 +127,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.23.2 | 보안: go-authn/oidc v0.4.2는 int64 범위를 벗어난 `nbf`(아직 유효하지 않은 토큰이 받아들여졌음)와 `e = 0`인 RSA 키(파싱되었음)를 거부합니다. go-authn/wireguard v0.1.2 |
 | v0.23.3 | Go 1.27.3으로 빌드, GO-2026-6809 대응(`crypto/x509`: `Certificate.Verify`가 알려진 침해된 중간 인증서를 거부하지 않았음). `go` 지시어는 1.27.3. 동작 변경 없음 |
 | v0.23.4 | 릴리스 바이너리를 `-s -w` 대신 `-w`로 링크하므로 정확한 `govulncheck -mode binary`를 위해 심볼 테이블이 남음. 동작 변경 없음 |
+| v0.23.6 | 감사, 퍼징, 카오스 실행. go-authn/saml v0.5.1 사용. 추가되거나 바뀐 구성 키는 없습니다. [메타데이터를 제때 새로 고칩니다]({{< relref "/authn-bridge/federation.md#refreshing-it" >}}): 남은 `validUntil`의 절반을 넘겨 예약되지 않으며, 유효한 메타데이터가 없으면 1분 뒤에 다시 시도하고 간격을 두 배로 늘려 최대 1시간까지 가므로, 만료 직전의 새로 고침 실패로 공급자가 최대 12시간 IdP 없이 지내는 일이 없습니다. 어설션 재전송 키는 SHA-256으로 저장됩니다. 긴 IdP `entityID` 때문에 PostgreSQL과 MySQL이 쓰기를 거부하여 상태 데이터베이스가 막혔습니다. 시계는 IdP와 3분까지 달라도 되며 한 시간은 400 페이지로 거부됩니다. [테스트되는 것]({{< relref "/authn-bridge/federation.md#tested" >}}): XML 서명 래핑 XSW1~XSW8, CVE-2017-11427, DOCTYPE, 다른 오디언스·수신자·요청·목적지, 퍼저 다섯 개. 로그인당 SHA-256 한 번은 할당이 0~2회 늘어납니다(`BenchmarkReplayUse`: 0회·183 B에서 2회·326 B). 실제 시간은 측정하지 않음, 부하 53~75 |
 
 ### authn-revokd {#authn-revokd}
 
@@ -134,6 +145,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.6.4 | 의존성만: golang.org/x/crypto v0.58.0 |
 | v0.6.5 | Go 1.27.3으로 빌드, GO-2026-6809 대응(`crypto/x509`: `Certificate.Verify`가 알려진 침해된 중간 인증서를 거부하지 않았음). `go` 지시어는 1.27.3. 동작 변경 없음 |
 | v0.6.6 | 릴리스 바이너리를 `-s -w` 대신 `-w`로 링크하므로 정확한 `govulncheck -mode binary`를 위해 심볼 테이블이 남음. 동작 변경 없음 |
+| v0.6.7 | 감사, 퍼징, 카오스, 성능 실행([한 번의 동기화가 하는 일]({{< relref "/authn-revokd/configuration.md#sync" >}})). 만료되는 목록은 다음 새로 고침이 아니라 만료되는 때 거부됩니다. 소스는 병렬로 가져옵니다(최대 16개, 각 2분). `on_change`는 1분 뒤에 종료되고 다시 시도됩니다. 에이전트 모르게 바뀐 출력 파일은 다음 동기화에서 다시 쓰입니다. `file://` 소스는 일반 파일이어야 합니다. 오류는 비밀번호, 쿼리, 프래그먼트 없는 URL을 보여 줍니다. `0..2^159` 범위를 벗어난 CRL 번호는 거부됩니다. 미러에는 읽기, 쓰기, 유휴 기한이 있습니다. 오래된 임시 파일은 시작할 때 제거됩니다. 100,000개 항목의 CRL을 다시 조회: 조회당 할당 300,138회와 96,956,946 B가 37회와 4,776,864 B로(정확. 시간은 측정하지 않음, 부하 53~65). govulncheck는 여전히 GO-2026-5932(`golang.org/x/crypto/openpgp`)를 나열하며, 수정된 버전이 없고 호출되지 않습니다 |
 
 ### sshcert {#sshcert}
 
@@ -158,9 +170,13 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | directory v0.13.0 | [속성]({{< relref "/libraries/directory.md#attributes" >}}): 누군가를 설명하되 아무것도 증명하지 않는 것(자격 증명 제외), 속성이 될 수 없는 이름 포함, `user`와 `group` 블록의 `attributes`, `users_attributes`와 `groups_attributes` 쿼리, ldapdir의 `attributes`와 `group_attributes` |
 | directory v0.14.0 | ⛔ ldapdir의 [기본값]({{< relref "/libraries/directory.md#ldapdir-defaults" >}})이 `account`와 `uidObject` 사람 및 `groupOfNames` 그룹을 읽으므로 기관의 디렉터리가 제공하는 범위가 넓어짐, `member` DN은 소스가 가져온 사람에게만 매핑됨 |
 | directory v0.15.0 | [오브젝트 클래스]({{< relref "/libraries/directory.md#object-classes" >}}), 선언되며 추론되지 않음: `users` 블록의 `object_classes`와 `group_object_classes`, `user`와 `group` 블록의 `object_classes`, sqldir의 `WithObjectClasses`와 ldapdir의 `Config.ObjectClasses`, 그룹의 클래스는 이를 선언하는 첫 번째 소스가 결정함, `sqldir.ClosesDB` |
+| directory v0.16.0 | [각 그룹을 한 번만 읽음]({{< relref "/libraries/directory.md" >}}): `GroupReader`와 `Set.Frozen`. 새로 고침이 그룹 수와 멤버십 행의 곱에 따라 늘지 않습니다 |
+| directory v0.17.0 | [`ErrUnavailable`]({{< relref "/libraries/directory.md#unavailable" >}}), `AsUnavailable`과 `TransportFailure` 포함: ldapdir는 busy(51), unavailable(52), other(80), timeLimitExceeded(3), 끊기거나 거부된 연결, 연결이나 TLS 실패에 대해 `Verify`와 모든 읽기에서 이를 반환합니다. `ErrWrongPassword`와 동시에 참인 일은 없으며 `invalidCredentials`(49)는 후자로 남습니다. `ldaptest.Server.FailBindsWith(code)`. 멤버 DN은 훑는 대신 한 번의 조회로 사람에 대응되며 결과는 같습니다. DN 50개씩의 2,000개 그룹과 10,000명에서 `ReadGroups`는 50.6 MB·2.20 M 객체 대신 13.1 MB·0.38 M을 할당하고, DN 조회는 0회, 전체 새로 고침은 9.72 M 대신 7.17 M회(정확. 시간은 측정하지 않음, 부하 65~105) |
 | kdc v0.4.3 | 의존성만: 최소 요구 버전으로 go-authn/directory v0.12.0 |
+| kdc v0.4.5 | 보안 감사, 퍼징, 카오스 실행([거부하는 것]({{< relref "/libraries/kdc.md" >}})): 다른 렐름에 대한 요청은 `KDC_ERR_WRONG_REALM`, 읽을 수 없는 디렉터리는 `KDC_ERR_SVC_UNAVAILABLE`로 응답하며(이전에는 `KDC_ERR_C_PRINCIPAL_UNKNOWN`), 시작이 `MaxSkew` 안의 미래인 TGT는 받아들이고, 디코더 패닉은 프로세스를 크래시시키는 대신 요청 하나를 버립니다(잘못된 AS-REQ나 TGS-REQ 하나로 크래시할 수 있었습니다). 프린시펄 이름은 로그에서 따옴표로 묶입니다. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | keyfactor v0.4.2 | 의존성만: 최소 요구 버전으로 go-authn/fido v0.6.2와 golang.org/x/crypto v0.58.0 |
 | krb5 v0.3.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
+| krb5 v0.3.3 | 의존성만: golang.org/x/net v0.62.0, golang.org/x/crypto v0.58.0, go-uuid v1.0.4로 요구하지만 호출되지 않는 모듈에서 `govulncheck` 결과 46건 중 45건이 해소됩니다. GO-2026-5932(`x/crypto/openpgp`)는 수정이 없고 어떤 go-authn 모듈도 가져오지 않습니다. API 변경 없음 |
 | krl v0.6.1 | 의존성만: golang.org/x/crypto v0.58.0, Go 1.27.2로 테스트함 |
 | ldap v0.8.0 | [`schema` 패키지]({{< relref "/libraries/ldap.md#the-schema" >}})와 `Server.Schema`: `cn=Subschema`(RFC 4512 §4.2), `Validate`, RFC 4517 매칭 규칙, `uidNumber`와 `gidNumber`는 정수로 정렬됨, 페이지 검색이 요청된 속성만 유지함 |
 | ldap v0.9.0 | [HCL2 스키마]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}}): `schema/hclschema` 패키지와 OpenLDAP `.schema`, cn=config LDIF, HCL2 사이를 변환하는 `ldapschema` 명령(`to-hcl`, `to-schema`, `check`), 리더는 slapd처럼 파일을 읽음, DIT 콘텐츠와 구조 규칙, 이름 형식, `include`, `X-SUBST`는 지원되지 않음(v0.11.0은 규칙을 지원함) |
@@ -171,7 +187,9 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | ldap v0.11.1 | 성능만 개선, 결과는 그대로: 인쇄 가능한 ASCII 문자열은 문자열 비교 규칙(RFC 4518)을 위해 최대 한 번의 할당으로 준비되고 아무것도 바뀌지 않으면 할당이 없으며, DN 파서는 RDN이 네 개인 DN에서 할당을 11회에서 6회로 줄임. 결과는 v0.11.0과 같고, 0x80 미만의 1바이트·2바이트 문자열 전부에 대해 v0.11.0 코드와 대조했으며 차분 퍼저로도 확인함 |
 | ldap v0.11.2 | 성능만 개선, 결과는 그대로: 속성 열 개짜리 엔트리에서 `Validate`의 할당이 76회에서 12회로 줄어듦(소문자 복사본 없는 조회, 나누었다 다시 합치지 않는 설명, 맵 대신 제자리 집합). 결과는 v0.11.1과 같고, 표준 스키마와 규칙 스키마에서 무작위 엔트리로 v0.11.1의 `Validate` 사본과 대조했으며 차분 퍼저로도 확인함 |
 | ldap v0.11.3 | 성능만 개선, 결과는 그대로: `GoverningStructureRule`의 할당이 계정 하나에서 12회에서 5회로 줄어듦(RDN의 타입만 읽음), DN 파서는 RDN이 네 개인 DN에서 6회에서 3회로 줄어듦. 결과는 v0.11.2와 같고, 무작위 엔트리와 모든 상위 규칙에서 v0.11.2의 `GoverningStructureRule` 사본과 대조했으며 차분 퍼저로도 확인함 |
+| ldap v0.12.0 | [서버의 자원 한도]({{< relref "/libraries/ldap.md" >}}): `Server.MaxConnections`와 `Server.MaxConnectionsPerIP`(기본 0, 제한 없음. 상한을 넘은 연결은 `busy`(51) 연결 해제 통지, RFC 4511 4.4.1을 받고 닫힙니다). `Server.Timeout`은 서버가 강제하며, 핸들러가 막혀서 컨텍스트를 무시하더라도 기한에 모든 작업에 `timeLimitExceeded`(3)로 응답합니다(늦은 결과는 버려지고, 고루틴은 돌아올 때까지 `MaxPending`과 `MaxPendingAuth`에 계산됩니다). 클라이언트의 검색 `timeLimit`은 핸들러의 컨텍스트에 적용됩니다. 핸들러의 `DeadlineExceeded`는 그 작업 자신의 컨텍스트가 만료되었을 때만 코드 3이 됩니다. 작업당 할당(정확): `Timeout` 없이는 전후 모두 3, 있으면 이전 10, 지금 16 |
 | oidc v0.4.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
+| scim v0.2.0 | [감사, 퍼징, 카오스, 성능 실행]({{< relref "/libraries/scim.md#v020" >}}): `Server.ReadTimeout`(30초), 선택 인터페이스 `ConditionalDeleter`, `If-Match` 없는 PATCH나 PUT은 진 경합에서 412 대신 최대 32번 다시 수행, 아무것도 일치하지 않는 필터로의 제거는 성공, 경로 없는 PATCH의 키는 정렬된 순서로 적용, `BearerAuth`는 스킴을 대소문자 구분 없이 받아들임, `startIndex`와 `count`는 워드 크기와 상관없이 상한으로 잘림. 사용자 10,000명에 대한 목록 요청: 100개 페이지는 789,417회에서 14,952회로, `userName eq`는 797,979회에서 90회로, 전체 훑기는 818,847회에서 361,098회로(정확. 시간은 측정하지 않음, 부하 65) |
 | servercert v0.5.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | totp v0.4.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | wireguard v0.1.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |

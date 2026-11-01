@@ -90,6 +90,43 @@ cerrado **solo para su propia CA**; el archivo fusionado caduca con la primera d
 entradas vigentes, así que un lector que comprueba la caducidad ve detenerse
 authn-revokd.
 
+## Lo que hace una sincronización {#sync}
+
+Desde la v0.6.7, en el orden en que una sincronización los encuentra:
+
+- **Las fuentes se descargan juntas**, 16 como máximo a la vez, cada una en dos minutos
+  (una descarga hace hasta cuatro peticiones). Un origen que nunca responde ya no
+  retrasa a todas las demás fuentes, ni a las salidas con ellas.
+- **Cada archivo de salida se compara con el disco en cada sincronización** y se
+  reescribe si difiere, ejecutando `on_change`: un archivo borrado, truncado o
+  reemplazado a espaldas del agente seguía así hasta que la lista cambiaba, y sshd
+  rechaza todos los accesos cuando su `RevokedKeys` es ilegible.
+- **`on_change` se mata al cabo de un minuto**, con los procesos hijos que retienen su
+  salida, y se reintenta en la siguiente sincronización como cualquier otro fallo. Ya no
+  se ejecuta con el cerrojo del agente tomado, así que `/healthz` y la siguiente
+  sincronización no se cuelgan con él.
+- **Una lista que caduca se rechaza cuando caduca**, no en la siguiente actualización:
+  el agente despierta en la primera caducidad (o `max_age`) de una lista vigente y falla
+  entonces cerrando el acceso. Con `refresh = "1h"` el último KRL seguía en disco, vigente
+  para sshd, hasta una hora después de que el emisor se detuviera.
+- **Una fuente `file://` debe ser un archivo regular.** Una que nombraba un FIFO bloqueaba
+  al agente para siempre en `open(2)`.
+- **Una URL en un error se muestra sin su contraseña, consulta ni fragmento**, para que un
+  token en la consulta no llegue a los registros ni al `/healthz` sin autenticar de un
+  espejo.
+- **Se rechaza un número de CRL fuera de `0..2^159`**: la RFC 5280 5.2.3 define
+  `CRLNumber ::= INTEGER (0..MAX)` de a lo sumo 20 octetos. El número `-1` se aceptaba
+  hasta que un fuzzer lo encontró.
+- **Los archivos temporales** de una escritura interrumpida entre crearlos y renombrarlos
+  se eliminan al arrancar.
+
+Los bytes idénticos a la lista que se tiene no se vuelven a verificar ni analizar (la
+vigencia se sigue juzgando), lo que hace barato consultar una fuente sin `ETag`: un CRL
+de 100 000 entradas (2,1 MB) costaba 300 138 asignaciones y 96 956 946 bytes por consulta
+en la v0.6.6 y cuesta 37 asignaciones y 4 776 864 bytes en la v0.6.7
+(`BenchmarkFetchUnchangedCRL`, asignaciones exactas). No se midieron los tiempos: la carga
+de la máquina era de 53 a 65.
+
 ## El espejo {#the-mirror}
 
 Con `listen`, authn-revokd sirve lo que tiene, desde la memoria, nunca desde los
@@ -119,6 +156,11 @@ $ curl -s -o /dev/null -w "%{http_code}\n" -H 'If-Match: "stale"' http://127.0.0
 Un origen CRL no tiene `.sig` (`404`). Los espejos se encadenan: el origen de un
 espejo puede ser otro espejo, puesto que cada lista se verifica por sí misma. Un
 origen lento nunca bloquea las respuestas del espejo.
+
+Desde la v0.6.7 las conexiones del espejo tienen plazos propios: 10 s para leer las
+cabeceras de la petición, 30 s la petición entera, 2 minutos para escribir la respuesta
+y 1 minuto en reposo. Un cliente que pedía una lista y no la leía nunca mantenía su
+conexión para siempre.
 
 ## Lo que se rechaza al arrancar {#what-is-refused-at-start}
 

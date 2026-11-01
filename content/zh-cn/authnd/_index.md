@@ -10,13 +10,28 @@ tags: [authnd, ldap]
 认证的系统使用的是 LDAP。** authnd 就是前端：它基于 [go-authn/directory]({{< relref "/libraries/_index.md" >}})
 的各个来源进行绑定和搜索，因此数据库中保存的内容可以被任何懂得
 如何查询目录的程序读取。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述
-v0.13.0，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
+v0.15.0，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
 提供的模式，站点可以用自己的模式对其扩展
 （[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），并可通过
 [DIT 内容规则、名称形式和结构规则]({{< relref "/authnd/schemas.md#rules" >}})
-为条目塑形，其下是 go-authn/ldap v0.11.0 和
-go-authn/directory v0.16.0；哪些已经验证、哪些尚未验证，见
+为条目塑形，其下是 go-authn/ldap v0.12.0 和
+go-authn/directory v0.17.0；哪些已经验证、哪些尚未验证，见
 [状态]({{< relref "/status.md" >}})页面。
+
+{{< callout type="warning" >}}
+**从 v0.14.x 升级**
+
+- ⛔ **两个默认值发生变化。** `max_connections` 为 `4096`（以前不限），`operation_timeout` 为 `30s`（以前无）。
+  保持更多连接打开、或运行超过 30 秒的操作的站点，需要设置这个键；`0`（时长用 `"0"`）就是旧的行为。
+  参见[限制]({{< relref "/authnd/operations.md#limits" >}})。
+- 新增，均为可选：`max_connections_per_ip` 和 `startup_timeout`（`60s`）。
+- 上游目录宕机时回答 `unavailable`（52），不再回答 `invalidCredentials`（49）：把 49 当作“密码错误”、
+  把 52 当作“稍后再试”的客户端，现在能区分这两者。
+- 续期后的 TLS 证书无需重启即可提供：
+  [续期证书]({{< relref "/authnd/tls.md#renewal" >}})。
+
+`authnd check` 会打印它将使用的限制。
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **从 v0.11.x 升级**
@@ -165,10 +180,12 @@ vendorVersion: v0.13.0
 | [Kerberos 域]({{< relref "/authnd/kerberos.md" >}}) | keytab，以及谁可以获得票据 |
 | [第二因素]({{< relref "/authnd/mfa.md" >}}) | 附在密码末尾的一次性代码 |
 | [绑定时使用令牌]({{< relref "/authnd/tokens.md" >}}) | 基于 SASL `OAUTHBEARER` 的 OIDC |
-| [运行]({{< relref "/authnd/operations.md" >}}) | 信号、重启、它记录什么日志、如何判断它已在运行 |
+| [运行]({{< relref "/authnd/operations.md" >}}) | 信号、重启、连接限制与期限、它记录什么日志、如何判断它已在运行 |
 
 {{< callout type="info" >}}
 **关于这些记录**
 
 这些页面上显示的每条命令，都已于 2026-10-26 用已发布的二进制文件重新运行，而不是手工重写：`authnd` v0.12.3（`authnd-darwin-arm64`，已由 `relverify` 对照 `SHA256SUMS` 及其证明（attestation）核对；`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.12.3`，`vcs.modified=false`）、`authn-bridge` v0.23.4、`authn-revokd` v0.6.6、`sshcert-authorize` v0.1.9 和 `ldapschema` v0.10.1。命令输出了什么，这里就是什么。有两份记录是例外，各自在所在之处注明：[令牌页面]({{< relref "/authnd/tokens.md" >}})上的 `oidctool` 客户端是为这些页面编写的测试客户端，不属于任何发布版本，它的记录以及旁边的服务器输出行由 v0.10.0 发布的二进制文件输出；另一份是[联邦页面]({{< relref "/authn-bridge/federation.md" >}})上 RENATER 已过期的元数据，该文件已不再发布。所有这些都由 macOS 自带的 OpenLDAP 和 Heimdal 客户端发出请求，在 127.0.0.1 的非特权端口上，在临时目录中进行。这就是为什么其背后的配置用相对路径指名文件，例如 `etc/authnd/passwords/alice.pw`，也是为什么密码文件的名称类似 `alice.pwin`。示例中的 `/etc/authnd` 路径是已安装的服务器所使用的路径。输出 `authnd` 版本的记录已用 v0.13.0 重新运行（`authnd-darwin-arm64`，由 `relverify` 对照 `SHA256SUMS` 及其证明校验；`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.13.0`）：此处和运维页面的 root DSE，以及 `authnd --version`。条目页面的模式由 v0.12.4 输出（`mod github.com/go-authn/authnd v0.12.4`，`vcs.modified=false`）；对于没有规则的模式，v0.13.0 不输出 `dITContentRules`、`nameForms` 或 `dITStructureRules` 的任何值，这一点已经核对。[站点模式页面的规则一节]({{< relref "/authnd/schemas.md#rules" >}})说明了它是用什么运行的。
+
+文档版本 0.7 中新增的记录（`check` 的 `limits:` 行，以及运维页面中发送信号的那次运行）由 `authnd` v0.15.0（用 `go install` 从标签构建；`go version -m`：`go1.27.3`，`mod github.com/go-authn/authnd v0.15.0`；`authnd --version`：`authnd version v0.15.0`）和 OpenLDAP 的 `ldappasswd` 于 2026-11-01 在 127.0.0.1 上的工作目录中打印。`authn-bridge --version` 打印了 `authn-bridge version v0.23.6`，`authn-revokd -version` 打印了 `authn-revokd v0.6.7`，构建方式相同。其余记录没有为此版本重新运行：每一份都由其正文所指明的版本打印，而 authn-bridge 和 authn-revokd 页面所描述的行为，在记录所显示的范围内不因 v0.23.6 和 v0.6.7 而改变。
 {{< /callout >}}

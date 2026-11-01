@@ -13,12 +13,12 @@ keytab 所持有的服务。它运行在
 [authnd]({{< relref "/authnd/_index.md" >}})之下。
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.3
+go get github.com/go-authn/kdc@v0.4.5
 ```
 
-在 v0.4.3，其 `go.mod` 至少要求 `go-authn/directory` v0.12.0 和
-gokrb5 v8.4.4：这只是最低版本，因此要求 directory v0.14.0（即这些页面所
-描述的版本）的程序会用 v0.15.0 构建，authnd v0.13.0 就是如此。
+在 v0.4.5，其 `go.mod` 至少要求 `go-authn/directory` v0.16.1 和
+gokrb5 v8.4.4：这只是最低版本，因此要求 directory v0.16.1
+的程序会用 v0.17.0 构建，authnd v0.15.0 就是如此。
 接受的一半是 [krb5]({{< relref "/libraries/krb5.md" >}})，只
 验证票据的服务完全不需要本模块。
 
@@ -189,6 +189,21 @@ RFC 4120 §5.4.1：`till` 为 19700101000000Z 表示请求 KDC 策略
 - 客户端属于本域，且仍在目录中
   （`KDC_ERR_C_PRINCIPAL_UNKNOWN`）。
 
+**自 v0.4.5 起**，经过安全审计以及模糊测试和混沌测试：
+
+- 针对另一个域的请求在 AS 和 TGS 处都回答 `KDC_ERR_WRONG_REALM`，而不是被处理；
+- 无法读取的目录回答 `KDC_ERR_SVC_UNAVAILABLE`，不再回答 `KDC_ERR_C_PRINCIPAL_UNKNOWN`；
+- 开始时间在 `MaxSkew` 之内的未来的 TGT 会被接受（时钟跳变），而以前 TGT 的开始时间不允许任何偏差；
+- **一个格式错误的 AS-REQ 或 TGS-REQ 就能使进程崩溃**：gokrb5 v8.4.4 的 `unmarshalTicketsSequence`
+  在任何认证之前就会 panic。现在，使解码器 panic 的请求会被丢弃，panic 及其堆栈会被记录；
+- 来自网络的主体名称在日志中加引号，使其无法伪造一行；
+- 依赖项为 golang.org/x/net v0.62.0（GO-2026-6866、GO-2026-6860）和 go-authn/directory v0.16.1。
+  GO-2026-5932（`golang.org/x/crypto/openpgp`）在上游没有修复，且不会被调用。
+
+`FuzzHandle` 在两次运行（90 秒和 150 秒）中执行了约 1400 万次，没有任何 panic 逃出。`BenchmarkASNoPreauth`，
+10,000 人中的最后一人，不带预认证：每个请求 508 次分配、18,999 字节、112 µs；没有之前的数字，因为该路径上的
+代码没有变化。时间仅供参考：负载为 65，所以没有与 MIT 的 `krb5kdc` 作比较。
+
 **有效期。** `Config.Lifetime` 为票据设上限，为零时是十小时；请求更短有效期的
 客户端会得到更短的有效期，而用 TGT 换取的票据，其结束时间不会晚于
 该 TGT，因此再次请求 `krbtgt` 不能延长凭据。
@@ -213,4 +228,4 @@ AS-REQ 请求的服务、TGS 处伪造的服务票据，以及由验证器支撑
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.3](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.3)
+[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)

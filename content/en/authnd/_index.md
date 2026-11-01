@@ -11,13 +11,30 @@ things that want to authenticate them speak LDAP.** authnd is the front: it
 binds and searches over [go-authn/directory]({{< relref "/libraries/_index.md" >}})'s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe
-v0.13.0, whose entries follow the standard schemas and pass the schema it
+v0.15.0, whose entries follow the standard schemas and pass the schema it
 serves at `cn=Subschema`, which a site extends with its own
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) and, with
 [DIT content rules, name forms and structure rules]({{< relref "/authnd/schemas.md#rules" >}}),
-shapes, with go-authn/ldap v0.11.0 and
-go-authn/directory v0.16.0 under it; what is verified and what is not is on
+shapes, with go-authn/ldap v0.12.0 and
+go-authn/directory v0.17.0 under it; what is verified and what is not is on
 the [status]({{< relref "/status.md" >}}) page.
+
+{{< callout type="warning" >}}
+**Upgrading from v0.14.x**
+
+- ⛔ **Two defaults change.** `max_connections` is `4096` (it was unlimited) and
+  `operation_timeout` is `30s` (it was none). A site that holds more connections
+  open, or runs an operation longer than 30 seconds, sets the key; `0` (`"0"` for
+  the duration) is the old behaviour. See [limits]({{< relref "/authnd/operations.md#limits" >}}).
+- New, all optional: `max_connections_per_ip` and `startup_timeout` (`60s`).
+- An upstream directory that is down is answered `unavailable` (52), no longer
+  `invalidCredentials` (49): a client that treats 49 as "wrong password" and 52
+  as "try later" now tells the two apart.
+- A renewed TLS certificate is served without a restart:
+  [renewing the certificate]({{< relref "/authnd/tls.md#renewal" >}}).
+
+`authnd check` prints the limits it will serve with.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Upgrading from v0.11.x**
@@ -171,10 +188,12 @@ which is answered to an anonymous client as well.
 | [A Kerberos realm]({{< relref "/authnd/kerberos.md" >}}) | the keytab, and who can be issued a ticket |
 | [A second factor]({{< relref "/authnd/mfa.md" >}}) | a one-time code on the end of the password |
 | [A token at the bind]({{< relref "/authnd/tokens.md" >}}) | OIDC over SASL `OAUTHBEARER` |
-| [Running it]({{< relref "/authnd/operations.md" >}}) | signals, restarts, what it logs, how to tell it is up |
+| [Running it]({{< relref "/authnd/operations.md" >}}) | signals, restarts, connection limits and deadlines, what it logs, how to tell it is up |
 
 {{< callout type="info" >}}
 **About the transcripts**
 
 Every command shown on these pages was run again on 2026-10-26 with the release binaries, not retyped: `authnd` v0.12.3 (`authnd-darwin-arm64`, checked by `relverify` against `SHA256SUMS` and its attestation; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.12.3`, `vcs.modified=false`), `authn-bridge` v0.23.4, `authn-revokd` v0.6.6, `sshcert-authorize` v0.1.9 and `ldapschema` v0.10.1. What the commands printed is what stands here. Two transcripts are exceptions, and each says so where it stands: the `oidctool` client of [the token page]({{< relref "/authnd/tokens.md" >}}), a test client written for these pages and part of no release, whose transcripts and the server lines beside them were printed by the v0.10.0 release binary; and RENATER's expired metadata on [the federation page]({{< relref "/authn-bridge/federation.md" >}}), a file that is no longer published. All of them were asked by the OpenLDAP and Heimdal clients that ship with macOS, on 127.0.0.1 on unprivileged ports, in a scratch directory. That is why the configurations behind them name files by relative paths such as `etc/authnd/passwords/alice.pw`, and why the password files have names like `alice.pwin`. The `/etc/authnd` paths in the examples are what an installed server uses. The transcripts that print the version of `authnd` were run again with v0.13.0 (`authnd-darwin-arm64`, checked by `relverify` against `SHA256SUMS` and its attestation; `go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.13.0`): the root DSE here and on the operations page, and `authnd --version`. The schema of the entries page was printed by v0.12.4 (`mod github.com/go-authn/authnd v0.12.4`, `vcs.modified=false`); v0.13.0 prints no value of `dITContentRules`, `nameForms` or `dITStructureRules` for a schema without rules, which was checked. The [rules section of the site schemas page]({{< relref "/authnd/schemas.md#rules" >}}) says what it was run with.
+
+The transcripts that are new in documentation version 0.7 (the `limits:` line of `check`, and the signal run on the operations page) were printed on 2026-11-01 by `authnd` v0.15.0, built with `go install` from the tag (`go version -m`: `go1.27.3`, `mod github.com/go-authn/authnd v0.15.0`; `authnd --version`: `authnd version v0.15.0`) and OpenLDAP's `ldappasswd`, on 127.0.0.1, in a scratch directory. `authn-bridge --version` printed `authn-bridge version v0.23.6` and `authn-revokd -version` printed `authn-revokd v0.6.7`, built the same way. The other transcripts were not run again for this version: each was printed by the release its text names, and the pages of authn-bridge and authn-revokd describe behaviour that v0.23.6 and v0.6.7 do not change in what a transcript shows.
 {{< /callout >}}

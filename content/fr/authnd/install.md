@@ -107,7 +107,7 @@ Le reste de l'unité est le durcissement habituel (`ProtectHome`, `PrivateTmp`,
 
 | | |
 |---|---|
-| `ExecReload=` | authnd n'a pas de rechargement. Il lit sa configuration, son certificat et son keytab une seule fois ; voir [l'exploiter]({{< relref "/authnd/operations.md" >}}) |
+| `ExecReload=` | authnd n'a pas de rechargement. Il lit sa configuration et son keytab une seule fois, et son certificat de nouveau quand les fichiers changent (`SIGHUP` le demande aussitôt) ; voir [l'exploiter]({{< relref "/authnd/operations.md" >}}) |
 | `PrivateUsers=` | dans un espace de noms utilisateur, `CAP_NET_BIND_SERVICE` ne s'applique plus au réseau de l'hôte, et la liaison au port 389 est refusée |
 | `ProcSubset=pid` | il masque `/proc/sys`, où Go lit `net/core/somaxconn`, et le backlog de chaque écouteur retombe à la valeur de repli de Go, 128 |
 
@@ -163,6 +163,10 @@ Pourquoi ce répertoire et pas le fichier est expliqué dans
 | `reader "<dn>"` | aucun | un compte de service qui peut chercher ; voir [qui peut lire]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | à quelle fréquence chaque source est relue ; `0` le désactive ; voir [l'exploiter]({{< relref "/authnd/operations.md" >}}) |
 | `max_age` | non défini | refuser les données périmées (`unavailable`) dès que les données servies sont plus anciennes ; voir [l'exploiter]({{< relref "/authnd/operations.md" >}}) |
+| `max_connections` | `4096` | le plus grand nombre de connexions ouvertes à la fois, `0` pour aucune limite ; au-delà, une connexion reçoit `busy` et est fermée ; voir [limites]({{< relref "/authnd/operations.md#limits" >}}) |
+| `max_connections_per_ip` | aucun | le plus grand nombre de connexions depuis une même adresse |
+| `operation_timeout` | `30s` | la durée maximale d'une opération, `"0"` pour aucune ; au-delà, le client reçoit `timeLimitExceeded` |
+| `startup_timeout` | `60s` | la durée maximale pour ouvrir et lire une première fois les sources, `"0"` pour aucune |
 | `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | désactivé | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [les personnes]({{< relref "/authnd/people.md" >}}) ; au moins un bloc `user` ou `users` |
 | `kerberos` | aucun | [un royaume]({{< relref "/authnd/kerberos.md" >}}) |

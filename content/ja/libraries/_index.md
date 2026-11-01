@@ -18,16 +18,16 @@ tags: [ライブラリ]
 | [totp]({{< relref "/libraries/totp.md" >}}) | この六桁のコードは正しいか。以前に使われたことはないか | v0.4.2 | `github.com/go-authn/totp` |
 | [fido]({{< relref "/libraries/fido.md" >}}) | 64 バイトのレポートで、セキュリティキーとどう話すか | v0.6.2 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | *登録された*鍵が答えたか。人がそれに触れたか | v0.4.2 | `github.com/go-authn/keyfactor` |
-| [directory]({{< relref "/libraries/directory.md" >}}) | ある人は誰で、何がその人を証明できるか | v0.16.0 | `github.com/go-authn/directory` |
-| [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP サーバーのバイト列とは何か | v0.11.3 | `github.com/go-authn/ldap` |
-| [krb5]({{< relref "/libraries/krb5.md" >}}) | この Kerberos チケットはこのサービスに有効か | v0.3.1 | `github.com/go-authn/krb5` |
-| [kdc]({{< relref "/libraries/kdc.md" >}}) | レルムはディレクトリからどうチケットを発行するか | v0.4.3 | `github.com/go-authn/kdc` |
+| [directory]({{< relref "/libraries/directory.md" >}}) | ある人は誰で、何がその人を証明できるか | v0.17.0 | `github.com/go-authn/directory` |
+| [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP サーバーのバイト列とは何か | v0.12.0 | `github.com/go-authn/ldap` |
+| [krb5]({{< relref "/libraries/krb5.md" >}}) | この Kerberos チケットはこのサービスに有効か | v0.3.3 | `github.com/go-authn/krb5` |
+| [kdc]({{< relref "/libraries/kdc.md" >}}) | レルムはディレクトリからどうチケットを発行するか | v0.4.5 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | このベアラートークンは誰が尋ねていると述べ、それを信じるべきか | v0.4.1 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | フェデレーションの ID プロバイダーは、この人について何と述べたか | v0.4.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | この SSH 証明書または鍵は、sshd が答えるとおりに失効しているか | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | デーモンの TLS サーバー証明書はどこから来るか | v0.5.2 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | この WireGuard 鍵は接続してよいか。誰のものか | v0.1.1 | `github.com/go-authn/wireguard` |
-| [scim]({{< relref "/libraries/scim.md" >}}) | ID プロバイダーが作成、変更、削除したのは誰か | v0.1.0 | `github.com/go-authn/scim` |
+| [scim]({{< relref "/libraries/scim.md" >}}) | ID プロバイダーが作成、変更、削除したのは誰か | v0.2.0 | `github.com/go-authn/scim` |
 
 ## グループ分け {#how-they-group}
 
@@ -73,7 +73,7 @@ tags: [ライブラリ]
 抱えることになります。
 
 これは意図ではなく、測定です。`github.com/go-authn/krb5@v0.3.1` だけをインポートする作業用
-モジュールで:
+モジュールで (v0.3.3 が変えるのは間接依存だけで、必要とする go-authn のモジュールは変わりません):
 
 ```sh
 $ GOWORK=off go list -deps . | grep go-authn

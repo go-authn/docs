@@ -13,10 +13,10 @@ client X.509 pour NFS sur TLS, définir un mot de passe d'application pour SMB e
 enregistrer une clé WireGuard. Le fournisseur peut révoquer ce qu'il a émis, et il
 publie des listes signées de ce qu'il a révoqué ; un jeton d'accès déjà remis reste
 valide jusqu'à son expiration. Pur Go, `CGO_ENABLED=0`, un seul
-binaire. Ces pages décrivent la v0.23.4.
+binaire. Ces pages décrivent la v0.23.6.
 
 ```sh
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.6
 
 authn-bridge keygen   --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 authn-bridge metadata --config /etc/authn-bridge > sp.xml   # register this with the federation

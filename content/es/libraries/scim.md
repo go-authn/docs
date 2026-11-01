@@ -13,7 +13,7 @@ de acceso HTTP, para Users y Groups (RFC 7643, RFC 7644), sobre un `Backend`
 que usted escribe. Go puro, `CGO_ENABLED=0`, solo biblioteca estándar.
 
 ```sh
-go get github.com/go-authn/scim@v0.1.0
+go get github.com/go-authn/scim@v0.2.0
 ```
 
 ## Ejemplo {#example}
@@ -58,6 +58,52 @@ Todo lo de aquí viene de fuera, así que los límites son parte de la API:
 **No admitido**: operaciones en bloque (bulk), ordenación, cambios de
 contraseña, `/Me` (anunciado como tal en `/ServiceProviderConfig`).
 
+## Qué cambió la v0.2.0 {#v020}
+
+Tras una auditoría, una pasada de fuzzing y caos y una pasada de rendimiento. Lo que un
+llamante puede ver:
+
+- **`Server.ReadTimeout`**, nuevo, 30 s por defecto: un cuerpo de petición que tarda más en
+  llegar se corta con un 400. Sustituye al `ReadTimeout` propio del `http.Server` para la
+  petición; un valor negativo deja el del `http.Server`.
+- **`ConditionalDeleter`**, una nueva interfaz opcional que un `Backend` puede implementar
+  (`DeleteUserIf`, `DeleteGroupIf`), lo que hace `Memory`. `DELETE` con `If-Match`
+  comprobaba la versión y borraba en dos pasos, de modo que una escritura que llegaba entre
+  medias se borraba sin verse.
+- **Una carrera perdida se rehace.** Un `PATCH` o `PUT` sin `If-Match` que perdía una carrera
+  con otro escritor se respondía con 412 aunque el cliente no pidiera ninguna precondición;
+  ahora se rehace sobre la versión más nueva, como máximo 32 veces. Con `If-Match` la
+  respuesta sigue siendo 412. De 24 PATCH concurrentes sin `If-Match`, 9 fallaban con 412
+  antes y ninguno ahora.
+- Quitar un miembro, o cualquier elemento, mediante un filtro que no coincide con nada
+  tiene éxito; era un 400 `noTarget` (RFC 7644 §3.5.2.2).
+- Un PATCH sin ruta aplica sus claves en orden ordenado; usaba el orden del mapa, de modo
+  que `name` y `name.givenName` en un mismo objeto daban un recurso distinto de una
+  ejecución a otra.
+- `BearerAuth` acepta el nombre del esquema en cualquier caso (`bearer <token>`, RFC 7235
+  §2.1).
+- `startIndex` y `count` se acotan sea cual sea el tamaño de un `int`: un valor por encima
+  era un 400 en destinos de 32 bits y una página acotada en los de 64 bits.
+- Un `Filter.Equality()` entrega a un `Backend` la cadena decodificada. Es un dato: páselo a
+  la base de datos como parámetro y nunca lo inserte en una consulta.
+
+Las operaciones en bloque, la ordenación y los cambios de contraseña siguen sin
+soportarse.
+
+**Asignaciones** de una petición de lista sobre 10 000 usuarios y 200 grupos con `Memory`,
+exactas, de `go test -bench`, Apple M4 Max:
+
+| petición de lista | antes | después |
+|---|---|---|
+| una página de 100 | 789 417 asignaciones, 47,7 MB | 14 952 asignaciones, 6,0 MB |
+| `userName eq` | 797 979 asignaciones, 47,7 MB | 90 asignaciones, 12,6 KB |
+| un filtro que recorre todos los usuarios (`name.givenName eq` y `emails[...]`) | 818 847 asignaciones, 48 MB | 361 098 asignaciones, 29,7 MB |
+
+No se midió el tiempo de reloj: la carga era de 65, y la regla es menos de 9. Las ejecuciones
+sueltas ruidosas (unos 1,7 s a 0,06 s para el filtro que recorre) no son un resultado.
+`FuzzPatchPath`, `FuzzPatchThenDecode`, `FuzzFilter` y `FuzzServer` corrieron 45 s cada uno
+con 16 trabajadores, de 1,3 a 2,4 millones de ejecuciones, y no encontraron ningún fallo.
+
 ## Contra qué se comprueba {#what-it-is-checked-against}
 
 **Lo que los proveedores de identidad envían de verdad**, probado con sus
@@ -69,4 +115,4 @@ El filtro, PATCH y todo el manejador se prueban con fuzzing (`FuzzFilter`,
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.1.0](https://pkg.go.dev/github.com/go-authn/scim@v0.1.0)
+[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)

@@ -300,5 +300,5 @@ authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database)
 そのため*そこで*変更されたパスワードが有効になります。人が authnd 自体を通じて
 変更したパスワードは、[直ちに反映されます]({{< relref "/authnd/passwords.md" >}})。
 失敗した更新は最後に正常だったデータを保ち、いつ提供をやめるかは `max_age` で決まります。
-[運用]({{< relref "/authnd/operations.md" >}})を参照してください。設定ファイル、証明書、
-keytab は今も再起動が必要です。
+[運用]({{< relref "/authnd/operations.md" >}})を参照してください。設定ファイルと keytab は今も再起動が必要ですが、証明書は v0.15.0 から
+不要です。

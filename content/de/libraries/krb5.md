@@ -13,8 +13,15 @@ signiert, prüft, versiegelt und öffnet dann Nachrichten mit dem Schlüssel, de
 festgelegt hat.
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.1
+go get github.com/go-authn/krb5@v0.3.3
 ```
+
+v0.3.3 ändert weder die API noch den Code: Es hebt die indirekten Abhängigkeiten
+golang.org/x/net auf v0.62.0, golang.org/x/crypto auf v0.58.0 und
+github.com/hashicorp/go-uuid auf v1.0.4. `govulncheck` listete 46 Funde in Modulen auf,
+die es verlangt und nicht aufruft; jetzt listet es 1, GO-2026-5932
+(`golang.org/x/crypto/openpgp`), das keine korrigierte Version hat und das nichts in
+go-authn importiert. Die vom Code aus erreichbaren Funde waren 0 vorher und sind 0 nachher.
 
 Es spricht nie mit einem KDC und stellt nie ein Ticket aus, daher entscheidet jemand anderes,
 wessen Tickets es annimmt. Die ausstellende Hälfte ist
@@ -138,4 +145,4 @@ Prüfstein übersprungen. Die Untergrenze der Coverage-Lane liegt bei 90 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.1](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.1)
+[pkg.go.dev/github.com/go-authn/krb5@v0.3.3](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3)

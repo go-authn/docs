@@ -11,8 +11,20 @@ memory, a SQL database, an LDAP server, or `user` and `group` blocks in a
 configuration file — and the point of it is the second half of the question.
 
 ```sh
-go get github.com/go-authn/directory@v0.16.0
+go get github.com/go-authn/directory@v0.17.0
 ```
+
+New in v0.17.0: [`ErrUnavailable`](#unavailable), an outage told apart from a
+wrong password, and a member DN mapped to a person by one lookup instead of a
+scan (same results). On 10,000 people and 2,000 groups of 50 DNs read through
+`Frozen` against `ldaptest` (a server in the same process), `ldapdir`'s
+`ReadGroups` allocated 50.6 MB in 2.20 M objects and allocates 13.1 MB in
+0.38 M (pprof, sample rate 4096); the whole refresh, which also counts the
+`go-ldap/ber` library on both sides of the connection, went from 9.72 M
+allocations and 537 MB to 7.17 M and 481 MB. A DN lookup allocates nothing (0
+allocations, 0 B; it was a linear scan of the people), and the `sqldir` refresh
+went from 1.138 M allocations and 45.3 MB to 1.114 M and 42.2 MB. Allocation
+counts are exact; times were not measured, the load being 65 to 105.
 
 ## What proves somebody is not one thing
 
@@ -361,6 +373,37 @@ gives each person an `objectClass` (`Person.ObjectClasses`, by default
 `top`, `account`, `posixAccount`) and has `groupOfNames` groups
 (`GroupsOfNames`), so a test of a client's filters can fail.
 
+## An outage is not a wrong password {#unavailable}
+
+From v0.17.0, `directory.ErrUnavailable` says that a source could not be
+*asked*, as opposed to answering no. `ldapdir` returns it, wrapping the cause
+and leaving the message unchanged, when the LDAP server answers busy (51),
+unavailable (52), other (80) or timeLimitExceeded (3), when the connection is
+dropped or refused, and when the dial or the TLS handshake fails, on `Verify`
+and on every read (`ldapdir.New`, `Identities`, `Members`, `ReadGroups`,
+`GroupNames`, `GroupAttributes`, `GroupObjectClasses`). LDAP result 49 stays
+`ErrWrongPassword`, and **the two are never both true**. `AsUnavailable(err)`
+marks an error the same way, and `TransportFailure(err)` says whether an error
+is the network or the connection failing rather than a source answering.
+`ldaptest.Server.FailBindsWith(code)` makes a test server answer every bind
+with a result code, to test a caller against that.
+
+A server in front of the source decides on three cases:
+
+```go
+switch {
+case errors.Is(err, directory.ErrWrongPassword):
+	// the credentials are wrong: count a failed guess, answer 49
+case errors.Is(err, directory.ErrUnavailable):
+	// the directory could not be asked: answer unavailable (52), count nothing
+default:
+	// anything else
+}
+```
+
+That is how authnd v0.15.0 answers a bind, as
+[the operations page]({{< relref "/authnd/operations.md#limits" >}}) says.
+
 ## What it refuses, and why
 
 - **A group with nobody in it**, and **a group no source has**, when `Expand`
@@ -384,7 +427,9 @@ gives each person an `objectClass` (`Person.ObjectClasses`, by default
   `ldapdir: the directory did not answer the bind: …`, wrapping the LDAP error.
   The password is refused either way; what changes is that a server's log no
   longer says *wrong password* to somebody who typed it right. Before v0.11.2
-  every failed bind was `ErrWrongPassword`.
+  every failed bind was `ErrWrongPassword`. From v0.17.0 such an error is also
+  [`ErrUnavailable`](#unavailable), so that a server can answer *try later*
+  instead of *invalid credentials*.
 - **Credentials in an LDAP URL** — a URL is printed; `BindDN` and
   `BindPassword` are fields.
 - **An NT hash that is not 16 bytes** (`ParseNTHash`), rather than padding it
@@ -429,4 +474,4 @@ The coverage lane fails below 85% (its stated standard is 100%), and the
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/directory@v0.14.0](https://pkg.go.dev/github.com/go-authn/directory@v0.14.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)

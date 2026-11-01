@@ -19,16 +19,16 @@ tags: [库]
 | [totp]({{< relref "/libraries/totp.md" >}}) | 这个六位数字代码是否正确，以前是否用过？ | v0.4.2 | `github.com/go-authn/totp` |
 | [fido]({{< relref "/libraries/fido.md" >}}) | 如何通过 64 字节报告与安全密钥通信？ | v0.6.2 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | *已注册的*那把密钥是否作出了回答，是否有人触摸过它？ | v0.4.2 | `github.com/go-authn/keyfactor` |
-| [directory]({{< relref "/libraries/directory.md" >}}) | 某人是谁，什么可以证明其身份？ | v0.16.0 | `github.com/go-authn/directory` |
-| [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP 服务器的字节是什么？ | v0.11.3 | `github.com/go-authn/ldap` |
-| [krb5]({{< relref "/libraries/krb5.md" >}}) | 这张 Kerberos 票据对此服务是否有效？ | v0.3.1 | `github.com/go-authn/krb5` |
-| [kdc]({{< relref "/libraries/kdc.md" >}}) | 域如何根据目录签发票据？ | v0.4.3 | `github.com/go-authn/kdc` |
+| [directory]({{< relref "/libraries/directory.md" >}}) | 某人是谁，什么可以证明其身份？ | v0.17.0 | `github.com/go-authn/directory` |
+| [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP 服务器的字节是什么？ | v0.12.0 | `github.com/go-authn/ldap` |
+| [krb5]({{< relref "/libraries/krb5.md" >}}) | 这张 Kerberos 票据对此服务是否有效？ | v0.3.3 | `github.com/go-authn/krb5` |
+| [kdc]({{< relref "/libraries/kdc.md" >}}) | 域如何根据目录签发票据？ | v0.4.5 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | 这个持有者令牌声称是谁在发出请求，是否应当相信？ | v0.4.1 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | 联邦的身份提供方对此人说了什么？ | v0.4.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | 按 sshd 的回答，这个 SSH 证书或密钥是否已被吊销？ | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | 守护进程的 TLS 服务器证书从哪里来？ | v0.5.2 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 这把 WireGuard 密钥是否可以连接，它是谁的？ | v0.1.1 | `github.com/go-authn/wireguard` |
-| [scim]({{< relref "/libraries/scim.md" >}}) | 身份提供方刚刚创建、更改或删除了谁？ | v0.1.0 | `github.com/go-authn/scim` |
+| [scim]({{< relref "/libraries/scim.md" >}}) | 身份提供方刚刚创建、更改或删除了谁？ | v0.2.0 | `github.com/go-authn/scim` |
 
 ## 它们如何分组 {#how-they-group}
 
@@ -79,7 +79,7 @@ WireGuard 公钥的签名列表，网关会将其转换为对端。
 KDC 读取人员所用的 directory 模块，而它从不使用该模块。
 
 这是测量得到的，而不是意图。在只导入
-`github.com/go-authn/krb5@v0.3.1` 的临时模块中：
+`github.com/go-authn/krb5@v0.3.1` 的临时模块中（v0.3.3 只改变间接依赖，不改变它所需要的 go-authn 模块）：
 
 ```sh
 $ GOWORK=off go list -deps . | grep go-authn

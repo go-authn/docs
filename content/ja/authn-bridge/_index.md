@@ -12,10 +12,10 @@ tags: [authn-bridge, oidc, saml]
 発行したり、SMB と S3 用のアプリケーションパスワードを設定したり、WireGuard 鍵を登録したり
 することもできます。プロバイダーは自分が発行したものを失効でき、失効させたものの署名付き
 リストを公開します。すでに渡されたアクセストークンは、期限が切れるまで有効なままです。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.23.4 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.23.6 を説明しています。
 
 ```sh
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.4
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.6
 
 authn-bridge keygen   --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 authn-bridge metadata --config /etc/authn-bridge > sp.xml   # register this with the federation

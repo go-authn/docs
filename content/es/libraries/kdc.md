@@ -12,13 +12,12 @@ que conoce un [directorio]({{< relref "/libraries/directory.md" >}}) y los servi
 guarda una keytab. Se ejecuta bajo [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.3
+go get github.com/go-authn/kdc@v0.4.5
 ```
 
-En la v0.4.3 su `go.mod` requiere como mínimo `go-authn/directory` v0.12.0 y
-gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.14.0, la
-versión que describen estas páginas, se compila con la v0.15.0, como hace authnd
-v0.13.0. La mitad que
+En la v0.4.5 su `go.mod` requiere como mínimo `go-authn/directory` v0.16.1 y
+gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.16.1
+se compila con la v0.17.0, como hace authnd v0.15.0. La mitad que
 acepta es [krb5]({{< relref "/libraries/krb5.md" >}}), y un servicio que solo
 verifica tickets no necesita este módulo en absoluto.
 
@@ -191,6 +190,30 @@ incompatible de una contraseña mal escrita.
 - el cliente es de este reino y sigue en el directorio
   (`KDC_ERR_C_PRINCIPAL_UNKNOWN`).
 
+**Desde la v0.4.5**, tras una auditoría de seguridad y una pasada de fuzzing y caos:
+
+- una petición para otro reino se responde con `KDC_ERR_WRONG_REALM`, en el AS y en el
+  TGS, en lugar de servirse;
+- un directorio que no se puede leer se responde con `KDC_ERR_SVC_UNAVAILABLE`, ya no con
+  `KDC_ERR_C_PRINCIPAL_UNKNOWN`;
+- se acepta un TGT cuyo inicio está dentro de `MaxSkew` en el futuro (un salto de reloj),
+  cuando antes el inicio de un TGT no admitía desfase;
+- **una sola AS-REQ o TGS-REQ mal formada podía hacer caer el proceso**:
+  `unmarshalTicketsSequence` de gokrb5 v8.4.4 entra en pánico antes de cualquier
+  autenticación. Una petición que hace entrar en pánico al decodificador ahora se descarta,
+  y el pánico y su pila se registran;
+- un nombre de principal procedente de la red se entrecomilla en el registro, para que no
+  pueda falsificar una línea;
+- las dependencias son golang.org/x/net v0.62.0 (GO-2026-6866, GO-2026-6860) y
+  go-authn/directory v0.16.1. GO-2026-5932 (`golang.org/x/crypto/openpgp`) no tiene
+  corrección en origen y no se llama.
+
+`FuzzHandle` hizo unos 14 millones de ejecuciones en dos pasadas (90 s y 150 s) sin que
+escapara ningún pánico. `BenchmarkASNoPreauth`, 10 000 personas y la última pedida, sin
+preautenticación: 508 asignaciones, 18 999 bytes y 112 µs por petición; no hay cifra
+anterior, pues no cambió ningún código de esa ruta. El tiempo es solo indicativo: la carga
+era de 65, así que no se comparó nada con el `krb5kdc` de MIT.
+
 **Duraciones.** `Config.Lifetime` limita un ticket, diez horas cuando vale cero; un
 cliente que pide menos obtiene menos, y un ticket obtenido con un TGT no termina más
 tarde que ese TGT, así que volver a pedir `krbtgt` no puede alargar una credencial.
@@ -215,4 +238,4 @@ respaldado por un verificador. El mínimo de la línea de cobertura es el 80%.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.3](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.3)
+[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)

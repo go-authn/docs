@@ -138,6 +138,12 @@ engineers names zoe, who has no entry here: the group is published as it stands,
 (Ein `group`-*Block*, der eine fremde Person nennt, wird sofort abgelehnt; siehe
 [Personen]({{< relref "/authnd/people.md#written-in-the-configuration" >}}).)
 
+Ab v0.15.0 ist die zweite Zeile der Ausgabe `limits:`: die Verbindungsgrenzen, die
+Frist einer Operation und die Frist des Starts, mit denen authnd laufen wird,
+einschließlich der Standardwerte. Die Transkripte auf dieser Seite stammen von
+früheren Releases und zeigen sie nicht. Ein echtes steht unter
+[Grenzen und Fristen]({{< relref "/authnd/operations.md#limits" >}}).
+
 ## Was es ablehnt {#what-it-refuses}
 
 Jeder dieser Fälle hält `check` und den Server gleichermaßen auf, mit Exit-Status 1. Sie

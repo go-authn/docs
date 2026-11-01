@@ -8,14 +8,17 @@ tags: [authnd, 운영, 시그널, systemd]
 
 ## 모든 것을 한 번만 읽습니다 {#it-reads-everything-once}
 
-구성 파일, TLS 인증서, keytab은 **시작할 때** 읽습니다.
-다시 불러오기는 없으며, 패키지로 제공되는 유닛에는 `ExecReload=`가 없습니다. 이
-중 무엇이든 바꾼 뒤에는:
+구성 파일과 keytab은 **시작할 때** 읽습니다.
+이들을 다시 불러오는 기능은 없으며, 패키지로 제공되는 유닛에는 `ExecReload=`가 없습니다.
+둘 중 무엇이든 바꾼 뒤에는:
 
 ```sh
 sudo -u authnd authnd check /etc/authnd
 sudo systemctl restart authnd
 ```
+
+TLS 인증서는 v0.15.0부터 예외입니다. authnd가 `cert_file`과 `key_file`을 다시 살펴보므로
+갱신에 재시작이 필요 없습니다. [인증서 갱신]({{< relref "/authnd/tls.md#renewal" >}})을 참조하십시오.
 
 소스(아래 참조)를 제외하면, 실행 중에 적용되는 유일한 것은
 [사람이 authnd를 통해 바꾸는 비밀번호]({{< relref "/authnd/passwords.md" >}})이며,
@@ -39,19 +42,19 @@ sudo systemctl restart authnd
 | 시그널 | 일어나는 일 |
 |---|---|
 | `SIGTERM`, `SIGINT` | `stopping`을 출력하고, 리스너와 **수립된 모든 연결**을 닫고, 렐름을 멈추고, 소스를 닫은 뒤, 서버가 실제로 끝나면 0으로 종료합니다 |
-| `SIGHUP` | 잡아서 기록하며, authnd는 아무것도 다시 불러오지 않고 **계속 실행됩니다** |
+| `SIGHUP` | 잡아서 기록하며, authnd는 **계속 실행됩니다**. TLS 인증서는 즉시 다시 읽습니다(v0.15.0). 구성과 keytab은 다시 불러오지 않습니다 |
 
 ```
 $ authnd --config etc/authnd
-ldap on 127.0.0.1:3893, serving 4 people from the configuration file, then a sqlite database
-hangup: authnd does not reload; restart it to apply a changed configuration, certificate or keytab
+ldap on 127.0.0.1:3893, serving 1 person from the configuration file
+hangup: authnd does not reload its configuration or keytab; restart it to apply those (the TLS certificate is read again)
 alice's password change was refused: the old password did not verify: directory: wrong password
 alice changed their own password
 
 stopping
 ```
 
-한 번의 실행입니다. `kill -HUP`, 비밀번호 변경 시도 두 번(첫 번째는 거부, 두
+v0.15.0 바이너리의 한 번의 실행입니다. `kill -HUP`, 비밀번호 변경 시도 두 번(첫 번째는 거부, 두
 번째는 수락), 그리고 `kill -TERM`. `SIGHUP` 뒤에도 프로세스는 그대로 있었습니다.
 
 예전에는 `SIGHUP`이 authnd를 **종료시켰습니다**. 아무도 처리하지 않는 시그널에
@@ -82,6 +85,62 @@ stopping
 
 `mfa` 블록이 없는 단순 바인드에서의 단순한 잘못된 비밀번호는
 `invalidCredentials`로 응답하며 authnd 자체는 기록하지 않습니다.
+
+## 제한과 기한 {#limits}
+
+v0.15.0부터 authnd는 클라이언트, 느린 소스, 폭주가 자신에게 붙잡아 둘 수 있는 것에 상한을 둡니다.
+구성의 최상위에 두는 선택 키 네 개입니다.
+
+| 키 | 기본값 | 의미 |
+|---|---|---|
+| `max_connections` | `4096` (이전에는 무제한) | 동시에 열려 있는 연결의 최대 수. `0`은 무제한 |
+| `max_connections_per_ip` | 없음 | 한 주소에서의 최대 수. `max_connections`를 넘을 수 없음 |
+| `operation_timeout` | `30s` (이전에는 없음) | LDAP 작업 하나가 걸릴 수 있는 최대 시간. `"0"`은 없음, 그 외에는 `100ms` 이상 |
+| `startup_timeout` | `60s` | 모든 소스를 열고 처음 읽는 데 걸릴 수 있는 최대 시간. `"0"`은 없음 |
+
+상한을 넘은 연결은 연결 해제 통지(notice of disconnection)로 `busy`(51)를 받고 닫히며, 대기열에 들어가지
+않습니다(RFC 4511 4.4.1). `operation_timeout` 시점에도 실행 중인 작업은 `timeLimitExceeded`(3)로 응답받습니다.
+**핸들러가 막혀서 기한을 무시하더라도 마찬가지입니다**. 늦게 나온 결과는 버려집니다. 시작할 때 소스가 응답하지
+않으면 authnd는 `startup_timeout` 뒤에 시작을 거부하며, 오류는 단계와 소스를 밝힙니다. 음수나 읽을 수 없는
+기간은 시작할 때와 `check`에서 거부됩니다. v0.14의 동작을 원하면 `max_connections = 0`과
+`operation_timeout = "0"`을 설정하십시오.
+
+`check`는 앞으로 적용할 제한을 출력합니다. 아무도 모르는 채 기본값으로 운영하지 않도록 하기 위해서입니다.
+
+```
+$ authnd check etc2/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+limits: 200 connections, 20 per address; an operation may take 10s; startup may take no limit
+
+USER   FROM                    CAN PROVE   PUBLISHED AS        WITH
+alice  the configuration file  a password  account, uidObject  uid
+
+GROUP  MEMBERS  PUBLISHED AS
+staff  alice    groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+
+this configuration can be served
+```
+
+이 구성은 `max_connections = 200`, `max_connections_per_ip = 20`, `operation_timeout = "10s"`,
+`startup_timeout = "0"`을 지정합니다. 이 네 키가 없으면 해당 줄은 `limits: 4096 connections, no limit per
+address; an operation may take 30s; startup may take 1m0s`이며, 같은 바이너리가 이것도 출력했습니다.
+
+### 장애는 틀린 비밀번호가 아닙니다 {#outage}
+
+사람을 다른 디렉터리(`ldap` 소스)에 대해 확인하는데 그 디렉터리에 물어볼 수 없을 때, 즉 연결이 거부되거나
+재설정되거나, `busy`, `unavailable`, `other`로 응답하거나, `operation_timeout` 안에 응답하지 않을 때, authnd는
+LDAP `unavailable`(52)로 응답하며 `invalidCredentials`(49)로는 **절대** 응답하지 않습니다. 단순 바인드, 비밀번호
+변경의 이전 비밀번호, `mfa` 바인드의 비밀번호 요소에 모두 해당합니다. v0.15.0 이전에는 이것이 틀린 비밀번호로
+보고되었으므로, 디렉터리가 내려가 있는 동안 로그인 양식이 사용자에게 비밀번호가 틀렸다고 알렸습니다. 틀린
+비밀번호는 여전히 49입니다. 원인은 클라이언트에게 알려지는 내용이 아니라 로그에 남으며, 장애는 실패한 추측으로
+세지 않습니다.
 
 ## 시작하지 않는 경우 {#when-it-does-not-start}
 

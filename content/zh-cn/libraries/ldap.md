@@ -12,7 +12,7 @@ tags: [库, ldap, 目录]
 绑定策略；本库拥有字节。
 
 ```sh
-go get github.com/go-authn/ldap@v0.11.0
+go get github.com/go-authn/ldap@v0.12.0
 ```
 
 依据 RFC 4511（协议）、4512（根 DSE 和模式）、
@@ -178,6 +178,21 @@ modifying entry "uid=dora,ou=people,dc=example,dc=org"
 | `IdleTimeout` | 5 分钟 | 整个消息必须及时到达，而不仅仅是它的第一个字节；负值表示永不超时 |
 | `MaxPending`、`MaxPendingAuth` | 100、1000 | 一个连接在绑定之前（`MaxPending`）和之后（`MaxPendingAuth`）可以有多少进行中的操作，对应 slapd 的 `conn_max_pending` 和 `conn_max_pending_auth`；超出的连接会收到断开通知并被关闭 |
 | `MaxPagedSearches` | 4 | 每个连接打开的分页搜索数，每个都是停在下一个条目上的 goroutine |
+| `MaxConnections` | 0（不限） | 同时保持的连接数；超出的连接会收到结果码为 `busy`（51，RFC 4511 4.4.1）的断开通知并立即被关闭，绝不排队。v0.12.0 中新增 |
+| `MaxConnectionsPerIP` | 0（不限） | 一个远程地址可以保持的连接数；非 TCP 的监听器（unix 套接字）不受此限。v0.12.0 中新增 |
+
+**处理程序无法忽略的期限。** `Server.Timeout`（零：无）是处理程序上下文的期限，自 v0.12.0 起由*服务器*强制执行：
+到期时，无论处理程序是否返回，客户端对任何操作（不仅是搜索，绑定、比较或写入也一样）都会收到
+`timeLimitExceeded`（3）。在 v0.12.0 之前，忽略上下文的处理程序会让客户端永远等待，而且只有搜索把期限映射为代码 3，
+绑定、比较或写入回答 `other`。不返回的处理程序的 goroutine 无法被终止：在它返回之前，它一直计入 `MaxPending` 和
+`MaxPendingAuth`，它迟到的结果被丢弃，其消息 ID 在此期间被拒绝（`protocolError`），因此泄漏的 goroutine 按连接受限，
+所有操作都这样到期的连接会达到待处理上限并被关闭。**处理程序必须遵守其上下文，才能释放它所持有的资源。**
+客户端的搜索 `timeLimit` 现在也适用于处理程序的上下文。包装了 `context.DeadlineExceeded` 的处理程序错误，只有在该
+操作自身的上下文已到期时才映射为代码 3；否则仍是 `other`。没有处理程序接口发生变化。
+
+成本，以每次操作的分配次数计（`BenchmarkRun`，精确）：没有 `Timeout` 时之前和现在都是 3；有 `Timeout` 时之前 10，现在 16，
+用于期限监视器。时间无法报告：负载为 65（没有 `Timeout` 时 454 ns 和 444 ns，有时 981 ns 和 1455 ns，仅供参考）。
+覆盖率为 99.9 %，下限为 99.7 %，没有触碰任何解析器或解码器。
 
 过滤器的嵌套同样有界：Go 中的栈溢出会终止进程。
 没有任何内容会记录断言*值*——过滤器携带的是某人键入的内容——只记录

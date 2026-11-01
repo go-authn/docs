@@ -103,7 +103,7 @@ ProtectSystem=strict
 
 | | |
 |---|---|
-| `ExecReload=` | authnd にはリロードがありません。設定、証明書、キータブを一度だけ読み込みます。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
+| `ExecReload=` | authnd にはリロードがありません。設定とキータブを一度だけ読み込み、証明書はファイルが変わると読み直します (`SIGHUP` ですぐに)。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
 | `PrivateUsers=` | ユーザー名前空間の内部では、`CAP_NET_BIND_SERVICE` はホストのネットワークに適用されなくなり、389 へのバインドが拒否されます |
 | `ProcSubset=pid` | Go が `net/core/somaxconn` を読む `/proc/sys` を隠してしまい、すべてのリスナーのバックログが Go のフォールバックである 128 に下がります |
 
@@ -159,6 +159,10 @@ ReadWritePaths=/etc/authnd/passwords
 | `reader "<dn>"` | なし | 検索できるサービスアカウント。[誰が読めるか]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})を参照 |
 | `refresh` | `60s` | すべてのソースを読み直す間隔。`0` で無効。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
 | `max_age` | 未設定 | 提供中のデータがこれより古くなったら、古いデータを拒否 (`unavailable`)。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
+| `max_connections` | `4096` | 同時に開く接続の最大数、`0` は無制限。超えた接続には `busy` が送られて閉じられます。[制限]({{< relref "/authnd/operations.md#limits" >}})を参照 |
+| `max_connections_per_ip` | なし | 一つのアドレスからの接続の最大数 |
+| `operation_timeout` | `30s` | 一つの操作に許される最長時間、`"0"` はなし。過ぎるとクライアントに `timeLimitExceeded` が返ります |
+| `startup_timeout` | `60s` | ソースを開いて最初に読み込むのに許される最長時間、`"0"` はなし |
 | `cert_file`、`key_file`、`starttls`、`publish_nt_hash`、`samba` | オフ | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`、`group`、`users` | — | [人々]({{< relref "/authnd/people.md" >}})。`user` または `users` ブロックが少なくとも一つ必要 |
 | `kerberos` | なし | [レルム]({{< relref "/authnd/kerberos.md" >}}) |

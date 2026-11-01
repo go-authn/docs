@@ -16,8 +16,9 @@ key_file  = "/etc/authnd/key.pem"
 (*one without the other serves nothing*). TLS 1.2가 최소 버전입니다. authnd에는
 ACME 클라이언트가 없습니다. 두 파일은 다른 것이 기록합니다 —
 [go-authn/servercert]({{< relref "/libraries/servercert.md" >}}), certbot, 사이트
-자체의 CA — 그리고 인증서는 리스너를 열 때 한 번만 읽으므로 갱신할 때마다
-authnd를 **재시작**합니다.
+자체의 CA — 그리고 v0.15.0부터 authnd는 파일이 바뀌면 다시 읽으므로 재시작이 필요 없습니다.
+[인증서 갱신](#renewal)을 참조하십시오. v0.14.1까지는 인증서를 리스너를 열 때 한 번만 읽었으므로
+갱신할 때마다 authnd를 **재시작**했습니다.
 
 ## 두 가지 방식, 각각 리스너 하나 {#two-ways-one-listener-each}
 
@@ -90,6 +91,19 @@ sambaNTPassword: 8846F7EAEE8FB117AD06BDD830B7586C
 그 거부가 `cert_file`을 제안이 아니라 보장으로 만들며, `publish_nt_hash`가 의존하는
 것도 그것입니다. 루트 DSE를 읽기 전에 `ldapsearch -x`가 보내는 익명 바인드도
 포함되므로, StartTLS 리스너에서는 그 디스커버리 쿼리에도 `-ZZ`가 필요합니다.
+
+## 인증서 갱신 {#renewal}
+
+v0.15.0부터 갱신된 인증서에는 재시작이 필요 없습니다. authnd는 마지막으로 살펴본 뒤 5초가 지난 첫 TLS
+핸드셰이크에서, 그리고 `SIGHUP`(`kill -HUP` 또는 `systemctl kill -s HUP authnd`)으로 즉시, `cert_file`과
+`key_file`을 제공 중인 것과 비교합니다. 파일의 식별은 내용의 SHA-256이므로, 새 파일을 옛 파일 위로 이름 변경하는
+갱신 도구와 제자리에서 다시 쓰는 도구가 모두 감지되며, 같은 타임스탬프 눈금 안에 쓰인 같은 크기의 쌍이 옛 것으로
+오인되지도 않습니다.
+
+로드되지 않는 새 쌍(쓰다 만 것, 인증서와 맞지 않는 키, 깨진 파일)은 아무것도 바꾸지 않습니다. authnd는 가진
+인증서를 계속 제공하고, 파일의 그 상태에 대해 실패를 **한 번만** 기록하며, 파일이 다시 바뀌면 다시 시도합니다.
+v0.15.0 이전에는 밤에 만료된 인증서가 누군가 authnd를 재시작할 때까지 모든 클라이언트에게 신뢰받지 못했습니다.
+구성과 keytab은 여전히 시작할 때만 읽습니다.
 
 ## `publish_nt_hash` {#publish_nt_hash}
 

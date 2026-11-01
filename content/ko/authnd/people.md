@@ -303,5 +303,5 @@ authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database)
 바뀐 비밀번호가 동작하는 것이라는 점뿐입니다. 사람이 authnd
 자체를 통해 바꾸는 비밀번호는 [즉시 적용됩니다]({{< relref "/authnd/passwords.md" >}}).
 새로 고침이 실패하면 마지막 정상 데이터를 유지하며, 언제 서비스를 멈출지는 `max_age`가 정합니다.
-[운영하기]({{< relref "/authnd/operations.md" >}})를 참조하십시오. 구성 파일, 인증서,
-keytab은 여전히 재시작이 필요합니다.
+[운영하기]({{< relref "/authnd/operations.md" >}})를 참조하십시오. 구성 파일과
+keytab은 여전히 재시작이 필요하며, 인증서는 v0.15.0부터 필요하지 않습니다.

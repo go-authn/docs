@@ -87,6 +87,47 @@ Chaque liste est d'abord fusionnée seule. Une liste qui ne peut pas être fusio
 sa propre AC seulement** ; le fichier fusionné expire avec la première de ses entrées
 en vigueur, si bien qu'un lecteur qui vérifie l'expiration voit l'arrêt d'authn-revokd.
 
+## Ce que fait une synchronisation {#sync}
+
+Depuis la v0.6.7, dans l'ordre où une synchronisation les rencontre :
+
+- **Les sources sont récupérées ensemble**, 16 au plus à la fois, chacune en
+  deux minutes (une récupération fait jusqu'à quatre requêtes). Un amont qui ne
+  répond jamais ne retarde plus toutes les autres sources, ni les sorties avec
+  elles.
+- **Chaque fichier de sortie est comparé au disque à chaque synchronisation** et
+  réécrit s'il diffère, `on_change` étant exécuté : un fichier supprimé, tronqué
+  ou remplacé dans le dos de l'agent le restait jusqu'au prochain changement de
+  la liste, et sshd refuse toutes les connexions quand son `RevokedKeys` est
+  illisible.
+- **`on_change` est tué au bout d'une minute**, avec les processus enfants qui
+  tiennent sa sortie, et relancé à la synchronisation suivante comme tout autre
+  échec. Il ne s'exécute plus avec le verrou de l'agent, si bien que `/healthz`
+  et la synchronisation suivante ne se bloquent plus avec lui.
+- **Une liste qui expire est refusée quand elle expire**, pas au rafraîchissement
+  suivant : l'agent se réveille à la première expiration (ou `max_age`) d'une
+  liste courante et refuse alors par défaut. Avec `refresh = "1h"`, le dernier KRL
+  restait sur le disque, courant pour sshd, jusqu'à une heure après l'arrêt de
+  l'émetteur.
+- **Une source `file://` doit être un fichier ordinaire.** Une source désignant un
+  FIFO bloquait l'agent pour toujours dans `open(2)`.
+- **Une URL dans une erreur est affichée sans son mot de passe, sa requête ni son
+  fragment**, pour qu'un jeton placé dans la requête n'atteigne ni les journaux
+  ni le `/healthz` non authentifié d'un miroir.
+- **Un numéro de CRL hors de `0..2^159` est refusé** : la RFC 5280 5.2.3 définit
+  `CRLNumber ::= INTEGER (0..MAX)` d'au plus 20 octets. Le numéro `-1` était
+  accepté jusqu'à ce qu'un fuzzer le trouve.
+- **Les fichiers temporaires** d'une écriture interrompue entre la création et le
+  renommage sont supprimés au démarrage.
+
+Des octets identiques à la liste déjà détenue ne sont pas vérifiés ni analysés de
+nouveau (la validité temporelle est toujours jugée), ce qui rend peu coûteuse
+l'interrogation d'une source sans `ETag` : un CRL de 100 000 entrées (2,1 Mo)
+coûtait 300 138 allocations et 96 956 946 octets par interrogation en v0.6.6, et
+coûte 37 allocations et 4 776 864 octets en v0.6.7 (`BenchmarkFetchUnchangedCRL`,
+allocations exactes). Les temps n'ont pas été mesurés : la charge de la machine
+était de 53 à 65.
+
 ## Le miroir {#the-mirror}
 
 Avec `listen`, authn-revokd sert ce qu'il détient, depuis la mémoire, jamais depuis les
@@ -116,6 +157,11 @@ $ curl -s -o /dev/null -w "%{http_code}\n" -H 'If-Match: "stale"' http://127.0.0
 Une source CRL n'a pas de `.sig` (`404`). Les miroirs s'enchaînent : la source d'un miroir peut être
 un autre miroir, puisque chaque liste se vérifie par elle-même. Un amont lent ne
 bloque jamais les réponses du miroir.
+
+Depuis la v0.6.7, les connexions du miroir ont leurs propres échéances : 10 s pour
+lire les en-têtes de la requête, 30 s pour la requête entière, 2 minutes pour
+écrire la réponse et 1 minute d'inactivité. Un client qui avait demandé une liste
+et ne la lisait jamais gardait sa connexion pour toujours.
 
 ## Ce qui est refusé au démarrage {#what-is-refused-at-start}
 

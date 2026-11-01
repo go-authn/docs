@@ -12,7 +12,7 @@ serveur qui l'exécute et qui détient la configuration, les sources d'annuaire 
 politique de liaison ; celle-ci détient les octets.
 
 ```sh
-go get github.com/go-authn/ldap@v0.11.0
+go get github.com/go-authn/ldap@v0.12.0
 ```
 
 Écrite d'après les RFC 4511 (le protocole), 4512 (le root DSE et le schéma),
@@ -179,6 +179,32 @@ les alias ni les renvois (referrals), si bien qu'un ManageDsaIT critique est ref
 | `IdleTimeout` | 5 minutes | le message entier doit arriver à temps, pas son premier octet ; une valeur négative signifie jamais |
 | `MaxPending`, `MaxPendingAuth` | 100, 1000 | opérations qu'une connexion peut avoir en cours avant sa liaison (`MaxPending`) et après (`MaxPendingAuth`), comme les `conn_max_pending` et `conn_max_pending_auth` de slapd ; une connexion qui dépasse reçoit un avis de déconnexion et est fermée |
 | `MaxPagedSearches` | 4 | recherches paginées ouvertes par connexion, chacune une goroutine en attente de son entrée suivante |
+| `MaxConnections` | 0 (aucune limite) | connexions tenues à la fois ; une connexion en trop reçoit une notification de déconnexion avec le code résultat `busy` (51, RFC 4511 4.4.1) et est fermée aussitôt, jamais mise en file. Ajouté en v0.12.0 |
+| `MaxConnectionsPerIP` | 0 (aucune limite) | connexions qu'une même adresse distante peut tenir ; un écouteur qui n'est pas TCP (une socket unix) n'y est pas soumis. Ajouté en v0.12.0 |
+
+**Une échéance que le gestionnaire ne peut pas ignorer.** `Server.Timeout` (zéro :
+aucune) est l'échéance du contexte du gestionnaire, et depuis la v0.12.0 c'est le
+*serveur* qui l'applique : à l'échéance, le client reçoit `timeLimitExceeded` (3) pour
+toute opération (une liaison, une comparaison ou une écriture aussi bien qu'une
+recherche), que le gestionnaire revienne ou non. Avant la v0.12.0, un gestionnaire qui
+ignorait son contexte laissait le client attendre pour toujours, et seule une recherche
+traduisait une échéance en code 3, une liaison, une comparaison ou une écriture
+répondant `other`. La goroutine d'un gestionnaire qui ne revient pas ne peut pas être
+tuée : elle continue de compter dans `MaxPending` et `MaxPendingAuth` jusqu'à son retour,
+son résultat tardif est abandonné, et son identifiant de message est refusé
+(`protocolError`) entre-temps ; les goroutines perdues sont ainsi bornées par connexion,
+et une connexion dont toutes les opérations expirent ainsi atteint la limite et est
+fermée. **Un gestionnaire doit respecter son contexte pour libérer ce qu'il tient.** Le
+`timeLimit` de recherche du client s'applique aussi au contexte du gestionnaire. Une
+erreur de gestionnaire qui enveloppe `context.DeadlineExceeded` est traduite en code 3
+seulement quand le contexte propre de l'opération a expiré ; sinon elle reste `other`.
+Aucune interface de gestionnaire n'a changé.
+
+Le coût, en allocations par opération (`BenchmarkRun`, exact) : 3 avant et maintenant
+sans `Timeout` ; avec un `Timeout`, 10 avant et 16 maintenant, pour l'observateur
+d'échéance. Les temps ne sont pas publiables : la charge était de 65 (454 ns et 444 ns
+sans `Timeout`, 981 ns et 1455 ns avec, à titre indicatif seulement). La couverture est
+de 99,9 %, pour un plancher de 99,7 %, et aucun analyseur ni décodeur n'a été touché.
 
 La profondeur d'imbrication des filtres est bornée elle aussi : un débordement de pile en Go tue le processus.
 Rien ne journalise la *valeur* d'une assertion — un filtre porte ce que quelqu'un a tapé — seulement

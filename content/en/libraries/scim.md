@@ -13,7 +13,7 @@ endpoint, for Users and Groups (RFC 7643, RFC 7644), over a `Backend` you
 write. Pure Go, `CGO_ENABLED=0`, standard library only.
 
 ```sh
-go get github.com/go-authn/scim@v0.1.0
+go get github.com/go-authn/scim@v0.2.0
 ```
 
 ## Example
@@ -57,6 +57,52 @@ Everything here comes from outside, so the limits are part of the API:
 **Not supported**: bulk operations, sorting, password changes, `/Me`
 (announced as such in `/ServiceProviderConfig`).
 
+## What v0.2.0 changed {#v020}
+
+From an audit, a fuzzing and chaos pass and a performance pass. What a caller can
+see:
+
+- **`Server.ReadTimeout`**, new, default 30 s: a request body that takes longer
+  to arrive is cut off with a 400. It replaces the `http.Server`'s own
+  `ReadTimeout` for the request; a negative value leaves the `http.Server`'s
+  alone.
+- **`ConditionalDeleter`**, a new optional interface a `Backend` may implement
+  (`DeleteUserIf`, `DeleteGroupIf`), which `Memory` does. `DELETE` with
+  `If-Match` used to check the version and delete in two steps, so a write
+  landing between them was deleted unseen.
+- **A lost race is redone.** A `PATCH` or `PUT` without `If-Match` that lost a
+  race with another writer was answered 412 although the client asked for no
+  precondition; it is now redone on the newer version, at most 32 times. With
+  `If-Match` the answer is still 412. Of 24 concurrent PATCHes without
+  `If-Match`, 9 failed with 412 before and none now.
+- Removing a member, or any element, through a filter that matches nothing
+  succeeds; it was a 400 `noTarget` (RFC 7644 §3.5.2.2).
+- A PATCH without a path applies its keys in sorted order; it used the map's
+  order, so `name` and `name.givenName` in one object gave a different resource
+  from run to run.
+- `BearerAuth` accepts the scheme name in any case (`bearer <token>`, RFC 7235
+  §2.1).
+- `startIndex` and `count` are clamped whatever the size of an `int`: a value
+  beyond it was a 400 on 32-bit targets and a clamped page on 64-bit ones.
+- A `Filter.Equality()` hands a `Backend` the decoded string. It is data: pass it
+  to the database as a parameter, and never splice it into a query.
+
+Bulk operations, sorting and password changes remain unsupported.
+
+**Allocations** of one list request over 10,000 users and 200 groups on
+`Memory`, exact, from `go test -bench`, Apple M4 Max:
+
+| list request | before | after |
+|---|---|---|
+| a page of 100 | 789,417 allocations, 47.7 MB | 14,952 allocations, 6.0 MB |
+| `userName eq` | 797,979 allocations, 47.7 MB | 90 allocations, 12.6 KB |
+| a filter that scans every user (`name.givenName eq` and `emails[...]`) | 818,847 allocations, 48 MB | 361,098 allocations, 29.7 MB |
+
+Wall-clock was not measured: the load was 65, and the rule is under 9. The noisy
+single runs (about 1.7 s to 0.06 s for the scanning filter) are not a result.
+`FuzzPatchPath`, `FuzzPatchThenDecode`, `FuzzFilter` and `FuzzServer` ran 45 s
+each with 16 workers, 1.3 to 2.4 million executions, and found no failure.
+
 ## What it is checked against
 
 **What identity providers really send**, tested with their payloads: Entra
@@ -67,4 +113,4 @@ path that repeats the `id`. The filter, PATCH and the whole handler are fuzzed
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/scim@v0.1.0](https://pkg.go.dev/github.com/go-authn/scim@v0.1.0)
+[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)

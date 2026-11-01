@@ -11,8 +11,20 @@ en memoria, una base de datos SQL, un servidor LDAP, o bloques `user` y `group` 
 archivo de configuración; y lo que importa es la segunda mitad de la pregunta.
 
 ```sh
-go get github.com/go-authn/directory@v0.16.0
+go get github.com/go-authn/directory@v0.17.0
 ```
+
+Nuevo en la v0.17.0: [`ErrUnavailable`](#unavailable), una caída distinguida de una
+contraseña incorrecta, y un DN de miembro asignado a una persona con una sola búsqueda en
+lugar de un recorrido (mismos resultados). Con 10 000 personas y 2000 grupos de 50 DN
+leídos mediante `Frozen` contra `ldaptest` (un servidor en el mismo proceso), `ReadGroups`
+de `ldapdir` asignaba 50,6 MB en 2,20 M de objetos y asigna 13,1 MB en 0,38 M (pprof, tasa
+4096); la actualización completa, que cuenta también la biblioteca `go-ldap/ber` a ambos
+lados de la conexión, pasó de 9,72 M de asignaciones y 537 MB a 7,17 M y 481 MB. Una
+búsqueda de DN no asigna nada (0 asignaciones, 0 B; era un recorrido lineal de las
+personas), y la actualización de `sqldir` pasó de 1,138 M de asignaciones y 45,3 MB a
+1,114 M y 42,2 MB. Los recuentos de asignaciones son exactos; no se midieron los tiempos,
+con una carga de 65 a 105.
 
 ## Lo que prueba a alguien no es una sola cosa {#what-proves-somebody-is-not-one-thing}
 
@@ -368,6 +380,36 @@ defecto `top`, `account`, `posixAccount`) y tiene grupos `groupOfNames`
 (`GroupsOfNames`), para que una prueba de los filtros de un cliente pueda
 fallar.
 
+## Una caída no es una contraseña incorrecta {#unavailable}
+
+Desde la v0.17.0, `directory.ErrUnavailable` dice que una fuente no pudo ser *consultada*,
+en lugar de responder que no. `ldapdir` lo devuelve, envolviendo la causa y sin cambiar el
+mensaje, cuando el servidor LDAP responde busy (51), unavailable (52), other (80) o
+timeLimitExceeded (3), cuando la conexión se corta o se rechaza, y cuando falla la conexión
+o el handshake TLS, en `Verify` y en cada lectura (`ldapdir.New`, `Identities`, `Members`,
+`ReadGroups`, `GroupNames`, `GroupAttributes`, `GroupObjectClasses`). El resultado LDAP 49
+sigue siendo `ErrWrongPassword`, y **los dos nunca son ciertos a la vez**.
+`AsUnavailable(err)` marca un error del mismo modo, y `TransportFailure(err)` dice si un
+error es la red o la conexión que falla en lugar de una fuente que responde.
+`ldaptest.Server.FailBindsWith(code)` hace que un servidor de prueba responda cada bind con
+un código de resultado, para probar a un llamante frente a eso.
+
+Un servidor delante de la fuente decide entre tres casos:
+
+```go
+switch {
+case errors.Is(err, directory.ErrWrongPassword):
+	// the credentials are wrong: count a failed guess, answer 49
+case errors.Is(err, directory.ErrUnavailable):
+	// the directory could not be asked: answer unavailable (52), count nothing
+default:
+	// anything else
+}
+```
+
+Así responde authnd v0.15.0 a un bind, como dice
+[la página de operación]({{< relref "/authnd/operations.md#limits" >}}).
+
 ## Lo que rechaza, y por qué {#what-it-refuses-and-why}
 
 - **Un grupo en el que no hay nadie**, y **un grupo que ningún origen tiene**,
@@ -392,7 +434,9 @@ fallar.
   devuelve como `ldapdir: the directory did not answer the bind: …`, envolviendo el
   error LDAP. La contraseña se rechaza en ambos casos; lo que cambia es que el registro
   de un servidor ya no dice *wrong password* a alguien que la escribió bien. Antes de la
-  v0.11.2, cada bind fallido era `ErrWrongPassword`.
+  v0.11.2, cada bind fallido era `ErrWrongPassword`. Desde la v0.17.0 un error así es también
+  [`ErrUnavailable`](#unavailable), para que un servidor pueda responder *inténtelo más tarde*
+  en lugar de *credenciales no válidas*.
 - **Credenciales en una URL LDAP**: una URL se imprime; `BindDN` y `BindPassword` son
   campos.
 - **Un hash NT que no tiene 16 bytes** (`ParseNTHash`), en lugar de rellenarlo hasta
@@ -438,4 +482,4 @@ compilaciones `nosql` y `noldap` se comprueban en la CI.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.14.0](https://pkg.go.dev/github.com/go-authn/directory@v0.14.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)

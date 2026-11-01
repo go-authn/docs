@@ -19,16 +19,16 @@ Alle sind reines Go und bauen mit `CGO_ENABLED=0`.
 | [totp]({{< relref "/libraries/totp.md" >}}) | Stimmt dieser sechsstellige Code, und wurde er schon einmal verwendet? | v0.4.2 | `github.com/go-authn/totp` |
 | [fido]({{< relref "/libraries/fido.md" >}}) | Wie spricht man mit einem Sicherheitsschlüssel, über 64-Byte-Reports? | v0.6.2 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | Hat *der registrierte* Schlüssel geantwortet, und hat eine Person ihn berührt? | v0.4.2 | `github.com/go-authn/keyfactor` |
-| [directory]({{< relref "/libraries/directory.md" >}}) | Wer ist jemand, und was kann das beweisen? | v0.16.0 | `github.com/go-authn/directory` |
-| [ldap]({{< relref "/libraries/ldap.md" >}}) | Was sind die Bytes eines LDAP-Servers? | v0.11.3 | `github.com/go-authn/ldap` |
-| [krb5]({{< relref "/libraries/krb5.md" >}}) | Taugt dieses Kerberos-Ticket für diesen Dienst? | v0.3.1 | `github.com/go-authn/krb5` |
-| [kdc]({{< relref "/libraries/kdc.md" >}}) | Wie stellt ein Realm Tickets aus einem Verzeichnis aus? | v0.4.3 | `github.com/go-authn/kdc` |
+| [directory]({{< relref "/libraries/directory.md" >}}) | Wer ist jemand, und was kann das beweisen? | v0.17.0 | `github.com/go-authn/directory` |
+| [ldap]({{< relref "/libraries/ldap.md" >}}) | Was sind die Bytes eines LDAP-Servers? | v0.12.0 | `github.com/go-authn/ldap` |
+| [krb5]({{< relref "/libraries/krb5.md" >}}) | Taugt dieses Kerberos-Ticket für diesen Dienst? | v0.3.3 | `github.com/go-authn/krb5` |
+| [kdc]({{< relref "/libraries/kdc.md" >}}) | Wie stellt ein Realm Tickets aus einem Verzeichnis aus? | v0.4.5 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | Wer fragt laut diesem Bearer-Token, und sollte man ihm glauben? | v0.4.1 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | Was hat der Identitätsanbieter einer Föderation über diese Person gesagt? | v0.4.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | Ist dieses SSH-Zertifikat oder dieser Schlüssel widerrufen, so wie sshd antworten würde? | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | Woher kommt das TLS-Serverzertifikat eines Daemons? | v0.5.2 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | Darf dieser WireGuard-Schlüssel sich verbinden, und wem gehört er? | v0.1.1 | `github.com/go-authn/wireguard` |
-| [scim]({{< relref "/libraries/scim.md" >}}) | Wen hat der Identitätsanbieter gerade angelegt, geändert oder gelöscht? | v0.1.0 | `github.com/go-authn/scim` |
+| [scim]({{< relref "/libraries/scim.md" >}}) | Wen hat der Identitätsanbieter gerade angelegt, geändert oder gelöscht? | v0.2.0 | `github.com/go-authn/scim` |
 
 ## Wie sie sich gruppieren {#how-they-group}
 
@@ -81,7 +81,8 @@ einen Codepfad zum Ausstellen von Tickets mit sich, den er nie ausführt, und da
 aus dem ein KDC Personen liest und das er nie benutzt.
 
 Das ist gemessen, nicht beabsichtigt. In einem Wegwerfmodul, das nur
-`github.com/go-authn/krb5@v0.3.1` importiert:
+`github.com/go-authn/krb5@v0.3.1` importiert (v0.3.3 ändert nur indirekte
+Abhängigkeiten, nicht die go-authn-Module, die es verlangt):
 
 ```sh
 $ GOWORK=off go list -deps . | grep go-authn

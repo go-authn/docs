@@ -8,14 +8,16 @@ tags: [authnd, 运维, 信号, systemd]
 
 ## 一切只读取一次 {#it-reads-everything-once}
 
-配置文件、TLS 证书和
-keytab 都在**启动时**读取。没有重新加载，打包提供的单元
-也没有 `ExecReload=`。更改其中任何一项之后：
+配置文件和 keytab 在**启动时**读取。
+它们没有重新加载，打包提供的单元也没有 `ExecReload=`。更改其中任何一项之后：
 
 ```sh
 sudo -u authnd authnd check /etc/authnd
 sudo systemctl restart authnd
 ```
+
+TLS 证书自 v0.15.0 起是例外：authnd 会再次查看 `cert_file` 和 `key_file`，所以续期无需重启。
+参见[续期证书]({{< relref "/authnd/tls.md#renewal" >}})。
 
 除来源（见下文）外，运行期间唯一会生效的是
 [人员通过 authnd 更改的密码]({{< relref "/authnd/passwords.md" >}})，
@@ -36,19 +38,19 @@ sudo systemctl restart authnd
 | 信号 | 发生什么 |
 |---|---|
 | `SIGTERM`、`SIGINT` | 它输出 `stopping`，关闭监听器**以及每个已建立的连接**，停止域，关闭各来源，并在服务器真正结束后以 0 退出 |
-| `SIGHUP` | 它被捕获并记录，而 authnd **保持运行**，不重新加载任何内容 |
+| `SIGHUP` | 它被捕获并记录，而 authnd **保持运行**。它会立即重新读取 TLS 证书（v0.15.0）；配置和 keytab 不会重新加载 |
 
 ```
 $ authnd --config etc/authnd
-ldap on 127.0.0.1:3893, serving 4 people from the configuration file, then a sqlite database
-hangup: authnd does not reload; restart it to apply a changed configuration, certificate or keytab
+ldap on 127.0.0.1:3893, serving 1 person from the configuration file
+hangup: authnd does not reload its configuration or keytab; restart it to apply those (the TLS certificate is read again)
 alice's password change was refused: the old password did not verify: directory: wrong password
 alice changed their own password
 
 stopping
 ```
 
-这是一次运行：一个 `kill -HUP`，两次更改密码的尝试（第一次
+这是 v0.15.0 二进制文件的一次运行：一个 `kill -HUP`，两次更改密码的尝试（第一次
 被拒绝，第二次被接受），然后一个 `kill -TERM`。
 在 `SIGHUP` 之后进程仍然存在。
 
@@ -79,6 +81,58 @@ stopping
 
 没有 `mfa` 块时，简单绑定上单纯的错误密码会得到
 `invalidCredentials` 的答复，authnd 自己不记录日志。
+
+## 限制与期限 {#limits}
+
+自 v0.15.0 起，authnd 限定了客户端、缓慢的来源或洪流能让它占用的资源。四个可选的键，位于配置的顶层：
+
+| 键 | 默认值 | 含义 |
+|---|---|---|
+| `max_connections` | `4096`（以前不限） | 同时打开的连接数上限；`0` 表示不限 |
+| `max_connections_per_ip` | 无 | 来自同一地址的上限；不得超过 `max_connections` |
+| `operation_timeout` | `30s`（以前无） | 一次 LDAP 操作最多可以花多长时间；`"0"` 表示无，否则至少为 `100ms` |
+| `startup_timeout` | `60s` | 打开并首次读取所有来源最多可以花多长时间；`"0"` 表示无 |
+
+超出上限的连接会在断开通知（notice of disconnection）中收到 `busy`（51）并被关闭，绝不排队（RFC 4511 4.4.1）。
+在 `operation_timeout` 时仍在运行的操作会收到 `timeLimitExceeded`（3），**即使它的处理程序被阻塞且忽略期限**：
+迟到的结果会被丢弃。启动时某个来源不响应，authnd 会在 `startup_timeout` 之后拒绝启动，错误会指出阶段和来源。
+负数或无法解析的时长会在启动时和 `check` 中被拒绝。设置 `max_connections = 0` 和 `operation_timeout = "0"`
+可恢复 v0.14 的行为。
+
+`check` 会打印它将使用的限制，免得有人在不知情的情况下运行默认值：
+
+```
+$ authnd check etc2/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+limits: 200 connections, 20 per address; an operation may take 10s; startup may take no limit
+
+USER   FROM                    CAN PROVE   PUBLISHED AS        WITH
+alice  the configuration file  a password  account, uidObject  uid
+
+GROUP  MEMBERS  PUBLISHED AS
+staff  alice    groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+
+this configuration can be served
+```
+
+该配置设置了 `max_connections = 200`、`max_connections_per_ip = 20`、`operation_timeout = "10s"` 和
+`startup_timeout = "0"`。没有这四个键时，该行为 `limits: 4096 connections, no limit per address; an operation may
+take 30s; startup may take 1m0s`，同一个二进制文件也打印过它。
+
+### 故障不是密码错误 {#outage}
+
+当人员是对另一个目录（`ldap` 来源）验证的，而该目录无法被询问时，即连接被拒绝或重置、它回答 `busy`、`unavailable`
+或 `other`、或在 `operation_timeout` 内没有回答，authnd 会回答 LDAP `unavailable`（52），**绝不**回答
+`invalidCredentials`（49）。这适用于简单绑定、密码更改中的旧密码，以及 `mfa` 绑定的密码因素。在 v0.15.0 之前，
+这会被报告为密码错误，所以目录宕机时，登录表单会告诉用户密码错了。密码错误仍然是 49。原因记录在日志里，
+而不是告诉客户端，故障也不计入失败的猜测。
 
 ## 无法启动时 {#when-it-does-not-start}
 

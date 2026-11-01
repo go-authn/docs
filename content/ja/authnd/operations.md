@@ -8,14 +8,17 @@ tags: [authnd, 運用, シグナル, systemd]
 
 ## すべてを一度だけ読み込む {#it-reads-everything-once}
 
-設定ファイル、TLS 証明書、キータブは**起動時に**読み込まれます。
-リロードはなく、パッケージ付属のユニットにも `ExecReload=` はありません。これらのいずれかを
+設定ファイルとキータブは**起動時に**読み込まれます。
+これらのリロードはなく、パッケージ付属のユニットにも `ExecReload=` はありません。どちらかを
 変更した後は:
 
 ```sh
 sudo -u authnd authnd check /etc/authnd
 sudo systemctl restart authnd
 ```
+
+TLS 証明書は v0.15.0 から例外です。authnd は `cert_file` と `key_file` をもう一度確認するので、
+更新に再起動は不要です。[証明書の更新]({{< relref "/authnd/tls.md#renewal" >}})を参照してください。
 
 ソース (後述) を除き、実行中に反映される唯一のものは、
 [人が authnd を通じて変更したパスワード]({{< relref "/authnd/passwords.md" >}})で、
@@ -39,19 +42,19 @@ sudo systemctl restart authnd
 | シグナル | 動作 |
 |---|---|
 | `SIGTERM`、`SIGINT` | `stopping` を出力し、リスナーと**確立済みのすべての接続**を閉じ、レルムを停止し、ソースを閉じ、サーバーが実際に終了した時点で 0 で終了します |
-| `SIGHUP` | 捕捉されてログに記録され、authnd は何もリロードせずに**稼働し続けます** |
+| `SIGHUP` | 捕捉されてログに記録され、authnd は**稼働し続けます**。TLS 証明書はすぐに読み直します (v0.15.0)。設定とキータブはリロードされません |
 
 ```
 $ authnd --config etc/authnd
-ldap on 127.0.0.1:3893, serving 4 people from the configuration file, then a sqlite database
-hangup: authnd does not reload; restart it to apply a changed configuration, certificate or keytab
+ldap on 127.0.0.1:3893, serving 1 person from the configuration file
+hangup: authnd does not reload its configuration or keytab; restart it to apply those (the TLS certificate is read again)
 alice's password change was refused: the old password did not verify: directory: wrong password
 alice changed their own password
 
 stopping
 ```
 
-これは一回の実行です。`kill -HUP` が一回、パスワード変更の試行が二回 (最初は拒否され、
+これは v0.15.0 のバイナリの一回の実行です。`kill -HUP` が一回、パスワード変更の試行が二回 (最初は拒否され、
 二回目は受け入れられました)、そして `kill -TERM` です。`SIGHUP` の後もプロセスは残っていました。
 
 かつて `SIGHUP` は authnd を**終了させて**いました。誰も処理しないシグナルに対する Go の既定の
@@ -81,6 +84,63 @@ stopping
 
 `mfa` ブロックがない単純バインドでの単なる間違ったパスワードには `invalidCredentials` が
 返され、authnd 自身はログに記録しません。
+
+## 制限と期限 {#limits}
+
+v0.15.0 から、authnd はクライアント、遅いソース、大量の接続が自分に保持させられるものに上限を設けます。
+設定の最上位に置く、省略可能な四つのキーです。
+
+| キー | 既定値 | 意味 |
+|---|---|---|
+| `max_connections` | `4096` (以前は無制限) | 同時に開く接続の最大数。`0` は無制限 |
+| `max_connections_per_ip` | なし | 一つのアドレスからの最大数。`max_connections` を超えられません |
+| `operation_timeout` | `30s` (以前はなし) | 一つの LDAP 操作に許される最長時間。`"0"` はなし、それ以外は `100ms` 以上 |
+| `startup_timeout` | `60s` | すべてのソースを開いて最初に読み込むのに許される最長時間。`"0"` はなし |
+
+上限を超えた接続には、切断通知 (notice of disconnection) で `busy` (51) が送られて閉じられ、待ち行列に
+入れられることはありません (RFC 4511 4.4.1)。`operation_timeout` の時点でまだ実行中の操作には
+`timeLimitExceeded` (3) が返されます。**ハンドラーがブロックして期限を無視していても同じです**。遅れて届いた結果は
+捨てられます。起動時にソースが応答しないと、authnd は `startup_timeout` の後に起動を拒否し、
+そのエラーは段階とソースを名指しします。負の数や、読み取れない期間は、起動時と `check` で拒否されます。
+v0.14 の動作に戻すには `max_connections = 0` と `operation_timeout = "0"` を設定します。
+
+`check` は、これから使う制限を表示します。既定値で動かしていることに気づかないままにならないようにするためです。
+
+```
+$ authnd check etc2/authnd
+ldap://127.0.0.1:3893, base dc=example,dc=org
+limits: 200 connections, 20 per address; an operation may take 10s; startup may take no limit
+
+USER   FROM                    CAN PROVE   PUBLISHED AS        WITH
+alice  the configuration file  a password  account, uidObject  uid
+
+GROUP  MEMBERS  PUBLISHED AS
+staff  alice    groupOfNames
+
+alice has no uidNumber, gidNumber or homeDirectory: not a posixAccount, published as account, uidObject
+group staff has no gidNumber: not a posixGroup, published as a groupOfNames (member DNs, no memberUid)
+
+a bind carries a password
+cn=reader,dc=example,dc=org may search; every other bound client may not
+sambaNTPassword is not published, so nothing here can authenticate an SMB session (NTLMv2 needs the password or its MD4, and a bind cannot answer it)
+
+this configuration can be served
+```
+
+この設定は `max_connections = 200`、`max_connections_per_ip = 20`、`operation_timeout = "10s"`、
+`startup_timeout = "0"` としています。この四つのキーがなければ、行は
+`limits: 4096 connections, no limit per address; an operation may take 30s; startup may take 1m0s`
+となり、同じバイナリがこれも表示しました。
+
+### 障害は間違ったパスワードではない {#outage}
+
+人々を別のディレクトリ (`ldap` ソース) に対して確認していて、そのディレクトリに問い合わせられないとき、
+つまり接続が拒否またはリセットされた、`busy`・`unavailable`・`other` が返った、`operation_timeout` 内に
+応答がなかった場合、authnd は LDAP `unavailable` (52) を返し、`invalidCredentials` (49) は**決して**返しません。
+これは単純バインド、パスワード変更の古いパスワード、`mfa` バインドのパスワード要素に当てはまります。
+v0.15.0 より前は間違ったパスワードとして報告されていたため、ディレクトリが落ちている間にログインフォームが
+パスワードが間違っていると本人に伝えていました。間違ったパスワードは今も 49 です。原因はクライアントに伝わる
+内容ではなくログに残り、障害は失敗した推測として数えられません。
 
 ## 起動しないとき {#when-it-does-not-start}
 

@@ -109,7 +109,7 @@ son deliberadas:
 
 | | |
 |---|---|
-| `ExecReload=` | authnd no tiene recarga. Lee su configuración, su certificado y su keytab una sola vez; consulte [ejecutarlo]({{< relref "/authnd/operations.md" >}}) |
+| `ExecReload=` | authnd no tiene recarga. Lee su configuración y su keytab una sola vez, y su certificado de nuevo cuando cambian los archivos (`SIGHUP` lo pide de inmediato); consulte [ejecutarlo]({{< relref "/authnd/operations.md" >}}) |
 | `PrivateUsers=` | dentro de un espacio de nombres de usuario, `CAP_NET_BIND_SERVICE` deja de aplicarse a la red del host, y el bind al 389 se rechaza |
 | `ProcSubset=pid` | oculta `/proc/sys`, donde Go lee `net/core/somaxconn`, y la cola de cada escucha cae al valor de reserva de Go, 128 |
 
@@ -166,6 +166,10 @@ Por qué ese directorio y no el archivo se explica en
 | `reader "<dn>"` | ninguno | una cuenta de servicio que puede buscar; consulte [quién puede leer]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | con qué frecuencia se vuelve a leer cada origen; `0` lo desactiva; consulte [ponerlo en marcha]({{< relref "/authnd/operations.md" >}}) |
 | `max_age` | sin definir | rechazar los datos obsoletos (`unavailable`) cuando los datos servidos son más antiguos; consulte [ponerlo en marcha]({{< relref "/authnd/operations.md" >}}) |
+| `max_connections` | `4096` | el máximo de conexiones abiertas a la vez, `0` para ningún límite; por encima, una conexión recibe `busy` y se cierra; consulte [límites]({{< relref "/authnd/operations.md#limits" >}}) |
+| `max_connections_per_ip` | ninguno | el máximo de conexiones desde una dirección |
+| `operation_timeout` | `30s` | lo máximo que puede durar una operación, `"0"` para ninguno; pasado el plazo, el cliente recibe `timeLimitExceeded` |
+| `startup_timeout` | `60s` | lo máximo que puede durar abrir y leer por primera vez las fuentes, `"0"` para ninguno |
 | `cert_file`, `key_file`, `starttls`, `publish_nt_hash`, `samba` | desactivado | [TLS]({{< relref "/authnd/tls.md" >}}) |
 | `user`, `group`, `users` | — | [las personas]({{< relref "/authnd/people.md" >}}); al menos un bloque `user` o `users` |
 | `kerberos` | ninguno | [un reino]({{< relref "/authnd/kerberos.md" >}}) |

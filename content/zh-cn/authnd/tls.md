@@ -16,8 +16,9 @@ key_file  = "/etc/authnd/key.pem"
 拒绝（*one without the other serves nothing*）。TLS 1.2 是最低版本。
 authnd 没有 ACME 客户端：这两个文件由其他程序写入——
 [go-authn/servercert]({{< relref "/libraries/servercert.md" >}})、certbot、
-站点自己的 CA——并且每次续期之后都要**重启** authnd，
-因为证书只在监听器打开时读取一次。
+站点自己的 CA——并且自 v0.15.0 起，这些文件一有变化 authnd 就会重新读取，无需重启：
+参见[续期证书](#renewal)。直到 v0.14.1，证书只在监听器打开时读取一次，
+所以每次续期之后都要**重启** authnd。
 
 ## 两种方式，各用一个监听器 {#two-ways-one-listener-each}
 
@@ -90,6 +91,17 @@ sambaNTPassword: 8846F7EAEE8FB117AD06BDD830B7586C
 `publish_nt_hash` 所依赖的。它也包括 `ldapsearch -x` 在读取根 DSE 之前
 发送的匿名绑定，因此在 StartTLS 监听器上，
 那个发现查询同样需要 `-ZZ`。
+
+## 续期证书 {#renewal}
+
+自 v0.15.0 起，续期后的证书无需重启。authnd 会在距上次查看 5 秒之后的第一次 TLS 握手时，以及在收到 `SIGHUP`
+（`kill -HUP`，或 `systemctl kill -s HUP authnd`）时立即，将 `cert_file` 和 `key_file` 与它正在提供的内容比较。
+文件的标识是其内容的 SHA-256，因此，把新文件重命名覆盖旧文件的续期工具，和就地重写文件的续期工具，都能被发现，
+同一个时间戳刻度内写入的相同大小的一对文件也不会被误认为旧的。
+
+无法加载的新证书对（写了一半、密钥与证书不匹配、损坏的文件）不会改变任何东西：authnd 继续提供它已有的证书，
+针对文件的这种状态只记录**一次**失败，并在文件再次变化时重试。在 v0.15.0 之前，夜里过期的证书会让所有客户端
+不再信任，直到有人重启 authnd。配置和 keytab 仍然只在启动时读取。
 
 ## `publish_nt_hash` {#publish_nt_hash}
 
