@@ -758,7 +758,7 @@ módulos que se publican, se versionan y se prueban por separado. Cada uno respo
 &lt;tr&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/es/libraries/kdc/"&gt;kdc&lt;/a&gt;&lt;/td&gt;
 &lt;td&gt;¿cómo emite un reino tickets a partir de un directorio?&lt;/td&gt;
-&lt;td&gt;v0.4.5&lt;/td&gt;
+&lt;td&gt;v0.5.0&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/kdc&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -2452,7 +2452,7 @@ y TCP, con preautenticación por marca de tiempo cifrada obligatoria, para las p
 que conoce un &lt;a href="https://go-authn.github.io/docs/0.7/es/libraries/directory/"&gt;directorio&lt;/a&gt; y los servicios que
 guarda una keytab. Se ejecuta bajo &lt;a href="https://go-authn.github.io/docs/0.7/es/authnd/"&gt;authnd&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/kdc@v0.4.5&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/kdc@v0.5.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copiar código"
@@ -2464,9 +2464,9 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;En la v0.4.5 su &lt;code&gt;go.mod&lt;/code&gt; requiere como mínimo &lt;code&gt;go-authn/directory&lt;/code&gt; v0.16.1 y
+&lt;p&gt;En la v0.5.0 su &lt;code&gt;go.mod&lt;/code&gt; requiere como mínimo &lt;code&gt;go-authn/directory&lt;/code&gt; v0.16.1 y
 gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.16.1
-se compila con la v0.17.0, como hace authnd v0.15.0. La mitad que
+se compila con la v0.17.0, como hace authnd v0.15.1. La mitad que
 acepta es &lt;a href="https://go-authn.github.io/docs/0.7/es/libraries/krb5/"&gt;krb5&lt;/a&gt;, y un servicio que solo
 verifica tickets no necesita este módulo en absoluto.&lt;/p&gt;
 &lt;p&gt;No implementado: referencias entre reinos, PKINIT, FAST, tickets renovables o
@@ -2641,6 +2641,19 @@ clave, &lt;code&gt;KRB_AP_ERR_MODIFIED&lt;/code&gt; cuando es incorrecta);&lt;/l
 ni está marcado como inválido (&lt;code&gt;KRB_AP_ERR_TKT_NYV&lt;/code&gt;), sin ningún desfase permitido:esas horas las escribió el reloj de este KDC;&lt;/li&gt;
 &lt;li&gt;el cliente es de este reino y sigue en el directorio(&lt;code&gt;KDC_ERR_C_PRINCIPAL_UNKNOWN&lt;/code&gt;).&lt;/li&gt;
 &lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Desde la v0.5.0&lt;/strong&gt;, una solicitud que llega de nuevo byte a byte — un cliente
+que perdió la respuesta por UDP, o alguien que la repite — recibe la respuesta
+que ya tuvo, sin volver a procesarse: el &lt;em&gt;lookaside&lt;/em&gt; del KDC del MIT(&lt;code&gt;src/kdc/replay.c&lt;/code&gt;), portado. Las entradas duran dos minutos y juntas ocupan
+menos de 10 MiB, y las más antiguas se descartan primero; un &lt;code&gt;KRB-ERROR&lt;/code&gt; nunca
+se guarda, así que un cliente al que se respondió &lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt; se
+atiende de nuevo cuando el directorio vuelve. A propósito no hay caché de
+repetición de autenticadores: el KDC del MIT la desactiva en el TGS, porque una
+retransmisión fallaría entonces con &lt;code&gt;KRB_AP_ERR_REPEAT&lt;/code&gt;, y quien repite no puede
+abrir una respuesta sellada con una clave que no tiene. Un directorio que no se
+puede leer da &lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt; en el AS y en el TGS, también con la
+contraseña correcta — nunca &lt;code&gt;KDC_ERR_PREAUTH_FAILED&lt;/code&gt;, así que nunca cuenta para
+un bloqueo — y Kerberos nunca llama a un verificador (un origen &lt;code&gt;ldap&lt;/code&gt;)(&lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt;). Coste: dos asignaciones por solicitud (&lt;code&gt;BenchmarkTGSReq&lt;/code&gt;
+de 1784 a 1786); los tiempos no se compararon, la máquina estaba cargada.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Desde la v0.4.5&lt;/strong&gt;, tras una auditoría de seguridad y una pasada de fuzzing y caos:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;una petición para otro reino se responde con &lt;code&gt;KDC_ERR_WRONG_REALM&lt;/code&gt;, en el AS y en el
@@ -2677,7 +2690,7 @@ la clave equivocada, una de hace una hora, un cifrado de tres bytes, un servicio
 directamente en un AS-REQ, un ticket de servicio falsificado en el TGS, y un reino
 respaldado por un verificador. El mínimo de la línea de cobertura es el 80%.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Referencia&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/kdc@v0.4.5&lt;/a&gt;&lt;/p&gt;</description></item><item><title>oidc — verificar un token bearer</title><link>https://go-authn.github.io/docs/0.7/es/libraries/oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/es/libraries/oidc/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/kdc@v0.5.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>oidc — verificar un token bearer</title><link>https://go-authn.github.io/docs/0.7/es/libraries/oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.7/es/libraries/oidc/</guid><description>
 &lt;p&gt;&lt;strong&gt;¿Quién dice este token bearer que está preguntando, y hay que creerlo?&lt;/strong&gt; El
 descubrimiento, el conjunto de claves y las comprobaciones que debe hacer un servidor
 de recursos, en Go puro, &lt;strong&gt;sin dependencias&lt;/strong&gt; fuera de la biblioteca estándar.&lt;/p&gt;

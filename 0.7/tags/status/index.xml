@@ -11,7 +11,7 @@
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;authnd&lt;/td&gt;
-&lt;td&gt;&lt;strong&gt;v0.15.0&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;v0.15.1&lt;/strong&gt;&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/authnd&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -35,7 +35,7 @@
 rules read, enforced and published, a typed &lt;code&gt;BuildError&lt;/code&gt; for a schema that does
 not build, schemas in HCL2 and the &lt;code&gt;ldapschema&lt;/code&gt; converter, and
 directory &lt;strong&gt;v0.17.0&lt;/strong&gt;, with declared object classes. authnd
-v0.15.0 embeds ldap v0.12.0 and directory v0.17.0.A new minor version of any program above is a new documentation version, so
+v0.15.1 embeds ldap v0.12.0 and directory v0.17.0.A new minor version of any program above is a new documentation version, so
 the pages a reader finds under &lt;code&gt;/docs/0.7/&lt;/code&gt; keep describing what they
 installed; those of the previous releases stay under &lt;code&gt;/docs/0.1/&lt;/code&gt;,&lt;code&gt;/docs/0.2/&lt;/code&gt;, &lt;code&gt;/docs/0.3/&lt;/code&gt;, &lt;code&gt;/docs/0.4/&lt;/code&gt;, &lt;code&gt;/docs/0.5/&lt;/code&gt; and &lt;code&gt;/docs/0.6/&lt;/code&gt;.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
@@ -200,6 +200,10 @@ dependencies are left out, except those this documentation version describes.&lt
 &lt;tr&gt;
 &lt;td&gt;v0.15.0&lt;/td&gt;
 &lt;td&gt;Availability and security, with go-authn/ldap v0.12.0 and go-authn/directory v0.17.0. ⛔ &lt;strong&gt;Two defaults change&lt;/strong&gt;: &lt;code&gt;max_connections&lt;/code&gt; is &lt;code&gt;4096&lt;/code&gt; (it was unlimited) and &lt;code&gt;operation_timeout&lt;/code&gt; is &lt;code&gt;30s&lt;/code&gt; (it was none). New, optional: &lt;code&gt;max_connections_per_ip&lt;/code&gt; and &lt;code&gt;startup_timeout&lt;/code&gt; (&lt;code&gt;60s&lt;/code&gt;); &lt;a href="https://go-authn.github.io/docs/0.7/authnd/operations/#limits"&gt;&lt;code&gt;check&lt;/code&gt; prints the limits&lt;/a&gt;. A connection over the cap is sent &lt;code&gt;busy&lt;/code&gt; and closed; an operation past the deadline is answered &lt;code&gt;timeLimitExceeded&lt;/code&gt;, even when its handler is blocked. An upstream outage during a bind (simple bind, password change, the password factor of &lt;code&gt;mfa&lt;/code&gt;) is &lt;code&gt;unavailable&lt;/code&gt; (52), never &lt;code&gt;invalidCredentials&lt;/code&gt; (49); a wrong password is still 49. Startup against a slow source fails after &lt;code&gt;startup_timeout&lt;/code&gt;, naming the stage and the source. &lt;a href="https://go-authn.github.io/docs/0.7/authnd/tls/#renewal"&gt;The TLS certificate is read again&lt;/a&gt; when &lt;code&gt;cert_file&lt;/code&gt; or &lt;code&gt;key_file&lt;/code&gt; change (first handshake after 5 s, and on &lt;code&gt;SIGHUP&lt;/code&gt;); a pair that does not load keeps the served certificate and is logged once. Allocation counts are in the libraries below; wall-clock was not measured (load 21 at the start)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;v0.15.1&lt;/td&gt;
+&lt;td&gt;Kerberos, with go-authn/kdc v0.5.0: a byte-identical retransmission gets its previous reply (MIT&amp;rsquo;s lookaside), and a directory outage is &lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt;, never &lt;code&gt;KDC_ERR_PREAUTH_FAILED&lt;/code&gt;, also for a correct password, so it cannot count against a lockout. golang.org/x/net v0.62.0. No configuration change&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
@@ -486,6 +490,10 @@ library&amp;rsquo;s page says what earlier ones changed.&lt;/p&gt;
 &lt;tr&gt;
 &lt;td&gt;kdc v0.4.5&lt;/td&gt;
 &lt;td&gt;a security audit, fuzzing and chaos pass (&lt;a href="https://go-authn.github.io/docs/0.7/libraries/kdc/"&gt;what it refuses&lt;/a&gt;): a request for another realm is answered &lt;code&gt;KDC_ERR_WRONG_REALM&lt;/code&gt;, an unreadable directory &lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt; (it was &lt;code&gt;KDC_ERR_C_PRINCIPAL_UNKNOWN&lt;/code&gt;), a TGT whose start is within &lt;code&gt;MaxSkew&lt;/code&gt; in the future is accepted, and a decoder panic drops one request instead of crashing the process (a single malformed AS-REQ or TGS-REQ could crash it); principal names are quoted in the log. golang.org/x/net v0.62.0, go-authn/directory v0.16.1&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;kdc v0.5.0&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.7/libraries/kdc/"&gt;the lookaside&lt;/a&gt; of MIT&amp;rsquo;s KDC: a request seen before, byte for byte, gets its previous reply, for two minutes and under 10 MiB in all; a &lt;code&gt;KRB-ERROR&lt;/code&gt; is never stored; deliberately no authenticator replay cache, which MIT turns off at the TGS. Tests pin an unreadable directory as &lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt; at the AS, with a correct password, and at the TGS. Two allocations more per request&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;keyfactor v0.4.2&lt;/td&gt;

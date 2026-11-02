@@ -407,7 +407,7 @@ UDP und TCP, mit verpflichtender Pre-Authentication per verschlüsseltem Zeitste
 Personen, die ein &lt;a href="https://go-authn.github.io/docs/0.7/de/libraries/directory/"&gt;directory&lt;/a&gt; kennt, und die
 Dienste, die eine Keytab hält. Es läuft unter&lt;a href="https://go-authn.github.io/docs/0.7/de/authnd/"&gt;authnd&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/kdc@v0.4.5&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/kdc@v0.5.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Code kopieren"
@@ -419,8 +419,8 @@ data-copied-label="Kopiert!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;In v0.4.5 verlangt sein &lt;code&gt;go.mod&lt;/code&gt; mindestens &lt;code&gt;go-authn/directory&lt;/code&gt; v0.16.1 und
-gokrb5 v8.4.4: Mindestversionen, sodass ein Programm, das directory v0.16.1 verlangt,mit v0.17.0 gebaut wird, wie authnd v0.15.0. Die
+&lt;p&gt;In v0.5.0 verlangt sein &lt;code&gt;go.mod&lt;/code&gt; mindestens &lt;code&gt;go-authn/directory&lt;/code&gt; v0.16.1 und
+gokrb5 v8.4.4: Mindestversionen, sodass ein Programm, das directory v0.16.1 verlangt,mit v0.17.0 gebaut wird, wie authnd v0.15.1. Die
 annehmende Hälfte ist &lt;a href="https://go-authn.github.io/docs/0.7/de/libraries/krb5/"&gt;krb5&lt;/a&gt;, und ein Dienst,der Tickets nur prüft, braucht dieses Modul überhaupt nicht.&lt;/p&gt;
 &lt;p&gt;Nicht implementiert: Cross-Realm-Referrals, PKINIT, FAST, erneuerbare oder vordatierte
 Tickets und jegliches kadmin-Protokoll. Schlüssel kommen aus dem Verzeichnis und aus einer
@@ -589,6 +589,16 @@ liegt und nicht als ungültig markiert ist (&lt;code&gt;KRB_AP_ERR_TKT_NYV&lt;/c
 dieses KDC hat diese Zeiten geschrieben;&lt;/li&gt;
 &lt;li&gt;der Client zu diesem Realm gehört und noch im Verzeichnis steht(&lt;code&gt;KDC_ERR_C_PRINCIPAL_UNKNOWN&lt;/code&gt;).&lt;/li&gt;
 &lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Seit v0.5.0&lt;/strong&gt; bekommt eine Anfrage, die Byte für Byte erneut eintrifft — ein
+Client, der die Antwort über UDP verloren hat, oder ein Wiederholer —, die
+Antwort, die sie schon hatte, ohne erneut bearbeitet zu werden: der Lookaside
+des MIT-KDC (&lt;code&gt;src/kdc/replay.c&lt;/code&gt;), portiert. Einträge leben zwei Minuten und
+bleiben zusammen unter 10 MiB, die ältesten werden zuerst verworfen; ein&lt;code&gt;KRB-ERROR&lt;/code&gt; wird nie gespeichert, sodass ein Client, dem&lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt; gesagt wurde, neu bedient wird, sobald das
+Verzeichnis zurück ist. Einen Replay-Cache für Authenticatoren gibt es mit
+Absicht nicht: Der MIT-KDC schaltet ihn am TGS ab, weil eine Wiederholung sonst
+mit &lt;code&gt;KRB_AP_ERR_REPEAT&lt;/code&gt; scheitern würde, und ein Wiederholer kann eine Antwort
+nicht öffnen, die unter einem Schlüssel versiegelt ist, den er nicht hat. Ein
+Verzeichnis, das nicht gelesen werden kann, ergibt am AS und am TGS&lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt;, auch bei richtigem Passwort — nie&lt;code&gt;KDC_ERR_PREAUTH_FAILED&lt;/code&gt;, zählt also nie für eine Sperre —, und ein Verifier(ein &lt;code&gt;ldap&lt;/code&gt;-Upstream) wird von Kerberos nie aufgerufen (&lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt;).Kosten: zwei Allokationen pro Anfrage (&lt;code&gt;BenchmarkTGSReq&lt;/code&gt; 1.784 auf 1.786);Zeiten wurden nicht verglichen, die Maschine war ausgelastet.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Seit v0.4.5&lt;/strong&gt;, nach einem Sicherheitsaudit sowie einem Fuzzing- und Chaos-Durchgang:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;eine Anfrage für einen anderen Realm wird mit &lt;code&gt;KDC_ERR_WRONG_REALM&lt;/code&gt; beantwortet, am AS
@@ -622,4 +632,4 @@ Ablehnungen fest, die ein echter Client nie auslöst: ein Zeitstempel unter dem 
 von vor einer Stunde, eine Drei-Byte-Chiffre, ein Dienst, der direkt über einen
 AS-REQ angefordert wird, ein gefälschtes Service-Ticket beim TGS und ein Realm, der von einem Verifier getragen wird.Die Untergrenze der Coverage-Lane liegt bei 80 %.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Referenz&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/kdc@v0.4.5&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/kdc@v0.5.0&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>
