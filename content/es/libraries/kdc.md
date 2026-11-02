@@ -12,12 +12,12 @@ que conoce un [directorio]({{< relref "/libraries/directory.md" >}}) y los servi
 guarda una keytab. Se ejecuta bajo [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.5
+go get github.com/go-authn/kdc@v0.5.0
 ```
 
-En la v0.4.5 su `go.mod` requiere como mínimo `go-authn/directory` v0.16.1 y
+En la v0.5.0 su `go.mod` requiere como mínimo `go-authn/directory` v0.16.1 y
 gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.16.1
-se compila con la v0.17.0, como hace authnd v0.15.0. La mitad que
+se compila con la v0.17.0, como hace authnd v0.15.1. La mitad que
 acepta es [krb5]({{< relref "/libraries/krb5.md" >}}), y un servicio que solo
 verifica tickets no necesita este módulo en absoluto.
 
@@ -190,6 +190,22 @@ incompatible de una contraseña mal escrita.
 - el cliente es de este reino y sigue en el directorio
   (`KDC_ERR_C_PRINCIPAL_UNKNOWN`).
 
+**Desde la v0.5.0**, una solicitud que llega de nuevo byte a byte — un cliente
+que perdió la respuesta por UDP, o alguien que la repite — recibe la respuesta
+que ya tuvo, sin volver a procesarse: el *lookaside* del KDC del MIT
+(`src/kdc/replay.c`), portado. Las entradas duran dos minutos y juntas ocupan
+menos de 10 MiB, y las más antiguas se descartan primero; un `KRB-ERROR` nunca
+se guarda, así que un cliente al que se respondió `KDC_ERR_SVC_UNAVAILABLE` se
+atiende de nuevo cuando el directorio vuelve. A propósito no hay caché de
+repetición de autenticadores: el KDC del MIT la desactiva en el TGS, porque una
+retransmisión fallaría entonces con `KRB_AP_ERR_REPEAT`, y quien repite no puede
+abrir una respuesta sellada con una clave que no tiene. Un directorio que no se
+puede leer da `KDC_ERR_SVC_UNAVAILABLE` en el AS y en el TGS, también con la
+contraseña correcta — nunca `KDC_ERR_PREAUTH_FAILED`, así que nunca cuenta para
+un bloqueo — y Kerberos nunca llama a un verificador (un origen `ldap`)
+(`KDC_ERR_NULL_KEY`). Coste: dos asignaciones por solicitud (`BenchmarkTGSReq`
+de 1784 a 1786); los tiempos no se compararon, la máquina estaba cargada.
+
 **Desde la v0.4.5**, tras una auditoría de seguridad y una pasada de fuzzing y caos:
 
 - una petición para otro reino se responde con `KDC_ERR_WRONG_REALM`, en el AS y en el
@@ -238,4 +254,4 @@ respaldado por un verificador. El mínimo de la línea de cobertura es el 80%.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)
+[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)

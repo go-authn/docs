@@ -22,7 +22,7 @@ tags: [库]
 | [directory]({{< relref "/libraries/directory.md" >}}) | 某人是谁，什么可以证明其身份？ | v0.17.0 | `github.com/go-authn/directory` |
 | [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP 服务器的字节是什么？ | v0.12.0 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | 这张 Kerberos 票据对此服务是否有效？ | v0.3.3 | `github.com/go-authn/krb5` |
-| [kdc]({{< relref "/libraries/kdc.md" >}}) | 域如何根据目录签发票据？ | v0.4.5 | `github.com/go-authn/kdc` |
+| [kdc]({{< relref "/libraries/kdc.md" >}}) | 域如何根据目录签发票据？ | v0.5.0 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | 这个持有者令牌声称是谁在发出请求，是否应当相信？ | v0.4.1 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | 联邦的身份提供方对此人说了什么？ | v0.4.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | 按 sshd 的回答，这个 SSH 证书或密钥是否已被吊销？ | v0.6.1 | `github.com/go-authn/krl` |

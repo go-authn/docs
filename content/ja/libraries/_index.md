@@ -21,7 +21,7 @@ tags: [ライブラリ]
 | [directory]({{< relref "/libraries/directory.md" >}}) | ある人は誰で、何がその人を証明できるか | v0.17.0 | `github.com/go-authn/directory` |
 | [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP サーバーのバイト列とは何か | v0.12.0 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | この Kerberos チケットはこのサービスに有効か | v0.3.3 | `github.com/go-authn/krb5` |
-| [kdc]({{< relref "/libraries/kdc.md" >}}) | レルムはディレクトリからどうチケットを発行するか | v0.4.5 | `github.com/go-authn/kdc` |
+| [kdc]({{< relref "/libraries/kdc.md" >}}) | レルムはディレクトリからどうチケットを発行するか | v0.5.0 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | このベアラートークンは誰が尋ねていると述べ、それを信じるべきか | v0.4.1 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | フェデレーションの ID プロバイダーは、この人について何と述べたか | v0.4.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | この SSH 証明書または鍵は、sshd が答えるとおりに失効しているか | v0.6.1 | `github.com/go-authn/krl` |

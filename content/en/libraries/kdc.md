@@ -13,12 +13,12 @@ services a keytab holds. It runs under
 [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.5
+go get github.com/go-authn/kdc@v0.5.0
 ```
 
-At v0.4.5 its `go.mod` requires at least `go-authn/directory` v0.16.1 and
+At v0.5.0 its `go.mod` requires at least `go-authn/directory` v0.16.1 and
 gokrb5 v8.4.4: minimums, so a program that requires directory v0.16.1 builds
-with v0.17.0, as authnd v0.15.0 does. The
+with v0.17.0, as authnd v0.15.1 does. The
 accepting half is [krb5]({{< relref "/libraries/krb5.md" >}}), and a service
 that only verifies tickets needs this module not at all.
 
@@ -190,6 +190,21 @@ mistyped password.
 - the client is of this realm and still in the directory
   (`KDC_ERR_C_PRINCIPAL_UNKNOWN`).
 
+**Since v0.5.0**, a request that arrives again byte for byte — a client that
+lost the reply over UDP, or a replayer — is answered with the reply it already
+had, without being worked again: MIT's lookaside (`src/kdc/replay.c`), ported.
+Entries last two minutes and are held under 10 MiB together, the oldest
+discarded first; a `KRB-ERROR` is never stored, so a client told
+`KDC_ERR_SVC_UNAVAILABLE` is served afresh once the directory is back. There is
+deliberately no authenticator replay cache: MIT's KDC turns it off at the TGS,
+because a retransmission would then fail with `KRB_AP_ERR_REPEAT`, and a
+replayer cannot open a reply sealed under a key they do not hold. A directory
+that cannot be read is `KDC_ERR_SVC_UNAVAILABLE` on the AS and the TGS, also for
+a correct password — never `KDC_ERR_PREAUTH_FAILED`, so it cannot count against
+a lockout — and a verifier (an `ldap` upstream) is never called by Kerberos
+(`KDC_ERR_NULL_KEY`). Cost: two allocations per request (`BenchmarkTGSReq`
+1,784 to 1,786); times were not compared, the machine was loaded.
+
 **Since v0.4.5**, from a security audit and a fuzzing and chaos pass:
 
 - a request for another realm is answered `KDC_ERR_WRONG_REALM`, at the AS and at
@@ -236,4 +251,4 @@ The coverage lane's floor is 80%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)
+[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)

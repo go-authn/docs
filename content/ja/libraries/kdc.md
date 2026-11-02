@@ -12,12 +12,12 @@ tags: [ライブラリ, kerberos, ディレクトリ]
 [authnd]({{< relref "/authnd/_index.md" >}}) の下で動作します。
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.5
+go get github.com/go-authn/kdc@v0.5.0
 ```
 
-v0.4.5 では、その `go.mod` が少なくとも `go-authn/directory` v0.16.1 と gokrb5 v8.4.4 を要求します。
+v0.5.0 では、その `go.mod` が少なくとも `go-authn/directory` v0.16.1 と gokrb5 v8.4.4 を要求します。
 これは最小バージョンなので、directory v0.16.1 を要求する
-プログラムは、authnd v0.15.0 と同様に v0.17.0 でビルドされます。受け入れ側の半分は
+プログラムは、authnd v0.15.1 と同様に v0.17.0 でビルドされます。受け入れ側の半分は
 [krb5]({{< relref "/libraries/krb5.md" >}}) で、チケットを検証するだけのサービスは、このモジュールを
 まったく必要としません。
 
@@ -179,6 +179,21 @@ Unix エポックを本物の終了時刻と受け取り、`klist` で `>>>Expir
   書いたものだから
 - クライアントがこのレルムのもので、まだディレクトリにいる (`KDC_ERR_C_PRINCIPAL_UNKNOWN`)
 
+**v0.5.0 から**、バイト単位でまったく同じリクエストが再び届いたとき (UDP
+で応答を失ったクライアント、または再送する攻撃者) は、再処理せずに以前の応答を
+返します。MIT の KDC の lookaside (`src/kdc/replay.c`) の移植です。エントリは
+2 分間保持され、合計 10 MiB 未満に抑えられ、古いものから捨てられます。
+`KRB-ERROR` は保存されないため、`KDC_ERR_SVC_UNAVAILABLE` を返されたクライアン
+トは、ディレクトリが戻れば改めて処理されます。オーセンティケータのリプレイキャッ
+シュは意図的にありません: MIT の KDC は TGS でこれを無効にしています。再送が
+`KRB_AP_ERR_REPEAT` で失敗してしまうからであり、また再送者は自分が持たない鍵で
+封じられた応答を開けないからです。読めないディレクトリは、正しいパスワードでも
+AS と TGS で `KDC_ERR_SVC_UNAVAILABLE` になり、`KDC_ERR_PREAUTH_FAILED` には決し
+てならない (ロックアウトに数えられない) うえ、検証器 (`ldap` 上流) が Kerberos
+から呼ばれることはありません (`KDC_ERR_NULL_KEY`)。コスト: リクエストあたり 2
+アロケーション (`BenchmarkTGSReq` 1,784 から 1,786)。マシンに負荷がかかっていた
+ため、時間は比較していません。
+
 **v0.4.5 から**、セキュリティ監査とファジング・カオスの実施を経て:
 
 - 別のレルム向けのリクエストは、AS でも TGS でも、処理されずに `KDC_ERR_WRONG_REALM` で答えられます。
@@ -217,4 +232,4 @@ Unix エポックを本物の終了時刻と受け取り、`klist` で `>>>Expir
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)
+[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)

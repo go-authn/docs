@@ -13,12 +13,12 @@ services qu'un keytab détient. Il fonctionne sous
 [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.5
+go get github.com/go-authn/kdc@v0.5.0
 ```
 
-En v0.4.5, son `go.mod` requiert au moins `go-authn/directory` v0.16.1 et
+En v0.5.0, son `go.mod` requiert au moins `go-authn/directory` v0.16.1 et
 gokrb5 v8.4.4 : des minimums, si bien qu'un programme qui requiert directory v0.16.1
-est compilé avec la v0.17.0, comme authnd v0.15.0. La
+est compilé avec la v0.17.0, comme authnd v0.15.1. La
 moitié qui accepte est [krb5]({{< relref "/libraries/krb5.md" >}}), et un service
 qui ne fait que vérifier des tickets n'a nullement besoin de ce module.
 
@@ -189,6 +189,23 @@ mot de passe mal tapé.
 - le client est de ce royaume et toujours dans l'annuaire
   (`KDC_ERR_C_PRINCIPAL_UNKNOWN`).
 
+**Depuis la v0.5.0**, une requête qui arrive de nouveau octet pour octet — un
+client qui a perdu la réponse en UDP, ou un rejoueur — reçoit la réponse
+qu'elle avait déjà eue, sans être retraitée : le *lookaside* du KDC du MIT
+(`src/kdc/replay.c`), porté. Les entrées durent deux minutes et tiennent
+ensemble sous 10 Mio, les plus anciennes écartées d'abord ; un `KRB-ERROR`
+n'est jamais conservé, si bien qu'un client à qui l'on a répondu
+`KDC_ERR_SVC_UNAVAILABLE` est servi à neuf une fois l'annuaire revenu. Il n'y a
+délibérément pas de cache de rejeu des authentificateurs : le KDC du MIT le
+désactive au TGS, parce qu'une retransmission échouerait alors en
+`KRB_AP_ERR_REPEAT`, et qu'un rejoueur ne peut pas ouvrir une réponse scellée
+sous une clé qu'il n'a pas. Un annuaire illisible donne
+`KDC_ERR_SVC_UNAVAILABLE` à l'AS et au TGS, même pour un mot de passe correct —
+jamais `KDC_ERR_PREAUTH_FAILED`, donc jamais compté pour un verrouillage — et un
+vérificateur (un amont `ldap`) n'est jamais appelé par Kerberos
+(`KDC_ERR_NULL_KEY`). Coût : deux allocations par requête (`BenchmarkTGSReq`
+1 784 à 1 786) ; les temps n'ont pas été comparés, la machine était chargée.
+
 **Depuis la v0.4.5**, après un audit de sécurité et une passe de fuzzing et de chaos :
 
 - une requête pour un autre royaume reçoit `KDC_ERR_WRONG_REALM`, à l'AS et au
@@ -238,4 +255,4 @@ Le plancher de la voie de couverture est de 80 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)
+[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)

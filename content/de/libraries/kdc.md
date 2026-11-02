@@ -13,12 +13,12 @@ Dienste, die eine Keytab hält. Es läuft unter
 [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.5
+go get github.com/go-authn/kdc@v0.5.0
 ```
 
-In v0.4.5 verlangt sein `go.mod` mindestens `go-authn/directory` v0.16.1 und
+In v0.5.0 verlangt sein `go.mod` mindestens `go-authn/directory` v0.16.1 und
 gokrb5 v8.4.4: Mindestversionen, sodass ein Programm, das directory v0.16.1 verlangt,
-mit v0.17.0 gebaut wird, wie authnd v0.15.0. Die
+mit v0.17.0 gebaut wird, wie authnd v0.15.1. Die
 annehmende Hälfte ist [krb5]({{< relref "/libraries/krb5.md" >}}), und ein Dienst,
 der Tickets nur prüft, braucht dieses Modul überhaupt nicht.
 
@@ -189,6 +189,24 @@ vertippten Passwort unterscheiden kann.
 - der Client zu diesem Realm gehört und noch im Verzeichnis steht
   (`KDC_ERR_C_PRINCIPAL_UNKNOWN`).
 
+**Seit v0.5.0** bekommt eine Anfrage, die Byte für Byte erneut eintrifft — ein
+Client, der die Antwort über UDP verloren hat, oder ein Wiederholer —, die
+Antwort, die sie schon hatte, ohne erneut bearbeitet zu werden: der Lookaside
+des MIT-KDC (`src/kdc/replay.c`), portiert. Einträge leben zwei Minuten und
+bleiben zusammen unter 10 MiB, die ältesten werden zuerst verworfen; ein
+`KRB-ERROR` wird nie gespeichert, sodass ein Client, dem
+`KDC_ERR_SVC_UNAVAILABLE` gesagt wurde, neu bedient wird, sobald das
+Verzeichnis zurück ist. Einen Replay-Cache für Authenticatoren gibt es mit
+Absicht nicht: Der MIT-KDC schaltet ihn am TGS ab, weil eine Wiederholung sonst
+mit `KRB_AP_ERR_REPEAT` scheitern würde, und ein Wiederholer kann eine Antwort
+nicht öffnen, die unter einem Schlüssel versiegelt ist, den er nicht hat. Ein
+Verzeichnis, das nicht gelesen werden kann, ergibt am AS und am TGS
+`KDC_ERR_SVC_UNAVAILABLE`, auch bei richtigem Passwort — nie
+`KDC_ERR_PREAUTH_FAILED`, zählt also nie für eine Sperre —, und ein Verifier
+(ein `ldap`-Upstream) wird von Kerberos nie aufgerufen (`KDC_ERR_NULL_KEY`).
+Kosten: zwei Allokationen pro Anfrage (`BenchmarkTGSReq` 1.784 auf 1.786);
+Zeiten wurden nicht verglichen, die Maschine war ausgelastet.
+
 **Seit v0.4.5**, nach einem Sicherheitsaudit sowie einem Fuzzing- und Chaos-Durchgang:
 
 - eine Anfrage für einen anderen Realm wird mit `KDC_ERR_WRONG_REALM` beantwortet, am AS
@@ -238,4 +256,4 @@ Die Untergrenze der Coverage-Lane liegt bei 80 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)
+[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)
