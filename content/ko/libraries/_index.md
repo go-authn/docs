@@ -22,7 +22,7 @@ tags: [라이브러리]
 | [directory]({{< relref "/libraries/directory.md" >}}) | 누군가는 누구이며, 무엇이 그를 증명할 수 있는가? | v0.17.0 | `github.com/go-authn/directory` |
 | [ldap]({{< relref "/libraries/ldap.md" >}}) | LDAP 서버의 바이트는 무엇인가? | v0.12.0 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | 이 Kerberos 티켓이 이 서비스에 유효한가? | v0.3.3 | `github.com/go-authn/krb5` |
-| [kdc]({{< relref "/libraries/kdc.md" >}}) | 렐름은 디렉터리에서 어떻게 티켓을 발급하는가? | v0.4.5 | `github.com/go-authn/kdc` |
+| [kdc]({{< relref "/libraries/kdc.md" >}}) | 렐름은 디렉터리에서 어떻게 티켓을 발급하는가? | v0.5.0 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | 이 베어러 토큰은 누가 요청한다고 말하며, 믿어야 하는가? | v0.4.1 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | 페더레이션의 신원 공급자는 이 사람에 대해 무엇을 말했는가? | v0.4.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | sshd가 답하는 대로, 이 SSH 인증서나 키는 폐기되었는가? | v0.6.1 | `github.com/go-authn/krl` |

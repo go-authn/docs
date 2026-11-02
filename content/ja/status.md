@@ -9,7 +9,7 @@ tags: [ステータス, リリース]
 
 | プログラム | リリース | モジュール |
 |---|---|---|
-| authnd | **v0.15.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.15.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.6** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap は **v0.12.0** で、DIT コンテンツルール、ネームフォーム�
 ビルドできないスキーマのための型付きの `BuildError`、
 HCL2 のスキーマと `ldapschema` コンバーターを備えています。
 directory は **v0.17.0** で、宣言されたオブジェクトクラスを備えています。
-authnd v0.15.0 は ldap v0.12.0 と directory v0.17.0 を組み込んでいます。
+authnd v0.15.1 は ldap v0.12.0 と directory v0.17.0 を組み込んでいます。
 上記のいずれかのプログラムのマイナーバージョンが新しくなると、新しいドキュメントバージョンになります。
 そのため、`/docs/0.7/` 以下のページは、読者がインストールしたものを説明し続け、
 以前のリリースのページは `/docs/0.1/`、`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/`、`/docs/0.6/` 以下に残ります。
@@ -90,6 +90,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | v0.14.0 | 変更: v0.13.4 ではグループの変更に再起動が必要で、データベースから外したメンバーが、誰かが authnd を再起動するまでアクセス権を持ち続けていました。v0.14.0 で適時の失効を取り戻しました。`refresh` (既定 60 秒、`0` で無効) が、人とグループのすべてのソースを、応答経路の外で組み立てた新しいスナップショットに読み直し、丸ごと入れ替えます。失敗した更新は最後に正常だったスナップショットを保ち、失敗が続く間に 1 回だけ、ソース名を添えてログに記録されます。`max_age` (既定は未設定) を設定すると、提供中のデータがそれより古くなった時点で、検索・人の bind・パスワード変更が `unavailable` を返します。authnd 経由で書かれたパスワードも同じ入れ替えを通ります。計測: SQLite で 500 人・50 人ずつ 200 グループの更新は 1 コアで約 2 秒、検索は 0.5 ミリ秒 (更新コストは v0.14.1 で修正) |
 | v0.14.1 | 性能のみ。更新のコストが、グループ数 × メンバーシップ行数に比例して増えなくなりました。directory v0.16.0 が各ソースを一括で 1 回だけ読み込みます。SQLite で 500 人・50 人ずつ 200 グループの更新は 1.87 秒から 0.155 秒に、10,000 人・2,000 グループの更新は 391 秒 (更新周期の 6.5 回分) から 1.6 秒 (60 秒周期の 2.7 %) になりました。アロケーションは 39,959,235 から 3,095,482 に、6,373,736,235 から 31,198,460 に減りました。時間は負荷 17〜67 の下で計測した目安で、アロケーション数は正確です |
 | v0.15.0 | 可用性とセキュリティ。go-authn/ldap v0.12.0 と go-authn/directory v0.17.0 を使用。⛔ **既定値が二つ変わります**: `max_connections` は `4096` (以前は無制限)、`operation_timeout` は `30s` (以前はなし)。新規で省略可能: `max_connections_per_ip` と `startup_timeout` (`60s`)。[`check` は制限を表示します]({{< relref "/authnd/operations.md#limits" >}})。上限を超えた接続には `busy` が送られて閉じられ、期限を過ぎた操作は、ハンドラーがブロックしていても `timeLimitExceeded` で答えられます。バインド中の上流の障害 (単純バインド、パスワード変更、`mfa` のパスワード要素) は `unavailable` (52) で、`invalidCredentials` (49) にはなりません。間違ったパスワードは今も 49 です。遅いソースに対する起動は `startup_timeout` の後に失敗し、段階とソースを名指しします。[TLS 証明書は読み直されます]({{< relref "/authnd/tls.md#renewal" >}}) (`cert_file` や `key_file` が変わったとき。5 秒後の最初のハンドシェイクと `SIGHUP`)。読み込めない組は提供中の証明書を保ち、一度だけログに記録されます。アロケーション数は下のライブラリにあります。実時間は未測定 (開始時の負荷は 21) |
+| v0.15.1 | Kerberos。go-authn/kdc v0.5.0 を使用: バイト単位で同一の再送には以前の応答を返し (MIT の lookaside)、ディレクトリの障害は正しいパスワードでも `KDC_ERR_SVC_UNAVAILABLE` で、`KDC_ERR_PREAUTH_FAILED` にはならないため、ロックアウトに数えられません。golang.org/x/net v0.62.0。設定の変更なし |
 
 ### authn-bridge {#authn-bridge}
 
@@ -173,6 +174,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | directory v0.17.0 | [`ErrUnavailable`]({{< relref "/libraries/directory.md#unavailable" >}})、`AsUnavailable` と `TransportFailure` を伴う: ldapdir は busy (51)、unavailable (52)、other (80)、timeLimitExceeded (3)、切れたり拒否された接続、接続や TLS の失敗に対して、`Verify` とすべての読み取りでこれを返します。`ErrWrongPassword` と同時に真になることはなく、`invalidCredentials` (49) は後者のままです。`ldaptest.Server.FailBindsWith(code)`。メンバーの DN は走査ではなく一回の検索で人に対応づけられ、結果は同じです。10,000 人と 50 DN ずつの 2,000 グループでの `ReadGroups` は、50.6 MB・2.20 M オブジェクトの代わりに 13.1 MB・0.38 M を確保し、DN の検索は 0 回、更新全体は 9.72 M の代わりに 7.17 M 回 (正確。時間は未測定、負荷 65 から 105) |
 | kdc v0.4.3 | 依存関係のみ: 最小バージョンとして go-authn/directory v0.12.0 |
 | kdc v0.4.5 | セキュリティ監査、ファジング、カオスの実施 ([拒否するもの]({{< relref "/libraries/kdc.md" >}})): 別のレルム向けのリクエストは `KDC_ERR_WRONG_REALM`、読み取れないディレクトリは `KDC_ERR_SVC_UNAVAILABLE` で答えられ (以前は `KDC_ERR_C_PRINCIPAL_UNKNOWN`)、開始が `MaxSkew` 以内の未来にある TGT は受け入れられ、デコーダーのパニックはプロセスをクラッシュさせずリクエスト一つを破棄します (不正な AS-REQ または TGS-REQ 一つでクラッシュし得ました)。プリンシパル名はログで引用符で囲まれます。golang.org/x/net v0.62.0、go-authn/directory v0.16.1 |
+| kdc v0.5.0 | MIT の KDC の [lookaside]({{< relref "/libraries/kdc.md" >}}): バイト単位で既に見たリクエストには以前の応答を返す (2 分間、合計 10 MiB 未満)。`KRB-ERROR` は保存しない。MIT が TGS で無効にしているオーセンティケータのリプレイキャッシュは意図的に持たない。テストは、読めないディレクトリが AS (正しいパスワードで) と TGS で `KDC_ERR_SVC_UNAVAILABLE` になることを固定する。リクエストあたりアロケーション 2 回増 |
 | keyfactor v0.4.2 | 依存関係のみ: 最小バージョンとして go-authn/fido v0.6.2 と golang.org/x/crypto v0.58.0 |
 | krb5 v0.3.1 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | krb5 v0.3.3 | 依存関係のみ: golang.org/x/net v0.62.0、golang.org/x/crypto v0.58.0、go-uuid v1.0.4 により、必要としていても呼び出していないモジュールでの `govulncheck` の 46 件中 45 件が解消されます。GO-2026-5932 (`x/crypto/openpgp`) には修正がなく、どの go-authn モジュールもインポートしていません。API の変更はありません |

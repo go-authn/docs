@@ -12,12 +12,12 @@ tags: [라이브러리, kerberos, 디렉터리]
 실행됩니다.
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.5
+go get github.com/go-authn/kdc@v0.5.0
 ```
 
-v0.4.5의 `go.mod`는 최소 `go-authn/directory` v0.16.1과 gokrb5 v8.4.4를 요구합니다.
+v0.5.0의 `go.mod`는 최소 `go-authn/directory` v0.16.1과 gokrb5 v8.4.4를 요구합니다.
 이는 최소 요구 버전이므로, directory v0.16.1을 요구하는 프로그램은
-authnd v0.15.0처럼 v0.17.0으로 빌드됩니다. 받아들이는 쪽 절반은
+authnd v0.15.1처럼 v0.17.0으로 빌드됩니다. 받아들이는 쪽 절반은
 [krb5]({{< relref "/libraries/krb5.md" >}})이며, 티켓을 검증하기만 하는 서비스에는 이
 모듈이 전혀 필요하지 않습니다.
 
@@ -181,6 +181,20 @@ etype 목록에 18이 없는 요청은 누구를 조회하기 전에 `KDC_ERR_ET
 - 클라이언트가 이 렐름의 것이고 여전히 디렉터리에 있을 때
   (`KDC_ERR_C_PRINCIPAL_UNKNOWN`)
 
+**v0.5.0부터**, 바이트 단위로 똑같은 요청이 다시 도착하면(UDP로 응답을 잃은
+클라이언트, 또는 재전송하는 공격자) 다시 처리하지 않고 이전 응답을 돌려줍니다.
+MIT KDC의 lookaside(`src/kdc/replay.c`)를 이식한 것입니다. 항목은 2분 동안
+유지되고 합쳐서 10 MiB 미만으로 유지되며, 가장 오래된 것부터 버려집니다.
+`KRB-ERROR`는 저장하지 않으므로 `KDC_ERR_SVC_UNAVAILABLE`을 받은 클라이언트는
+디렉터리가 돌아오면 새로 처리됩니다. 인증자 재전송 캐시는 일부러 두지 않았습니다:
+MIT KDC는 TGS에서 이를 끕니다. 재전송이 `KRB_AP_ERR_REPEAT`로 실패하기 때문이고,
+재전송자는 자신이 갖지 않은 키로 봉인된 응답을 열 수 없기 때문입니다. 읽을 수
+없는 디렉터리는 올바른 비밀번호여도 AS와 TGS에서 `KDC_ERR_SVC_UNAVAILABLE`이
+되며 `KDC_ERR_PREAUTH_FAILED`가 되는 일은 없고(잠금에 계산되지 않음), 검증기
+(`ldap` 업스트림)는 Kerberos가 결코 호출하지 않습니다(`KDC_ERR_NULL_KEY`).
+비용: 요청당 할당 2회(`BenchmarkTGSReq` 1,784에서 1,786). 머신에 부하가 있어
+시간은 비교하지 않았습니다.
+
 **v0.4.5부터**, 보안 감사와 퍼징·카오스 실행을 거쳐:
 
 - 다른 렐름에 대한 요청은 처리되지 않고 AS와 TGS 모두에서 `KDC_ERR_WRONG_REALM`으로 응답합니다.
@@ -220,4 +234,4 @@ MIT KDC는 관여하지 않으며 클라이언트만 빌려 옵니다.
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)
+[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)

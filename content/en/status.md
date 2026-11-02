@@ -9,7 +9,7 @@ These pages are documentation version **0.7**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.15.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.15.1** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.6** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap is **v0.12.0**, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed `BuildError` for a schema that does
 not build, schemas in HCL2 and the `ldapschema` converter, and
 directory **v0.17.0**, with declared object classes. authnd
-v0.15.0 embeds ldap v0.12.0 and directory v0.17.0.
+v0.15.1 embeds ldap v0.12.0 and directory v0.17.0.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.7/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
@@ -93,6 +93,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.14.0 | Changed: v0.13.4 required a restart for a change to a group, so a member removed from a database kept the access until somebody restarted authnd. v0.14.0 restores timely revocation. `refresh` (60 s by default, `0` turns it off) re-reads every source, people and groups, into a new snapshot built off the serving path and swapped in whole; a failed refresh keeps the last good snapshot and is logged once per failure streak, naming the source. `max_age` (unset by default) makes searches, people's binds and password changes answer `unavailable` once the served data is older. A password written through authnd goes through the same swap. Measured: a refresh of 500 people and 200 groups of 50 on SQLite costs about 2 s of one core, and a search 0.5 ms (the refresh cost is fixed in v0.14.1) |
 | v0.14.1 | Performance only. A refresh no longer grows with groups times membership rows: directory v0.16.0 reads each source once, in bulk. A refresh of 500 people and 200 groups of 50 on SQLite goes from 1.87 s to 0.155 s, and one of 10,000 people and 2,000 groups from 391 s (six and a half refresh periods) to 1.6 s (2.7 % of the 60 s period). Allocations fall from 39,959,235 to 3,095,482 and from 6,373,736,235 to 31,198,460. Times were measured at a load of 17 to 67 and are indicative; the allocation counts are exact |
 | v0.15.0 | Availability and security, with go-authn/ldap v0.12.0 and go-authn/directory v0.17.0. ⛔ **Two defaults change**: `max_connections` is `4096` (it was unlimited) and `operation_timeout` is `30s` (it was none). New, optional: `max_connections_per_ip` and `startup_timeout` (`60s`); [`check` prints the limits]({{< relref "/authnd/operations.md#limits" >}}). A connection over the cap is sent `busy` and closed; an operation past the deadline is answered `timeLimitExceeded`, even when its handler is blocked. An upstream outage during a bind (simple bind, password change, the password factor of `mfa`) is `unavailable` (52), never `invalidCredentials` (49); a wrong password is still 49. Startup against a slow source fails after `startup_timeout`, naming the stage and the source. [The TLS certificate is read again]({{< relref "/authnd/tls.md#renewal" >}}) when `cert_file` or `key_file` change (first handshake after 5 s, and on `SIGHUP`); a pair that does not load keeps the served certificate and is logged once. Allocation counts are in the libraries below; wall-clock was not measured (load 21 at the start) |
+| v0.15.1 | Kerberos, with go-authn/kdc v0.5.0: a byte-identical retransmission gets its previous reply (MIT's lookaside), and a directory outage is `KDC_ERR_SVC_UNAVAILABLE`, never `KDC_ERR_PREAUTH_FAILED`, also for a correct password, so it cannot count against a lockout. golang.org/x/net v0.62.0. No configuration change |
 
 ### authn-bridge
 
@@ -176,6 +177,7 @@ library's page says what earlier ones changed.
 | directory v0.17.0 | [`ErrUnavailable`]({{< relref "/libraries/directory.md#unavailable" >}}), with `AsUnavailable` and `TransportFailure`: ldapdir returns it for busy (51), unavailable (52), other (80), timeLimitExceeded (3), dropped or refused connections and TLS or dial failures, on `Verify` and every read; it is never also `ErrWrongPassword`, and `invalidCredentials` (49) stays that. `ldaptest.Server.FailBindsWith(code)`. A member DN maps to a person by one lookup instead of a scan, with the same results: `ReadGroups` on 10,000 people and 2,000 groups of 50 DNs allocates 13.1 MB in 0.38 M objects instead of 50.6 MB in 2.20 M, a DN lookup 0 allocations; the whole refresh 7.17 M allocations instead of 9.72 M (exact; times not measured, load 65 to 105) |
 | kdc v0.4.3 | dependencies only: go-authn/directory v0.12.0 as its minimum |
 | kdc v0.4.5 | a security audit, fuzzing and chaos pass ([what it refuses]({{< relref "/libraries/kdc.md" >}})): a request for another realm is answered `KDC_ERR_WRONG_REALM`, an unreadable directory `KDC_ERR_SVC_UNAVAILABLE` (it was `KDC_ERR_C_PRINCIPAL_UNKNOWN`), a TGT whose start is within `MaxSkew` in the future is accepted, and a decoder panic drops one request instead of crashing the process (a single malformed AS-REQ or TGS-REQ could crash it); principal names are quoted in the log. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
+| kdc v0.5.0 | [the lookaside]({{< relref "/libraries/kdc.md" >}}) of MIT's KDC: a request seen before, byte for byte, gets its previous reply, for two minutes and under 10 MiB in all; a `KRB-ERROR` is never stored; deliberately no authenticator replay cache, which MIT turns off at the TGS. Tests pin an unreadable directory as `KDC_ERR_SVC_UNAVAILABLE` at the AS, with a correct password, and at the TGS. Two allocations more per request |
 | keyfactor v0.4.2 | dependencies only: go-authn/fido v0.6.2 and golang.org/x/crypto v0.58.0 as its minimums |
 | krb5 v0.3.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | krb5 v0.3.3 | dependencies only: golang.org/x/net v0.62.0, golang.org/x/crypto v0.58.0 and go-uuid v1.0.4 clear 45 of 46 `govulncheck` findings in modules that are required and not called; GO-2026-5932 (`x/crypto/openpgp`) has no fix and is not imported by any go-authn module; no API change |

@@ -13,12 +13,12 @@ keytab 所持有的服务。它运行在
 [authnd]({{< relref "/authnd/_index.md" >}})之下。
 
 ```sh
-go get github.com/go-authn/kdc@v0.4.5
+go get github.com/go-authn/kdc@v0.5.0
 ```
 
-在 v0.4.5，其 `go.mod` 至少要求 `go-authn/directory` v0.16.1 和
+在 v0.5.0，其 `go.mod` 至少要求 `go-authn/directory` v0.16.1 和
 gokrb5 v8.4.4：这只是最低版本，因此要求 directory v0.16.1
-的程序会用 v0.17.0 构建，authnd v0.15.0 就是如此。
+的程序会用 v0.17.0 构建，authnd v0.15.1 就是如此。
 接受的一半是 [krb5]({{< relref "/libraries/krb5.md" >}})，只
 验证票据的服务完全不需要本模块。
 
@@ -189,6 +189,17 @@ RFC 4120 §5.4.1：`till` 为 19700101000000Z 表示请求 KDC 策略
 - 客户端属于本域，且仍在目录中
   （`KDC_ERR_C_PRINCIPAL_UNKNOWN`）。
 
+**自 v0.5.0 起**，逐字节完全相同的请求再次到达时（通过 UDP 丢失了应答的客户端，
+或重放者），会得到它已经得到过的应答，而不再重新处理：移植自 MIT KDC 的
+lookaside（`src/kdc/replay.c`）。条目保留两分钟，总量保持在 10 MiB 以下，最旧的先被
+丢弃；`KRB-ERROR` 从不保存，因此收到 `KDC_ERR_SVC_UNAVAILABLE` 的客户端在目录恢复后会
+被重新处理。这里有意不设认证符重放缓存：MIT 的 KDC 在 TGS 上关闭了它，因为重传会因
+`KRB_AP_ERR_REPEAT` 而失败，而重放者也打不开用他没有的密钥封装的应答。无法读取的目录在
+AS 和 TGS 上都返回 `KDC_ERR_SVC_UNAVAILABLE`，即使密码正确也是如此——绝不是
+`KDC_ERR_PREAUTH_FAILED`，因此不会计入锁定——而且 Kerberos 从不调用验证器（`ldap`
+上游）（`KDC_ERR_NULL_KEY`）。代价：每个请求多两次分配（`BenchmarkTGSReq` 从 1,784 到
+1,786）；机器负载较高，未比较耗时。
+
 **自 v0.4.5 起**，经过安全审计以及模糊测试和混沌测试：
 
 - 针对另一个域的请求在 AS 和 TGS 处都回答 `KDC_ERR_WRONG_REALM`，而不是被处理；
@@ -228,4 +239,4 @@ AS-REQ 请求的服务、TGS 处伪造的服务票据，以及由验证器支撑
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.4.5](https://pkg.go.dev/github.com/go-authn/kdc@v0.4.5)
+[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)
