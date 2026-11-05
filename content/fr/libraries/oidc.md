@@ -11,7 +11,7 @@ La découverte, le jeu de clés, et les vérifications qu'un serveur de ressourc
 pur, **sans aucune dépendance** en dehors de la bibliothèque standard.
 
 ```sh
-go get github.com/go-authn/oidc@v0.5.0
+go get github.com/go-authn/oidc@v0.6.0
 ```
 
 Il n'y a pas ici de parcours de connexion : pas de redirection, pas d'échange de code, pas de secret client,
@@ -150,6 +150,10 @@ Depuis **v0.5.0**, `oidc.NewSet(v1, v2, …)` vérifie des jetons de plusieurs �
 
 Derrière un proxy de fédération (eduGAIN via MyAccessID, eduTEAMS, Renater, un broker Keycloak), `oidc.Accept{Claim, Values}` et `oidc.Check(accepts, token)` refusent un jeton dont la revendication ne contient aucun des établissements servis. Tous les accepts doivent tenir ; pour une revendication multivaluée, une valeur suffit ; une revendication absente ou qui n'est pas du texte ne contient rien. La casse suit le schéma de la revendication : `schac_home_organization` (SCHAC 1.6.0, un nom de domaine, `caseIgnoreMatch`), `eduperson_scoped_affiliation` et `voperson_external_affiliation` sont comparées sans tenir compte de la casse, les autres exactement. Seules les lettres ASCII sont repliées (le signe Kelvin U+212A n'est pas un `k`). La revendication doit figurer dans le jeton vérifié : MyAccessID livre `schac_home_organization` dans userinfo seulement.
 
+## Noms avec portée, et de qui est la portée {#scoped-names}
+
+Un compte est relatif à un établissement : derrière un proxy de fédération, un émetteur répond de personnes de nombreux établissements. `oidc.ScopedName(name, allowed, defaultScope)` renvoie le nom sous la forme `local@scope`, en minuscules ASCII (eduPersonPrincipalName est `caseIgnoreMatch` dans le schéma eduPerson, et monovalué), après avoir **vérifié la portée** par rapport à ce que cet émetteur peut affirmer, comme Shibboleth vérifie un scope : une autre portée est `ErrScopeNotAllowed`, un nom sans portée et sans valeur par défaut est `ErrNoScope`. Un nom sans `@` prend `defaultScope` (un établissement dont les comptes sont antérieurs aux noms avec portée), qui doit lui aussi être autorisé. `Token.ScopedUsername` l'applique au nom d'utilisateur du jeton : réglez `UsernameClaim` sur `eduperson_principal_name` ou `voperson_id`. La portée est ce qui suit le dernier `@`.
+
 ## Ce contre quoi il est vérifié {#what-it-is-checked-against}
 
 **pyjwt** signe chaque jeton de la suite de tests, si bien que le vérificateur n'est jamais jugé
@@ -164,4 +168,4 @@ fait passer un test au rouge. Le plancher de la voie de couverture est de 90 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.6.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.6.0)
