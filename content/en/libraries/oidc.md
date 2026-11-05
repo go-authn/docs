@@ -11,7 +11,7 @@ Discovery, the key set, and the checks a resource server must make — in pure
 Go, with **no dependencies** outside the standard library.
 
 ```sh
-go get github.com/go-authn/oidc@v0.4.1
+go get github.com/go-authn/oidc@v0.5.0
 ```
 
 There is no login flow here: no redirect, no code exchange, no client secret,
@@ -144,6 +144,33 @@ fetch that fails still counts.
 is a string the person typed (OIDC Core §5.1). A configured `UsernameClaim` is
 read as named, with no fallback.
 
+## Several issuers, and only some institutions
+
+Since **v0.5.0**, `oidc.NewSet(v1, v2, …)` verifies tokens from several
+issuers, each verifier with its own audience and key set. A token is routed by
+its **unverified** `iss` to the one verifier configured for exactly that issuer,
+and verified there: signature against that issuer's keys, `iss` again, audience,
+times. Reading `iss` first only chooses a key set; a forged token fails the
+verification that follows. An unknown `iss` is `ErrUnknownIssuer` and costs no
+network access; no other issuer's key set is ever tried; two verifiers for one
+issuer are refused; a token over `MaxTokenSize` (16 KiB) is refused before
+decoding. With one verifier the token goes straight to it, with no extra work.
+
+Behind a federation proxy (eduGAIN through MyAccessID, eduTEAMS, Renater, a
+Keycloak broker) `oidc.Accept{Claim, Values}` and `oidc.Check(accepts, token)`
+refuse a token unless its claim holds one of the institutions you serve. All the
+accepts must hold, any value of a multi-valued claim matches, and a claim that is
+absent or not a string (or a list of strings) holds nothing. The case rule comes
+from the claim's schema: `schac_home_organization` (SCHAC 1.6.0, a domain name,
+`caseIgnoreMatch`), `eduperson_scoped_affiliation` (eduPerson, `caseIgnoreMatch`)
+and `voperson_external_affiliation` (a scoped affiliation, AARC-G025) are compared
+without case; every other claim exactly. Only ASCII letters are folded, since a
+Unicode lower-casing maps the Kelvin sign U+212A to `k`. The claim must be in
+the token that is verified: MyAccessID releases `schac_home_organization` in
+userinfo, not in the ID token. The login side (one `rp.Set` of providers, the
+state bound to its provider, the RFC 9207 `iss` check) is in
+[go-authn/rp](https://github.com/go-authn/rp) v0.3.0.
+
 ## What it is checked against
 
 **pyjwt** signs every token in the test suite, so the verifier is never judged
@@ -158,4 +185,4 @@ turns a test red. The coverage lane's floor is 90%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.4.1](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1)
+[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)
