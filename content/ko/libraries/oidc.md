@@ -11,7 +11,7 @@ tags: [라이브러리, oidc, 토큰]
 없이** 제공합니다.
 
 ```sh
-go get github.com/go-authn/oidc@v0.4.1
+go get github.com/go-authn/oidc@v0.5.0
 ```
 
 여기에는 로그인 흐름이 없습니다. 리디렉션도, 코드 교환도, 클라이언트 시크릿도,
@@ -141,6 +141,12 @@ true일 때만** `email`, 그다음 `sub`입니다. 확인되지 않은 이메�
 문자열입니다(OIDC Core §5.1). 구성된 `UsernameClaim`은 폴백 없이 지정된 그대로
 읽습니다.
 
+## 여러 발급자, 그리고 일부 기관만 허용 {#several-issuers-and-only-some-institutions}
+
+**v0.5.0** 부터 `oidc.NewSet(v1, v2, …)` 는 여러 발급자의 토큰을 검증합니다. 검증기마다 고유한 audience 와 키 집합을 가집니다. 토큰은 **검증되지 않은** `iss` 로 그 발급자에 정확히 설정된 검증기로 전달되어 거기서 검증됩니다(그 발급자의 키로 서명, `iss` 재확인, audience, 시각). `iss` 를 읽는 것은 키 집합을 고르는 데 그치며, 위조된 토큰은 이어지는 검증에서 실패합니다. 알 수 없는 `iss` 는 `ErrUnknownIssuer` 이며 네트워크 접근이 없습니다. 다른 발급자의 키 집합을 시도하는 일은 없고, 한 발급자에 두 검증기를 두면 거부되며, `MaxTokenSize`(16 KiB)를 넘는 토큰은 디코딩 전에 거부됩니다.
+
+연합 프록시(MyAccessID 를 통한 eduGAIN, eduTEAMS, Renater, Keycloak 브로커) 뒤에서는 `oidc.Accept{Claim, Values}` 와 `oidc.Check(accepts, token)` 가 클레임에 제공 대상 기관의 값이 하나도 없는 토큰을 거부합니다. 모든 accept 가 충족되어야 하며, 다중 값 클레임은 값 하나만 일치하면 됩니다. 없거나 문자열(또는 문자열 목록)이 아닌 클레임은 아무것도 포함하지 않습니다. 대소문자 규칙은 클레임의 스키마를 따릅니다. `schac_home_organization`(SCHAC 1.6.0, 도메인 이름, `caseIgnoreMatch`), `eduperson_scoped_affiliation`, `voperson_external_affiliation` 은 대소문자를 구분하지 않고, 나머지 클레임은 정확히 비교합니다. ASCII 문자만 접습니다(켈빈 기호 U+212A 는 `k` 가 아닙니다). 클레임은 검증되는 토큰에 있어야 합니다. MyAccessID 는 `schac_home_organization` 을 userinfo 로만 제공합니다.
+
 ## 무엇과 대조해 검사하는가 {#what-it-is-checked-against}
 
 **pyjwt**가 테스트 스위트의 모든 토큰에 서명하므로, 검증자는 같은 손에서 나온 서명자에게
@@ -153,4 +159,4 @@ true일 때만** `email`, 그다음 `sub`입니다. 확인되지 않은 이메�
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.4.1](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1)
+[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)

@@ -11,7 +11,7 @@ descubrimiento, el conjunto de claves y las comprobaciones que debe hacer un ser
 de recursos, en Go puro, **sin dependencias** fuera de la biblioteca estándar.
 
 ```sh
-go get github.com/go-authn/oidc@v0.4.1
+go get github.com/go-authn/oidc@v0.5.0
 ```
 
 Aquí no hay flujo de inicio de sesión: ni redirección, ni intercambio de código, ni
@@ -145,6 +145,12 @@ descarga en curso la esperan, y una descarga que falla cuenta igualmente.
 es una cadena que tecleó la persona (OIDC Core §5.1). Un `UsernameClaim` configurado
 se lee tal como se nombra, sin alternativa.
 
+## Varios emisores y solo algunas instituciones {#several-issuers-and-only-some-institutions}
+
+Desde **v0.5.0**, `oidc.NewSet(v1, v2, …)` verifica tokens de varios emisores, cada verificador con su propia audiencia y su propio conjunto de claves. Un token se dirige por su `iss` **sin verificar** al verificador configurado exactamente para ese emisor y se verifica allí: firma con las claves de ese emisor, `iss` de nuevo, audiencia, fechas. Leer `iss` solo elige un conjunto de claves; un token falsificado falla en la verificación posterior. Un `iss` desconocido da `ErrUnknownIssuer` y no cuesta ningún acceso a la red; nunca se prueba el conjunto de claves de otro emisor; dos verificadores para un emisor se rechazan; un token de más de `MaxTokenSize` (16 KiB) se rechaza antes de decodificarlo.
+
+Detrás de un proxy de federación (eduGAIN mediante MyAccessID, eduTEAMS, Renater, un broker Keycloak), `oidc.Accept{Claim, Values}` y `oidc.Check(accepts, token)` rechazan un token cuyo claim no contenga ninguna de las instituciones atendidas. Todos los accepts deben cumplirse; en un claim multivalor basta un valor; un claim ausente o que no sea texto no contiene nada. La regla de mayúsculas viene del esquema del claim: `schac_home_organization` (SCHAC 1.6.0, un nombre de dominio, `caseIgnoreMatch`), `eduperson_scoped_affiliation` y `voperson_external_affiliation` se comparan sin distinguir mayúsculas; los demás claims, exactamente. Solo se pliegan las letras ASCII (el signo Kelvin U+212A no es una `k`). El claim debe estar en el token verificado: MyAccessID entrega `schac_home_organization` solo en userinfo.
+
 ## Contra qué se comprueba {#what-it-is-checked-against}
 
 **pyjwt** firma todos los tokens del conjunto de pruebas, de modo que el verificador
@@ -160,4 +166,4 @@ cobertura es del 90 %.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.4.1](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1)
+[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)

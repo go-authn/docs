@@ -11,7 +11,7 @@ Discovery, die Schlüsselmenge und die Prüfungen, die ein Resource Server vorne
 Go, **ohne Abhängigkeiten** außerhalb der Standardbibliothek.
 
 ```sh
-go get github.com/go-authn/oidc@v0.4.1
+go get github.com/go-authn/oidc@v0.5.0
 ```
 
 Hier gibt es keinen Anmeldeablauf: keine Weiterleitung, keinen Code-Austausch, kein Client-Geheimnis,
@@ -144,6 +144,12 @@ Abruf, der fehlschlägt, zählt trotzdem.
 ist eine Zeichenkette, die die Person eingetippt hat (OIDC Core §5.1). Ein konfigurierter `UsernameClaim` wird
 so gelesen, wie er benannt ist, ohne Rückfall.
 
+## Mehrere Aussteller und nur bestimmte Einrichtungen {#several-issuers-and-only-some-institutions}
+
+Seit **v0.5.0** prüft `oidc.NewSet(v1, v2, …)` Token mehrerer Aussteller, jeder Verifier mit eigener Audience und eigenem Schlüsselsatz. Ein Token wird anhand seines **ungeprüften** `iss` an den Verifier geleitet, der genau für diesen Aussteller konfiguriert ist, und dort geprüft: Signatur gegen die Schlüssel dieses Ausstellers, `iss` erneut, Audience, Zeiten. Das Lesen von `iss` wählt nur einen Schlüsselsatz; ein gefälschtes Token scheitert an der folgenden Prüfung. Ein unbekanntes `iss` ergibt `ErrUnknownIssuer` und kostet keinen Netzwerkzugriff; kein fremder Schlüsselsatz wird je probiert; zwei Verifier für einen Aussteller werden abgelehnt; ein Token über `MaxTokenSize` (16 KiB) wird vor dem Dekodieren abgelehnt.
+
+Hinter einem Föderations-Proxy (eduGAIN über MyAccessID, eduTEAMS, Renater, ein Keycloak-Broker) lehnen `oidc.Accept{Claim, Values}` und `oidc.Check(accepts, token)` ein Token ab, wenn der Claim keinen der bedienten Einrichtungswerte enthält. Alle Accepts müssen gelten; bei mehrwertigen Claims genügt ein Wert; ein fehlender oder nicht aus Strings bestehender Claim enthält nichts. Die Groß-/Kleinschreibung folgt dem Schema des Claims: `schac_home_organization` (SCHAC 1.6.0, ein Domainname, `caseIgnoreMatch`), `eduperson_scoped_affiliation` und `voperson_external_affiliation` werden ohne Beachtung der Schreibweise verglichen, alle anderen Claims exakt. Nur ASCII-Buchstaben werden gefaltet (das Kelvin-Zeichen U+212A ist kein `k`). Der Claim muss im geprüften Token stehen: MyAccessID liefert `schac_home_organization` nur über userinfo.
+
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
 
 **pyjwt** signiert jedes Token in der Testsuite, sodass der Verifier nie von
@@ -158,4 +164,4 @@ färbt einen Test rot. Die Untergrenze der Coverage-Lane liegt bei 90 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.4.1](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1)
+[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)

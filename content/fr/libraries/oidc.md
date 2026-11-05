@@ -11,7 +11,7 @@ La découverte, le jeu de clés, et les vérifications qu'un serveur de ressourc
 pur, **sans aucune dépendance** en dehors de la bibliothèque standard.
 
 ```sh
-go get github.com/go-authn/oidc@v0.4.1
+go get github.com/go-authn/oidc@v0.5.0
 ```
 
 Il n'y a pas ici de parcours de connexion : pas de redirection, pas d'échange de code, pas de secret client,
@@ -144,6 +144,12 @@ récupération qui échoue compte quand même.
 est une chaîne que la personne a tapée (OIDC Core §5.1). Une `UsernameClaim` configurée est
 lue telle que nommée, sans repli.
 
+## Plusieurs émetteurs, et seulement certains établissements {#several-issuers-and-only-some-institutions}
+
+Depuis **v0.5.0**, `oidc.NewSet(v1, v2, …)` vérifie des jetons de plusieurs émetteurs, chaque vérificateur ayant sa propre audience et son propre jeu de clés. Un jeton est aiguillé par son `iss` **non vérifié** vers le vérificateur configuré exactement pour cet émetteur, et vérifié là : signature avec les clés de cet émetteur, `iss` de nouveau, audience, dates. Lire `iss` ne fait que choisir un jeu de clés ; un jeton forgé échoue à la vérification qui suit. Un `iss` inconnu donne `ErrUnknownIssuer` sans aucun accès réseau ; le jeu de clés d'un autre émetteur n'est jamais essayé ; deux vérificateurs pour un émetteur sont refusés ; un jeton de plus de `MaxTokenSize` (16 Kio) est refusé avant tout décodage.
+
+Derrière un proxy de fédération (eduGAIN via MyAccessID, eduTEAMS, Renater, un broker Keycloak), `oidc.Accept{Claim, Values}` et `oidc.Check(accepts, token)` refusent un jeton dont la revendication ne contient aucun des établissements servis. Tous les accepts doivent tenir ; pour une revendication multivaluée, une valeur suffit ; une revendication absente ou qui n'est pas du texte ne contient rien. La casse suit le schéma de la revendication : `schac_home_organization` (SCHAC 1.6.0, un nom de domaine, `caseIgnoreMatch`), `eduperson_scoped_affiliation` et `voperson_external_affiliation` sont comparées sans tenir compte de la casse, les autres exactement. Seules les lettres ASCII sont repliées (le signe Kelvin U+212A n'est pas un `k`). La revendication doit figurer dans le jeton vérifié : MyAccessID livre `schac_home_organization` dans userinfo seulement.
+
 ## Ce contre quoi il est vérifié {#what-it-is-checked-against}
 
 **pyjwt** signe chaque jeton de la suite de tests, si bien que le vérificateur n'est jamais jugé
@@ -158,4 +164,4 @@ fait passer un test au rouge. Le plancher de la voie de couverture est de 90 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.4.1](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1)
+[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)
