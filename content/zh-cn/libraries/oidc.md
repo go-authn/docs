@@ -11,7 +11,7 @@ tags: [库, oidc, 令牌]
 **除标准库之外没有任何依赖**。
 
 ```sh
-go get github.com/go-authn/oidc@v0.4.1
+go get github.com/go-authn/oidc@v0.5.0
 ```
 
 这里没有登录流程：没有重定向，没有授权码交换，没有客户端密钥，
@@ -144,6 +144,12 @@ ECDSA 的 `s` 和 `n − s` 都能通过验证，算法允许这样。因此
 是人员自己键入的字符串（OIDC Core §5.1）。配置了 `UsernameClaim` 时
 按所指名的读取，不作回退。
 
+## 多个签发者，以及只接受部分机构 {#several-issuers-and-only-some-institutions}
+
+自 **v0.5.0** 起，`oidc.NewSet(v1, v2, …)` 可验证来自多个签发者的令牌，每个验证器有自己的 audience 和密钥集。令牌依据其**未经验证**的 `iss` 被路由到恰好为该签发者配置的验证器，并在那里验证：用该签发者的密钥验签、再次核对 `iss`、audience、时间。读取 `iss` 只是选择密钥集，伪造的令牌会在随后的验证中失败。未知的 `iss` 返回 `ErrUnknownIssuer`，不产生任何网络访问；从不尝试其他签发者的密钥集；同一签发者的两个验证器会被拒绝；超过 `MaxTokenSize`（16 KiB）的令牌在解码前即被拒绝。
+
+在联盟代理（经 MyAccessID 的 eduGAIN、eduTEAMS、Renater、Keycloak 代理）之后，`oidc.Accept{Claim, Values}` 与 `oidc.Check(accepts, token)` 会拒绝其声明不含任何所服务机构取值的令牌。所有 accept 都必须满足；多值声明只需一个值匹配；缺失或不是字符串（列表）的声明不包含任何值。大小写规则取自声明的模式：`schac_home_organization`（SCHAC 1.6.0，域名，`caseIgnoreMatch`）、`eduperson_scoped_affiliation` 和 `voperson_external_affiliation` 不区分大小写，其他声明精确比较。只折叠 ASCII 字母（开尔文符号 U+212A 不是 `k`）。声明必须出现在被验证的令牌中：MyAccessID 仅在 userinfo 中提供 `schac_home_organization`。
+
 ## 它对照什么检查 {#what-it-is-checked-against}
 
 **pyjwt** 为测试套件中的每个令牌签名，因此验证器从不由
@@ -157,4 +163,4 @@ audience 检查，都曾被有意尝试过，每一种都会使一个测试变�
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.4.1](https://pkg.go.dev/github.com/go-authn/oidc@v0.4.1)
+[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)
