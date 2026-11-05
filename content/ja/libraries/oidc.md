@@ -11,7 +11,7 @@ tags: [ライブラリ, oidc, トークン]
 ライブラリ以外の**依存関係なし**の純粋な Go で。
 
 ```sh
-go get github.com/go-authn/oidc@v0.5.0
+go get github.com/go-authn/oidc@v0.6.0
 ```
 
 ここにログインフローはありません。リダイレクトも、コード交換も、クライアントシークレットも、
@@ -145,6 +145,10 @@ ECDSA の `s` と `n − s` はどちらも、アルゴリズムが許すとお�
 
 フェデレーションプロキシ（MyAccessID 経由の eduGAIN、eduTEAMS、Renater、Keycloak ブローカー）の背後では、`oidc.Accept{Claim, Values}` と `oidc.Check(accepts, token)` が、クレームが提供対象の機関のいずれの値も含まないトークンを拒否します。すべての accept が満たされる必要があり、複数値のクレームでは 1 つの値が一致すれば十分です。存在しないクレーム、または文字列（の配列）でないクレームは何も含みません。大文字小文字の扱いはクレームのスキーマに従います。`schac_home_organization`（SCHAC 1.6.0、ドメイン名、`caseIgnoreMatch`）、`eduperson_scoped_affiliation`、`voperson_external_affiliation` は大文字小文字を区別せず、他のクレームは完全一致で比較します。畳み込むのは ASCII 文字のみです（ケルビン記号 U+212A は `k` ではありません）。クレームは検証されるトークンに含まれている必要があります。MyAccessID は `schac_home_organization` を userinfo でのみ提供します。
 
+## スコープ付きの名前と、そのスコープが誰のものか {#scoped-names}
+
+アカウントは機関に属します。連合プロキシの背後では、1 つの発行者が多くの機関の人を保証します。`oidc.ScopedName(name, allowed, defaultScope)` は、この発行者が主張してよいスコープかどうかを Shibboleth のスコープ検査のように**確認した上で**、名前を ASCII 小文字の `local@scope` として返します（eduPersonPrincipalName は eduPerson スキーマで `caseIgnoreMatch`、単一値です）。別のスコープは `ErrScopeNotAllowed`、スコープもデフォルトもない名前は `ErrNoScope` です。`@` のない名前には `defaultScope`（スコープ付き名前より前からアカウントがある機関）が付き、これも許可されている必要があります。`Token.ScopedUsername` はトークンのユーザー名に対して同じことを行います。`UsernameClaim` に `eduperson_principal_name` または `voperson_id` を設定してください。スコープは最後の `@` の後ろの部分です。
+
 ## 何に対して検証されているか {#what-it-is-checked-against}
 
 **pyjwt** がテストスイートのすべてのトークンに署名するので、検証器が同じ手による署名者に審査される
@@ -157,4 +161,4 @@ ECDSA の `s` と `n − s` はどちらも、アルゴリズムが許すとお�
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.6.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.6.0)

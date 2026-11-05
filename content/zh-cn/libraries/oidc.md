@@ -11,7 +11,7 @@ tags: [库, oidc, 令牌]
 **除标准库之外没有任何依赖**。
 
 ```sh
-go get github.com/go-authn/oidc@v0.5.0
+go get github.com/go-authn/oidc@v0.6.0
 ```
 
 这里没有登录流程：没有重定向，没有授权码交换，没有客户端密钥，
@@ -150,6 +150,10 @@ ECDSA 的 `s` 和 `n − s` 都能通过验证，算法允许这样。因此
 
 在联盟代理（经 MyAccessID 的 eduGAIN、eduTEAMS、Renater、Keycloak 代理）之后，`oidc.Accept{Claim, Values}` 与 `oidc.Check(accepts, token)` 会拒绝其声明不含任何所服务机构取值的令牌。所有 accept 都必须满足；多值声明只需一个值匹配；缺失或不是字符串（列表）的声明不包含任何值。大小写规则取自声明的模式：`schac_home_organization`（SCHAC 1.6.0，域名，`caseIgnoreMatch`）、`eduperson_scoped_affiliation` 和 `voperson_external_affiliation` 不区分大小写，其他声明精确比较。只折叠 ASCII 字母（开尔文符号 U+212A 不是 `k`）。声明必须出现在被验证的令牌中：MyAccessID 仅在 userinfo 中提供 `schac_home_organization`。
 
+## 带作用域的名称，以及作用域属于谁 {#scoped-names}
+
+账户是相对于机构的：在联盟代理之后，一个签发者为许多机构的人担保。`oidc.ScopedName(name, allowed, defaultScope)` 在**检查作用域**之后（该签发者是否可以断言它，如同 Shibboleth 检查 scope），以 ASCII 小写的 `local@scope` 形式返回名称（eduPersonPrincipalName 在 eduPerson 模式中是 `caseIgnoreMatch` 且为单值）。其他作用域为 `ErrScopeNotAllowed`，没有作用域且没有默认值的名称为 `ErrNoScope`。不含 `@` 的名称采用 `defaultScope`（账户早于带作用域名称的机构），它也必须被允许。`Token.ScopedUsername` 对令牌的用户名执行同样操作：把 `UsernameClaim` 设为 `eduperson_principal_name` 或 `voperson_id`。作用域是最后一个 `@` 之后的部分。
+
 ## 它对照什么检查 {#what-it-is-checked-against}
 
 **pyjwt** 为测试套件中的每个令牌签名，因此验证器从不由
@@ -163,4 +167,4 @@ audience 检查，都曾被有意尝试过，每一种都会使一个测试变�
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.6.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.6.0)

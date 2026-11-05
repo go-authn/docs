@@ -11,7 +11,7 @@ descubrimiento, el conjunto de claves y las comprobaciones que debe hacer un ser
 de recursos, en Go puro, **sin dependencias** fuera de la biblioteca estándar.
 
 ```sh
-go get github.com/go-authn/oidc@v0.5.0
+go get github.com/go-authn/oidc@v0.6.0
 ```
 
 Aquí no hay flujo de inicio de sesión: ni redirección, ni intercambio de código, ni
@@ -151,6 +151,10 @@ Desde **v0.5.0**, `oidc.NewSet(v1, v2, …)` verifica tokens de varios emisores,
 
 Detrás de un proxy de federación (eduGAIN mediante MyAccessID, eduTEAMS, Renater, un broker Keycloak), `oidc.Accept{Claim, Values}` y `oidc.Check(accepts, token)` rechazan un token cuyo claim no contenga ninguna de las instituciones atendidas. Todos los accepts deben cumplirse; en un claim multivalor basta un valor; un claim ausente o que no sea texto no contiene nada. La regla de mayúsculas viene del esquema del claim: `schac_home_organization` (SCHAC 1.6.0, un nombre de dominio, `caseIgnoreMatch`), `eduperson_scoped_affiliation` y `voperson_external_affiliation` se comparan sin distinguir mayúsculas; los demás claims, exactamente. Solo se pliegan las letras ASCII (el signo Kelvin U+212A no es una `k`). El claim debe estar en el token verificado: MyAccessID entrega `schac_home_organization` solo en userinfo.
 
+## Nombres con ámbito, y de quién es el ámbito {#scoped-names}
+
+Una cuenta es relativa a una institución: detrás de un proxy de federación un emisor responde por personas de muchas. `oidc.ScopedName(name, allowed, defaultScope)` devuelve el nombre como `local@scope`, en minúsculas ASCII (eduPersonPrincipalName es `caseIgnoreMatch` en el esquema eduPerson y monovalor), tras **comprobar el ámbito** contra lo que este emisor puede afirmar, como Shibboleth comprueba un scope: otro ámbito es `ErrScopeNotAllowed`, un nombre sin ámbito y sin valor por defecto es `ErrNoScope`. Un nombre sin `@` toma `defaultScope` (una institución cuyas cuentas son anteriores a los nombres con ámbito), que también debe estar permitido. `Token.ScopedUsername` lo aplica al nombre de usuario del token: configure `UsernameClaim` como `eduperson_principal_name` o `voperson_id`. El ámbito es lo que sigue al último `@`.
+
 ## Contra qué se comprueba {#what-it-is-checked-against}
 
 **pyjwt** firma todos los tokens del conjunto de pruebas, de modo que el verificador
@@ -166,4 +170,4 @@ cobertura es del 90 %.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.6.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.6.0)

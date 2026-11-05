@@ -11,7 +11,7 @@ tags: [라이브러리, oidc, 토큰]
 없이** 제공합니다.
 
 ```sh
-go get github.com/go-authn/oidc@v0.5.0
+go get github.com/go-authn/oidc@v0.6.0
 ```
 
 여기에는 로그인 흐름이 없습니다. 리디렉션도, 코드 교환도, 클라이언트 시크릿도,
@@ -147,6 +147,10 @@ true일 때만** `email`, 그다음 `sub`입니다. 확인되지 않은 이메�
 
 연합 프록시(MyAccessID 를 통한 eduGAIN, eduTEAMS, Renater, Keycloak 브로커) 뒤에서는 `oidc.Accept{Claim, Values}` 와 `oidc.Check(accepts, token)` 가 클레임에 제공 대상 기관의 값이 하나도 없는 토큰을 거부합니다. 모든 accept 가 충족되어야 하며, 다중 값 클레임은 값 하나만 일치하면 됩니다. 없거나 문자열(또는 문자열 목록)이 아닌 클레임은 아무것도 포함하지 않습니다. 대소문자 규칙은 클레임의 스키마를 따릅니다. `schac_home_organization`(SCHAC 1.6.0, 도메인 이름, `caseIgnoreMatch`), `eduperson_scoped_affiliation`, `voperson_external_affiliation` 은 대소문자를 구분하지 않고, 나머지 클레임은 정확히 비교합니다. ASCII 문자만 접습니다(켈빈 기호 U+212A 는 `k` 가 아닙니다). 클레임은 검증되는 토큰에 있어야 합니다. MyAccessID 는 `schac_home_organization` 을 userinfo 로만 제공합니다.
 
+## 범위가 있는 이름, 그리고 그 범위가 누구의 것인지 {#scoped-names}
+
+계정은 기관에 상대적입니다. 연합 프록시 뒤에서는 하나의 발급자가 여러 기관의 사람을 보증합니다. `oidc.ScopedName(name, allowed, defaultScope)` 은 이 발급자가 주장할 수 있는 범위인지 Shibboleth 가 scope 를 검사하듯 **확인한 뒤** 이름을 ASCII 소문자 `local@scope` 로 돌려줍니다(eduPersonPrincipalName 은 eduPerson 스키마에서 `caseIgnoreMatch` 이며 단일 값입니다). 다른 범위는 `ErrScopeNotAllowed`, 범위도 기본값도 없는 이름은 `ErrNoScope` 입니다. `@` 가 없는 이름은 `defaultScope`(범위 이름보다 계정이 먼저 있던 기관)를 받으며, 이것도 허용되어야 합니다. `Token.ScopedUsername` 은 토큰의 사용자 이름에 이를 적용합니다. `UsernameClaim` 을 `eduperson_principal_name` 또는 `voperson_id` 로 설정하십시오. 범위는 마지막 `@` 뒤의 부분입니다.
+
 ## 무엇과 대조해 검사하는가 {#what-it-is-checked-against}
 
 **pyjwt**가 테스트 스위트의 모든 토큰에 서명하므로, 검증자는 같은 손에서 나온 서명자에게
@@ -159,4 +163,4 @@ true일 때만** `email`, 그다음 `sub`입니다. 확인되지 않은 이메�
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.6.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.6.0)

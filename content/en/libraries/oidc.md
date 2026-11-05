@@ -11,7 +11,7 @@ Discovery, the key set, and the checks a resource server must make — in pure
 Go, with **no dependencies** outside the standard library.
 
 ```sh
-go get github.com/go-authn/oidc@v0.5.0
+go get github.com/go-authn/oidc@v0.6.0
 ```
 
 There is no login flow here: no redirect, no code exchange, no client secret,
@@ -171,6 +171,10 @@ userinfo, not in the ID token. The login side (one `rp.Set` of providers, the
 state bound to its provider, the RFC 9207 `iss` check) is in
 [go-authn/rp](https://github.com/go-authn/rp) v0.3.0.
 
+## Scoped names, and whose scope it is {#scoped-names}
+
+An account is relative to an institution: behind a federation proxy one issuer vouches for people of many. `oidc.ScopedName(name, allowed, defaultScope)` returns the name as `local@scope`, ASCII-lower-cased (eduPersonPrincipalName is `caseIgnoreMatch` in the eduPerson schema, and single-valued), after **checking the scope** against what this issuer may assert, as Shibboleth checks a scope: another scope is `ErrScopeNotAllowed`, a name with no scope and no default is `ErrNoScope`. A name without `@` takes `defaultScope` (an institution whose accounts predate scoped names), which must be allowed too. `Token.ScopedUsername` does it on the token's username: set `UsernameClaim` to `eduperson_principal_name` or `voperson_id`. The scope is what follows the last `@`.
+
 ## What it is checked against
 
 **pyjwt** signs every token in the test suite, so the verifier is never judged
@@ -185,4 +189,4 @@ turns a test red. The coverage lane's floor is 90%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.6.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.6.0)

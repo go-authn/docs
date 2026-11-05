@@ -11,7 +11,7 @@ Discovery, die Schlüsselmenge und die Prüfungen, die ein Resource Server vorne
 Go, **ohne Abhängigkeiten** außerhalb der Standardbibliothek.
 
 ```sh
-go get github.com/go-authn/oidc@v0.5.0
+go get github.com/go-authn/oidc@v0.6.0
 ```
 
 Hier gibt es keinen Anmeldeablauf: keine Weiterleitung, keinen Code-Austausch, kein Client-Geheimnis,
@@ -150,6 +150,10 @@ Seit **v0.5.0** prüft `oidc.NewSet(v1, v2, …)` Token mehrerer Aussteller, jed
 
 Hinter einem Föderations-Proxy (eduGAIN über MyAccessID, eduTEAMS, Renater, ein Keycloak-Broker) lehnen `oidc.Accept{Claim, Values}` und `oidc.Check(accepts, token)` ein Token ab, wenn der Claim keinen der bedienten Einrichtungswerte enthält. Alle Accepts müssen gelten; bei mehrwertigen Claims genügt ein Wert; ein fehlender oder nicht aus Strings bestehender Claim enthält nichts. Die Groß-/Kleinschreibung folgt dem Schema des Claims: `schac_home_organization` (SCHAC 1.6.0, ein Domainname, `caseIgnoreMatch`), `eduperson_scoped_affiliation` und `voperson_external_affiliation` werden ohne Beachtung der Schreibweise verglichen, alle anderen Claims exakt. Nur ASCII-Buchstaben werden gefaltet (das Kelvin-Zeichen U+212A ist kein `k`). Der Claim muss im geprüften Token stehen: MyAccessID liefert `schac_home_organization` nur über userinfo.
 
+## Bereichsnamen, und wessen Bereich es ist {#scoped-names}
+
+Ein Konto gehört zu einer Einrichtung: hinter einem Föderations-Proxy bürgt ein Aussteller für Personen vieler Einrichtungen. `oidc.ScopedName(name, allowed, defaultScope)` liefert den Namen als `local@scope`, ASCII-kleingeschrieben (eduPersonPrincipalName ist im eduPerson-Schema `caseIgnoreMatch` und einwertig), nachdem der **Bereich geprüft** wurde: ob dieser Aussteller ihn behaupten darf, wie Shibboleth einen Scope prüft. Ein anderer Bereich ist `ErrScopeNotAllowed`, ein Name ohne Bereich und ohne Vorgabe `ErrNoScope`. Ein Name ohne `@` erhält `defaultScope` (eine Einrichtung, deren Konten älter als Bereichsnamen sind), der ebenfalls erlaubt sein muss. `Token.ScopedUsername` wendet das auf den Benutzernamen des Tokens an: `UsernameClaim` auf `eduperson_principal_name` oder `voperson_id` setzen. Der Bereich ist, was auf das letzte `@` folgt.
+
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
 
 **pyjwt** signiert jedes Token in der Testsuite, sodass der Verifier nie von
@@ -164,4 +168,4 @@ färbt einen Test rot. Die Untergrenze der Coverage-Lane liegt bei 90 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/oidc@v0.5.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/oidc@v0.6.0](https://pkg.go.dev/github.com/go-authn/oidc@v0.6.0)
