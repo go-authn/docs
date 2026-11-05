@@ -120,60 +120,43 @@ jobs:
   links:
     name: every external link resolves
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+      # linkcheck (go-fleettools/fleettools, pinned): retries with exponential
+      # backoff that honours Retry-After, github.com repo and path links decided
+      # through the REST API rather than the HTML page, a DEAD link told apart
+      # from a FLAKY host. It already skips img.shields.io, example domains
+      # and localhost.
+      #
+      # --skip: this site's own address (published by the deploy job of the
+      # very change that adds it; its internal links are checked offline
+      # above); identifiers written as URIs, not pages (a SAML authentication
+      # context class, a federation's metadata URL quoted as a configuration
+      # value: 403 from a runner whatever the agent); and a per-account ACME
+      # directory prefix, a template whose <uuid> tail the extractor stops at.
+      #
+      # THE ONE DELIBERATE EXCEPTION to "no secret on a command line or in the
+      # environment": the job's ephemeral, read-only github.token (permissions:
+      # contents: read, for this job alone) reaches the tool as a 0600 file in
+      # RUNNER_TEMP, written by the shell builtin printf (no process argument,
+      # no environment variable) and removed on exit. It is sent to
+      # api.github.com only and never printed.
       - name: Check
         run: |
-          set -uo pipefail
-          # The character class matters: an extractor stopping only at ) and "
-          # carries a closing > or < into the request. A backtick is in it too:
-          # never valid in a URL, and German writes "`http://`-Aussteller", a
-          # compound the extractor read as the URL "http://`-Aussteller".
-          urls=$(grep -rhoE 'https?://[^)"><` [:space:]]+' content/ README.md | sed -E 's/[.,`]+$//' | sort -u)
-          test -n "$urls" || { echo "::error::no links found; are the pages still there?"; exit 1; }
-          echo "checking $(printf '%s\n' "$urls" | wc -l) distinct URLs"
-          fail=0
-          while read -r u; do
-            case "$u" in
-              # Renders whatever it is asked for; proves nothing.
-              *img.shields.io*) continue ;;
-              # Documented placeholders, not hosts.
-              *example.com*|*example.org*|*example.net*|*localhost*|*127.0.0.1*|*.invalid*) continue ;;
-              # RFC 2606's .example TLD and mDNS's .local: placeholders too.
-              *.example|*.example/*|*.example:*|*.local|*.local/*|*.local:*) continue ;;
-              # A scheme alone, or a URL still holding a shell variable: a
-              # template in a command, not an address.
-              http://|https://|*'$'*) continue ;;
-              # This site's own address: published by the deploy job of the
-              # very change that adds it, and its internal links and anchors
-              # are checked offline by lychee above.
-              https://go-authn.github.io/docs/*) continue ;;
-              # Identifiers written as URIs, not pages: a SAML authentication
-              # context class (refeds.org answers robots 403 whatever the agent)
-              # and a federation's metadata URL quoted as a configuration value
-              # (200 from a desktop, 403 from GitHub's runners).
-              https://refeds.org/profile/*|https://proxy.eduteams.org/saml2/idp/metadata.php) continue ;;
-              # A per-account ACME directory: the path holds the account's
-              # <uuid>, which the extractor stops at, so what is left is a
-              # prefix no server answers. The host is real; the URL is a
-              # template, like the placeholders above.
-              https://acme-v02.harica.gr/acme/) continue ;;
-            esac
-            # Three attempts: one is a flake detector rather than a link
-            # checker, and a lane that fails at random gets ignored.
-            code=000
-            for _ in 1 2 3; do
-              code=$(curl -sS -o /dev/null -w '%{http_code}' -L --max-time 25 "$u" 2>/dev/null) || true
-              code=${code:-000}
-              case "$code" in 2*|3*) break ;; esac
-              sleep 3
-            done
-            case "$code" in
-              2*|3*) printf '  ok   %s  %s\n' "$code" "$u" ;;
-              *)     printf '  FAIL %s  %s\n' "$code" "$u"; fail=1 ;;
-            esac
-          done <<< "$urls"
-          test "$fail" -eq 0 || { echo "::error::at least one link does not resolve"; exit 1; }
+          umask 077
+          token="${RUNNER_TEMP}/linkcheck-token"
+          trap 'rm -f "${token}"' EXIT
+          printf '%s' '${{ github.token }}' > "${token}"
+          go run github.com/go-fleettools/fleettools/cmd/linkcheck@v0.74.0 \
+            --token-file "${token}" \
+            --skip go-authn.github.io/docs/ \
+            --skip refeds.org/profile/ \
+            --skip proxy.eduteams.org/saml2/idp/metadata.php \
+            --skip acme-v02.harica.gr/acme/ \
+            content/ README.md
 
   deploy:
     # Only main publishes. A pull request stops after build above: it has no
