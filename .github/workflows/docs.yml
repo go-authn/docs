@@ -128,8 +128,9 @@ jobs:
       # linkcheck (go-fleettools/fleettools, pinned): retries with exponential
       # backoff that honours Retry-After, github.com repo and path links decided
       # through the REST API rather than the HTML page, a DEAD link told apart
-      # from a FLAKY host. It already skips img.shields.io, example domains
-      # and localhost.
+      # from a FLAKY host. It already skips, printed and counted, URLs with no
+      # host (a bare scheme, prose glued to a backtick), the RFC 2606 / 6761
+      # placeholder hosts (.example, .local, localhost, ...) and img.shields.io.
       #
       # --skip: this site's own address (published by the deploy job of the
       # very change that adds it; its internal links are checked offline
@@ -137,9 +138,7 @@ jobs:
       # context class, a federation's metadata URL quoted as a configuration
       # value: 403 from a runner whatever the agent); and a per-account ACME
       # directory prefix, a template whose <uuid> tail the extractor stops at;
-      # RFC 2606 .example hosts and mDNS .local ones (placeholders); a scheme
-      # followed by a backtick (prose such as "`http://`-Aussteller", which
-      # the extractor reads as a URL); a URL still holding a shell variable.
+      # and a release-download URL still holding a shell variable in its path.
       #
       # THE ONE DELIBERATE EXCEPTION to "no secret on a command line or in the
       # environment": the job's ephemeral, read-only github.token (permissions:
@@ -153,16 +152,12 @@ jobs:
           token="${RUNNER_TEMP}/linkcheck-token"
           trap 'rm -f "${token}"' EXIT
           printf '%s' '${{ github.token }}' > "${token}"
-          go run github.com/go-fleettools/fleettools/cmd/linkcheck@v0.74.0 \
+          go run github.com/go-fleettools/fleettools/cmd/linkcheck@v0.77.0 \
             --token-file "${token}" \
             --skip go-authn.github.io/docs/ \
             --skip refeds.org/profile/ \
             --skip proxy.eduteams.org/saml2/idp/metadata.php \
             --skip acme-v02.harica.gr/acme/ \
-            --skip .example/ \
-            --skip .local: \
-            --skip 'http://`' \
-            --skip 'https://`' \
             --skip '/download/$version' \
             content/ README.md
 
