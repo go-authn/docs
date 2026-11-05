@@ -11,14 +11,36 @@ directorio. Lo que quiere autenticarlas habla LDAP.** authnd es la fachada:
 hace binds y búsquedas sobre los orígenes de
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}), así que lo que guarda
 una base de datos puede leerlo cualquier cosa que sepa consultar un directorio.
-Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.15.1,
+Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.16.0,
 cuyas entradas siguen los esquemas estándar y superan el esquema que sirve en
 `cn=Subschema`, que un sitio amplía con el suyo
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) y, con
 [reglas de contenido DIT, formas de nombre y reglas de estructura DIT]({{< relref "/authnd/schemas.md#rules" >}}),
 da forma a las entradas, con go-authn/ldap v0.12.0 y
-go-authn/directory v0.17.0 por debajo; lo que está verificado y lo que no
+go-authn/directory v0.18.0 por debajo; lo que está verificado y lo que no
 figura en la página de [estado]({{< relref "/status.md" >}}).
+
+{{< callout type="warning" >}}
+**Actualizar desde la v0.15.x: una configuración con un bloque `oidc` debe cambiar**
+
+- ⛔ **`oidc { domains = [...] }` es obligatorio**: el servidor no arranca sin
+  él. El nombre del token debe ser exactamente un `local@scope` de un dominio
+  permitido; se rechaza un nombre sin ámbito, el de otra institución o uno con
+  dos `@`. Detrás de un proxy de federación, la alice de cualquier institución
+  se autenticaba como la alice local. Véase
+  [el nombre debe tener ámbito]({{< relref "/authnd/tokens.md#scoped-name" >}}).
+- Para actualizar: añada `domains = ["<su dominio>"]`, configure
+  `username_claim = "eduperson_principal_name"` (o el claim que su emisor
+  rellene con `local@scope`) y, si los nombres de su directorio son simples
+  (`alice`), añada `local_domain = "<su dominio>"`. Un token cuyo nombre no
+  tiene ámbito ya no puede hacer bind.
+- Dos entradas de una misma fuente que comparten un uid son ahora un error al
+  arrancar y al refrescar (go-authn/directory v0.18.0), no una elección
+  silenciosa. Busque uid repetidos en un upstream LDAP antes de actualizar:
+  `ldapsearch -b <base> '(uid=*)' uid`.
+
+Una configuración sin bloque `oidc` no se ve afectada.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Actualizar desde la v0.14.x**

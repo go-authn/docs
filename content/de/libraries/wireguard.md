@@ -149,6 +149,7 @@ als Liste durchgehen kann, noch eine Liste als Token.
 | ein Schlüssel, der keiner ist | siehe oben |
 | ein Aussteller oder Token-Endpunkt im Klartext, außer Loopback | das Geheimnis des Gateways und die Liste würden eine Verbindung passieren, die jeder mitlesen kann |
 | eine `SourceConfig` ohne `ClientID` und `ClientSecret` | ein Gateway liest die Liste als eigener Client |
+| eine Weiterleitung vom Token-Endpunkt oder von der Liste (ab v0.1.4) | die Anfrage trägt das Basic-Geheimnis oder das Bearer-Token, und Go würde es erneut an denselben Host auf einem anderen Port oder Schema senden; keine der beiden Anfragen folgt Weiterleitungen, eine Weiterleitung ist also ein Fehler |
 
 Eine Liste trägt `exp`: Ein Gateway, das bis dahin keine neuere abrufen kann, hat keine
 Liste statt einer veralteten. `Peer.Subject` ist das `sub` der Person, wie es der

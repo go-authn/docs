@@ -11,13 +11,34 @@ things that want to authenticate them speak LDAP.** authnd is the front: it
 binds and searches over [go-authn/directory]({{< relref "/libraries/_index.md" >}})'s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe
-v0.15.1, whose entries follow the standard schemas and pass the schema it
+v0.16.0, whose entries follow the standard schemas and pass the schema it
 serves at `cn=Subschema`, which a site extends with its own
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) and, with
 [DIT content rules, name forms and structure rules]({{< relref "/authnd/schemas.md#rules" >}}),
 shapes, with go-authn/ldap v0.12.0 and
-go-authn/directory v0.17.0 under it; what is verified and what is not is on
+go-authn/directory v0.18.0 under it; what is verified and what is not is on
 the [status]({{< relref "/status.md" >}}) page.
+
+{{< callout type="warning" >}}
+**Upgrading from v0.15.x: a configuration with an `oidc` block must change**
+
+- ⛔ **`oidc { domains = [...] }` is required**: the server does not start
+  without it. The token's name must be exactly one `local@scope` of an allowed
+  domain; an unscoped name, another institution's, or one with two `@` is
+  refused. Behind a federation proxy any institution's "alice" used to bind as
+  the local alice. See [the name must be scoped]({{< relref "/authnd/tokens.md#scoped-name" >}}).
+- To upgrade: add `domains = ["<your domain>"]`, set
+  `username_claim = "eduperson_principal_name"` (or whichever claim your issuer
+  fills with `local@scope`), and, if your directory names are bare (`alice`),
+  add `local_domain = "<your domain>"`. A token whose name is unscoped can no
+  longer bind.
+- Two entries of one source that share a uid are now an error at startup and at
+  refresh (go-authn/directory v0.18.0), not a silent pick. Look for repeated
+  uids in an LDAP upstream before upgrading:
+  `ldapsearch -b <base> '(uid=*)' uid`.
+
+A configuration without an `oidc` block is not affected.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Upgrading from v0.14.x**

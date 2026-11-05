@@ -152,6 +152,7 @@ de ID pueden hacerse pasar por una lista, ni una lista por un token.
 | una clave que no lo es | véase más arriba |
 | un emisor o un endpoint de token en claro, salvo loopback | el secreto del gateway y la lista cruzarían un enlace que cualquiera puede leer |
 | un `SourceConfig` sin `ClientID` ni `ClientSecret` | un gateway lee la lista como un cliente propio |
+| una redirección del endpoint de token o de la lista (desde la v0.1.4) | la petición lleva el secreto Basic, o el token Bearer, y Go lo reenviaría al mismo host en otro puerto o esquema; ninguna de las dos peticiones sigue redirecciones, así que una redirección es un error |
 
 Una lista lleva `exp`: un gateway que no puede obtener una más reciente para
 entonces se queda sin lista, en lugar de con una obsoleta. `Peer.Subject` es el

@@ -30,13 +30,16 @@ oidc {
   issuer   = "https://login.example.org/realms/staff"   # the "iss" a token must carry, and where discovery starts
   audience = "ldap"                                     # this server's client id at the provider
 
-  # username_claim = "preferred_username"   which claim names the person here
+  username_claim = "eduperson_principal_name"          # the claim that holds ONE local@scope
+  domains        = ["univ-a.example"]                  # REQUIRED: the scopes this issuer may assert
+  # local_domain = "univ-a.example"   optional, one of domains: its people are published under their bare name
   # jwks_url       = "…"                    skips discovery, for a provider that does not publish it
   # allow_plaintext = true                  only when TLS is terminated in front of this process
 }
 ```
 
-`issuer` und `audience` sind Pflicht. Ohne `username_claim` ist der Name
+`issuer`, `audience` und `domains` sind Pflicht, und der Name muss ein
+`local@scope` einer davon sein ([weiter unten]({{< relref "/authnd/tokens.md#scoped-name" >}})). Ohne `username_claim` ist der Name
 `preferred_username`, dann `email`, wenn `email_verified` wahr ist, dann `sub`.
 Mit dem Block kündigt das Root-DSE den Mechanismus an:
 
@@ -48,6 +51,34 @@ supportedSASLMechanisms: OAUTHBEARER
 
 Ohne ihn wird jeder SASL-Bind mit `authMethodNotSupported` beantwortet – *nicht auf
 diesem Weg*, was einen Client anderswohin schickt als *falsches Passwort*.
+
+## Der Name muss einen Bereich haben {#scoped-name}
+
+Hinter einem Föderationsproxy (eduGAIN über MyAccessID, eduTEAMS, ein
+Keycloak-Broker) bürgt ein Aussteller für Menschen vieler Einrichtungen, und
+„alice“ an einer anderen Universität ist nicht die alice dieses Verzeichnisses.
+Deshalb muss der Name des Tokens **genau ein `local@scope` sein, dessen Bereich
+einer der `domains` ist** (`ScopedName` von go-authn/oidc): Ein Name ohne
+Bereich, der einer anderen Einrichtung oder einer mit zwei `@` wird abgelehnt.
+
+`local_domain` (optional, eines der `domains`) ist der Bereich, dessen Personen
+hier unter ihrem bloßen lokalen Teil veröffentlicht werden: Mit `local_domain =
+"univ-a.example"` ist `alice@univ-a.example` die `alice` des Verzeichnisses. Ein
+Name jedes anderen erlaubten Bereichs wird als ganzes `local@scope` nachgeschlagen
+(`alice@univ-b.example`).
+
+{{< callout type="warning" >}}
+**Ab v0.16.0 ist `domains` Pflicht, und der Server startet ohne nicht.**
+
+Zuvor wurde ein `preferred_username` ohne Bereich unmittelbar auf Namen des
+Verzeichnisses abgebildet, sodass die alice jeder Einrichtung als die lokale
+alice gebunden wurde. Zum Umstieg `domains = ["<Ihre Domain>"]` ergänzen,
+`username_claim = "eduperson_principal_name"` setzen (oder den Claim, den Ihr
+Aussteller mit `local@scope` füllt) und, wenn die Namen Ihres Verzeichnisses
+bloß sind, `local_domain = "<Ihre Domain>"` ergänzen. Ein Token mit Name ohne
+Bereich kann nicht mehr binden: Den Aussteller so konfigurieren, dass er einen
+Claim mit Bereich freigibt.
+{{< /callout >}}
 
 ## Die Discovery findet beim Start statt {#discovery-happens-at-startup}
 
@@ -174,6 +205,8 @@ Ein erfolgreicher `OAUTHBEARER`-Bind hinterlässt die Verbindung gebunden als
   von der Leitung liest, ist diese Person, bis es abläuft. `allow_plaintext = true`
   gibt es für eine Installation, die TLS vor diesem Prozess terminiert, und
   `check` sagt dann *a token may cross this socket in the clear*.
+- **Ein Name, der kein `local@scope` einer erlaubten Domain ist**: ohne
+  Bereich, der einer anderen Einrichtung oder mit mehr als einem `@`.
 - **Eine Anfrage, jemand anderes zu sein.** Der GS2-Header darf eine `authzid` nennen. Ein
   Token für alice, das die Anfrage trägt, als tess zu handeln, wird abgelehnt, nicht stillschweigend
   als das eine oder das andere behandelt.

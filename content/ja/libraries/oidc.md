@@ -147,7 +147,7 @@ ECDSA の `s` と `n − s` はどちらも、アルゴリズムが許すとお�
 
 ## スコープ付きの名前と、そのスコープが誰のものか {#scoped-names}
 
-アカウントは機関に属します。連合プロキシの背後では、1 つの発行者が多くの機関の人を保証します。`oidc.ScopedName(name, allowed, defaultScope)` は、この発行者が主張してよいスコープかどうかを Shibboleth のスコープ検査のように**確認した上で**、名前を ASCII 小文字の `local@scope` として返します（eduPersonPrincipalName は eduPerson スキーマで `caseIgnoreMatch`、単一値です）。別のスコープは `ErrScopeNotAllowed`、スコープもデフォルトもない名前は `ErrNoScope` です。`@` のない名前には `defaultScope`（スコープ付き名前より前からアカウントがある機関）が付き、これも許可されている必要があります。`Token.ScopedUsername` はトークンのユーザー名に対して同じことを行います。`UsernameClaim` に `eduperson_principal_name` または `voperson_id` を設定してください。スコープは最後の `@` の後ろの部分です。
+アカウントは機関に属します。連合プロキシの背後では、1 つの発行者が多くの機関の人を保証します。`oidc.ScopedName(name, allowed, defaultScope)` は、この発行者が主張してよいスコープかどうかを Shibboleth のスコープ検査のように**確認した上で**、名前を ASCII 小文字の `local@scope` として返します（eduPersonPrincipalName は eduPerson スキーマで `caseIgnoreMatch`、単一値です）。別のスコープは `ErrScopeNotAllowed`、スコープもデフォルトもない名前は `ErrNoScope` です。`@` のない名前には `defaultScope`（スコープ付き名前より前からアカウントがある機関）が付き、これも許可されている必要があります。`Token.ScopedUsername` はトークンのユーザー名に対して同じことを行います。`UsernameClaim` に `eduperson_principal_name` または `voperson_id` を設定してください。名前には `@` がちょうど 1 つ含まれていなければなりません。2 つ以上ある名前は `ErrBadName` で（v0.6.1 から）、ローカル部分に `@` を入れてスコープを選ぶことはできません。スコープはその後ろの部分です。
 
 ## 何に対して検証されているか {#what-it-is-checked-against}
 

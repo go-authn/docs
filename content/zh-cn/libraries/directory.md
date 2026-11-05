@@ -413,6 +413,13 @@ authnd v0.15.0 就是这样回答绑定的，如[运维页面]({{< relref "/auth
   输对了密码的人说*密码错误*。在 v0.11.2 之前，
   每个失败的绑定都是 `ErrWrongPassword`。自 v0.17.0 起，这样的错误同时也是
   [`ErrUnavailable`](#unavailable)，这样服务器就可以回答*稍后再试*，而不是*凭据无效*。
+- **同一个来源中两个条目持有的同一个名称。** 自 v0.18.0 起它是 `directory.ErrAmbiguous`，
+  而不是悄悄选一个：`ldapdir` 比较 uid 时不区分大小写（`caseIgnoreMatch`，RFC 4519），并指出两个 DN；
+  `Set.Identities` 拒绝一个来源列出两次的名称。此前 `Identities` 会返回两者，`Set.Identities` 保留先到的那个，
+  于是一个人得到了另一个人的组、密钥和密码校验。跨来源则没有变化：最先知道某个名称的来源拥有它。
+  含有这类重复的目录在删除其中一个条目或改正其 uid 之前无法加载
+  （`ldapsearch -b <base> '(uid=*)' uid dn` 可以找出重复的值）。`ldaptest.Person.UID` 是在它不是 map 键时发布的 uid，
+  这样测试就能构造两个 uid 相同的条目。
 - **LDAP URL 中的凭据**——URL 会被打印出来；`BindDN` 和
   `BindPassword` 是字段。
 - **不是 16 字节的 NT 哈希**（`ParseNTHash`），而不是将其填充

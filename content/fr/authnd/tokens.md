@@ -30,13 +30,16 @@ oidc {
   issuer   = "https://login.example.org/realms/staff"   # the "iss" a token must carry, and where discovery starts
   audience = "ldap"                                     # this server's client id at the provider
 
-  # username_claim = "preferred_username"   which claim names the person here
+  username_claim = "eduperson_principal_name"          # the claim that holds ONE local@scope
+  domains        = ["univ-a.example"]                  # REQUIRED: the scopes this issuer may assert
+  # local_domain = "univ-a.example"   optional, one of domains: its people are published under their bare name
   # jwks_url       = "…"                    skips discovery, for a provider that does not publish it
   # allow_plaintext = true                  only when TLS is terminated in front of this process
 }
 ```
 
-`issuer` et `audience` sont obligatoires. Sans `username_claim`, le nom est
+`issuer`, `audience` et `domains` sont obligatoires, et le nom doit être un
+`local@scope` de l'un d'eux ([plus bas]({{< relref "/authnd/tokens.md#scoped-name" >}})). Sans `username_claim`, le nom est
 `preferred_username`, puis `email` quand `email_verified` est vrai, puis `sub`.
 Avec le bloc, le root DSE annonce le mécanisme :
 
@@ -48,6 +51,34 @@ supportedSASLMechanisms: OAUTHBEARER
 
 Sans lui, chaque liaison SASL reçoit `authMethodNotSupported` — *pas de cette
 façon*, ce qui envoie un client ailleurs que *mauvais mot de passe*.
+
+## Le nom doit avoir une portée {#scoped-name}
+
+Derrière un proxy de fédération (eduGAIN via MyAccessID, eduTEAMS, un courtier
+Keycloak), un même émetteur répond de personnes de nombreux établissements, et
+« alice » dans une autre université n'est pas l'alice de cet annuaire. Le nom du
+jeton doit donc être **exactement un `local@scope` dont la portée est l'une des
+`domains`** (`ScopedName` de go-authn/oidc) : un nom sans portée, celui d'un
+autre établissement ou un nom avec deux `@` est refusé.
+
+`local_domain` (facultatif, l'une des `domains`) est la portée dont les
+personnes sont publiées ici sous leur seule partie locale : avec `local_domain =
+"univ-a.example"`, `alice@univ-a.example` est l'`alice` de l'annuaire. Un nom de
+toute autre portée autorisée est recherché en entier, `local@scope`
+(`alice@univ-b.example`).
+
+{{< callout type="warning" >}}
+**Depuis la v0.16.0, `domains` est obligatoire, et le serveur ne démarre pas sans.**
+
+Auparavant, un `preferred_username` sans portée était associé directement aux
+noms de l'annuaire : l'alice de n'importe quel établissement se liait comme
+l'alice locale. Pour mettre à niveau, ajoutez `domains = ["<votre domaine>"]`,
+réglez `username_claim = "eduperson_principal_name"` (ou la revendication que
+votre émetteur remplit avec `local@scope`) et, si les noms de votre annuaire
+sont nus, ajoutez `local_domain = "<votre domaine>"`. Un jeton dont le nom n'a
+pas de portée ne peut plus se lier : configurez l'émetteur pour qu'il libère
+une revendication avec portée.
+{{< /callout >}}
 
 ## La découverte a lieu au démarrage {#discovery-happens-at-startup}
 
@@ -175,6 +206,8 @@ Une liaison `OAUTHBEARER` réussie laisse la connexion liée comme
   sur le réseau est cette personne jusqu'à son expiration. `allow_plaintext = true`
   existe pour un déploiement qui termine TLS devant ce processus, et
   `check` dit alors *a token may cross this socket in the clear*.
+- **Un nom qui n'est pas un `local@scope` d'un domaine autorisé** : sans
+  portée, celui d'un autre établissement, ou avec plus d'un `@`.
 - **Une demande d'être quelqu'un d'autre.** L'en-tête GS2 peut nommer un `authzid`. Un
   jeton pour alice portant une demande d'agir en tant que tess est refusé, et non traité
   discrètement comme l'un ou l'autre.

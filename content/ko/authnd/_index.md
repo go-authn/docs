@@ -11,13 +11,32 @@ tags: [authnd, ldap]
 [go-authn/directory]({{< relref "/libraries/_index.md" >}})의 소스 위에서 바인드와
 검색을 처리하므로, 데이터베이스에 있는 내용을 디렉터리에 질의할 줄 아는 어떤
 것이든 읽을 수 있습니다. 순수 Go, `CGO_ENABLED=0`, 바이너리 하나입니다. 이 문서는
-v0.15.1을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
+v0.16.0을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
 제공하는 스키마를 통과합니다. 사이트는 이 스키마를 자신의 스키마로
 확장할 수 있고([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})),
 [DIT 콘텐츠 규칙, 이름 형식, 구조 규칙]({{< relref "/authnd/schemas.md#rules" >}})으로
 엔트리의 형태까지 정할 수 있습니다. 그 아래에는
-go-authn/ldap v0.12.0과 go-authn/directory v0.17.0이 있습니다. 무엇이 검증되었고
+go-authn/ldap v0.12.0과 go-authn/directory v0.18.0이 있습니다. 무엇이 검증되었고
 무엇이 아닌지는 [상태]({{< relref "/status.md" >}}) 페이지에 있습니다.
+
+{{< callout type="warning" >}}
+**v0.15.x에서 업그레이드: `oidc` 블록이 있는 설정은 바꿔야 합니다**
+
+- ⛔ **`oidc { domains = [...] }`는 필수입니다**. 없으면 서버가 시작되지 않습니다.
+  토큰의 이름은 허용된 도메인의 정확히 하나의 `local@scope`여야 하며, 범위가 없는 이름,
+  다른 기관의 이름, `@`가 둘인 이름은 거부됩니다. 연합 프록시 뒤에서는 어느 기관의 alice든
+  로컬 alice로 바인드되었습니다.
+  [이름에는 범위가 있어야 합니다]({{< relref "/authnd/tokens.md#scoped-name" >}})를 보십시오.
+- 업그레이드하려면 `domains = ["<귀하의 도메인>"]`을 추가하고,
+  `username_claim = "eduperson_principal_name"`(또는 발급자가 `local@scope`로 채우는 클레임)을 설정하며,
+  디렉터리 이름이 로컬 부분만(`alice`)이면 `local_domain = "<귀하의 도메인>"`을 추가하십시오.
+  범위 없는 이름의 토큰은 더 이상 바인드할 수 없습니다.
+- 한 소스의 두 엔트리가 같은 uid를 가지면, 조용히 하나를 고르는 대신 시작할 때와 새로 고칠 때
+  오류가 됩니다(go-authn/directory v0.18.0). 업그레이드하기 전에 LDAP 업스트림에서
+  반복된 uid를 찾아 보십시오. `ldapsearch -b <base> '(uid=*)' uid`
+
+`oidc` 블록이 없는 설정은 영향을 받지 않습니다.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **v0.14.x에서 업그레이드**

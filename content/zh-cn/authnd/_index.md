@@ -10,13 +10,29 @@ tags: [authnd, ldap]
 认证的系统使用的是 LDAP。** authnd 就是前端：它基于 [go-authn/directory]({{< relref "/libraries/_index.md" >}})
 的各个来源进行绑定和搜索，因此数据库中保存的内容可以被任何懂得
 如何查询目录的程序读取。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述
-v0.15.1，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
+v0.16.0，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
 提供的模式，站点可以用自己的模式对其扩展
 （[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），并可通过
 [DIT 内容规则、名称形式和结构规则]({{< relref "/authnd/schemas.md#rules" >}})
 为条目塑形，其下是 go-authn/ldap v0.12.0 和
-go-authn/directory v0.17.0；哪些已经验证、哪些尚未验证，见
+go-authn/directory v0.18.0；哪些已经验证、哪些尚未验证，见
 [状态]({{< relref "/status.md" >}})页面。
+
+{{< callout type="warning" >}}
+**从 v0.15.x 升级：带 `oidc` 块的配置必须修改**
+
+- ⛔ **`oidc { domains = [...] }` 是必需的**：没有它服务器不会启动。令牌中的名称必须恰好是允许域的一个
+  `local@scope`；没有作用域的名称、其他机构的名称、含两个 `@` 的名称都会被拒绝。在联盟代理之后，
+  任何机构的 alice 过去都会绑定为本地的 alice。见
+  [名称必须带作用域]({{< relref "/authnd/tokens.md#scoped-name" >}})。
+- 升级时：添加 `domains = ["<你的域>"]`，设置 `username_claim = "eduperson_principal_name"`
+  （或你的签发者用 `local@scope` 填充的声明），如果目录中的名称是裸名（`alice`），再添加
+  `local_domain = "<你的域>"`。名称没有作用域的令牌不再能绑定。
+- 同一个来源中共用一个 uid 的两个条目，现在会在启动和刷新时报错（go-authn/directory v0.18.0），
+  而不是悄悄选一个。升级前请在 LDAP 上游查找重复的 uid：`ldapsearch -b <base> '(uid=*)' uid`。
+
+没有 `oidc` 块的配置不受影响。
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **从 v0.14.x 升级**

@@ -54,6 +54,13 @@ una configuración con un bloque `admin` en lugar de arrancar sin ella.
 | `DisableIdP`, `EnableIdP` | lo mismo para todas las personas por las que responde una institución; una actualización de metadatos no lo levanta |
 | `ListDisabled` | quién está desactivado, por qué, por quién, desde cuándo y hasta cuándo |
 
+Quitar un IdP de `saml { idps }` termina lo que avalaba, como lo hace
+`DisableIdP` (desde la v0.23.7): un inicio de sesión nuevo se rechaza, y
+también cada concesión de quien pasó por él, en el siguiente uso, con
+`institution not configured`: un token de refresco (incluso tras un reinicio),
+una contraseña de aplicación, una solicitud de certificado SSH. Vuelva a
+poner el IdP y funcionan de nuevo; no hace falta revocar nada.
+
 Con `reflection = true`, contra un proveedor de prueba:
 
 ```

@@ -149,6 +149,7 @@ token can pass for a list, nor a list for a token.
 | a key that is not one | see above |
 | an issuer or token endpoint in the clear, except loopback | the gateway's secret and the list would cross a link anybody can read |
 | a `SourceConfig` without `ClientID` and `ClientSecret` | a gateway reads the list as a client of its own |
+| a redirect from the token endpoint or from the list (from v0.1.4) | the request carries the Basic secret, or the Bearer token, and Go would send it again to the same host on another port or scheme; neither request follows redirects, so a redirect is an error |
 
 A list carries `exp`: a gateway that cannot fetch a newer one by then has no
 list, rather than a stale one. `Peer.Subject` is the person's `sub` as the

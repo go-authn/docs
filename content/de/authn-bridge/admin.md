@@ -53,6 +53,13 @@ mit einem `admin`-Block ab, statt ohne sie zu starten.
 | `DisableIdP`, `EnableIdP` | dasselbe für alle, für die eine Einrichtung bürgt; eine Aktualisierung der Metadaten hebt es nicht auf |
 | `ListDisabled` | wer deaktiviert ist, warum, von wem, seit wann und bis wann |
 
+Einen IdP aus `saml { idps }` zu entfernen beendet, wofür er bürgte, wie es
+`DisableIdP` tut (ab v0.23.7): Eine neue Anmeldung wird abgelehnt, ebenso jede
+Berechtigung von jemandem, der über ihn kam, bei der nächsten Verwendung, mit
+`institution not configured`: ein Refresh-Token (auch über einen Neustart
+hinweg), ein Anwendungspasswort, eine SSH-Zertifikatsanfrage. Wird der IdP
+wieder eingetragen, funktionieren sie wieder; nichts muss widerrufen werden.
+
 Mit `reflection = true`, gegen einen Testanbieter:
 
 ```

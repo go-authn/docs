@@ -149,6 +149,7 @@ d'identité (ID token) ne peuvent passer pour une liste, ni une liste pour un je
 | une clé qui n'en est pas une | voir ci-dessus |
 | un émetteur ou un point de terminaison de jeton en clair, sauf en boucle locale | le secret de la passerelle et la liste traverseraient un lien que n'importe qui peut lire |
 | une `SourceConfig` sans `ClientID` ni `ClientSecret` | une passerelle lit la liste en tant que client à part entière |
+| une redirection du point de terminaison de jeton ou de la liste (depuis la v0.1.4) | la requête porte le secret Basic, ou le jeton Bearer, et Go le renverrait au même hôte sur un autre port ou schéma ; aucune des deux requêtes ne suit les redirections, donc une redirection est une erreur |
 
 Une liste porte `exp` : une passerelle qui ne peut pas en récupérer une plus récente d'ici là n'a plus
 de liste, plutôt qu'une liste périmée. `Peer.Subject` est le `sub` de la personne tel que le

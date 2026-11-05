@@ -436,6 +436,18 @@ So beantwortet authnd v0.15.0 einen Bind, wie
   war jeder fehlgeschlagene Bind `ErrWrongPassword`. Ab v0.17.0 ist ein solcher Fehler
   auch [`ErrUnavailable`](#unavailable), damit ein Server *später erneut versuchen*
   antworten kann statt *ungültige Zugangsdaten*.
+- **Ein Name, den zwei Einträge einer Quelle tragen.** Ab v0.18.0 ist das
+  `directory.ErrAmbiguous`, keine stille Auswahl: `ldapdir` vergleicht die uid
+  ohne Beachtung der Groß-/Kleinschreibung (`caseIgnoreMatch`, RFC 4519) und
+  nennt beide DNs, und `Set.Identities` lehnt einen Namen ab, den EINE Quelle
+  zweimal liefert. Zuvor gab `Identities` beide zurück und `Set.Identities`
+  behielt den zuerst genannten, sodass eine Person die Gruppen, Schlüssel und
+  Passwortprüfung der anderen bekam. Über Quellen hinweg ändert sich nichts: Die
+  erste Quelle, die einen Namen kennt, besitzt ihn. Ein Verzeichnis mit solchen
+  Dubletten lädt nicht, bis ein Eintrag entfernt oder seine uid korrigiert ist
+  (`ldapsearch -b <base> '(uid=*)' uid dn` findet wiederholte Werte).
+  `ldaptest.Person.UID` ist die veröffentlichte uid, wenn sie nicht der
+  Map-Schlüssel ist, damit ein Test zwei Einträge mit einer uid bauen kann.
 - **Anmeldedaten in einer LDAP-URL** – eine URL wird ausgegeben; `BindDN` und
   `BindPassword` sind Felder.
 - **Ein NT-Hash, der nicht 16 Bytes lang ist** (`ParseNTHash`), statt ihn zu einem Hash

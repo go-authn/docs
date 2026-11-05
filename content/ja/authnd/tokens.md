@@ -27,13 +27,15 @@ oidc {
   issuer   = "https://login.example.org/realms/staff"   # the "iss" a token must carry, and where discovery starts
   audience = "ldap"                                     # this server's client id at the provider
 
-  # username_claim = "preferred_username"   which claim names the person here
+  username_claim = "eduperson_principal_name"          # the claim that holds ONE local@scope
+  domains        = ["univ-a.example"]                  # REQUIRED: the scopes this issuer may assert
+  # local_domain = "univ-a.example"   optional, one of domains: its people are published under their bare name
   # jwks_url       = "…"                    skips discovery, for a provider that does not publish it
   # allow_plaintext = true                  only when TLS is terminated in front of this process
 }
 ```
 
-`issuer` と `audience` は必須です。`username_claim` がなければ、名前は `preferred_username`、
+`issuer`、`audience`、`domains` は必須で、名前はそのいずれかの `local@scope` でなければなりません（[後述]({{< relref "/authnd/tokens.md#scoped-name" >}})）。`username_claim` がなければ、名前は `preferred_username`、
 次に `email_verified` が true の場合の `email`、次に `sub` です。このブロックがあると、
 ルート DSE がメカニズムを通知します。
 
@@ -45,6 +47,18 @@ supportedSASLMechanisms: OAUTHBEARER
 
 ブロックがなければ、すべての SASL バインドに `authMethodNotSupported` が返ります。
 *この方法ではない*という意味で、クライアントを*間違ったパスワード*とは別のところへ向かわせます。
+
+## 名前にはスコープが必要 {#scoped-name}
+
+連合プロキシ（MyAccessID 経由の eduGAIN、eduTEAMS、Keycloak ブローカー）の背後では、1 つの発行者が多くの機関の人を保証します。別の大学の「alice」は、このディレクトリの alice ではありません。そのため、トークンの名前は**ちょうど 1 つの `local@scope` で、そのスコープが `domains` のいずれかであること**が必要です（go-authn/oidc の `ScopedName`）。スコープのない名前、別の機関の名前、`@` が 2 つある名前は拒否されます。
+
+`local_domain`（任意、`domains` のいずれか）は、その人たちをローカル部分だけの名前で公開するスコープです。`local_domain = "univ-a.example"` なら、`alice@univ-a.example` はディレクトリの `alice` です。許可された他のスコープの名前は、`local@scope` の全体で検索されます（`alice@univ-b.example`）。
+
+{{< callout type="warning" >}}
+**v0.16.0 から `domains` は必須で、これがないとサーバーは起動しません。**
+
+以前は、スコープのない `preferred_username` がそのままディレクトリの名前に対応付けられていたため、どの機関の alice もローカルの alice としてバインドできました。アップグレードするには、`domains = ["<あなたのドメイン>"]` を追加し、`username_claim = "eduperson_principal_name"`（または発行者が `local@scope` で埋めるクレーム）を設定し、ディレクトリの名前がローカル部分だけの場合は `local_domain = "<あなたのドメイン>"` を追加してください。スコープのない名前のトークンはバインドできなくなります。発行者がスコープ付きのクレームを渡すように設定してください。
+{{< /callout >}}
 
 ## ディスカバリーは起動時に行われる {#discovery-happens-at-startup}
 
@@ -167,6 +181,8 @@ a token was refused: OAUTHBEARER was offered over a connection that is not encry
   切れるまでその人です。`allow_plaintext = true` は、このプロセスの手前で TLS を終端する
   デプロイのためにあり、その場合 `check` は *a token may cross this socket in the clear* と
   述べます。
+- **許可されたドメインの `local@scope` ではない名前**。スコープなし、別の機関のもの、
+  または `@` が 2 つ以上あるものです。
 - **他人になりすます要求。** GS2 ヘッダーは `authzid` を指名できます。alice のトークンが tess
   として動作する要求を伴っている場合は、どちらかとして静かに扱われることなく拒否されます。
 - **ここのどのソースも公開していない人のトークン。** クライアントに告げられるのは

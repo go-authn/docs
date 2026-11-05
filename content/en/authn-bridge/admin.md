@@ -53,6 +53,13 @@ with an `admin` block rather than start without it.
 | `DisableIdP`, `EnableIdP` | the same for everybody one institution vouches for; a metadata refresh does not lift it |
 | `ListDisabled` | who is disabled, why, by whom, since and until when |
 
+Removing an IdP from `saml { idps }` ends what it vouched for, the way
+`DisableIdP` does (from v0.23.7): a new login is refused, and so is every grant
+of someone who came through it, at the next use, with `institution not
+configured`: a refresh token (even across a restart), an application password,
+an SSH certificate request. Put the IdP back and they work again; nothing needs
+revoking.
+
 With `reflection = true`, against a test provider:
 
 ```

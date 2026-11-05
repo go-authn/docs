@@ -430,6 +430,17 @@ That is how authnd v0.15.0 answers a bind, as
   every failed bind was `ErrWrongPassword`. From v0.17.0 such an error is also
   [`ErrUnavailable`](#unavailable), so that a server can answer *try later*
   instead of *invalid credentials*.
+- **A name held by two entries of one source.** From v0.18.0 it is
+  `directory.ErrAmbiguous`, not a silent pick: `ldapdir` compares the uid
+  without case (`caseIgnoreMatch`, RFC 4519) and names both DNs, and
+  `Set.Identities` refuses a name that ONE source lists twice. Before,
+  `Identities` returned both and `Set.Identities` kept whichever came first, so
+  one person got the other's groups, keys and password check. Across sources
+  nothing changes: the first source that knows a name owns it. A directory with
+  such duplicates fails to load until one entry is removed or its uid corrected
+  (`ldapsearch -b <base> '(uid=*)' uid dn` finds repeated values).
+  `ldaptest.Person.UID` is the uid published when it is not the map key, so a
+  test can build two entries with one uid.
 - **Credentials in an LDAP URL** — a URL is printed; `BindDN` and
   `BindPassword` are fields.
 - **An NT hash that is not 16 bytes** (`ParseNTHash`), rather than padding it
