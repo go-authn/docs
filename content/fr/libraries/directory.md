@@ -443,6 +443,18 @@ C'est ainsi qu'authnd v0.15.0 répond à une liaison, comme le dit
   tout échec de liaison était `ErrWrongPassword`. Depuis la v0.17.0, une telle erreur est aussi
   [`ErrUnavailable`](#unavailable), pour qu'un serveur puisse répondre *réessayez plus tard*
   au lieu de *identifiants invalides*.
+- **Un nom porté par deux entrées d'une même source.** Depuis la v0.18.0 c'est
+  `directory.ErrAmbiguous`, et non un choix silencieux : `ldapdir` compare l'uid
+  sans tenir compte de la casse (`caseIgnoreMatch`, RFC 4519) et nomme les deux
+  DN, et `Set.Identities` refuse un nom qu'UNE source liste deux fois.
+  Auparavant, `Identities` renvoyait les deux et `Set.Identities` gardait la
+  première venue, si bien qu'une personne recevait les groupes, les clés et la
+  vérification du mot de passe de l'autre. Entre sources, rien ne change : la
+  première source qui connaît un nom le possède. Un annuaire qui a de tels
+  doublons ne se charge plus tant qu'une entrée n'est pas supprimée ou son uid
+  corrigé (`ldapsearch -b <base> '(uid=*)' uid dn` trouve les valeurs
+  répétées). `ldaptest.Person.UID` est l'uid publié quand ce n'est pas la clé
+  de la map, pour qu'un test puisse construire deux entrées avec un même uid.
 - **Des identifiants dans une URL LDAP** — une URL est affichée ; `BindDN` et
   `BindPassword` sont des champs.
 - **Une empreinte NT qui ne fait pas 16 octets** (`ParseNTHash`), plutôt que de la compléter

@@ -5,12 +5,12 @@ description: "Les versions que décrivent ces pages, ce que chaque version a ajo
 tags: [état, versions]
 ---
 
-Ces pages sont la version **0.7** de la documentation, et décrivent :
+Ces pages sont la version **0.8** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
-| authnd | **v0.15.1** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.6** | `github.com/go-authn/bridge` |
+| authnd | **v0.16.0** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
@@ -18,12 +18,25 @@ Les versions des bibliothèques sont sur [leur propre page]({{< relref "/librari
 ldap est en **v0.12.0**, avec les règles de contenu DIT, les formes de noms et
 les règles de structure DIT lues, appliquées et publiées, une `BuildError` typée
 pour un schéma qui ne se construit pas, les schémas en HCL2 et le convertisseur
-`ldapschema`, et directory en **v0.17.0**, avec les classes d'objet déclarées.
-authnd v0.15.1 embarque ldap v0.12.0 et directory v0.17.0.
+`ldapschema`, et directory en **v0.18.0**, avec les classes d'objet déclarées.
+authnd v0.16.0 embarque ldap v0.12.0 et directory v0.18.0.
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
-de sorte que les pages qu'une personne trouve sous `/docs/0.7/` continuent de décrire ce
+de sorte que les pages qu'une personne trouve sous `/docs/0.8/` continuent de décrire ce
 qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`,
-`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/` et `/docs/0.6/`.
+`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/` et `/docs/0.7/`.
+
+{{< callout type="warning" >}}
+**Mise à jour d'authnd depuis la v0.15.x : `oidc { domains }` est obligatoire**
+
+Une configuration avec un bloc `oidc` ne démarre pas sans `domains`, et le nom
+d'un jeton doit être exactement un `local@scope` d'un domaine autorisé :
+derrière un proxy de fédération, l'alice de n'importe quel établissement se
+liait comme l'alice locale. Ajoutez `domains`, réglez
+`username_claim = "eduperson_principal_name"` et ajoutez `local_domain` si les
+noms de votre annuaire sont nus. Voir
+[la note de mise à jour]({{< relref "/authnd/_index.md" >}}) et
+[le nom doit avoir une portée]({{< relref "/authnd/tokens.md#scoped-name" >}}).
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Mise à jour d'authnd depuis la v0.14.x : deux valeurs par défaut changent**
@@ -94,6 +107,7 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.14.1 | Performance uniquement. Un rafraîchissement ne croît plus avec groupes × lignes d'appartenance : directory v0.16.0 lit chaque source une seule fois, en bloc. Un rafraîchissement de 500 personnes et 200 groupes de 50 avec SQLite passe de 1,87 s à 0,155 s, et celui de 10 000 personnes et 2 000 groupes de 391 s (six périodes de rafraîchissement et demie) à 1,6 s (2,7 % de la période de 60 s). Les allocations passent de 39 959 235 à 3 095 482 et de 6 373 736 235 à 31 198 460. Les durées ont été mesurées sous une charge de 17 à 67 et sont indicatives ; les nombres d'allocations sont exacts |
 | v0.15.0 | Disponibilité et sécurité, avec go-authn/ldap v0.12.0 et go-authn/directory v0.17.0. ⛔ **Deux valeurs par défaut changent** : `max_connections` vaut `4096` (illimité auparavant) et `operation_timeout` vaut `30s` (aucun auparavant). Nouveau, facultatif : `max_connections_per_ip` et `startup_timeout` (`60s`) ; [`check` affiche les limites]({{< relref "/authnd/operations.md#limits" >}}). Une connexion au-delà du plafond reçoit `busy` et est fermée ; une opération qui dépasse l'échéance reçoit `timeLimitExceeded`, même si son gestionnaire est bloqué. Une panne amont pendant une liaison (liaison simple, changement de mot de passe, facteur mot de passe de `mfa`) donne `unavailable` (52), jamais `invalidCredentials` (49) ; un mauvais mot de passe donne toujours 49. Un démarrage face à une source lente échoue après `startup_timeout`, en nommant l'étape et la source. [Le certificat TLS est relu]({{< relref "/authnd/tls.md#renewal" >}}) quand `cert_file` ou `key_file` changent (premier handshake après 5 s, et sur `SIGHUP`) ; une paire qui ne se charge pas garde le certificat servi et est journalisée une fois. Les nombres d'allocations sont dans les bibliothèques ci-dessous ; temps réel non mesuré (charge 21 au départ) |
 | v0.15.1 | Kerberos, avec go-authn/kdc v0.5.0 : une retransmission identique octet pour octet reçoit sa réponse précédente (le *lookaside* du MIT), et une panne de l'annuaire donne `KDC_ERR_SVC_UNAVAILABLE`, jamais `KDC_ERR_PREAUTH_FAILED`, même pour un mot de passe correct, si bien qu'elle ne compte jamais pour un verrouillage. golang.org/x/net v0.62.0. Aucun changement de configuration |
+| v0.16.0 | ⛔ Sécurité, avec go-authn/oidc v0.6.1 et go-authn/directory v0.18.0. **Rupture pour un déploiement avec un bloc `oidc`** : [`domains` est obligatoire]({{< relref "/authnd/tokens.md#scoped-name" >}}) et le serveur ne démarre pas sans. Le nom du jeton doit être exactement un `local@scope` d'un domaine autorisé (un nom sans portée, celui d'un autre établissement ou un nom avec deux `@` est refusé) ; `local_domain`, facultatif et l'un des `domains`, associe les personnes de cette portée à des noms d'annuaire nus, et les autres portées sont recherchées en entier, `local@scope`. Derrière un proxy de fédération, l'alice de n'importe quel établissement se liait comme l'alice locale. Deux entrées d'une même source qui partagent un uid sont une erreur au démarrage et à l'actualisation, et non un choix silencieux. [Note de mise à jour]({{< relref "/authnd/_index.md" >}}) |
 
 ### authn-bridge {#authn-bridge}
 
@@ -131,6 +145,7 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.23.3 | construit avec Go 1.27.3, pour GO-2026-6809 (`crypto/x509` : `Certificate.Verify` ne rejetait pas des certificats intermédiaires compromis connus) ; la directive `go` vaut 1.27.3 ; aucun changement de comportement |
 | v0.23.4 | les binaires de release sont liés avec `-w` au lieu de `-s -w`, la table des symboles est donc conservée pour un `govulncheck -mode binary` précis ; aucun changement de comportement |
 | v0.23.6 | une passe d'audit, de fuzzing et de chaos, avec go-authn/saml v0.5.1 ; aucune clé de configuration ajoutée ou modifiée. [Les métadonnées sont rafraîchies à temps]({{< relref "/authn-bridge/federation.md#refreshing-it" >}}) : jamais programmées au-delà de la moitié du `validUntil` restant, et, sans métadonnées valides, retentées après une minute puis à intervalle doublé jusqu'à une heure, si bien qu'un rafraîchissement échoué près de l'expiration ne laisse plus le fournisseur sans IdP jusqu'à douze heures. La clé de rejeu d'assertion est stockée sous forme de SHA-256 : un `entityID` d'IdP long faisait refuser l'écriture par PostgreSQL et MySQL et bloquait la base d'état. L'horloge peut différer de celle d'un IdP de trois minutes ; une heure est refusée avec une page 400. [Ce qui est testé]({{< relref "/authn-bridge/federation.md#tested" >}}) : l'enveloppement de signature XSW1 à XSW8, CVE-2017-11427, DOCTYPE, audience, destinataire, requête et destination étrangers, cinq fuzzers. Un SHA-256 par connexion coûte 0 à 2 allocations de plus (`BenchmarkReplayUse` : 0 allocation et 183 o, maintenant 2 et 326 o) ; temps réel non mesuré, charge 53 à 75 |
+| v0.23.7 | sécurité : un jeton d'actualisation, un mot de passe d'application ou une demande de certificat SSH d'un IdP retiré de `saml { idps }` est refusé à sa prochaine utilisation, avec `institution not configured`, comme le fait `DisableIdP` ([API d'administration]({{< relref "/authn-bridge/admin.md" >}})) ; remettez l'IdP et ils fonctionnent de nouveau |
 
 ### authn-revokd {#authn-revokd}
 
@@ -176,6 +191,7 @@ changé les précédentes.
 | directory v0.15.0 | [classes d'objet]({{< relref "/libraries/directory.md#object-classes" >}}), déclarées et jamais déduites : `object_classes` et `group_object_classes` dans les blocs `users`, `object_classes` dans les blocs `user` et `group`, `WithObjectClasses` pour sqldir et `Config.ObjectClasses` pour ldapdir ; la première source qui déclare les classes d'un groupe décide ; `sqldir.ClosesDB` |
 | directory v0.16.0 | [chaque groupe lu une fois]({{< relref "/libraries/directory.md" >}}) : `GroupReader` et `Set.Frozen`, si bien qu'un rafraîchissement ne croît plus avec groupes fois lignes d'appartenance |
 | directory v0.17.0 | [`ErrUnavailable`]({{< relref "/libraries/directory.md#unavailable" >}}), avec `AsUnavailable` et `TransportFailure` : ldapdir le renvoie pour busy (51), unavailable (52), other (80), timeLimitExceeded (3), connexions coupées ou refusées et échecs de connexion ou de TLS, sur `Verify` et chaque lecture ; il n'est jamais aussi `ErrWrongPassword`, et `invalidCredentials` (49) reste ce dernier. `ldaptest.Server.FailBindsWith(code)`. Un DN de membre est associé à une personne par une seule recherche au lieu d'un balayage, avec les mêmes résultats : `ReadGroups` sur 10 000 personnes et 2 000 groupes de 50 DN alloue 13,1 Mo en 0,38 M objets au lieu de 50,6 Mo en 2,20 M, une recherche de DN 0 allocation ; le rafraîchissement entier 7,17 M allocations au lieu de 9,72 M (exact ; temps non mesurés, charge 65 à 105) |
+| directory v0.18.0 | [un nom porté par deux entrées d'une même source est `ErrAmbiguous`]({{< relref "/libraries/directory.md" >}}) : ldapdir compare l'uid sans tenir compte de la casse et nomme les deux DN, `Set.Identities` refuse un nom qu'une source liste deux fois, et entre sources la première possède toujours le nom ; `ldaptest.Person.UID`. Un annuaire qui a de tels doublons ne se charge plus tant que l'un n'est pas corrigé |
 | kdc v0.4.3 | dépendances seulement : go-authn/directory v0.12.0 comme minimum |
 | kdc v0.4.5 | une passe d'audit de sécurité, de fuzzing et de chaos ([ce qu'il refuse]({{< relref "/libraries/kdc.md" >}})) : une requête pour un autre royaume reçoit `KDC_ERR_WRONG_REALM`, un annuaire illisible `KDC_ERR_SVC_UNAVAILABLE` (c'était `KDC_ERR_C_PRINCIPAL_UNKNOWN`), un TGT dont le début tombe dans `MaxSkew` dans le futur est accepté, et une panique du décodeur abandonne une requête au lieu de faire planter le processus (une seule AS-REQ ou TGS-REQ mal formée pouvait le faire planter) ; les noms de principal sont entre guillemets dans le journal. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | kdc v0.5.0 | [le *lookaside*]({{< relref "/libraries/kdc.md" >}}) du KDC du MIT : une requête déjà vue, octet pour octet, reçoit sa réponse précédente, pendant deux minutes et sous 10 Mio en tout ; un `KRB-ERROR` n'est jamais conservé ; délibérément pas de cache de rejeu des authentificateurs, que le MIT désactive au TGS. Des tests fixent un annuaire illisible à `KDC_ERR_SVC_UNAVAILABLE` à l'AS, avec un mot de passe correct, et au TGS. Deux allocations de plus par requête |
@@ -194,10 +210,12 @@ changé les précédentes.
 | ldap v0.11.3 | Performance seulement, aucun changement de résultat : `GoverningStructureRule` fait 5 allocations au lieu de 12 pour un compte (il ne lit que les types du RDN), et l'analyseur de DN 3 au lieu de 6 pour un DN de quatre RDN. Les résultats sont ceux de la v0.11.2, vérifiés contre une copie de son `GoverningStructureRule` sur des entrées aléatoires et chaque règle supérieure, et par un fuzzer différentiel |
 | ldap v0.12.0 | [bornes de ressources pour le serveur]({{< relref "/libraries/ldap.md" >}}) : `Server.MaxConnections` et `Server.MaxConnectionsPerIP` (0 par défaut, aucune limite ; une connexion au-delà d'un plafond reçoit une notification de déconnexion `busy` (51), RFC 4511 4.4.1, et est fermée) ; `Server.Timeout` est appliqué par le serveur, qui répond `timeLimitExceeded` (3) pour toute opération à l'échéance même si le gestionnaire est bloqué et ignore son contexte (le résultat tardif est abandonné, et la goroutine compte dans `MaxPending` et `MaxPendingAuth` jusqu'à son retour) ; le `timeLimit` de recherche du client s'applique au contexte du gestionnaire ; un `DeadlineExceeded` de gestionnaire devient le code 3 seulement quand le contexte propre de l'opération a expiré. Allocations par opération (exact) : 3 avant et après sans `Timeout` ; 10 avant et 16 maintenant avec un |
 | oidc v0.4.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
+| oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) refuse un nom avec plus d'un `@` (`ErrBadName`) |
 | scim v0.2.0 | [une passe d'audit, de fuzzing, de chaos et de performance]({{< relref "/libraries/scim.md#v020" >}}) : `Server.ReadTimeout` (30 s), l'interface facultative `ConditionalDeleter`, un PATCH ou PUT sans `If-Match` rejoué jusqu'à 32 fois après une course perdue au lieu de recevoir 412, le retrait par un filtre qui ne correspond à rien réussit, les clés d'un PATCH sans chemin appliquées dans l'ordre trié, `BearerAuth` accepte le schéma en toute casse, `startIndex` et `count` bornés quelle que soit la taille du mot. Une requête de liste sur 10 000 utilisateurs : une page de 100 de 789 417 à 14 952 allocations, `userName eq` de 797 979 à 90, un balayage complet de 818 847 à 361 098 (exact ; temps non mesurés, charge 65) |
 | servercert v0.5.2 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 | totp v0.4.2 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 | wireguard v0.1.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
+| wireguard v0.1.4 | les requêtes de jeton et de liste de la source ne suivent plus les redirections, puisqu'elles portent le secret Basic ou le jeton Bearer ; une redirection est une erreur ([ce qu'elle refuse]({{< relref "/libraries/wireguard.md" >}})) |
 
 ## Pas encore implémenté {#not-implemented-yet}
 

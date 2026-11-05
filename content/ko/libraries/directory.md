@@ -403,6 +403,14 @@ authnd v0.15.0은 [운영 페이지]({{< relref "/authnd/operations.md#limits" >
   사람에게 *wrong password*라고 말하지 않는다는 점입니다. v0.11.2 이전에는 실패한 모든
   바인드가 `ErrWrongPassword`였습니다. v0.17.0부터 그런 오류는 [`ErrUnavailable`](#unavailable)이기도 하여,
   서버가 *잘못된 자격 증명* 대신 *나중에 다시 시도*로 응답할 수 있습니다.
+- **한 소스의 두 엔트리가 가진 같은 이름.** v0.18.0부터 이는 조용히 하나를 고르는 대신
+  `directory.ErrAmbiguous`입니다. `ldapdir`은 uid를 대소문자 구분 없이 비교하고(`caseIgnoreMatch`, RFC 4519)
+  두 DN을 모두 밝히며, `Set.Identities`는 하나의 소스가 두 번 나열하는 이름을 거부합니다. 이전에는
+  `Identities`가 둘 다 돌려주고 `Set.Identities`는 먼저 온 것을 남겨서, 한 사람이 다른 사람의 그룹, 키,
+  비밀번호 확인을 얻었습니다. 소스 사이에서는 달라지는 것이 없습니다. 이름을 처음 아는 소스가 그 이름을 가집니다.
+  이런 중복이 있는 디렉터리는 한 엔트리를 지우거나 uid를 고칠 때까지 로드되지 않습니다
+  (`ldapsearch -b <base> '(uid=*)' uid dn`으로 반복된 값을 찾을 수 있습니다). `ldaptest.Person.UID`는
+  맵의 키와 다를 때 게시되는 uid로, 테스트가 같은 uid를 가진 두 엔트리를 만들 수 있게 합니다.
 - **LDAP URL 안의 자격 증명** — URL은 출력됩니다. `BindDN`과 `BindPassword`는
   필드입니다.
 - **16바이트가 아닌 NT 해시**(`ParseNTHash`). 모든 로그인을 잘못된 비밀번호로

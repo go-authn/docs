@@ -11,14 +11,36 @@ anderen Verzeichnis. Was sie authentifizieren will, spricht LDAP.** authnd ist d
 davor: Es führt Binds und Suchen über die Quellen von
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) aus, sodass das, was eine
 Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,
-`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.15.1, dessen Einträge den
+`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.16.0, dessen Einträge den
 Standardschemata folgen und das Schema bestehen, das es unter `cn=Subschema` bereitstellt
 und das ein Standort um sein eigenes erweitert
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) und mit
 [DIT-Content-Rules, Name Forms und Structure Rules]({{< relref "/authnd/schemas.md#rules" >}})
 auch um Formvorgaben, mit go-authn/ldap v0.12.0 und
-go-authn/directory v0.17.0 darunter; was geprüft ist und
+go-authn/directory v0.18.0 darunter; was geprüft ist und
 was nicht, steht auf der Seite [Stand]({{< relref "/status.md" >}}).
+
+{{< callout type="warning" >}}
+**Aktualisierung von v0.15.x: Eine Konfiguration mit `oidc`-Block muss sich ändern**
+
+- ⛔ **`oidc { domains = [...] }` ist Pflicht**: Ohne startet der Server nicht.
+  Der Name des Tokens muss genau ein `local@scope` einer erlaubten Domain sein;
+  ein Name ohne Bereich, der einer anderen Einrichtung oder einer mit zwei `@`
+  wird abgelehnt. Hinter einem Föderationsproxy wurde die alice jeder
+  Einrichtung als die lokale alice gebunden. Siehe
+  [Der Name muss einen Bereich haben]({{< relref "/authnd/tokens.md#scoped-name" >}}).
+- Zum Umstieg: `domains = ["<Ihre Domain>"]` ergänzen,
+  `username_claim = "eduperson_principal_name"` setzen (oder den Claim, den Ihr
+  Aussteller mit `local@scope` füllt) und, wenn die Namen Ihres Verzeichnisses
+  bloß sind (`alice`), `local_domain = "<Ihre Domain>"` ergänzen. Ein Token mit
+  Name ohne Bereich kann nicht mehr binden.
+- Zwei Einträge einer Quelle mit derselben uid sind jetzt ein Fehler beim Start
+  und beim Refresh (go-authn/directory v0.18.0), keine stille Auswahl mehr.
+  Vor dem Umstieg in einem LDAP-Upstream nach wiederholten uids suchen:
+  `ldapsearch -b <base> '(uid=*)' uid`.
+
+Eine Konfiguration ohne `oidc`-Block ist nicht betroffen.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Aktualisierung von v0.14.x**

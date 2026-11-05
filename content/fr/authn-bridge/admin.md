@@ -53,6 +53,14 @@ comportant un bloc `admin` plutôt que de démarrer sans elle.
 | `DisableIdP`, `EnableIdP` | la même chose pour toutes les personnes dont un établissement se porte garant ; un rafraîchissement des métadonnées ne le lève pas |
 | `ListDisabled` | qui est désactivé, pourquoi, par qui, depuis quand et jusqu'à quand |
 
+Retirer un IdP de `saml { idps }` met fin à ce dont il répondait, comme le fait
+`DisableIdP` (depuis la v0.23.7) : une nouvelle connexion est refusée, et aussi
+chaque autorisation de quelqu'un qui est passé par lui, à la prochaine
+utilisation, avec `institution not configured` : un jeton d'actualisation (même
+après un redémarrage), un mot de passe d'application, une demande de
+certificat SSH. Remettez l'IdP et ils fonctionnent de nouveau ; rien n'a besoin
+d'être révoqué.
+
 Avec `reflection = true`, sur un fournisseur de test :
 
 ```

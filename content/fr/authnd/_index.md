@@ -11,13 +11,35 @@ qui veut les authentifier parle LDAP.** authnd est la façade : il
 se lie et cherche sur les sources de [go-authn/directory]({{< relref "/libraries/_index.md" >}}),
 si bien que ce que contient une base de données peut être lu par tout ce qui sait
 interroger un annuaire. Pur Go, `CGO_ENABLED=0`, un seul binaire. Ces pages décrivent
-la v0.15.1, dont les entrées suivent les schémas standard et respectent le schéma
+la v0.16.0, dont les entrées suivent les schémas standard et respectent le schéma
 qu'elle sert à `cn=Subschema`, qu'un site étend avec le sien
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) et façonne grâce aux
 [règles de contenu DIT, formes de noms et règles de structure]({{< relref "/authnd/schemas.md#rules" >}}),
 avec go-authn/ldap v0.12.0 et
-go-authn/directory v0.17.0 en dessous ; ce qui est vérifié et ce qui ne l'est pas figure sur la
+go-authn/directory v0.18.0 en dessous ; ce qui est vérifié et ce qui ne l'est pas figure sur la
 page [état]({{< relref "/status.md" >}}).
+
+{{< callout type="warning" >}}
+**Mise à jour depuis la v0.15.x : une configuration avec un bloc `oidc` doit changer**
+
+- ⛔ **`oidc { domains = [...] }` est obligatoire** : le serveur ne démarre pas
+  sans. Le nom du jeton doit être exactement un `local@scope` d'un domaine
+  autorisé ; un nom sans portée, celui d'un autre établissement ou un nom avec
+  deux `@` est refusé. Derrière un proxy de fédération, l'alice de n'importe
+  quel établissement se liait comme l'alice locale. Voir
+  [le nom doit avoir une portée]({{< relref "/authnd/tokens.md#scoped-name" >}}).
+- Pour mettre à niveau : ajoutez `domains = ["<votre domaine>"]`, réglez
+  `username_claim = "eduperson_principal_name"` (ou la revendication que votre
+  émetteur remplit avec `local@scope`) et, si les noms de votre annuaire sont
+  nus (`alice`), ajoutez `local_domain = "<votre domaine>"`. Un jeton dont le
+  nom n'a pas de portée ne peut plus se lier.
+- Deux entrées d'une même source qui partagent un uid sont désormais une erreur
+  au démarrage et à l'actualisation (go-authn/directory v0.18.0), et non un
+  choix silencieux. Cherchez les uid répétés dans un amont LDAP avant de mettre
+  à niveau : `ldapsearch -b <base> '(uid=*)' uid`.
+
+Une configuration sans bloc `oidc` n'est pas concernée.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Mise à jour depuis la v0.14.x**

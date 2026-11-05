@@ -30,13 +30,15 @@ oidc {
   issuer   = "https://login.example.org/realms/staff"   # the "iss" a token must carry, and where discovery starts
   audience = "ldap"                                     # this server's client id at the provider
 
-  # username_claim = "preferred_username"   which claim names the person here
+  username_claim = "eduperson_principal_name"          # the claim that holds ONE local@scope
+  domains        = ["univ-a.example"]                  # REQUIRED: the scopes this issuer may assert
+  # local_domain = "univ-a.example"   optional, one of domains: its people are published under their bare name
   # jwks_url       = "…"                    skips discovery, for a provider that does not publish it
   # allow_plaintext = true                  only when TLS is terminated in front of this process
 }
 ```
 
-`issuer` 和 `audience` 是必需的。没有 `username_claim` 时，名称取
+`issuer`、`audience` 和 `domains` 是必需的，名称必须是其中某个域的 `local@scope`（见[下文]({{< relref "/authnd/tokens.md#scoped-name" >}})）。没有 `username_claim` 时，名称取
 `preferred_username`，然后是 `email`（当 `email_verified` 为 true 时），然后是 `sub`。
 有了该块，根 DSE 会通告该机制：
 
@@ -48,6 +50,18 @@ supportedSASLMechanisms: OAUTHBEARER
 
 没有它时，每个 SASL 绑定都会得到 `authMethodNotSupported` 的答复——*不是这种
 方式*，这会把客户端引向与*密码错误*不同的地方。
+
+## 名称必须带作用域 {#scoped-name}
+
+在联盟代理（经 MyAccessID 的 eduGAIN、eduTEAMS、Keycloak 代理）之后，一个签发者为许多机构的人担保，而另一所大学的“alice”并不是这个目录里的 alice。因此令牌中的名称必须**恰好是一个 `local@scope`，且其作用域是 `domains` 之一**（go-authn/oidc 的 `ScopedName`）：没有作用域的名称、其他机构的名称、含两个 `@` 的名称都会被拒绝。
+
+`local_domain`（可选，是 `domains` 之一）是这样的作用域：其下的人在此以仅含本地部分的名称发布。设 `local_domain = "univ-a.example"` 时，`alice@univ-a.example` 就是目录中的 `alice`。其他允许作用域的名称按完整的 `local@scope` 查找（`alice@univ-b.example`）。
+
+{{< callout type="warning" >}}
+**自 v0.16.0 起 `domains` 是必需的，没有它服务器不会启动。**
+
+此前，没有作用域的 `preferred_username` 被直接映射到目录名称，于是任何机构的 alice 都能绑定为本地的 alice。升级时：添加 `domains = ["<你的域>"]`，设置 `username_claim = "eduperson_principal_name"`（或你的签发者用 `local@scope` 填充的声明），如果目录中的名称是不带作用域的裸名，再添加 `local_domain = "<你的域>"`。名称没有作用域的令牌不再能绑定：请配置签发者释放带作用域的声明。
+{{< /callout >}}
 
 ## 发现在启动时进行 {#discovery-happens-at-startup}
 
@@ -175,6 +189,7 @@ a token was refused: OAUTHBEARER was offered over a connection that is not encry
   读到它的人，在它过期之前就是那个人。`allow_plaintext = true`
   适用于在此进程之前终止 TLS 的部署，而
   `check` 此时会提示 *a token may cross this socket in the clear*。
+- **不是允许域的 `local@scope` 的名称**：没有作用域、属于其他机构，或含多于一个 `@`。
 - **冒充他人的请求。** GS2 头可以指名 `authzid`。alice 的
   令牌如果带有以 tess 身份行事的请求，会被拒绝，而不是悄悄地
   当作其中任何一个处理。

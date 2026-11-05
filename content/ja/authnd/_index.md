@@ -10,14 +10,34 @@ tags: [authnd, ldap]
 その人々を認証したいものは LDAP を話します。** authnd はその窓口です。
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) のソースに対してバインドと検索を行うので、
 データベースが保持しているものを、ディレクトリに問い合わせる方法を知っているものなら何でも読めます。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.15.1 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.16.0 を説明しています。
 そのエントリは標準スキーマに従い、`cn=Subschema` で公開するスキーマに適合します。
 サイトはこのスキーマを自前のもの
 ([SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})) で拡張でき、
 [DIT コンテンツルール、ネームフォーム、DIT 構造ルール]({{< relref "/authnd/schemas.md#rules" >}})で
 形も定められます。
-その下には go-authn/ldap v0.12.0 と go-authn/directory v0.17.0 があります。
+その下には go-authn/ldap v0.12.0 と go-authn/directory v0.18.0 があります。
 何が検証済みで何が未検証かは、[ステータス]({{< relref "/status.md" >}})のページにあります。
+
+{{< callout type="warning" >}}
+**v0.15.x からのアップグレード: `oidc` ブロックのある設定は変更が必要です**
+
+- ⛔ **`oidc { domains = [...] }` は必須です**。これがないとサーバーは起動しません。
+  トークンの名前は、許可されたドメインのちょうど 1 つの `local@scope` でなければならず、
+  スコープのない名前、別の機関の名前、`@` が 2 つある名前は拒否されます。連合プロキシの背後では、
+  どの機関の alice もローカルの alice としてバインドできました。
+  [名前にはスコープが必要]({{< relref "/authnd/tokens.md#scoped-name" >}})を参照してください。
+- アップグレードするには、`domains = ["<あなたのドメイン>"]` を追加し、
+  `username_claim = "eduperson_principal_name"`（または発行者が `local@scope` で埋めるクレーム）を設定し、
+  ディレクトリの名前がローカル部分だけ（`alice`）の場合は `local_domain = "<あなたのドメイン>"` を追加します。
+  スコープのない名前のトークンはバインドできなくなります。
+- 1 つのソースの 2 つのエントリが同じ uid を持つ場合は、黙って 1 つを選ぶのではなく、
+  起動時とリフレッシュ時のエラーになります（go-authn/directory v0.18.0）。
+  アップグレードの前に、LDAP のアップストリームに重複した uid がないか確認してください。
+  `ldapsearch -b <base> '(uid=*)' uid`
+  
+`oidc` ブロックのない設定は影響を受けません。
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **v0.14.x からのアップグレード**

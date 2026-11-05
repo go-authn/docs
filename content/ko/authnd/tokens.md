@@ -28,13 +28,15 @@ oidc {
   issuer   = "https://login.example.org/realms/staff"   # the "iss" a token must carry, and where discovery starts
   audience = "ldap"                                     # this server's client id at the provider
 
-  # username_claim = "preferred_username"   which claim names the person here
+  username_claim = "eduperson_principal_name"          # the claim that holds ONE local@scope
+  domains        = ["univ-a.example"]                  # REQUIRED: the scopes this issuer may assert
+  # local_domain = "univ-a.example"   optional, one of domains: its people are published under their bare name
   # jwks_url       = "…"                    skips discovery, for a provider that does not publish it
   # allow_plaintext = true                  only when TLS is terminated in front of this process
 }
 ```
 
-`issuer`와 `audience`는 필수입니다. `username_claim`이 없으면 이름은
+`issuer`, `audience`, `domains`는 필수이며, 이름은 그중 하나의 `local@scope`여야 합니다([아래]({{< relref "/authnd/tokens.md#scoped-name" >}})). `username_claim`이 없으면 이름은
 `preferred_username`이고, 그다음 `email_verified`가 true일 때의 `email`, 그다음
 `sub`입니다. 이 블록이 있으면 루트 DSE가 메커니즘을 알립니다.
 
@@ -46,6 +48,18 @@ supportedSASLMechanisms: OAUTHBEARER
 
 블록이 없으면 모든 SASL 바인드에 `authMethodNotSupported`로 응답합니다 — *이
 방식이 아님*이며, 이는 클라이언트를 *잘못된 비밀번호*와는 다른 곳으로 보냅니다.
+
+## 이름에는 범위가 있어야 합니다 {#scoped-name}
+
+연합 프록시(MyAccessID를 거치는 eduGAIN, eduTEAMS, Keycloak 브로커) 뒤에서는 하나의 발급자가 여러 기관의 사람을 보증하며, 다른 대학의 "alice"는 이 디렉터리의 alice가 아닙니다. 그래서 토큰의 이름은 **정확히 하나의 `local@scope`이고 그 범위가 `domains` 중 하나여야 합니다**(go-authn/oidc의 `ScopedName`). 범위가 없는 이름, 다른 기관의 이름, `@`가 둘인 이름은 거부됩니다.
+
+`local_domain`(선택, `domains` 중 하나)은 그 사람들을 로컬 부분만의 이름으로 게시하는 범위입니다. `local_domain = "univ-a.example"`이면 `alice@univ-a.example`는 디렉터리의 `alice`입니다. 허용된 다른 범위의 이름은 `local@scope` 전체로 조회됩니다(`alice@univ-b.example`).
+
+{{< callout type="warning" >}}
+**v0.16.0부터 `domains`는 필수이며, 없으면 서버가 시작되지 않습니다.**
+
+이전에는 범위 없는 `preferred_username`이 디렉터리 이름에 그대로 대응되어, 어느 기관의 alice든 로컬 alice로 바인드되었습니다. 업그레이드하려면 `domains = ["<귀하의 도메인>"]`을 추가하고, `username_claim = "eduperson_principal_name"`(또는 발급자가 `local@scope`로 채우는 클레임)을 설정하며, 디렉터리 이름이 로컬 부분만이면 `local_domain = "<귀하의 도메인>"`을 추가하십시오. 범위 없는 이름의 토큰은 더 이상 바인드할 수 없습니다. 발급자가 범위 있는 클레임을 내놓도록 설정하십시오.
+{{< /callout >}}
 
 ## 디스커버리는 시작할 때 일어납니다 {#discovery-happens-at-startup}
 
@@ -171,6 +185,8 @@ a token was refused: OAUTHBEARER was offered over a connection that is not encry
   사람은 만료될 때까지 그 사람입니다. `allow_plaintext = true`는 이 프로세스 앞에서
   TLS를 종단하는 배포를 위한 것이며, 그러면 `check`가 *a token may cross this
   socket in the clear*라고 알려 줍니다.
+- **허용된 도메인의 `local@scope`가 아닌 이름**: 범위가 없는 이름, 다른 기관의 이름,
+  또는 `@`가 둘 이상인 이름.
 - **다른 사람이 되겠다는 요청.** GS2 헤더는 `authzid`를 지정할 수 있습니다. alice용
   토큰이 tess로 행동하겠다는 요청을 담고 있으면, 둘 중 어느 쪽으로도 조용히
   취급되지 않고 거부됩니다.

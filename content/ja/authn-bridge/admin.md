@@ -52,6 +52,11 @@ authn-bridge: admin: control: listen address "127.0.0.1:9443" is TCP, which requ
 | `DisableIdP`、`EnableIdP` | ある一つの機関が保証する全員に対して同じことを行う。メタデータの更新では解除されない |
 | `ListDisabled` | 誰が無効化されているか、理由、実施者、開始時刻、期限 |
 
+`saml { idps }` から IdP を外すと、`DisableIdP` と同じように、その IdP が保証していたものが終わります（v0.23.7 から）。
+新しいログインは拒否され、その IdP を経由した人のあらゆる許可も、次に使われたときに
+`institution not configured` で拒否されます。対象はリフレッシュトークン（再起動をまたいでも）、
+アプリケーションパスワード、SSH 証明書の要求です。IdP を戻せばそれらは再び動作し、失効させる必要はありません。
+
 `reflection = true` で、テスト用プロバイダーに対して:
 
 ```

@@ -53,6 +53,10 @@ authn-bridge: admin: control: listen address "127.0.0.1:9443" is TCP, which requ
 | `DisableIdP`、`EnableIdP` | 对某一机构所担保的所有人做同样的事；元数据刷新不会解除它 |
 | `ListDisabled` | 谁被禁用、原因、由谁禁用、从何时起、到何时为止 |
 
+把一个 IdP 从 `saml { idps }` 中移除，会像 `DisableIdP` 一样终止它所担保的一切（自 v0.23.7 起）：
+新的登录被拒绝，经由它而来的人的每一项授权也会在下次使用时以 `institution not configured` 被拒绝，
+包括刷新令牌（即使跨越重启）、应用密码和 SSH 证书请求。把 IdP 放回去，它们就重新可用；无需吊销任何东西。
+
 设置 `reflection = true`，针对测试提供方：
 
 ```

@@ -30,13 +30,17 @@ oidc {
   issuer   = "https://login.example.org/realms/staff"   # the "iss" a token must carry, and where discovery starts
   audience = "ldap"                                     # this server's client id at the provider
 
-  # username_claim = "preferred_username"   which claim names the person here
+  username_claim = "eduperson_principal_name"          # the claim that holds ONE local@scope
+  domains        = ["univ-a.example"]                  # REQUIRED: the scopes this issuer may assert
+  # local_domain = "univ-a.example"   optional, one of domains: its people are published under their bare name
   # jwks_url       = "…"                    skips discovery, for a provider that does not publish it
   # allow_plaintext = true                  only when TLS is terminated in front of this process
 }
 ```
 
-`issuer` and `audience` are required. Without `username_claim`, the name is
+`issuer`, `audience` and `domains` are required, and the name must be a
+`local@scope` of one of them ([below]({{< relref "/authnd/tokens.md#scoped-name" >}})).
+Without `username_claim`, the name is
 `preferred_username`, then `email` when `email_verified` is true, then `sub`.
 With the block, the root DSE advertises the mechanism:
 
@@ -48,6 +52,32 @@ supportedSASLMechanisms: OAUTHBEARER
 
 Without it, every SASL bind is answered `authMethodNotSupported` — *not this
 way*, which sends a client somewhere different from *wrong password*.
+
+## The name must be scoped {#scoped-name}
+
+Behind a federation proxy (eduGAIN through MyAccessID, eduTEAMS, a Keycloak
+broker) one issuer vouches for people of many institutions, and "alice" at
+another university is not this directory's alice. So the token's name must be
+**exactly one `local@scope` whose scope is one of `domains`**
+(go-authn/oidc's `ScopedName`): an unscoped name, another institution's, or one
+with two `@` is refused.
+
+`local_domain` (optional, one of `domains`) is the scope whose people are
+published here under their bare local part: with `local_domain =
+"univ-a.example"`, `alice@univ-a.example` is the directory's `alice`. A name of
+any other allowed scope is looked up as the whole `local@scope`
+(`alice@univ-b.example`).
+
+{{< callout type="warning" >}}
+**From v0.16.0 `domains` is required, and the server does not start without it.**
+
+Before, an unscoped `preferred_username` was mapped straight onto directory
+names, so any institution's alice bound as the local alice. To upgrade, add
+`domains = ["<your domain>"]`, set `username_claim = "eduperson_principal_name"`
+(or whichever claim your issuer fills with `local@scope`) and, if your directory
+names are bare, add `local_domain = "<your domain>"`. A token whose name is
+unscoped can no longer bind: configure the issuer to release a scoped claim.
+{{< /callout >}}
 
 ## Discovery happens at startup
 
@@ -175,6 +205,8 @@ A successful `OAUTHBEARER` bind leaves the connection bound as
   it off the wire is that person until it expires. `allow_plaintext = true`
   exists for a deployment that terminates TLS in front of this process, and
   `check` then says *a token may cross this socket in the clear*.
+- **A name that is not one `local@scope` of an allowed domain**: unscoped,
+  another institution's, or with more than one `@`.
 - **A request to be somebody else.** The GS2 header may name an `authzid`. A
   token for alice carrying a request to act as tess is refused, not quietly
   treated as either.
