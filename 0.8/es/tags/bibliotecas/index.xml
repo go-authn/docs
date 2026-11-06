@@ -758,7 +758,7 @@ módulos que se publican, se versionan y se prueban por separado. Cada uno respo
 &lt;tr&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.8/es/libraries/kdc/"&gt;kdc&lt;/a&gt;&lt;/td&gt;
 &lt;td&gt;¿cómo emite un reino tickets a partir de un directorio?&lt;/td&gt;
-&lt;td&gt;v0.5.0&lt;/td&gt;
+&lt;td&gt;v0.6.0&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/kdc&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -2461,7 +2461,7 @@ y TCP, con preautenticación por marca de tiempo cifrada obligatoria, para las p
 que conoce un &lt;a href="https://go-authn.github.io/docs/0.8/es/libraries/directory/"&gt;directorio&lt;/a&gt; y los servicios que
 guarda una keytab. Se ejecuta bajo &lt;a href="https://go-authn.github.io/docs/0.8/es/authnd/"&gt;authnd&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/kdc@v0.5.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/kdc@v0.6.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copiar código"
@@ -2473,9 +2473,9 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;En la v0.5.0 su &lt;code&gt;go.mod&lt;/code&gt; requiere como mínimo &lt;code&gt;go-authn/directory&lt;/code&gt; v0.16.1 y
-gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.16.1
-se compila con la v0.17.0, como hace authnd v0.15.1. La mitad que
+&lt;p&gt;En la v0.6.0 su &lt;code&gt;go.mod&lt;/code&gt; requiere como mínimo &lt;code&gt;go-authn/directory&lt;/code&gt; v0.17.0 y
+gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.17.0
+se compila con la v0.18.0, como hace authnd v0.16.2. La mitad que
 acepta es &lt;a href="https://go-authn.github.io/docs/0.8/es/libraries/krb5/"&gt;krb5&lt;/a&gt;, y un servicio que solo
 verifica tickets no necesita este módulo en absoluto.&lt;/p&gt;
 &lt;p&gt;No implementado: referencias entre reinos, PKINIT, FAST, tickets renovables o
@@ -2487,6 +2487,27 @@ duración de esa persona, así que un &lt;code&gt;directory.Verifier&lt;/code&gt
 otro, una comparación de hash— no sirve, por bien que responda &lt;em&gt;¿es esta la contraseña
 correcta?&lt;/em&gt;. A una persona cuyo origen no guarda ninguna contraseña se le responde&lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt; (&lt;em&gt;null key&lt;/em&gt;), nunca el código que recibe una contraseña incorrecta,de modo que se lee como una configuración que corregir y no como una contraseña que
 volver a escribir.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="finder"&gt;Darle un índice: &lt;code&gt;Finder&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="finder"&gt;&lt;/span&gt;
+&lt;a href="#finder" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Cada AS-REQ y TGS-REQ busca a una persona. Con una &lt;code&gt;directory.Source&lt;/code&gt; simple eso es&lt;code&gt;Identities()&lt;/code&gt; y un recorrido: con 10 000 personas el recorrido era la mitad de la
+CPU de una AS-REQ, y una fuente que lee una base de datos o un servidor LDAP en&lt;code&gt;Identities()&lt;/code&gt; se lee entera en cada solicitud, incluida una no autenticada.&lt;strong&gt;Desde la v0.6.0&lt;/strong&gt; una fuente que mantiene un índice implementa&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nf"&gt;Find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;name&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;directory&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Identity&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;bool&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;error&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;y el reino le pregunta en lugar de recorrer. El nombre de la identidad debe ser&lt;strong&gt;exactamente&lt;/strong&gt; el principal —un principal distingue mayúsculas y minúsculas, así
+que una respuesta cuyo nombre difiere es un principal desconocido— y un error da&lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt;. Con un &lt;code&gt;Finder&lt;/code&gt; la búsqueda queda por debajo del umbral
+del perfil de CPU; lo que queda de una solicitud es sobre todo la codificación ASN.1
+de gokrb5. &lt;a href="https://go-authn.github.io/docs/0.8/es/authnd/kerberos/#where-the-realm-reads-people"&gt;authnd&lt;/a&gt;
+entrega así al reino su instantánea actualizada.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="example"&gt;Ejemplo&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
 &lt;a href="#example" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un reino en memoria, en loopback:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -2699,7 +2720,7 @@ la clave equivocada, una de hace una hora, un cifrado de tres bytes, un servicio
 directamente en un AS-REQ, un ticket de servicio falsificado en el TGS, y un reino
 respaldado por un verificador. El mínimo de la línea de cobertura es el 80%.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Referencia&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/kdc@v0.5.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>oidc — verificar un token bearer</title><link>https://go-authn.github.io/docs/0.8/es/libraries/oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.8/es/libraries/oidc/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/kdc@v0.6.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>oidc — verificar un token bearer</title><link>https://go-authn.github.io/docs/0.8/es/libraries/oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.8/es/libraries/oidc/</guid><description>
 &lt;p&gt;&lt;strong&gt;¿Quién dice este token bearer que está preguntando, y hay que creerlo?&lt;/strong&gt; El
 descubrimiento, el conjunto de claves y las comprobaciones que debe hacer un servidor
 de recursos, en Go puro, &lt;strong&gt;sin dependencias&lt;/strong&gt; fuera de la biblioteca estándar.&lt;/p&gt;

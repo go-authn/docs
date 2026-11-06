@@ -1418,7 +1418,7 @@ UDP and TCP, with encrypted-timestamp pre-authentication required, for the
 people a &lt;a href="https://go-authn.github.io/docs/0.8/libraries/directory/"&gt;directory&lt;/a&gt; knows and the
 services a keytab holds. It runs under&lt;a href="https://go-authn.github.io/docs/0.8/authnd/"&gt;authnd&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/kdc@v0.5.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/kdc@v0.6.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -1430,9 +1430,9 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;At v0.5.0 its &lt;code&gt;go.mod&lt;/code&gt; requires at least &lt;code&gt;go-authn/directory&lt;/code&gt; v0.16.1 and
-gokrb5 v8.4.4: minimums, so a program that requires directory v0.16.1 builds
-with v0.17.0, as authnd v0.15.1 does. The
+&lt;p&gt;At v0.6.0 its &lt;code&gt;go.mod&lt;/code&gt; requires at least &lt;code&gt;go-authn/directory&lt;/code&gt; v0.17.0 and
+gokrb5 v8.4.4: minimums, so a program that requires directory v0.17.0 builds
+with v0.18.0, as authnd v0.16.2 does. The
 accepting half is &lt;a href="https://go-authn.github.io/docs/0.8/libraries/krb5/"&gt;krb5&lt;/a&gt;, and a service
 that only verifies tickets needs this module not at all.&lt;/p&gt;
 &lt;p&gt;Not implemented: cross-realm referrals, PKINIT, FAST, renewable or postdated
@@ -1444,6 +1444,29 @@ long-term key, so a &lt;code&gt;directory.Verifier&lt;/code&gt; — a bind again
 LDAP, a hash comparison — cannot serve, however well it answers &lt;em&gt;is this the
 right password&lt;/em&gt;. A person whose source holds no password is answered&lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt; (&lt;em&gt;null key&lt;/em&gt;), never the code a wrong password gets, so it
 reads as a configuration to fix rather than a password to retype.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="finder"&gt;Give it an index: &lt;code&gt;Finder&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="finder"&gt;&lt;/span&gt;
+&lt;a href="#finder" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Every AS-REQ and TGS-REQ looks one person up. With a plain &lt;code&gt;directory.Source&lt;/code&gt;
+that is &lt;code&gt;Identities()&lt;/code&gt; and a walk: with 10,000 people the walk was half of an
+AS-REQ&amp;rsquo;s CPU, and a source that reads a database or an LDAP server on&lt;code&gt;Identities()&lt;/code&gt; is read in full by every request, an unauthenticated one
+included. &lt;strong&gt;Since v0.6.0&lt;/strong&gt; a source that keeps an index implements&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nf"&gt;Find&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;name&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nx"&gt;directory&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Identity&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;bool&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kt"&gt;error&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;and the realm asks it instead of walking. The identity&amp;rsquo;s name must equal the
+principal &lt;strong&gt;exactly&lt;/strong&gt; — a principal is case-sensitive, so an answer whose name
+differs is an unknown principal — and an error is &lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt;.With a &lt;code&gt;Finder&lt;/code&gt; the lookup is below the CPU profile&amp;rsquo;s threshold; what is left
+of a request is mostly gokrb5&amp;rsquo;s ASN.1 encoding.&lt;a href="https://go-authn.github.io/docs/0.8/authnd/kerberos/#where-the-realm-reads-people"&gt;authnd&lt;/a&gt;
+hands the realm its refreshed snapshot this way.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="example"&gt;Example&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
 &lt;a href="#example" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A realm in memory, on loopback:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -1650,4 +1673,4 @@ refusals a real client never triggers: a timestamp under the wrong key, one
 from an hour ago, a three-byte cipher, a service asked for straight from an
 AS-REQ, a forged service ticket at the TGS, and a realm backed by a verifier.The coverage lane&amp;rsquo;s floor is 80%.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Reference&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/kdc@v0.5.0&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/kdc@v0.6.0&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>

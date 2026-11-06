@@ -1,7 +1,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Authnd</title><link>https://go-authn.github.io/docs/0.8/es/tags/authnd/</link><description>Recent content in Authnd on go-authn</description><generator>Hugo -- gohugo.io</generator><language>es</language><atom:link href="https://go-authn.github.io/docs/0.8/es/tags/authnd/index.xml" rel="self" type="application/rss+xml"/><item><title>authnd, un servidor LDAP para personas que están en otro lugar</title><link>https://go-authn.github.io/docs/0.8/es/authnd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.8/es/authnd/</guid><description>
 &lt;p&gt;&lt;strong&gt;Las personas de un sitio ya están en una base de datos, un archivo u otro
 directorio. Lo que quiere autenticarlas habla LDAP.&lt;/strong&gt; authnd es la fachada:hace binds y búsquedas sobre los orígenes de&lt;a href="https://go-authn.github.io/docs/0.8/es/libraries/"&gt;go-authn/directory&lt;/a&gt;, así que lo que guarda
-una base de datos puede leerlo cualquier cosa que sepa consultar un directorio.Go puro, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un solo binario. Estas páginas describen la v0.16.0,cuyas entradas siguen los esquemas estándar y superan el esquema que sirve en&lt;code&gt;cn=Subschema&lt;/code&gt;, que un sitio amplía con el suyo(&lt;a href="https://go-authn.github.io/docs/0.8/es/authnd/schemas/"&gt;SUPANN, eduPerson&lt;/a&gt;) y, con&lt;a href="https://go-authn.github.io/docs/0.8/es/authnd/schemas/#rules"&gt;reglas de contenido DIT, formas de nombre y reglas de estructura DIT&lt;/a&gt;,da forma a las entradas, con go-authn/ldap v0.12.0 y
+una base de datos puede leerlo cualquier cosa que sepa consultar un directorio.Go puro, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un solo binario. Estas páginas describen la v0.16.2,cuyas entradas siguen los esquemas estándar y superan el esquema que sirve en&lt;code&gt;cn=Subschema&lt;/code&gt;, que un sitio amplía con el suyo(&lt;a href="https://go-authn.github.io/docs/0.8/es/authnd/schemas/"&gt;SUPANN, eduPerson&lt;/a&gt;) y, con&lt;a href="https://go-authn.github.io/docs/0.8/es/authnd/schemas/#rules"&gt;reglas de contenido DIT, formas de nombre y reglas de estructura DIT&lt;/a&gt;,da forma a las entradas, con go-authn/ldap v0.12.0 y
 go-authn/directory v0.18.0 por debajo; lo que está verificado y lo que no
 figura en la página de &lt;a href="https://go-authn.github.io/docs/0.8/es/status/"&gt;estado&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
@@ -3886,6 +3886,20 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;h2 data-hextra-search-id="where-the-realm-reads-people"&gt;Dónde lee el reino a las personas&lt;span class="hx:absolute hx:-mt-20" id="where-the-realm-reads-people"&gt;&lt;/span&gt;
+&lt;a href="#where-the-realm-reads-people" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Desde la v0.16.2&lt;/strong&gt; el reino lee la misma instantánea que los bind LDAP, una
+búsqueda en una tabla por solicitud (el &lt;a href="https://go-authn.github.io/docs/0.8/es/libraries/kdc/#finder"&gt;&lt;code&gt;Finder&lt;/code&gt;&lt;/a&gt;
+de go-authn/kdc), y nunca las fuentes. Antes, cada AS-REQ y TGS-REQ —incluida una
+AS-REQ no autenticada por UDP— ejecutaba la consulta completa de personas de cada
+fuente SQL &lt;code&gt;users&lt;/code&gt; y una búsqueda de subárbol en cada origen &lt;code&gt;ldap&lt;/code&gt;: un solo
+datagrama de cualquiera leía entero cada backend.&lt;/p&gt;
+&lt;p&gt;Lo que se sigue para un despliegue:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;una contraseña cambiada a través de authnd llega al reino de inmediato, como arriba;&lt;/li&gt;
+&lt;li&gt;una persona eliminada de una base de datos deja de obtener tickets en un periodo
+de &lt;code&gt;refresh&lt;/code&gt; (60 s por defecto), como en un bind, no en la solicitud siguiente;&lt;/li&gt;
+&lt;li&gt;pasado &lt;code&gt;max_age&lt;/code&gt;, el reino responde &lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt;, como LDAP responde&lt;code&gt;unavailable&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="not-beside-an-mfa-block"&gt;No junto a un bloque &lt;code&gt;mfa&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="not-beside-an-mfa-block"&gt;&lt;/span&gt;
 &lt;a href="#not-beside-an-mfa-block" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/krb-mfa.hcl

@@ -2,7 +2,7 @@
 &lt;p&gt;&lt;strong&gt;Die Personen eines Standorts stehen bereits in einer Datenbank, einer Datei oder einem
 anderen Verzeichnis. Was sie authentifizieren will, spricht LDAP.&lt;/strong&gt; authnd ist die Fassade
 davor: Es führt Binds und Suchen über die Quellen von&lt;a href="https://go-authn.github.io/docs/0.8/de/libraries/"&gt;go-authn/directory&lt;/a&gt; aus, sodass das, was eine
-Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, ein Binary. Diese Seiten beschreiben v0.16.0, dessen Einträge den
+Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, ein Binary. Diese Seiten beschreiben v0.16.2, dessen Einträge den
 Standardschemata folgen und das Schema bestehen, das es unter &lt;code&gt;cn=Subschema&lt;/code&gt; bereitstellt
 und das ein Standort um sein eigenes erweitert(&lt;a href="https://go-authn.github.io/docs/0.8/de/authnd/schemas/"&gt;SUPANN, eduPerson&lt;/a&gt;) und mit&lt;a href="https://go-authn.github.io/docs/0.8/de/authnd/schemas/#rules"&gt;DIT-Content-Rules, Name Forms und Structure Rules&lt;/a&gt;
 auch um Formvorgaben, mit go-authn/ldap v0.12.0 und
@@ -3788,6 +3788,18 @@ data-copied-label="Kopiert!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;h2 data-hextra-search-id="where-the-realm-reads-people"&gt;Wo der Realm die Personen liest&lt;span class="hx:absolute hx:-mt-20" id="where-the-realm-reads-people"&gt;&lt;/span&gt;
+&lt;a href="#where-the-realm-reads-people" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Seit v0.16.2&lt;/strong&gt; liest der Realm denselben Schnappschuss wie LDAP-Binds, ein
+Tabellenzugriff pro Anfrage (der &lt;a href="https://go-authn.github.io/docs/0.8/de/libraries/kdc/#finder"&gt;&lt;code&gt;Finder&lt;/code&gt;&lt;/a&gt;
+von go-authn/kdc), und nie die Quellen. Vorher führte jede AS-REQ und TGS-REQ —auch eine nicht authentifizierte AS-REQ über UDP — die vollständige Personenabfrage
+jeder &lt;code&gt;users&lt;/code&gt;-SQL-Quelle und eine Teilbaumsuche jedes &lt;code&gt;ldap&lt;/code&gt;-Upstreams aus: Ein
+einziges Datagramm von irgendwem las jedes Backend vollständig.&lt;/p&gt;
+&lt;p&gt;Was daraus für eine Installation folgt:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ein über authnd geändertes Passwort erreicht den Realm sofort, wie oben;&lt;/li&gt;
+&lt;li&gt;eine aus einer Datenbank entfernte Person bekommt innerhalb einer&lt;code&gt;refresh&lt;/code&gt;-Periode (standardmäßig 60 s) keine Tickets mehr, wie bei einem Bind —nicht schon bei der nächsten Anfrage;&lt;/li&gt;
+&lt;li&gt;nach &lt;code&gt;max_age&lt;/code&gt; antwortet der Realm &lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt;, wie LDAP&lt;code&gt;unavailable&lt;/code&gt; antwortet.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="not-beside-an-mfa-block"&gt;Nicht neben einem &lt;code&gt;mfa&lt;/code&gt;-Block&lt;span class="hx:absolute hx:-mt-20" id="not-beside-an-mfa-block"&gt;&lt;/span&gt;
 &lt;a href="#not-beside-an-mfa-block" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/krb-mfa.hcl

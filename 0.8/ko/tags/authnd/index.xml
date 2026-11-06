@@ -3,7 +3,7 @@
 인증하려는 것들은 LDAP을 사용합니다.&lt;/strong&gt; authnd는 그 앞단입니다.&lt;a href="https://go-authn.github.io/docs/0.8/ko/libraries/"&gt;go-authn/directory&lt;/a&gt;의 소스 위에서 바인드와
 검색을 처리하므로, 데이터베이스에 있는 내용을 디렉터리에 질의할 줄 아는 어떤
 것이든 읽을 수 있습니다. 순수 Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, 바이너리 하나입니다. 이 문서는
-v0.16.0을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 &lt;code&gt;cn=Subschema&lt;/code&gt;에서
+v0.16.2를 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 &lt;code&gt;cn=Subschema&lt;/code&gt;에서
 제공하는 스키마를 통과합니다. 사이트는 이 스키마를 자신의 스키마로
 확장할 수 있고(&lt;a href="https://go-authn.github.io/docs/0.8/ko/authnd/schemas/"&gt;SUPANN, eduPerson&lt;/a&gt;),&lt;a href="https://go-authn.github.io/docs/0.8/ko/authnd/schemas/#rules"&gt;DIT 콘텐츠 규칙, 이름 형식, 구조 규칙&lt;/a&gt;으로
 엔트리의 형태까지 정할 수 있습니다. 그 아래에는
@@ -3760,6 +3760,17 @@ data-copied-label="복사됨!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;h2 data-hextra-search-id="where-the-realm-reads-people"&gt;렐름이 사람들을 읽는 곳&lt;span class="hx:absolute hx:-mt-20" id="where-the-realm-reads-people"&gt;&lt;/span&gt;
+&lt;a href="#where-the-realm-reads-people" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;v0.16.2부터&lt;/strong&gt; 렐름은 LDAP 바인드와 같은 스냅숏을 요청마다 표를 한 번 찾아 읽으며(go-authn/kdc의 &lt;a href="https://go-authn.github.io/docs/0.8/ko/libraries/kdc/#finder"&gt;&lt;code&gt;Finder&lt;/code&gt;&lt;/a&gt;), 소스는 결코 읽지 않습니다.이전에는 모든 AS-REQ와 TGS-REQ(UDP의 인증되지 않은 AS-REQ 포함)가 각 &lt;code&gt;users&lt;/code&gt; SQL 소스의
+전체 사용자 쿼리와 각 &lt;code&gt;ldap&lt;/code&gt; 업스트림의 하위 트리 검색을 실행했습니다. 누구든 보낸 데이터그램
+하나로 모든 백엔드가 통째로 읽혔습니다.&lt;/p&gt;
+&lt;p&gt;배포에 대한 결과:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;authnd를 통해 바꾼 비밀번호는 위에서처럼 즉시 렐름에 반영됩니다.&lt;/li&gt;
+&lt;li&gt;데이터베이스에서 삭제된 사람은 바인드와 마찬가지로 &lt;code&gt;refresh&lt;/code&gt; 한 주기(기본 60초) 안에
+티켓을 받지 못합니다. 바로 다음 요청부터가 아닙니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;max_age&lt;/code&gt;를 넘으면, LDAP이 &lt;code&gt;unavailable&lt;/code&gt;로 응답하듯 렐름은&lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt;로 응답합니다.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="not-beside-an-mfa-block"&gt;&lt;code&gt;mfa&lt;/code&gt; 블록과 함께 둘 수 없음&lt;span class="hx:absolute hx:-mt-20" id="not-beside-an-mfa-block"&gt;&lt;/span&gt;
 &lt;a href="#not-beside-an-mfa-block" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/krb-mfa.hcl

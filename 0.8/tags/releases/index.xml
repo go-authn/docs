@@ -159,7 +159,7 @@ v0.1.5, and revokd has no &lt;code&gt;-version&lt;/code&gt; before v0.5.0.&lt;/p
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;authnd&lt;/td&gt;
-&lt;td&gt;&lt;strong&gt;v0.16.0&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;v0.16.2&lt;/strong&gt;&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/authnd&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -183,7 +183,7 @@ v0.1.5, and revokd has no &lt;code&gt;-version&lt;/code&gt; before v0.5.0.&lt;/p
 rules read, enforced and published, a typed &lt;code&gt;BuildError&lt;/code&gt; for a schema that does
 not build, schemas in HCL2 and the &lt;code&gt;ldapschema&lt;/code&gt; converter, and
 directory &lt;strong&gt;v0.18.0&lt;/strong&gt;, with declared object classes. authnd
-v0.16.0 embeds ldap v0.12.0 and directory v0.18.0.A new minor version of any program above is a new documentation version, so
+v0.16.2 embeds ldap v0.12.0 and directory v0.18.0.A new minor version of any program above is a new documentation version, so
 the pages a reader finds under &lt;code&gt;/docs/0.8/&lt;/code&gt; keep describing what they
 installed; those of the previous releases stay under &lt;code&gt;/docs/0.1/&lt;/code&gt;,&lt;code&gt;/docs/0.2/&lt;/code&gt;, &lt;code&gt;/docs/0.3/&lt;/code&gt;, &lt;code&gt;/docs/0.4/&lt;/code&gt;, &lt;code&gt;/docs/0.5/&lt;/code&gt;, &lt;code&gt;/docs/0.6/&lt;/code&gt; and &lt;code&gt;/docs/0.7/&lt;/code&gt;.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
@@ -366,6 +366,14 @@ dependencies are left out, except those this documentation version describes.&lt
 &lt;tr&gt;
 &lt;td&gt;v0.16.0&lt;/td&gt;
 &lt;td&gt;⛔ Security, with go-authn/oidc v0.6.1 and go-authn/directory v0.18.0. &lt;strong&gt;Breaking for a deployment with an &lt;code&gt;oidc&lt;/code&gt; block&lt;/strong&gt;: &lt;a href="https://go-authn.github.io/docs/0.8/authnd/tokens/#scoped-name"&gt;&lt;code&gt;domains&lt;/code&gt; is required&lt;/a&gt; and the server does not start without it. The token&amp;rsquo;s name must be exactly one &lt;code&gt;local@scope&lt;/code&gt; of an allowed domain (an unscoped name, another institution&amp;rsquo;s, or one with two &lt;code&gt;@&lt;/code&gt; is refused); the optional &lt;code&gt;local_domain&lt;/code&gt;, one of &lt;code&gt;domains&lt;/code&gt;, maps that scope&amp;rsquo;s people to bare directory names, and other scopes are looked up as the whole &lt;code&gt;local@scope&lt;/code&gt;. Behind a federation proxy any institution&amp;rsquo;s alice used to bind as the local alice. Two entries of one source that share a uid are an error at startup and at refresh, not a silent pick. &lt;a href="https://go-authn.github.io/docs/0.8/authnd/"&gt;Upgrade note&lt;/a&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;v0.16.1&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;kerberos { listen = &amp;quot;host:0&amp;quot; }&lt;/code&gt; gets one port for UDP and TCP (it got two, and a &lt;code&gt;krb5.conf&lt;/code&gt; names one); the startup line names that port. The tests stop picking a port, releasing it and naming it, which failed on a runner with &lt;code&gt;address already in use&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;v0.16.2&lt;/td&gt;
+&lt;td&gt;⛔ Security. &lt;a href="https://go-authn.github.io/docs/0.8/authnd/kerberos/#where-the-realm-reads-people"&gt;The realm reads the snapshot&lt;/a&gt;, never the sources: every AS-REQ and TGS-REQ, an unauthenticated one over UDP included, ran the whole people query of every SQL source and a subtree search of every &lt;code&gt;ldap&lt;/code&gt; upstream. &lt;code&gt;max_age&lt;/code&gt; now holds for Kerberos (&lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt; past it). A person removed from a database stops getting tickets within one &lt;code&gt;refresh&lt;/code&gt; period, as LDAP binds do. With go-authn/kdc v0.6.0&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
@@ -664,6 +672,10 @@ library&amp;rsquo;s page says what earlier ones changed.&lt;/p&gt;
 &lt;tr&gt;
 &lt;td&gt;kdc v0.5.0&lt;/td&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.8/libraries/kdc/"&gt;the lookaside&lt;/a&gt; of MIT&amp;rsquo;s KDC: a request seen before, byte for byte, gets its previous reply, for two minutes and under 10 MiB in all; a &lt;code&gt;KRB-ERROR&lt;/code&gt; is never stored; deliberately no authenticator replay cache, which MIT turns off at the TGS. Tests pin an unreadable directory as &lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt; at the AS, with a correct password, and at the TGS. Two allocations more per request&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;kdc v0.6.0&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.8/libraries/kdc/#finder"&gt;&lt;code&gt;Finder&lt;/code&gt;&lt;/a&gt;: a source that keeps an index by name is asked instead of walked. With 10,000 people the walk was half of an AS-REQ&amp;rsquo;s CPU; with a &lt;code&gt;Finder&lt;/code&gt; the lookup is below the profile&amp;rsquo;s threshold. An answer whose name differs from the principal is an unknown principal (a principal is case-sensitive)&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;keyfactor v0.4.2&lt;/td&gt;

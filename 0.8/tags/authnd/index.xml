@@ -4,7 +4,7 @@ things that want to authenticate them speak LDAP.&lt;/strong&gt; authnd is the f
 binds and searches over &lt;a href="https://go-authn.github.io/docs/0.8/libraries/"&gt;go-authn/directory&lt;/a&gt;&amp;rsquo;s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, one binary. These pages describe
-v0.16.0, whose entries follow the standard schemas and pass the schema it
+v0.16.2, whose entries follow the standard schemas and pass the schema it
 serves at &lt;code&gt;cn=Subschema&lt;/code&gt;, which a site extends with its own(&lt;a href="https://go-authn.github.io/docs/0.8/authnd/schemas/"&gt;SUPANN, eduPerson&lt;/a&gt;) and, with&lt;a href="https://go-authn.github.io/docs/0.8/authnd/schemas/#rules"&gt;DIT content rules, name forms and structure rules&lt;/a&gt;,shapes, with go-authn/ldap v0.12.0 and
 go-authn/directory v0.18.0 under it; what is verified and what is not is on
 the &lt;a href="https://go-authn.github.io/docs/0.8/status/"&gt;status&lt;/a&gt; page.&lt;/p&gt;
@@ -3838,6 +3838,19 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;h2 data-hextra-search-id="where-the-realm-reads-people"&gt;Where the realm reads people&lt;span class="hx:absolute hx:-mt-20" id="where-the-realm-reads-people"&gt;&lt;/span&gt;
+&lt;a href="#where-the-realm-reads-people" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Since v0.16.2&lt;/strong&gt; the realm reads the same snapshot LDAP binds read, one map
+lookup per request (go-authn/kdc&amp;rsquo;s &lt;a href="https://go-authn.github.io/docs/0.8/libraries/kdc/#finder"&gt;&lt;code&gt;Finder&lt;/code&gt;&lt;/a&gt;),and never the sources. Before, every AS-REQ and TGS-REQ — an unauthenticated
+AS-REQ over UDP included — ran the whole people query of every &lt;code&gt;users&lt;/code&gt; SQL
+source and a subtree search of every &lt;code&gt;ldap&lt;/code&gt; upstream: one datagram from anybody
+read every backend in full.&lt;/p&gt;
+&lt;p&gt;What follows for a deployment:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;a password changed through authnd reaches the realm at once, as above;&lt;/li&gt;
+&lt;li&gt;a person removed from a database stops getting tickets within one &lt;code&gt;refresh&lt;/code&gt;
+period (60 s by default), as for a bind — not at the very next request;&lt;/li&gt;
+&lt;li&gt;past &lt;code&gt;max_age&lt;/code&gt;, the realm answers &lt;code&gt;KDC_ERR_SVC_UNAVAILABLE&lt;/code&gt;, as LDAP answers&lt;code&gt;unavailable&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="not-beside-an-mfa-block"&gt;Not beside an &lt;code&gt;mfa&lt;/code&gt; block&lt;span class="hx:absolute hx:-mt-20" id="not-beside-an-mfa-block"&gt;&lt;/span&gt;
 &lt;a href="#not-beside-an-mfa-block" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/krb-mfa.hcl
