@@ -169,9 +169,13 @@ Unicode lower-casing maps the Kelvin sign U+212A to `k`. The claim must be in
 the token that is verified: MyAccessID releases `schac_home_organization` in
 userinfo, not in the ID token. The login side (one `rp.Set` of providers, the
 state bound to its provider, the RFC 9207 `iss` check) is in
-[go-authn/rp](https://github.com/go-authn/rp) v0.3.1, whose `Loopback` applies
+[go-authn/rp](https://github.com/go-authn/rp) v0.4.0, whose `Loopback` applies
 the RFC 9207 check too (`CheckIssuer`): an `iss` missing from a provider that
-advertises `authorization_response_iss_parameter_supported` is refused.
+advertises `authorization_response_iss_parameter_supported` is refused. Since
+v0.4.0 it can also end a login: `Client.Revoke(ctx, refreshToken, rp.RefreshTokenHint)`
+asks the provider's `revocation_endpoint` (RFC 7009) to revoke the refresh token,
+so that a copy of a logged-out session's token is worth nothing; a provider with
+no such endpoint gives `rp.ErrNoRevocation`.
 
 ## Scoped names, and whose scope it is {#scoped-names}
 
