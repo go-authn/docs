@@ -9,7 +9,7 @@ Diese Seiten sind die Dokumentationsversion **0.8** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
-| authnd | **v0.16.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.16.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap ist bei **v0.12.0**, mit DIT-Content-Rules, Name Forms und DIT-Structure-Ru
 gelesen, durchgesetzt und veröffentlicht werden, einem typisierten `BuildError` für ein Schema, das sich nicht aufbauen lässt,
 Schemas in HCL2 und dem Konverter `ldapschema`,
 und directory bei **v0.18.0**, mit deklarierten Objektklassen. authnd
-v0.16.0 bettet ldap v0.12.0 und directory v0.18.0 ein.
+v0.16.2 bettet ldap v0.12.0 und directory v0.18.0 ein.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
 sodass die Seiten, die jemand unter `/docs/0.8/` findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`,
@@ -107,6 +107,8 @@ Abhängigkeiten aktualisiert haben, sind weggelassen, außer denen, die diese Do
 | v0.15.0 | Verfügbarkeit und Sicherheit, mit go-authn/ldap v0.12.0 und go-authn/directory v0.17.0. ⛔ **Zwei Standardwerte ändern sich**: `max_connections` ist `4096` (war unbegrenzt) und `operation_timeout` ist `30s` (war keiner). Neu, optional: `max_connections_per_ip` und `startup_timeout` (`60s`); [`check` gibt die Grenzen aus]({{< relref "/authnd/operations.md#limits" >}}). Eine Verbindung über der Grenze erhält `busy` und wird geschlossen; eine Operation über der Frist wird mit `timeLimitExceeded` beantwortet, auch wenn ihr Handler blockiert ist. Ein vorgelagerter Ausfall während eines Binds (einfacher Bind, Passwortänderung, Passwortfaktor von `mfa`) ergibt `unavailable` (52), nie `invalidCredentials` (49); ein falsches Passwort ergibt weiterhin 49. Ein Start gegen eine langsame Quelle scheitert nach `startup_timeout` und nennt Phase und Quelle. [Das TLS-Zertifikat wird erneut gelesen]({{< relref "/authnd/tls.md#renewal" >}}), wenn sich `cert_file` oder `key_file` ändern (erster Handshake nach 5 s und bei `SIGHUP`); ein Paar, das sich nicht laden lässt, behält das ausgelieferte Zertifikat und wird einmal protokolliert. Allokationszahlen stehen bei den Bibliotheken unten; Wanduhrzeit nicht gemessen (Last 21 zu Beginn) |
 | v0.15.1 | Kerberos, mit go-authn/kdc v0.5.0: eine Byte für Byte identische Wiederholung bekommt ihre frühere Antwort (der Lookaside von MIT), und ein Ausfall des Verzeichnisses ergibt `KDC_ERR_SVC_UNAVAILABLE`, nie `KDC_ERR_PREAUTH_FAILED`, auch bei richtigem Passwort, zählt also nie für eine Sperre. golang.org/x/net v0.62.0. Keine Konfigurationsänderung |
 | v0.16.0 | ⛔ Sicherheit, mit go-authn/oidc v0.6.1 und go-authn/directory v0.18.0. **Inkompatibel für ein Deployment mit `oidc`-Block**: [`domains` ist Pflicht]({{< relref "/authnd/tokens.md#scoped-name" >}}), und der Server startet ohne nicht. Der Name des Tokens muss genau ein `local@scope` einer erlaubten Domain sein (ein Name ohne Bereich, der einer anderen Einrichtung oder einer mit zwei `@` wird abgelehnt); das optionale `local_domain`, eines der `domains`, bildet die Personen dieses Bereichs auf bloße Verzeichnisnamen ab, andere Bereiche werden als ganzes `local@scope` nachgeschlagen. Hinter einem Föderationsproxy wurde die alice jeder Einrichtung als die lokale alice gebunden. Zwei Einträge einer Quelle mit derselben uid sind ein Fehler beim Start und beim Refresh, keine stille Auswahl. [Umstiegshinweis]({{< relref "/authnd/_index.md" >}}) |
+| v0.16.1 | `kerberos { listen = "host:0" }` bekommt einen Port für UDP und TCP (es bekam zwei, und eine `krb5.conf` nennt einen); die Startzeile nennt diesen Port. Die Tests wählen keinen Port mehr, geben ihn frei und nennen ihn dann, was auf einem Runner mit `address already in use` scheiterte |
+| v0.16.2 | ⛔ Sicherheit. [Der Realm liest den Schnappschuss]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}}), nie die Quellen: Jede AS-REQ und TGS-REQ, auch eine nicht authentifizierte über UDP, führte die vollständige Personenabfrage jeder SQL-Quelle und eine Teilbaumsuche jedes `ldap`-Upstreams aus. `max_age` gilt jetzt auch für Kerberos (`KDC_ERR_SVC_UNAVAILABLE` danach). Eine aus einer Datenbank entfernte Person bekommt innerhalb einer `refresh`-Periode keine Tickets mehr, wie bei LDAP-Binds. Mit go-authn/kdc v0.6.0 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -193,6 +195,7 @@ jeder Bibliothek sagt, was frühere geändert haben.
 | kdc v0.4.3 | nur Abhängigkeiten: go-authn/directory v0.12.0 als Mindestversion |
 | kdc v0.4.5 | ein Sicherheitsaudit-, Fuzzing- und Chaos-Durchgang ([was es ablehnt]({{< relref "/libraries/kdc.md" >}})): eine Anfrage für einen anderen Realm wird mit `KDC_ERR_WRONG_REALM` beantwortet, ein nicht lesbares Verzeichnis mit `KDC_ERR_SVC_UNAVAILABLE` (es war `KDC_ERR_C_PRINCIPAL_UNKNOWN`), ein TGT, dessen Beginn innerhalb von `MaxSkew` in der Zukunft liegt, wird akzeptiert, und eine Panik des Decoders verwirft eine Anfrage, statt den Prozess abstürzen zu lassen (eine einzige fehlerhafte AS-REQ oder TGS-REQ konnte ihn abstürzen lassen); Principal-Namen werden im Log in Anführungszeichen gesetzt. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | kdc v0.5.0 | [der Lookaside]({{< relref "/libraries/kdc.md" >}}) des MIT-KDC: eine Byte für Byte schon gesehene Anfrage bekommt ihre frühere Antwort, zwei Minuten lang und insgesamt unter 10 MiB; ein `KRB-ERROR` wird nie gespeichert; mit Absicht kein Replay-Cache für Authenticatoren, den MIT am TGS abschaltet. Tests legen ein nicht lesbares Verzeichnis auf `KDC_ERR_SVC_UNAVAILABLE` fest, am AS mit richtigem Passwort und am TGS. Zwei Allokationen mehr pro Anfrage |
+| kdc v0.6.0 | [`Finder`]({{< relref "/libraries/kdc.md#finder" >}}): Eine Quelle mit einem Index nach Namen wird gefragt statt durchlaufen. Bei 10.000 Personen war der Durchlauf die Hälfte der CPU einer AS-REQ; mit einem `Finder` liegt die Suche unter der Schwelle des Profils. Eine Antwort, deren Name vom Principal abweicht, ist ein unbekannter Principal (ein Principal unterscheidet Groß- und Kleinschreibung) |
 | keyfactor v0.4.2 | nur Abhängigkeiten: go-authn/fido v0.6.2 und golang.org/x/crypto v0.58.0 als Mindestversionen |
 | krb5 v0.3.1 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | krb5 v0.3.3 | nur Abhängigkeiten: golang.org/x/net v0.62.0, golang.org/x/crypto v0.58.0 und go-uuid v1.0.4 beseitigen 45 von 46 `govulncheck`-Funden in verlangten, aber nicht aufgerufenen Modulen; GO-2026-5932 (`x/crypto/openpgp`) hat keine Korrektur und wird von keinem go-authn-Modul importiert; keine API-Änderung |

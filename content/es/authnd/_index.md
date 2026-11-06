@@ -11,7 +11,7 @@ directorio. Lo que quiere autenticarlas habla LDAP.** authnd es la fachada:
 hace binds y búsquedas sobre los orígenes de
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}), así que lo que guarda
 una base de datos puede leerlo cualquier cosa que sepa consultar un directorio.
-Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.16.0,
+Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.16.2,
 cuyas entradas siguen los esquemas estándar y superan el esquema que sirve en
 `cn=Subschema`, que un sitio amplía con el suyo
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) y, con

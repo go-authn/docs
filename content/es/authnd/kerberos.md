@@ -206,6 +206,23 @@ $ kinit --password-file=alice.new alice@EXAMPLE.ORG
 $
 ```
 
+## Dónde lee el reino a las personas {#where-the-realm-reads-people}
+
+**Desde la v0.16.2** el reino lee la misma instantánea que los bind LDAP, una
+búsqueda en una tabla por solicitud (el [`Finder`]({{< relref "/libraries/kdc.md#finder" >}})
+de go-authn/kdc), y nunca las fuentes. Antes, cada AS-REQ y TGS-REQ —incluida una
+AS-REQ no autenticada por UDP— ejecutaba la consulta completa de personas de cada
+fuente SQL `users` y una búsqueda de subárbol en cada origen `ldap`: un solo
+datagrama de cualquiera leía entero cada backend.
+
+Lo que se sigue para un despliegue:
+
+- una contraseña cambiada a través de authnd llega al reino de inmediato, como arriba;
+- una persona eliminada de una base de datos deja de obtener tickets en un periodo
+  de `refresh` (60 s por defecto), como en un bind, no en la solicitud siguiente;
+- pasado `max_age`, el reino responde `KDC_ERR_SVC_UNAVAILABLE`, como LDAP responde
+  `unavailable`.
+
 ## No junto a un bloque `mfa` {#not-beside-an-mfa-block}
 
 ```

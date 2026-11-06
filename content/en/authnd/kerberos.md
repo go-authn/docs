@@ -205,6 +205,23 @@ $ kinit --password-file=alice.new alice@EXAMPLE.ORG
 $
 ```
 
+## Where the realm reads people {#where-the-realm-reads-people}
+
+**Since v0.16.2** the realm reads the same snapshot LDAP binds read, one map
+lookup per request (go-authn/kdc's [`Finder`]({{< relref "/libraries/kdc.md#finder" >}})),
+and never the sources. Before, every AS-REQ and TGS-REQ — an unauthenticated
+AS-REQ over UDP included — ran the whole people query of every `users` SQL
+source and a subtree search of every `ldap` upstream: one datagram from anybody
+read every backend in full.
+
+What follows for a deployment:
+
+- a password changed through authnd reaches the realm at once, as above;
+- a person removed from a database stops getting tickets within one `refresh`
+  period (60 s by default), as for a bind — not at the very next request;
+- past `max_age`, the realm answers `KDC_ERR_SVC_UNAVAILABLE`, as LDAP answers
+  `unavailable`.
+
 ## Not beside an `mfa` block
 
 ```

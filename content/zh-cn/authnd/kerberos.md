@@ -203,6 +203,21 @@ $ kinit --password-file=alice.new alice@EXAMPLE.ORG
 $
 ```
 
+## 域从哪里读取人员 {#where-the-realm-reads-people}
+
+**自 v0.16.2 起**，域读取与 LDAP 绑定相同的快照，每个请求只查一次表
+（go-authn/kdc 的 [`Finder`]({{< relref "/libraries/kdc.md#finder" >}})），从不读取来源。
+此前，每个 AS-REQ 和 TGS-REQ（包括 UDP 上未经认证的 AS-REQ）都会执行每个 `users` SQL
+来源的完整人员查询，以及对每个 `ldap` 上游的子树搜索：任何人发来的一个数据报就会把每个
+后端完整读一遍。
+
+对部署而言：
+
+- 通过 authnd 修改的密码会立即到达域，如上文所述；
+- 从数据库删除的人员会在一个 `refresh` 周期（默认 60 秒）内不再获得票据，与绑定相同，
+  而不是在下一个请求时立即生效；
+- 超过 `max_age` 后，域回答 `KDC_ERR_SVC_UNAVAILABLE`，正如 LDAP 回答 `unavailable`。
+
 ## 不能与 `mfa` 块并存 {#not-beside-an-mfa-block}
 
 ```

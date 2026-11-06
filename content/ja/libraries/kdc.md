@@ -12,12 +12,12 @@ tags: [ライブラリ, kerberos, ディレクトリ]
 [authnd]({{< relref "/authnd/_index.md" >}}) の下で動作します。
 
 ```sh
-go get github.com/go-authn/kdc@v0.5.0
+go get github.com/go-authn/kdc@v0.6.0
 ```
 
-v0.5.0 では、その `go.mod` が少なくとも `go-authn/directory` v0.16.1 と gokrb5 v8.4.4 を要求します。
-これは最小バージョンなので、directory v0.16.1 を要求する
-プログラムは、authnd v0.15.1 と同様に v0.17.0 でビルドされます。受け入れ側の半分は
+v0.6.0 では、その `go.mod` が少なくとも `go-authn/directory` v0.17.0 と gokrb5 v8.4.4 を要求します。
+これは最小バージョンなので、directory v0.17.0 を要求する
+プログラムは、authnd v0.16.2 と同様に v0.18.0 でビルドされます。受け入れ側の半分は
 [krb5]({{< relref "/libraries/krb5.md" >}}) で、チケットを検証するだけのサービスは、このモジュールを
 まったく必要としません。
 
@@ -31,6 +31,25 @@ KDC は、クライアントの事前認証を、その人の長期鍵で**復�
 どれだけうまく答えても、役に立ちません。ソースにパスワードがない人には、間違ったパスワードが得る
 コードではなく `KDC_ERR_NULL_KEY` (*null key*) が返るので、入力し直すべきパスワードではなく、直す
 べき設定として読めます。
+
+## 索引を渡す: `Finder` {#finder}
+
+AS-REQ と TGS-REQ はどれも一人を検索します。通常の `directory.Source` では、それは
+`Identities()` と走査です。10,000 人では走査が AS-REQ の CPU の半分を占め、
+`Identities()` でデータベースや LDAP サーバーを読むソースは、認証なしのものを含む
+すべてのリクエストで丸ごと読まれます。**v0.6.0 から**、索引を持つソースは
+
+```go
+Find(name string) (*directory.Identity, bool, error)
+```
+
+を実装でき、レルムは走査の代わりにそれに問い合わせます。アイデンティティの名前は
+プリンシパルと**完全に**一致しなければなりません (プリンシパルは大文字と小文字を区別するので、
+名前が異なる応答は未知のプリンシパルです)。エラーは `KDC_ERR_SVC_UNAVAILABLE` になります。
+`Finder` があれば検索は CPU プロファイルのしきい値を下回り、リクエストに残るのは主に
+gokrb5 の ASN.1 エンコードです。
+[authnd]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}}) は
+この方法でレルムにリフレッシュされたスナップショットを渡します。
 
 ## 例 {#example}
 
@@ -232,4 +251,4 @@ AS と TGS で `KDC_ERR_SVC_UNAVAILABLE` になり、`KDC_ERR_PREAUTH_FAILED` �
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)

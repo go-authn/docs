@@ -13,12 +13,12 @@ keytab 所持有的服务。它运行在
 [authnd]({{< relref "/authnd/_index.md" >}})之下。
 
 ```sh
-go get github.com/go-authn/kdc@v0.5.0
+go get github.com/go-authn/kdc@v0.6.0
 ```
 
-在 v0.5.0，其 `go.mod` 至少要求 `go-authn/directory` v0.16.1 和
-gokrb5 v8.4.4：这只是最低版本，因此要求 directory v0.16.1
-的程序会用 v0.17.0 构建，authnd v0.15.1 就是如此。
+在 v0.6.0，其 `go.mod` 至少要求 `go-authn/directory` v0.17.0 和
+gokrb5 v8.4.4：这只是最低版本，因此要求 directory v0.17.0
+的程序会用 v0.18.0 构建，authnd v0.16.2 就是如此。
 接受的一半是 [krb5]({{< relref "/libraries/krb5.md" >}})，只
 验证票据的服务完全不需要本模块。
 
@@ -34,6 +34,23 @@ KDC 必须用该人员的长期密钥**解密**客户端的预认证，
 正确的密码*。来源中没有密码的人员会得到
 `KDC_ERR_NULL_KEY`（*null key*）的答复，而不是密码错误时得到的代码，因此
 这读起来是需要修正的配置，而不是需要重新键入的密码。
+
+## 给它一个索引：`Finder` {#finder}
+
+每个 AS-REQ 和 TGS-REQ 都要查找一个人。使用普通的 `directory.Source` 时，这就是
+`Identities()` 加一次遍历：10,000 人时，遍历占 AS-REQ CPU 的一半；而在
+`Identities()` 中读取数据库或 LDAP 服务器的来源，会被每个请求（包括未经认证的请求）
+完整读取一遍。**自 v0.6.0 起**，持有索引的来源可以实现
+
+```go
+Find(name string) (*directory.Identity, bool, error)
+```
+
+域会询问它而不是遍历。身份的名称必须与主体**完全**相同——主体区分大小写，因此名称不同的
+应答视为未知主体——错误则回答 `KDC_ERR_SVC_UNAVAILABLE`。有 `Finder` 时，查找低于
+CPU 性能剖析的阈值；请求剩下的主要是 gokrb5 的 ASN.1 编码。
+[authnd]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}}) 正是这样把
+刷新后的快照交给域的。
 
 ## 示例 {#example}
 
@@ -239,4 +256,4 @@ AS-REQ 请求的服务、TGS 处伪造的服务票据，以及由验证器支撑
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)

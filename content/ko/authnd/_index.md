@@ -11,7 +11,7 @@ tags: [authnd, ldap]
 [go-authn/directory]({{< relref "/libraries/_index.md" >}})의 소스 위에서 바인드와
 검색을 처리하므로, 데이터베이스에 있는 내용을 디렉터리에 질의할 줄 아는 어떤
 것이든 읽을 수 있습니다. 순수 Go, `CGO_ENABLED=0`, 바이너리 하나입니다. 이 문서는
-v0.16.0을 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
+v0.16.2를 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
 제공하는 스키마를 통과합니다. 사이트는 이 스키마를 자신의 스키마로
 확장할 수 있고([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})),
 [DIT 콘텐츠 규칙, 이름 형식, 구조 규칙]({{< relref "/authnd/schemas.md#rules" >}})으로

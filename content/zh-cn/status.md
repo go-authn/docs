@@ -9,7 +9,7 @@ tags: [状态, 发布版本]
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.16.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.16.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -17,7 +17,7 @@ tags: [状态, 发布版本]
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
 ldap 为 **v0.12.0**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
 directory 为 **v0.18.0**，带有已声明的对象类。authnd
-v0.16.0 内嵌 ldap v0.12.0 和 directory v0.18.0。
+v0.16.2 内嵌 ldap v0.12.0 和 directory v0.18.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
 因此读者在 `/docs/0.8/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
@@ -101,6 +101,8 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.15.0 | 可用性与安全，使用 go-authn/ldap v0.12.0 和 go-authn/directory v0.17.0。⛔ **两个默认值发生变化**：`max_connections` 为 `4096`（以前不限），`operation_timeout` 为 `30s`（以前无）。新增，可选：`max_connections_per_ip` 和 `startup_timeout`（`60s`）；[`check` 会打印限制]({{< relref "/authnd/operations.md#limits" >}})。超出上限的连接会收到 `busy` 并被关闭；超过期限的操作会收到 `timeLimitExceeded`，即使其处理程序被阻塞。绑定期间的上游故障（简单绑定、密码更改、`mfa` 的密码因素）回答 `unavailable`（52），绝不回答 `invalidCredentials`（49）；密码错误仍是 49。针对缓慢来源的启动会在 `startup_timeout` 之后失败，并指出阶段和来源。[TLS 证书会被重新读取]({{< relref "/authnd/tls.md#renewal" >}})，当 `cert_file` 或 `key_file` 变化时（5 秒后的第一次握手，以及 `SIGHUP`）；无法加载的证书对保持正在提供的证书，并只记录一次。分配次数见下面的库；挂钟时间未测量（开始时负载为 21） |
 | v0.15.1 | Kerberos，使用 go-authn/kdc v0.5.0：逐字节相同的重传会得到之前的应答（MIT 的 lookaside），目录故障即使密码正确也回答 `KDC_ERR_SVC_UNAVAILABLE`，绝不回答 `KDC_ERR_PREAUTH_FAILED`，因此不会计入锁定。golang.org/x/net v0.62.0。配置无变化 |
 | v0.16.0 | ⛔ 安全，使用 go-authn/oidc v0.6.1 和 go-authn/directory v0.18.0。**对带 `oidc` 块的部署是不兼容变更**：[`domains` 是必需的]({{< relref "/authnd/tokens.md#scoped-name" >}})，没有它服务器不会启动。令牌中的名称必须恰好是允许域的一个 `local@scope`（没有作用域的名称、其他机构的名称、含两个 `@` 的名称都会被拒绝）；可选的 `local_domain`（`domains` 之一）把该作用域的人映射到仅含本地部分的目录名称，其他作用域按完整的 `local@scope` 查找。在联盟代理之后，任何机构的 alice 过去都会绑定为本地的 alice。同一个来源中共用一个 uid 的两个条目，现在会在启动和刷新时报错，而不是悄悄选一个。[升级说明]({{< relref "/authnd/_index.md" >}}) |
+| v0.16.1 | `kerberos { listen = "host:0" }` 为 UDP 和 TCP 获得同一个端口（以前得到两个，而 `krb5.conf` 只能写一个）；启动行显示该端口。测试不再先选一个端口、释放后再写入配置，这种做法曾在运行器上以 `address already in use` 失败 |
+| v0.16.2 | ⛔ 安全。[域读取快照]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}})，从不读取来源：每个 AS-REQ 和 TGS-REQ（包括 UDP 上未经认证的 AS-REQ）都会执行每个 SQL 来源的完整人员查询，以及对每个 `ldap` 上游的子树搜索。`max_age` 现在也适用于 Kerberos（超过后回答 `KDC_ERR_SVC_UNAVAILABLE`）。从数据库删除的人员会在一个 `refresh` 周期内不再获得票据，与 LDAP 绑定相同。使用 go-authn/kdc v0.6.0 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -187,6 +189,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | kdc v0.4.3 | 仅依赖项：以 go-authn/directory v0.12.0 为最低版本 |
 | kdc v0.4.5 | 安全审计、模糊测试和混沌测试（[它拒绝什么]({{< relref "/libraries/kdc.md" >}})）：针对另一个域的请求回答 `KDC_ERR_WRONG_REALM`，无法读取的目录回答 `KDC_ERR_SVC_UNAVAILABLE`（以前是 `KDC_ERR_C_PRINCIPAL_UNKNOWN`），开始时间在 `MaxSkew` 之内的未来的 TGT 会被接受，解码器 panic 只丢弃一个请求，而不是使进程崩溃（一个格式错误的 AS-REQ 或 TGS-REQ 就能使其崩溃）；主体名称在日志中加引号。golang.org/x/net v0.62.0，go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT KDC 的 [lookaside]({{< relref "/libraries/kdc.md" >}})：逐字节已见过的请求会得到之前的应答（两分钟内，总计 10 MiB 以下）；`KRB-ERROR` 从不保存；有意不设 MIT 在 TGS 上关闭的认证符重放缓存。测试固定了无法读取的目录在 AS（密码正确）和 TGS 上都回答 `KDC_ERR_SVC_UNAVAILABLE`。每个请求多两次分配 |
+| kdc v0.6.0 | [`Finder`]({{< relref "/libraries/kdc.md#finder" >}})：按名称保有索引的来源会被直接询问，而不是被遍历。10,000 人时，遍历占 AS-REQ CPU 的一半；有 `Finder` 时查找低于性能剖析的阈值。名称与主体不同的应答视为未知主体（主体区分大小写） |
 | keyfactor v0.4.2 | 仅依赖项：以 go-authn/fido v0.6.2 和 golang.org/x/crypto v0.58.0 为最低版本 |
 | krb5 v0.3.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | krb5 v0.3.3 | 仅依赖项：golang.org/x/net v0.62.0、golang.org/x/crypto v0.58.0 和 go-uuid v1.0.4 清除了 `govulncheck` 在所需但不调用的模块中的 46 项发现中的 45 项；GO-2026-5932（`x/crypto/openpgp`）没有修复，且没有任何 go-authn 模块导入它；API 无变化 |

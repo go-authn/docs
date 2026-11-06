@@ -9,7 +9,7 @@ tags: [상태, 릴리스]
 
 | 프로그램 | 릴리스 | 모듈 |
 |---|---|---|
-| authnd | **v0.16.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.16.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ tags: [상태, 릴리스]
 빌드되지 않는 스키마를 위한 타입이 있는 `BuildError`, HCL2
 스키마, `ldapschema` 변환기를 갖춘 **v0.12.0**이고,
 directory는 선언된 오브젝트 클래스를 갖춘 **v0.18.0**입니다. authnd
-v0.16.0은 ldap v0.12.0과 directory v0.18.0을 내장합니다.
+v0.16.2는 ldap v0.12.0과 directory v0.18.0을 내장합니다.
 위 프로그램 중 어느 것이든 새 마이너 버전이 나오면 새 문서 버전이 됩니다. 따라서
 독자가 `/docs/0.8/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
 페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/`에 남아 있습니다.
@@ -103,6 +103,8 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.15.0 | 가용성과 보안. go-authn/ldap v0.12.0과 go-authn/directory v0.17.0 사용. ⛔ **기본값 두 개가 바뀝니다**: `max_connections`는 `4096`(이전에는 무제한), `operation_timeout`은 `30s`(이전에는 없음). 새 선택 항목: `max_connections_per_ip`와 `startup_timeout`(`60s`). [`check`는 제한을 출력합니다]({{< relref "/authnd/operations.md#limits" >}}). 상한을 넘은 연결은 `busy`를 받고 닫히며, 기한을 넘긴 작업은 핸들러가 막혀 있어도 `timeLimitExceeded`로 응답받습니다. 바인드 중 업스트림 장애(단순 바인드, 비밀번호 변경, `mfa`의 비밀번호 요소)는 `unavailable`(52)이며 `invalidCredentials`(49)가 아닙니다. 틀린 비밀번호는 여전히 49입니다. 느린 소스에 대한 시작은 `startup_timeout` 뒤에 실패하고 단계와 소스를 밝힙니다. [TLS 인증서를 다시 읽습니다]({{< relref "/authnd/tls.md#renewal" >}})(`cert_file`이나 `key_file`이 바뀔 때. 5초 뒤 첫 핸드셰이크와 `SIGHUP`). 로드되지 않는 쌍은 제공 중인 인증서를 유지하고 한 번만 기록됩니다. 할당 횟수는 아래 라이브러리에 있습니다. 실제 시간은 측정하지 않음(시작 시 부하 21) |
 | v0.15.1 | Kerberos. go-authn/kdc v0.5.0 사용: 바이트 단위로 같은 재전송은 이전 응답을 받고(MIT의 lookaside), 디렉터리 장애는 올바른 비밀번호여도 `KDC_ERR_SVC_UNAVAILABLE`이며 `KDC_ERR_PREAUTH_FAILED`가 아니므로 잠금에 계산되지 않습니다. golang.org/x/net v0.62.0. 설정 변경 없음 |
 | v0.16.0 | ⛔ 보안. go-authn/oidc v0.6.1과 go-authn/directory v0.18.0 사용. **`oidc` 블록이 있는 배포에는 호환되지 않는 변경**: [`domains`가 필수]({{< relref "/authnd/tokens.md#scoped-name" >}})이며 없으면 서버가 시작되지 않습니다. 토큰의 이름은 허용된 도메인의 정확히 하나의 `local@scope`여야 하며(범위 없는 이름, 다른 기관의 이름, `@`가 둘인 이름은 거부), 선택 사항인 `local_domain`(`domains` 중 하나)은 그 범위의 사람을 로컬 부분만의 디렉터리 이름에 대응시키고 다른 범위는 `local@scope` 전체로 조회됩니다. 연합 프록시 뒤에서는 어느 기관의 alice든 로컬 alice로 바인드되었습니다. 한 소스의 두 엔트리가 같은 uid를 가지면 조용히 하나를 고르는 대신 시작할 때와 새로 고칠 때 오류가 됩니다. [업그레이드 노트]({{< relref "/authnd/_index.md" >}}) |
+| v0.16.1 | `kerberos { listen = "host:0" }`는 UDP와 TCP에 하나의 포트를 받습니다(이전에는 두 개였고, `krb5.conf`는 하나만 지정할 수 있습니다). 시작 줄은 그 포트를 표시합니다. 테스트는 포트를 골라 해제한 뒤 지정하는 방식을 그만두었습니다. 이 방식은 러너에서 `address already in use`로 실패했습니다 |
+| v0.16.2 | ⛔ 보안. [렐름은 스냅숏을 읽습니다]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}}). 소스는 읽지 않습니다: 모든 AS-REQ와 TGS-REQ(UDP의 인증되지 않은 AS-REQ 포함)가 각 SQL 소스의 전체 사용자 쿼리와 각 `ldap` 업스트림의 하위 트리 검색을 실행했습니다. `max_age`는 이제 Kerberos에도 적용됩니다(넘으면 `KDC_ERR_SVC_UNAVAILABLE`). 데이터베이스에서 삭제된 사람은 LDAP 바인드처럼 `refresh` 한 주기 안에 티켓을 받지 못합니다. go-authn/kdc v0.6.0 사용 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -189,6 +191,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | kdc v0.4.3 | 의존성만: 최소 요구 버전으로 go-authn/directory v0.12.0 |
 | kdc v0.4.5 | 보안 감사, 퍼징, 카오스 실행([거부하는 것]({{< relref "/libraries/kdc.md" >}})): 다른 렐름에 대한 요청은 `KDC_ERR_WRONG_REALM`, 읽을 수 없는 디렉터리는 `KDC_ERR_SVC_UNAVAILABLE`로 응답하며(이전에는 `KDC_ERR_C_PRINCIPAL_UNKNOWN`), 시작이 `MaxSkew` 안의 미래인 TGT는 받아들이고, 디코더 패닉은 프로세스를 크래시시키는 대신 요청 하나를 버립니다(잘못된 AS-REQ나 TGS-REQ 하나로 크래시할 수 있었습니다). 프린시펄 이름은 로그에서 따옴표로 묶입니다. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT KDC의 [lookaside]({{< relref "/libraries/kdc.md" >}}): 바이트 단위로 이미 본 요청은 이전 응답을 받음(2분 동안, 합계 10 MiB 미만). `KRB-ERROR`는 저장하지 않음. MIT가 TGS에서 끄는 인증자 재전송 캐시는 일부러 두지 않음. 테스트는 읽을 수 없는 디렉터리가 AS(올바른 비밀번호로)와 TGS에서 `KDC_ERR_SVC_UNAVAILABLE`이 됨을 고정함. 요청당 할당 2회 증가 |
+| kdc v0.6.0 | [`Finder`]({{< relref "/libraries/kdc.md#finder" >}}): 이름 색인을 가진 소스는 순회하지 않고 질의함. 10,000명일 때 순회가 AS-REQ CPU의 절반이었고, `Finder`가 있으면 조회는 프로파일 임계값 아래로 내려감. 이름이 프린시펄과 다른 응답은 알 수 없는 프린시펄로 처리함(프린시펄은 대소문자를 구분함) |
 | keyfactor v0.4.2 | 의존성만: 최소 요구 버전으로 go-authn/fido v0.6.2와 golang.org/x/crypto v0.58.0 |
 | krb5 v0.3.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | krb5 v0.3.3 | 의존성만: golang.org/x/net v0.62.0, golang.org/x/crypto v0.58.0, go-uuid v1.0.4로 요구하지만 호출되지 않는 모듈에서 `govulncheck` 결과 46건 중 45건이 해소됩니다. GO-2026-5932(`x/crypto/openpgp`)는 수정이 없고 어떤 go-authn 모듈도 가져오지 않습니다. API 변경 없음 |

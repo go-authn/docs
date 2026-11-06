@@ -10,7 +10,7 @@ tags: [authnd, ldap]
 认证的系统使用的是 LDAP。** authnd 就是前端：它基于 [go-authn/directory]({{< relref "/libraries/_index.md" >}})
 的各个来源进行绑定和搜索，因此数据库中保存的内容可以被任何懂得
 如何查询目录的程序读取。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述
-v0.16.0，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
+v0.16.2，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
 提供的模式，站点可以用自己的模式对其扩展
 （[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），并可通过
 [DIT 内容规则、名称形式和结构规则]({{< relref "/authnd/schemas.md#rules" >}})

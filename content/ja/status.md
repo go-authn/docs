@@ -9,7 +9,7 @@ tags: [ステータス, リリース]
 
 | プログラム | リリース | モジュール |
 |---|---|---|
-| authnd | **v0.16.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.16.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap は **v0.12.0** で、DIT コンテンツルール、ネームフォーム�
 ビルドできないスキーマのための型付きの `BuildError`、
 HCL2 のスキーマと `ldapschema` コンバーターを備えています。
 directory は **v0.18.0** で、宣言されたオブジェクトクラスを備えています。
-authnd v0.16.0 は ldap v0.12.0 と directory v0.18.0 を組み込んでいます。
+authnd v0.16.2 は ldap v0.12.0 と directory v0.18.0 を組み込んでいます。
 上記のいずれかのプログラムのマイナーバージョンが新しくなると、新しいドキュメントバージョンになります。
 そのため、`/docs/0.8/` 以下のページは、読者がインストールしたものを説明し続け、
 以前のリリースのページは `/docs/0.1/`、`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/`、`/docs/0.6/`、`/docs/0.7/` 以下に残ります。
@@ -102,6 +102,8 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | v0.15.0 | 可用性とセキュリティ。go-authn/ldap v0.12.0 と go-authn/directory v0.17.0 を使用。⛔ **既定値が二つ変わります**: `max_connections` は `4096` (以前は無制限)、`operation_timeout` は `30s` (以前はなし)。新規で省略可能: `max_connections_per_ip` と `startup_timeout` (`60s`)。[`check` は制限を表示します]({{< relref "/authnd/operations.md#limits" >}})。上限を超えた接続には `busy` が送られて閉じられ、期限を過ぎた操作は、ハンドラーがブロックしていても `timeLimitExceeded` で答えられます。バインド中の上流の障害 (単純バインド、パスワード変更、`mfa` のパスワード要素) は `unavailable` (52) で、`invalidCredentials` (49) にはなりません。間違ったパスワードは今も 49 です。遅いソースに対する起動は `startup_timeout` の後に失敗し、段階とソースを名指しします。[TLS 証明書は読み直されます]({{< relref "/authnd/tls.md#renewal" >}}) (`cert_file` や `key_file` が変わったとき。5 秒後の最初のハンドシェイクと `SIGHUP`)。読み込めない組は提供中の証明書を保ち、一度だけログに記録されます。アロケーション数は下のライブラリにあります。実時間は未測定 (開始時の負荷は 21) |
 | v0.15.1 | Kerberos。go-authn/kdc v0.5.0 を使用: バイト単位で同一の再送には以前の応答を返し (MIT の lookaside)、ディレクトリの障害は正しいパスワードでも `KDC_ERR_SVC_UNAVAILABLE` で、`KDC_ERR_PREAUTH_FAILED` にはならないため、ロックアウトに数えられません。golang.org/x/net v0.62.0。設定の変更なし |
 | v0.16.0 | ⛔ セキュリティ。go-authn/oidc v0.6.1 と go-authn/directory v0.18.0 を使用。**`oidc` ブロックのあるデプロイには互換性のない変更**: [`domains` が必須]({{< relref "/authnd/tokens.md#scoped-name" >}})で、これがないとサーバーは起動しません。トークンの名前は許可されたドメインのちょうど 1 つの `local@scope` でなければならず（スコープのない名前、別の機関の名前、`@` が 2 つある名前は拒否）、任意の `local_domain`（`domains` のいずれか）はそのスコープの人をローカル部分だけのディレクトリ名に対応付け、他のスコープは `local@scope` の全体で検索されます。連合プロキシの背後では、どの機関の alice もローカルの alice としてバインドできました。1 つのソースの 2 つのエントリが同じ uid を持つ場合は、黙って 1 つを選ぶのではなく、起動時とリフレッシュ時のエラーになります。[アップグレードの注記]({{< relref "/authnd/_index.md" >}}) |
+| v0.16.1 | `kerberos { listen = "host:0" }` は UDP と TCP に一つのポートを得ます (以前は二つで、`krb5.conf` は一つしか名指せません)。起動時の行はそのポートを示します。テストはポートを選んで解放してから名指すことをやめました。これはランナー上で `address already in use` で失敗していました |
+| v0.16.2 | ⛔ セキュリティ。[レルムはスナップショットを読みます]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}})。ソースは読みません: すべての AS-REQ と TGS-REQ (UDP 上の認証なしの AS-REQ を含む) が、各 SQL ソースの人々のクエリ全体と各 `ldap` 上流のサブツリー検索を実行していました。`max_age` は Kerberos にも適用されます (超えると `KDC_ERR_SVC_UNAVAILABLE`)。データベースから削除された人は、LDAP バインドと同様に `refresh` の一周期以内にチケットを得られなくなります。go-authn/kdc v0.6.0 を使用 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -188,6 +190,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | kdc v0.4.3 | 依存関係のみ: 最小バージョンとして go-authn/directory v0.12.0 |
 | kdc v0.4.5 | セキュリティ監査、ファジング、カオスの実施 ([拒否するもの]({{< relref "/libraries/kdc.md" >}})): 別のレルム向けのリクエストは `KDC_ERR_WRONG_REALM`、読み取れないディレクトリは `KDC_ERR_SVC_UNAVAILABLE` で答えられ (以前は `KDC_ERR_C_PRINCIPAL_UNKNOWN`)、開始が `MaxSkew` 以内の未来にある TGT は受け入れられ、デコーダーのパニックはプロセスをクラッシュさせずリクエスト一つを破棄します (不正な AS-REQ または TGS-REQ 一つでクラッシュし得ました)。プリンシパル名はログで引用符で囲まれます。golang.org/x/net v0.62.0、go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT の KDC の [lookaside]({{< relref "/libraries/kdc.md" >}}): バイト単位で既に見たリクエストには以前の応答を返す (2 分間、合計 10 MiB 未満)。`KRB-ERROR` は保存しない。MIT が TGS で無効にしているオーセンティケータのリプレイキャッシュは意図的に持たない。テストは、読めないディレクトリが AS (正しいパスワードで) と TGS で `KDC_ERR_SVC_UNAVAILABLE` になることを固定する。リクエストあたりアロケーション 2 回増 |
+| kdc v0.6.0 | [`Finder`]({{< relref "/libraries/kdc.md#finder" >}}): 名前による索引を持つソースには、走査せずに問い合わせる。10,000 人では走査が AS-REQ の CPU の半分だった。`Finder` があれば検索はプロファイルのしきい値を下回る。プリンシパルと名前が異なる応答は未知のプリンシパルとする (プリンシパルは大文字と小文字を区別する) |
 | keyfactor v0.4.2 | 依存関係のみ: 最小バージョンとして go-authn/fido v0.6.2 と golang.org/x/crypto v0.58.0 |
 | krb5 v0.3.1 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | krb5 v0.3.3 | 依存関係のみ: golang.org/x/net v0.62.0、golang.org/x/crypto v0.58.0、go-uuid v1.0.4 により、必要としていても呼び出していないモジュールでの `govulncheck` の 46 件中 45 件が解消されます。GO-2026-5932 (`x/crypto/openpgp`) には修正がなく、どの go-authn モジュールもインポートしていません。API の変更はありません |
