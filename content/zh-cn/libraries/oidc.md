@@ -154,6 +154,8 @@ ECDSA 的 `s` 和 `n − s` 都能通过验证，算法允许这样。因此
 
 账户是相对于机构的：在联盟代理之后，一个签发者为许多机构的人担保。`oidc.ScopedName(name, allowed, defaultScope)` 在**检查作用域**之后（该签发者是否可以断言它，如同 Shibboleth 检查 scope），以 ASCII 小写的 `local@scope` 形式返回名称（eduPersonPrincipalName 在 eduPerson 模式中是 `caseIgnoreMatch` 且为单值）。其他作用域为 `ErrScopeNotAllowed`，没有作用域且没有默认值的名称为 `ErrNoScope`。不含 `@` 的名称采用 `defaultScope`（账户早于带作用域名称的机构），它也必须被允许。`Token.ScopedUsername` 对令牌的用户名执行同样操作：把 `UsernameClaim` 设为 `eduperson_principal_name` 或 `voperson_id`。名称必须恰好含有一个 `@`：含多于一个的名称是 `ErrBadName`（自 v0.6.1 起），因此不能通过在本地部分放入 `@` 来选择作用域。作用域是它之后的部分。
 
+**名称只有一种折叠**（自 v0.7.0 起）。只折叠 ASCII 字母，比较或存储这些名称的服务必须以同样方式折叠：`oidc.ASCIILower(name)` 和 `oidc.EqualASCIIFold(a, b)` 就是这唯一的折叠。`strings.ToLower` 和 `strings.EqualFold` 折叠 Unicode，会把开尔文符号 U+212A 与 "k" 视为相同：`Kate`（开尔文符号）和 `kate` 对签发者是两个账户，对折叠 Unicode 的使用方却是一个。
+
 ## 它对照什么检查 {#what-it-is-checked-against}
 
 **pyjwt** 为测试套件中的每个令牌签名，因此验证器从不由

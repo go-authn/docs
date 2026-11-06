@@ -181,6 +181,8 @@ no such endpoint gives `rp.ErrNoRevocation`.
 
 An account is relative to an institution: behind a federation proxy one issuer vouches for people of many. `oidc.ScopedName(name, allowed, defaultScope)` returns the name as `local@scope`, ASCII-lower-cased (eduPersonPrincipalName is `caseIgnoreMatch` in the eduPerson schema, and single-valued), after **checking the scope** against what this issuer may assert, as Shibboleth checks a scope: another scope is `ErrScopeNotAllowed`, a name with no scope and no default is `ErrNoScope`. A name without `@` takes `defaultScope` (an institution whose accounts predate scoped names), which must be allowed too. `Token.ScopedUsername` does it on the token's username: set `UsernameClaim` to `eduperson_principal_name` or `voperson_id`. The name must hold exactly one `@`: a name with more than one is `ErrBadName` (from v0.6.1), so a scope cannot be chosen by putting an `@` in the local part. The scope is what follows it.
 
+**One fold for names** (since v0.7.0). Only ASCII letters are folded, and a service that compares or stores these names must fold the same way: `oidc.ASCIILower(name)` and `oidc.EqualASCIIFold(a, b)` are that one fold. `strings.ToLower` and `strings.EqualFold` fold Unicode, which equates the Kelvin sign U+212A with "k": `Kate` (Kelvin) and `kate` are two accounts at an issuer and one to a consumer that folds Unicode.
+
 ## What it is checked against
 
 **pyjwt** signs every token in the test suite, so the verifier is never judged

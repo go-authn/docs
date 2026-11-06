@@ -11,7 +11,7 @@ Speicher, einer SQL-Datenbank, einem LDAP-Server oder `user`- und `group`-Blöck
 Konfigurationsdatei – und worauf es ankommt, ist die zweite Hälfte der Frage.
 
 ```sh
-go get github.com/go-authn/directory@v0.17.0
+go get github.com/go-authn/directory@v0.19.0
 ```
 
 Neu in v0.17.0: [`ErrUnavailable`](#unavailable), ein Ausfall, der von einem falschen
@@ -408,6 +408,8 @@ default:
 So beantwortet authnd v0.15.0 einen Bind, wie
 [die Betriebsseite]({{< relref "/authnd/operations.md#limits" >}}) sagt.
 
+**Eine Prüfung lässt sich abbrechen.** `Identity.VerifyContext(ctx, password)` (ab v0.19.0) gibt auf, wenn `ctx` endet: Bei einer `ldapdir`-Identität wird die Upstream-Verbindung geschlossen (so bricht man in go-ldap eine Anfrage ab, das weder Kontext noch Standard-Timeout kennt: Ein Bind gegen einen Server, der annimmt und nie antwortet, wartete ewig), und die Antwort ist `ErrUnavailable`; auch der Verbindungsaufbau endet an der Frist des Kontexts. Eine Quelle liefert eine solche Prüfung mit `directory.WithContextVerifier`; `Verify` funktioniert weiterhin, mit einem Hintergrundkontext, und eine Identität mit nur einem `WithVerifier` ist `Verify` (nicht unterbrechbar). Ein Server, der einen Bind begrenzt (`operation_timeout` von authnd), sollte `VerifyContext` aufrufen, damit ein hängender Upstream nach der Antwort keine Goroutine und keine Verbindung behält.
+
 ## Was es ablehnt und warum {#what-it-refuses-and-why}
 
 - **Eine Gruppe, in der niemand ist**, und **eine Gruppe, die keine Quelle
@@ -492,4 +494,4 @@ Builds mit `nosql` und `noldap` werden in der CI geprüft.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.19.0](https://pkg.go.dev/github.com/go-authn/directory@v0.19.0)

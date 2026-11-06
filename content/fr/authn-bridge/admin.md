@@ -130,6 +130,8 @@ l'IdP ne communique aucun nom d'utilisateur.
 L'entrée est enregistrée **avant** que quoi que ce soit ne soit révoqué, si bien qu'une autorisation en concurrence avec
 la révocation rencontre l'entrée.
 
+**Les noms ne replient que les lettres ASCII** (depuis la v0.23.8). La liste des désactivés, les principals de certificat et le subject-id comparent les noms d'utilisateur avec `ASCIILower` de go-authn/oidc : un signe Kelvin (U+212A) n'est donc pas un « k », et `kate` et son orthographe avec un signe Kelvin sont deux personnes, avec deux entrées de désactivation et deux principals de certificat. Désactiver l'une ne désactive pas l'autre.
+
 **La désactivation est conservée dans `disabled_file`, et refusée sans lui.** Quelqu'un
 désactivé jusqu'au prochain redémarrage serait réadmis par le prochain déploiement :
 

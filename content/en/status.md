@@ -5,12 +5,12 @@ description: "Which releases these pages describe, what each release added, and 
 tags: [status, releases]
 ---
 
-These pages are documentation version **0.9**, and describe:
+These pages are documentation version **0.10**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.17.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
+| authnd | **v0.18.0** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.23.8** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
@@ -18,12 +18,12 @@ The libraries' versions are on [their own page]({{< relref "/libraries/_index.md
 ldap is **v0.12.1**, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed `BuildError` for a schema that does
 not build, schemas in HCL2 and the `ldapschema` converter, and
-directory **v0.18.0**, with declared object classes. authnd
-v0.17.0 embeds ldap v0.12.1 and directory v0.18.0.
+directory **v0.19.0**, with declared object classes. authnd
+v0.18.0 embeds ldap v0.12.1 and directory v0.19.0.
 A new minor version of any program above is a new documentation version, so
-the pages a reader finds under `/docs/0.9/` keep describing what they
+the pages a reader finds under `/docs/0.10/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
-`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/` and `/docs/0.8/`.
+`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/`, `/docs/0.8/` and `/docs/0.9/`.
 
 {{< callout type="warning" >}}
 **Upgrading authnd from v0.16.x: `max_age` defaults to ten minutes**
@@ -116,6 +116,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.16.1 | `kerberos { listen = "host:0" }` gets one port for UDP and TCP (it got two, and a `krb5.conf` names one); the startup line names that port. The tests stop picking a port, releasing it and naming it, which failed on a runner with `address already in use` |
 | v0.16.2 | ⛔ Security. [The realm reads the snapshot]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}}), never the sources: every AS-REQ and TGS-REQ, an unauthenticated one over UDP included, ran the whole people query of every SQL source and a subtree search of every `ldap` upstream. `max_age` now holds for Kerberos (`KDC_ERR_SVC_UNAVAILABLE` past it). A person removed from a database stops getting tickets within one `refresh` period, as LDAP binds do. With go-authn/kdc v0.6.0 |
 | v0.17.0 | ⛔ Security, second pass, with go-authn/ldap v0.12.1. **Breaking: [`max_age` now defaults]({{< relref "/authnd/operations.md#it-reads-everything-once" >}}) to ten minutes** (at least ten `refresh` periods; no default with `refresh = "0"`), where it was unlimited: a person removed from a source that then became unreadable kept binding for as long as the outage lasted. Past it searches, people's binds and password changes answer `unavailable` (52); `max_age = "0"` is accepted and means no limit, on purpose. [A token's name is compared with ASCII case folding only]({{< relref "/authnd/tokens.md#scoped-name" >}}): `Kate@univ-a.example` with a Kelvin sign (U+212A) no longer binds as `kate`. [At most 64 checks per source]({{< relref "/authnd/operations.md#outage" >}}) may be outstanding against an upstream; the 65th is answered `unavailable` at once (400 binds against an upstream that never answers left 1620 goroutines held, now 257). [Upgrade note]({{< relref "/authnd/_index.md" >}}) |
+| v0.18.0 | [A password check against an upstream is cancelled, not only bounded]({{< relref "/authnd/operations.md#outage" >}}): the bind and the password factor use `Identity.VerifyContext` (go-authn/directory v0.19.0), which closes the upstream connection when the bind's budget ends, so nothing is left running. 400 binds against an upstream that never answers: 1620 goroutines held (v0.16.2), 257 (v0.17.0, the cap), 4 (v0.18.0); the cap of 64 checks per source stays, for sources that cannot be cancelled. The name folds come from go-authn/oidc v0.7.0. No configuration change |
 
 ### authn-bridge
 
@@ -154,6 +155,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.23.4 | release binaries are linked with `-w` instead of `-s -w`, so the symbol table is kept for a precise `govulncheck -mode binary`; no change in behaviour |
 | v0.23.6 | an audit, fuzzing and chaos pass, with go-authn/saml v0.5.1; no configuration key added or changed. [Metadata is refreshed in time]({{< relref "/authn-bridge/federation.md#refreshing-it" >}}): never scheduled past half of the remaining `validUntil`, and with no valid metadata left retried after a minute, doubling to an hour, so one failed refresh near expiry no longer leaves the provider without an IdP for up to twelve hours. The assertion replay key is stored as its SHA-256: a long IdP `entityID` made PostgreSQL and MySQL refuse the write and wedged the state database. The clock may differ from an IdP's by three minutes; an hour is refused with a 400 page. [What is tested]({{< relref "/authn-bridge/federation.md#tested" >}}): XML signature wrapping XSW1 to XSW8, CVE-2017-11427, DOCTYPE, foreign audience, recipient, request and destination, five fuzzers. One SHA-256 per login costs 0 to 2 allocations more (`BenchmarkReplayUse`: 0 allocations and 183 B, now 2 and 326 B); wall-clock not measured, load 53 to 75 |
 | v0.23.7 | security: a refresh token, an application password or an SSH certificate request from an IdP removed from `saml { idps }` is refused at its next use, with `institution not configured`, as `DisableIdP` does ([admin API]({{< relref "/authn-bridge/admin.md" >}})); put the IdP back and they work again |
+| v0.23.8 | security: [a person is disabled as who they are]({{< relref "/authn-bridge/admin.md" >}}): usernames (the disable list, certificate principals, subject-id) fold ASCII letters only, with go-authn/oidc v0.7.0's `ASCIILower`, so `kate` and its Kelvin-sign spelling (U+212A) are two people, with two disable entries and two certificate principals |
 
 ### authn-revokd
 
@@ -199,6 +201,7 @@ library's page says what earlier ones changed.
 | directory v0.16.0 | [every group read once]({{< relref "/libraries/directory.md" >}}): `GroupReader` and `Set.Frozen`, so a refresh no longer grows with groups times membership rows |
 | directory v0.17.0 | [`ErrUnavailable`]({{< relref "/libraries/directory.md#unavailable" >}}), with `AsUnavailable` and `TransportFailure`: ldapdir returns it for busy (51), unavailable (52), other (80), timeLimitExceeded (3), dropped or refused connections and TLS or dial failures, on `Verify` and every read; it is never also `ErrWrongPassword`, and `invalidCredentials` (49) stays that. `ldaptest.Server.FailBindsWith(code)`. A member DN maps to a person by one lookup instead of a scan, with the same results: `ReadGroups` on 10,000 people and 2,000 groups of 50 DNs allocates 13.1 MB in 0.38 M objects instead of 50.6 MB in 2.20 M, a DN lookup 0 allocations; the whole refresh 7.17 M allocations instead of 9.72 M (exact; times not measured, load 65 to 105) |
 | directory v0.18.0 | [a name held by two entries of one source is `ErrAmbiguous`]({{< relref "/libraries/directory.md" >}}): ldapdir compares the uid without case and names both DNs, `Set.Identities` refuses a name that one source lists twice, and across sources the first still owns it; `ldaptest.Person.UID`. A directory with such duplicates fails to load until one is fixed |
+| directory v0.19.0 | [a password check can be cancelled]({{< relref "/libraries/directory.md" >}}): `directory.WithContextVerifier` and `Identity.VerifyContext(ctx, password)`; for an `ldapdir` identity the upstream connection is closed when the context ends and the answer is `ErrUnavailable` (go-ldap has no context and no default timeout, so a bind to an upstream that accepts and never answers waited for ever). The dial of a check ends at the context's deadline too. `Verify` and `WithVerifier` are unchanged. **Upgrade:** a server that bounds a check should call `VerifyContext` |
 | kdc v0.4.3 | dependencies only: go-authn/directory v0.12.0 as its minimum |
 | kdc v0.4.5 | a security audit, fuzzing and chaos pass ([what it refuses]({{< relref "/libraries/kdc.md" >}})): a request for another realm is answered `KDC_ERR_WRONG_REALM`, an unreadable directory `KDC_ERR_SVC_UNAVAILABLE` (it was `KDC_ERR_C_PRINCIPAL_UNKNOWN`), a TGT whose start is within `MaxSkew` in the future is accepted, and a decoder panic drops one request instead of crashing the process (a single malformed AS-REQ or TGS-REQ could crash it); principal names are quoted in the log. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | kdc v0.5.0 | [the lookaside]({{< relref "/libraries/kdc.md" >}}) of MIT's KDC: a request seen before, byte for byte, gets its previous reply, for two minutes and under 10 MiB in all; a `KRB-ERROR` is never stored; deliberately no authenticator replay cache, which MIT turns off at the TGS. Tests pin an unreadable directory as `KDC_ERR_SVC_UNAVAILABLE` at the AS, with a correct password, and at the TGS. Two allocations more per request |
@@ -220,6 +223,7 @@ library's page says what earlier ones changed.
 | ldap v0.12.1 | [a bind abandons the paged searches in progress]({{< relref "/libraries/ldap.md" >}}) (RFC 4511 4.2.1), so a search begun by one person never goes on delivering to the connection once it is anonymous or somebody else's |
 | oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) refuses a name with more than one `@` (`ErrBadName`) |
+| oidc v0.7.0 | [`ASCIILower` and `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}}): the one ASCII-only fold for names, since `strings.ToLower` and `strings.EqualFold` fold Unicode and equate the Kelvin sign U+212A with "k" |
 | scim v0.2.0 | [an audit, fuzzing, chaos and performance pass]({{< relref "/libraries/scim.md#v020" >}}): `Server.ReadTimeout` (30 s), the optional `ConditionalDeleter`, a PATCH or PUT without `If-Match` redone up to 32 times on a lost race instead of answered 412, removal through a filter that matches nothing succeeds, keys of a PATCH without a path applied in sorted order, `BearerAuth` accepts the scheme in any case, `startIndex` and `count` clamped on every word size. A list request over 10,000 users: a page of 100 from 789,417 to 14,952 allocations, `userName eq` from 797,979 to 90, a full scan from 818,847 to 361,098 (exact; times not measured, load 65) |
 | servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | servercert v0.6.0 | [the TLS `KeyFile` and the ACME `EABHMACKeyFile` are refused]({{< relref "/libraries/servercert.md" >}}) when group or others can read or write them, at `New` and on every reload (a readable replacement key is reported to `OnError` and not taken; the current certificate keeps serving); not checked on Windows. **Upgrade:** `chmod 600` both files |

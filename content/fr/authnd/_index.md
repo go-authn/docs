@@ -11,12 +11,12 @@ qui veut les authentifier parle LDAP.** authnd est la façade : il
 se lie et cherche sur les sources de [go-authn/directory]({{< relref "/libraries/_index.md" >}}),
 si bien que ce que contient une base de données peut être lu par tout ce qui sait
 interroger un annuaire. Pur Go, `CGO_ENABLED=0`, un seul binaire. Ces pages décrivent
-la v0.17.0, dont les entrées suivent les schémas standard et respectent le schéma
+la v0.18.0, dont les entrées suivent les schémas standard et respectent le schéma
 qu'elle sert à `cn=Subschema`, qu'un site étend avec le sien
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) et façonne grâce aux
 [règles de contenu DIT, formes de noms et règles de structure]({{< relref "/authnd/schemas.md#rules" >}}),
 avec go-authn/ldap v0.12.1 et
-go-authn/directory v0.18.0 en dessous ; ce qui est vérifié et ce qui ne l'est pas figure sur la
+go-authn/directory v0.19.0 en dessous ; ce qui est vérifié et ce qui ne l'est pas figure sur la
 page [état]({{< relref "/status.md" >}}).
 
 {{< callout type="warning" >}}

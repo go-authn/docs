@@ -5,12 +5,12 @@ description: "Les versions que décrivent ces pages, ce que chaque version a ajo
 tags: [état, versions]
 ---
 
-Ces pages sont la version **0.9** de la documentation, et décrivent :
+Ces pages sont la version **0.10** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
-| authnd | **v0.17.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
+| authnd | **v0.18.0** | `github.com/go-authn/authnd` |
+| authn-bridge | **v0.23.8** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
@@ -18,12 +18,12 @@ Les versions des bibliothèques sont sur [leur propre page]({{< relref "/librari
 ldap est en **v0.12.1**, avec les règles de contenu DIT, les formes de noms et
 les règles de structure DIT lues, appliquées et publiées, une `BuildError` typée
 pour un schéma qui ne se construit pas, les schémas en HCL2 et le convertisseur
-`ldapschema`, et directory en **v0.18.0**, avec les classes d'objet déclarées.
-authnd v0.17.0 embarque ldap v0.12.1 et directory v0.18.0.
+`ldapschema`, et directory en **v0.19.0**, avec les classes d'objet déclarées.
+authnd v0.18.0 embarque ldap v0.12.1 et directory v0.19.0.
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
-de sorte que les pages qu'une personne trouve sous `/docs/0.9/` continuent de décrire ce
+de sorte que les pages qu'une personne trouve sous `/docs/0.10/` continuent de décrire ce
 qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`,
-`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/` et `/docs/0.8/`.
+`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/`, `/docs/0.8/` et `/docs/0.9/`.
 
 {{< callout type="warning" >}}
 **Mise à jour d'authnd depuis la v0.16.x : `max_age` vaut dix minutes par défaut**
@@ -117,6 +117,7 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.16.1 | `kerberos { listen = "hôte:0" }` reçoit un seul port pour UDP et TCP (il en recevait deux, et un `krb5.conf` n'en nomme qu'un) ; la ligne de démarrage nomme ce port. Les tests ne choisissent plus un port pour le libérer puis le nommer, ce qui échouait sur un runner en `address already in use` |
 | v0.16.2 | ⛔ Sécurité. [Le royaume lit l'instantané]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}}), jamais les sources : chaque AS-REQ et TGS-REQ, y compris une AS-REQ non authentifiée en UDP, exécutait la requête complète des personnes de chaque source SQL et une recherche de sous-arbre sur chaque amont `ldap`. `max_age` vaut désormais pour Kerberos (`KDC_ERR_SVC_UNAVAILABLE` au-delà). Une personne retirée d'une base cesse d'obtenir des tickets en une période de `refresh`, comme pour les liaisons LDAP. Avec go-authn/kdc v0.6.0 |
 | v0.17.0 | ⛔ Sécurité, deuxième passe, avec go-authn/ldap v0.12.1. **Rupture : [`max_age` a désormais une valeur par défaut]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})**, dix minutes (au moins dix périodes de `refresh` ; pas de valeur par défaut avec `refresh = "0"`), alors qu'il était illimité : une personne retirée d'une source devenue illisible continuait de se connecter tant que la panne durait. Au-delà, les recherches, les binds des personnes et les changements de mot de passe répondent `unavailable` (52) ; `max_age = "0"` est accepté et signifie aucune limite, délibérément. [Le nom d'un jeton n'est comparé qu'avec un repli de casse ASCII]({{< relref "/authnd/tokens.md#scoped-name" >}}) : `Kate@univ-a.example` avec un signe Kelvin (U+212A) ne se lie plus comme `kate`. [Au plus 64 vérifications par source]({{< relref "/authnd/operations.md#outage" >}}) peuvent être en cours auprès d'un amont ; la 65e reçoit aussitôt `unavailable` (400 binds contre un amont qui ne répond jamais laissaient 1620 goroutines retenues, maintenant 257). [Note de mise à jour]({{< relref "/authnd/_index.md" >}}) |
+| v0.18.0 | [Une vérification de mot de passe auprès d'un amont est annulée, et pas seulement bornée]({{< relref "/authnd/operations.md#outage" >}}) : le bind et le facteur mot de passe utilisent `Identity.VerifyContext` (go-authn/directory v0.19.0), qui ferme la connexion vers l'amont quand le budget du bind est épuisé, de sorte que rien ne continue de tourner. 400 binds contre un amont qui ne répond jamais : 1620 goroutines retenues (v0.16.2), 257 (v0.17.0, le plafond), 4 (v0.18.0) ; le plafond de 64 vérifications par source demeure, pour les sources dont la vérification ne peut pas être annulée. Les replis de noms viennent de go-authn/oidc v0.7.0. Aucun changement de configuration |
 
 ### authn-bridge {#authn-bridge}
 
@@ -155,6 +156,7 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.23.4 | les binaires de release sont liés avec `-w` au lieu de `-s -w`, la table des symboles est donc conservée pour un `govulncheck -mode binary` précis ; aucun changement de comportement |
 | v0.23.6 | une passe d'audit, de fuzzing et de chaos, avec go-authn/saml v0.5.1 ; aucune clé de configuration ajoutée ou modifiée. [Les métadonnées sont rafraîchies à temps]({{< relref "/authn-bridge/federation.md#refreshing-it" >}}) : jamais programmées au-delà de la moitié du `validUntil` restant, et, sans métadonnées valides, retentées après une minute puis à intervalle doublé jusqu'à une heure, si bien qu'un rafraîchissement échoué près de l'expiration ne laisse plus le fournisseur sans IdP jusqu'à douze heures. La clé de rejeu d'assertion est stockée sous forme de SHA-256 : un `entityID` d'IdP long faisait refuser l'écriture par PostgreSQL et MySQL et bloquait la base d'état. L'horloge peut différer de celle d'un IdP de trois minutes ; une heure est refusée avec une page 400. [Ce qui est testé]({{< relref "/authn-bridge/federation.md#tested" >}}) : l'enveloppement de signature XSW1 à XSW8, CVE-2017-11427, DOCTYPE, audience, destinataire, requête et destination étrangers, cinq fuzzers. Un SHA-256 par connexion coûte 0 à 2 allocations de plus (`BenchmarkReplayUse` : 0 allocation et 183 o, maintenant 2 et 326 o) ; temps réel non mesuré, charge 53 à 75 |
 | v0.23.7 | sécurité : un jeton d'actualisation, un mot de passe d'application ou une demande de certificat SSH d'un IdP retiré de `saml { idps }` est refusé à sa prochaine utilisation, avec `institution not configured`, comme le fait `DisableIdP` ([API d'administration]({{< relref "/authn-bridge/admin.md" >}})) ; remettez l'IdP et ils fonctionnent de nouveau |
+| v0.23.8 | sécurité : [une personne est désactivée pour ce qu'elle est]({{< relref "/authn-bridge/admin.md" >}}) : les noms d'utilisateur (la liste des désactivés, les principals de certificat, le subject-id) ne se replient que sur les lettres ASCII, avec `ASCIILower` de go-authn/oidc v0.7.0, de sorte que `kate` et son orthographe avec un signe Kelvin (U+212A) sont deux personnes, avec deux entrées de désactivation et deux principals de certificat |
 
 ### authn-revokd {#authn-revokd}
 
@@ -201,6 +203,7 @@ changé les précédentes.
 | directory v0.16.0 | [chaque groupe lu une fois]({{< relref "/libraries/directory.md" >}}) : `GroupReader` et `Set.Frozen`, si bien qu'un rafraîchissement ne croît plus avec groupes fois lignes d'appartenance |
 | directory v0.17.0 | [`ErrUnavailable`]({{< relref "/libraries/directory.md#unavailable" >}}), avec `AsUnavailable` et `TransportFailure` : ldapdir le renvoie pour busy (51), unavailable (52), other (80), timeLimitExceeded (3), connexions coupées ou refusées et échecs de connexion ou de TLS, sur `Verify` et chaque lecture ; il n'est jamais aussi `ErrWrongPassword`, et `invalidCredentials` (49) reste ce dernier. `ldaptest.Server.FailBindsWith(code)`. Un DN de membre est associé à une personne par une seule recherche au lieu d'un balayage, avec les mêmes résultats : `ReadGroups` sur 10 000 personnes et 2 000 groupes de 50 DN alloue 13,1 Mo en 0,38 M objets au lieu de 50,6 Mo en 2,20 M, une recherche de DN 0 allocation ; le rafraîchissement entier 7,17 M allocations au lieu de 9,72 M (exact ; temps non mesurés, charge 65 à 105) |
 | directory v0.18.0 | [un nom porté par deux entrées d'une même source est `ErrAmbiguous`]({{< relref "/libraries/directory.md" >}}) : ldapdir compare l'uid sans tenir compte de la casse et nomme les deux DN, `Set.Identities` refuse un nom qu'une source liste deux fois, et entre sources la première possède toujours le nom ; `ldaptest.Person.UID`. Un annuaire qui a de tels doublons ne se charge plus tant que l'un n'est pas corrigé |
+| directory v0.19.0 | [une vérification de mot de passe peut être annulée]({{< relref "/libraries/directory.md" >}}) : `directory.WithContextVerifier` et `Identity.VerifyContext(ctx, password)` ; pour une identité `ldapdir`, la connexion vers l'amont est fermée quand le contexte se termine et la réponse est `ErrUnavailable` (go-ldap n'a ni contexte ni délai par défaut : un bind vers un amont qui accepte et ne répond jamais attendait indéfiniment). La connexion initiale d'une vérification s'arrête elle aussi à l'échéance du contexte. `Verify` et `WithVerifier` ne changent pas. **Mise à jour :** un serveur qui borne une vérification doit appeler `VerifyContext` |
 | kdc v0.4.3 | dépendances seulement : go-authn/directory v0.12.0 comme minimum |
 | kdc v0.4.5 | une passe d'audit de sécurité, de fuzzing et de chaos ([ce qu'il refuse]({{< relref "/libraries/kdc.md" >}})) : une requête pour un autre royaume reçoit `KDC_ERR_WRONG_REALM`, un annuaire illisible `KDC_ERR_SVC_UNAVAILABLE` (c'était `KDC_ERR_C_PRINCIPAL_UNKNOWN`), un TGT dont le début tombe dans `MaxSkew` dans le futur est accepté, et une panique du décodeur abandonne une requête au lieu de faire planter le processus (une seule AS-REQ ou TGS-REQ mal formée pouvait le faire planter) ; les noms de principal sont entre guillemets dans le journal. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | kdc v0.5.0 | [le *lookaside*]({{< relref "/libraries/kdc.md" >}}) du KDC du MIT : une requête déjà vue, octet pour octet, reçoit sa réponse précédente, pendant deux minutes et sous 10 Mio en tout ; un `KRB-ERROR` n'est jamais conservé ; délibérément pas de cache de rejeu des authentificateurs, que le MIT désactive au TGS. Des tests fixent un annuaire illisible à `KDC_ERR_SVC_UNAVAILABLE` à l'AS, avec un mot de passe correct, et au TGS. Deux allocations de plus par requête |
@@ -222,6 +225,7 @@ changé les précédentes.
 | ldap v0.12.1 | [un bind abandonne les recherches paginées en cours]({{< relref "/libraries/ldap.md" >}}) (RFC 4511 4.2.1) : une recherche commencée par une personne ne continue plus de livrer à la connexion une fois celle-ci anonyme ou à quelqu'un d'autre |
 | oidc v0.4.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) refuse un nom avec plus d'un `@` (`ErrBadName`) |
+| oidc v0.7.0 | [`ASCIILower` et `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}}) : l'unique repli ASCII pour les noms, car `strings.ToLower` et `strings.EqualFold` replient Unicode et assimilent le signe Kelvin U+212A à « k » |
 | scim v0.2.0 | [une passe d'audit, de fuzzing, de chaos et de performance]({{< relref "/libraries/scim.md#v020" >}}) : `Server.ReadTimeout` (30 s), l'interface facultative `ConditionalDeleter`, un PATCH ou PUT sans `If-Match` rejoué jusqu'à 32 fois après une course perdue au lieu de recevoir 412, le retrait par un filtre qui ne correspond à rien réussit, les clés d'un PATCH sans chemin appliquées dans l'ordre trié, `BearerAuth` accepte le schéma en toute casse, `startIndex` et `count` bornés quelle que soit la taille du mot. Une requête de liste sur 10 000 utilisateurs : une page de 100 de 789 417 à 14 952 allocations, `userName eq` de 797 979 à 90, un balayage complet de 818 847 à 361 098 (exact ; temps non mesurés, charge 65) |
 | servercert v0.5.2 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 | servercert v0.6.0 | [la `KeyFile` TLS et l'`EABHMACKeyFile` ACME sont refusées]({{< relref "/libraries/servercert.md" >}}) lorsque le groupe ou les autres peuvent les lire ou les écrire, à `New` et à chaque rechargement (une clé de remplacement lisible est signalée à `OnError` et n'est pas prise ; le certificat actuel continue d'être servi) ; non vérifié sous Windows. **Mise à jour :** `chmod 600` sur les deux fichiers |

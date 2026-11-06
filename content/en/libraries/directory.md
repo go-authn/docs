@@ -11,7 +11,7 @@ memory, a SQL database, an LDAP server, or `user` and `group` blocks in a
 configuration file — and the point of it is the second half of the question.
 
 ```sh
-go get github.com/go-authn/directory@v0.17.0
+go get github.com/go-authn/directory@v0.19.0
 ```
 
 New in v0.17.0: [`ErrUnavailable`](#unavailable), an outage told apart from a
@@ -404,6 +404,8 @@ default:
 That is how authnd v0.15.0 answers a bind, as
 [the operations page]({{< relref "/authnd/operations.md#limits" >}}) says.
 
+**A check can be cancelled.** `Identity.VerifyContext(ctx, password)` (since v0.19.0) gives up when `ctx` ends: for an `ldapdir` identity the upstream connection is closed (that is what cancels a request in go-ldap, which has no context and no default timeout: a bind to a server that accepts and never answers used to wait for ever) and the answer is `ErrUnavailable`; the dial ends at the context's deadline too. A source supplies one with `directory.WithContextVerifier`; `Verify` still works, with a background context, and an identity with only a `WithVerifier` is `Verify` (not interruptible). A server that bounds a bind (authnd's `operation_timeout`) should call `VerifyContext`, so that a hung upstream does not keep a goroutine and a connection after the answer was given.
+
 ## What it refuses, and why
 
 - **A group with nobody in it**, and **a group no source has**, when `Expand`
@@ -485,4 +487,4 @@ The coverage lane fails below 85% (its stated standard is 100%), and the
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.19.0](https://pkg.go.dev/github.com/go-authn/directory@v0.19.0)

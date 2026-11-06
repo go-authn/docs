@@ -154,6 +154,8 @@ Hinter einem Föderations-Proxy (eduGAIN über MyAccessID, eduTEAMS, Renater, ei
 
 Ein Konto gehört zu einer Einrichtung: hinter einem Föderations-Proxy bürgt ein Aussteller für Personen vieler Einrichtungen. `oidc.ScopedName(name, allowed, defaultScope)` liefert den Namen als `local@scope`, ASCII-kleingeschrieben (eduPersonPrincipalName ist im eduPerson-Schema `caseIgnoreMatch` und einwertig), nachdem der **Bereich geprüft** wurde: ob dieser Aussteller ihn behaupten darf, wie Shibboleth einen Scope prüft. Ein anderer Bereich ist `ErrScopeNotAllowed`, ein Name ohne Bereich und ohne Vorgabe `ErrNoScope`. Ein Name ohne `@` erhält `defaultScope` (eine Einrichtung, deren Konten älter als Bereichsnamen sind), der ebenfalls erlaubt sein muss. `Token.ScopedUsername` wendet das auf den Benutzernamen des Tokens an: `UsernameClaim` auf `eduperson_principal_name` oder `voperson_id` setzen. Der Der Name muss genau ein `@` enthalten: Einer mit mehr als einem ist `ErrBadName` (ab v0.6.1), sodass sich ein Bereich nicht durch ein `@` im lokalen Teil wählen lässt. Der Bereich ist, was darauf folgt.
 
+**Eine Faltung für Namen** (ab v0.7.0). Nur ASCII-Buchstaben werden gefaltet, und ein Dienst, der diese Namen vergleicht oder speichert, muss genauso falten: `oidc.ASCIILower(name)` und `oidc.EqualASCIIFold(a, b)` sind diese eine Faltung. `strings.ToLower` und `strings.EqualFold` falten Unicode und setzen damit das Kelvin-Zeichen U+212A mit "k" gleich: `Kate` (mit Kelvin-Zeichen) und `kate` sind für einen Aussteller zwei Konten und für einen Verbraucher, der Unicode faltet, eines.
+
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
 
 **pyjwt** signiert jedes Token in der Testsuite, sodass der Verifier nie von

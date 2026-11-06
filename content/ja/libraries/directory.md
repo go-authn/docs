@@ -11,7 +11,7 @@ tags: [ライブラリ, ディレクトリ, ldap, sql]
 あります。
 
 ```sh
-go get github.com/go-authn/directory@v0.17.0
+go get github.com/go-authn/directory@v0.19.0
 ```
 
 v0.17.0 の新機能: [`ErrUnavailable`](#unavailable)。障害を間違ったパスワードと区別します。また、メンバーの DN は
@@ -374,6 +374,8 @@ default:
 
 authnd v0.15.0 は、[運用のページ]({{< relref "/authnd/operations.md#limits" >}})にあるとおり、バインドにこのように答えます。
 
+**チェックは取り消せます。** `Identity.VerifyContext(ctx, password)` (v0.19.0 以降) は `ctx` が終了すると諦めます。`ldapdir` の identity では上流への接続が閉じられ (go-ldap でリクエストを取り消す方法であり、go-ldap には context も既定のタイムアウトもありません。受け付けても応答しないサーバーへの bind は永久に待っていました)、応答は `ErrUnavailable` になります。接続確立も context の期限で終了します。ソースは `directory.WithContextVerifier` でこれを提供します。`Verify` は引き続き使え、背景 context で動作します。`WithVerifier` だけを持つ identity では `Verify` が使われます (中断できません)。bind に上限を設けるサーバー (authnd の `operation_timeout`) は `VerifyContext` を呼ぶべきです。そうすれば、応答した後に、応答しない上流が goroutine と接続を保持し続けることはありません。
+
 ## 拒否するものと、その理由 {#what-it-refuses-and-why}
 
 - **メンバーのいないグループ**と**どのソースにもないグループ**を、`Expand` が `@group` を人々に
@@ -441,4 +443,4 @@ CI で確認されます。
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.19.0](https://pkg.go.dev/github.com/go-authn/directory@v0.19.0)
