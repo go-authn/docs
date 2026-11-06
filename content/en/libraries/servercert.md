@@ -12,7 +12,7 @@ key on disk, re-read when they change, or an ACME CA through
 Account Binding included.
 
 ```sh
-go get github.com/go-authn/servercert@v0.5.2
+go get github.com/go-authn/servercert@v0.6.0
 ```
 
 A `Config` names exactly one source — `CertFile` and `KeyFile`, or `ACME` —
@@ -147,6 +147,8 @@ root or the effective user, as sshd's `StrictModes` asks of the path to
 On Windows, mode and owner are not checked — ACLs decide both, and restricting
 them is yours — and a symbolic link anywhere in the path is refused.
 
+`New` (and every reload) also refuses a **secret file** that group or others can read or write: the TLS `KeyFile` and the ACME `EABHMACKeyFile` (since v0.6.0), as OpenSSH refuses a private key, with `chmod 600 it`. The mode is read from the opened file, not from its name. A replacement key written readable is not taken: the current certificate keeps serving and `OnError` is called. Not checked on Windows, where ACLs decide. **Upgrade:** `chmod 600` (or `0400`) both files before deploying.
+
 ## What it is checked against
 
 **pebble**, Let's Encrypt's test CA, run in-process from its `ca`, `db`, `va`
@@ -159,4 +161,4 @@ it to fail. The coverage floor is 100%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.5.2](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.2)
+[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)

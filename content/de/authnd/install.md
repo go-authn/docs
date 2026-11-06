@@ -160,7 +160,7 @@ Warum dieses Verzeichnis und nicht die Datei, erklärt
 | `listen` | `127.0.0.1:3893` | eine Adresse. Standardmäßig Loopback: Ein Verzeichnis, das auf jeder Schnittstelle erscheint, sobald es startet, ist eine Entscheidung, die jemand bewusst treffen sollte. Ein Standort, der LDAP und LDAPS braucht, betreibt zwei Instanzen |
 | `reader "<dn>"` | keiner | ein Dienstkonto, das suchen darf; siehe [wer lesen darf]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | wie oft jede Quelle erneut gelesen wird; `0` schaltet es ab; siehe [Betrieb]({{< relref "/authnd/operations.md" >}}) |
-| `max_age` | nicht gesetzt | veraltete Daten verweigern (`unavailable`), sobald die ausgelieferten Daten älter sind; siehe [Betrieb]({{< relref "/authnd/operations.md" >}}) |
+| `max_age` | `10m` (v0.17.0; `"0"` = keine Grenze) | veraltete Daten verweigern (`unavailable`), sobald die ausgelieferten Daten älter sind; siehe [Betrieb]({{< relref "/authnd/operations.md" >}}) |
 | `max_connections` | `4096` | die meisten gleichzeitig offenen Verbindungen, `0` für keine Grenze; darüber erhält eine Verbindung `busy` und wird geschlossen; siehe [Grenzen]({{< relref "/authnd/operations.md#limits" >}}) |
 | `max_connections_per_ip` | keiner | die meisten Verbindungen von einer Adresse |
 | `operation_timeout` | `30s` | wie lange eine Operation höchstens dauern darf, `"0"` für keine Frist; danach erhält der Client `timeLimitExceeded` |

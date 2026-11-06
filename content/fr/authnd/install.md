@@ -162,7 +162,7 @@ Pourquoi ce répertoire et pas le fichier est expliqué dans
 | `listen` | `127.0.0.1:3893` | une seule adresse. Boucle locale par défaut : un annuaire qui apparaît sur toutes les interfaces dès qu'il démarre est une décision que quelqu'un devrait prendre exprès. Un site qui a besoin de LDAP et de LDAPS lance deux instances |
 | `reader "<dn>"` | aucun | un compte de service qui peut chercher ; voir [qui peut lire]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | à quelle fréquence chaque source est relue ; `0` le désactive ; voir [l'exploiter]({{< relref "/authnd/operations.md" >}}) |
-| `max_age` | non défini | refuser les données périmées (`unavailable`) dès que les données servies sont plus anciennes ; voir [l'exploiter]({{< relref "/authnd/operations.md" >}}) |
+| `max_age` | `10m` (v0.17.0 ; `"0"` = pas de limite) | refuser les données périmées (`unavailable`) dès que les données servies sont plus anciennes ; voir [l'exploiter]({{< relref "/authnd/operations.md" >}}) |
 | `max_connections` | `4096` | le plus grand nombre de connexions ouvertes à la fois, `0` pour aucune limite ; au-delà, une connexion reçoit `busy` et est fermée ; voir [limites]({{< relref "/authnd/operations.md#limits" >}}) |
 | `max_connections_per_ip` | aucun | le plus grand nombre de connexions depuis une même adresse |
 | `operation_timeout` | `30s` | la durée maximale d'une opération, `"0"` pour aucune ; au-delà, le client reçoit `timeLimitExceeded` |

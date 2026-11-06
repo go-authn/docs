@@ -43,6 +43,8 @@ source et le groupe. Une entrée trop grande pour un message LDAP (environ
 publiée, et c'est dit au démarrage et par `check`, comme pour une entrée qui
 échoue au schéma.
 
+**`max_age` vaut dix minutes par défaut** (depuis la v0.17.0 ; au moins dix périodes de `refresh`, et avec `refresh = "0"` aucune valeur par défaut ne s'applique, puisque plus rien n'est relu). Auparavant il était illimité, et une personne retirée d'une source devenue illisible continuait de se connecter tant que la panne durait. Définissez `max_age` à une autre valeur (au moins `refresh`), ou `"0"` pour aucune limite, délibérément. `check` et le journal disent quand les données sont trop anciennes.
+
 ## Signaux {#signals}
 
 | signal | ce qui se passe |
@@ -158,6 +160,10 @@ mauvais mot de passe : un formulaire de connexion disait à la personne que son
 mot de passe était faux alors que l'annuaire était en panne. Un mauvais mot de
 passe donne toujours 49. La cause est dans le journal, pas dans ce que le client
 apprend, et une panne n'est pas comptée comme un essai raté.
+
+**Un amont bloqué ne peut pas accumuler les vérifications.** Une vérification auprès d'un amont ne peut pas être annulée une fois lancée (le `Verify` de la bibliothèque directory ne prend pas de contexte) : celle qui dépasse son budget garde une goroutine et une connexion amont jusqu'à ce que l'amont réponde ou renonce. Au plus **64 vérifications par source** peuvent être en cours ; la 65e reçoit aussitôt `unavailable` (52) et ne démarre rien, de sorte qu'une source qui accepte sans jamais répondre retient un nombre borné de goroutines (mesuré : 400 binds laissaient 1620 goroutines retenues avant, 257 après), et les binds contre les autres sources ne sont pas touchés.
+
+**Le nom d'un jeton n'est comparé qu'avec un repli de casse ASCII**, comme le fait go-authn/oidc : `Kate@univ-a.example` avec un signe Kelvin (U+212A) est un autre compte chez l'émetteur et ne se lie plus comme `kate`.
 
 ## Quand il ne démarre pas {#when-it-does-not-start}
 

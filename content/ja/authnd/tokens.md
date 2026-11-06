@@ -60,6 +60,8 @@ supportedSASLMechanisms: OAUTHBEARER
 以前は、スコープのない `preferred_username` がそのままディレクトリの名前に対応付けられていたため、どの機関の alice もローカルの alice としてバインドできました。アップグレードするには、`domains = ["<あなたのドメイン>"]` を追加し、`username_claim = "eduperson_principal_name"`（または発行者が `local@scope` で埋めるクレーム）を設定し、ディレクトリの名前がローカル部分だけの場合は `local_domain = "<あなたのドメイン>"` を追加してください。スコープのない名前のトークンはバインドできなくなります。発行者がスコープ付きのクレームを渡すように設定してください。
 {{< /callout >}}
 
+**比較で畳み込まれるのは ASCII の大文字小文字のみです** (v0.17.0 から)。go-authn/oidc の `ScopedName` と同じです。ケルビン記号 (U+212A) を使った `Kate@univ-a.example` は発行者側では別のアカウントであり、`kate` として bind されなくなりました。以前は、検索と authzid の比較に Unicode の大文字小文字の畳み込みが使われていました。
+
 ## ディスカバリーは起動時に行われる {#discovery-happens-at-startup}
 
 プロバイダーのディスカバリードキュメントと鍵は、サーバーの起動時と `check` で読み込まれます。

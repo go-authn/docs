@@ -12,7 +12,7 @@ serveur qui l'exécute et qui détient la configuration, les sources d'annuaire 
 politique de liaison ; celle-ci détient les octets.
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.0
+go get github.com/go-authn/ldap@v0.12.1
 ```
 
 Écrite d'après les RFC 4511 (le protocole), 4512 (le root DSE et le schéma),
@@ -223,6 +223,8 @@ Sans schéma — `Server.Schema` nil, la valeur par défaut — toute comparaiso
 est insensible à la casse sur la valeur : la plus sûre des deux pour la
 lecture, puisqu'elle ne cache jamais une entrée qu'une comparaison exacte
 aurait trouvée.
+
+**Un bind abandonne toutes les recherches paginées en cours** (depuis la v0.12.1 ; RFC 4511 4.2.1 : l'état d'authentification est rejeté à la réception du bind) : une recherche commencée par une personne ne continue donc jamais de livrer à la connexion une fois celle-ci anonyme ou à quelqu'un d'autre.
 
 ## Le schéma {#the-schema}
 

@@ -162,7 +162,7 @@ Why that directory and not the file is explained in
 | `listen` | `127.0.0.1:3893` | one address. Loopback by default: a directory that appears on every interface the moment it starts is a decision somebody should make on purpose. A site that needs LDAP and LDAPS runs two instances |
 | `reader "<dn>"` | none | a service account that may search; see [who may read]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | how often every source is read again; `0` turns it off; see [running it]({{< relref "/authnd/operations.md" >}}) |
-| `max_age` | unset | refuse stale data (`unavailable`) once the served data is older; see [running it]({{< relref "/authnd/operations.md" >}}) |
+| `max_age` | `10m` (v0.17.0; `"0"` = no limit) | refuse stale data (`unavailable`) once the served data is older; see [running it]({{< relref "/authnd/operations.md" >}}) |
 | `max_connections` | `4096` | the most connections open at once, `0` for no limit; over it, a connection is sent `busy` and closed; see [limits]({{< relref "/authnd/operations.md#limits" >}}) |
 | `max_connections_per_ip` | none | the most connections from one address |
 | `operation_timeout` | `30s` | the longest one operation may take, `"0"` for none; past it the client is answered `timeLimitExceeded` |

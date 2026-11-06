@@ -10,14 +10,22 @@ tags: [authnd, ldap]
 その人々を認証したいものは LDAP を話します。** authnd はその窓口です。
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) のソースに対してバインドと検索を行うので、
 データベースが保持しているものを、ディレクトリに問い合わせる方法を知っているものなら何でも読めます。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.16.2 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.17.0 を説明しています。
 そのエントリは標準スキーマに従い、`cn=Subschema` で公開するスキーマに適合します。
 サイトはこのスキーマを自前のもの
 ([SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})) で拡張でき、
 [DIT コンテンツルール、ネームフォーム、DIT 構造ルール]({{< relref "/authnd/schemas.md#rules" >}})で
 形も定められます。
-その下には go-authn/ldap v0.12.0 と go-authn/directory v0.18.0 があります。
+その下には go-authn/ldap v0.12.1 と go-authn/directory v0.18.0 があります。
 何が検証済みで何が未検証かは、[ステータス]({{< relref "/status.md" >}})のページにあります。
+
+{{< callout type="warning" >}}
+**v0.16.x からのアップグレード: `max_age` にデフォルト値が付きました**
+
+- ⛔ **`max_age` のデフォルトは 10 分です** (`refresh` の周期の 10 回分以上)。以前は無制限でした。ソースから削除された人が、そのソースが読めなくなった後も障害が続く限り bind できてしまい、失効が開いたまま失敗していました。`max_age` を過ぎると、検索、人の bind、パスワード変更は `unavailable` (52) を返します。`refresh = "0"` の場合、デフォルトはありません。
+- アップグレードするには: ソースが 10 分を超えて停止する可能性があり、拒否するより古いデータを優先したい場合は、`max_age` を許容できる値に設定するか、意図的に `"0"` (無制限) にしてください。データが古すぎるときは `check` とログが知らせます。[運用]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})を参照してください。
+- トークンの名前の比較は ASCII の大文字小文字の畳み込みのみで行われ ([名前にはスコープが必要]({{< relref "/authnd/tokens.md#scoped-name" >}}))、上流のソースごとに未完了のチェックは最大 64 件です ([障害は間違ったパスワードではない]({{< relref "/authnd/operations.md#outage" >}}))。
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **v0.15.x からのアップグレード: `oidc` ブロックのある設定は変更が必要です**

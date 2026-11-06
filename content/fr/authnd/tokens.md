@@ -80,6 +80,8 @@ pas de portée ne peut plus se lier : configurez l'émetteur pour qu'il libère
 une revendication avec portée.
 {{< /callout >}}
 
+**La comparaison ne replie que la casse ASCII** (depuis la v0.17.0), comme le `ScopedName` de go-authn/oidc : `Kate@univ-a.example` avec un signe Kelvin (U+212A) est un autre compte chez l'émetteur et ne se lie plus comme `kate`. La recherche et la comparaison de l'authzid utilisaient auparavant le repli de casse Unicode.
+
 ## La découverte a lieu au démarrage {#discovery-happens-at-startup}
 
 Le document de découverte et les clés du fournisseur sont lus au démarrage du serveur,

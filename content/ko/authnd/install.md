@@ -161,7 +161,7 @@ ReadWritePaths=/etc/authnd/passwords
 | `listen` | `127.0.0.1:3893` | 주소 하나. 기본값은 루프백입니다. 시작하는 순간 모든 인터페이스에 나타나는 디렉터리는 누군가 의도적으로 내려야 하는 결정입니다. LDAP과 LDAPS가 모두 필요한 사이트는 인스턴스 두 개를 실행합니다 |
 | `reader "<dn>"` | 없음 | 검색할 수 있는 서비스 계정. [누가 읽을 수 있는가]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})를 참조 |
 | `refresh` | `60s` | 모든 소스를 다시 읽는 주기. `0`이면 끔. [운영]({{< relref "/authnd/operations.md" >}})을 참조 |
-| `max_age` | 설정 안 함 | 제공 중인 데이터가 이보다 오래되면 오래된 데이터를 거부(`unavailable`). [운영]({{< relref "/authnd/operations.md" >}})을 참조 |
+| `max_age` | `10m` (v0.17.0; `"0"` = 제한 없음) | 제공 중인 데이터가 이보다 오래되면 오래된 데이터를 거부(`unavailable`). [운영]({{< relref "/authnd/operations.md" >}})을 참조 |
 | `max_connections` | `4096` | 동시에 열려 있는 연결의 최대 수, `0`은 제한 없음. 넘은 연결은 `busy`를 받고 닫힘. [제한]({{< relref "/authnd/operations.md#limits" >}})을 참조 |
 | `max_connections_per_ip` | 없음 | 한 주소에서의 연결 최대 수 |
 | `operation_timeout` | `30s` | 작업 하나가 걸릴 수 있는 최대 시간, `"0"`은 없음. 넘으면 클라이언트는 `timeLimitExceeded`를 받음 |

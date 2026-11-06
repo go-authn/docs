@@ -5,25 +5,31 @@ description: "Welche Releases diese Seiten beschreiben, was jedes Release hinzug
 tags: [stand, releases]
 ---
 
-Diese Seiten sind die Dokumentationsversion **0.8** und beschreiben:
+Diese Seiten sind die Dokumentationsversion **0.9** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
-| authnd | **v0.16.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.17.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 Die Versionen der Bibliotheken stehen auf [ihrer eigenen Seite]({{< relref "/libraries/_index.md" >}});
-ldap ist bei **v0.12.0**, mit DIT-Content-Rules, Name Forms und DIT-Structure-Rules, die
+ldap ist bei **v0.12.1**, mit DIT-Content-Rules, Name Forms und DIT-Structure-Rules, die
 gelesen, durchgesetzt und veröffentlicht werden, einem typisierten `BuildError` für ein Schema, das sich nicht aufbauen lässt,
 Schemas in HCL2 und dem Konverter `ldapschema`,
 und directory bei **v0.18.0**, mit deklarierten Objektklassen. authnd
-v0.16.2 bettet ldap v0.12.0 und directory v0.18.0 ein.
+v0.17.0 bettet ldap v0.12.1 und directory v0.18.0 ein.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
-sodass die Seiten, die jemand unter `/docs/0.8/` findet, weiterhin beschreiben, was
+sodass die Seiten, die jemand unter `/docs/0.9/` findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`,
-`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/` und `/docs/0.7/`.
+`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/` und `/docs/0.8/`.
+
+{{< callout type="warning" >}}
+**authnd von v0.16.x aktualisieren: `max_age` beträgt standardmäßig zehn Minuten**
+
+Ausgelieferte Daten hatten kein Höchstalter, sodass eine Person, die aus einer danach unlesbar gewordenen Quelle entfernt wurde, sich so lange weiter anmelden konnte, wie der Ausfall dauerte. Ab v0.17.0 beträgt `max_age` zehn Minuten (mindestens zehn `refresh`-Perioden; mit `refresh = "0"` kein Standardwert), und danach antworten Suchen, die Binds von Personen und Passwortänderungen mit `unavailable` (52). Setzen Sie `max_age` auf das, was Sie tolerieren können, oder auf `"0"` für keine Grenze. Siehe [den Hinweis zum Aktualisieren]({{< relref "/authnd/_index.md" >}}) und [wie veraltete Daten verweigert werden]({{< relref "/authnd/operations.md#it-reads-everything-once" >}}).
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **authnd von v0.15.x aktualisieren: `oidc { domains }` ist Pflicht**
@@ -109,6 +115,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen, außer denen, die diese Do
 | v0.16.0 | ⛔ Sicherheit, mit go-authn/oidc v0.6.1 und go-authn/directory v0.18.0. **Inkompatibel für ein Deployment mit `oidc`-Block**: [`domains` ist Pflicht]({{< relref "/authnd/tokens.md#scoped-name" >}}), und der Server startet ohne nicht. Der Name des Tokens muss genau ein `local@scope` einer erlaubten Domain sein (ein Name ohne Bereich, der einer anderen Einrichtung oder einer mit zwei `@` wird abgelehnt); das optionale `local_domain`, eines der `domains`, bildet die Personen dieses Bereichs auf bloße Verzeichnisnamen ab, andere Bereiche werden als ganzes `local@scope` nachgeschlagen. Hinter einem Föderationsproxy wurde die alice jeder Einrichtung als die lokale alice gebunden. Zwei Einträge einer Quelle mit derselben uid sind ein Fehler beim Start und beim Refresh, keine stille Auswahl. [Umstiegshinweis]({{< relref "/authnd/_index.md" >}}) |
 | v0.16.1 | `kerberos { listen = "host:0" }` bekommt einen Port für UDP und TCP (es bekam zwei, und eine `krb5.conf` nennt einen); die Startzeile nennt diesen Port. Die Tests wählen keinen Port mehr, geben ihn frei und nennen ihn dann, was auf einem Runner mit `address already in use` scheiterte |
 | v0.16.2 | ⛔ Sicherheit. [Der Realm liest den Schnappschuss]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}}), nie die Quellen: Jede AS-REQ und TGS-REQ, auch eine nicht authentifizierte über UDP, führte die vollständige Personenabfrage jeder SQL-Quelle und eine Teilbaumsuche jedes `ldap`-Upstreams aus. `max_age` gilt jetzt auch für Kerberos (`KDC_ERR_SVC_UNAVAILABLE` danach). Eine aus einer Datenbank entfernte Person bekommt innerhalb einer `refresh`-Periode keine Tickets mehr, wie bei LDAP-Binds. Mit go-authn/kdc v0.6.0 |
+| v0.17.0 | ⛔ Sicherheit, zweiter Durchgang, mit go-authn/ldap v0.12.1. **Inkompatibel: [`max_age` hat jetzt einen Standardwert]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})** von zehn Minuten (mindestens zehn `refresh`-Perioden; mit `refresh = "0"` kein Standardwert), vorher war es unbegrenzt: Eine Person, die aus einer danach unlesbar gewordenen Quelle entfernt wurde, konnte sich so lange weiter anmelden, wie der Ausfall dauerte. Danach antworten Suchen, die Binds von Personen und Passwortänderungen mit `unavailable` (52); `max_age = "0"` wird akzeptiert und bedeutet bewusst keine Grenze. [Der Name eines Tokens wird nur mit ASCII-Groß-/Kleinschreibung-Faltung verglichen]({{< relref "/authnd/tokens.md#scoped-name" >}}): `Kate@univ-a.example` mit einem Kelvin-Zeichen (U+212A) bindet nicht mehr als `kate`. [Höchstens 64 Prüfungen pro Quelle]({{< relref "/authnd/operations.md#outage" >}}) dürfen gegenüber einem Upstream ausstehen; die 65. wird sofort mit `unavailable` beantwortet (400 Binds gegen einen Upstream, der nie antwortet, ließen 1620 Goroutinen gehalten, jetzt 257). [Hinweis zum Aktualisieren]({{< relref "/authnd/_index.md" >}}) |
 
 ### authn-bridge {#authn-bridge}
 
@@ -210,10 +217,12 @@ jeder Bibliothek sagt, was frühere geändert haben.
 | ldap v0.11.2 | Nur Leistung, kein geändertes Ergebnis: `Validate` macht für einen Eintrag mit zehn Attributen 12 statt 76 Allokationen (Nachschlagen ohne Kleinbuchstaben-Kopie, Beschreibungen nicht zerlegt und wieder zusammengesetzt, Mengen an Ort und Stelle statt Maps). Die Ergebnisse sind die von v0.11.1, gegen eine Kopie von dessen `Validate` an Zufallseinträgen unter dem Standardschema und einem Regelschema und mit einem differenziellen Fuzzer geprüft |
 | ldap v0.11.3 | Nur Leistung, kein geändertes Ergebnis: `GoverningStructureRule` macht für ein Konto 5 statt 12 Allokationen (es liest nur die Typen des RDN), und der DN-Parser 3 statt 6 für einen DN mit vier RDNs. Die Ergebnisse sind die von v0.11.2, gegen eine Kopie von dessen `GoverningStructureRule` an Zufallseinträgen und jeder übergeordneten Regel und mit einem differenziellen Fuzzer geprüft |
 | ldap v0.12.0 | [Ressourcengrenzen für den Server]({{< relref "/libraries/ldap.md" >}}): `Server.MaxConnections` und `Server.MaxConnectionsPerIP` (Standard 0, keine Grenze; eine Verbindung über einer Grenze erhält eine Notice of Disconnection `busy` (51), RFC 4511 4.4.1, und wird geschlossen); `Server.Timeout` wird vom Server durchgesetzt, der zur Frist bei jeder Operation `timeLimitExceeded` (3) antwortet, auch wenn der Handler blockiert ist und seinen Kontext ignoriert (das späte Ergebnis wird verworfen, und die Goroutine zählt gegen `MaxPending` und `MaxPendingAuth`, bis sie zurückkehrt); das `timeLimit` der Client-Suche gilt für den Kontext des Handlers; ein `DeadlineExceeded` eines Handlers wird nur dann auf Code 3 abgebildet, wenn der eigene Kontext der Operation abgelaufen ist. Allokationen pro Operation (exakt): 3 vorher und nachher ohne `Timeout`; 10 vorher und 16 jetzt mit einem |
+| ldap v0.12.1 | [ein Bind bricht die laufenden seitenweisen Suchen ab]({{< relref "/libraries/ldap.md" >}}) (RFC 4511 4.2.1): Eine von einer Person begonnene Suche liefert nicht mehr weiter an die Verbindung, wenn diese anonym ist oder jemand anderem gehört |
 | oidc v0.4.1 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) lehnt einen Namen mit mehr als einem `@` ab (`ErrBadName`) |
 | scim v0.2.0 | [ein Audit-, Fuzzing-, Chaos- und Performance-Durchgang]({{< relref "/libraries/scim.md#v020" >}}): `Server.ReadTimeout` (30 s), die optionale Schnittstelle `ConditionalDeleter`, ein PATCH oder PUT ohne `If-Match` wird nach einem verlorenen Rennen bis zu 32-mal wiederholt statt mit 412 beantwortet, das Entfernen über einen Filter, der nichts trifft, gelingt, die Schlüssel eines PATCH ohne Pfad werden in sortierter Reihenfolge angewandt, `BearerAuth` akzeptiert das Schema in jeder Schreibweise, `startIndex` und `count` werden bei jeder Wortbreite begrenzt. Eine Listenanfrage über 10.000 Benutzer: eine Seite mit 100 von 789.417 auf 14.952 Allokationen, `userName eq` von 797.979 auf 90, ein vollständiger Durchlauf von 818.847 auf 361.098 (exakt; Zeiten nicht gemessen, Last 65) |
 | servercert v0.5.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
+| servercert v0.6.0 | [der TLS-`KeyFile` und der ACME-`EABHMACKeyFile` werden verweigert]({{< relref "/libraries/servercert.md" >}}), wenn Gruppe oder andere sie lesen oder schreiben können, bei `New` und bei jedem Neuladen (ein lesbarer Ersatzschlüssel wird an `OnError` gemeldet und nicht übernommen; das aktuelle Zertifikat wird weiter ausgeliefert); unter Windows nicht geprüft. **Aktualisieren:** `chmod 600` für beide Dateien |
 | totp v0.4.2 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | wireguard v0.1.1 | mit Go 1.27.2 getestet; weder der Code noch `go.mod` haben sich geändert |
 | wireguard v0.1.4 | die Token- und Listenanfragen der Quelle folgen keinen Weiterleitungen mehr, da sie das Basic-Geheimnis oder das Bearer-Token tragen; eine Weiterleitung ist ein Fehler ([was es ablehnt]({{< relref "/libraries/wireguard.md" >}})) |

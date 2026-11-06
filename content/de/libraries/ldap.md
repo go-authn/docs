@@ -12,7 +12,7 @@ Server, der sie ausführt und dem die Konfiguration, die Verzeichnisquellen und 
 Bind-Richtlinie gehören; dieser Bibliothek gehören die Bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.0
+go get github.com/go-authn/ldap@v0.12.1
 ```
 
 Geschrieben nach RFC 4511 (das Protokoll), 4512 (das Root-DSE und das Schema),
@@ -220,6 +220,8 @@ Ab v0.8.0 wenden beide die Auswahl an, was `ldapsearch` selbst in der CI prüft.
 Ohne Schema – `Server.Schema` nil, der Standard – ist jeder Vergleich auf dem Wert
 unabhängig von Groß- und Kleinschreibung: die sicherere der beiden Varianten fürs Lesen, da sie
 nie einen Eintrag verbirgt, den ein exakter Vergleich gefunden hätte.
+
+**Ein Bind bricht jede laufende seitenweise Suche ab** (seit v0.12.1; RFC 4511 4.2.1: Der Authentifizierungszustand wird verworfen, wenn der Bind empfangen wird), sodass eine von einer Person begonnene Suche nie weiter an die Verbindung liefert, wenn diese anonym ist oder jemand anderem gehört.
 
 ## Das Schema {#the-schema}
 

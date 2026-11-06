@@ -11,13 +11,21 @@ things that want to authenticate them speak LDAP.** authnd is the front: it
 binds and searches over [go-authn/directory]({{< relref "/libraries/_index.md" >}})'s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe
-v0.16.2, whose entries follow the standard schemas and pass the schema it
+v0.17.0, whose entries follow the standard schemas and pass the schema it
 serves at `cn=Subschema`, which a site extends with its own
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) and, with
 [DIT content rules, name forms and structure rules]({{< relref "/authnd/schemas.md#rules" >}}),
-shapes, with go-authn/ldap v0.12.0 and
+shapes, with go-authn/ldap v0.12.1 and
 go-authn/directory v0.18.0 under it; what is verified and what is not is on
 the [status]({{< relref "/status.md" >}}) page.
+
+{{< callout type="warning" >}}
+**Upgrading from v0.16.x: `max_age` now has a default**
+
+- ⛔ **`max_age` defaults to ten minutes** (at least ten `refresh` periods), where it was unlimited: a person removed from a source that then became unreadable kept binding for as long as the outage lasted, so revocation failed open. Past `max_age`, searches, people's binds and password changes answer `unavailable` (52). With `refresh = "0"` there is no default.
+- To upgrade: if a source can be down for longer than ten minutes and you prefer stale data to refusing, set `max_age` to what you can tolerate, or `"0"` for no limit, on purpose. `check` and the log say when data is too old. See [running it]({{< relref "/authnd/operations.md#it-reads-everything-once" >}}).
+- A token's name is compared with ASCII case folding only ([the name must be scoped]({{< relref "/authnd/tokens.md#scoped-name" >}})), and at most 64 checks per upstream source may be outstanding ([an outage is not a wrong password]({{< relref "/authnd/operations.md#outage" >}})).
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Upgrading from v0.15.x: a configuration with an `oidc` block must change**
