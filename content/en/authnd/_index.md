@@ -11,12 +11,12 @@ things that want to authenticate them speak LDAP.** authnd is the front: it
 binds and searches over [go-authn/directory]({{< relref "/libraries/_index.md" >}})'s
 sources, so what a database holds can be read by anything that knows how to
 ask a directory. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe
-v0.17.0, whose entries follow the standard schemas and pass the schema it
+v0.18.0, whose entries follow the standard schemas and pass the schema it
 serves at `cn=Subschema`, which a site extends with its own
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) and, with
 [DIT content rules, name forms and structure rules]({{< relref "/authnd/schemas.md#rules" >}}),
 shapes, with go-authn/ldap v0.12.1 and
-go-authn/directory v0.18.0 under it; what is verified and what is not is on
+go-authn/directory v0.19.0 under it; what is verified and what is not is on
 the [status]({{< relref "/status.md" >}}) page.
 
 {{< callout type="warning" >}}

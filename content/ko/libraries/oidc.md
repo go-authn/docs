@@ -151,6 +151,8 @@ true일 때만** `email`, 그다음 `sub`입니다. 확인되지 않은 이메�
 
 계정은 기관에 상대적입니다. 연합 프록시 뒤에서는 하나의 발급자가 여러 기관의 사람을 보증합니다. `oidc.ScopedName(name, allowed, defaultScope)` 은 이 발급자가 주장할 수 있는 범위인지 Shibboleth 가 scope 를 검사하듯 **확인한 뒤** 이름을 ASCII 소문자 `local@scope` 로 돌려줍니다(eduPersonPrincipalName 은 eduPerson 스키마에서 `caseIgnoreMatch` 이며 단일 값입니다). 다른 범위는 `ErrScopeNotAllowed`, 범위도 기본값도 없는 이름은 `ErrNoScope` 입니다. `@` 가 없는 이름은 `defaultScope`(범위 이름보다 계정이 먼저 있던 기관)를 받으며, 이것도 허용되어야 합니다. `Token.ScopedUsername` 은 토큰의 사용자 이름에 이를 적용합니다. `UsernameClaim` 을 `eduperson_principal_name` 또는 `voperson_id` 로 설정하십시오. 이름에는 `@`가 정확히 하나 있어야 합니다. 둘 이상 있는 이름은 `ErrBadName`이며(v0.6.1부터), 로컬 부분에 `@`를 넣어 범위를 고를 수 없습니다. 범위는 그 뒤의 부분입니다.
 
+**이름에 쓰는 접기는 하나뿐입니다**(v0.7.0부터). ASCII 문자만 접으며, 이 이름을 비교하거나 저장하는 서비스도 같은 방식으로 접어야 합니다. `oidc.ASCIILower(name)`와 `oidc.EqualASCIIFold(a, b)`가 그 유일한 접기입니다. `strings.ToLower`와 `strings.EqualFold`는 유니코드를 접어서 켈빈 기호 U+212A를 "k"와 같게 봅니다. `Kate`(켈빈 기호)와 `kate`는 발급자에게는 두 계정이지만 유니코드를 접는 소비자에게는 하나입니다.
+
 ## 무엇과 대조해 검사하는가 {#what-it-is-checked-against}
 
 **pyjwt**가 테스트 스위트의 모든 토큰에 서명하므로, 검증자는 같은 손에서 나온 서명자에게

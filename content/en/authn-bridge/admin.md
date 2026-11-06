@@ -129,6 +129,8 @@ IdP releases no username.
 The entry is recorded **before** anything is revoked, so a grant racing the
 revocation meets the entry.
 
+**Names fold ASCII letters only** (since v0.23.8). The disable list, the certificate principals and the subject-id compare usernames with go-authn/oidc's `ASCIILower`, so a Kelvin sign (U+212A) is not a "k": `kate` and its spelling with a Kelvin sign are two people, with two disable entries and two certificate principals. Disabling one does not disable the other.
+
 **Disabling is kept in `disabled_file`, and refused without one.** Somebody
 disabled until the next restart would be let back in by the next deployment:
 

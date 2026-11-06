@@ -149,6 +149,8 @@ ECDSA の `s` と `n − s` はどちらも、アルゴリズムが許すとお�
 
 アカウントは機関に属します。連合プロキシの背後では、1 つの発行者が多くの機関の人を保証します。`oidc.ScopedName(name, allowed, defaultScope)` は、この発行者が主張してよいスコープかどうかを Shibboleth のスコープ検査のように**確認した上で**、名前を ASCII 小文字の `local@scope` として返します（eduPersonPrincipalName は eduPerson スキーマで `caseIgnoreMatch`、単一値です）。別のスコープは `ErrScopeNotAllowed`、スコープもデフォルトもない名前は `ErrNoScope` です。`@` のない名前には `defaultScope`（スコープ付き名前より前からアカウントがある機関）が付き、これも許可されている必要があります。`Token.ScopedUsername` はトークンのユーザー名に対して同じことを行います。`UsernameClaim` に `eduperson_principal_name` または `voperson_id` を設定してください。名前には `@` がちょうど 1 つ含まれていなければなりません。2 つ以上ある名前は `ErrBadName` で（v0.6.1 から）、ローカル部分に `@` を入れてスコープを選ぶことはできません。スコープはその後ろの部分です。
 
+**名前の畳み込みは 1 つだけ** (v0.7.0 以降)。畳み込むのは ASCII 文字だけで、これらの名前を比較または保存するサービスも同じ方法で畳み込む必要があります。`oidc.ASCIILower(name)` と `oidc.EqualASCIIFold(a, b)` がその唯一の畳み込みです。`strings.ToLower` と `strings.EqualFold` は Unicode を畳み込み、ケルビン記号 U+212A を "k" と同一視します。`Kate` (ケルビン記号) と `kate` は、発行者にとっては 2 つのアカウントですが、Unicode を畳み込む利用側にとっては 1 つです。
+
 ## 何に対して検証されているか {#what-it-is-checked-against}
 
 **pyjwt** がテストスイートのすべてのトークンに署名するので、検証器が同じ手による署名者に審査される

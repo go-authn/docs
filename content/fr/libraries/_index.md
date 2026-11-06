@@ -19,11 +19,11 @@ Tous sont en pur Go et se compilent avec `CGO_ENABLED=0`.
 | [totp]({{< relref "/libraries/totp.md" >}}) | ce code à six chiffres est-il juste, et a-t-il déjà servi ? | v0.4.2 | `github.com/go-authn/totp` |
 | [fido]({{< relref "/libraries/fido.md" >}}) | comment parle-t-on à une clé de sécurité, par rapports de 64 octets ? | v0.6.2 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | est-ce *la clé enregistrée* qui a répondu, et une personne l'a-t-elle touchée ? | v0.4.2 | `github.com/go-authn/keyfactor` |
-| [directory]({{< relref "/libraries/directory.md" >}}) | qui est quelqu'un, et qu'est-ce qui peut le prouver ? | v0.18.0 | `github.com/go-authn/directory` |
+| [directory]({{< relref "/libraries/directory.md" >}}) | qui est quelqu'un, et qu'est-ce qui peut le prouver ? | v0.19.0 | `github.com/go-authn/directory` |
 | [ldap]({{< relref "/libraries/ldap.md" >}}) | quels sont les octets d'un serveur LDAP ? | v0.12.1 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | ce ticket Kerberos est-il bon pour ce service ? | v0.3.3 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | comment un royaume délivre-t-il des tickets à partir d'un annuaire ? | v0.6.0 | `github.com/go-authn/kdc` |
-| [oidc]({{< relref "/libraries/oidc.md" >}}) | qui ce jeton porteur dit-il être en train de demander, et faut-il le croire ? | v0.6.1 | `github.com/go-authn/oidc` |
+| [oidc]({{< relref "/libraries/oidc.md" >}}) | qui ce jeton porteur dit-il être en train de demander, et faut-il le croire ? | v0.7.0 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | qu'a dit le fournisseur d'identité d'une fédération à propos de cette personne ? | v0.4.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | ce certificat ou cette clé SSH est-il révoqué, comme sshd répondrait ? | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | d'où vient le certificat de serveur TLS d'un démon ? | v0.6.0 | `github.com/go-authn/servercert` |

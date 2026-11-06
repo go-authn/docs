@@ -155,6 +155,8 @@ Detrás de un proxy de federación (eduGAIN mediante MyAccessID, eduTEAMS, Renat
 
 Una cuenta es relativa a una institución: detrás de un proxy de federación un emisor responde por personas de muchas. `oidc.ScopedName(name, allowed, defaultScope)` devuelve el nombre como `local@scope`, en minúsculas ASCII (eduPersonPrincipalName es `caseIgnoreMatch` en el esquema eduPerson y monovalor), tras **comprobar el ámbito** contra lo que este emisor puede afirmar, como Shibboleth comprueba un scope: otro ámbito es `ErrScopeNotAllowed`, un nombre sin ámbito y sin valor por defecto es `ErrNoScope`. Un nombre sin `@` toma `defaultScope` (una institución cuyas cuentas son anteriores a los nombres con ámbito), que también debe estar permitido. `Token.ScopedUsername` lo aplica al nombre de usuario del token: configure `UsernameClaim` como `eduperson_principal_name` o `voperson_id`. El nombre debe contener exactamente un `@`: uno con más de uno es `ErrBadName` (desde la v0.6.1), de modo que no se puede elegir un ámbito poniendo un `@` en la parte local. El ámbito es lo que lo sigue.
 
+**Un solo plegado para los nombres** (desde la v0.7.0). Solo se pliegan las letras ASCII, y un servicio que compare o almacene estos nombres debe plegar igual: `oidc.ASCIILower(name)` y `oidc.EqualASCIIFold(a, b)` son ese único plegado. `strings.ToLower` y `strings.EqualFold` pliegan Unicode, lo que iguala el signo Kelvin U+212A con "k": `Kate` (con Kelvin) y `kate` son dos cuentas para un emisor y una sola para un consumidor que pliega Unicode.
+
 ## Contra qué se comprueba {#what-it-is-checked-against}
 
 **pyjwt** firma todos los tokens del conjunto de pruebas, de modo que el verificador

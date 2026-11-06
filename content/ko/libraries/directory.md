@@ -11,7 +11,7 @@ tags: [라이브러리, 디렉터리, ldap, sql]
 모델이며, 요점은 질문의 후반부에 있습니다.
 
 ```sh
-go get github.com/go-authn/directory@v0.17.0
+go get github.com/go-authn/directory@v0.19.0
 ```
 
 v0.17.0의 새 기능: [`ErrUnavailable`](#unavailable)은 장애를 틀린 비밀번호와 구별하며, 멤버 DN은 훑어 보는 대신
@@ -381,6 +381,8 @@ default:
 
 authnd v0.15.0은 [운영 페이지]({{< relref "/authnd/operations.md#limits" >}})에 나온 대로 바인드에 이렇게 응답합니다.
 
+**확인을 취소할 수 있습니다.** `Identity.VerifyContext(ctx, password)`(v0.19.0부터)는 `ctx`가 끝나면 포기합니다. `ldapdir` ID에서는 업스트림 연결을 닫고(go-ldap에서 요청을 취소하는 방법입니다. go-ldap에는 컨텍스트도 기본 타임아웃도 없어서, 연결을 받아들이고 응답하지 않는 서버에 대한 bind는 영원히 기다렸습니다) `ErrUnavailable`로 응답합니다. 연결 수립도 컨텍스트의 기한에 끝납니다. 소스는 `directory.WithContextVerifier`로 이를 제공합니다. `Verify`는 배경 컨텍스트로 계속 동작하며, `WithVerifier`만 가진 ID는 `Verify`입니다(중단할 수 없음). bind에 제한을 두는 서버(authnd의 `operation_timeout`)는 `VerifyContext`를 호출해야 응답한 뒤에 응답하지 않는 업스트림이 goroutine과 연결을 붙들고 있지 않습니다.
+
 ## 거부하는 것과 그 이유 {#what-it-refuses-and-why}
 
 - **구성원이 없는 그룹**, 그리고 **어떤 소스에도 없는 그룹**을 `Expand`가 `@group`을
@@ -452,4 +454,4 @@ CI에서 검사합니다.
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.19.0](https://pkg.go.dev/github.com/go-authn/directory@v0.19.0)

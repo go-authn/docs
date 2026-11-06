@@ -129,6 +129,8 @@ IdP keinen Benutzernamen herausgibt.
 Der Eintrag wird **vor** jedem Widerruf festgehalten, sodass ein Grant, der mit dem
 Widerruf um die Wette läuft, auf den Eintrag trifft.
 
+**Namen falten nur ASCII-Buchstaben** (ab v0.23.8). Die Deaktivierungsliste, die Zertifikats-Principals und die subject-id vergleichen Benutzernamen mit `ASCIILower` aus go-authn/oidc, ein Kelvin-Zeichen (U+212A) ist also kein "k": `kate` und die Schreibweise mit einem Kelvin-Zeichen sind zwei Personen, mit zwei Deaktivierungseinträgen und zwei Zertifikats-Principals. Wer die eine deaktiviert, deaktiviert nicht die andere.
+
 **Die Deaktivierung wird in `disabled_file` festgehalten und ohne diese Datei abgelehnt.** Jemand,
 der nur bis zum nächsten Neustart deaktiviert wäre, würde vom nächsten Deployment wieder hereingelassen:
 

@@ -11,7 +11,7 @@ tenue en mémoire, une base de données SQL, un serveur LDAP, ou des blocs `user
 fichier de configuration — et ce qui compte, c'est la seconde moitié de la question.
 
 ```sh
-go get github.com/go-authn/directory@v0.17.0
+go get github.com/go-authn/directory@v0.19.0
 ```
 
 Nouveau en v0.17.0 : [`ErrUnavailable`](#unavailable), une panne distinguée d'un
@@ -416,6 +416,8 @@ default:
 C'est ainsi qu'authnd v0.15.0 répond à une liaison, comme le dit
 [la page d'exploitation]({{< relref "/authnd/operations.md#limits" >}}).
 
+**Une vérification peut être annulée.** `Identity.VerifyContext(ctx, password)` (depuis la v0.19.0) abandonne quand `ctx` se termine : pour une identité `ldapdir`, la connexion vers l'amont est fermée (c'est ainsi qu'on annule une requête dans go-ldap, qui n'a ni contexte ni délai par défaut : un bind vers un serveur qui accepte et ne répond jamais attendait indéfiniment) et la réponse est `ErrUnavailable` ; la connexion initiale s'arrête elle aussi à l'échéance du contexte. Une source en fournit une avec `directory.WithContextVerifier` ; `Verify` fonctionne toujours, avec un contexte d'arrière-plan, et une identité qui n'a qu'un `WithVerifier` est `Verify` (non interruptible). Un serveur qui borne un bind (l'`operation_timeout` d'authnd) doit appeler `VerifyContext`, pour qu'un amont bloqué ne garde ni goroutine ni connexion une fois la réponse donnée.
+
 ## Ce qu'il refuse, et pourquoi {#what-it-refuses-and-why}
 
 - **Un groupe où il n'y a personne**, et **un groupe qu'aucune source n'a**,
@@ -499,4 +501,4 @@ compilations `nosql` et `noldap` sont vérifiées en CI.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.17.0](https://pkg.go.dev/github.com/go-authn/directory@v0.17.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.19.0](https://pkg.go.dev/github.com/go-authn/directory@v0.19.0)

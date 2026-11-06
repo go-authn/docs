@@ -131,6 +131,8 @@ usuario.
 La entrada se registra **antes** de revocar nada, así que una concesión que compite
 con la revocación se encuentra con la entrada.
 
+**Los nombres pliegan solo las letras ASCII** (desde la v0.23.8). La lista de desactivados, los principales de certificado y el subject-id comparan los nombres de usuario con `ASCIILower` de go-authn/oidc, así que un signo Kelvin (U+212A) no es una "k": `kate` y su grafía con un signo Kelvin son dos personas, con dos entradas de desactivación y dos principales de certificado. Desactivar a una no desactiva a la otra.
+
 **La desactivación se guarda en `disabled_file`, y se rechaza sin él.** A alguien
 desactivado hasta el próximo reinicio lo dejaría volver a entrar el próximo
 despliegue:
