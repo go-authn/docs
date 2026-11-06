@@ -148,7 +148,7 @@ ECDSA 的 `s` 和 `n − s` 都能通过验证，算法允许这样。因此
 
 自 **v0.5.0** 起，`oidc.NewSet(v1, v2, …)` 可验证来自多个签发者的令牌，每个验证器有自己的 audience 和密钥集。令牌依据其**未经验证**的 `iss` 被路由到恰好为该签发者配置的验证器，并在那里验证：用该签发者的密钥验签、再次核对 `iss`、audience、时间。读取 `iss` 只是选择密钥集，伪造的令牌会在随后的验证中失败。未知的 `iss` 返回 `ErrUnknownIssuer`，不产生任何网络访问；从不尝试其他签发者的密钥集；同一签发者的两个验证器会被拒绝；超过 `MaxTokenSize`（16 KiB）的令牌在解码前即被拒绝。
 
-在联盟代理（经 MyAccessID 的 eduGAIN、eduTEAMS、Renater、Keycloak 代理）之后，`oidc.Accept{Claim, Values}` 与 `oidc.Check(accepts, token)` 会拒绝其声明不含任何所服务机构取值的令牌。所有 accept 都必须满足；多值声明只需一个值匹配；缺失或不是字符串（列表）的声明不包含任何值。大小写规则取自声明的模式：`schac_home_organization`（SCHAC 1.6.0，域名，`caseIgnoreMatch`）、`eduperson_scoped_affiliation` 和 `voperson_external_affiliation` 不区分大小写，其他声明精确比较。只折叠 ASCII 字母（开尔文符号 U+212A 不是 `k`）。声明必须出现在被验证的令牌中：MyAccessID 仅在 userinfo 中提供 `schac_home_organization`。
+在联盟代理（经 MyAccessID 的 eduGAIN、eduTEAMS、Renater、Keycloak 代理）之后，`oidc.Accept{Claim, Values}` 与 `oidc.Check(accepts, token)` 会拒绝其声明不含任何所服务机构取值的令牌。所有 accept 都必须满足；多值声明只需一个值匹配；缺失或不是字符串（列表）的声明不包含任何值。大小写规则取自声明的模式：`schac_home_organization`（SCHAC 1.6.0，域名，`caseIgnoreMatch`）、`eduperson_scoped_affiliation` 和 `voperson_external_affiliation` 不区分大小写，其他声明精确比较。只折叠 ASCII 字母（开尔文符号 U+212A 不是 `k`）。声明必须出现在被验证的令牌中：MyAccessID 仅在 userinfo 中提供 `schac_home_organization`。登录一侧（提供者的 `rp.Set`、与其提供者绑定的 state、对 `iss` 的 RFC 9207 检查）在 [go-authn/rp](https://github.com/go-authn/rp) v0.4.0 中。自 v0.4.0 起它还能结束一次登录：`Client.Revoke(ctx, refreshToken, rp.RefreshTokenHint)` 请求提供者的 `revocation_endpoint`（RFC 7009）吊销刷新令牌，使已登出会话的令牌副本一文不值；没有该端点的提供者返回 `rp.ErrNoRevocation`。
 
 ## 带作用域的名称，以及作用域属于谁 {#scoped-names}
 
