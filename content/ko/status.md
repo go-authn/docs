@@ -5,11 +5,11 @@ description: "이 문서가 설명하는 릴리스, 각 릴리스에서 추가�
 tags: [상태, 릴리스]
 ---
 
-이 문서는 문서 버전 **0.8**이며 다음을 설명합니다.
+이 문서는 문서 버전 **0.9**이며 다음을 설명합니다.
 
 | 프로그램 | 릴리스 | 모듈 |
 |---|---|---|
-| authnd | **v0.16.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.17.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -17,12 +17,18 @@ tags: [상태, 릴리스]
 라이브러리의 버전은 [해당 페이지]({{< relref "/libraries/_index.md" >}})에
 있습니다. ldap은 DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙의 읽기, 적용, 게시와
 빌드되지 않는 스키마를 위한 타입이 있는 `BuildError`, HCL2
-스키마, `ldapschema` 변환기를 갖춘 **v0.12.0**이고,
+스키마, `ldapschema` 변환기를 갖춘 **v0.12.1**이고,
 directory는 선언된 오브젝트 클래스를 갖춘 **v0.18.0**입니다. authnd
-v0.16.2는 ldap v0.12.0과 directory v0.18.0을 내장합니다.
+v0.17.0는 ldap v0.12.1과 directory v0.18.0을 내장합니다.
 위 프로그램 중 어느 것이든 새 마이너 버전이 나오면 새 문서 버전이 됩니다. 따라서
-독자가 `/docs/0.8/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
-페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/`에 남아 있습니다.
+독자가 `/docs/0.9/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
+페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/`, `/docs/0.8/`에 남아 있습니다.
+
+{{< callout type="warning" >}}
+**authnd를 v0.16.x에서 업그레이드: `max_age`의 기본값은 10분입니다**
+
+제공되는 데이터에는 나이 제한이 없어서, 소스에서 제거된 사람이 그 소스를 읽을 수 없게 된 뒤에도 장애가 이어지는 동안 계속 bind할 수 있었습니다. v0.17.0부터 `max_age`는 10분이며(`refresh` 주기의 10배 이상, `refresh = "0"`이면 기본값 없음), 그 시간이 지나면 검색, 사람의 bind, 비밀번호 변경은 `unavailable`(52)로 응답합니다. `max_age`를 허용할 수 있는 값으로 설정하거나, 제한이 없어도 되면 `"0"`으로 설정하십시오. [업그레이드 안내]({{< relref "/authnd/_index.md" >}})와 [오래된 데이터를 거부하는 방식]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})을 참조하십시오.
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **authnd를 v0.15.x에서 업그레이드: `oidc { domains }`가 필수입니다**
@@ -105,6 +111,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.16.0 | ⛔ 보안. go-authn/oidc v0.6.1과 go-authn/directory v0.18.0 사용. **`oidc` 블록이 있는 배포에는 호환되지 않는 변경**: [`domains`가 필수]({{< relref "/authnd/tokens.md#scoped-name" >}})이며 없으면 서버가 시작되지 않습니다. 토큰의 이름은 허용된 도메인의 정확히 하나의 `local@scope`여야 하며(범위 없는 이름, 다른 기관의 이름, `@`가 둘인 이름은 거부), 선택 사항인 `local_domain`(`domains` 중 하나)은 그 범위의 사람을 로컬 부분만의 디렉터리 이름에 대응시키고 다른 범위는 `local@scope` 전체로 조회됩니다. 연합 프록시 뒤에서는 어느 기관의 alice든 로컬 alice로 바인드되었습니다. 한 소스의 두 엔트리가 같은 uid를 가지면 조용히 하나를 고르는 대신 시작할 때와 새로 고칠 때 오류가 됩니다. [업그레이드 노트]({{< relref "/authnd/_index.md" >}}) |
 | v0.16.1 | `kerberos { listen = "host:0" }`는 UDP와 TCP에 하나의 포트를 받습니다(이전에는 두 개였고, `krb5.conf`는 하나만 지정할 수 있습니다). 시작 줄은 그 포트를 표시합니다. 테스트는 포트를 골라 해제한 뒤 지정하는 방식을 그만두었습니다. 이 방식은 러너에서 `address already in use`로 실패했습니다 |
 | v0.16.2 | ⛔ 보안. [렐름은 스냅숏을 읽습니다]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}}). 소스는 읽지 않습니다: 모든 AS-REQ와 TGS-REQ(UDP의 인증되지 않은 AS-REQ 포함)가 각 SQL 소스의 전체 사용자 쿼리와 각 `ldap` 업스트림의 하위 트리 검색을 실행했습니다. `max_age`는 이제 Kerberos에도 적용됩니다(넘으면 `KDC_ERR_SVC_UNAVAILABLE`). 데이터베이스에서 삭제된 사람은 LDAP 바인드처럼 `refresh` 한 주기 안에 티켓을 받지 못합니다. go-authn/kdc v0.6.0 사용 |
+| v0.17.0 | ⛔ 보안, 두 번째 점검, go-authn/ldap v0.12.1 사용. **호환되지 않는 변경: [`max_age`에 이제 기본값이 있습니다]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})**. 10분(`refresh` 주기의 10배 이상, `refresh = "0"`이면 기본값 없음)이며 이전에는 무제한이었습니다. 소스에서 제거된 사람이 그 소스를 읽을 수 없게 된 뒤에도 장애가 이어지는 동안 계속 bind할 수 있었습니다. 그 시간이 지나면 검색, 사람의 bind, 비밀번호 변경은 `unavailable`(52)로 응답하며, `max_age = "0"`은 받아들여지고 의도적인 제한 없음을 뜻합니다. [토큰의 이름은 ASCII 대소문자 접기로만 비교됩니다]({{< relref "/authnd/tokens.md#scoped-name" >}}): 켈빈 기호(U+212A)를 쓴 `Kate@univ-a.example`는 더 이상 `kate`로 bind되지 않습니다. 업스트림에 대해 [소스마다 미완료 확인은 최대 64개]({{< relref "/authnd/operations.md#outage" >}})이며 65번째는 즉시 `unavailable`로 응답합니다(응답하지 않는 업스트림에 대한 bind 400건에서 유지되던 goroutine은 1620개에서 257개로 줄었습니다). [업그레이드 안내]({{< relref "/authnd/_index.md" >}}) |
 
 ### authn-bridge {#authn-bridge}
 
@@ -206,10 +213,12 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | ldap v0.11.2 | 성능만 개선, 결과는 그대로: 속성 열 개짜리 엔트리에서 `Validate`의 할당이 76회에서 12회로 줄어듦(소문자 복사본 없는 조회, 나누었다 다시 합치지 않는 설명, 맵 대신 제자리 집합). 결과는 v0.11.1과 같고, 표준 스키마와 규칙 스키마에서 무작위 엔트리로 v0.11.1의 `Validate` 사본과 대조했으며 차분 퍼저로도 확인함 |
 | ldap v0.11.3 | 성능만 개선, 결과는 그대로: `GoverningStructureRule`의 할당이 계정 하나에서 12회에서 5회로 줄어듦(RDN의 타입만 읽음), DN 파서는 RDN이 네 개인 DN에서 6회에서 3회로 줄어듦. 결과는 v0.11.2와 같고, 무작위 엔트리와 모든 상위 규칙에서 v0.11.2의 `GoverningStructureRule` 사본과 대조했으며 차분 퍼저로도 확인함 |
 | ldap v0.12.0 | [서버의 자원 한도]({{< relref "/libraries/ldap.md" >}}): `Server.MaxConnections`와 `Server.MaxConnectionsPerIP`(기본 0, 제한 없음. 상한을 넘은 연결은 `busy`(51) 연결 해제 통지, RFC 4511 4.4.1을 받고 닫힙니다). `Server.Timeout`은 서버가 강제하며, 핸들러가 막혀서 컨텍스트를 무시하더라도 기한에 모든 작업에 `timeLimitExceeded`(3)로 응답합니다(늦은 결과는 버려지고, 고루틴은 돌아올 때까지 `MaxPending`과 `MaxPendingAuth`에 계산됩니다). 클라이언트의 검색 `timeLimit`은 핸들러의 컨텍스트에 적용됩니다. 핸들러의 `DeadlineExceeded`는 그 작업 자신의 컨텍스트가 만료되었을 때만 코드 3이 됩니다. 작업당 할당(정확): `Timeout` 없이는 전후 모두 3, 있으면 이전 10, 지금 16 |
+| ldap v0.12.1 | [bind는 진행 중인 페이지 검색을 중단합니다]({{< relref "/libraries/ldap.md" >}})(RFC 4511 4.2.1): 한 사람이 시작한 검색은 연결이 익명이거나 다른 사람의 것이 된 뒤에는 결과를 계속 전달하지 않습니다 |
 | oidc v0.4.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}})은 `@`가 둘 이상인 이름을 거부합니다(`ErrBadName`) |
 | scim v0.2.0 | [감사, 퍼징, 카오스, 성능 실행]({{< relref "/libraries/scim.md#v020" >}}): `Server.ReadTimeout`(30초), 선택 인터페이스 `ConditionalDeleter`, `If-Match` 없는 PATCH나 PUT은 진 경합에서 412 대신 최대 32번 다시 수행, 아무것도 일치하지 않는 필터로의 제거는 성공, 경로 없는 PATCH의 키는 정렬된 순서로 적용, `BearerAuth`는 스킴을 대소문자 구분 없이 받아들임, `startIndex`와 `count`는 워드 크기와 상관없이 상한으로 잘림. 사용자 10,000명에 대한 목록 요청: 100개 페이지는 789,417회에서 14,952회로, `userName eq`는 797,979회에서 90회로, 전체 훑기는 818,847회에서 361,098회로(정확. 시간은 측정하지 않음, 부하 65) |
 | servercert v0.5.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
+| servercert v0.6.0 | [TLS `KeyFile`과 ACME `EABHMACKeyFile`은 거부됩니다]({{< relref "/libraries/servercert.md" >}}). 그룹이나 다른 사용자가 읽거나 쓸 수 있는 경우이며, `New` 시점과 매번 다시 불러올 때 확인합니다(읽을 수 있는 교체 키는 `OnError`로 보고되고 사용되지 않으며, 현재 인증서가 계속 제공됩니다). Windows에서는 확인하지 않습니다. **업그레이드:** 두 파일 모두 `chmod 600` |
 | totp v0.4.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | wireguard v0.1.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | wireguard v0.1.4 | 소스의 토큰 요청과 목록 요청은 Basic 시크릿이나 Bearer 토큰을 싣고 있으므로 더 이상 리디렉션을 따르지 않습니다. 리디렉션은 오류입니다([거부하는 것]({{< relref "/libraries/wireguard.md" >}})) |

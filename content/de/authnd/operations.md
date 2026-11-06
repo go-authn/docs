@@ -42,6 +42,8 @@ LDAP-Nachricht zu groß ist (etwa 3 MiB, was ein einziger 10-MB-Attributwert
 erreicht), wird nicht veröffentlicht; das wird beim Start und von `check`
 gemeldet, wie bei einem Eintrag, der das Schema verletzt.
 
+**`max_age` beträgt standardmäßig zehn Minuten** (seit v0.17.0; mindestens zehn `refresh`-Perioden, und mit `refresh = "0"` gilt kein Standardwert, da nichts mehr gelesen wird). Vorher war es unbegrenzt, und eine Person, die aus einer unlesbar gewordenen Quelle entfernt wurde, konnte sich so lange weiter anmelden, wie der Ausfall dauerte. Setzen Sie `max_age` auf einen anderen Wert (mindestens `refresh`) oder bewusst auf `"0"` für keine Grenze. `check` und das Log sagen, wann Daten zu alt sind.
+
 ## Signale {#signals}
 
 | Signal | was geschieht |
@@ -156,6 +158,10 @@ Vor v0.15.0 wurde das als falsches Passwort gemeldet, sodass ein Anmeldeformular
 der Person sagte, ihr Passwort sei falsch, während das Verzeichnis ausgefallen war.
 Ein falsches Passwort ergibt weiterhin 49. Die Ursache steht im Log, nicht in dem,
 was der Client erfährt, und ein Ausfall zählt nicht als fehlgeschlagener Versuch.
+
+**Ein hängender Upstream kann Prüfungen nicht aufstauen.** Eine Prüfung gegen einen Upstream lässt sich nach dem Start nicht abbrechen (das `Verify` der directory-Bibliothek nimmt keinen Kontext), sodass eine, die ihr Budget überschreitet, eine Goroutine und eine Upstream-Verbindung behält, bis der Upstream antwortet oder aufgibt. Höchstens **64 Prüfungen pro Quelle** dürfen ausstehen; die 65. wird sofort mit `unavailable` (52) beantwortet und startet nichts, sodass eine Quelle, die annimmt und nie antwortet, nur eine begrenzte Zahl von Goroutinen hält (gemessen: 400 Binds ließen vorher 1620 Goroutinen gehalten, nachher 257), und Binds gegen andere Quellen sind nicht betroffen.
+
+**Der Name eines Tokens wird nur mit ASCII-Groß-/Kleinschreibung-Faltung verglichen**, wie es go-authn/oidc tut: `Kate@univ-a.example` mit einem Kelvin-Zeichen (U+212A) ist beim Aussteller ein anderes Konto und bindet nicht mehr als `kate`.
 
 ## Wenn es nicht startet {#when-it-does-not-start}
 

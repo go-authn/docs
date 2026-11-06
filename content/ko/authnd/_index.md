@@ -11,13 +11,21 @@ tags: [authnd, ldap]
 [go-authn/directory]({{< relref "/libraries/_index.md" >}})의 소스 위에서 바인드와
 검색을 처리하므로, 데이터베이스에 있는 내용을 디렉터리에 질의할 줄 아는 어떤
 것이든 읽을 수 있습니다. 순수 Go, `CGO_ENABLED=0`, 바이너리 하나입니다. 이 문서는
-v0.16.2를 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
+v0.17.0를 설명하며, 이 버전의 엔트리는 표준 스키마를 따르고 `cn=Subschema`에서
 제공하는 스키마를 통과합니다. 사이트는 이 스키마를 자신의 스키마로
 확장할 수 있고([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})),
 [DIT 콘텐츠 규칙, 이름 형식, 구조 규칙]({{< relref "/authnd/schemas.md#rules" >}})으로
 엔트리의 형태까지 정할 수 있습니다. 그 아래에는
-go-authn/ldap v0.12.0과 go-authn/directory v0.18.0이 있습니다. 무엇이 검증되었고
+go-authn/ldap v0.12.1과 go-authn/directory v0.18.0이 있습니다. 무엇이 검증되었고
 무엇이 아닌지는 [상태]({{< relref "/status.md" >}}) 페이지에 있습니다.
+
+{{< callout type="warning" >}}
+**v0.16.x에서 업그레이드: `max_age`에 이제 기본값이 있습니다**
+
+- ⛔ **`max_age`의 기본값은 10분입니다** (`refresh` 주기의 10배 이상). 이전에는 무제한이었습니다. 소스에서 제거된 사람이, 그 소스를 읽을 수 없게 된 뒤에도 장애가 이어지는 동안 계속 bind할 수 있었고, 그래서 권한 회수가 열린 채로 실패했습니다. `max_age`가 지나면 검색, 사람의 bind, 비밀번호 변경은 `unavailable`(52)로 응답합니다. `refresh = "0"`이면 기본값이 없습니다.
+- 업그레이드하려면: 소스가 10분보다 오래 중단될 수 있고 거부보다 오래된 데이터를 선호한다면, `max_age`를 허용할 수 있는 값으로 설정하거나 의도적으로 `"0"`(제한 없음)으로 설정하십시오. 데이터가 너무 오래되면 `check`와 로그가 알려 줍니다. [운영]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})을 참조하십시오.
+- 토큰의 이름은 ASCII 대소문자 접기로만 비교되며 ([이름에는 범위가 있어야 합니다]({{< relref "/authnd/tokens.md#scoped-name" >}})), 업스트림 소스마다 미완료 확인은 최대 64개입니다 ([장애는 틀린 비밀번호가 아닙니다]({{< relref "/authnd/operations.md#outage" >}})).
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **v0.15.x에서 업그레이드: `oidc` 블록이 있는 설정은 바꿔야 합니다**

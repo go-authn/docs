@@ -80,6 +80,8 @@ Bereich kann nicht mehr binden: Den Aussteller so konfigurieren, dass er einen
 Claim mit Bereich freigibt.
 {{< /callout >}}
 
+**Der Vergleich faltet nur die ASCII-Groß-/Kleinschreibung** (seit v0.17.0), wie `ScopedName` von go-authn/oidc: `Kate@univ-a.example` mit einem Kelvin-Zeichen (U+212A) ist beim Aussteller ein anderes Konto und bindet nicht mehr als `kate`. Die Suche und der Vergleich der authzid verwendeten vorher die Unicode-Faltung.
+
 ## Die Discovery findet beim Start statt {#discovery-happens-at-startup}
 
 Das Discovery-Dokument und die Schlüssel des Anbieters werden gelesen, wenn der Server startet,

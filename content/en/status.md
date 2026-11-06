@@ -5,25 +5,31 @@ description: "Which releases these pages describe, what each release added, and 
 tags: [status, releases]
 ---
 
-These pages are documentation version **0.8**, and describe:
+These pages are documentation version **0.9**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.16.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.17.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
-ldap is **v0.12.0**, with DIT content rules, name forms and DIT structure
+ldap is **v0.12.1**, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed `BuildError` for a schema that does
 not build, schemas in HCL2 and the `ldapschema` converter, and
 directory **v0.18.0**, with declared object classes. authnd
-v0.16.2 embeds ldap v0.12.0 and directory v0.18.0.
+v0.17.0 embeds ldap v0.12.1 and directory v0.18.0.
 A new minor version of any program above is a new documentation version, so
-the pages a reader finds under `/docs/0.8/` keep describing what they
+the pages a reader finds under `/docs/0.9/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
-`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/` and `/docs/0.7/`.
+`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/` and `/docs/0.8/`.
+
+{{< callout type="warning" >}}
+**Upgrading authnd from v0.16.x: `max_age` defaults to ten minutes**
+
+Served data used to have no age limit, so a person removed from a source that then became unreadable kept binding for as long as the outage lasted. From v0.17.0 `max_age` is ten minutes (at least ten `refresh` periods; no default with `refresh = "0"`), and past it searches, people's binds and password changes answer `unavailable` (52). Set `max_age` to what you can tolerate, or `"0"` for no limit. See [the upgrade note]({{< relref "/authnd/_index.md" >}}) and [how stale data is refused]({{< relref "/authnd/operations.md#it-reads-everything-once" >}}).
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Upgrading authnd from v0.15.x: `oidc { domains }` is required**
@@ -109,6 +115,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.16.0 | ⛔ Security, with go-authn/oidc v0.6.1 and go-authn/directory v0.18.0. **Breaking for a deployment with an `oidc` block**: [`domains` is required]({{< relref "/authnd/tokens.md#scoped-name" >}}) and the server does not start without it. The token's name must be exactly one `local@scope` of an allowed domain (an unscoped name, another institution's, or one with two `@` is refused); the optional `local_domain`, one of `domains`, maps that scope's people to bare directory names, and other scopes are looked up as the whole `local@scope`. Behind a federation proxy any institution's alice used to bind as the local alice. Two entries of one source that share a uid are an error at startup and at refresh, not a silent pick. [Upgrade note]({{< relref "/authnd/_index.md" >}}) |
 | v0.16.1 | `kerberos { listen = "host:0" }` gets one port for UDP and TCP (it got two, and a `krb5.conf` names one); the startup line names that port. The tests stop picking a port, releasing it and naming it, which failed on a runner with `address already in use` |
 | v0.16.2 | ⛔ Security. [The realm reads the snapshot]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}}), never the sources: every AS-REQ and TGS-REQ, an unauthenticated one over UDP included, ran the whole people query of every SQL source and a subtree search of every `ldap` upstream. `max_age` now holds for Kerberos (`KDC_ERR_SVC_UNAVAILABLE` past it). A person removed from a database stops getting tickets within one `refresh` period, as LDAP binds do. With go-authn/kdc v0.6.0 |
+| v0.17.0 | ⛔ Security, second pass, with go-authn/ldap v0.12.1. **Breaking: [`max_age` now defaults]({{< relref "/authnd/operations.md#it-reads-everything-once" >}}) to ten minutes** (at least ten `refresh` periods; no default with `refresh = "0"`), where it was unlimited: a person removed from a source that then became unreadable kept binding for as long as the outage lasted. Past it searches, people's binds and password changes answer `unavailable` (52); `max_age = "0"` is accepted and means no limit, on purpose. [A token's name is compared with ASCII case folding only]({{< relref "/authnd/tokens.md#scoped-name" >}}): `Kate@univ-a.example` with a Kelvin sign (U+212A) no longer binds as `kate`. [At most 64 checks per source]({{< relref "/authnd/operations.md#outage" >}}) may be outstanding against an upstream; the 65th is answered `unavailable` at once (400 binds against an upstream that never answers left 1620 goroutines held, now 257). [Upgrade note]({{< relref "/authnd/_index.md" >}}) |
 
 ### authn-bridge
 
@@ -210,10 +217,12 @@ library's page says what earlier ones changed.
 | ldap v0.11.2 | Performance only, no change of result: `Validate` allocates 12 times for a ten attribute entry instead of 76 (lookups without a lower-case copy, descriptions not split and re-joined, in-place sets instead of maps). The results are those of v0.11.1, checked against a copy of its `Validate` on random entries under the standard schema and a rules schema, and by a differential fuzzer |
 | ldap v0.11.3 | Performance only, no change of result: `GoverningStructureRule` allocates 5 times instead of 12 for an account (it reads only the RDN's types), and the DN parser 3 times instead of 6 for a four-RDN DN. The results are those of v0.11.2, checked against a copy of its `GoverningStructureRule` on random entries and every superior rule, and by a differential fuzzer |
 | ldap v0.12.0 | [resource bounds for the server]({{< relref "/libraries/ldap.md" >}}): `Server.MaxConnections` and `Server.MaxConnectionsPerIP` (default 0, no limit; a connection over a cap gets a `busy` (51) notice of disconnection, RFC 4511 4.4.1, and is closed); `Server.Timeout` is enforced by the server, which answers `timeLimitExceeded` (3) for any operation at the deadline even when the handler is blocked and ignores its context (the late result is dropped, and the goroutine counts against `MaxPending` and `MaxPendingAuth` until it returns); the client's search `timeLimit` applies to the handler's context; a handler's `DeadlineExceeded` maps to code 3 only when the operation's own context has expired. Allocations per operation (exact): 3 before and after without a `Timeout`; 10 before and 16 now with one |
+| ldap v0.12.1 | [a bind abandons the paged searches in progress]({{< relref "/libraries/ldap.md" >}}) (RFC 4511 4.2.1), so a search begun by one person never goes on delivering to the connection once it is anonymous or somebody else's |
 | oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) refuses a name with more than one `@` (`ErrBadName`) |
 | scim v0.2.0 | [an audit, fuzzing, chaos and performance pass]({{< relref "/libraries/scim.md#v020" >}}): `Server.ReadTimeout` (30 s), the optional `ConditionalDeleter`, a PATCH or PUT without `If-Match` redone up to 32 times on a lost race instead of answered 412, removal through a filter that matches nothing succeeds, keys of a PATCH without a path applied in sorted order, `BearerAuth` accepts the scheme in any case, `startIndex` and `count` clamped on every word size. A list request over 10,000 users: a page of 100 from 789,417 to 14,952 allocations, `userName eq` from 797,979 to 90, a full scan from 818,847 to 361,098 (exact; times not measured, load 65) |
 | servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
+| servercert v0.6.0 | [the TLS `KeyFile` and the ACME `EABHMACKeyFile` are refused]({{< relref "/libraries/servercert.md" >}}) when group or others can read or write them, at `New` and on every reload (a readable replacement key is reported to `OnError` and not taken; the current certificate keeps serving); not checked on Windows. **Upgrade:** `chmod 600` both files |
 | totp v0.4.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | wireguard v0.1.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | wireguard v0.1.4 | the source's token and list requests no longer follow redirects, since they carry the Basic secret or the Bearer token; a redirect is an error ([what it refuses]({{< relref "/libraries/wireguard.md" >}})) |

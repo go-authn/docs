@@ -12,7 +12,7 @@ Schlüssel auf der Festplatte, neu gelesen, wenn sie sich ändern, oder eine ACM
 Account Binding eingeschlossen.
 
 ```sh
-go get github.com/go-authn/servercert@v0.5.2
+go get github.com/go-authn/servercert@v0.6.0
 ```
 
 Eine `Config` nennt genau eine Quelle – `CertFile` und `KeyFile` oder `ACME` –,
@@ -147,6 +147,8 @@ root oder dem effektiven Benutzer änderbar sein, wie es `StrictModes` von sshd 
 Unter Windows werden Modus und Eigentümer nicht geprüft – ACLs entscheiden beides, und sie
 einzuschränken ist Ihre Sache –, und ein symbolischer Link irgendwo im Pfad wird abgelehnt.
 
+`New` (und jedes Neuladen) verweigert außerdem eine **geheime Datei**, die Gruppe oder andere lesen oder schreiben können: den TLS-`KeyFile` und den ACME-`EABHMACKeyFile` (seit v0.6.0), so wie OpenSSH einen privaten Schlüssel verweigert, mit `chmod 600 it`. Der Modus wird von der geöffneten Datei gelesen, nicht von ihrem Namen. Ein lesbar geschriebener Ersatzschlüssel wird nicht übernommen: Das aktuelle Zertifikat wird weiter ausgeliefert und `OnError` wird aufgerufen. Unter Windows nicht geprüft, dort entscheiden ACLs. **Aktualisieren:** `chmod 600` (oder `0400`) für beide Dateien vor dem Deployment.
+
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
 
 **pebble**, die Test-CA von Let's Encrypt, im Prozess ausgeführt aus ihren Paketen `ca`, `db`, `va`
@@ -159,4 +161,4 @@ dass sie fehlschlägt. Die Coverage-Untergrenze liegt bei 100 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.5.2](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.2)
+[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)

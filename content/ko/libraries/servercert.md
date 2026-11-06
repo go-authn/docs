@@ -11,7 +11,7 @@ tags: [라이브러리, tls, acme, 인증서]
 ACME CA로, External Account Binding을 포함합니다.
 
 ```sh
-go get github.com/go-authn/servercert@v0.5.2
+go get github.com/go-authn/servercert@v0.6.0
 ```
 
 `Config`는 정확히 하나의 소스 — `CertFile`과 `KeyFile`, 또는 `ACME` — 를 지정하며,
@@ -141,6 +141,8 @@ sshd의 `StrictModes`가 `authorized_keys`로 가는 경로에 요구하는 것�
 Windows에서는 모드와 소유자를 검사하지 않습니다. ACL이 둘 다 결정하며 제한하는 것은
 사용자의 몫입니다. 경로의 어디든 심볼릭 링크가 있으면 거부됩니다.
 
+`New`(그리고 다시 불러올 때마다)는 그룹이나 다른 사용자가 읽거나 쓸 수 있는 **비밀 파일**도 거부합니다. TLS `KeyFile`과 ACME `EABHMACKeyFile`(v0.6.0부터)이며, OpenSSH가 개인 키를 거부하는 것과 같이 `chmod 600 it`이라고 안내합니다. 모드는 이름이 아니라 열린 파일에서 읽습니다. 읽을 수 있게 쓰인 교체 키는 사용되지 않고, 현재 인증서가 계속 제공되며 `OnError`가 호출됩니다. Windows에서는 확인하지 않습니다(ACL이 결정하므로). **업그레이드:** 배포하기 전에 두 파일 모두 `chmod 600`(또는 `0400`)으로 설정하십시오.
+
 ## 무엇과 대조해 검사하는가 {#what-it-is-checked-against}
 
 **pebble**, Let's Encrypt의 테스트 CA를 `ca`, `db`, `va`, `wfe` 패키지로 프로세스
@@ -152,4 +154,4 @@ Windows에서는 모드와 소유자를 검사하지 않습니다. ACL이 둘 �
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.5.2](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.2)
+[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)

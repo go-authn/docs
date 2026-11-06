@@ -158,7 +158,7 @@ ReadWritePaths=/etc/authnd/passwords
 | `listen` | `127.0.0.1:3893` | 一つのアドレス。既定ではループバックです。起動した途端にすべてのインターフェースに現れるディレクトリは、誰かが意図して決めるべきことです。LDAP と LDAPS の両方が必要なサイトは、二つのインスタンスを動かします |
 | `reader "<dn>"` | なし | 検索できるサービスアカウント。[誰が読めるか]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})を参照 |
 | `refresh` | `60s` | すべてのソースを読み直す間隔。`0` で無効。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
-| `max_age` | 未設定 | 提供中のデータがこれより古くなったら、古いデータを拒否 (`unavailable`)。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
+| `max_age` | `10m` (v0.17.0。`"0"` = 無制限) | 提供中のデータがこれより古くなったら、古いデータを拒否 (`unavailable`)。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
 | `max_connections` | `4096` | 同時に開く接続の最大数、`0` は無制限。超えた接続には `busy` が送られて閉じられます。[制限]({{< relref "/authnd/operations.md#limits" >}})を参照 |
 | `max_connections_per_ip` | なし | 一つのアドレスからの接続の最大数 |
 | `operation_timeout` | `30s` | 一つの操作に許される最長時間、`"0"` はなし。過ぎるとクライアントに `timeLimitExceeded` が返ります |

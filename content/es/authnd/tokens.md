@@ -81,6 +81,8 @@ con `local@scope`) y, si los nombres de su directorio son simples, añada
 puede hacer bind: configure el emisor para que libere un claim con ámbito.
 {{< /callout >}}
 
+**La comparación pliega solo las mayúsculas ASCII** (desde v0.17.0), como el `ScopedName` de go-authn/oidc: `Kate@univ-a.example` con un signo Kelvin (U+212A) es otra cuenta en el emisor y ya no se vincula como `kate`. Antes, la búsqueda y la comparación del authzid usaban el plegado de mayúsculas Unicode.
+
 ## El descubrimiento ocurre al arrancar {#discovery-happens-at-startup}
 
 El documento de descubrimiento y las claves del proveedor se leen cuando el servidor

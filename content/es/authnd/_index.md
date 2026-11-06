@@ -11,14 +11,22 @@ directorio. Lo que quiere autenticarlas habla LDAP.** authnd es la fachada:
 hace binds y búsquedas sobre los orígenes de
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}), así que lo que guarda
 una base de datos puede leerlo cualquier cosa que sepa consultar un directorio.
-Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.16.2,
+Go puro, `CGO_ENABLED=0`, un solo binario. Estas páginas describen la v0.17.0,
 cuyas entradas siguen los esquemas estándar y superan el esquema que sirve en
 `cn=Subschema`, que un sitio amplía con el suyo
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) y, con
 [reglas de contenido DIT, formas de nombre y reglas de estructura DIT]({{< relref "/authnd/schemas.md#rules" >}}),
-da forma a las entradas, con go-authn/ldap v0.12.0 y
+da forma a las entradas, con go-authn/ldap v0.12.1 y
 go-authn/directory v0.18.0 por debajo; lo que está verificado y lo que no
 figura en la página de [estado]({{< relref "/status.md" >}}).
+
+{{< callout type="warning" >}}
+**Actualizar desde v0.16.x: `max_age` tiene ahora un valor por defecto**
+
+- ⛔ **`max_age` vale diez minutos por defecto** (al menos diez períodos de `refresh`), cuando antes era ilimitado: una persona eliminada de una fuente que después dejó de poder leerse seguía autenticándose mientras durara la caída, de modo que la revocación fallaba dejando pasar. Pasado `max_age`, las búsquedas, los binds de las personas y los cambios de contraseña responden `unavailable` (52). Con `refresh = "0"` no hay valor por defecto.
+- Para actualizar: si una fuente puede estar caída más de diez minutos y prefiere datos obsoletos a un rechazo, defina `max_age` con lo que pueda tolerar, o `"0"` para no tener límite, a propósito. `check` y el registro indican cuándo los datos son demasiado antiguos. Consulte [ponerlo en marcha]({{< relref "/authnd/operations.md#it-reads-everything-once" >}}).
+- El nombre de un token se compara solo con plegado de mayúsculas ASCII ([el nombre debe tener ámbito]({{< relref "/authnd/tokens.md#scoped-name" >}})), y como máximo puede haber 64 comprobaciones pendientes por fuente ascendente ([una caída no es una contraseña incorrecta]({{< relref "/authnd/operations.md#outage" >}})).
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Actualizar desde la v0.15.x: una configuración con un bloque `oidc` debe cambiar**

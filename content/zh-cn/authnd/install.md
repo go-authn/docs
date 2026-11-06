@@ -162,7 +162,7 @@ ReadWritePaths=/etc/authnd/passwords
 | `listen` | `127.0.0.1:3893` | 一个地址。默认环回：目录一启动就出现在每个接口上，这是应当有人有意作出的决定。需要 LDAP 和 LDAPS 的站点运行两个实例 |
 | `reader "<dn>"` | 无 | 可以搜索的服务账户；参见[谁可以读取]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | 每个来源被重新读取的频率；`0` 表示关闭；参见[运行]({{< relref "/authnd/operations.md" >}}) |
-| `max_age` | 未设置 | 一旦所提供的数据比它更旧就拒绝过期数据（`unavailable`）；参见[运行]({{< relref "/authnd/operations.md" >}}) |
+| `max_age` | `10m`（v0.17.0；`"0"` = 无限制） | 一旦所提供的数据比它更旧就拒绝过期数据（`unavailable`）；参见[运行]({{< relref "/authnd/operations.md" >}}) |
 | `max_connections` | `4096` | 同时打开的连接数上限，`0` 表示不限；超出的连接会收到 `busy` 并被关闭；参见[限制]({{< relref "/authnd/operations.md#limits" >}}) |
 | `max_connections_per_ip` | 无 | 来自同一地址的连接数上限 |
 | `operation_timeout` | `30s` | 一次操作最多可以花的时间，`"0"` 表示无；超过后客户端会收到 `timeLimitExceeded` |

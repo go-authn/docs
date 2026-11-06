@@ -5,23 +5,29 @@ description: "这些页面描述哪些版本、每个版本新增了什么，以
 tags: [状态, 发布版本]
 ---
 
-这些页面是文档版本 **0.8**，描述的内容如下：
+这些页面是文档版本 **0.9**，描述的内容如下：
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.16.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.17.0** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
-ldap 为 **v0.12.0**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
+ldap 为 **v0.12.1**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
 directory 为 **v0.18.0**，带有已声明的对象类。authnd
-v0.16.2 内嵌 ldap v0.12.0 和 directory v0.18.0。
+v0.17.0 内嵌 ldap v0.12.1 和 directory v0.18.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
-因此读者在 `/docs/0.8/` 下找到的页面始终描述其所安装的版本；
+因此读者在 `/docs/0.9/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
-`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/`、`/docs/0.6/` 和 `/docs/0.7/` 之下。
+`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/`、`/docs/0.6/`、`/docs/0.7/` 和 `/docs/0.8/` 之下。
+
+{{< callout type="warning" >}}
+**从 v0.16.x 升级 authnd：`max_age` 默认为十分钟**
+
+所提供的数据此前没有存活时间上限，因此从某个来源中移除的人，在该来源随后变得不可读时，只要故障持续就仍能 bind。从 v0.17.0 起，`max_age` 为十分钟（至少为十个 `refresh` 周期；`refresh = "0"` 时没有默认值），超过之后，搜索、人员的 bind 和密码修改都会返回 `unavailable`（52）。请把 `max_age` 设为您能容忍的值，或设为 `"0"` 表示无限制。参见[升级说明]({{< relref "/authnd/_index.md" >}})和[过期数据如何被拒绝]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})。
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **从 v0.15.x 升级 authnd：`oidc { domains }` 是必需的**
@@ -103,6 +109,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.16.0 | ⛔ 安全，使用 go-authn/oidc v0.6.1 和 go-authn/directory v0.18.0。**对带 `oidc` 块的部署是不兼容变更**：[`domains` 是必需的]({{< relref "/authnd/tokens.md#scoped-name" >}})，没有它服务器不会启动。令牌中的名称必须恰好是允许域的一个 `local@scope`（没有作用域的名称、其他机构的名称、含两个 `@` 的名称都会被拒绝）；可选的 `local_domain`（`domains` 之一）把该作用域的人映射到仅含本地部分的目录名称，其他作用域按完整的 `local@scope` 查找。在联盟代理之后，任何机构的 alice 过去都会绑定为本地的 alice。同一个来源中共用一个 uid 的两个条目，现在会在启动和刷新时报错，而不是悄悄选一个。[升级说明]({{< relref "/authnd/_index.md" >}}) |
 | v0.16.1 | `kerberos { listen = "host:0" }` 为 UDP 和 TCP 获得同一个端口（以前得到两个，而 `krb5.conf` 只能写一个）；启动行显示该端口。测试不再先选一个端口、释放后再写入配置，这种做法曾在运行器上以 `address already in use` 失败 |
 | v0.16.2 | ⛔ 安全。[域读取快照]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}})，从不读取来源：每个 AS-REQ 和 TGS-REQ（包括 UDP 上未经认证的 AS-REQ）都会执行每个 SQL 来源的完整人员查询，以及对每个 `ldap` 上游的子树搜索。`max_age` 现在也适用于 Kerberos（超过后回答 `KDC_ERR_SVC_UNAVAILABLE`）。从数据库删除的人员会在一个 `refresh` 周期内不再获得票据，与 LDAP 绑定相同。使用 go-authn/kdc v0.6.0 |
+| v0.17.0 | ⛔ 安全，第二轮，使用 go-authn/ldap v0.12.1。**不兼容变更：[`max_age` 现在有默认值]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})**，为十分钟（至少为十个 `refresh` 周期；`refresh = "0"` 时没有默认值），此前不受限制：从某个来源中移除的人，在该来源随后变得不可读时，只要故障持续就仍能 bind。超过之后，搜索、人员的 bind 和密码修改都会返回 `unavailable`（52）；`max_age = "0"` 被接受，表示有意不设限制。[令牌的名称仅按 ASCII 大小写折叠进行比较]({{< relref "/authnd/tokens.md#scoped-name" >}})：带开尔文符号（U+212A）的 `Kate@univ-a.example` 不再作为 `kate` bind。对上游，[每个来源最多可有 64 个未完成的检查]({{< relref "/authnd/operations.md#outage" >}})，第 65 个会立即返回 `unavailable`（针对永不应答的上游发起 400 次 bind，此前占用 1620 个 goroutine，现在为 257 个）。[升级说明]({{< relref "/authnd/_index.md" >}}) |
 
 ### authn-bridge {#authn-bridge}
 
@@ -204,10 +211,12 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | ldap v0.11.2 | 仅优化性能，结果不变：对含十个属性的条目，`Validate` 的分配从 76 次降为 12 次（查找不再复制小写副本，描述不再拆分再拼合，用原地集合代替映射）。结果与 v0.11.1 相同，已在标准模式和带规则的模式下用随机条目对 v0.11.1 的 `Validate` 副本核对，并用差分模糊测试检验 |
 | ldap v0.11.3 | 仅优化性能，结果不变：`GoverningStructureRule` 对一个账户的分配从 12 次降为 5 次（只读取 RDN 的类型），DN 解析器对含四个 RDN 的 DN 从 6 次降为 3 次。结果与 v0.11.2 相同，已用随机条目和每条上级规则对 v0.11.2 的 `GoverningStructureRule` 副本核对，并用差分模糊测试检验 |
 | ldap v0.12.0 | [服务器的资源上限]({{< relref "/libraries/ldap.md" >}})：`Server.MaxConnections` 和 `Server.MaxConnectionsPerIP`（默认 0，不限；超出上限的连接会收到 `busy`（51）断开通知，RFC 4511 4.4.1，并被关闭）；`Server.Timeout` 由服务器强制执行，到期时即使处理程序被阻塞并忽略其上下文，对任何操作都回答 `timeLimitExceeded`（3）（迟到的结果被丢弃，goroutine 在返回之前计入 `MaxPending` 和 `MaxPendingAuth`）；客户端的搜索 `timeLimit` 适用于处理程序的上下文；处理程序的 `DeadlineExceeded` 只有在该操作自身的上下文已到期时才映射为代码 3。每次操作的分配次数（精确）：没有 `Timeout` 时之前和之后都是 3；有 `Timeout` 时之前 10，现在 16 |
+| ldap v0.12.1 | [bind 会放弃正在进行的分页搜索]({{< relref "/libraries/ldap.md" >}})（RFC 4511 4.2.1）：某人发起的搜索，在连接变为匿名或属于他人之后，不会再继续向该连接交付结果 |
 | oidc v0.4.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) 拒绝含多于一个 `@` 的名称（`ErrBadName`） |
 | scim v0.2.0 | [审计、模糊测试、混沌测试和性能改进]({{< relref "/libraries/scim.md#v020" >}})：`Server.ReadTimeout`（30 秒）、可选接口 `ConditionalDeleter`、没有 `If-Match` 的 PATCH 或 PUT 在输掉竞争后最多重做 32 次而不是回答 412、通过不匹配任何内容的过滤器移除会成功、没有路径的 PATCH 的键按排序顺序应用、`BearerAuth` 接受任意大小写的方案、`startIndex` 和 `count` 无论字长都被限定。针对 10,000 个用户的列表请求：100 条的一页从 789,417 次分配降到 14,952 次，`userName eq` 从 797,979 次降到 90 次，完整扫描从 818,847 次降到 361,098 次（精确；时间未测量，负载 65） |
 | servercert v0.5.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
+| servercert v0.6.0 | [TLS 的 `KeyFile` 和 ACME 的 `EABHMACKeyFile` 会被拒绝]({{< relref "/libraries/servercert.md" >}})，当组或其他用户可读写它们时，在 `New` 时以及每次重新加载时检查（可读的替换密钥会报告给 `OnError` 且不被采用，当前证书继续提供服务）；Windows 上不检查。**升级：**两个文件都执行 `chmod 600` |
 | totp v0.4.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | wireguard v0.1.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | wireguard v0.1.4 | 来源的令牌请求和列表请求不再跟随重定向，因为它们携带 Basic 密钥或 Bearer 令牌；重定向是一个错误（[它拒绝什么]({{< relref "/libraries/wireguard.md" >}})） |

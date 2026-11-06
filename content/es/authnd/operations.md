@@ -41,6 +41,8 @@ mensaje LDAP (unos 3 MiB, que basta un solo valor de atributo de 10 MB para
 alcanzar) no se publica, y se dice al arrancar y con `check`, como una entrada
 que no cumple el esquema.
 
+**`max_age` vale diez minutos por defecto** (desde v0.17.0; al menos diez períodos de `refresh`, y con `refresh = "0"` no se aplica ningún valor por defecto, porque no se vuelve a leer nada). Antes era ilimitado, y una persona eliminada de una fuente que había dejado de poder leerse seguía autenticándose mientras durara la caída. Defina `max_age` con otro valor (al menos `refresh`), o `"0"` para no tener límite, a propósito. `check` y el registro indican cuándo los datos son demasiado antiguos.
+
 ## Señales {#signals}
 
 | señal | qué ocurre |
@@ -152,6 +154,10 @@ contraseña incorrecta, de modo que un formulario de inicio de sesión decía a 
 que su contraseña era incorrecta mientras el directorio estaba caído. Una contraseña
 incorrecta sigue dando 49. La causa está en el registro, no en lo que se dice al
 cliente, y una caída no cuenta como un intento fallido.
+
+**Un ascendente colgado no puede acumular comprobaciones.** Una comprobación contra un ascendente no se puede cancelar una vez iniciada (el `Verify` de la biblioteca directory no recibe contexto), así que la que supera su presupuesto conserva una goroutine y una conexión ascendente hasta que el ascendente responde o desiste. Como máximo puede haber **64 comprobaciones pendientes por fuente**; la 65.ª recibe `unavailable` (52) de inmediato y no inicia nada, de modo que una fuente que acepta y nunca responde retiene un número acotado de goroutines (medido: 400 binds dejaban 1620 goroutines retenidas antes, 257 después), y los binds contra otras fuentes no se ven afectados.
+
+**El nombre de un token se compara solo con plegado de mayúsculas ASCII**, como hace go-authn/oidc: `Kate@univ-a.example` con un signo Kelvin (U+212A) es otra cuenta en el emisor y ya no se vincula como `kate`.
 
 ## Cuando no arranca {#when-it-does-not-start}
 

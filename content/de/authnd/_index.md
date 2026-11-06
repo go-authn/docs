@@ -11,14 +11,22 @@ anderen Verzeichnis. Was sie authentifizieren will, spricht LDAP.** authnd ist d
 davor: Es führt Binds und Suchen über die Quellen von
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) aus, sodass das, was eine
 Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,
-`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.16.2, dessen Einträge den
+`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.17.0, dessen Einträge den
 Standardschemata folgen und das Schema bestehen, das es unter `cn=Subschema` bereitstellt
 und das ein Standort um sein eigenes erweitert
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) und mit
 [DIT-Content-Rules, Name Forms und Structure Rules]({{< relref "/authnd/schemas.md#rules" >}})
-auch um Formvorgaben, mit go-authn/ldap v0.12.0 und
+auch um Formvorgaben, mit go-authn/ldap v0.12.1 und
 go-authn/directory v0.18.0 darunter; was geprüft ist und
 was nicht, steht auf der Seite [Stand]({{< relref "/status.md" >}}).
+
+{{< callout type="warning" >}}
+**Aktualisieren von v0.16.x: `max_age` hat jetzt einen Standardwert**
+
+- ⛔ **`max_age` beträgt standardmäßig zehn Minuten** (mindestens zehn `refresh`-Perioden), vorher war es unbegrenzt: Eine Person, die aus einer Quelle entfernt wurde, die danach unlesbar wurde, konnte sich so lange weiter anmelden, wie der Ausfall dauerte; die Sperrung versagte also offen. Nach `max_age` antworten Suchen, die Binds von Personen und Passwortänderungen mit `unavailable` (52). Mit `refresh = "0"` gibt es keinen Standardwert.
+- Zum Aktualisieren: Kann eine Quelle länger als zehn Minuten ausfallen und ziehen Sie veraltete Daten einer Verweigerung vor, setzen Sie `max_age` auf das, was Sie tolerieren können, oder bewusst auf `"0"` für keine Grenze. `check` und das Log sagen, wann Daten zu alt sind. Siehe [Betrieb]({{< relref "/authnd/operations.md#it-reads-everything-once" >}}).
+- Der Name eines Tokens wird nur mit ASCII-Groß-/Kleinschreibung-Faltung verglichen ([der Name muss einen Bereich haben]({{< relref "/authnd/tokens.md#scoped-name" >}})), und pro Upstream-Quelle dürfen höchstens 64 Prüfungen ausstehen ([ein Ausfall ist kein falsches Passwort]({{< relref "/authnd/operations.md#outage" >}})).
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Aktualisierung von v0.15.x: Eine Konfiguration mit `oidc`-Block muss sich ändern**

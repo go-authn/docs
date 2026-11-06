@@ -61,6 +61,8 @@ supportedSASLMechanisms: OAUTHBEARER
 이전에는 범위 없는 `preferred_username`이 디렉터리 이름에 그대로 대응되어, 어느 기관의 alice든 로컬 alice로 바인드되었습니다. 업그레이드하려면 `domains = ["<귀하의 도메인>"]`을 추가하고, `username_claim = "eduperson_principal_name"`(또는 발급자가 `local@scope`로 채우는 클레임)을 설정하며, 디렉터리 이름이 로컬 부분만이면 `local_domain = "<귀하의 도메인>"`을 추가하십시오. 범위 없는 이름의 토큰은 더 이상 바인드할 수 없습니다. 발급자가 범위 있는 클레임을 내놓도록 설정하십시오.
 {{< /callout >}}
 
+**비교에서 접는 것은 ASCII 대소문자뿐입니다** (v0.17.0부터). go-authn/oidc의 `ScopedName`과 같습니다. 켈빈 기호(U+212A)를 쓴 `Kate@univ-a.example`는 발급자에게는 다른 계정이며 더 이상 `kate`로 bind되지 않습니다. 이전에는 조회와 authzid 비교에 유니코드 대소문자 접기가 사용되었습니다.
+
 ## 디스커버리는 시작할 때 일어납니다 {#discovery-happens-at-startup}
 
 공급자의 디스커버리 문서와 키는 서버가 시작할 때와 `check`가 실행될 때 읽습니다.

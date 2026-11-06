@@ -12,7 +12,7 @@ ACME via [`autocert`](https://pkg.go.dev/golang.org/x/crypto/acme/autocert),
 External Account Binding compris.
 
 ```sh
-go get github.com/go-authn/servercert@v0.5.2
+go get github.com/go-authn/servercert@v0.6.0
 ```
 
 Une `Config` nomme exactement une source — `CertFile` et `KeyFile`, ou `ACME` —
@@ -148,6 +148,8 @@ vers `authorized_keys`, et un lien symbolique au-dessus est refusé sauf s'il ap
 Sous Windows, le mode et le propriétaire ne sont pas vérifiés — les ACL décident des deux, et
 les restreindre vous revient — et un lien symbolique n'importe où dans le chemin est refusé.
 
+`New` (et chaque rechargement) refuse aussi un **fichier secret** que le groupe ou les autres peuvent lire ou écrire : la `KeyFile` TLS et l'`EABHMACKeyFile` ACME (depuis la v0.6.0), comme OpenSSH refuse une clé privée, avec `chmod 600 it`. Le mode est lu sur le fichier ouvert, pas sur son nom. Une clé de remplacement écrite lisible n'est pas prise : le certificat actuel continue d'être servi et `OnError` est appelé. Non vérifié sous Windows, où les ACL décident. **Mise à jour :** `chmod 600` (ou `0400`) sur les deux fichiers avant de déployer.
+
 ## Contre quoi elle est vérifiée {#what-it-is-checked-against}
 
 **pebble**, l'AC de test de Let's Encrypt, exécutée dans le processus à partir de ses
@@ -160,4 +162,4 @@ qu'elle échoue. Le plancher de couverture est de 100 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.5.2](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.2)
+[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)

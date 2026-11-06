@@ -12,7 +12,7 @@ es el servidor que la ejecuta y que es dueño de la configuración, de los oríg
 directorio y de la política de bind; esta es dueña de los bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.0
+go get github.com/go-authn/ldap@v0.12.1
 ```
 
 Escrita a partir de los RFC 4511 (el protocolo), 4512 (el root DSE y el
@@ -220,6 +220,8 @@ Sin esquema —`Server.Schema` a nil, el valor por defecto—, cada comparación
 ignora mayúsculas y minúsculas en el valor: la más segura de las dos para
 leer, ya que nunca oculta una entrada que una comparación exacta habría
 encontrado.
+
+**Un bind abandona todas las búsquedas paginadas en curso** (desde v0.12.1; RFC 4511 4.2.1: el estado de autenticación se descarta cuando se recibe el bind), de modo que una búsqueda iniciada por una persona nunca sigue entregando a la conexión cuando esta es anónima o de otra persona.
 
 ## El esquema {#the-schema}
 

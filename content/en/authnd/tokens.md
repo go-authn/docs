@@ -79,6 +79,8 @@ names are bare, add `local_domain = "<your domain>"`. A token whose name is
 unscoped can no longer bind: configure the issuer to release a scoped claim.
 {{< /callout >}}
 
+**The comparison folds ASCII case only** (since v0.17.0), as go-authn/oidc's `ScopedName` does: `Kate@univ-a.example` with a Kelvin sign (U+212A) is a different account at the issuer and no longer binds as `kate`. The lookup and the authzid comparison used Unicode case folding before.
+
 ## Discovery happens at startup
 
 The provider's discovery document and keys are read when the server starts,

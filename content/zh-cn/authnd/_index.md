@@ -10,13 +10,21 @@ tags: [authnd, ldap]
 认证的系统使用的是 LDAP。** authnd 就是前端：它基于 [go-authn/directory]({{< relref "/libraries/_index.md" >}})
 的各个来源进行绑定和搜索，因此数据库中保存的内容可以被任何懂得
 如何查询目录的程序读取。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述
-v0.16.2，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
+v0.17.0，它的条目遵循标准模式，并通过它在 `cn=Subschema` 处
 提供的模式，站点可以用自己的模式对其扩展
 （[SUPANN、eduPerson]({{< relref "/authnd/schemas.md" >}})），并可通过
 [DIT 内容规则、名称形式和结构规则]({{< relref "/authnd/schemas.md#rules" >}})
-为条目塑形，其下是 go-authn/ldap v0.12.0 和
+为条目塑形，其下是 go-authn/ldap v0.12.1 和
 go-authn/directory v0.18.0；哪些已经验证、哪些尚未验证，见
 [状态]({{< relref "/status.md" >}})页面。
+
+{{< callout type="warning" >}}
+**从 v0.16.x 升级：`max_age` 现在有默认值**
+
+- ⛔ **`max_age` 默认为十分钟**（至少为十个 `refresh` 周期），此前不受限制：从某个来源中移除的人，在该来源随后变得不可读时，只要故障持续就仍能 bind，撤销因此失效而放行。超过 `max_age` 后，搜索、人员的 bind 和密码修改都会返回 `unavailable`（52）。`refresh = "0"` 时没有默认值。
+- 升级方法：如果某个来源可能中断超过十分钟，而您宁愿使用过期数据也不愿拒绝，请把 `max_age` 设为您能容忍的值，或有意设为 `"0"`（无限制）。数据过旧时，`check` 和日志会指出。参见[运行]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})。
+- 令牌的名称仅按 ASCII 大小写折叠进行比较（[名称必须带作用域]({{< relref "/authnd/tokens.md#scoped-name" >}})），并且每个上游来源最多可有 64 个未完成的检查（[故障不是密码错误]({{< relref "/authnd/operations.md#outage" >}})）。
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **从 v0.15.x 升级：带 `oidc` 块的配置必须修改**

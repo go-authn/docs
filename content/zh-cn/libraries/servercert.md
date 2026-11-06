@@ -12,7 +12,7 @@ tags: [库, tls, acme, 证书]
 Account Binding。
 
 ```sh
-go get github.com/go-authn/servercert@v0.5.2
+go get github.com/go-authn/servercert@v0.6.0
 ```
 
 `Config` 恰好指名一个来源——`CertFile` 和 `KeyFile`，或 `ACME`——
@@ -145,6 +145,8 @@ TCS，由 HARICA 提供服务，适用于 Enterprise Admin 账户。无法从互
 在 Windows 上，不检查权限和所有者——两者由 ACL 决定，而限制
 它们是你的事——并且路径中任何位置的符号链接都会被拒绝。
 
+`New`（以及每次重新加载）还会拒绝组或其他用户可读写的**机密文件**：TLS 的 `KeyFile` 和 ACME 的 `EABHMACKeyFile`（自 v0.6.0 起），正如 OpenSSH 拒绝私钥一样，并提示 `chmod 600 it`。模式读取自已打开的文件，而不是其名称。以可读方式写入的替换密钥不会被采用：当前证书继续提供服务，并调用 `OnError`。Windows 上不检查（由 ACL 决定）。**升级：**部署前请将两个文件都设为 `chmod 600`（或 `0400`）。
+
 ## 它对照什么检查 {#what-it-is-checked-against}
 
 **pebble**，即 Let's Encrypt 的测试 CA，用其 `ca`、`db`、`va`
@@ -157,4 +159,4 @@ TCS，由 HARICA 提供服务，适用于 Enterprise Admin 账户。无法从互
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.5.2](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.2)
+[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)

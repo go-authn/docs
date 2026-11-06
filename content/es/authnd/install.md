@@ -165,7 +165,7 @@ Por qué ese directorio y no el archivo se explica en
 | `listen` | `127.0.0.1:3893` | una dirección. Loopback por defecto: un directorio que aparece en todas las interfaces en cuanto arranca es una decisión que alguien debería tomar a propósito. Un sitio que necesita LDAP y LDAPS ejecuta dos instancias |
 | `reader "<dn>"` | ninguno | una cuenta de servicio que puede buscar; consulte [quién puede leer]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | con qué frecuencia se vuelve a leer cada origen; `0` lo desactiva; consulte [ponerlo en marcha]({{< relref "/authnd/operations.md" >}}) |
-| `max_age` | sin definir | rechazar los datos obsoletos (`unavailable`) cuando los datos servidos son más antiguos; consulte [ponerlo en marcha]({{< relref "/authnd/operations.md" >}}) |
+| `max_age` | `10m` (v0.17.0; `"0"` = sin límite) | rechazar los datos obsoletos (`unavailable`) cuando los datos servidos son más antiguos; consulte [ponerlo en marcha]({{< relref "/authnd/operations.md" >}}) |
 | `max_connections` | `4096` | el máximo de conexiones abiertas a la vez, `0` para ningún límite; por encima, una conexión recibe `busy` y se cierra; consulte [límites]({{< relref "/authnd/operations.md#limits" >}}) |
 | `max_connections_per_ip` | ninguno | el máximo de conexiones desde una dirección |
 | `operation_timeout` | `30s` | lo máximo que puede durar una operación, `"0"` para ninguno; pasado el plazo, el cliente recibe `timeLimitExceeded` |

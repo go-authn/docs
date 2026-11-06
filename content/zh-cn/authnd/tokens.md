@@ -63,6 +63,8 @@ supportedSASLMechanisms: OAUTHBEARER
 此前，没有作用域的 `preferred_username` 被直接映射到目录名称，于是任何机构的 alice 都能绑定为本地的 alice。升级时：添加 `domains = ["<你的域>"]`，设置 `username_claim = "eduperson_principal_name"`（或你的签发者用 `local@scope` 填充的声明），如果目录中的名称是不带作用域的裸名，再添加 `local_domain = "<你的域>"`。名称没有作用域的令牌不再能绑定：请配置签发者释放带作用域的声明。
 {{< /callout >}}
 
+**比较时只折叠 ASCII 大小写**（自 v0.17.0 起），与 go-authn/oidc 的 `ScopedName` 相同：带开尔文符号（U+212A）的 `Kate@univ-a.example` 在颁发方处是另一个账户，不再作为 `kate` bind。此前，查找和 authzid 的比较使用的是 Unicode 大小写折叠。
+
 ## 发现在启动时进行 {#discovery-happens-at-startup}
 
 提供方的发现文档和密钥在服务器启动时读取，

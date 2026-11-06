@@ -11,13 +11,21 @@ qui veut les authentifier parle LDAP.** authnd est la façade : il
 se lie et cherche sur les sources de [go-authn/directory]({{< relref "/libraries/_index.md" >}}),
 si bien que ce que contient une base de données peut être lu par tout ce qui sait
 interroger un annuaire. Pur Go, `CGO_ENABLED=0`, un seul binaire. Ces pages décrivent
-la v0.16.2, dont les entrées suivent les schémas standard et respectent le schéma
+la v0.17.0, dont les entrées suivent les schémas standard et respectent le schéma
 qu'elle sert à `cn=Subschema`, qu'un site étend avec le sien
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) et façonne grâce aux
 [règles de contenu DIT, formes de noms et règles de structure]({{< relref "/authnd/schemas.md#rules" >}}),
-avec go-authn/ldap v0.12.0 et
+avec go-authn/ldap v0.12.1 et
 go-authn/directory v0.18.0 en dessous ; ce qui est vérifié et ce qui ne l'est pas figure sur la
 page [état]({{< relref "/status.md" >}}).
+
+{{< callout type="warning" >}}
+**Mise à jour depuis la v0.16.x : `max_age` a désormais une valeur par défaut**
+
+- ⛔ **`max_age` vaut dix minutes par défaut** (au moins dix périodes de `refresh`), alors qu'il était illimité : une personne retirée d'une source devenue illisible continuait de se connecter tant que la panne durait, si bien que la révocation échouait en laissant passer. Au-delà de `max_age`, les recherches, les binds des personnes et les changements de mot de passe répondent `unavailable` (52). Avec `refresh = "0"`, il n'y a pas de valeur par défaut.
+- Pour mettre à jour : si une source peut être indisponible plus de dix minutes et que vous préférez des données périmées à un refus, définissez `max_age` à ce que vous tolérez, ou `"0"` pour aucune limite, délibérément. `check` et le journal disent quand les données sont trop anciennes. Voir [l'exploiter]({{< relref "/authnd/operations.md#it-reads-everything-once" >}}).
+- Le nom d'un jeton n'est comparé qu'avec un repli de casse ASCII ([le nom doit avoir une portée]({{< relref "/authnd/tokens.md#scoped-name" >}})), et au plus 64 vérifications par source amont peuvent être en cours ([une panne n'est pas un mauvais mot de passe]({{< relref "/authnd/operations.md#outage" >}})).
+{{< /callout >}}
 
 {{< callout type="warning" >}}
 **Mise à jour depuis la v0.15.x : une configuration avec un bloc `oidc` doit changer**

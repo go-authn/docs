@@ -12,7 +12,7 @@ server that runs it and owns the configuration, the directory sources and the
 bind policy; this owns the bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.0
+go get github.com/go-authn/ldap@v0.12.1
 ```
 
 Written from RFC 4511 (the protocol), 4512 (the root DSE and the schema),
@@ -219,6 +219,8 @@ v0.8.0 both apply the selection, which `ldapsearch` itself checks in CI.
 Without a schema — `Server.Schema` nil, the default — every comparison is
 case-insensitive on the value: the safer of the two for reading, since it
 never hides an entry an exact comparison would have found.
+
+**A bind abandons every paged search in progress** (since v0.12.1; RFC 4511 4.2.1: the authentication state is discarded when the bind is received), so a search begun by one person never goes on delivering to the connection once it is anonymous or somebody else's.
 
 ## The schema {#the-schema}
 

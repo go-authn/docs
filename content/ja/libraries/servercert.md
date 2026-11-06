@@ -11,7 +11,7 @@ tags: [ライブラリ, tls, acme, 証明書]
 External Account Binding を含みます。
 
 ```sh
-go get github.com/go-authn/servercert@v0.5.2
+go get github.com/go-authn/servercert@v0.6.0
 ```
 
 `Config` はちょうど一つのソースを指名します。`CertFile` と `KeyFile`、または `ACME` です。`New` は
@@ -137,6 +137,8 @@ sshd の `StrictModes` が `authorized_keys` へのパスに求めるのと同�
 Windows ではモードと所有者は確認されません。両方を決めるのは ACL で、それを制限するのはあなたの
 仕事です。そしてパスのどこにあってもシンボリックリンクは拒否されます。
 
+`New` (およびリロードのたび) は、グループまたはその他のユーザーが読み書きできる**秘密ファイル**も拒否します。TLS の `KeyFile` と ACME の `EABHMACKeyFile` (v0.6.0 から) で、OpenSSH が秘密鍵を拒否するのと同様に、`chmod 600 it` と指示します。モードは名前ではなく開いたファイルから読み取ります。読み取り可能な状態で書かれた差し替え鍵は採用されず、現在の証明書が提供され続け、`OnError` が呼ばれます。Windows では確認しません (ACL が決めるため)。**アップグレード:** デプロイ前に両方のファイルを `chmod 600` (または `0400`) にしてください。
+
 ## 何に対して検証されているか {#what-it-is-checked-against}
 
 **pebble**、Let's Encrypt のテスト CA を、その `ca`、`db`、`va`、`wfe` パッケージからプロセス内で、
@@ -148,4 +150,4 @@ tls-alpn-01、`HTTPHandler` を通じた http-01 と、`HTTPChallenge` をオフ
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.5.2](https://pkg.go.dev/github.com/go-authn/servercert@v0.5.2)
+[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)
