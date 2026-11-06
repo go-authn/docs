@@ -202,6 +202,22 @@ $ kinit --password-file=alice.new alice@EXAMPLE.ORG
 $
 ```
 
+## 렐름이 사람들을 읽는 곳 {#where-the-realm-reads-people}
+
+**v0.16.2부터** 렐름은 LDAP 바인드와 같은 스냅숏을 요청마다 표를 한 번 찾아 읽으며
+(go-authn/kdc의 [`Finder`]({{< relref "/libraries/kdc.md#finder" >}})), 소스는 결코 읽지 않습니다.
+이전에는 모든 AS-REQ와 TGS-REQ(UDP의 인증되지 않은 AS-REQ 포함)가 각 `users` SQL 소스의
+전체 사용자 쿼리와 각 `ldap` 업스트림의 하위 트리 검색을 실행했습니다. 누구든 보낸 데이터그램
+하나로 모든 백엔드가 통째로 읽혔습니다.
+
+배포에 대한 결과:
+
+- authnd를 통해 바꾼 비밀번호는 위에서처럼 즉시 렐름에 반영됩니다.
+- 데이터베이스에서 삭제된 사람은 바인드와 마찬가지로 `refresh` 한 주기(기본 60초) 안에
+  티켓을 받지 못합니다. 바로 다음 요청부터가 아닙니다.
+- `max_age`를 넘으면, LDAP이 `unavailable`로 응답하듯 렐름은
+  `KDC_ERR_SVC_UNAVAILABLE`로 응답합니다.
+
 ## `mfa` 블록과 함께 둘 수 없음 {#not-beside-an-mfa-block}
 
 ```

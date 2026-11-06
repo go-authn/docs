@@ -199,6 +199,22 @@ $ kinit --password-file=alice.new alice@EXAMPLE.ORG
 $
 ```
 
+## レルムが人々を読む場所 {#where-the-realm-reads-people}
+
+**v0.16.2 から**、レルムは LDAP バインドと同じスナップショットを、リクエストごとに
+表を一回引くだけで読み (go-authn/kdc の [`Finder`]({{< relref "/libraries/kdc.md#finder" >}}))、
+ソースは決して読みません。以前は、すべての AS-REQ と TGS-REQ (UDP 上の認証なしの AS-REQ を含む) が、
+各 `users` SQL ソースの人々のクエリ全体と、各 `ldap` 上流のサブツリー検索を実行していました。
+誰からでも一つのデータグラムで、すべてのバックエンドが丸ごと読まれていたのです。
+
+導入先にとっての帰結:
+
+- authnd 経由で変更したパスワードは、上のとおり、すぐにレルムに届きます。
+- データベースから削除された人は、バインドと同様に `refresh` の一周期 (既定 60 秒) 以内に
+  チケットを得られなくなります。次のリクエストですぐに、ではありません。
+- `max_age` を超えると、LDAP が `unavailable` を返すのと同様に、レルムは
+  `KDC_ERR_SVC_UNAVAILABLE` を返します。
+
 ## `mfa` ブロックと併用できない {#not-beside-an-mfa-block}
 
 ```

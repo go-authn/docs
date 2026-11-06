@@ -12,12 +12,12 @@ que conoce un [directorio]({{< relref "/libraries/directory.md" >}}) y los servi
 guarda una keytab. Se ejecuta bajo [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.5.0
+go get github.com/go-authn/kdc@v0.6.0
 ```
 
-En la v0.5.0 su `go.mod` requiere como mínimo `go-authn/directory` v0.16.1 y
-gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.16.1
-se compila con la v0.17.0, como hace authnd v0.15.1. La mitad que
+En la v0.6.0 su `go.mod` requiere como mínimo `go-authn/directory` v0.17.0 y
+gokrb5 v8.4.4: son mínimos, así que un programa que requiere directory v0.17.0
+se compila con la v0.18.0, como hace authnd v0.16.2. La mitad que
 acepta es [krb5]({{< relref "/libraries/krb5.md" >}}), y un servicio que solo
 verifica tickets no necesita este módulo en absoluto.
 
@@ -34,6 +34,26 @@ correcta?*. A una persona cuyo origen no guarda ninguna contraseña se le respon
 `KDC_ERR_NULL_KEY` (*null key*), nunca el código que recibe una contraseña incorrecta,
 de modo que se lee como una configuración que corregir y no como una contraseña que
 volver a escribir.
+
+## Darle un índice: `Finder` {#finder}
+
+Cada AS-REQ y TGS-REQ busca a una persona. Con una `directory.Source` simple eso es
+`Identities()` y un recorrido: con 10 000 personas el recorrido era la mitad de la
+CPU de una AS-REQ, y una fuente que lee una base de datos o un servidor LDAP en
+`Identities()` se lee entera en cada solicitud, incluida una no autenticada.
+**Desde la v0.6.0** una fuente que mantiene un índice implementa
+
+```go
+Find(name string) (*directory.Identity, bool, error)
+```
+
+y el reino le pregunta en lugar de recorrer. El nombre de la identidad debe ser
+**exactamente** el principal —un principal distingue mayúsculas y minúsculas, así
+que una respuesta cuyo nombre difiere es un principal desconocido— y un error da
+`KDC_ERR_SVC_UNAVAILABLE`. Con un `Finder` la búsqueda queda por debajo del umbral
+del perfil de CPU; lo que queda de una solicitud es sobre todo la codificación ASN.1
+de gokrb5. [authnd]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}})
+entrega así al reino su instantánea actualizada.
 
 ## Ejemplo {#example}
 
@@ -254,4 +274,4 @@ respaldado por un verificador. El mínimo de la línea de cobertura es el 80%.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)

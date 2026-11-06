@@ -13,12 +13,12 @@ services a keytab holds. It runs under
 [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.5.0
+go get github.com/go-authn/kdc@v0.6.0
 ```
 
-At v0.5.0 its `go.mod` requires at least `go-authn/directory` v0.16.1 and
-gokrb5 v8.4.4: minimums, so a program that requires directory v0.16.1 builds
-with v0.17.0, as authnd v0.15.1 does. The
+At v0.6.0 its `go.mod` requires at least `go-authn/directory` v0.17.0 and
+gokrb5 v8.4.4: minimums, so a program that requires directory v0.17.0 builds
+with v0.18.0, as authnd v0.16.2 does. The
 accepting half is [krb5]({{< relref "/libraries/krb5.md" >}}), and a service
 that only verifies tickets needs this module not at all.
 
@@ -34,6 +34,26 @@ LDAP, a hash comparison — cannot serve, however well it answers *is this the
 right password*. A person whose source holds no password is answered
 `KDC_ERR_NULL_KEY` (*null key*), never the code a wrong password gets, so it
 reads as a configuration to fix rather than a password to retype.
+
+## Give it an index: `Finder` {#finder}
+
+Every AS-REQ and TGS-REQ looks one person up. With a plain `directory.Source`
+that is `Identities()` and a walk: with 10,000 people the walk was half of an
+AS-REQ's CPU, and a source that reads a database or an LDAP server on
+`Identities()` is read in full by every request, an unauthenticated one
+included. **Since v0.6.0** a source that keeps an index implements
+
+```go
+Find(name string) (*directory.Identity, bool, error)
+```
+
+and the realm asks it instead of walking. The identity's name must equal the
+principal **exactly** — a principal is case-sensitive, so an answer whose name
+differs is an unknown principal — and an error is `KDC_ERR_SVC_UNAVAILABLE`.
+With a `Finder` the lookup is below the CPU profile's threshold; what is left
+of a request is mostly gokrb5's ASN.1 encoding.
+[authnd]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}})
+hands the realm its refreshed snapshot this way.
 
 ## Example
 
@@ -251,4 +271,4 @@ The coverage lane's floor is 80%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)

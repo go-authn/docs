@@ -13,12 +13,12 @@ services qu'un keytab détient. Il fonctionne sous
 [authnd]({{< relref "/authnd/_index.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.5.0
+go get github.com/go-authn/kdc@v0.6.0
 ```
 
-En v0.5.0, son `go.mod` requiert au moins `go-authn/directory` v0.16.1 et
-gokrb5 v8.4.4 : des minimums, si bien qu'un programme qui requiert directory v0.16.1
-est compilé avec la v0.17.0, comme authnd v0.15.1. La
+En v0.6.0, son `go.mod` requiert au moins `go-authn/directory` v0.17.0 et
+gokrb5 v8.4.4 : des minimums, si bien qu'un programme qui requiert directory v0.17.0
+est compilé avec la v0.18.0, comme authnd v0.16.2. La
 moitié qui accepte est [krb5]({{< relref "/libraries/krb5.md" >}}), et un service
 qui ne fait que vérifier des tickets n'a nullement besoin de ce module.
 
@@ -34,6 +34,26 @@ d'autre, une comparaison d'empreintes — ne peut pas servir, si bien qu'il rép
 bon mot de passe*. Une personne dont la source ne détient aucun mot de passe reçoit
 `KDC_ERR_NULL_KEY` (*null key*), jamais le code qu'obtient un mauvais mot de passe, si bien que cela
 se lit comme une configuration à corriger plutôt que comme un mot de passe à retaper.
+
+## Lui donner un index : `Finder` {#finder}
+
+Chaque AS-REQ et TGS-REQ cherche une personne. Avec une simple `directory.Source`,
+c'est `Identities()` puis un parcours : avec 10 000 personnes, le parcours était la
+moitié du CPU d'une AS-REQ, et une source qui lit une base ou un serveur LDAP sur
+`Identities()` est lue en entier par chaque requête, y compris une requête non
+authentifiée. **Depuis la v0.6.0**, une source qui tient un index implémente
+
+```go
+Find(name string) (*directory.Identity, bool, error)
+```
+
+et le royaume l'interroge au lieu de parcourir. Le nom de l'identité doit être
+**exactement** le principal — un principal est sensible à la casse, donc une
+réponse dont le nom diffère est un principal inconnu — et une erreur donne
+`KDC_ERR_SVC_UNAVAILABLE`. Avec un `Finder`, la recherche passe sous le seuil du
+profil CPU ; ce qui reste d'une requête est surtout l'encodage ASN.1 de gokrb5.
+[authnd]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}})
+donne ainsi au royaume son instantané rafraîchi.
 
 ## Exemple {#example}
 
@@ -255,4 +275,4 @@ Le plancher de la voie de couverture est de 80 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)

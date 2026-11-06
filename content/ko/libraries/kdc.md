@@ -12,12 +12,12 @@ tags: [라이브러리, kerberos, 디렉터리]
 실행됩니다.
 
 ```sh
-go get github.com/go-authn/kdc@v0.5.0
+go get github.com/go-authn/kdc@v0.6.0
 ```
 
-v0.5.0의 `go.mod`는 최소 `go-authn/directory` v0.16.1과 gokrb5 v8.4.4를 요구합니다.
-이는 최소 요구 버전이므로, directory v0.16.1을 요구하는 프로그램은
-authnd v0.15.1처럼 v0.17.0으로 빌드됩니다. 받아들이는 쪽 절반은
+v0.6.0의 `go.mod`는 최소 `go-authn/directory` v0.17.0과 gokrb5 v8.4.4를 요구합니다.
+이는 최소 요구 버전이므로, directory v0.17.0을 요구하는 프로그램은
+authnd v0.16.2처럼 v0.18.0으로 빌드됩니다. 받아들이는 쪽 절반은
 [krb5]({{< relref "/libraries/krb5.md" >}})이며, 티켓을 검증하기만 하는 서비스에는 이
 모듈이 전혀 필요하지 않습니다.
 
@@ -32,6 +32,24 @@ KDC는 클라이언트의 사전 인증을 그 사람의 장기 키로 **복호�
 비밀번호인가*에 아무리 잘 답하더라도 소용이 없습니다. 소스에 비밀번호가 없는 사람에게는
 `KDC_ERR_NULL_KEY`(*null key*)로 응답하며, 잘못된 비밀번호에 주는 코드는 절대 아니므로,
 다시 입력할 비밀번호가 아니라 고쳐야 할 구성으로 읽힙니다.
+
+## 색인 건네기: `Finder` {#finder}
+
+모든 AS-REQ와 TGS-REQ는 한 사람을 조회합니다. 일반 `directory.Source`에서는 이것이
+`Identities()`와 순회입니다. 10,000명일 때 순회가 AS-REQ CPU의 절반이었고,
+`Identities()`에서 데이터베이스나 LDAP 서버를 읽는 소스는 인증되지 않은 요청을 포함한
+모든 요청마다 통째로 읽혔습니다. **v0.6.0부터** 색인을 가진 소스는
+
+```go
+Find(name string) (*directory.Identity, bool, error)
+```
+
+를 구현할 수 있고, 렐름은 순회 대신 그것에 질의합니다. 아이덴티티의 이름은 프린시펄과
+**정확히** 같아야 합니다(프린시펄은 대소문자를 구분하므로, 이름이 다른 응답은 알 수 없는
+프린시펄입니다). 오류는 `KDC_ERR_SVC_UNAVAILABLE`이 됩니다. `Finder`가 있으면 조회는 CPU
+프로파일 임계값 아래로 내려가고, 요청에 남는 것은 주로 gokrb5의 ASN.1 인코딩입니다.
+[authnd]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}})는 이 방식으로
+렐름에 갱신된 스냅숏을 건넵니다.
 
 ## 예제 {#example}
 
@@ -234,4 +252,4 @@ MIT KDC는 관여하지 않으며 클라이언트만 빌려 옵니다.
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.5.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.5.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)

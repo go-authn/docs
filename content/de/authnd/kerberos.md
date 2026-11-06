@@ -204,6 +204,24 @@ $ kinit --password-file=alice.new alice@EXAMPLE.ORG
 $
 ```
 
+## Wo der Realm die Personen liest {#where-the-realm-reads-people}
+
+**Seit v0.16.2** liest der Realm denselben Schnappschuss wie LDAP-Binds, ein
+Tabellenzugriff pro Anfrage (der [`Finder`]({{< relref "/libraries/kdc.md#finder" >}})
+von go-authn/kdc), und nie die Quellen. Vorher führte jede AS-REQ und TGS-REQ —
+auch eine nicht authentifizierte AS-REQ über UDP — die vollständige Personenabfrage
+jeder `users`-SQL-Quelle und eine Teilbaumsuche jedes `ldap`-Upstreams aus: Ein
+einziges Datagramm von irgendwem las jedes Backend vollständig.
+
+Was daraus für eine Installation folgt:
+
+- ein über authnd geändertes Passwort erreicht den Realm sofort, wie oben;
+- eine aus einer Datenbank entfernte Person bekommt innerhalb einer
+  `refresh`-Periode (standardmäßig 60 s) keine Tickets mehr, wie bei einem Bind —
+  nicht schon bei der nächsten Anfrage;
+- nach `max_age` antwortet der Realm `KDC_ERR_SVC_UNAVAILABLE`, wie LDAP
+  `unavailable` antwortet.
+
 ## Nicht neben einem `mfa`-Block {#not-beside-an-mfa-block}
 
 ```

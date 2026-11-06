@@ -9,7 +9,7 @@ These pages are documentation version **0.8**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.16.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.16.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.7** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap is **v0.12.0**, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed `BuildError` for a schema that does
 not build, schemas in HCL2 and the `ldapschema` converter, and
 directory **v0.18.0**, with declared object classes. authnd
-v0.16.0 embeds ldap v0.12.0 and directory v0.18.0.
+v0.16.2 embeds ldap v0.12.0 and directory v0.18.0.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.8/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
@@ -107,6 +107,8 @@ dependencies are left out, except those this documentation version describes.
 | v0.15.0 | Availability and security, with go-authn/ldap v0.12.0 and go-authn/directory v0.17.0. ⛔ **Two defaults change**: `max_connections` is `4096` (it was unlimited) and `operation_timeout` is `30s` (it was none). New, optional: `max_connections_per_ip` and `startup_timeout` (`60s`); [`check` prints the limits]({{< relref "/authnd/operations.md#limits" >}}). A connection over the cap is sent `busy` and closed; an operation past the deadline is answered `timeLimitExceeded`, even when its handler is blocked. An upstream outage during a bind (simple bind, password change, the password factor of `mfa`) is `unavailable` (52), never `invalidCredentials` (49); a wrong password is still 49. Startup against a slow source fails after `startup_timeout`, naming the stage and the source. [The TLS certificate is read again]({{< relref "/authnd/tls.md#renewal" >}}) when `cert_file` or `key_file` change (first handshake after 5 s, and on `SIGHUP`); a pair that does not load keeps the served certificate and is logged once. Allocation counts are in the libraries below; wall-clock was not measured (load 21 at the start) |
 | v0.15.1 | Kerberos, with go-authn/kdc v0.5.0: a byte-identical retransmission gets its previous reply (MIT's lookaside), and a directory outage is `KDC_ERR_SVC_UNAVAILABLE`, never `KDC_ERR_PREAUTH_FAILED`, also for a correct password, so it cannot count against a lockout. golang.org/x/net v0.62.0. No configuration change |
 | v0.16.0 | ⛔ Security, with go-authn/oidc v0.6.1 and go-authn/directory v0.18.0. **Breaking for a deployment with an `oidc` block**: [`domains` is required]({{< relref "/authnd/tokens.md#scoped-name" >}}) and the server does not start without it. The token's name must be exactly one `local@scope` of an allowed domain (an unscoped name, another institution's, or one with two `@` is refused); the optional `local_domain`, one of `domains`, maps that scope's people to bare directory names, and other scopes are looked up as the whole `local@scope`. Behind a federation proxy any institution's alice used to bind as the local alice. Two entries of one source that share a uid are an error at startup and at refresh, not a silent pick. [Upgrade note]({{< relref "/authnd/_index.md" >}}) |
+| v0.16.1 | `kerberos { listen = "host:0" }` gets one port for UDP and TCP (it got two, and a `krb5.conf` names one); the startup line names that port. The tests stop picking a port, releasing it and naming it, which failed on a runner with `address already in use` |
+| v0.16.2 | ⛔ Security. [The realm reads the snapshot]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}}), never the sources: every AS-REQ and TGS-REQ, an unauthenticated one over UDP included, ran the whole people query of every SQL source and a subtree search of every `ldap` upstream. `max_age` now holds for Kerberos (`KDC_ERR_SVC_UNAVAILABLE` past it). A person removed from a database stops getting tickets within one `refresh` period, as LDAP binds do. With go-authn/kdc v0.6.0 |
 
 ### authn-bridge
 
@@ -193,6 +195,7 @@ library's page says what earlier ones changed.
 | kdc v0.4.3 | dependencies only: go-authn/directory v0.12.0 as its minimum |
 | kdc v0.4.5 | a security audit, fuzzing and chaos pass ([what it refuses]({{< relref "/libraries/kdc.md" >}})): a request for another realm is answered `KDC_ERR_WRONG_REALM`, an unreadable directory `KDC_ERR_SVC_UNAVAILABLE` (it was `KDC_ERR_C_PRINCIPAL_UNKNOWN`), a TGT whose start is within `MaxSkew` in the future is accepted, and a decoder panic drops one request instead of crashing the process (a single malformed AS-REQ or TGS-REQ could crash it); principal names are quoted in the log. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | kdc v0.5.0 | [the lookaside]({{< relref "/libraries/kdc.md" >}}) of MIT's KDC: a request seen before, byte for byte, gets its previous reply, for two minutes and under 10 MiB in all; a `KRB-ERROR` is never stored; deliberately no authenticator replay cache, which MIT turns off at the TGS. Tests pin an unreadable directory as `KDC_ERR_SVC_UNAVAILABLE` at the AS, with a correct password, and at the TGS. Two allocations more per request |
+| kdc v0.6.0 | [`Finder`]({{< relref "/libraries/kdc.md#finder" >}}): a source that keeps an index by name is asked instead of walked. With 10,000 people the walk was half of an AS-REQ's CPU; with a `Finder` the lookup is below the profile's threshold. An answer whose name differs from the principal is an unknown principal (a principal is case-sensitive) |
 | keyfactor v0.4.2 | dependencies only: go-authn/fido v0.6.2 and golang.org/x/crypto v0.58.0 as its minimums |
 | krb5 v0.3.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | krb5 v0.3.3 | dependencies only: golang.org/x/net v0.62.0, golang.org/x/crypto v0.58.0 and go-uuid v1.0.4 clear 45 of 46 `govulncheck` findings in modules that are required and not called; GO-2026-5932 (`x/crypto/openpgp`) has no fix and is not imported by any go-authn module; no API change |
