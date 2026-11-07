@@ -2,11 +2,11 @@
 &lt;p&gt;&lt;strong&gt;Die Personen eines Standorts stehen bereits in einer Datenbank, einer Datei oder einem
 anderen Verzeichnis. Was sie authentifizieren will, spricht LDAP.&lt;/strong&gt; authnd ist die Fassade
 davor: Es führt Binds und Suchen über die Quellen von&lt;a href="https://go-authn.github.io/docs/0.10/de/libraries/"&gt;go-authn/directory&lt;/a&gt; aus, sodass das, was eine
-Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, ein Binary. Diese Seiten beschreiben v0.18.0, dessen Einträge den
+Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, ein Binary. Diese Seiten beschreiben v0.18.2, dessen Einträge den
 Standardschemata folgen und das Schema bestehen, das es unter &lt;code&gt;cn=Subschema&lt;/code&gt; bereitstellt
 und das ein Standort um sein eigenes erweitert(&lt;a href="https://go-authn.github.io/docs/0.10/de/authnd/schemas/"&gt;SUPANN, eduPerson&lt;/a&gt;) und mit&lt;a href="https://go-authn.github.io/docs/0.10/de/authnd/schemas/#rules"&gt;DIT-Content-Rules, Name Forms und Structure Rules&lt;/a&gt;
 auch um Formvorgaben, mit go-authn/ldap v0.12.1 und
-go-authn/directory v0.19.0 darunter; was geprüft ist und
+go-authn/directory v0.20.0 darunter; was geprüft ist und
 was nicht, steht auf der Seite &lt;a href="https://go-authn.github.io/docs/0.10/de/status/"&gt;Stand&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
@@ -863,6 +863,7 @@ data-copied-label="Kopiert!"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;Jede muss eine Hilfsklasse (AUXILIARY) sein, die das bereitgestellte Schema definiert(das Standardschema, oder &lt;a href="https://go-authn.github.io/docs/0.10/de/authnd/schemas/"&gt;&lt;code&gt;schema_files&lt;/code&gt; und ein &lt;code&gt;schema&lt;/code&gt;-Block&lt;/a&gt;),und keine, die authnd selbst ableitet. Eine Person, der ein MUST einer deklarierten Klasse fehlt,wird ohne sie veröffentlicht, und &lt;code&gt;check&lt;/code&gt; sagt es.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;query_timeout&lt;/code&gt;&lt;/strong&gt;, optional, begrenzt jede Abfrage des Blocks einschließlich des Lesens ihrer Zeilen: eine Dauer wie &lt;code&gt;&amp;quot;20s&amp;quot;&lt;/code&gt;, oder &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt; für keine Grenze. Standardmäßig sind es drei Viertel von &lt;code&gt;refresh&lt;/code&gt; (45 s bei den üblichen 60 s): Eine Datenbank, die die Verbindung annimmt und nicht mehr antwortet, beendet so das Lesen, bevor der Refresh aufgibt, und der nächste Refresh läuft; ohne das fror ein einziges hängendes Lesen den Refresh bis zu einem Neustart ein (v0.18.2). Eine einzelne Abfrage, die länger als die Frist dauert, schlägt fehl: Erhöhen Sie &lt;code&gt;query_timeout&lt;/code&gt; für eine, die berechtigterweise länger braucht. Bei &lt;code&gt;refresh = &amp;quot;0&amp;quot;&lt;/code&gt; gilt der Standard der Bibliothek von 30 s.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;driver&lt;/code&gt; akzeptiert &lt;code&gt;postgres&lt;/code&gt; (oder &lt;code&gt;postgresql&lt;/code&gt;, &lt;code&gt;pgx&lt;/code&gt;), &lt;code&gt;mysql&lt;/code&gt; (oder &lt;code&gt;mariadb&lt;/code&gt;)und &lt;code&gt;sqlite&lt;/code&gt; (oder &lt;code&gt;sqlite3&lt;/code&gt;). Die Datenbank wird beim Start erreicht, bevor
 irgendetwas lauscht; eine, die nicht antwortet, hält den Server daher dort an, wo
 jemand zusieht:&lt;/p&gt;
@@ -4451,7 +4452,7 @@ der Konfiguration:&lt;/p&gt;
 &lt;p&gt;Eine Verbindung über einer Grenze erhält &lt;code&gt;busy&lt;/code&gt; (51) in einer Notice of
 Disconnection und wird geschlossen, nie in eine Warteschlange gestellt(RFC 4511 4.4.1). Eine Operation, die bei &lt;code&gt;operation_timeout&lt;/code&gt; noch läuft, wird mit&lt;code&gt;timeLimitExceeded&lt;/code&gt; (3) beantwortet, &lt;strong&gt;auch wenn ihr Handler blockiert ist und die
 Frist ignoriert&lt;/strong&gt;: das späte Ergebnis wird verworfen. Antwortet eine Quelle beim
-Start nicht, verweigert authnd den Start nach &lt;code&gt;startup_timeout&lt;/code&gt;, mit einem Fehler,der die Phase und die Quelle nennt. Eine negative Zahl oder eine Dauer, die sich
+Start nicht, verweigert authnd den Start nach &lt;code&gt;startup_timeout&lt;/code&gt;, mit einem Fehler,der die Phase und die Quelle nennt. Für einen &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt;-Block lautet die Quelle &lt;code&gt;opening sql pgx (dsn_file /etc/authnd/pg.dsn)&lt;/code&gt;: der Treiber und die Datei mit dem DSN, nie der DSN selbst (ab v0.18.1; vorher hieß jeder SQL-Block nur &lt;code&gt;sql&lt;/code&gt;). Eine negative Zahl oder eine Dauer, die sich
 nicht lesen lässt, wird beim Start und von &lt;code&gt;check&lt;/code&gt; abgelehnt. Mit&lt;code&gt;max_connections = 0&lt;/code&gt; und &lt;code&gt;operation_timeout = &amp;quot;0&amp;quot;&lt;/code&gt; gilt das Verhalten von v0.14.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;check&lt;/code&gt; gibt die Grenzen aus, mit denen es bedienen wird, damit niemand die
 Standardwerte betreibt, ohne es zu wissen:&lt;/p&gt;

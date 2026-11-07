@@ -704,7 +704,7 @@ architectures.&lt;/p&gt;
 memory, a SQL database, an LDAP server, or &lt;code&gt;user&lt;/code&gt; and &lt;code&gt;group&lt;/code&gt; blocks in a
 configuration file — and the point of it is the second half of the question.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/directory@v0.19.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/directory@v0.20.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -1230,6 +1230,7 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;p&gt;That is how authnd v0.15.0 answers a bind, as&lt;a href="https://go-authn.github.io/docs/0.10/authnd/operations/#limits"&gt;the operations page&lt;/a&gt; says.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;A check can be cancelled.&lt;/strong&gt; &lt;code&gt;Identity.VerifyContext(ctx, password)&lt;/code&gt; (since v0.19.0) gives up when &lt;code&gt;ctx&lt;/code&gt; ends: for an &lt;code&gt;ldapdir&lt;/code&gt; identity the upstream connection is closed (that is what cancels a request in go-ldap, which has no context and no default timeout: a bind to a server that accepts and never answers used to wait for ever) and the answer is &lt;code&gt;ErrUnavailable&lt;/code&gt;; the dial ends at the context&amp;rsquo;s deadline too. A source supplies one with &lt;code&gt;directory.WithContextVerifier&lt;/code&gt;; &lt;code&gt;Verify&lt;/code&gt; still works, with a background context, and an identity with only a &lt;code&gt;WithVerifier&lt;/code&gt; is &lt;code&gt;Verify&lt;/code&gt; (not interruptible). A server that bounds a bind (authnd&amp;rsquo;s &lt;code&gt;operation_timeout&lt;/code&gt;) should call &lt;code&gt;VerifyContext&lt;/code&gt;, so that a hung upstream does not keep a goroutine and a connection after the answer was given.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;A query has a deadline.&lt;/strong&gt; &lt;code&gt;sqldir.WithQueryTimeout(d)&lt;/code&gt; (since v0.20.0) bounds every query of a source, the reading of its rows included; past it the read returns an error and the driver drops the connection. The default, &lt;code&gt;sqldir.DefaultQueryTimeout&lt;/code&gt;, is 30 s; &lt;code&gt;0&lt;/code&gt; is no limit, on purpose. Before, a database that accepted a connection and stopped answering blocked the read for ever, and a program that refreshes periodically froze on it. &lt;code&gt;hcldir.Block.QueryTimeout&lt;/code&gt; (&lt;code&gt;query_timeout&lt;/code&gt; in a &lt;code&gt;sql&lt;/code&gt; block) reaches it: a duration, checked by &lt;code&gt;Check()&lt;/code&gt; without a network, and refused on an &lt;code&gt;ldap&lt;/code&gt; block. A program that refreshes should set it below its period, as authnd does (three quarters of &lt;code&gt;refresh&lt;/code&gt;).&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;What it refuses, and why&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;A group with nobody in it&lt;/strong&gt;, and &lt;strong&gt;a group no source has&lt;/strong&gt;, when &lt;code&gt;Expand&lt;/code&gt;
@@ -1291,7 +1292,7 @@ found anyway, a quoted one kept its case, and an alias naming&lt;code&gt;userPas
 &lt;/ul&gt;
 &lt;p&gt;The coverage lane fails below 85% (its stated standard is 100%), and the&lt;code&gt;nosql&lt;/code&gt; and &lt;code&gt;noldap&lt;/code&gt; builds are checked in CI.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Reference&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/directory@v0.19.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/directory@v0.19.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>The libraries, one question each</title><link>https://go-authn.github.io/docs/0.10/libraries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.10/libraries/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/directory@v0.20.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/directory@v0.20.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>The libraries, one question each</title><link>https://go-authn.github.io/docs/0.10/libraries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.10/libraries/</guid><description>
 &lt;p&gt;Programs such as &lt;a href="https://go-authn.github.io/docs/0.10/authnd/"&gt;authnd&lt;/a&gt; and&lt;a href="https://go-authn.github.io/docs/0.10/authn-bridge/"&gt;authn-bridge&lt;/a&gt; are built from
 modules that are published, versioned and tested on their own. Each answers&lt;strong&gt;one&lt;/strong&gt; question, and a program imports the ones whose questions it asks.&lt;/p&gt;
 &lt;p&gt;All of them are pure Go and build with &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;.&lt;/p&gt;
@@ -1332,7 +1333,7 @@ modules that are published, versioned and tested on their own. Each answers&lt;s
 &lt;tr&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/libraries/directory/"&gt;directory&lt;/a&gt;&lt;/td&gt;
 &lt;td&gt;who is somebody, and what can prove them?&lt;/td&gt;
-&lt;td&gt;v0.19.0&lt;/td&gt;
+&lt;td&gt;v0.20.0&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/directory&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;

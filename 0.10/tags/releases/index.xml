@@ -159,7 +159,7 @@ v0.1.5, and revokd has no &lt;code&gt;-version&lt;/code&gt; before v0.5.0.&lt;/p
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;authnd&lt;/td&gt;
-&lt;td&gt;&lt;strong&gt;v0.18.0&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;v0.18.2&lt;/strong&gt;&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/authnd&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -182,8 +182,8 @@ v0.1.5, and revokd has no &lt;code&gt;-version&lt;/code&gt; before v0.5.0.&lt;/p
 &lt;p&gt;The libraries&amp;rsquo; versions are on &lt;a href="https://go-authn.github.io/docs/0.10/libraries/"&gt;their own page&lt;/a&gt;;ldap is &lt;strong&gt;v0.12.1&lt;/strong&gt;, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed &lt;code&gt;BuildError&lt;/code&gt; for a schema that does
 not build, schemas in HCL2 and the &lt;code&gt;ldapschema&lt;/code&gt; converter, and
-directory &lt;strong&gt;v0.19.0&lt;/strong&gt;, with declared object classes. authnd
-v0.18.0 embeds ldap v0.12.1 and directory v0.19.0.A new minor version of any program above is a new documentation version, so
+directory &lt;strong&gt;v0.20.0&lt;/strong&gt;, with declared object classes and a deadline on every SQL query. authnd
+v0.18.2 embeds ldap v0.12.1 and directory v0.20.0.A new minor version of any program above is a new documentation version, so
 the pages a reader finds under &lt;code&gt;/docs/0.10/&lt;/code&gt; keep describing what they
 installed; those of the previous releases stay under &lt;code&gt;/docs/0.1/&lt;/code&gt;,&lt;code&gt;/docs/0.2/&lt;/code&gt;, &lt;code&gt;/docs/0.3/&lt;/code&gt;, &lt;code&gt;/docs/0.4/&lt;/code&gt;, &lt;code&gt;/docs/0.5/&lt;/code&gt;, &lt;code&gt;/docs/0.6/&lt;/code&gt;, &lt;code&gt;/docs/0.7/&lt;/code&gt;, &lt;code&gt;/docs/0.8/&lt;/code&gt; and &lt;code&gt;/docs/0.9/&lt;/code&gt;.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
@@ -390,6 +390,14 @@ dependencies are left out, except those this documentation version describes.&lt
 &lt;tr&gt;
 &lt;td&gt;v0.18.0&lt;/td&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/authnd/operations/#outage"&gt;A password check against an upstream is cancelled, not only bounded&lt;/a&gt;: the bind and the password factor use &lt;code&gt;Identity.VerifyContext&lt;/code&gt; (go-authn/directory v0.19.0), which closes the upstream connection when the bind&amp;rsquo;s budget ends, so nothing is left running. 400 binds against an upstream that never answers: 1620 goroutines held (v0.16.2), 257 (v0.17.0, the cap), 4 (v0.18.0); the cap of 64 checks per source stays, for sources that cannot be cancelled. The name folds come from go-authn/oidc v0.7.0. No configuration change&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;v0.18.1&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/authnd/operations/#limits"&gt;The startup timeout names the SQL source it was opening&lt;/a&gt;: &lt;code&gt;opening sql pgx (dsn_file …) did not answer&lt;/code&gt;, where it said &lt;code&gt;opening sql&lt;/code&gt; for every SQL block; the driver and the file that holds the DSN, never the DSN. Tests: chaos against a real PostgreSQL on a disposable cluster (server stopped during a refresh, connection reset mid-query, a listener that never answers, the Kerberos realm during an outage); they skip without the server binaries unless &lt;code&gt;AUTHND_REQUIRE_PG=1&lt;/code&gt;. No configuration change&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;v0.18.2&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/authnd/people/"&gt;A SQL read that hangs no longer freezes the refresh&lt;/a&gt;: a database that accepted the connection and stopped answering left the refresh blocked in the query, every later tick was skipped, and past &lt;code&gt;max_age&lt;/code&gt; everything answered &lt;code&gt;unavailable&lt;/code&gt; until a restart. A &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; block now has &lt;code&gt;query_timeout&lt;/code&gt;, by default three quarters of &lt;code&gt;refresh&lt;/code&gt;, with go-authn/directory v0.20.0. &lt;strong&gt;Behaviour change:&lt;/strong&gt; a single query slower than the deadline fails; set &lt;code&gt;query_timeout&lt;/code&gt; for a slower one&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
@@ -688,6 +696,10 @@ library&amp;rsquo;s page says what earlier ones changed.&lt;/p&gt;
 &lt;tr&gt;
 &lt;td&gt;directory v0.19.0&lt;/td&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/libraries/directory/"&gt;a password check can be cancelled&lt;/a&gt;: &lt;code&gt;directory.WithContextVerifier&lt;/code&gt; and &lt;code&gt;Identity.VerifyContext(ctx, password)&lt;/code&gt;; for an &lt;code&gt;ldapdir&lt;/code&gt; identity the upstream connection is closed when the context ends and the answer is &lt;code&gt;ErrUnavailable&lt;/code&gt; (go-ldap has no context and no default timeout, so a bind to an upstream that accepts and never answers waited for ever). The dial of a check ends at the context&amp;rsquo;s deadline too. &lt;code&gt;Verify&lt;/code&gt; and &lt;code&gt;WithVerifier&lt;/code&gt; are unchanged. &lt;strong&gt;Upgrade:&lt;/strong&gt; a server that bounds a check should call &lt;code&gt;VerifyContext&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;directory v0.20.0&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/libraries/directory/"&gt;every query has a deadline&lt;/a&gt;: &lt;code&gt;sqldir.WithQueryTimeout(d)&lt;/code&gt;, by default &lt;code&gt;sqldir.DefaultQueryTimeout&lt;/code&gt; (30 s), &lt;code&gt;0&lt;/code&gt; for none; it covers reading the rows, and the driver drops the connection at the deadline (before, a database that stopped answering blocked the read for ever). &lt;code&gt;hcldir.Block.QueryTimeout&lt;/code&gt; (&lt;code&gt;query_timeout&lt;/code&gt; in a &lt;code&gt;sql&lt;/code&gt; block) reaches it, checked without a network and refused on an &lt;code&gt;ldap&lt;/code&gt; block. The &lt;code&gt;Source&lt;/code&gt; interface does not change. &lt;strong&gt;Upgrade:&lt;/strong&gt; a query slower than 30 s now fails; say &lt;code&gt;WithQueryTimeout&lt;/code&gt; for a slower one&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;kdc v0.4.3&lt;/td&gt;

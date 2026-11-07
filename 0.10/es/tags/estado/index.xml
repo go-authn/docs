@@ -11,7 +11,7 @@
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;authnd&lt;/td&gt;
-&lt;td&gt;&lt;strong&gt;v0.18.0&lt;/strong&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;v0.18.2&lt;/strong&gt;&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/authnd&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
@@ -33,7 +33,7 @@
 &lt;/table&gt;
 &lt;p&gt;Las versiones de las bibliotecas están en &lt;a href="https://go-authn.github.io/docs/0.10/es/libraries/"&gt;su propia página&lt;/a&gt;;ldap está en la &lt;strong&gt;v0.12.1&lt;/strong&gt;, con reglas de contenido DIT, formas de nombre y
 reglas de estructura DIT leídas, aplicadas y publicadas, un &lt;code&gt;BuildError&lt;/code&gt; tipado
-para un esquema que no se construye, los esquemas en HCL2 y el conversor&lt;code&gt;ldapschema&lt;/code&gt;, y directory en la &lt;strong&gt;v0.19.0&lt;/strong&gt;, con clases de objeto declaradas.authnd v0.18.0 incorpora ldap v0.12.1 y directory v0.19.0.Una nueva versión menor de cualquiera de los programas anteriores es una nueva
+para un esquema que no se construye, los esquemas en HCL2 y el conversor&lt;code&gt;ldapschema&lt;/code&gt;, y directory en la &lt;strong&gt;v0.20.0&lt;/strong&gt;, con clases de objeto declaradas y un plazo en cada consulta SQL.authnd v0.18.2 incorpora ldap v0.12.1 y directory v0.20.0.Una nueva versión menor de cualquiera de los programas anteriores es una nueva
 versión de la documentación, de modo que las páginas que alguien encuentra bajo&lt;code&gt;/docs/0.10/&lt;/code&gt; siguen describiendo lo que instaló; las de las versiones anteriores
 siguen bajo &lt;code&gt;/docs/0.1/&lt;/code&gt;, &lt;code&gt;/docs/0.2/&lt;/code&gt;, &lt;code&gt;/docs/0.3/&lt;/code&gt;, &lt;code&gt;/docs/0.4/&lt;/code&gt;, &lt;code&gt;/docs/0.5/&lt;/code&gt;, &lt;code&gt;/docs/0.6/&lt;/code&gt;, &lt;code&gt;/docs/0.7/&lt;/code&gt;, &lt;code&gt;/docs/0.8/&lt;/code&gt; y &lt;code&gt;/docs/0.9/&lt;/code&gt;.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
@@ -242,6 +242,14 @@ que solo actualizaron dependencias, salvo las que describe esta versión de la d
 &lt;tr&gt;
 &lt;td&gt;v0.18.0&lt;/td&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/es/authnd/operations/#outage"&gt;Una comprobación de contraseña ante un ascendente se cancela, no solo se acota&lt;/a&gt;: el bind y el factor de contraseña usan &lt;code&gt;Identity.VerifyContext&lt;/code&gt; (go-authn/directory v0.19.0), que cierra la conexión con el ascendente cuando termina el presupuesto del bind, de modo que no queda nada en ejecución. 400 binds contra un ascendente que nunca responde: 1620 goroutines retenidas (v0.16.2), 257 (v0.17.0, el tope), 4 (v0.18.0); el tope de 64 comprobaciones por fuente se mantiene, para las fuentes cuya comprobación no se puede cancelar. Los plegados de nombres vienen de go-authn/oidc v0.7.0. Sin cambios de configuración&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;v0.18.1&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/es/authnd/operations/#limits"&gt;El plazo de arranque nombra la fuente SQL que estaba abriendo&lt;/a&gt;: &lt;code&gt;opening sql pgx (dsn_file …) did not answer&lt;/code&gt;, donde antes decía &lt;code&gt;opening sql&lt;/code&gt; para cualquier bloque SQL; el controlador y el archivo que contiene el DSN, nunca el DSN. Pruebas: caos contra un PostgreSQL real en un clúster desechable (servidor detenido durante un refresco, conexión reiniciada a mitad de consulta, un oyente que nunca responde, el reino Kerberos durante una caída); se omiten sin los binarios del servidor, salvo con &lt;code&gt;AUTHND_REQUIRE_PG=1&lt;/code&gt;. Sin cambios de configuración&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;v0.18.2&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/es/authnd/people/"&gt;Una lectura SQL colgada ya no congela el refresco&lt;/a&gt;: una base de datos que aceptó la conexión y dejó de responder dejaba el refresco bloqueado en la consulta, cada tic posterior se omitía, y pasado &lt;code&gt;max_age&lt;/code&gt; todo respondía &lt;code&gt;unavailable&lt;/code&gt; hasta reiniciar. Un bloque &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; tiene ahora &lt;code&gt;query_timeout&lt;/code&gt;, por defecto tres cuartos de &lt;code&gt;refresh&lt;/code&gt;, con go-authn/directory v0.20.0. &lt;strong&gt;Cambio de comportamiento:&lt;/strong&gt; una consulta aislada más lenta que el plazo falla; fije &lt;code&gt;query_timeout&lt;/code&gt; para una más lenta&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
@@ -541,6 +549,10 @@ anteriores.&lt;/p&gt;
 &lt;tr&gt;
 &lt;td&gt;directory v0.19.0&lt;/td&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/es/libraries/directory/"&gt;una comprobación de contraseña se puede cancelar&lt;/a&gt;: &lt;code&gt;directory.WithContextVerifier&lt;/code&gt; e &lt;code&gt;Identity.VerifyContext(ctx, password)&lt;/code&gt;; en una identidad de &lt;code&gt;ldapdir&lt;/code&gt;, la conexión con el ascendente se cierra cuando termina el contexto y la respuesta es &lt;code&gt;ErrUnavailable&lt;/code&gt; (go-ldap no tiene contexto ni tiempo de espera por defecto, así que un bind contra un ascendente que acepta y nunca responde esperaba para siempre). La conexión inicial de una comprobación también termina en el plazo del contexto. &lt;code&gt;Verify&lt;/code&gt; y &lt;code&gt;WithVerifier&lt;/code&gt; no cambian. &lt;strong&gt;Actualización:&lt;/strong&gt; un servidor que acota una comprobación debe llamar a &lt;code&gt;VerifyContext&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;directory v0.20.0&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.10/es/libraries/directory/"&gt;cada consulta tiene un plazo&lt;/a&gt;: &lt;code&gt;sqldir.WithQueryTimeout(d)&lt;/code&gt;, por defecto &lt;code&gt;sqldir.DefaultQueryTimeout&lt;/code&gt; (30 s), &lt;code&gt;0&lt;/code&gt; para ninguno; cubre la lectura de las filas, y el controlador cierra la conexión al vencer el plazo (antes, una base de datos que dejaba de responder bloqueaba la lectura para siempre). &lt;code&gt;hcldir.Block.QueryTimeout&lt;/code&gt; (&lt;code&gt;query_timeout&lt;/code&gt; en un bloque &lt;code&gt;sql&lt;/code&gt;) llega hasta ahí, comprobado sin red y rechazado en un bloque &lt;code&gt;ldap&lt;/code&gt;. La interfaz &lt;code&gt;Source&lt;/code&gt; no cambia. &lt;strong&gt;Actualización:&lt;/strong&gt; una consulta de más de 30 s ahora falla; indique &lt;code&gt;WithQueryTimeout&lt;/code&gt; para una más lenta&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;kdc v0.4.3&lt;/td&gt;

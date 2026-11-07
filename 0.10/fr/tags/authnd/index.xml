@@ -3,9 +3,9 @@
 qui veut les authentifier parle LDAP.&lt;/strong&gt; authnd est la façade : il
 se lie et cherche sur les sources de &lt;a href="https://go-authn.github.io/docs/0.10/fr/libraries/"&gt;go-authn/directory&lt;/a&gt;,si bien que ce que contient une base de données peut être lu par tout ce qui sait
 interroger un annuaire. Pur Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, un seul binaire. Ces pages décrivent
-la v0.18.0, dont les entrées suivent les schémas standard et respectent le schéma
+la v0.18.2, dont les entrées suivent les schémas standard et respectent le schéma
 qu&amp;rsquo;elle sert à &lt;code&gt;cn=Subschema&lt;/code&gt;, qu&amp;rsquo;un site étend avec le sien(&lt;a href="https://go-authn.github.io/docs/0.10/fr/authnd/schemas/"&gt;SUPANN, eduPerson&lt;/a&gt;) et façonne grâce aux&lt;a href="https://go-authn.github.io/docs/0.10/fr/authnd/schemas/#rules"&gt;règles de contenu DIT, formes de noms et règles de structure&lt;/a&gt;,avec go-authn/ldap v0.12.1 et
-go-authn/directory v0.19.0 en dessous ; ce qui est vérifié et ce qui ne l&amp;rsquo;est pas figure sur la
+go-authn/directory v0.20.0 en dessous ; ce qui est vérifié et ce qui ne l&amp;rsquo;est pas figure sur la
 page &lt;a href="https://go-authn.github.io/docs/0.10/fr/status/"&gt;état&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
@@ -880,6 +880,7 @@ data-copied-label="Copié !"
 &lt;p&gt;Chacune doit être une classe AUXILIARY que définit le schéma servi (le schéma
 standard, ou &lt;a href="https://go-authn.github.io/docs/0.10/fr/authnd/schemas/"&gt;&lt;code&gt;schema_files&lt;/code&gt; et un bloc &lt;code&gt;schema&lt;/code&gt;&lt;/a&gt;),et pas une classe qu&amp;rsquo;authnd déduit lui-même. Une personne à qui manque un MUST
 d&amp;rsquo;une classe déclarée est publiée sans elle, et &lt;code&gt;check&lt;/code&gt; le dit.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;query_timeout&lt;/code&gt;&lt;/strong&gt;, facultatif, borne chaque requête du bloc, lecture des lignes comprise : une durée comme &lt;code&gt;&amp;quot;20s&amp;quot;&lt;/code&gt;, ou &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt; pour aucune limite. Par défaut, ce sont les trois quarts de &lt;code&gt;refresh&lt;/code&gt; (45 s avec les 60 s par défaut), de sorte qu&amp;rsquo;une base de données qui accepte la connexion puis cesse de répondre met fin à la lecture avant que l&amp;rsquo;actualisation n&amp;rsquo;abandonne, et que l&amp;rsquo;actualisation suivante s&amp;rsquo;exécute ; sans cela, une seule lecture bloquée figeait l&amp;rsquo;actualisation jusqu&amp;rsquo;à un redémarrage (v0.18.2). Une requête isolée plus lente que l&amp;rsquo;échéance échoue : augmentez &lt;code&gt;query_timeout&lt;/code&gt; pour une requête qui demande légitimement plus longtemps. Avec &lt;code&gt;refresh = &amp;quot;0&amp;quot;&lt;/code&gt;, la valeur par défaut de la bibliothèque, 30 s, s&amp;rsquo;applique.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;driver&lt;/code&gt; accepte &lt;code&gt;postgres&lt;/code&gt; (ou &lt;code&gt;postgresql&lt;/code&gt;, &lt;code&gt;pgx&lt;/code&gt;), &lt;code&gt;mysql&lt;/code&gt; (ou &lt;code&gt;mariadb&lt;/code&gt;)et &lt;code&gt;sqlite&lt;/code&gt; (ou &lt;code&gt;sqlite3&lt;/code&gt;). La base de données est contactée au démarrage, avant
 que quoi que ce soit n&amp;rsquo;écoute, si bien qu&amp;rsquo;une base qui ne répond pas arrête le serveur là où
 quelqu&amp;rsquo;un regarde :&lt;/p&gt;
@@ -4562,7 +4563,7 @@ déconnexion et est fermée, jamais mise en file (RFC 4511 4.4.1). Une opératio
 encore en cours à &lt;code&gt;operation_timeout&lt;/code&gt; reçoit &lt;code&gt;timeLimitExceeded&lt;/code&gt; (3), &lt;strong&gt;même si
 son gestionnaire est bloqué et ignore l&amp;rsquo;échéance&lt;/strong&gt; : le résultat tardif est
 abandonné. Une source qui ne répond pas au démarrage fait refuser le démarrage
-après &lt;code&gt;startup_timeout&lt;/code&gt;, avec une erreur qui nomme l&amp;rsquo;étape et la source. Un
+après &lt;code&gt;startup_timeout&lt;/code&gt;, avec une erreur qui nomme l&amp;rsquo;étape et la source. Pour un bloc &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt;, la source se lit &lt;code&gt;opening sql pgx (dsn_file /etc/authnd/pg.dsn)&lt;/code&gt; : le pilote et le fichier qui contient le DSN, jamais le DSN lui-même (depuis la v0.18.1 ; auparavant, tout bloc SQL s&amp;rsquo;appelait simplement &lt;code&gt;sql&lt;/code&gt;). Un
 nombre négatif, ou une durée qui ne se lit pas, est refusé au démarrage et par&lt;code&gt;check&lt;/code&gt;. Mettez &lt;code&gt;max_connections = 0&lt;/code&gt; et &lt;code&gt;operation_timeout = &amp;quot;0&amp;quot;&lt;/code&gt; pour retrouver
 le comportement de la v0.14.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;check&lt;/code&gt; affiche les limites avec lesquelles il servira, pour que personne ne

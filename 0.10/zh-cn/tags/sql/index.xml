@@ -164,6 +164,7 @@ data-copied-label="已复制！"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;每个类都必须是所提供的模式（标准模式，或&lt;a href="https://go-authn.github.io/docs/0.10/zh-cn/authnd/schemas/"&gt;&lt;code&gt;schema_files&lt;/code&gt; 和 &lt;code&gt;schema&lt;/code&gt; 块&lt;/a&gt;）所定义的AUXILIARY 类，并且不能是 authnd 自行派生的类。缺少已声明类的某个 MUST 的人员，发布时不带该类，&lt;code&gt;check&lt;/code&gt; 会说明这一点。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;query_timeout&lt;/code&gt;&lt;/strong&gt;，可选，限制该块的每个查询，包括读取其各行：一个时长，如 &lt;code&gt;&amp;quot;20s&amp;quot;&lt;/code&gt;，或表示不限的 &lt;code&gt;&amp;quot;0&amp;quot;&lt;/code&gt;。默认是 &lt;code&gt;refresh&lt;/code&gt; 的四分之三（默认 60 秒时为 45 秒），这样接受了连接却不再应答的数据库会在刷新放弃之前结束读取，下一次刷新得以运行；没有它，一次挂起的读取就会冻结刷新直到重启（v0.18.2）。比截止时间更慢的单个查询会失败：对确实需要更久的查询，请调大 &lt;code&gt;query_timeout&lt;/code&gt;。当 &lt;code&gt;refresh = &amp;quot;0&amp;quot;&lt;/code&gt; 时，适用库的默认值 30 秒。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;driver&lt;/code&gt; 接受 &lt;code&gt;postgres&lt;/code&gt;（或 &lt;code&gt;postgresql&lt;/code&gt;、&lt;code&gt;pgx&lt;/code&gt;）、&lt;code&gt;mysql&lt;/code&gt;（或 &lt;code&gt;mariadb&lt;/code&gt;）和 &lt;code&gt;sqlite&lt;/code&gt;（或 &lt;code&gt;sqlite3&lt;/code&gt;）。数据库在启动时、任何监听之前就会被访问，因此没有应答的数据库会在有人关注的时候使服务器停止：&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/nodb
@@ -945,7 +946,7 @@ data-copied-label="已复制！"
 &lt;p&gt;&lt;strong&gt;某人是谁，什么可以证明其身份？&lt;/strong&gt; 一个统一的模型，覆盖保存在内存中的列表、SQL 数据库、LDAP 服务器，或配置文件中的 &lt;code&gt;user&lt;/code&gt; 和 &lt;code&gt;group&lt;/code&gt;
 块——其要点在于这个问题的后半部分。&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/directory@v0.19.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/directory@v0.20.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="复制代码"
@@ -1398,6 +1399,7 @@ data-copied-label="已复制！"
 &lt;/div&gt;
 &lt;p&gt;authnd v0.15.0 就是这样回答绑定的，如&lt;a href="https://go-authn.github.io/docs/0.10/zh-cn/authnd/operations/#limits"&gt;运维页面&lt;/a&gt;所述。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;检查可以取消。&lt;/strong&gt;&lt;code&gt;Identity.VerifyContext(ctx, password)&lt;/code&gt;（自 v0.19.0 起）在 &lt;code&gt;ctx&lt;/code&gt; 结束时放弃：对于 &lt;code&gt;ldapdir&lt;/code&gt; 身份，会关闭到上游的连接（这是在 go-ldap 中取消请求的方式，go-ldap 没有 context，也没有默认超时：对接受连接却从不应答的服务器发起 bind 会永远等待），并返回 &lt;code&gt;ErrUnavailable&lt;/code&gt;；拨号也在 context 的截止时间结束。来源通过 &lt;code&gt;directory.WithContextVerifier&lt;/code&gt; 提供它；&lt;code&gt;Verify&lt;/code&gt; 仍可使用，带一个后台 context，只有 &lt;code&gt;WithVerifier&lt;/code&gt; 的身份则是 &lt;code&gt;Verify&lt;/code&gt;（不可中断）。限制 bind 时间的服务器（authnd 的 &lt;code&gt;operation_timeout&lt;/code&gt;）应调用 &lt;code&gt;VerifyContext&lt;/code&gt;，这样在给出答复之后，挂起的上游就不会继续占用 goroutine 和连接。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;查询有截止时间。&lt;/strong&gt;&lt;code&gt;sqldir.WithQueryTimeout(d)&lt;/code&gt;（自 v0.20.0 起）限制来源的每个查询，包括读取其各行；超时后读取返回错误，驱动程序断开连接。默认值 &lt;code&gt;sqldir.DefaultQueryTimeout&lt;/code&gt; 为 30 秒；&lt;code&gt;0&lt;/code&gt; 是有意设计的不限时。以前，接受了连接却不再应答的数据库会让读取永远阻塞，定期刷新的程序就会卡在那里。&lt;code&gt;hcldir.Block.QueryTimeout&lt;/code&gt;（&lt;code&gt;sql&lt;/code&gt; 块中的 &lt;code&gt;query_timeout&lt;/code&gt;）可以到达它：一个时长，由 &lt;code&gt;Check()&lt;/code&gt; 在没有网络的情况下检查，在 &lt;code&gt;ldap&lt;/code&gt; 块中会被拒绝。会刷新的程序应把它设得比自己的周期短，authnd 就是这样做的（&lt;code&gt;refresh&lt;/code&gt; 的四分之三）。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;它拒绝什么，以及原因&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;没有人的组&lt;/strong&gt;，以及&lt;strong&gt;没有任何来源拥有的组&lt;/strong&gt;，当 &lt;code&gt;Expand&lt;/code&gt;
@@ -1431,4 +1433,4 @@ data-copied-label="已复制！"
 &lt;/ul&gt;
 &lt;p&gt;覆盖率通道在低于 85% 时失败（其声明的标准是 100%），CI 中还会检查 &lt;code&gt;nosql&lt;/code&gt; 和 &lt;code&gt;noldap&lt;/code&gt; 构建。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;参考&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/directory@v0.19.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/directory@v0.19.0&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>
+&lt;a href="#reference" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/directory@v0.20.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/directory@v0.20.0&lt;/a&gt;&lt;/p&gt;</description></item></channel></rss>
