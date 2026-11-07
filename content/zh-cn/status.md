@@ -10,7 +10,7 @@ tags: [状态, 发布版本]
 | 程序 | 版本 | 模块 |
 |---|---|---|
 | authnd | **v0.18.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.8** | `github.com/go-authn/bridge` |
+| authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
@@ -150,6 +150,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.23.6 | 审计、模糊测试和混沌测试，使用 go-authn/saml v0.5.1；没有增加或改变任何配置键。[元数据按时刷新]({{< relref "/authn-bridge/federation.md#refreshing-it" >}})：绝不安排在剩余 `validUntil` 的一半之后，没有有效元数据时一分钟后重试，间隔加倍直到一小时，所以临近到期时的一次刷新失败不再让提供方最长十二小时没有 IdP。断言重放键以其 SHA-256 存储：过长的 IdP `entityID` 曾使 PostgreSQL 和 MySQL 拒绝写入并卡住状态数据库。时钟可与 IdP 相差三分钟；相差一小时则以 400 页面拒绝。[测试了什么]({{< relref "/authn-bridge/federation.md#tested" >}})：XML 签名包装 XSW1 到 XSW8、CVE-2017-11427、DOCTYPE、外来的受众、接收方、请求和目的地，五个模糊测试器。每次登录一次 SHA-256 多花 0 到 2 次分配（`BenchmarkReplayUse`：0 次分配和 183 B，现在 2 次和 326 B）；挂钟时间未测量，负载 53 到 75 |
 | v0.23.7 | 安全：来自已从 `saml { idps }` 中移除的 IdP 的刷新令牌、应用密码或 SSH 证书请求，会像 `DisableIdP` 一样在下次使用时以 `institution not configured` 被拒绝（[管理 API]({{< relref "/authn-bridge/admin.md" >}})）；把 IdP 放回去它们就重新可用 |
 | v0.23.8 | 安全：[一个人按其本来身份被禁用]({{< relref "/authn-bridge/admin.md" >}})：用户名（禁用列表、证书主体、subject-id）只折叠 ASCII 字母，使用 go-authn/oidc v0.7.0 的 `ASCIILower`，因此 `kate` 和带开尔文符号（U+212A）的写法是两个人，有两个禁用条目和两个证书主体 |
+| v0.23.9 | 安全，随 go-authn/saml v0.6.0：[`schac_home_organization` 的发放]({{< relref "/authn-bridge/tokens.md" >}})，在令牌和 userinfo 中仅当它是声明方 IdP 的 `shibmd:Scope` 值之一（完全匹配，区分大小写）。一个机构的 IdP 可以声明另一个机构的值，而按该声明过滤的服务（网关的 `accept`）会把它当作那个机构接纳。**升级：** 元数据没有为其域名发布 Scope 的 IdP，不再发放该声明 |
 
 ### authn-revokd {#authn-revokd}
 
@@ -218,6 +219,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | oidc v0.4.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) 拒绝含多于一个 `@` 的名称（`ErrBadName`） |
 | oidc v0.7.0 | [`ASCIILower` 和 `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}})：名称唯一的纯 ASCII 折叠，因为 `strings.ToLower` 和 `strings.EqualFold` 折叠 Unicode，会把开尔文符号 U+212A 与 "k" 视为相同 |
+| saml v0.6.0 | [`schacHomeOrganization` 受限于该 IdP 的 `shibmd:Scope` 值]({{< relref "/libraries/saml.md" >}})（完全匹配，区分大小写），否则丢弃，正如 `eduPersonPrincipalName`、`subject-id`、`pairwise-id` 和带 scope 的归属此前已经如此（SWITCH 和 SAFIRE 的属性页面对依赖方有此要求）。**升级：** 元数据没有为其域名发布 Scope 的 IdP，其该属性不再被读取 |
 | scim v0.2.0 | [审计、模糊测试、混沌测试和性能改进]({{< relref "/libraries/scim.md#v020" >}})：`Server.ReadTimeout`（30 秒）、可选接口 `ConditionalDeleter`、没有 `If-Match` 的 PATCH 或 PUT 在输掉竞争后最多重做 32 次而不是回答 412、通过不匹配任何内容的过滤器移除会成功、没有路径的 PATCH 的键按排序顺序应用、`BearerAuth` 接受任意大小写的方案、`startIndex` 和 `count` 无论字长都被限定。针对 10,000 个用户的列表请求：100 条的一页从 789,417 次分配降到 14,952 次，`userName eq` 从 797,979 次降到 90 次，完整扫描从 818,847 次降到 361,098 次（精确；时间未测量，负载 65） |
 | servercert v0.5.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | servercert v0.6.0 | [TLS 的 `KeyFile` 和 ACME 的 `EABHMACKeyFile` 会被拒绝]({{< relref "/libraries/servercert.md" >}})，当组或其他用户可读写它们时，在 `New` 时以及每次重新加载时检查（可读的替换密钥会报告给 `OnError` 且不被采用，当前证书继续提供服务）；Windows 上不检查。**升级：**两个文件都执行 `chmod 600` |

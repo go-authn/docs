@@ -13,7 +13,7 @@ tags: [库, saml, 联邦]
 该提供方所说的内容。
 
 ```sh
-go get github.com/go-authn/saml@v0.5.0
+go get github.com/go-authn/saml@v0.6.0
 ```
 
 它是 [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -194,6 +194,7 @@ func pendingFor(relayState string) saml.Pending { return saml.Pending{} }
 | 多于一个断言 | 这正是已签名的断言与未签名的断言同时到达而读取了错误那个的方式（CVE-2022-41912） |
 | 签名所覆盖范围之外的任何内容 | 绝不读取：只读取根据签名所摘要的字节重建的元素 |
 | 位于 IdP 的 `Scopes` 之外的带 scope 标识符 | 丢弃：否则任何 IdP 都可以断言 `alice@another-university.example` |
+| 不是该 IdP 的 `shibmd:Scope` 值之一的 `schacHomeOrganization`（完全匹配，区分大小写；自 v0.6.0 起） | 丢弃，正如 SWITCH 和 SAFIRE 的属性页面对依赖方的要求：一个机构的 IdP 可能声明另一个机构的值，而按它过滤的服务（网关的 `accept`）会把它当作那个机构接纳。**升级：** 元数据没有为其域名发布 Scope 的 IdP，其 `schacHomeOrganization` 不再被读取；请其联盟发布 |
 | 没有已验证签名覆盖的 AES-CBC 密文 | 甚至不解密：未经认证的 CBC 是填充预言机。完全不接受 RSA PKCS#1 v1.5 密钥传输；接受 AES-GCM 和 RSA-OAEP |
 | 另一个 audience、ACS 或请求；未经请求的响应；超过一小时的请求 | saml-profiles 4.1.4.3 |
 | 已经使用过的断言 | 持有者断言属于持有它的任何人 |

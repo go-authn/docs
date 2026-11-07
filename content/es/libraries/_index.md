@@ -24,7 +24,7 @@ Todos son Go puro y se compilan con `CGO_ENABLED=0`.
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | ¿es válido este ticket Kerberos para este servicio? | v0.3.3 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | ¿cómo emite un reino tickets a partir de un directorio? | v0.6.0 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | ¿quién dice este token bearer que pregunta, y hay que creerlo? | v0.7.0 | `github.com/go-authn/oidc` |
-| [saml]({{< relref "/libraries/saml.md" >}}) | ¿qué dijo de esta persona el proveedor de identidad de una federación? | v0.4.1 | `github.com/go-authn/saml` |
+| [saml]({{< relref "/libraries/saml.md" >}}) | ¿qué dijo de esta persona el proveedor de identidad de una federación? | v0.6.0 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | ¿está revocado este certificado o esta clave SSH, tal como respondería sshd? | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | ¿de dónde procede el certificado de servidor TLS de un demonio? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | ¿puede conectarse esta clave WireGuard, y de quién es? | v0.1.4 | `github.com/go-authn/wireguard` |

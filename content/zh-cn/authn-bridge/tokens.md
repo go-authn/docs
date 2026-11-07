@@ -110,6 +110,11 @@ IdP 说明其所用认证上下文时的 `acr`。有效期为
 | `eduperson` | `eduperson_principal_name`、`eduperson_scoped_affiliation`、`eduperson_entitlement` 和 `entitlements`、`eduperson_assurance`、`eduperson_orcid`、`schac_home_organization`、`voperson_id`（SAML 的 `subject-id`，转为小写） |
 | `groups` | `groups` |
 
+`schac_home_organization` 仅当它是声明方 IdP 的 `shibmd:Scope` 值之一时才会发放
+（完全匹配，区分大小写；go-authn/saml v0.6.0，bridge v0.23.9）：一个机构的 IdP
+不能声明另一个机构的值，而按该声明过滤的依赖方（网关的 `accept`）会把它当作那个
+机构。**升级：** 元数据没有为其域名发布 Scope 的 IdP，不再发放该声明；请其联盟发布。
+
 ## 访问令牌 {#the-access-token}
 
 面向客户端 `audience` 中的资源服务器，如 RFC 9068 所述：

@@ -110,6 +110,15 @@ für eine Anfrage mit dem Scope `openid` ausgestellt.
 | `eduperson` | `eduperson_principal_name`, `eduperson_scoped_affiliation`, `eduperson_entitlement` und `entitlements`, `eduperson_assurance`, `eduperson_orcid`, `schac_home_organization`, `voperson_id` (die SAML-`subject-id`, in Kleinbuchstaben) |
 | `groups` | `groups` |
 
+`schac_home_organization` wird nur ausgestellt, wenn es einer der
+`shibmd:Scope`-Werte des behauptenden IdP ist (exakt, Groß-/Kleinschreibung
+beachtet; go-authn/saml v0.6.0, bridge v0.23.9): Ein IdP einer Einrichtung kann
+nicht die einer anderen behaupten, was eine Relying Party, die nach diesem Claim
+filtert (das `accept` des Gateways), für diese Einrichtung halten würde.
+**Upgrade:** Bei einem IdP, dessen Metadaten keinen Scope für seine Domain
+veröffentlichen, wird der Claim nicht mehr ausgestellt; bitten Sie seine
+Föderation, ihn zu veröffentlichen.
+
 ## Das Access-Token {#the-access-token}
 
 Für die Ressourcenserver in der `audience` des Clients, wie RFC 9068 es beschreibt:

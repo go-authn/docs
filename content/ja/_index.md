@@ -19,7 +19,7 @@ Kerberos の両側、そして SAML フェデレーションの手前に置く O
 | | 概要 | これらのページが説明するバージョン |
 |---|---|---|
 | [authnd]({{< relref "/authnd/_index.md" >}}) | 別の場所で管理されている人々、つまりファイル、SQL データベース、別のディレクトリにいる人々のための LDAP サーバーと、任意で Kerberos レルム | v0.18.0 |
-| [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | SAML フェデレーション (RENATER、eduGAIN) の手前に置く OpenID Connect プロバイダー。SSH 証明書の発行と、それを失効させるリストへの署名も行う | v0.23.8 |
+| [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | SAML フェデレーション (RENATER、eduGAIN) の手前に置く OpenID Connect プロバイダー。SSH 証明書の発行と、それを失効させるリストへの署名も行う | v0.23.9 |
 | [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | それらのリストを取得し、サーバーが読む前に一つずつ検証し、期限が切れたものがあればフェイルクローズする | v0.6.7 |
 | [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`。証明書のドメイン許可がこのホストを指しているかどうかを sshd が問い合わせる | v0.1.9 |
 
@@ -29,7 +29,7 @@ Kerberos の両側、そして SAML フェデレーションの手前に置く O
 
 ```sh
 go install github.com/go-authn/authnd@v0.18.0
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.8
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.9
 go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.7
 ```
 

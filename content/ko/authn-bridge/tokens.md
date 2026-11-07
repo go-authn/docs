@@ -110,6 +110,13 @@ $ curl -s http://127.0.0.1:28473/.well-known/openid-configuration | jq .
 | `eduperson` | `eduperson_principal_name`, `eduperson_scoped_affiliation`, `eduperson_entitlement`와 `entitlements`, `eduperson_assurance`, `eduperson_orcid`, `schac_home_organization`, `voperson_id` (SAML `subject-id`를 소문자로 한 것) |
 | `groups` | `groups` |
 
+`schac_home_organization`은 어서션하는 IdP의 `shibmd:Scope` 값 중 하나일 때만
+발급됩니다(정확히 일치, 대소문자 구분; go-authn/saml v0.6.0, bridge v0.23.9).
+한 기관의 IdP는 다른 기관의 값을 말할 수 없습니다. 이 클레임으로 거르는 신뢰
+당사자(게이트웨이의 `accept`)는 그것을 그 기관으로 받아들이기 때문입니다.
+**업그레이드:** 메타데이터가 도메인의 Scope를 게시하지 않는 IdP는 더 이상 클레임이
+발급되지 않습니다. 해당 연합에 게시를 요청하십시오.
+
 ## 액세스 토큰 {#the-access-token}
 
 RFC 9068이 설명하는 대로 클라이언트의 `audience`에 있는 리소스 서버를 위한 것입니다.

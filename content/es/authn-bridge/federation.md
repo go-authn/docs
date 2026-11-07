@@ -130,6 +130,8 @@ expresión regular se ignora, no se respeta.
 IdP que lo afirma se **descarta**, y un valor con más de una `@` no está en
 ningún ámbito.
 
+**schacHomeOrganization.** Solo se libera si es uno de los ámbitos del IdP que lo afirma (exacto, sensible a mayúsculas; go-authn/saml v0.6.0, bridge v0.23.9), como los identificadores anteriores: un IdP de una institución no puede afirmar la de otra. Un IdP cuyos metadatos no publican ningún Scope para su dominio ya no lo tiene leído.
+
 **Grupos.** Cuando más de un IdP puede iniciar sesión, un valor
 `eduPersonEntitlement` o `isMemberOf` solo se conserva si su espacio de nombres es
 uno de los ámbitos de ese IdP o está bajo uno de ellos:

@@ -109,6 +109,12 @@ OIDC Core 5.4 が、アクセストークンが発行されるときについて
 | `eduperson` | `eduperson_principal_name`、`eduperson_scoped_affiliation`、`eduperson_entitlement` と `entitlements`、`eduperson_assurance`、`eduperson_orcid`、`schac_home_organization`、`voperson_id` (SAML の `subject-id` を小文字にしたもの) |
 | `groups` | `groups` |
 
+`schac_home_organization` は、表明する IdP の `shibmd:Scope` の値のいずれかである場合にのみ
+発行されます (完全一致、大文字小文字を区別。go-authn/saml v0.6.0、bridge v0.23.9)。ある機関の
+IdP は別の機関のものを述べられません。このクレームで絞り込む依拠者 (ゲートウェイの `accept`) は、
+それをその機関と見なしてしまうためです。**アップグレード:** メタデータがそのドメインの Scope を
+公開していない IdP では、クレームは発行されなくなります。その連合に公開を依頼してください。
+
 ## アクセストークン {#the-access-token}
 
 RFC 9068 が述べるとおり、クライアントの `audience` にあるリソースサーバー向けです。

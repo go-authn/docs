@@ -13,7 +13,7 @@ federación, envía a las personas al proveedor de identidad de su propia
 institución, y lee lo que ese proveedor responde.
 
 ```sh
-go get github.com/go-authn/saml@v0.5.0
+go get github.com/go-authn/saml@v0.6.0
 ```
 
 Es la mitad de [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) que da a
@@ -194,6 +194,7 @@ quien llama como un error, destinado al registro del servidor:
 | más de una aserción | así llegan juntas una firmada y otra sin firmar y se lee la que no es (CVE-2022-41912) |
 | cualquier cosa fuera de lo que cubrió la firma | nunca se lee: solo se lee el elemento reconstruido a partir de los bytes que resumió la firma |
 | un identificador con ámbito fuera de los `Scopes` del IdP | se descarta: de lo contrario cualquier IdP podría afirmar `alice@another-university.example` |
+| un `schacHomeOrganization` que no es uno de los valores `shibmd:Scope` del IdP (exactos, sensibles a mayúsculas; desde v0.6.0) | se descarta, como piden a una parte confiante las páginas de atributos de SWITCH y SAFIRE: un IdP de una institución podría afirmar la de otra, y un servicio que filtre por él (el `accept` de la pasarela) lo admitiría como esa institución. **Actualización:** un IdP cuyos metadatos no publican ningún Scope para su dominio ya no tiene su `schacHomeOrganization` leído; pida a su federación que lo publique |
 | texto cifrado AES-CBC que no cubre ninguna firma verificada | ni siquiera se descifra: CBC sin autenticar es un oráculo de relleno. El transporte de clave RSA PKCS#1 v1.5 no se acepta en absoluto; AES-GCM y RSA-OAEP sí |
 | otra audiencia, otro ACS u otra solicitud; una respuesta no solicitada; una solicitud de más de una hora | saml-profiles 4.1.4.3 |
 | una aserción ya usada | una aserción bearer es de quien la tenga |
