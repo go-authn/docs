@@ -109,7 +109,7 @@ closed, never queued (RFC 4511 4.4.1). An operation still running at
 `operation_timeout` is answered `timeLimitExceeded` (3), **even when its handler
 is blocked and ignores the deadline**: the late result is dropped. A source that
 does not answer at start makes authnd refuse to start after `startup_timeout`,
-with an error that names the stage and the source. A negative number, or a
+with an error that names the stage and the source. For a `users "sql"` block the source reads `opening sql pgx (dsn_file /etc/authnd/pg.dsn)`: the driver and the file that holds the DSN, never the DSN itself (since v0.18.1; before, every SQL block was just `sql`). A negative number, or a
 duration that does not parse, is refused at start and by `check`. Set
 `max_connections = 0` and `operation_timeout = "0"` for v0.14's behaviour.
 

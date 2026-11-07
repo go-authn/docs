@@ -11,7 +11,7 @@ tags: [ライブラリ, ディレクトリ, ldap, sql]
 あります。
 
 ```sh
-go get github.com/go-authn/directory@v0.19.0
+go get github.com/go-authn/directory@v0.20.0
 ```
 
 v0.17.0 の新機能: [`ErrUnavailable`](#unavailable)。障害を間違ったパスワードと区別します。また、メンバーの DN は
@@ -376,6 +376,8 @@ authnd v0.15.0 は、[運用のページ]({{< relref "/authnd/operations.md#limi
 
 **チェックは取り消せます。** `Identity.VerifyContext(ctx, password)` (v0.19.0 以降) は `ctx` が終了すると諦めます。`ldapdir` の identity では上流への接続が閉じられ (go-ldap でリクエストを取り消す方法であり、go-ldap には context も既定のタイムアウトもありません。受け付けても応答しないサーバーへの bind は永久に待っていました)、応答は `ErrUnavailable` になります。接続確立も context の期限で終了します。ソースは `directory.WithContextVerifier` でこれを提供します。`Verify` は引き続き使え、背景 context で動作します。`WithVerifier` だけを持つ identity では `Verify` が使われます (中断できません)。bind に上限を設けるサーバー (authnd の `operation_timeout`) は `VerifyContext` を呼ぶべきです。そうすれば、応答した後に、応答しない上流が goroutine と接続を保持し続けることはありません。
 
+**クエリには期限があります。** `sqldir.WithQueryTimeout(d)` (v0.20.0 以降) は、ソースの各クエリを、行の読み取りも含めて制限します。期限を過ぎると読み取りはエラーを返し、ドライバーは接続を切ります。既定の `sqldir.DefaultQueryTimeout` は 30 秒で、`0` は意図的に制限なしです。以前は、接続を受け付けて応答しなくなったデータベースが読み取りを永久にブロックし、定期的にリフレッシュするプログラムはそこで固まりました。`hcldir.Block.QueryTimeout` (`sql` ブロックの `query_timeout`) がこれに届きます。期間で指定し、`Check()` がネットワークなしで検査し、`ldap` ブロックでは拒否されます。リフレッシュするプログラムは、authnd のように (`refresh` の 4 分の 3)、その周期より短く設定すべきです。
+
 ## 拒否するものと、その理由 {#what-it-refuses-and-why}
 
 - **メンバーのいないグループ**と**どのソースにもないグループ**を、`Expand` が `@group` を人々に
@@ -443,4 +445,4 @@ CI で確認されます。
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.19.0](https://pkg.go.dev/github.com/go-authn/directory@v0.19.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.20.0](https://pkg.go.dev/github.com/go-authn/directory@v0.20.0)

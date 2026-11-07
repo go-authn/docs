@@ -11,7 +11,7 @@ tags: [库, 目录, ldap, sql]
 块——其要点在于这个问题的后半部分。
 
 ```sh
-go get github.com/go-authn/directory@v0.19.0
+go get github.com/go-authn/directory@v0.20.0
 ```
 
 v0.17.0 的新内容：[`ErrUnavailable`](#unavailable)，把故障与密码错误区分开；以及成员 DN 通过一次查找而不是一次扫描
@@ -390,6 +390,8 @@ authnd v0.15.0 就是这样回答绑定的，如[运维页面]({{< relref "/auth
 
 **检查可以取消。**`Identity.VerifyContext(ctx, password)`（自 v0.19.0 起）在 `ctx` 结束时放弃：对于 `ldapdir` 身份，会关闭到上游的连接（这是在 go-ldap 中取消请求的方式，go-ldap 没有 context，也没有默认超时：对接受连接却从不应答的服务器发起 bind 会永远等待），并返回 `ErrUnavailable`；拨号也在 context 的截止时间结束。来源通过 `directory.WithContextVerifier` 提供它；`Verify` 仍可使用，带一个后台 context，只有 `WithVerifier` 的身份则是 `Verify`（不可中断）。限制 bind 时间的服务器（authnd 的 `operation_timeout`）应调用 `VerifyContext`，这样在给出答复之后，挂起的上游就不会继续占用 goroutine 和连接。
 
+**查询有截止时间。**`sqldir.WithQueryTimeout(d)`（自 v0.20.0 起）限制来源的每个查询，包括读取其各行；超时后读取返回错误，驱动程序断开连接。默认值 `sqldir.DefaultQueryTimeout` 为 30 秒；`0` 是有意设计的不限时。以前，接受了连接却不再应答的数据库会让读取永远阻塞，定期刷新的程序就会卡在那里。`hcldir.Block.QueryTimeout`（`sql` 块中的 `query_timeout`）可以到达它：一个时长，由 `Check()` 在没有网络的情况下检查，在 `ldap` 块中会被拒绝。会刷新的程序应把它设得比自己的周期短，authnd 就是这样做的（`refresh` 的四分之三）。
+
 ## 它拒绝什么，以及原因 {#what-it-refuses-and-why}
 
 - **没有人的组**，以及**没有任何来源拥有的组**，当 `Expand`
@@ -466,4 +468,4 @@ CI 中还会检查 `nosql` 和 `noldap` 构建。
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.19.0](https://pkg.go.dev/github.com/go-authn/directory@v0.19.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.20.0](https://pkg.go.dev/github.com/go-authn/directory@v0.20.0)

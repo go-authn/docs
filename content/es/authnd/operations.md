@@ -109,7 +109,7 @@ se cierra, nunca se pone en cola (RFC 4511 4.4.1). Una operación que sigue en c
 en `operation_timeout` recibe `timeLimitExceeded` (3), **incluso si su manejador está
 bloqueado e ignora el plazo**: el resultado tardío se descarta. Una fuente que no
 responde al arrancar hace que authnd se niegue a arrancar tras `startup_timeout`, con
-un error que nombra la etapa y la fuente. Un número negativo, o una duración que no
+un error que nombra la etapa y la fuente. Para un bloque `users "sql"` la fuente se lee `opening sql pgx (dsn_file /etc/authnd/pg.dsn)`: el controlador y el archivo que contiene el DSN, nunca el DSN en sí (desde la v0.18.1; antes, todo bloque SQL era simplemente `sql`). Un número negativo, o una duración que no
 se lee, se rechaza al arrancar y por `check`. Ponga `max_connections = 0` y
 `operation_timeout = "0"` para el comportamiento de la v0.14.
 

@@ -132,6 +132,8 @@ esquema estándar, o [`schema_files` y un bloque `schema`]({{< relref "/authnd/s
 y no una que authnd deduzca por sí mismo. Una persona a la que le falta un MUST
 de una clase declarada se publica sin ella, y `check` lo dice.
 
+**`query_timeout`**, opcional, acota cada consulta del bloque, incluida la lectura de sus filas: una duración como `"20s"`, o `"0"` para ninguna. Por defecto son tres cuartos de `refresh` (45 s con los 60 s por defecto), de modo que una base de datos que acepta la conexión y deja de responder termina la lectura antes de que el refresco se rinda, y se ejecuta el siguiente; sin ello, una sola lectura colgada congelaba el refresco hasta reiniciar (v0.18.2). Una consulta aislada más lenta que el plazo falla: aumente `query_timeout` para una que tarde legítimamente más. Con `refresh = "0"` se aplica el valor por defecto de la biblioteca, 30 s.
+
 `driver` acepta `postgres` (o `postgresql`, `pgx`), `mysql` (o `mariadb`) y `sqlite`
 (o `sqlite3`). La base de datos se contacta al arrancar, antes de que nada escuche,
 así que una que no responde detiene el servidor allí donde alguien está mirando:

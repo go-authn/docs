@@ -11,7 +11,7 @@ Speicher, einer SQL-Datenbank, einem LDAP-Server oder `user`- und `group`-Blöck
 Konfigurationsdatei – und worauf es ankommt, ist die zweite Hälfte der Frage.
 
 ```sh
-go get github.com/go-authn/directory@v0.19.0
+go get github.com/go-authn/directory@v0.20.0
 ```
 
 Neu in v0.17.0: [`ErrUnavailable`](#unavailable), ein Ausfall, der von einem falschen
@@ -410,6 +410,8 @@ So beantwortet authnd v0.15.0 einen Bind, wie
 
 **Eine Prüfung lässt sich abbrechen.** `Identity.VerifyContext(ctx, password)` (ab v0.19.0) gibt auf, wenn `ctx` endet: Bei einer `ldapdir`-Identität wird die Upstream-Verbindung geschlossen (so bricht man in go-ldap eine Anfrage ab, das weder Kontext noch Standard-Timeout kennt: Ein Bind gegen einen Server, der annimmt und nie antwortet, wartete ewig), und die Antwort ist `ErrUnavailable`; auch der Verbindungsaufbau endet an der Frist des Kontexts. Eine Quelle liefert eine solche Prüfung mit `directory.WithContextVerifier`; `Verify` funktioniert weiterhin, mit einem Hintergrundkontext, und eine Identität mit nur einem `WithVerifier` ist `Verify` (nicht unterbrechbar). Ein Server, der einen Bind begrenzt (`operation_timeout` von authnd), sollte `VerifyContext` aufrufen, damit ein hängender Upstream nach der Antwort keine Goroutine und keine Verbindung behält.
 
+**Eine Abfrage hat eine Frist.** `sqldir.WithQueryTimeout(d)` (ab v0.20.0) begrenzt jede Abfrage einer Quelle einschließlich des Lesens ihrer Zeilen; danach liefert das Lesen einen Fehler, und der Treiber trennt die Verbindung. Der Standard, `sqldir.DefaultQueryTimeout`, ist 30 s; `0` ist absichtlich keine Grenze. Vorher blockierte eine Datenbank, die eine Verbindung annahm und nicht mehr antwortete, das Lesen für immer, und ein Programm, das regelmäßig aktualisiert, fror daran ein. `hcldir.Block.QueryTimeout` (`query_timeout` in einem `sql`-Block) führt dorthin: eine Dauer, von `Check()` ohne Netz geprüft und in einem `ldap`-Block abgelehnt. Ein Programm, das aktualisiert, sollte sie unter seiner Periode setzen, wie authnd es tut (drei Viertel von `refresh`).
+
 ## Was es ablehnt und warum {#what-it-refuses-and-why}
 
 - **Eine Gruppe, in der niemand ist**, und **eine Gruppe, die keine Quelle
@@ -494,4 +496,4 @@ Builds mit `nosql` und `noldap` werden in der CI geprüft.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.19.0](https://pkg.go.dev/github.com/go-authn/directory@v0.19.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.20.0](https://pkg.go.dev/github.com/go-authn/directory@v0.20.0)

@@ -103,7 +103,7 @@ v0.15.0부터 authnd는 클라이언트, 느린 소스, 폭주가 자신에게 �
 상한을 넘은 연결은 연결 해제 통지(notice of disconnection)로 `busy`(51)를 받고 닫히며, 대기열에 들어가지
 않습니다(RFC 4511 4.4.1). `operation_timeout` 시점에도 실행 중인 작업은 `timeLimitExceeded`(3)로 응답받습니다.
 **핸들러가 막혀서 기한을 무시하더라도 마찬가지입니다**. 늦게 나온 결과는 버려집니다. 시작할 때 소스가 응답하지
-않으면 authnd는 `startup_timeout` 뒤에 시작을 거부하며, 오류는 단계와 소스를 밝힙니다. 음수나 읽을 수 없는
+않으면 authnd는 `startup_timeout` 뒤에 시작을 거부하며, 오류는 단계와 소스를 밝힙니다. `users "sql"` 블록에서는 소스가 `opening sql pgx (dsn_file /etc/authnd/pg.dsn)`로 표시됩니다. 드라이버와 DSN을 담은 파일이며, DSN 자체는 결코 표시되지 않습니다(v0.18.1부터. 이전에는 모든 SQL 블록이 그저 `sql`이었습니다). 음수나 읽을 수 없는
 기간은 시작할 때와 `check`에서 거부됩니다. v0.14의 동작을 원하면 `max_connections = 0`과
 `operation_timeout = "0"`을 설정하십시오.
 

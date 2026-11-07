@@ -132,6 +132,8 @@ Jede muss eine Hilfsklasse (AUXILIARY) sein, die das bereitgestellte Schema defi
 und keine, die authnd selbst ableitet. Eine Person, der ein MUST einer deklarierten Klasse fehlt,
 wird ohne sie veröffentlicht, und `check` sagt es.
 
+**`query_timeout`**, optional, begrenzt jede Abfrage des Blocks einschließlich des Lesens ihrer Zeilen: eine Dauer wie `"20s"`, oder `"0"` für keine Grenze. Standardmäßig sind es drei Viertel von `refresh` (45 s bei den üblichen 60 s): Eine Datenbank, die die Verbindung annimmt und nicht mehr antwortet, beendet so das Lesen, bevor der Refresh aufgibt, und der nächste Refresh läuft; ohne das fror ein einziges hängendes Lesen den Refresh bis zu einem Neustart ein (v0.18.2). Eine einzelne Abfrage, die länger als die Frist dauert, schlägt fehl: Erhöhen Sie `query_timeout` für eine, die berechtigterweise länger braucht. Bei `refresh = "0"` gilt der Standard der Bibliothek von 30 s.
+
 `driver` akzeptiert `postgres` (oder `postgresql`, `pgx`), `mysql` (oder `mariadb`)
 und `sqlite` (oder `sqlite3`). Die Datenbank wird beim Start erreicht, bevor
 irgendetwas lauscht; eine, die nicht antwortet, hält den Server daher dort an, wo
