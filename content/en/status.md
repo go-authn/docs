@@ -9,7 +9,7 @@ These pages are documentation version **0.10**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.18.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap is **v0.12.1**, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed `BuildError` for a schema that does
 not build, schemas in HCL2 and the `ldapschema` converter, and
 directory **v0.20.0**, with declared object classes and a deadline on every SQL query. authnd
-v0.18.2 embeds ldap v0.12.1 and directory v0.20.0.
+v0.18.3 embeds ldap v0.12.1 and directory v0.20.0.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.10/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
@@ -119,6 +119,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.18.0 | [A password check against an upstream is cancelled, not only bounded]({{< relref "/authnd/operations.md#outage" >}}): the bind and the password factor use `Identity.VerifyContext` (go-authn/directory v0.19.0), which closes the upstream connection when the bind's budget ends, so nothing is left running. 400 binds against an upstream that never answers: 1620 goroutines held (v0.16.2), 257 (v0.17.0, the cap), 4 (v0.18.0); the cap of 64 checks per source stays, for sources that cannot be cancelled. The name folds come from go-authn/oidc v0.7.0. No configuration change |
 | v0.18.1 | [The startup timeout names the SQL source it was opening]({{< relref "/authnd/operations.md#limits" >}}): `opening sql pgx (dsn_file …) did not answer`, where it said `opening sql` for every SQL block; the driver and the file that holds the DSN, never the DSN. Tests: chaos against a real PostgreSQL on a disposable cluster (server stopped during a refresh, connection reset mid-query, a listener that never answers, the Kerberos realm during an outage); they skip without the server binaries unless `AUTHND_REQUIRE_PG=1`. No configuration change |
 | v0.18.2 | [A SQL read that hangs no longer freezes the refresh]({{< relref "/authnd/people.md" >}}): a database that accepted the connection and stopped answering left the refresh blocked in the query, every later tick was skipped, and past `max_age` everything answered `unavailable` until a restart. A `users "sql"` block now has `query_timeout`, by default three quarters of `refresh`, with go-authn/directory v0.20.0. **Behaviour change:** a single query slower than the deadline fails; set `query_timeout` for a slower one |
+| v0.18.3 | [Returned means stopped]({{< relref "/authnd/operations.md" >}}): when a shutdown returns, the LDAP listener and both Kerberos sockets are closed and the server has finished, so a restart can bind at once. A shutdown that landed before the server reached the Kerberos library used to return with the realm's UDP and TCP sockets still open. No configuration change |
 
 ### authn-bridge
 

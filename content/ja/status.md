@@ -9,7 +9,7 @@ tags: [ステータス, リリース]
 
 | プログラム | リリース | モジュール |
 |---|---|---|
-| authnd | **v0.18.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap は **v0.12.1** で、DIT コンテンツルール、ネームフォーム�
 ビルドできないスキーマのための型付きの `BuildError`、
 HCL2 のスキーマと `ldapschema` コンバーターを備えています。
 directory は **v0.20.0** で、宣言されたオブジェクトクラスと、すべての SQL クエリの期限を備えています。
-authnd v0.18.2 は ldap v0.12.1 と directory v0.20.0 を組み込んでいます。
+authnd v0.18.3 は ldap v0.12.1 と directory v0.20.0 を組み込んでいます。
 上記のいずれかのプログラムのマイナーバージョンが新しくなると、新しいドキュメントバージョンになります。
 そのため、`/docs/0.10/` 以下のページは、読者がインストールしたものを説明し続け、
 以前のリリースのページは `/docs/0.1/`、`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/`、`/docs/0.6/`、`/docs/0.7/`、`/docs/0.8/`、`/docs/0.9/` 以下に残ります。
@@ -114,6 +114,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | v0.18.0 | [上流に対するパスワードチェックは、制限されるだけでなく取り消される]({{< relref "/authnd/operations.md#outage" >}}): bind とパスワード要素は `Identity.VerifyContext` (go-authn/directory v0.19.0) を使い、bind の予算が尽きると上流への接続を閉じるので、何も動き続けません。応答しない上流に対する 400 件の bind で保持される goroutine: 1620 (v0.16.2)、257 (v0.17.0、上限)、4 (v0.18.0)。ソースごとに最大 64 件という上限は、取り消せないソースのために残ります。名前の畳み込みは go-authn/oidc v0.7.0 のものです。設定の変更はありません |
 | v0.18.1 | [起動のタイムアウトが、開こうとしていた SQL ソースを示す]({{< relref "/authnd/operations.md#limits" >}}): `opening sql pgx (dsn_file …) did not answer`。以前はどの SQL ブロックも `opening sql` でした。ドライバーと DSN を保持するファイルを示し、DSN は決して示しません。テスト: 使い捨てクラスター上の本物の PostgreSQL に対するカオステスト (リフレッシュ中のサーバー停止、クエリの途中での接続リセット、決して応答しないリスナー、障害中の Kerberos レルム)。サーバーのバイナリがなければスキップされ、`AUTHND_REQUIRE_PG=1` を指定した場合は失敗になります。設定の変更はありません |
 | v0.18.2 | [ハングした SQL の読み取りがリフレッシュを止めなくなった]({{< relref "/authnd/people.md" >}}): 接続を受け付けて応答しなくなったデータベースがあると、リフレッシュがクエリの中でブロックされ、以降のティックはすべてスキップされ、`max_age` を過ぎると再起動まですべてが `unavailable` を返しました。`users "sql"` ブロックに `query_timeout` が加わり、既定は `refresh` の 4 分の 3 です (go-authn/directory v0.20.0)。**動作の変更:** 期限より遅い単一のクエリは失敗します。より遅いクエリには `query_timeout` を設定してください |
+| v0.18.3 | [戻ったときは停止している]({{< relref "/authnd/operations.md" >}}): シャットダウンが戻った時点で、LDAP リスナーと Kerberos の 2 つのソケットは閉じられ、サーバーは終了しているため、再起動はすぐにバインドできます。サーバーが Kerberos ライブラリに達する前にシャットダウンが届くと、以前はレルムの UDP と TCP のソケットが開いたまま戻っていました。設定の変更はありません |
 
 ### authn-bridge {#authn-bridge}
 

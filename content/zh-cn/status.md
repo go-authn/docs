@@ -9,7 +9,7 @@ tags: [状态, 发布版本]
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.18.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -17,7 +17,7 @@ tags: [状态, 发布版本]
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
 ldap 为 **v0.12.1**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
 directory 为 **v0.20.0**，带有已声明的对象类，并为每个 SQL 查询设置截止时间。authnd
-v0.18.2 内嵌 ldap v0.12.1 和 directory v0.20.0。
+v0.18.3 内嵌 ldap v0.12.1 和 directory v0.20.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
 因此读者在 `/docs/0.10/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
@@ -113,6 +113,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.18.0 | [对上游的密码检查会被取消，而不只是限时]({{< relref "/authnd/operations.md#outage" >}})：bind 和密码因素使用 `Identity.VerifyContext`（go-authn/directory v0.19.0），bind 的预算用完时会关闭到上游的连接，因此没有任何东西继续运行。针对永不应答的上游发起 400 次 bind，占用的 goroutine：1620 个（v0.16.2）、257 个（v0.17.0，上限）、4 个（v0.18.0）；每个来源最多 64 个检查的上限保留，用于无法取消的来源。名称折叠来自 go-authn/oidc v0.7.0。配置没有变化 |
 | v0.18.1 | [启动超时会指出它正在打开的 SQL 来源]({{< relref "/authnd/operations.md#limits" >}})：`opening sql pgx (dsn_file …) did not answer`，以前每个 SQL 块都只显示 `opening sql`；指出驱动程序和保存 DSN 的文件，绝不指出 DSN。测试：针对一个一次性集群上真实 PostgreSQL 的混沌测试（刷新期间停止服务器、查询中途重置连接、从不应答的监听器、故障期间的 Kerberos 域）；没有服务器二进制文件时会跳过，设置 `AUTHND_REQUIRE_PG=1` 则视为失败。配置没有变化 |
 | v0.18.2 | [挂起的 SQL 读取不再冻结刷新]({{< relref "/authnd/people.md" >}})：接受了连接却不再应答的数据库会让刷新阻塞在查询中，之后每个节拍都被跳过，超过 `max_age` 后一切都返回 `unavailable`，直到重启。`users "sql"` 块现在有 `query_timeout`，默认是 `refresh` 的四分之三（go-authn/directory v0.20.0）。**行为变化：**比截止时间更慢的单个查询会失败；对更慢的查询请设置 `query_timeout` |
+| v0.18.3 | [返回即已停止]({{< relref "/authnd/operations.md" >}})：关闭返回时，LDAP 监听器和两个 Kerberos 套接字都已关闭，服务器已结束，因此重启可以立即绑定。以前，如果关闭发生在服务器到达 Kerberos 库之前，返回时域的 UDP 和 TCP 套接字仍然是打开的。配置没有变化 |
 
 ### authn-bridge {#authn-bridge}
 

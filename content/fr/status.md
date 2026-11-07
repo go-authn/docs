@@ -9,7 +9,7 @@ Ces pages sont la version **0.10** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
-| authnd | **v0.18.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap est en **v0.12.1**, avec les règles de contenu DIT, les formes de noms et
 les règles de structure DIT lues, appliquées et publiées, une `BuildError` typée
 pour un schéma qui ne se construit pas, les schémas en HCL2 et le convertisseur
 `ldapschema`, et directory en **v0.20.0**, avec les classes d'objet déclarées et une échéance sur chaque requête SQL.
-authnd v0.18.2 embarque ldap v0.12.1 et directory v0.20.0.
+authnd v0.18.3 embarque ldap v0.12.1 et directory v0.20.0.
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
 de sorte que les pages qu'une personne trouve sous `/docs/0.10/` continuent de décrire ce
 qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`,
@@ -120,6 +120,7 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.18.0 | [Une vérification de mot de passe auprès d'un amont est annulée, et pas seulement bornée]({{< relref "/authnd/operations.md#outage" >}}) : le bind et le facteur mot de passe utilisent `Identity.VerifyContext` (go-authn/directory v0.19.0), qui ferme la connexion vers l'amont quand le budget du bind est épuisé, de sorte que rien ne continue de tourner. 400 binds contre un amont qui ne répond jamais : 1620 goroutines retenues (v0.16.2), 257 (v0.17.0, le plafond), 4 (v0.18.0) ; le plafond de 64 vérifications par source demeure, pour les sources dont la vérification ne peut pas être annulée. Les replis de noms viennent de go-authn/oidc v0.7.0. Aucun changement de configuration |
 | v0.18.1 | [Le délai de démarrage nomme la source SQL qu'il ouvrait]({{< relref "/authnd/operations.md#limits" >}}) : `opening sql pgx (dsn_file …) did not answer`, là où il disait `opening sql` pour tout bloc SQL ; le pilote et le fichier qui contient le DSN, jamais le DSN. Tests : chaos contre un vrai PostgreSQL sur une grappe jetable (serveur arrêté pendant une actualisation, connexion réinitialisée en pleine requête, un écouteur qui ne répond jamais, le royaume Kerberos pendant une panne) ; ils sont ignorés sans les binaires du serveur, sauf avec `AUTHND_REQUIRE_PG=1`. Aucun changement de configuration |
 | v0.18.2 | [Une lecture SQL bloquée ne fige plus l'actualisation]({{< relref "/authnd/people.md" >}}) : une base de données qui avait accepté la connexion puis cessé de répondre laissait l'actualisation bloquée dans la requête, chaque tic suivant était ignoré, et passé `max_age` tout répondait `unavailable` jusqu'à un redémarrage. Un bloc `users "sql"` a désormais `query_timeout`, par défaut les trois quarts de `refresh`, avec go-authn/directory v0.20.0. **Changement de comportement :** une requête isolée plus lente que l'échéance échoue ; fixez `query_timeout` pour une requête plus lente |
+| v0.18.3 | [Retourné veut dire arrêté]({{< relref "/authnd/operations.md" >}}) : quand un arrêt rend la main, l'écouteur LDAP et les deux sockets Kerberos sont fermés et le serveur a terminé, de sorte qu'un redémarrage peut se lier aussitôt. Un arrêt survenu avant que le serveur n'atteigne la bibliothèque Kerberos rendait la main avec les sockets UDP et TCP du royaume encore ouverts. Aucun changement de configuration |
 
 ### authn-bridge {#authn-bridge}
 
