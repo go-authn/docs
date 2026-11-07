@@ -125,6 +125,8 @@ ignored, not honoured.
 IdP's scopes is **dropped**, and a value with more than one `@` is not in any
 scope.
 
+**schacHomeOrganization.** Released only when it is one of the asserting IdP's scopes (exact, case-sensitive; go-authn/saml v0.6.0, bridge v0.23.9), like the identifiers above: an IdP of one institution cannot state another's. An IdP whose metadata publishes no Scope for its domain no longer has it read.
+
 **Groups.** With more than one IdP allowed to log in, an `eduPersonEntitlement`
 or `isMemberOf` value is kept only if its namespace is one of that IdP's scopes
 or under one:

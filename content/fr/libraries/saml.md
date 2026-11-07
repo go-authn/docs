@@ -13,7 +13,7 @@ signées de la fédération, envoie les personnes vers le fournisseur d'identit�
 de leur propre établissement, et relit ce que ce fournisseur affirme.
 
 ```sh
-go get github.com/go-authn/saml@v0.5.0
+go get github.com/go-authn/saml@v0.6.0
 ```
 
 C'est la moitié d'[authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -194,6 +194,7 @@ l'appelant sous forme d'erreur, destinée au journal du serveur :
 | plus d'une assertion | c'est ainsi qu'une assertion signée et une non signée arrivent ensemble et que la mauvaise est lue (CVE-2022-41912) |
 | tout ce que la signature ne couvrait pas | ce n'est jamais lu : seul l'est l'élément reconstruit à partir des octets que la signature a condensés |
 | un identifiant à portée hors des `Scopes` de l'IdP | écarté : sinon n'importe quel IdP pourrait affirmer `alice@another-university.example` |
+| un `schacHomeOrganization` qui n'est pas l'une des valeurs `shibmd:Scope` de l'IdP (exactes, sensibles à la casse ; depuis v0.6.0) | écarté, comme les pages d'attributs de SWITCH et de SAFIRE le demandent à une partie de confiance : un IdP d'un établissement pourrait énoncer celui d'un autre, et un service qui filtre dessus (le `accept` de la passerelle) l'admettrait comme cet établissement. **Mise à jour :** un IdP dont les métadonnées ne publient aucun Scope pour son domaine n'a plus son `schacHomeOrganization` lu ; demandez à sa fédération de le publier |
 | un chiffré AES-CBC qu'aucune signature vérifiée ne couvre | pas même déchiffré : CBC non authentifié est un oracle de remplissage. Le transport de clé RSA PKCS#1 v1.5 n'est pas accepté du tout ; AES-GCM et RSA-OAEP le sont |
 | une autre audience, un autre ACS ou une autre requête ; une réponse non sollicitée ; une requête vieille de plus d'une heure | saml-profiles 4.1.4.3 |
 | une assertion déjà utilisée | une assertion porteuse appartient à qui la détient |

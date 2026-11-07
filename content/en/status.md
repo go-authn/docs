@@ -10,7 +10,7 @@ These pages are documentation version **0.10**, and describe:
 | program | release | module |
 |---|---|---|
 | authnd | **v0.18.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.8** | `github.com/go-authn/bridge` |
+| authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
@@ -156,6 +156,7 @@ dependencies are left out, except those this documentation version describes.
 | v0.23.6 | an audit, fuzzing and chaos pass, with go-authn/saml v0.5.1; no configuration key added or changed. [Metadata is refreshed in time]({{< relref "/authn-bridge/federation.md#refreshing-it" >}}): never scheduled past half of the remaining `validUntil`, and with no valid metadata left retried after a minute, doubling to an hour, so one failed refresh near expiry no longer leaves the provider without an IdP for up to twelve hours. The assertion replay key is stored as its SHA-256: a long IdP `entityID` made PostgreSQL and MySQL refuse the write and wedged the state database. The clock may differ from an IdP's by three minutes; an hour is refused with a 400 page. [What is tested]({{< relref "/authn-bridge/federation.md#tested" >}}): XML signature wrapping XSW1 to XSW8, CVE-2017-11427, DOCTYPE, foreign audience, recipient, request and destination, five fuzzers. One SHA-256 per login costs 0 to 2 allocations more (`BenchmarkReplayUse`: 0 allocations and 183 B, now 2 and 326 B); wall-clock not measured, load 53 to 75 |
 | v0.23.7 | security: a refresh token, an application password or an SSH certificate request from an IdP removed from `saml { idps }` is refused at its next use, with `institution not configured`, as `DisableIdP` does ([admin API]({{< relref "/authn-bridge/admin.md" >}})); put the IdP back and they work again |
 | v0.23.8 | security: [a person is disabled as who they are]({{< relref "/authn-bridge/admin.md" >}}): usernames (the disable list, certificate principals, subject-id) fold ASCII letters only, with go-authn/oidc v0.7.0's `ASCIILower`, so `kate` and its Kelvin-sign spelling (U+212A) are two people, with two disable entries and two certificate principals |
+| v0.23.9 | security, with go-authn/saml v0.6.0: [`schac_home_organization` is released]({{< relref "/authn-bridge/tokens.md" >}}) in tokens and userinfo only when it is one of the asserting IdP's `shibmd:Scope` values (exact, case-sensitive). An IdP of one institution could state another's, and a service that filters on the claim (the gateway's `accept`) would admit it as that institution. **Upgrade:** an IdP whose metadata publishes no Scope for its domain no longer has the claim released |
 
 ### authn-revokd
 
@@ -224,6 +225,7 @@ library's page says what earlier ones changed.
 | oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) refuses a name with more than one `@` (`ErrBadName`) |
 | oidc v0.7.0 | [`ASCIILower` and `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}}): the one ASCII-only fold for names, since `strings.ToLower` and `strings.EqualFold` fold Unicode and equate the Kelvin sign U+212A with "k" |
+| saml v0.6.0 | [`schacHomeOrganization` is held to the IdP's `shibmd:Scope` values]({{< relref "/libraries/saml.md" >}}) (exact, case-sensitive) and dropped otherwise, as `eduPersonPrincipalName`, `subject-id`, `pairwise-id` and scoped affiliation already were (the SWITCH and SAFIRE attribute pages ask it of a relying party). **Upgrade:** an IdP whose metadata publishes no Scope for its domain no longer has the attribute read |
 | scim v0.2.0 | [an audit, fuzzing, chaos and performance pass]({{< relref "/libraries/scim.md#v020" >}}): `Server.ReadTimeout` (30 s), the optional `ConditionalDeleter`, a PATCH or PUT without `If-Match` redone up to 32 times on a lost race instead of answered 412, removal through a filter that matches nothing succeeds, keys of a PATCH without a path applied in sorted order, `BearerAuth` accepts the scheme in any case, `startIndex` and `count` clamped on every word size. A list request over 10,000 users: a page of 100 from 789,417 to 14,952 allocations, `userName eq` from 797,979 to 90, a full scan from 818,847 to 361,098 (exact; times not measured, load 65) |
 | servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | servercert v0.6.0 | [the TLS `KeyFile` and the ACME `EABHMACKeyFile` are refused]({{< relref "/libraries/servercert.md" >}}) when group or others can read or write them, at `New` and on every reload (a readable replacement key is reported to `OnError` and not taken; the current certificate keeps serving); not checked on Windows. **Upgrade:** `chmod 600` both files |

@@ -127,6 +127,8 @@ ignoriert, nicht beachtet.
 behauptenden IdP wird **verworfen**, und ein Wert mit mehr als einem `@` liegt in keinem
 Scope.
 
+**schacHomeOrganization.** Wird nur ausgestellt, wenn es einer der Scopes des behauptenden IdP ist (exakt, Groß-/Kleinschreibung beachtet; go-authn/saml v0.6.0, bridge v0.23.9), wie die Bezeichner oben: Ein IdP einer Einrichtung kann nicht die einer anderen behaupten. Ein IdP, dessen Metadaten keinen Scope für seine Domain veröffentlichen, hat es nicht mehr gelesen.
+
 **Gruppen.** Wenn sich über mehr als einen IdP angemeldet werden darf, wird ein Wert von `eduPersonEntitlement`
 oder `isMemberOf` nur behalten, wenn sein Namensraum einer der Scopes dieses IdP ist
 oder darunter liegt:

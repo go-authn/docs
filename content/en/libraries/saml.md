@@ -13,7 +13,7 @@ sends people to their own institution's identity provider, and reads back what
 that provider says.
 
 ```sh
-go get github.com/go-authn/saml@v0.5.0
+go get github.com/go-authn/saml@v0.6.0
 ```
 
 It is the half of [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -194,6 +194,7 @@ caller as an error, for the server's log:
 | more than one assertion | how a signed one and an unsigned one arrive together and the wrong one is read (CVE-2022-41912) |
 | anything outside what the signature covered | it is never read: only the element rebuilt from the bytes the signature digested is |
 | a scoped identifier outside the IdP's `Scopes` | dropped: otherwise any IdP could assert `alice@another-university.example` |
+| a `schacHomeOrganization` that is not one of the IdP's `shibmd:Scope` values (exact, case-sensitive; since v0.6.0) | dropped, as the SWITCH and SAFIRE attribute pages ask of a relying party: an IdP of one institution could state another's, and a service that filters on it (the gateway's `accept`) would admit it as that institution. **Upgrade:** an IdP whose metadata publishes no Scope for its domain no longer has its `schacHomeOrganization` read; ask its federation to publish it |
 | AES-CBC ciphertext no verified signature covers | not even decrypted: unauthenticated CBC is a padding oracle. RSA PKCS#1 v1.5 key transport is not accepted at all; AES-GCM and RSA-OAEP are |
 | another audience, ACS or request; an unsolicited response; a request more than an hour old | saml-profiles 4.1.4.3 |
 | an assertion already used | a bearer assertion is whoever holds it |

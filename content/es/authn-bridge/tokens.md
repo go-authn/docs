@@ -111,6 +111,14 @@ de ID solo se emite para una petición con el scope `openid`.
 | `eduperson` | `eduperson_principal_name`, `eduperson_scoped_affiliation`, `eduperson_entitlement` y `entitlements`, `eduperson_assurance`, `eduperson_orcid`, `schac_home_organization`, `voperson_id` (el `subject-id` de SAML, en minúsculas) |
 | `groups` | `groups` |
 
+`schac_home_organization` solo se libera si es uno de los valores `shibmd:Scope`
+del IdP que lo afirma (exactos, sensibles a mayúsculas; go-authn/saml v0.6.0,
+bridge v0.23.9): un IdP de una institución no puede afirmar la de otra, algo que
+una parte confiante que filtre por esa reclamación (el `accept` de la pasarela)
+tomaría por esa institución. **Actualización:** un IdP cuyos metadatos no
+publican ningún Scope para su dominio ya no tiene la reclamación liberada; pida a
+su federación que lo publique.
+
 ## El token de acceso {#the-access-token}
 
 Para los servidores de recursos de la `audience` del cliente, como describe el

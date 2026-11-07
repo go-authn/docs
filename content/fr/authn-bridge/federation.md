@@ -124,6 +124,8 @@ ignorée, pas honorée.
 qui l'affirme est **écartée**, et une valeur comportant plus d'un `@` n'est dans aucune
 portée.
 
+**schacHomeOrganization.** Délivré seulement s'il fait partie des scopes de l'IdP qui l'affirme (exact, sensible à la casse ; go-authn/saml v0.6.0, bridge v0.23.9), comme les identifiants ci-dessus : un IdP d'un établissement ne peut pas énoncer celui d'un autre. Un IdP dont les métadonnées ne publient aucun Scope pour son domaine ne l'a plus lu.
+
 **Groupes.** Lorsque plus d'un IdP est autorisé à se connecter, une valeur `eduPersonEntitlement`
 ou `isMemberOf` n'est conservée que si son espace de noms est l'une des portées de cet IdP
 ou se trouve sous l'une d'elles :

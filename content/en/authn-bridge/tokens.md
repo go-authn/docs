@@ -110,6 +110,13 @@ issued for a request with the `openid` scope.
 | `eduperson` | `eduperson_principal_name`, `eduperson_scoped_affiliation`, `eduperson_entitlement` and `entitlements`, `eduperson_assurance`, `eduperson_orcid`, `schac_home_organization`, `voperson_id` (the SAML `subject-id`, lower-cased) |
 | `groups` | `groups` |
 
+`schac_home_organization` is released only when it is one of the asserting IdP's
+`shibmd:Scope` values (exact, case-sensitive; go-authn/saml v0.6.0, bridge
+v0.23.9): an IdP of one institution cannot state another's, which a relying
+party that filters on the claim (the gateway's `accept`) would take for that
+institution. **Upgrade:** an IdP whose metadata publishes no Scope for its domain
+no longer has the claim released; ask its federation to publish it.
+
 ## The access token
 
 For the resource servers in the client's `audience`, as RFC 9068 describes:

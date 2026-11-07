@@ -118,6 +118,8 @@ openssl x509 -in /etc/authn-bridge/metadata-signature-2026.pem -noout -fingerpri
 `eduPersonScopedAffiliation`) が、表明している IdP のスコープの外にあれば**破棄され**、`@` が
 二つ以上ある値はどのスコープにも属しません。
 
+**schacHomeOrganization。** 表明する IdP のスコープのいずれかである場合にのみ発行されます (完全一致、大文字小文字を区別。go-authn/saml v0.6.0、bridge v0.23.9)。上の識別子と同じです。ある機関の IdP は別の機関のものを述べられません。メタデータがそのドメインの Scope を公開していない IdP からは、読まれなくなります。
+
 **グループ。** ログインを許された IdP が複数ある場合、`eduPersonEntitlement` または
 `isMemberOf` の値は、その名前空間がその IdP のスコープのいずれか、またはその配下にある場合に
 のみ保持されます。

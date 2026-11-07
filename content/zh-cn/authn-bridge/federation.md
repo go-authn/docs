@@ -119,6 +119,8 @@ HTTP-Redirect `SingleSignOnService` 时才会保留。被描述了两次的实�
 `eduPersonPrincipalName`、`eduPersonScopedAffiliation`）会被**丢弃**，
 含有多个 `@` 的值不属于任何 scope。
 
+**schacHomeOrganization。** 仅当它是声明方 IdP 的 scope 之一时才会发放（完全匹配，区分大小写；go-authn/saml v0.6.0，bridge v0.23.9），与上面的标识符一样：一个机构的 IdP 不能声明另一个机构的值。元数据没有为其域名发布 Scope 的 IdP，其该属性不再被读取。
+
 **组。** 当允许登录的 IdP 多于一个时，`eduPersonEntitlement`
 或 `isMemberOf` 的值只有在其命名空间是该 IdP 的某个 scope
 或位于其下时才会保留：

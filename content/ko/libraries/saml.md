@@ -12,7 +12,7 @@ tags: [라이브러리, saml, 페더레이션]
 그 공급자가 말하는 것을 읽어 옵니다.
 
 ```sh
-go get github.com/go-authn/saml@v0.5.0
+go get github.com/go-authn/saml@v0.6.0
 ```
 
 이것은 [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})의 페더레이션을 마주하는
@@ -190,6 +190,7 @@ IdP 인증서는 자체 서명되었고 만료된 경우가 많으므로 그 날
 | 어서션이 둘 이상 | 서명된 것과 서명되지 않은 것이 함께 도착해 잘못된 것을 읽게 되는 방식(CVE-2022-41912) |
 | 서명이 덮지 않은 모든 것 | 절대 읽지 않습니다. 서명이 다이제스트한 바이트로 다시 만든 요소만 읽습니다 |
 | IdP의 `Scopes` 밖의 스코프 식별자 | 버려짐: 그렇지 않으면 어느 IdP든 `alice@another-university.example`을 어서션할 수 있습니다 |
+| IdP의 `shibmd:Scope` 값 중 하나가 아닌 `schacHomeOrganization` (정확히 일치, 대소문자 구분; v0.6.0부터) | 버려짐. SWITCH와 SAFIRE의 속성 페이지가 신뢰 당사자에게 요구하는 대로입니다. 한 기관의 IdP가 다른 기관의 값을 말할 수 있었고, 이것으로 거르는 서비스(게이트웨이의 `accept`)는 그 기관으로 받아들였을 것입니다. **업그레이드:** 메타데이터가 도메인의 Scope를 게시하지 않는 IdP는 더 이상 `schacHomeOrganization`이 읽히지 않습니다. 해당 연합에 게시를 요청하십시오 |
 | 검증된 서명이 덮지 않는 AES-CBC 암호문 | 복호화조차 하지 않습니다. 인증되지 않은 CBC는 패딩 오라클입니다. RSA PKCS#1 v1.5 키 전송은 아예 받아들이지 않으며, AES-GCM과 RSA-OAEP는 받아들입니다 |
 | 다른 audience, ACS 또는 요청, 요청하지 않은 응답, 한 시간이 넘은 요청 | saml-profiles 4.1.4.3 |
 | 이미 사용된 어서션 | 베어러 어서션은 그것을 가진 사람이 곧 주인입니다 |

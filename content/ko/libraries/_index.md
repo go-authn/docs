@@ -24,7 +24,7 @@ tags: [라이브러리]
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | 이 Kerberos 티켓이 이 서비스에 유효한가? | v0.3.3 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | 렐름은 디렉터리에서 어떻게 티켓을 발급하는가? | v0.6.0 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | 이 베어러 토큰은 누가 요청한다고 말하며, 믿어야 하는가? | v0.7.0 | `github.com/go-authn/oidc` |
-| [saml]({{< relref "/libraries/saml.md" >}}) | 페더레이션의 신원 공급자는 이 사람에 대해 무엇을 말했는가? | v0.4.1 | `github.com/go-authn/saml` |
+| [saml]({{< relref "/libraries/saml.md" >}}) | 페더레이션의 신원 공급자는 이 사람에 대해 무엇을 말했는가? | v0.6.0 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | sshd가 답하는 대로, 이 SSH 인증서나 키는 폐기되었는가? | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | 데몬의 TLS 서버 인증서는 어디서 오는가? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 이 WireGuard 키가 연결해도 되는가, 그리고 누구의 것인가? | v0.1.4 | `github.com/go-authn/wireguard` |

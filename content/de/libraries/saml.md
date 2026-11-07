@@ -13,7 +13,7 @@ schickt Personen zum Identitätsanbieter ihrer eigenen Einrichtung und liest zur
 dieser Anbieter sagt.
 
 ```sh
-go get github.com/go-authn/saml@v0.5.0
+go get github.com/go-authn/saml@v0.6.0
 ```
 
 Er ist die Hälfte von [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}),
@@ -194,6 +194,7 @@ den Aufrufer, für das Log des Servers:
 | mehr als eine Assertion | so kommen eine signierte und eine unsignierte zusammen an, und die falsche wird gelesen (CVE-2022-41912) |
 | alles außerhalb dessen, was die Signatur abgedeckt hat | es wird nie gelesen: gelesen wird nur das Element, das aus den von der Signatur gehashten Bytes neu aufgebaut wird |
 | ein bereichsgebundener Bezeichner außerhalb der `Scopes` des IdP | verworfen: Sonst könnte jeder IdP `alice@another-university.example` behaupten |
+| ein `schacHomeOrganization`, das keiner der `shibmd:Scope`-Werte des IdP ist (exakt, Groß-/Kleinschreibung beachtet; seit v0.6.0) | verworfen, wie es die Attributseiten von SWITCH und SAFIRE von einer Relying Party verlangen: Ein IdP einer Einrichtung könnte die einer anderen behaupten, und ein Dienst, der danach filtert (das `accept` des Gateways), ließe ihn als diese Einrichtung zu. **Upgrade:** Ein IdP, dessen Metadaten keinen Scope für seine Domain veröffentlichen, hat sein `schacHomeOrganization` nicht mehr gelesen; bitten Sie seine Föderation, ihn zu veröffentlichen |
 | AES-CBC-Chiffretext, den keine geprüfte Signatur abdeckt | nicht einmal entschlüsselt: Nicht authentifiziertes CBC ist ein Padding-Orakel. RSA-PKCS#1-v1.5-Schlüsseltransport wird überhaupt nicht akzeptiert; AES-GCM und RSA-OAEP schon |
 | eine andere Audience, ein anderer ACS oder eine andere Anfrage; eine unaufgeforderte Antwort; eine Anfrage, die älter als eine Stunde ist | saml-profiles 4.1.4.3 |
 | eine bereits verwendete Assertion | eine Bearer-Assertion ist, wer auch immer sie hält |

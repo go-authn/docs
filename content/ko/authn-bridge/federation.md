@@ -116,6 +116,8 @@ strict 모드의 PostgreSQL과 MySQL이 거부했고, 그래서 쓰기가 보류
 `eduPersonPrincipalName`, `eduPersonScopedAffiliation`)은 **버려지며**, `@`가 둘
 이상인 값은 어떤 스코프에도 속하지 않습니다.
 
+**schacHomeOrganization.** 어서션하는 IdP의 scope 중 하나일 때만 발급됩니다(정확히 일치, 대소문자 구분; go-authn/saml v0.6.0, bridge v0.23.9). 위의 식별자와 같습니다. 한 기관의 IdP는 다른 기관의 값을 말할 수 없습니다. 메타데이터가 도메인의 Scope를 게시하지 않는 IdP는 더 이상 읽히지 않습니다.
+
 **그룹.** 로그인이 허용된 IdP가 둘 이상이면 `eduPersonEntitlement` 또는
 `isMemberOf` 값은 그 네임스페이스가 해당 IdP의 스코프 중 하나이거나 그 아래에
 있을 때만 유지됩니다.

@@ -110,6 +110,15 @@ définit `id_token_claims = true` pour les y faire copier. Un jeton d'identité 
 | `eduperson` | `eduperson_principal_name`, `eduperson_scoped_affiliation`, `eduperson_entitlement` et `entitlements`, `eduperson_assurance`, `eduperson_orcid`, `schac_home_organization`, `voperson_id` (le `subject-id` SAML, en minuscules) |
 | `groups` | `groups` |
 
+`schac_home_organization` n'est délivré que s'il fait partie des valeurs
+`shibmd:Scope` de l'IdP qui l'affirme (exactes, sensibles à la casse ;
+go-authn/saml v0.6.0, bridge v0.23.9) : un IdP d'un établissement ne peut pas
+énoncer celui d'un autre, ce qu'une partie de confiance qui filtre sur cette
+revendication (le `accept` de la passerelle) prendrait pour cet établissement.
+**Mise à jour :** un IdP dont les métadonnées ne publient aucun Scope pour son
+domaine n'a plus la revendication délivrée ; demandez à sa fédération de le
+publier.
+
 ## Le jeton d'accès {#the-access-token}
 
 Pour les serveurs de ressources de l'`audience` du client, comme le décrit la RFC 9068 :

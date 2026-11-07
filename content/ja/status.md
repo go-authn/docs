@@ -10,7 +10,7 @@ tags: [ステータス, リリース]
 | プログラム | リリース | モジュール |
 |---|---|---|
 | authnd | **v0.18.0** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.8** | `github.com/go-authn/bridge` |
+| authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
@@ -151,6 +151,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | v0.23.6 | 監査、ファジング、カオスの実施。go-authn/saml v0.5.1 を使用。設定キーの追加・変更はありません。[メタデータは間に合うように更新されます]({{< relref "/authn-bridge/federation.md#refreshing-it" >}}): `validUntil` の残りの半分を超えて予定されることはなく、有効なメタデータがなければ一分後に再試行して間隔を倍にしながら最大一時間まで延ばすので、期限近くの更新の失敗でプロバイダーが最大十二時間 IdP を失うことはなくなりました。アサーションのリプレイキーは SHA-256 として保存されます。長い IdP の `entityID` で PostgreSQL と MySQL が書き込みを拒否し、状態データベースが詰まっていました。時計は IdP と三分までずれてよく、一時間は 400 ページで拒否されます。[テストされているもの]({{< relref "/authn-bridge/federation.md#tested" >}}): XML 署名ラッピング XSW1 から XSW8、CVE-2017-11427、DOCTYPE、他のオーディエンス・受信者・リクエスト・宛先、五つのファザー。ログイン一回あたりの SHA-256 は、アロケーションが 0 から 2 回増えます (`BenchmarkReplayUse`: 0 回・183 B から 2 回・326 B)。実時間は未測定、負荷 53 から 75 |
 | v0.23.7 | セキュリティ: `saml { idps }` から外された IdP 由来のリフレッシュトークン、アプリケーションパスワード、SSH 証明書の要求は、`DisableIdP` と同じく、次に使われたときに `institution not configured` で拒否されます（[管理 API]({{< relref "/authn-bridge/admin.md" >}})）。IdP を戻せば再び動作します |
 | v0.23.8 | セキュリティ: [人は、その人自身として無効化されます]({{< relref "/authn-bridge/admin.md" >}})。ユーザー名 (無効化リスト、証明書のプリンシパル、subject-id) は go-authn/oidc v0.7.0 の `ASCIILower` で ASCII 文字だけを畳み込むので、`kate` とケルビン記号 (U+212A) を使った綴りは別の 2 人であり、無効化エントリも証明書のプリンシパルも 2 つになります |
+| v0.23.9 | セキュリティ。go-authn/saml v0.6.0 とともに: [`schac_home_organization` が発行される]({{< relref "/authn-bridge/tokens.md" >}}) のは、トークンと userinfo で、表明する IdP の `shibmd:Scope` の値のいずれか (完全一致、大文字小文字を区別) である場合のみです。ある機関の IdP が別の機関のものを述べられ、このクレームで絞り込むサービス (ゲートウェイの `accept`) がその機関として受け入れていました。**アップグレード:** メタデータがそのドメインの Scope を公開していない IdP では、クレームは発行されなくなります |
 
 ### authn-revokd {#authn-revokd}
 
@@ -219,6 +220,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | oidc v0.4.1 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) は `@` が 2 つ以上ある名前を拒否します（`ErrBadName`） |
 | oidc v0.7.0 | [`ASCIILower` と `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}}): 名前のための ASCII だけの唯一の畳み込み。`strings.ToLower` と `strings.EqualFold` は Unicode を畳み込み、ケルビン記号 U+212A を "k" と同一視するためです |
+| saml v0.6.0 | [`schacHomeOrganization` は IdP の `shibmd:Scope` の値に限られ]({{< relref "/libraries/saml.md" >}}) (完全一致、大文字小文字を区別)、そうでなければ破棄されます。`eduPersonPrincipalName`、`subject-id`、`pairwise-id`、スコープ付き所属がすでにそうだったのと同じです (SWITCH と SAFIRE の属性ページが依拠者に求めています)。**アップグレード:** メタデータがそのドメインの Scope を公開していない IdP の属性は、読まれなくなります |
 | scim v0.2.0 | [監査、ファジング、カオス、性能の実施]({{< relref "/libraries/scim.md#v020" >}}): `Server.ReadTimeout` (30 秒)、省略可能な `ConditionalDeleter`、`If-Match` なしの PATCH または PUT は競合に負けても 412 ではなく最大 32 回やり直し、何にも一致しないフィルターでの削除は成功し、パスなしの PATCH のキーはソート順に適用され、`BearerAuth` はスキームを大文字小文字を問わず受け入れ、`startIndex` と `count` はワード幅にかかわらず丸められます。10,000 ユーザーに対するリスト要求: 100 件のページは 789,417 回から 14,952 回、`userName eq` は 797,979 回から 90 回、全走査は 818,847 回から 361,098 回 (正確。時間は未測定、負荷 65) |
 | servercert v0.5.2 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | servercert v0.6.0 | [TLS の `KeyFile` と ACME の `EABHMACKeyFile` は拒否されます]({{< relref "/libraries/servercert.md" >}})。グループまたはその他のユーザーが読み書きできる場合で、`New` 時とリロードのたびに確認されます (読み取り可能な差し替え鍵は `OnError` に報告されて採用されず、現在の証明書が提供され続けます)。Windows では確認しません。**アップグレード:** 両方のファイルを `chmod 600` |
