@@ -46,7 +46,7 @@ start and by `check`, like an entry that fails the schema.
 
 | signal | what happens |
 |---|---|
-| `SIGTERM`, `SIGINT` | it prints `stopping`, closes the listeners **and every established connection**, stops the realm, closes the sources, and exits 0 once the server has really finished |
+| `SIGTERM`, `SIGINT` | it prints `stopping`, closes the listeners **and every established connection**, stops the realm, closes the sources, and exits 0 once the server has really finished; by then the LDAP listener and, with a realm, both Kerberos sockets are closed, so a restart can bind at once |
 | `SIGHUP` | it is caught and logged, and authnd **stays up**. It reads the TLS certificate again at once (v0.15.0); the configuration and the keytab are not reloaded |
 
 ```

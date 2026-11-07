@@ -48,7 +48,7 @@ gemeldet, wie bei einem Eintrag, der das Schema verletzt.
 
 | Signal | was geschieht |
 |---|---|
-| `SIGTERM`, `SIGINT` | es gibt `stopping` aus, schließt die Listener **und jede bestehende Verbindung**, hält den Realm an, schließt die Quellen und beendet sich mit 0, sobald der Server wirklich fertig ist |
+| `SIGTERM`, `SIGINT` | es gibt `stopping` aus, schließt die Listener **und jede bestehende Verbindung**, hält den Realm an, schließt die Quellen und beendet sich mit 0, sobald der Server wirklich fertig ist; dann sind der LDAP-Listener und, mit Realm, beide Kerberos-Sockets geschlossen, sodass ein Neustart sofort binden kann |
 | `SIGHUP` | es wird abgefangen und protokolliert, und authnd **bleibt in Betrieb**. Es liest das TLS-Zertifikat sofort erneut (v0.15.0); die Konfiguration und die Keytab werden nicht neu geladen |
 
 ```

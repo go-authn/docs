@@ -9,7 +9,7 @@ tags: [상태, 릴리스]
 
 | 프로그램 | 릴리스 | 모듈 |
 |---|---|---|
-| authnd | **v0.18.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ tags: [상태, 릴리스]
 빌드되지 않는 스키마를 위한 타입이 있는 `BuildError`, HCL2
 스키마, `ldapschema` 변환기를 갖춘 **v0.12.1**이고,
 directory는 선언된 오브젝트 클래스와 모든 SQL 쿼리의 기한을 갖춘 **v0.20.0**입니다. authnd
-v0.18.2는 ldap v0.12.1과 directory v0.20.0을 내장합니다.
+v0.18.3는 ldap v0.12.1과 directory v0.20.0을 내장합니다.
 위 프로그램 중 어느 것이든 새 마이너 버전이 나오면 새 문서 버전이 됩니다. 따라서
 독자가 `/docs/0.10/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
 페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/`, `/docs/0.8/`, `/docs/0.9/`에 남아 있습니다.
@@ -115,6 +115,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.18.0 | [업스트림에 대한 비밀번호 확인은 제한되는 데 그치지 않고 취소됩니다]({{< relref "/authnd/operations.md#outage" >}}): bind와 비밀번호 요소는 `Identity.VerifyContext`(go-authn/directory v0.19.0)를 사용하며, bind의 예산이 끝나면 업스트림 연결을 닫으므로 아무것도 계속 실행되지 않습니다. 응답하지 않는 업스트림에 대한 bind 400건에서 붙들린 goroutine: 1620개(v0.16.2), 257개(v0.17.0, 상한), 4개(v0.18.0). 취소할 수 없는 소스를 위해 소스마다 확인 64개라는 상한은 그대로입니다. 이름 접기는 go-authn/oidc v0.7.0에서 가져옵니다. 설정 변경은 없습니다 |
 | v0.18.1 | [시작 타임아웃이 열고 있던 SQL 소스를 밝힙니다]({{< relref "/authnd/operations.md#limits" >}}): `opening sql pgx (dsn_file …) did not answer`. 이전에는 모든 SQL 블록이 `opening sql`이었습니다. 드라이버와 DSN을 담은 파일을 밝히며, DSN은 결코 밝히지 않습니다. 테스트: 일회용 클러스터의 실제 PostgreSQL에 대한 카오스 테스트(새로 고치는 중 서버 중지, 쿼리 도중 연결 재설정, 결코 응답하지 않는 리스너, 장애 중의 Kerberos 렐름). 서버 바이너리가 없으면 건너뛰며, `AUTHND_REQUIRE_PG=1`이면 실패로 처리합니다. 설정 변경은 없습니다 |
 | v0.18.2 | [멈춘 SQL 읽기가 더 이상 새로 고침을 얼리지 않습니다]({{< relref "/authnd/people.md" >}}): 연결을 받아들이고 응답을 멈춘 데이터베이스가 있으면 새로 고침이 쿼리에서 막혔고, 이후의 모든 틱은 건너뛰어졌으며, `max_age`가 지나면 재시작할 때까지 모든 것이 `unavailable`로 응답했습니다. `users "sql"` 블록에 이제 `query_timeout`이 있으며 기본값은 `refresh`의 4분의 3입니다(go-authn/directory v0.20.0). **동작 변경:** 기한보다 느린 쿼리 하나는 실패합니다. 더 느린 쿼리에는 `query_timeout`을 설정하세요 |
+| v0.18.3 | [반환은 정지를 뜻합니다]({{< relref "/authnd/operations.md" >}}): 종료가 반환되는 시점에 LDAP 리스너와 Kerberos 소켓 둘은 닫혀 있고 서버는 끝나 있으므로 재시작이 즉시 바인드할 수 있습니다. 서버가 Kerberos 라이브러리에 닿기 전에 종료가 도착하면, 이전에는 렐름의 UDP와 TCP 소켓이 열린 채로 반환되었습니다. 설정 변경은 없습니다 |
 
 ### authn-bridge {#authn-bridge}
 

@@ -9,7 +9,7 @@ Diese Seiten sind die Dokumentationsversion **0.10** und beschreiben:
 
 | Programm | Release | Modul |
 |---|---|---|
-| authnd | **v0.18.2** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -19,7 +19,7 @@ ldap ist bei **v0.12.1**, mit DIT-Content-Rules, Name Forms und DIT-Structure-Ru
 gelesen, durchgesetzt und veröffentlicht werden, einem typisierten `BuildError` für ein Schema, das sich nicht aufbauen lässt,
 Schemas in HCL2 und dem Konverter `ldapschema`,
 und directory bei **v0.20.0**, mit deklarierten Objektklassen und einer Frist für jede SQL-Abfrage. authnd
-v0.18.2 bettet ldap v0.12.1 und directory v0.20.0 ein.
+v0.18.3 bettet ldap v0.12.1 und directory v0.20.0 ein.
 Eine neue Minor-Version eines der obigen Programme ist eine neue Dokumentationsversion,
 sodass die Seiten, die jemand unter `/docs/0.10/` findet, weiterhin beschreiben, was
 installiert wurde; die der früheren Releases bleiben unter `/docs/0.1/`,
@@ -119,6 +119,7 @@ Abhängigkeiten aktualisiert haben, sind weggelassen, außer denen, die diese Do
 | v0.18.0 | [Eine Passwortprüfung gegen einen Upstream wird abgebrochen, nicht nur begrenzt]({{< relref "/authnd/operations.md#outage" >}}): Der Bind und der Passwortfaktor verwenden `Identity.VerifyContext` (go-authn/directory v0.19.0), das die Upstream-Verbindung schließt, wenn das Budget des Binds endet, sodass nichts weiterläuft. 400 Binds gegen einen Upstream, der nie antwortet: 1620 Goroutinen gehalten (v0.16.2), 257 (v0.17.0, die Obergrenze), 4 (v0.18.0); die Obergrenze von 64 Prüfungen pro Quelle bleibt, für Quellen, deren Prüfung sich nicht abbrechen lässt. Die Namensfaltung kommt aus go-authn/oidc v0.7.0. Keine Konfigurationsänderung |
 | v0.18.1 | [Das Startup-Timeout nennt die SQL-Quelle, die es öffnete]({{< relref "/authnd/operations.md#limits" >}}): `opening sql pgx (dsn_file …) did not answer`, wo es für jeden SQL-Block nur `opening sql` hieß; der Treiber und die Datei mit dem DSN, nie der DSN. Tests: Chaos gegen ein echtes PostgreSQL auf einem Wegwerf-Cluster (Server während eines Refresh angehalten, Verbindung mitten in der Abfrage zurückgesetzt, ein Listener, der nie antwortet, der Kerberos-Realm bei einem Ausfall); ohne die Server-Binärdateien werden sie übersprungen, außer mit `AUTHND_REQUIRE_PG=1`. Keine Konfigurationsänderung |
 | v0.18.2 | [Ein hängendes SQL-Lesen friert den Refresh nicht mehr ein]({{< relref "/authnd/people.md" >}}): Eine Datenbank, die die Verbindung annahm und nicht mehr antwortete, ließ den Refresh in der Abfrage blockiert, jeder spätere Tick wurde übersprungen, und nach `max_age` antwortete alles `unavailable` bis zu einem Neustart. Ein `users "sql"`-Block hat jetzt `query_timeout`, standardmäßig drei Viertel von `refresh`, mit go-authn/directory v0.20.0. **Verhaltensänderung:** Eine einzelne Abfrage, die länger als die Frist dauert, schlägt fehl; setzen Sie `query_timeout` für eine langsamere |
+| v0.18.3 | [Zurückgekehrt heißt angehalten]({{< relref "/authnd/operations.md" >}}): Wenn ein Herunterfahren zurückkehrt, sind der LDAP-Listener und beide Kerberos-Sockets geschlossen und der Server ist fertig, sodass ein Neustart sofort binden kann. Ein Herunterfahren, das eintraf, bevor der Server die Kerberos-Bibliothek erreichte, kehrte früher mit noch offenen UDP- und TCP-Sockets des Realms zurück. Keine Konfigurationsänderung |
 
 ### authn-bridge {#authn-bridge}
 

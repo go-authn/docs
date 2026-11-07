@@ -47,7 +47,7 @@ que no cumple el esquema.
 
 | señal | qué ocurre |
 |---|---|
-| `SIGTERM`, `SIGINT` | imprime `stopping`, cierra las escuchas **y todas las conexiones establecidas**, detiene el reino, cierra los orígenes, y termina con 0 una vez que el servidor ha terminado de verdad |
+| `SIGTERM`, `SIGINT` | imprime `stopping`, cierra las escuchas **y todas las conexiones establecidas**, detiene el reino, cierra los orígenes, y termina con 0 una vez que el servidor ha terminado de verdad; para entonces la escucha LDAP y, con reino, los dos sockets Kerberos están cerrados, de modo que un reinicio puede enlazar de inmediato |
 | `SIGHUP` | se captura y se registra, y authnd **sigue en marcha**. Vuelve a leer el certificado TLS de inmediato (v0.15.0); la configuración y la keytab no se recargan |
 
 ```

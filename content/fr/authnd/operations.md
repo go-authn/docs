@@ -49,7 +49,7 @@ publiée, et c'est dit au démarrage et par `check`, comme pour une entrée qui
 
 | signal | ce qui se passe |
 |---|---|
-| `SIGTERM`, `SIGINT` | il affiche `stopping`, ferme les écouteurs **et chaque connexion établie**, arrête le royaume, ferme les sources, et sort avec 0 une fois que le serveur a réellement terminé |
+| `SIGTERM`, `SIGINT` | il affiche `stopping`, ferme les écouteurs **et chaque connexion établie**, arrête le royaume, ferme les sources, et sort avec 0 une fois que le serveur a réellement terminé ; à ce moment l'écouteur LDAP et, avec un royaume, les deux sockets Kerberos sont fermés, de sorte qu'un redémarrage peut se lier aussitôt |
 | `SIGHUP` | il est intercepté et journalisé, et authnd **reste en marche**. Il relit aussitôt le certificat TLS (v0.15.0) ; la configuration et le keytab ne sont pas rechargés |
 
 ```
