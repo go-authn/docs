@@ -5,9 +5,9 @@ Dieselbe Anmeldung kann außerdem einen SSH-Schlüssel zertifizieren lassen, ein
 X.509-Client-Zertifikat für NFS über TLS ausstellen lassen, ein Anwendungspasswort für SMB und S3
 setzen oder einen WireGuard-Schlüssel registrieren. Der Anbieter kann widerrufen, was er
 ausgestellt hat, und er veröffentlicht signierte Listen dessen, was er widerrufen hat; ein bereits
-ausgegebenes Zugriffstoken bleibt gültig, bis es abläuft. Reines Go,&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, ein Binary. Diese Seiten beschreiben v0.23.8.&lt;/p&gt;
+ausgegebenes Zugriffstoken bleibt gültig, bis es abläuft. Reines Go,&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, ein Binary. Diese Seiten beschreiben v0.23.9.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.8
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.9
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge keygen --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge metadata --config /etc/authn-bridge &amp;gt; sp.xml &lt;span class="c1"&gt;# register this with the federation&lt;/span&gt;
@@ -228,6 +228,12 @@ für eine Anfrage mit dem Scope &lt;code&gt;openid&lt;/code&gt; ausgestellt.&lt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
+&lt;p&gt;&lt;code&gt;schac_home_organization&lt;/code&gt; wird nur ausgestellt, wenn es einer der&lt;code&gt;shibmd:Scope&lt;/code&gt;-Werte des behauptenden IdP ist (exakt, Groß-/Kleinschreibung
+beachtet; go-authn/saml v0.6.0, bridge v0.23.9): Ein IdP einer Einrichtung kann
+nicht die einer anderen behaupten, was eine Relying Party, die nach diesem Claim
+filtert (das &lt;code&gt;accept&lt;/code&gt; des Gateways), für diese Einrichtung halten würde.&lt;strong&gt;Upgrade:&lt;/strong&gt; Bei einem IdP, dessen Metadaten keinen Scope für seine Domain
+veröffentlichen, wird der Claim nicht mehr ausgestellt; bitten Sie seine
+Föderation, ihn zu veröffentlichen.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-access-token"&gt;Das Access-Token&lt;span class="hx:absolute hx:-mt-20" id="the-access-token"&gt;&lt;/span&gt;
 &lt;a href="#the-access-token" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Für die Ressourcenserver in der &lt;code&gt;audience&lt;/code&gt; des Clients, wie RFC 9068 es beschreibt:signiert mit &lt;code&gt;signing_key_file&lt;/code&gt; (RS256) oder &lt;code&gt;access_token_key_file&lt;/code&gt; (ES256),&lt;code&gt;typ: at+jwt&lt;/code&gt;, gültig für &lt;code&gt;token_lifetime&lt;/code&gt; (standardmäßig eine Stunde). Es trägt, was ein
 Ressourcenserver braucht, um zu entscheiden, ohne jemanden zu fragen: &lt;code&gt;preferred_username&lt;/code&gt;,&lt;code&gt;groups&lt;/code&gt;, &lt;code&gt;idp&lt;/code&gt; (die Entity-ID des IdP, der gebürgt hat), &lt;code&gt;scope&lt;/code&gt;, &lt;code&gt;client_id&lt;/code&gt;

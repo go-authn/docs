@@ -6,9 +6,9 @@ issued for NFS over TLS, an application password set for SMB and S3, or a
 WireGuard key registered. The provider can revoke what it issued, and it
 publishes signed lists of what it has revoked; an access token already handed
 out stays valid until it expires. Pure Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, one
-binary. These pages describe v0.23.8.&lt;/p&gt;
+binary. These pages describe v0.23.9.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.8
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.9
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge keygen --key /var/lib/authn-bridge/oidc.key --salt /var/lib/authn-bridge/salt
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;authn-bridge metadata --config /etc/authn-bridge &amp;gt; sp.xml &lt;span class="c1"&gt;# register this with the federation&lt;/span&gt;
@@ -297,6 +297,7 @@ ignored, not honoured.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Identifiers.&lt;/strong&gt; A scoped value (&lt;code&gt;subject-id&lt;/code&gt;, &lt;code&gt;pairwise-id&lt;/code&gt;,&lt;code&gt;eduPersonPrincipalName&lt;/code&gt;, &lt;code&gt;eduPersonScopedAffiliation&lt;/code&gt;) outside the asserting
 IdP&amp;rsquo;s scopes is &lt;strong&gt;dropped&lt;/strong&gt;, and a value with more than one &lt;code&gt;@&lt;/code&gt; is not in any
 scope.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;schacHomeOrganization.&lt;/strong&gt; Released only when it is one of the asserting IdP&amp;rsquo;s scopes (exact, case-sensitive; go-authn/saml v0.6.0, bridge v0.23.9), like the identifiers above: an IdP of one institution cannot state another&amp;rsquo;s. An IdP whose metadata publishes no Scope for its domain no longer has it read.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Groups.&lt;/strong&gt; With more than one IdP allowed to log in, an &lt;code&gt;eduPersonEntitlement&lt;/code&gt;
 or &lt;code&gt;isMemberOf&lt;/code&gt; value is kept only if its namespace is one of that IdP&amp;rsquo;s scopes
 or under one:&lt;/p&gt;
@@ -472,7 +473,7 @@ service provider for an identity federation such as RENATER&amp;rsquo;s Fédéra
 Éducation-Recherche or eduGAIN: it reads the federation&amp;rsquo;s signed metadata,sends people to their own institution&amp;rsquo;s identity provider, and reads back what
 that provider says.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/saml@v0.5.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/saml@v0.6.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -748,6 +749,10 @@ caller as an error, for the server&amp;rsquo;s log:&lt;/p&gt;
 &lt;tr&gt;
 &lt;td&gt;a scoped identifier outside the IdP&amp;rsquo;s &lt;code&gt;Scopes&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;dropped: otherwise any IdP could assert &lt;code&gt;alice@another-university.example&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;a &lt;code&gt;schacHomeOrganization&lt;/code&gt; that is not one of the IdP&amp;rsquo;s &lt;code&gt;shibmd:Scope&lt;/code&gt; values (exact, case-sensitive; since v0.6.0)&lt;/td&gt;
+&lt;td&gt;dropped, as the SWITCH and SAFIRE attribute pages ask of a relying party: an IdP of one institution could state another&amp;rsquo;s, and a service that filters on it (the gateway&amp;rsquo;s &lt;code&gt;accept&lt;/code&gt;) would admit it as that institution. &lt;strong&gt;Upgrade:&lt;/strong&gt; an IdP whose metadata publishes no Scope for its domain no longer has its &lt;code&gt;schacHomeOrganization&lt;/code&gt; read; ask its federation to publish it&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;AES-CBC ciphertext no verified signature covers&lt;/td&gt;
