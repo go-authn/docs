@@ -9,7 +9,7 @@ tags: [ステータス, リリース]
 
 | プログラム | リリース | モジュール |
 |---|---|---|
-| authnd | **v0.18.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
@@ -18,8 +18,8 @@ tags: [ステータス, リリース]
 ldap は **v0.12.1** で、DIT コンテンツルール、ネームフォーム、DIT 構造ルールの読み込み、適用、公開、
 ビルドできないスキーマのための型付きの `BuildError`、
 HCL2 のスキーマと `ldapschema` コンバーターを備えています。
-directory は **v0.19.0** で、宣言されたオブジェクトクラスを備えています。
-authnd v0.18.0 は ldap v0.12.1 と directory v0.19.0 を組み込んでいます。
+directory は **v0.20.0** で、宣言されたオブジェクトクラスと、すべての SQL クエリの期限を備えています。
+authnd v0.18.2 は ldap v0.12.1 と directory v0.20.0 を組み込んでいます。
 上記のいずれかのプログラムのマイナーバージョンが新しくなると、新しいドキュメントバージョンになります。
 そのため、`/docs/0.10/` 以下のページは、読者がインストールしたものを説明し続け、
 以前のリリースのページは `/docs/0.1/`、`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/`、`/docs/0.6/`、`/docs/0.7/`、`/docs/0.8/`、`/docs/0.9/` 以下に残ります。
@@ -112,6 +112,8 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | v0.16.2 | ⛔ セキュリティ。[レルムはスナップショットを読みます]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}})。ソースは読みません: すべての AS-REQ と TGS-REQ (UDP 上の認証なしの AS-REQ を含む) が、各 SQL ソースの人々のクエリ全体と各 `ldap` 上流のサブツリー検索を実行していました。`max_age` は Kerberos にも適用されます (超えると `KDC_ERR_SVC_UNAVAILABLE`)。データベースから削除された人は、LDAP バインドと同様に `refresh` の一周期以内にチケットを得られなくなります。go-authn/kdc v0.6.0 を使用 |
 | v0.17.0 | ⛔ セキュリティ、2 回目の見直し。go-authn/ldap v0.12.1 を使用。**破壊的変更: [`max_age` にデフォルト値が付きました]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})**。10 分 (`refresh` の周期の 10 回分以上。`refresh = "0"` ではデフォルトなし) で、以前は無制限でした。ソースから削除された人が、そのソースが読めなくなった後も障害が続く限り bind できていました。これを過ぎると、検索、人の bind、パスワード変更は `unavailable` (52) を返します。`max_age = "0"` は受け付けられ、意図的な無制限を意味します。[トークンの名前は ASCII の大文字小文字の畳み込みのみで比較されます]({{< relref "/authnd/tokens.md#scoped-name" >}}): ケルビン記号 (U+212A) を使った `Kate@univ-a.example` は `kate` として bind されなくなりました。上流に対する[ソースごとの未完了のチェックは最大 64 件]({{< relref "/authnd/operations.md#outage" >}})で、65 件目は直ちに `unavailable` で応答されます (応答しない上流に対する 400 件の bind で保持される goroutine は 1620 から 257 になりました)。[アップグレードの注意]({{< relref "/authnd/_index.md" >}}) |
 | v0.18.0 | [上流に対するパスワードチェックは、制限されるだけでなく取り消される]({{< relref "/authnd/operations.md#outage" >}}): bind とパスワード要素は `Identity.VerifyContext` (go-authn/directory v0.19.0) を使い、bind の予算が尽きると上流への接続を閉じるので、何も動き続けません。応答しない上流に対する 400 件の bind で保持される goroutine: 1620 (v0.16.2)、257 (v0.17.0、上限)、4 (v0.18.0)。ソースごとに最大 64 件という上限は、取り消せないソースのために残ります。名前の畳み込みは go-authn/oidc v0.7.0 のものです。設定の変更はありません |
+| v0.18.1 | [起動のタイムアウトが、開こうとしていた SQL ソースを示す]({{< relref "/authnd/operations.md#limits" >}}): `opening sql pgx (dsn_file …) did not answer`。以前はどの SQL ブロックも `opening sql` でした。ドライバーと DSN を保持するファイルを示し、DSN は決して示しません。テスト: 使い捨てクラスター上の本物の PostgreSQL に対するカオステスト (リフレッシュ中のサーバー停止、クエリの途中での接続リセット、決して応答しないリスナー、障害中の Kerberos レルム)。サーバーのバイナリがなければスキップされ、`AUTHND_REQUIRE_PG=1` を指定した場合は失敗になります。設定の変更はありません |
+| v0.18.2 | [ハングした SQL の読み取りがリフレッシュを止めなくなった]({{< relref "/authnd/people.md" >}}): 接続を受け付けて応答しなくなったデータベースがあると、リフレッシュがクエリの中でブロックされ、以降のティックはすべてスキップされ、`max_age` を過ぎると再起動まですべてが `unavailable` を返しました。`users "sql"` ブロックに `query_timeout` が加わり、既定は `refresh` の 4 分の 3 です (go-authn/directory v0.20.0)。**動作の変更:** 期限より遅い単一のクエリは失敗します。より遅いクエリには `query_timeout` を設定してください |
 
 ### authn-bridge {#authn-bridge}
 
@@ -198,6 +200,7 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | directory v0.17.0 | [`ErrUnavailable`]({{< relref "/libraries/directory.md#unavailable" >}})、`AsUnavailable` と `TransportFailure` を伴う: ldapdir は busy (51)、unavailable (52)、other (80)、timeLimitExceeded (3)、切れたり拒否された接続、接続や TLS の失敗に対して、`Verify` とすべての読み取りでこれを返します。`ErrWrongPassword` と同時に真になることはなく、`invalidCredentials` (49) は後者のままです。`ldaptest.Server.FailBindsWith(code)`。メンバーの DN は走査ではなく一回の検索で人に対応づけられ、結果は同じです。10,000 人と 50 DN ずつの 2,000 グループでの `ReadGroups` は、50.6 MB・2.20 M オブジェクトの代わりに 13.1 MB・0.38 M を確保し、DN の検索は 0 回、更新全体は 9.72 M の代わりに 7.17 M 回 (正確。時間は未測定、負荷 65 から 105) |
 | directory v0.18.0 | [1 つのソースの 2 つのエントリが持つ同じ名前は `ErrAmbiguous`]({{< relref "/libraries/directory.md" >}}): ldapdir は uid を大文字小文字を区別せずに比較して両方の DN を示し、`Set.Identities` は 1 つのソースが 2 回挙げる名前を拒否します。ソースをまたぐ場合は最初のソースが名前を所有し続けます。`ldaptest.Person.UID`。このような重複のあるディレクトリは、直すまで読み込めません |
 | directory v0.19.0 | [パスワードチェックを取り消せます]({{< relref "/libraries/directory.md" >}}): `directory.WithContextVerifier` と `Identity.VerifyContext(ctx, password)`。`ldapdir` の identity では、context が終了すると上流への接続が閉じられ、応答は `ErrUnavailable` になります (go-ldap には context も既定のタイムアウトもなく、受け付けても応答しない上流への bind は永久に待っていました)。チェックの接続確立も context の期限で終了します。`Verify` と `WithVerifier` は変わりません。**アップグレード:** チェックに上限を設けるサーバーは `VerifyContext` を呼ぶべきです |
+| directory v0.20.0 | [すべてのクエリに期限がある]({{< relref "/libraries/directory.md" >}}): `sqldir.WithQueryTimeout(d)`。既定は `sqldir.DefaultQueryTimeout` (30 秒)、`0` は制限なし。行の読み取りも対象で、期限にドライバーが接続を切ります (以前は、応答しなくなったデータベースが読み取りを永久にブロックしました)。`hcldir.Block.QueryTimeout` (`sql` ブロックの `query_timeout`) がこれに届き、ネットワークなしで検査され、`ldap` ブロックでは拒否されます。`Source` インターフェースは変わりません。**アップグレード:** 30 秒を超えるクエリは失敗するようになります。より遅いクエリには `WithQueryTimeout` を指定してください |
 | kdc v0.4.3 | 依存関係のみ: 最小バージョンとして go-authn/directory v0.12.0 |
 | kdc v0.4.5 | セキュリティ監査、ファジング、カオスの実施 ([拒否するもの]({{< relref "/libraries/kdc.md" >}})): 別のレルム向けのリクエストは `KDC_ERR_WRONG_REALM`、読み取れないディレクトリは `KDC_ERR_SVC_UNAVAILABLE` で答えられ (以前は `KDC_ERR_C_PRINCIPAL_UNKNOWN`)、開始が `MaxSkew` 以内の未来にある TGT は受け入れられ、デコーダーのパニックはプロセスをクラッシュさせずリクエスト一つを破棄します (不正な AS-REQ または TGS-REQ 一つでクラッシュし得ました)。プリンシパル名はログで引用符で囲まれます。golang.org/x/net v0.62.0、go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT の KDC の [lookaside]({{< relref "/libraries/kdc.md" >}}): バイト単位で既に見たリクエストには以前の応答を返す (2 分間、合計 10 MiB 未満)。`KRB-ERROR` は保存しない。MIT が TGS で無効にしているオーセンティケータのリプレイキャッシュは意図的に持たない。テストは、読めないディレクトリが AS (正しいパスワードで) と TGS で `KDC_ERR_SVC_UNAVAILABLE` になることを固定する。リクエストあたりアロケーション 2 回増 |

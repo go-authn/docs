@@ -9,15 +9,15 @@ tags: [状态, 发布版本]
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.18.0** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.2** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
 ldap 为 **v0.12.1**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
-directory 为 **v0.19.0**，带有已声明的对象类。authnd
-v0.18.0 内嵌 ldap v0.12.1 和 directory v0.19.0。
+directory 为 **v0.20.0**，带有已声明的对象类，并为每个 SQL 查询设置截止时间。authnd
+v0.18.2 内嵌 ldap v0.12.1 和 directory v0.20.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
 因此读者在 `/docs/0.10/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
@@ -111,6 +111,8 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.16.2 | ⛔ 安全。[域读取快照]({{< relref "/authnd/kerberos.md#where-the-realm-reads-people" >}})，从不读取来源：每个 AS-REQ 和 TGS-REQ（包括 UDP 上未经认证的 AS-REQ）都会执行每个 SQL 来源的完整人员查询，以及对每个 `ldap` 上游的子树搜索。`max_age` 现在也适用于 Kerberos（超过后回答 `KDC_ERR_SVC_UNAVAILABLE`）。从数据库删除的人员会在一个 `refresh` 周期内不再获得票据，与 LDAP 绑定相同。使用 go-authn/kdc v0.6.0 |
 | v0.17.0 | ⛔ 安全，第二轮，使用 go-authn/ldap v0.12.1。**不兼容变更：[`max_age` 现在有默认值]({{< relref "/authnd/operations.md#it-reads-everything-once" >}})**，为十分钟（至少为十个 `refresh` 周期；`refresh = "0"` 时没有默认值），此前不受限制：从某个来源中移除的人，在该来源随后变得不可读时，只要故障持续就仍能 bind。超过之后，搜索、人员的 bind 和密码修改都会返回 `unavailable`（52）；`max_age = "0"` 被接受，表示有意不设限制。[令牌的名称仅按 ASCII 大小写折叠进行比较]({{< relref "/authnd/tokens.md#scoped-name" >}})：带开尔文符号（U+212A）的 `Kate@univ-a.example` 不再作为 `kate` bind。对上游，[每个来源最多可有 64 个未完成的检查]({{< relref "/authnd/operations.md#outage" >}})，第 65 个会立即返回 `unavailable`（针对永不应答的上游发起 400 次 bind，此前占用 1620 个 goroutine，现在为 257 个）。[升级说明]({{< relref "/authnd/_index.md" >}}) |
 | v0.18.0 | [对上游的密码检查会被取消，而不只是限时]({{< relref "/authnd/operations.md#outage" >}})：bind 和密码因素使用 `Identity.VerifyContext`（go-authn/directory v0.19.0），bind 的预算用完时会关闭到上游的连接，因此没有任何东西继续运行。针对永不应答的上游发起 400 次 bind，占用的 goroutine：1620 个（v0.16.2）、257 个（v0.17.0，上限）、4 个（v0.18.0）；每个来源最多 64 个检查的上限保留，用于无法取消的来源。名称折叠来自 go-authn/oidc v0.7.0。配置没有变化 |
+| v0.18.1 | [启动超时会指出它正在打开的 SQL 来源]({{< relref "/authnd/operations.md#limits" >}})：`opening sql pgx (dsn_file …) did not answer`，以前每个 SQL 块都只显示 `opening sql`；指出驱动程序和保存 DSN 的文件，绝不指出 DSN。测试：针对一个一次性集群上真实 PostgreSQL 的混沌测试（刷新期间停止服务器、查询中途重置连接、从不应答的监听器、故障期间的 Kerberos 域）；没有服务器二进制文件时会跳过，设置 `AUTHND_REQUIRE_PG=1` 则视为失败。配置没有变化 |
+| v0.18.2 | [挂起的 SQL 读取不再冻结刷新]({{< relref "/authnd/people.md" >}})：接受了连接却不再应答的数据库会让刷新阻塞在查询中，之后每个节拍都被跳过，超过 `max_age` 后一切都返回 `unavailable`，直到重启。`users "sql"` 块现在有 `query_timeout`，默认是 `refresh` 的四分之三（go-authn/directory v0.20.0）。**行为变化：**比截止时间更慢的单个查询会失败；对更慢的查询请设置 `query_timeout` |
 
 ### authn-bridge {#authn-bridge}
 
@@ -197,6 +199,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | directory v0.17.0 | [`ErrUnavailable`]({{< relref "/libraries/directory.md#unavailable" >}})，附带 `AsUnavailable` 和 `TransportFailure`：ldapdir 在 busy（51）、unavailable（52）、other（80）、timeLimitExceeded（3）、断开或被拒绝的连接以及连接或 TLS 失败时，对 `Verify` 和每次读取返回它；它绝不同时是 `ErrWrongPassword`，而 `invalidCredentials`（49）仍是后者。`ldaptest.Server.FailBindsWith(code)`。成员 DN 通过一次查找而不是一次扫描映射到人员，结果相同：在 10,000 人和 2,000 个各含 50 个 DN 的组上，`ReadGroups` 在 0.38 M 个对象中分配 13.1 MB，而不是 2.20 M 个对象 50.6 MB，DN 查找 0 次分配；整个刷新 7.17 M 次分配，而不是 9.72 M（精确；时间未测量，负载 65 到 105） |
 | directory v0.18.0 | [同一个来源中两个条目持有的同一个名称是 `ErrAmbiguous`]({{< relref "/libraries/directory.md" >}})：ldapdir 比较 uid 时不区分大小写并指出两个 DN，`Set.Identities` 拒绝一个来源列出两次的名称，跨来源时仍由第一个来源拥有该名称；`ldaptest.Person.UID`。含有这类重复的目录在修正之前无法加载 |
 | directory v0.19.0 | [密码检查可以取消]({{< relref "/libraries/directory.md" >}})：`directory.WithContextVerifier` 和 `Identity.VerifyContext(ctx, password)`；对于 `ldapdir` 身份，context 结束时会关闭到上游的连接，并返回 `ErrUnavailable`（go-ldap 没有 context，也没有默认超时，对接受连接却从不应答的上游发起 bind 会永远等待）。检查的拨号也在 context 的截止时间结束。`Verify` 和 `WithVerifier` 不变。**升级：**限制检查时间的服务器应调用 `VerifyContext` |
+| directory v0.20.0 | [每个查询都有截止时间]({{< relref "/libraries/directory.md" >}})：`sqldir.WithQueryTimeout(d)`，默认为 `sqldir.DefaultQueryTimeout`（30 秒），`0` 表示不限；它涵盖读取各行，到截止时间驱动程序会断开连接（以前，不再应答的数据库会让读取永远阻塞）。`hcldir.Block.QueryTimeout`（`sql` 块中的 `query_timeout`）可以到达它，在没有网络的情况下检查，在 `ldap` 块中被拒绝。`Source` 接口不变。**升级：**超过 30 秒的查询现在会失败；对更慢的查询请指定 `WithQueryTimeout` |
 | kdc v0.4.3 | 仅依赖项：以 go-authn/directory v0.12.0 为最低版本 |
 | kdc v0.4.5 | 安全审计、模糊测试和混沌测试（[它拒绝什么]({{< relref "/libraries/kdc.md" >}})）：针对另一个域的请求回答 `KDC_ERR_WRONG_REALM`，无法读取的目录回答 `KDC_ERR_SVC_UNAVAILABLE`（以前是 `KDC_ERR_C_PRINCIPAL_UNKNOWN`），开始时间在 `MaxSkew` 之内的未来的 TGT 会被接受，解码器 panic 只丢弃一个请求，而不是使进程崩溃（一个格式错误的 AS-REQ 或 TGS-REQ 就能使其崩溃）；主体名称在日志中加引号。golang.org/x/net v0.62.0，go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT KDC 的 [lookaside]({{< relref "/libraries/kdc.md" >}})：逐字节已见过的请求会得到之前的应答（两分钟内，总计 10 MiB 以下）；`KRB-ERROR` 从不保存；有意不设 MIT 在 TGS 上关闭的认证符重放缓存。测试固定了无法读取的目录在 AS（密码正确）和 TGS 上都回答 `KDC_ERR_SVC_UNAVAILABLE`。每个请求多两次分配 |

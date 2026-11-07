@@ -113,7 +113,7 @@ Disconnection und wird geschlossen, nie in eine Warteschlange gestellt
 `timeLimitExceeded` (3) beantwortet, **auch wenn ihr Handler blockiert ist und die
 Frist ignoriert**: das späte Ergebnis wird verworfen. Antwortet eine Quelle beim
 Start nicht, verweigert authnd den Start nach `startup_timeout`, mit einem Fehler,
-der die Phase und die Quelle nennt. Eine negative Zahl oder eine Dauer, die sich
+der die Phase und die Quelle nennt. Für einen `users "sql"`-Block lautet die Quelle `opening sql pgx (dsn_file /etc/authnd/pg.dsn)`: der Treiber und die Datei mit dem DSN, nie der DSN selbst (ab v0.18.1; vorher hieß jeder SQL-Block nur `sql`). Eine negative Zahl oder eine Dauer, die sich
 nicht lesen lässt, wird beim Start und von `check` abgelehnt. Mit
 `max_connections = 0` und `operation_timeout = "0"` gilt das Verhalten von v0.14.
 

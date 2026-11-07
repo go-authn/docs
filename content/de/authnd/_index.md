@@ -11,13 +11,13 @@ anderen Verzeichnis. Was sie authentifizieren will, spricht LDAP.** authnd ist d
 davor: Es führt Binds und Suchen über die Quellen von
 [go-authn/directory]({{< relref "/libraries/_index.md" >}}) aus, sodass das, was eine
 Datenbank enthält, von allem gelesen werden kann, das ein Verzeichnis zu fragen weiß. Reines Go,
-`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.18.0, dessen Einträge den
+`CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.18.2, dessen Einträge den
 Standardschemata folgen und das Schema bestehen, das es unter `cn=Subschema` bereitstellt
 und das ein Standort um sein eigenes erweitert
 ([SUPANN, eduPerson]({{< relref "/authnd/schemas.md" >}})) und mit
 [DIT-Content-Rules, Name Forms und Structure Rules]({{< relref "/authnd/schemas.md#rules" >}})
 auch um Formvorgaben, mit go-authn/ldap v0.12.1 und
-go-authn/directory v0.19.0 darunter; was geprüft ist und
+go-authn/directory v0.20.0 darunter; was geprüft ist und
 was nicht, steht auf der Seite [Stand]({{< relref "/status.md" >}}).
 
 {{< callout type="warning" >}}

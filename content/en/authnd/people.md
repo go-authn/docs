@@ -130,6 +130,8 @@ schema, or [`schema_files` and a `schema` block]({{< relref "/authnd/schemas.md"
 and not one authnd derives itself. A person missing a MUST of a declared class
 is published without it, and `check` says so.
 
+**`query_timeout`**, optional, bounds each query of the block, rows included: a duration such as `"20s"`, or `"0"` for no limit. By default it is three quarters of `refresh` (45 s with the default 60 s), so that a database that accepts the connection and stops answering ends the read before the refresh gives up, and the next refresh runs; without it, one hung read froze the refresh until a restart (v0.18.2). A single query slower than the deadline fails: raise `query_timeout` for one that legitimately takes longer. With `refresh = "0"` the library's default of 30 s applies.
+
 `driver` accepts `postgres` (or `postgresql`, `pgx`), `mysql` (or `mariadb`)
 and `sqlite` (or `sqlite3`). The database is reached at startup, before
 anything listens, so one that is not answering stops the server where

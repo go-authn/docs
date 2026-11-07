@@ -97,7 +97,7 @@ stopping
 
 超出上限的连接会在断开通知（notice of disconnection）中收到 `busy`（51）并被关闭，绝不排队（RFC 4511 4.4.1）。
 在 `operation_timeout` 时仍在运行的操作会收到 `timeLimitExceeded`（3），**即使它的处理程序被阻塞且忽略期限**：
-迟到的结果会被丢弃。启动时某个来源不响应，authnd 会在 `startup_timeout` 之后拒绝启动，错误会指出阶段和来源。
+迟到的结果会被丢弃。启动时某个来源不响应，authnd 会在 `startup_timeout` 之后拒绝启动，错误会指出阶段和来源。对于 `users "sql"` 块，来源显示为 `opening sql pgx (dsn_file /etc/authnd/pg.dsn)`：驱动程序和保存 DSN 的文件，绝不显示 DSN 本身（自 v0.18.1 起；以前每个 SQL 块都只是 `sql`）。
 负数或无法解析的时长会在启动时和 `check` 中被拒绝。设置 `max_connections = 0` 和 `operation_timeout = "0"`
 可恢复 v0.14 的行为。
 

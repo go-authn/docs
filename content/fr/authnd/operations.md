@@ -113,7 +113,7 @@ déconnexion et est fermée, jamais mise en file (RFC 4511 4.4.1). Une opératio
 encore en cours à `operation_timeout` reçoit `timeLimitExceeded` (3), **même si
 son gestionnaire est bloqué et ignore l'échéance** : le résultat tardif est
 abandonné. Une source qui ne répond pas au démarrage fait refuser le démarrage
-après `startup_timeout`, avec une erreur qui nomme l'étape et la source. Un
+après `startup_timeout`, avec une erreur qui nomme l'étape et la source. Pour un bloc `users "sql"`, la source se lit `opening sql pgx (dsn_file /etc/authnd/pg.dsn)` : le pilote et le fichier qui contient le DSN, jamais le DSN lui-même (depuis la v0.18.1 ; auparavant, tout bloc SQL s'appelait simplement `sql`). Un
 nombre négatif, ou une durée qui ne se lit pas, est refusé au démarrage et par
 `check`. Mettez `max_connections = 0` et `operation_timeout = "0"` pour retrouver
 le comportement de la v0.14.
