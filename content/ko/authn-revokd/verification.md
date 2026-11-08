@@ -24,7 +24,7 @@ KRL 자체는 `sshd`가 구문 분석하는 방식대로 구문 분석되어야 
 다른 키로 서명된 목록은 거부됩니다.
 
 ```
-$ authn-revokd -config revokd-other.hcl -once
+$ authn-revokd --config revokd-other.hcl --once
 bridge-ssh: revocation: the KRL's signature does not verify by SHA256:6iM7YPhdfXxQEj/PUf7CYbqBuSiVTVMx2VADj63cAg4: public key does not match
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/other.krl
@@ -80,16 +80,23 @@ KRL은 `expires@go-authn.github.io` 확장에 **언제 만료되는지도 밝혀
 보유한 목록은 `state_dir`에 소스당 파일 하나로 보관되며, 목록과 서명이 함께 들어
 있고, 디렉터리를 동기화한 단일 이름 변경으로 기록됩니다. 시작할 때 각 사본을
 **다시 검증**하며(만료되었든 아니든 다음에 올 것의 순서를 정합니다), 더 이상 검증되지
-않는 사본은 다음 것의 순서를 정하는 데조차 신뢰하지 않고 로그에 그렇게 기록합니다.
+않는 사본(손상되었거나, 다른 CA 키로 기록된 것)은 목록으로는 절대 쓰이지 않으며 로그에
+그렇게 기록합니다. v0.6.8부터 그래도 한 가지는 유지합니다. 신뢰하지 않고 읽은 버전과
+발급 시각이 **순서의 하한선**으로 남습니다. 이전에는 그런 사본이 사본이 없는 것으로
+계산되었으므로, 재생된 오래된 목록이 서명되어 있고 만료되지 않았다면 받아들여졌고 더
+새 목록이 폐기한 것을 되돌렸습니다. 이제 하한선보다 낮은 목록은 그 뒤를 잇는, 검증되는
+목록을 보유할 때까지 롤백으로 거부됩니다. CA가 교체되어 그 목록의 버전이 더 낮은 값에서
+다시 시작하면, 로그가 지울 파일을 알려 줍니다. `state_dir`의 `<source>.state`입니다.
+그것을 지우면 구성된 키로 검증된 다음 목록이 새 위치를 정합니다.
 
 여기서는 재시작 후, 소스가 이전 bridge 프로세스가 19초 전에 제공한, 여전히 서명되어
 있고 만료되지 않은 목록을 가리킵니다.
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
-$ authn-revokd -config revokd-old.hcl -once
+$ authn-revokd --config revokd-old.hcl --once
 bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-26T11:26:49Z, the copy held at 2026-10-26T11:27:10Z
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
@@ -107,9 +114,9 @@ $ ssh-keygen -Q -l -f out/sshd.krl
 두 번의 쓰기 사이의 충돌이 검증되지 않는 쌍을 남겨 롤백 방지 장치까지 함께 잃게 할 수
 없습니다. 목록과 서명은 하나의 파일입니다.
 
-## `-once`가 보고하는 것 {#what--once-reports}
+## `--once`가 보고하는 것 {#what--once-reports}
 
-`-once`는 소스에 현재 목록이 없거나, **마지막 가져오기가 실패했거나**, 출력을 기록할
+`--once`는 소스에 현재 목록이 없거나, **마지막 가져오기가 실패했거나**, 출력을 기록할
 수 없으면 `1`로 종료하며, 마지막 줄이 앞의 두 가지 중 어느 쪽인지 알려 줍니다.
 
 | 마지막 줄 | 소스 | 그 출력 |
@@ -120,7 +127,7 @@ $ ssh-keygen -Q -l -f out/sshd.krl
 여기서는 보유한 두 목록이 아직 현재인 동안 발급자가 멈춰 있습니다.
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z), bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)

@@ -6,7 +6,7 @@ description: "authn-revokd의 revokd.hcl: 목록이 어디서 오는지, 무엇�
 tags: [authn-revokd, 구성]
 ---
 
-기본값은 `/etc/authn-revokd/revokd.hcl` 파일 하나입니다(`-config`로 다른 파일을
+기본값은 `/etc/authn-revokd/revokd.hcl` 파일 하나입니다(`--config`로 다른 파일을
 지정). 시작할 때 한 번 읽습니다.
 
 ```hcl
@@ -45,7 +45,7 @@ output "tls" {                               # nginx: ssl_crl /var/lib/authn-rev
 |---|---|---|
 | `state_dir` | | 필수, 절대 경로. 없으면 `0700`으로 생성 |
 | `refresh` | `1m` | 모든 소스를 가져오는 주기, 1초 이상. 각 대기는 위아래로 10분의 1씩 달라져서 서버 군이 같은 박자로 움직이지 않음 |
-| `listen` | | `host:port`: 검증된 목록을 제공, 즉 미러. `-once`에서는 무시됨 |
+| `listen` | | `host:port`: 검증된 목록을 제공, 즉 미러. `--once`에서는 무시됨 |
 
 **`source "<name>"`**: 목록 하나. 이름은 문자, 숫자, `.`, `_`, `-`이며 점으로 시작하지
 않고 최대 64자입니다. 상태 디렉터리의 파일 이름이자 미러의 경로가 됩니다.
@@ -162,7 +162,7 @@ authn-revokd: v/revoke-keys-crl.hcl: source "bridge-x509": revoke_keys is for a 
 없는 구성도 마찬가지입니다.
 
 ```
-$ authn-revokd -config nowhere.hcl -once
+$ authn-revokd --config nowhere.hcl --once
 authn-revokd: nowhere.hcl: no such file or directory
 ```
 

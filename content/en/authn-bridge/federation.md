@@ -179,7 +179,12 @@ having verified that the person reads it.
 **What the request asks of the IdP.** `prompt=none` becomes `IsPassive`, and
 an IdP with no session answers `login_required`. `prompt=login` and `max_age=0`
 become `ForceAuthn`; for any other `max_age`, a person whose IdP authenticated
-them longer ago than that is sent back with `ForceAuthn`. `acr_values` becomes
+them longer ago than that is sent back with `ForceAuthn`. An `AuthnInstant`
+later than now plus the three minutes of clock skew allowed to an IdP is not
+fresh either (v0.23.10): its elapsed time is unknown, as OIDC Core 3.1.2.1 has
+it, and the person is sent back with `ForceAuthn` like one authenticated too long
+ago; before, it came out negative and counted as fresh under any `max_age`.
+Within the skew nothing changes. `acr_values` becomes
 `RequestedAuthnContext`, and an IdP that answers with another context is
 refused: a client that asked for a second factor is never told it got one
 when it did not.

@@ -83,15 +83,17 @@ $ authnd --version
 authnd version v0.13.0
 $ authn-bridge --version
 authn-bridge version v0.23.4
-$ authn-revokd -version
-authn-revokd v0.6.6
+$ authn-revokd --version
+authn-revokd v0.7.0
 ```
 
 Release-Binaries werden mit `-ldflags="-w"` gelinkt (authnd ab v0.12.2, authn-bridge ab v0.23.4, authn-revokd ab v0.6.6, sshcert ab v0.1.8), nicht mit `-s -w`: die Debug-Informationen entfallen, die Symboltabelle bleibt erhalten. Ohne Symboltabelle weiß `govulncheck -mode binary` nicht, welche Funktionen vorhanden sind, fällt auf die Modulebene zurück und meldet Schwachstellen in Code, der nicht gelinkt ist; mit ihr ist die Prüfung genau. Die Binaries sind 7 bis 10 % größer.
 
-authnd und authn-bridge nehmen `--version`; authn-revokd nimmt `-version`, die
-Standard-Flag-Syntax von Go. Ab v0.6.1 gibt es auf der Standardausgabe aus, wie die
-beiden anderen, sodass `v=$(authn-revokd -version)` es erfasst.
+authnd, authn-bridge und, ab v0.7.0, authn-revokd nehmen `--version` (`-v` bei
+authn-revokd). Vor v0.7.0 nahm authn-revokd `-version`, die Standard-Flag-Syntax von Go,
+die v0.7.0 weiterhin akzeptiert, mit einer Deprecation-Zeile auf der Standardfehlerausgabe.
+Ab v0.6.1 gibt es auf der Standardausgabe aus, wie die beiden anderen, sodass
+`v=$(authn-revokd --version)` es erfasst.
 
 ## Welche Releases Binaries haben {#which-releases-have-binaries}
 

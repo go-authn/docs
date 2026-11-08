@@ -6,7 +6,7 @@ description: "authn-revokd 的 revokd.hcl：列表从哪里来、必须由谁签
 tags: [authn-revokd, 配置]
 ---
 
-一个文件，默认为 `/etc/authn-revokd/revokd.hcl`（`-config` 可指定另一个）。
+一个文件，默认为 `/etc/authn-revokd/revokd.hcl`（`--config` 可指定另一个）。
 它在启动时读取一次。
 
 ```hcl
@@ -45,7 +45,7 @@ output "tls" {                               # nginx: ssl_crl /var/lib/authn-rev
 |---|---|---|
 | `state_dir` | | 必需，绝对路径；缺失时以 `0700` 创建 |
 | `refresh` | `1m` | 每个来源被获取的频率，一秒或更长；每次等待会在前后十分之一的范围内浮动，使整批机器不会保持同步 |
-| `listen` | | `host:port`：提供已验证的列表，即镜像；与 `-once` 并用时被忽略 |
+| `listen` | | `host:port`：提供已验证的列表，即镜像；与 `--once` 并用时被忽略 |
 
 **`source "<name>"`**：一个列表。名称由字母、数字、`.`、`_` 和
 `-` 组成，不以点开头，至多 64 个字符：它命名状态目录中的一个文件
@@ -159,7 +159,7 @@ authn-revokd: v/revoke-keys-crl.hcl: source "bridge-x509": revoke_keys is for a 
 不存在的配置也是如此：
 
 ```
-$ authn-revokd -config nowhere.hcl -once
+$ authn-revokd --config nowhere.hcl --once
 authn-revokd: nowhere.hcl: no such file or directory
 ```
 

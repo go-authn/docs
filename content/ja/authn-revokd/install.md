@@ -15,7 +15,7 @@ tags: [authn-revokd, インストール, systemd]
 | `/usr/local/bin/authn-revokd` | バイナリ | root、`0755` |
 | `/usr/lib/sysusers.d/authn-revokd.conf` | `authn-revokd` システムアカウント | root、`0644` |
 | `/etc/systemd/system/authn-revokd.service` | デーモン | root、`0644` |
-| `/etc/authn-revokd/revokd.hcl` | 設定。`-config` の既定値 | root、`0644` |
+| `/etc/authn-revokd/revokd.hcl` | 設定。`--config` の既定値 | root、`0644` |
 | `/etc/authn-revokd/ca/` | リストが署名されていなければならない CA の鍵と証明書 | root、`0755`。中のファイルは `0644` |
 | `/var/lib/authn-revokd/` | `StateDirectory=`、唯一の書き込み可能な場所 | authn-revokd、`0755` |
 | `/var/lib/authn-revokd/state/` | `state_dir`: 検証済みのコピー | authn-revokd、`0700` |
@@ -32,12 +32,14 @@ chmod されるので、独自のユーザーで動く `sshd` と TLS サーバ�
 リリースには、Linux、macOS、Windows の amd64 と arm64 向けの `authn-revokd-<os>-<arch>` が、
 `SHA256SUMS` とビルド来歴とともに含まれます
 ([ダウンロードの検証]({{< relref "/security/verifying-releases.md" >}}))。あるいは
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.7` です。
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0` です。
 
 アカウントとユニットはリリースタグの `packaging/` ディレクトリにあり、バイナリと同じバージョン
-です。そのタグのチェックアウトから、または v0.6.7 の場合は
-<https://github.com/go-authn/revocation/tree/v0.6.7/packaging> から、そのディレクトリを
-バイナリの隣にコピーしてください。
+です。そのタグのチェックアウトから、または v0.7.0 の場合は
+<https://github.com/go-authn/revocation/tree/v0.7.0/packaging> から、そのディレクトリを
+バイナリの隣にコピーしてください。v0.7.0 から、ユニットは `--config` と `--once` を使います。
+シングルダッシュの綴りでデプロイされたユニットは、後のリリースがそれらを削除するまで、
+起動のたびに標準エラー出力へ非推奨の行を出しながら動き続けます。
 
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
@@ -57,7 +59,7 @@ root の `0700` になり、独自のユーザーで動く TLS サーバーが C
 ```ini
 [Service]
 Type=exec
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 ```
@@ -123,10 +125,10 @@ TLS サーバーは設定を読み込むときに CRL を読むので、ファ�
 はできません。代わりに systemd にファイルを root として監視させてください。出力に対する
 `PathChanged=` を持つパスユニットが、`systemctl reload nginx` を実行する `oneshot` を起動します。
 
-## または: タイマーでの `-once` {#or--once-on-a-timer}
+## または: タイマーでの `--once` {#or-once-on-a-timer}
 
-`authn-revokd -once` は一度同期して終了し、リストが現在のものでない、または取得できなかった場合は
-`1` で終了します ([`-once` が報告するもの]({{< relref "/authn-revokd/verification.md#what--once-reports" >}}))。
+`authn-revokd --once` は一度同期して終了し、リストが現在のものでない、または取得できなかった場合は
+`1` で終了します ([`--once` が報告するもの]({{< relref "/authn-revokd/verification.md#what--once-reports" >}}))。
 出力はどちらの場合も書き込まれ、リストが失効すると sshd 向けにフェイルクローズされます。
 
 ```ini
@@ -136,7 +138,7 @@ Conflicts=authn-revokd.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl --once
 TimeoutStartSec=5min
 ```
 
@@ -169,7 +171,7 @@ systemctl enable --now authn-revokd-once.timer
 **両方を有効にしないでください。** ユニットは競合するので、一方を起動するともう一方が停止します。
 デーモンのほうが優れた選択です。失効したリストを次の `refresh` でフェイルクローズしますが、
 タイマーは次のティックを待ちます。そしてミラーとして提供できるのはデーモンだけです。`listen` は
-`-once` では無視されます。発火を止めたタイマーは、停止したデーモンと同じなので、
+`--once` では無視されます。発火を止めたタイマーは、停止したデーモンと同じなので、
 `systemctl status authn-revokd-once` を監視してください。
 
 ## アップグレードと、元に戻すこと {#upgrading-and-going-back}

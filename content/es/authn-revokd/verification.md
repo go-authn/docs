@@ -25,7 +25,7 @@ sección de firma propia de OpenSSH, que OpenSSH nunca verifica.
 Una lista firmada con cualquier otra clave se rechaza:
 
 ```
-$ authn-revokd -config revokd-other.hcl -once
+$ authn-revokd --config revokd-other.hcl --once
 bridge-ssh: revocation: the KRL's signature does not verify by SHA256:6iM7YPhdfXxQEj/PUf7CYbqBuSiVTVMx2VADj63cAg4: public key does not match
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/other.krl
@@ -88,17 +88,26 @@ revocación de lo que la más reciente revocó.
 La lista guardada se conserva en `state_dir`, un archivo por origen que contiene la
 lista y su firma juntas, escrito con un único renombrado y con el directorio
 sincronizado. Al arrancar, cada copia **se verifica de nuevo** (caducada o no, ordena
-lo que viene después), y una copia que ya no se verifica no merece confianza, ni
-siquiera para ordenar la siguiente, y así se indica en el registro.
+lo que viene después), y una copia que ya no se verifica (dañada, o escrita con otra
+clave de la CA) no se usa nunca como lista, y así se indica en el registro. Desde
+la v0.6.8 conserva todavía una cosa: su versión y su hora de emisión, leídas sin
+fiarse de ellas, quedan como **suelo de ordenación**. Antes, una copia así contaba
+como ninguna copia, de modo que una lista más antigua reproducida, firmada y sin
+caducar, se aceptaba y deshacía la revocación de lo que la más reciente había
+revocado. Ahora una lista por debajo del suelo se rechaza como vuelta atrás hasta
+que se tiene una que se verifica y la sigue. Si la CA se sustituyó y sus listas
+vuelven a empezar con una versión más baja, el registro nombra el archivo que hay
+que eliminar, `<source>.state` en `state_dir`: elimínelo, y la siguiente lista
+verificada con la clave configurada fija una nueva posición.
 
 Aquí, tras un reinicio, se hace apuntar un origen a una lista que un proceso bridge
 anterior sirvió diecinueve segundos antes, todavía firmada y todavía sin caducar:
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
-$ authn-revokd -config revokd-old.hcl -once
+$ authn-revokd --config revokd-old.hcl --once
 bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-26T11:26:49Z, the copy held at 2026-10-26T11:27:10Z
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
@@ -117,9 +126,9 @@ Un fallo entre dos escrituras no puede dejar un par que no se verifique, lo que 
 llevaría consigo la protección contra la vuelta atrás: la lista y su firma son un solo
 archivo.
 
-## Lo que informa `-once` {#what--once-reports}
+## Lo que informa `--once` {#what--once-reports}
 
-`-once` termina con `1` cuando un origen no tiene lista vigente, cuando su **última
+`--once` termina con `1` cuando un origen no tiene lista vigente, cuando su **última
 descarga falló**, o cuando no se pudo escribir una salida, y su última línea dice cuál
 de los dos primeros casos es:
 
@@ -131,7 +140,7 @@ de los dos primeros casos es:
 Aquí el emisor está detenido mientras las dos listas guardadas siguen vigentes:
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z), bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)

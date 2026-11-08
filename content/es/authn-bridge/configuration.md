@@ -144,6 +144,27 @@ SSF y sus eventos no entregados: se escriben de inmediato en una sola tabla,
 se guarda como su SHA-256, nunca tal cual. Sin el bloque viven en memoria, y un
 reinicio cierra la sesión de todo el mundo.
 
+**Lo que hace el proveedor cuando la base de datos rechaza una fila** (v0.23.11 y
+v0.23.12). Las eliminaciones siempre fluyen: una familia de tokens de
+actualización o un token de acceso en cola para eliminar, una revocación, llega a
+la base de datos aunque una escritura puesta en cola antes que ella sea rechazada
+(antes, una fila rechazada detenía todos los vaciados posteriores, y el proveedor
+seguía sin estar listo hasta que un reinicio recargaba lo que debía haberse
+revocado). Una fila que la base de datos rechaza definitivamente (una restricción,
+un tipo que no coincide, un valor demasiado grande: clase SQLSTATE 22 o 23 de
+PostgreSQL, MySQL 1048, 1062, 1264, 1265, 1292, 1366, 1406, 1452, SQLite
+constraint, mismatch, too big) se registra una vez y **se abandona**: sigue
+funcionando en memoria pero no sobrevive a un reinicio. Una fila rechazada con un
+error que ningún clasificador conoce se reintenta, y se abandona del mismo modo
+tras cinco vaciados a lo largo de al menos treinta segundos en los que la base de
+datos aceptó otra cosa (una escritura, una eliminación o una sonda sin efecto)
+mientras esa fila seguía fallando. Un vaciado en el que nada tiene éxito, por estar
+la base de datos ausente, no cuenta contra ninguna fila, de modo que **una caída no
+hace abandonar nada**. Cada fila abandonada se cuenta en
+`bridge_state_rows_rejected_total{kind}`, siendo `kind` la operación (`write`); un
+aumento de ese contador le corresponde leerlo al operador, ya que lo que se
+abandonó no estará allí tras un reinicio.
+
 Un inicio de sesión en curso no está en ella. Viaja en su propia cookie, sellada con
 AES-256-GCM bajo una clave derivada de la sal de sujeto, así que el navegador no
 puede ni leerla ni modificarla.

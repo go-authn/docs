@@ -12,24 +12,41 @@ aktuelle Liste. authn-revokd schließt beide Lücken für die Listen, die
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}}) veröffentlicht: Es
 ruft jede Liste ab, behält sie nur, wenn sie die Prüfung besteht, schreibt sie dorthin, wo `sshd` oder ein
 TLS-Server sie liest, und schreibt, wenn eine Liste verfällt, eine, die **die CA selbst
-widerruft**. Reines Go, `CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.6.7.
+widerruft**. Reines Go, `CGO_ENABLED=0`, ein Binary. Diese Seiten beschreiben v0.7.0.
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6
-go: github.com/go-authn/revocation@v0.6.6 requires go >= 1.27.3; switching to go1.27.3
-$ authn-revokd -version
-authn-revokd v0.6.6
-$ authn-revokd -help
-Usage of authn-revokd:
-  -config string
-    	the configuration file (default "/etc/authn-revokd/revokd.hcl")
-  -once
-    	sync once and exit: 1 when a list is not current, or could not be fetched
-  -version
-    	print the version and exit
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0
+go: downloading github.com/go-authn/revocation v0.7.0
+$ authn-revokd --version
+authn-revokd v0.7.0
+$ authn-revokd --help
+authn-revokd fetches revocation lists, keeps only those that verify, writes
+them where sshd and TLS servers read them (failing closed for sshd when a list
+lapses) and, with listen, serves the verified copies as a mirror. SIGHUP syncs now.
+
+The single-dash spellings -config, -once, -version and -help of earlier
+releases are still accepted, with a deprecation warning on stderr.
+
+Usage:
+  authn-revokd [flags]
+
+Flags:
+  -c, --config string   the configuration file (default "/etc/authn-revokd/revokd.hcl")
+  -h, --help            help for authn-revokd
+  -o, --once            sync once and exit: 1 when a list is not current, or could not be fetched
+  -v, --version         version for authn-revokd
 ```
 
-`-help` endet mit 0; vor v0.6.2 endete es mit 2.
+Der Befehl ist seit v0.7.0 cobra: POSIX-Flags `--config`/`-c`, `--once`/`-o`,
+`--version`/`-v`, `--help`/`-h` und `--config=PATH`. `--help` gibt auf der
+Standardausgabe aus und endet mit 0 (vor v0.6.2 endete das alte `-help` mit 2). Die
+Einzelstrich-Schreibweisen früherer Releases (`-config`, `-once`, `-version`,
+`-help`, mit `=` oder einem getrennten Wert) werden weiterhin akzeptiert, mit einer
+Deprecation-Zeile pro Flag auf der Standardfehlerausgabe, und in einem späteren
+Release entfernt; die Exit-Status bleiben unverändert (0; 1 bei einem Fehler oder
+einer nicht aktuellen Liste unter `--once`; 2 bei einem Nutzungsfehler oder einer
+unlesbaren Konfiguration), sodass eine mit `-once` eingerichtete Unit keine
+Änderung braucht.
 
 Vor v0.6.0 hieß der Befehl `revokd` und las standardmäßig `/etc/revokd.hcl`.
 Nichts liest diese Datei mehr; wenn sie vorhanden ist und der neue Standard nicht,
@@ -40,7 +57,7 @@ nennt die Fehlermeldung beide Pfade.
 Gegen eine Test-authn-bridge auf Loopback, mit einer KRL-Quelle und einer CRL-Quelle:
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
@@ -73,7 +90,7 @@ gefälschte oder veraltete Liste übernommen wird.
 
 | | |
 |---|---|
-| [Die Installation]({{< relref "/authn-revokd/install.md" >}}) | der Daemon oder `-once` mit einem Timer; sshd und nginx anbinden |
+| [Die Installation]({{< relref "/authn-revokd/install.md" >}}) | der Daemon oder `--once` mit einem Timer; sshd und nginx anbinden |
 | [Die Konfiguration]({{< relref "/authn-revokd/configuration.md" >}}) | Quellen, Ausgaben, der Spiegel und was abgelehnt wird |
 | [Wie eine Liste geprüft wird]({{< relref "/authn-revokd/verification.md" >}}) | Signatur, Daten und nie älter als die gehaltene Liste, auch über Neustarts hinweg |
 | [Wenn eine Liste verfällt]({{< relref "/authn-revokd/lapse.md" >}}) | die KRL, die die CA selbst widerruft |

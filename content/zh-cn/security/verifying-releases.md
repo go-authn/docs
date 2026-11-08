@@ -79,15 +79,17 @@ $ authnd --version
 authnd version v0.13.0
 $ authn-bridge --version
 authn-bridge version v0.23.4
-$ authn-revokd -version
-authn-revokd v0.6.6
+$ authn-revokd --version
+authn-revokd v0.7.0
 ```
 
 发布的二进制文件使用 `-ldflags="-w"` 链接（authnd 自 v0.12.2，authn-bridge 自 v0.23.4，authn-revokd 自 v0.6.6，sshcert 自 v0.1.8），而不是 `-s -w`：调试信息被省略，符号表被保留。没有符号表时，`govulncheck -mode binary` 无法判断存在哪些函数，会退回到模块级别，并报告未链接代码中的漏洞；保留之后，扫描是精确的。二进制文件会大 7 % 到 10 %。
 
-authnd 和 authn-bridge 接受 `--version`；authn-revokd 接受 `-version`，即 Go 的
-标准 flag 语法。从 v0.6.1 起，它像另外两个一样输出到标准输出，
-因此 `v=$(authn-revokd -version)` 可以捕获它。
+authnd、authn-bridge 以及自 v0.7.0 起的 authn-revokd 接受 `--version`（authn-revokd
+还接受 `-v`）。在 v0.7.0 之前，authn-revokd 接受 `-version`，即 Go 的标准 flag
+语法，v0.7.0 仍然接受它，并在标准错误上输出一行弃用提示。
+从 v0.6.1 起，它像另外两个一样输出到标准输出，因此
+`v=$(authn-revokd --version)` 可以捕获它。
 
 ## 哪些版本带有二进制文件 {#which-releases-have-binaries}
 

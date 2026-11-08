@@ -13,7 +13,7 @@ tags: [库, scim, 账户开通]
 编写的 `Backend`。纯 Go，`CGO_ENABLED=0`，仅依赖标准库。
 
 ```sh
-go get github.com/go-authn/scim@v0.2.0
+go get github.com/go-authn/scim@v0.2.1
 ```
 
 ## 示例 {#example}
@@ -89,6 +89,23 @@ id 的 get、`PUT`、`PATCH` 和 `DELETE`，带 `ETag` 和 `If-Match`）、`/Use
 `FuzzPatchPath`、`FuzzPatchThenDecode`、`FuzzFilter` 和 `FuzzServer` 各运行 45 秒，16 个工作线程，130 万到 240 万次执行，
 没有发现失败。
 
+## v0.2.1 改变了什么 {#v021}
+
+- **`If-None-Match` 遵循 RFC 7232 §3.2。** 带实体标签列表的 `GET`（多个头部行也一样）
+  在其中任何一个按弱比较匹配时答复 304（`"x"` 匹配 `W/"x"`）；`*` 对任何已存在的资源答复 304；
+  不是有效 `If-None-Match` 的头部会被忽略。304 带有 `ETag`（RFC 7232 §4.1），此前没有。
+  由 `FuzzIfNoneMatch` 做模糊测试。
+- **`Memory` 保有 `userName` 的索引。** 唯一性过去通过扫描每个用户来检查，所以加载 N 个用户是
+  O(N^2) 次 `EqualFold` 调用；现在是 O(N)，10,000 个用户的 1 亿次调用不复存在。键是每个 rune 的
+  `unicode.SimpleFold` 轨道最小值，这恰好就是 `strings.EqualFold` 的等价关系（已对照旧的扫描做过测试，
+  并由 `FuzzFoldKey` 做模糊测试）；创建、替换（PUT 和 PATCH）和删除都会保持它的一致。
+  `BenchmarkMemoryLoad10k`（创建并替换 10,000 个用户）每次运行花费 119,030 次分配，此前为 98,959：
+  索引是每次创建和每次重命名一个键。
+- **索引无法回答其过滤器的列表，在只保存该过滤器所指名的顶层属性的映射上匹配**，
+  完整的对象只为该页构建。`BenchmarkListFilterCo10k`（10,000 个用户）：每个请求此前为 361,095 次分配，
+  现在为 162,695 次，即每个用户 36.1 次降到 16.3 次。等价性已针对 50 个过滤器和随机过滤器做过测试
+  （`FuzzFilterOnSelectedMap`）。
+
 ## 它对照什么检查 {#what-it-is-checked-against}
 
 **身份提供方实际发送的内容**，使用它们的载荷进行测试：Entra
@@ -99,4 +116,4 @@ ID 的 `"Replace"`、其字符串形式的布尔值（`"active": "False"`）、�
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim)（撰写时 pkg.go.dev 尚未收录 v0.2.1 的页面，所以链接不带版本）

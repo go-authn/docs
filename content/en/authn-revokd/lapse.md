@@ -29,7 +29,7 @@ copy held lapses within a minute instead of an hour. The CRL source has no
 `max_age`, and its copy is still current:
 
 ```
-$ authn-revokd -config revokd-maxage.hcl -once
+$ authn-revokd --config revokd-maxage.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
@@ -46,7 +46,7 @@ ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 
 `bridge-ssh` is `not current`, and its output is failed closed; `bridge-x509`
 is only `not fetched`, and its CRL is left as it was
-([what `-once` reports]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
+([what `--once` reports]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
 `SHA256:AnDb/...` is the bridge's SSH CA. A certificate it signed is now
 revoked as far as anything reading the file is concerned. The commands above
 ran in the `revokd` directory, where `out/` is; this one runs beside it, in the

@@ -13,7 +13,7 @@ schickt Personen zum Identitätsanbieter ihrer eigenen Einrichtung und liest zur
 dieser Anbieter sagt.
 
 ```sh
-go get github.com/go-authn/saml@v0.6.0
+go get github.com/go-authn/saml@v0.6.1
 ```
 
 Er ist die Hälfte von [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}),
@@ -268,6 +268,35 @@ Aufruf erzeugt; nichts davon gehört in die Produktion.
   entfernt wurde, wird vor der Entschlüsselung abgelehnt.
 
 Die Untergrenze der Coverage-Lane liegt bei 92 %.
+
+## Gefuzzt, und was feindliche Eingaben kosten {#fuzzing}
+
+Seit v0.6.1 stehen vier Fuzz-Ziele neben dem Parser, und das Korpus ist unter
+`testdata/fuzz` eingecheckt und wird von jedem `go test` abgespielt:
+
+- `FuzzAccept`: Eine vom Fuzzer umgeordnete Antwort wird abgelehnt oder sagt genau, was
+  der IdP signiert hat. Gesät mit einer signierten Assertion im Klartext, einer signierten
+  Response um eine verschlüsselte herum und den Signature-Wrapping-Layouts XSW1 bis XSW8.
+- `FuzzParseMetadata`.
+- `FuzzDecrypt`: GCM und CBC, mit dem EncryptedKey innerhalb des KeyInfo von
+  EncryptedData und daneben. CBC wird nie unauthentifiziert geöffnet, und was GCM öffnet,
+  ist das, was versiegelt wurde.
+- `FuzzLimits`: `limits.check` und `parse` sind sich einig, was abgelehnt wird, und `check`
+  allokiert proportional zu seiner Eingabe.
+
+Die Seeds stammen aus `samltest`. Ein eingepflanzter Fehler, das entfernte CBC-Gate, färbt
+`FuzzDecrypt` allein durch seine Seeds rot. Je 130 s auf 16 Workern gelaufen, auf einer
+Maschine bei einer Last über 8 (Ausführungen, nicht Zeiten, sind das Maß), schafften sie
+1.502.094 (`FuzzAccept`), 2.120.800 (`FuzzParseMetadata`), 5.146.715
+(`FuzzDecrypt`) und 1.119.772 (`FuzzLimits`) Ausführungen und fanden keinen Absturz, keinen
+Hänger und keine Verletzung einer Eigenschaft. Die CI lässt jedes Ziel bei jedem Push und
+Pull Request 30 s laufen und bewahrt die Eingabe, die eines gebrochen hat, als Artefakt auf.
+
+`TestHostileInputsAreRefusedCheaply` prüft, dass feindliche Eingaben **abgelehnt** und nicht
+geparst werden: unter einem weichen Speicherlimit werden eine Entity-Expansion-Bombe
+(Billion Laughs), eine externe Entity, 80.000 und 1.048.576 Verschachtelungsebenen, 60.000
+Geschwisterelemente, ein `CipherValue` von 150 KiB, eine Antwort über der Größengrenze und
+eine nur aus Leerraum bestehende jeweils abgelehnt, mit `TotalAlloc` auf 4 bis 8 MiB begrenzt.
 
 ## Referenz {#reference}
 

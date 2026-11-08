@@ -14,7 +14,7 @@ au-dessus d'un `Backend` que vous écrivez. Go pur, `CGO_ENABLED=0`, bibliothèq
 standard uniquement.
 
 ```sh
-go get github.com/go-authn/scim@v0.2.0
+go get github.com/go-authn/scim@v0.2.1
 ```
 
 ## Exemple {#example}
@@ -107,6 +107,28 @@ sont pas un résultat. `FuzzPatchPath`, `FuzzPatchThenDecode`, `FuzzFilter` et
 `FuzzServer` ont tourné 45 s chacun avec 16 workers, de 1,3 à 2,4 millions
 d'exécutions, sans trouver d'échec.
 
+## Ce que la v0.2.1 a changé {#v021}
+
+- **`If-None-Match` suit la RFC 7232 §3.2.** Un `GET` avec une liste d'entity-tags
+  (plusieurs lignes d'en-tête aussi) répond 304 quand l'un d'eux correspond par comparaison
+  faible (`"x"` correspond à `W/"x"`) ; `*` répond 304 pour toute ressource existante ;
+  un en-tête qui n'est pas un `If-None-Match` valide est ignoré. Le 304 porte
+  l'`ETag` (RFC 7232 §4.1), ce qu'il ne faisait pas. Fuzzé par `FuzzIfNoneMatch`.
+- **`Memory` tient un index de `userName`.** L'unicité était vérifiée en balayant
+  chaque utilisateur, si bien que charger N utilisateurs coûtait O(N^2) appels à `EqualFold` ; c'est
+  désormais O(N), et les 100 millions d'appels pour 10 000 utilisateurs ont disparu. La clé est
+  le minimum de l'orbite `unicode.SimpleFold` de chaque rune, qui est exactement l'équivalence de
+  `strings.EqualFold` (testée contre l'ancien balayage, et fuzzée par
+  `FuzzFoldKey`) ; la création, le remplacement (PUT et PATCH) et la suppression le maintiennent cohérent.
+  `BenchmarkMemoryLoad10k` (créer et remplacer 10 000 utilisateurs) coûte 119 030
+  allocations par exécution, là où il en coûtait 98 959 : l'index est une clé par création et
+  par renommage.
+- **Une liste avec un filtre qu'aucun index ne sait répondre est évaluée sur une map ne contenant que
+  les attributs de premier niveau que le filtre nomme**, et des objets entiers ne sont construits
+  que pour la page. `BenchmarkListFilterCo10k` (10 000 utilisateurs) : 361 095 allocations par
+  requête avant, 162 695 maintenant, soit 36,1 à 16,3 par utilisateur. L'équivalence est
+  testée pour 50 filtres et des filtres aléatoires (`FuzzFilterOnSelectedMap`).
+
 ## Contre quoi il est vérifié {#what-it-is-checked-against}
 
 **Ce que les fournisseurs d'identité envoient réellement**, testé avec leurs
@@ -119,4 +141,4 @@ couverture est de 92 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim) (la page de v0.2.1 n'était pas encore indexée par pkg.go.dev à l'écriture, c'est pourquoi le lien ne nomme pas de version)

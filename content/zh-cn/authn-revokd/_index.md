@@ -12,24 +12,39 @@ tags: [authn-revokd, 吊销, krl, crl]
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}})发布的列表：它
 获取每个列表，只有验证通过才保留，将其写到 `sshd` 或 TLS
 服务器读取的位置，并且在列表过期时写出一个**吊销 CA
-本身**的列表。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述 v0.6.7。
+本身**的列表。纯 Go，`CGO_ENABLED=0`，单个二进制文件。这些页面描述 v0.7.0。
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6
-go: github.com/go-authn/revocation@v0.6.6 requires go >= 1.27.3; switching to go1.27.3
-$ authn-revokd -version
-authn-revokd v0.6.6
-$ authn-revokd -help
-Usage of authn-revokd:
-  -config string
-    	the configuration file (default "/etc/authn-revokd/revokd.hcl")
-  -once
-    	sync once and exit: 1 when a list is not current, or could not be fetched
-  -version
-    	print the version and exit
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0
+go: downloading github.com/go-authn/revocation v0.7.0
+$ authn-revokd --version
+authn-revokd v0.7.0
+$ authn-revokd --help
+authn-revokd fetches revocation lists, keeps only those that verify, writes
+them where sshd and TLS servers read them (failing closed for sshd when a list
+lapses) and, with listen, serves the verified copies as a mirror. SIGHUP syncs now.
+
+The single-dash spellings -config, -once, -version and -help of earlier
+releases are still accepted, with a deprecation warning on stderr.
+
+Usage:
+  authn-revokd [flags]
+
+Flags:
+  -c, --config string   the configuration file (default "/etc/authn-revokd/revokd.hcl")
+  -h, --help            help for authn-revokd
+  -o, --once            sync once and exit: 1 when a list is not current, or could not be fetched
+  -v, --version         version for authn-revokd
 ```
 
-`-help` 以 0 退出；在 v0.6.2 之前它以 2 退出。
+自 v0.7.0 起该命令使用 cobra：POSIX 标志 `--config`/`-c`、`--once`/`-o`、
+`--version`/`-v`、`--help`/`-h`，以及 `--config=PATH`。`--help` 输出到
+标准输出并以 0 退出（在 v0.6.2 之前，旧的 `-help` 以 2 退出）。
+早期发布版本的单横线写法（`-config`、`-once`、`-version`、
+`-help`，带 `=` 或用单独的值）仍然被接受，每个标志在标准错误上输出一行
+弃用提示，并将在以后的发布版本中移除；退出状态不变（0；失败或
+在 `--once` 下列表不是当前有效的为 1；用法错误或配置无法读取为 2），
+因此以 `-once` 部署的单元无需任何更改。
 
 在 v0.6.0 之前，该命令名为 `revokd`，默认读取 `/etc/revokd.hcl`。
 现在没有任何程序读取该文件；当它存在而新的默认文件不存在时，
@@ -40,7 +55,7 @@ Usage of authn-revokd:
 针对环回地址上的测试 authn-bridge，带有一个 KRL 来源和一个 CRL 来源：
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
@@ -73,7 +88,7 @@ CRL 通过其 CA 的签名。每个列表都声明它何时不再
 
 | | |
 |---|---|
-| [安装]({{< relref "/authn-revokd/install.md" >}}) | 守护进程，或定时器上的 `-once`；接入 sshd 和 nginx |
+| [安装]({{< relref "/authn-revokd/install.md" >}}) | 守护进程，或定时器上的 `--once`；接入 sshd 和 nginx |
 | [配置]({{< relref "/authn-revokd/configuration.md" >}}) | 来源、输出、镜像，以及什么会被拒绝 |
 | [列表如何验证]({{< relref "/authn-revokd/verification.md" >}}) | 签名、日期，以及绝不早于所持列表（重启之后也一样） |
 | [列表过期时]({{< relref "/authn-revokd/lapse.md" >}}) | 吊销 CA 本身的 KRL |

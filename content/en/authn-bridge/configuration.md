@@ -143,6 +143,24 @@ events: written through to one table, `bridge_state` (created if missing), and
 read at start. A refresh token is kept as its SHA-256, never as itself.
 Without the block they live in memory, and a restart logs everybody out.
 
+**What the provider does when the database refuses a row** (v0.23.11 and
+v0.23.12). Deletes always flow: a refresh family or an access token queued for
+deletion, a revocation, reaches the database even when a write queued before it
+is refused (before, one refused row stopped every later flush, and the provider
+stayed not ready until a restart reloaded what should have been revoked). A row
+the database refuses for good (a constraint, a type mismatch, a value too big:
+PostgreSQL SQLSTATE class 22 or 23, MySQL 1048, 1062, 1264, 1265, 1292, 1366,
+1406, 1452, SQLite constraint, mismatch, too big) is logged once and **given
+up**: it keeps working in memory but does not survive a restart. A row refused
+with an error no classifier knows is retried, and given up the same way after
+five flushes over at least thirty seconds in which the database took something
+else (a write, a delete or a no-op probe) while that row kept failing. A flush in
+which nothing succeeds, the database being away, counts against no row, so
+**an outage gives nothing up**. Each row given up is counted in
+`bridge_state_rows_rejected_total{kind}`, `kind` being the operation (`write`);
+a rise of it is an operator's to read, since what was given up will not be there
+after a restart.
+
 A login in progress is not in it. It travels in its own cookie, sealed with
 AES-256-GCM under a key derived from the subject salt, so the browser can
 neither read nor change it.

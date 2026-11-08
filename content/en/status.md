@@ -5,25 +5,26 @@ description: "Which releases these pages describe, what each release added, and 
 tags: [status, releases]
 ---
 
-These pages are documentation version **0.10**, and describe:
+These pages are documentation version **0.11**, and describe:
 
 | program | release | module |
 |---|---|---|
 | authnd | **v0.18.6** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
+| authn-bridge | **v0.23.12** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.7.0** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
 ldap is **v0.12.3**, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed `BuildError` for a schema that does
 not build, schemas in HCL2 and the `ldapschema` converter, and
-directory **v0.20.0**, with declared object classes and a deadline on every SQL query. authnd
+directory **v0.21.0**, with declared object classes, a deadline on every SQL query
+and a `GroupNames` that reports the sources that failed. authnd
 v0.18.6 embeds ldap v0.12.3 and directory v0.20.0.
 A new minor version of any program above is a new documentation version, so
-the pages a reader finds under `/docs/0.10/` keep describing what they
+the pages a reader finds under `/docs/0.11/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
-`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/`, `/docs/0.8/` and `/docs/0.9/`.
+`/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/`, `/docs/0.8/`, `/docs/0.9/` and `/docs/0.10/`.
 
 {{< callout type="warning" >}}
 **Upgrading authnd from v0.16.x: `max_age` defaults to ten minutes**
@@ -163,6 +164,9 @@ dependencies are left out, except those this documentation version describes.
 | v0.23.7 | security: a refresh token, an application password or an SSH certificate request from an IdP removed from `saml { idps }` is refused at its next use, with `institution not configured`, as `DisableIdP` does ([admin API]({{< relref "/authn-bridge/admin.md" >}})); put the IdP back and they work again |
 | v0.23.8 | security: [a person is disabled as who they are]({{< relref "/authn-bridge/admin.md" >}}): usernames (the disable list, certificate principals, subject-id) fold ASCII letters only, with go-authn/oidc v0.7.0's `ASCIILower`, so `kate` and its Kelvin-sign spelling (U+212A) are two people, with two disable entries and two certificate principals |
 | v0.23.9 | security, with go-authn/saml v0.6.0: [`schac_home_organization` is released]({{< relref "/authn-bridge/tokens.md" >}}) in tokens and userinfo only when it is one of the asserting IdP's `shibmd:Scope` values (exact, case-sensitive). An IdP of one institution could state another's, and a service that filters on the claim (the gateway's `accept`) would admit it as that institution. **Upgrade:** an IdP whose metadata publishes no Scope for its domain no longer has the claim released |
+| v0.23.10 | security: [an `AuthnInstant` later than now plus the three minutes of clock skew]({{< relref "/authn-bridge/federation.md" >}}) counted as a fresh authentication under `max_age` (its elapsed time came out negative). It is now an unknown elapsed time (OIDC Core 3.1.2.1), and the person is sent back to the IdP with `ForceAuthn`, as for a stale one. Within the skew nothing changes |
+| v0.23.11 | [one state row the database refuses for good no longer stops every later flush]({{< relref "/authn-bridge/configuration.md#state-what-a-restart-must-not-forget" >}}), revocations included: deletes always flow, and a row refused for good (PostgreSQL SQLSTATE class 22 and 23, MySQL 1048, 1062, 1264, 1265, 1292, 1366, 1406, 1452, SQLite constraint, mismatch, too big) is logged once, counted in the new `bridge_state_rows_rejected_total{kind}` and given up: it works in memory and does not survive a restart |
+| v0.23.12 | a state row refused with an error no classifier knows is given up after five flushes over at least thirty seconds in which the database took something else while the row kept failing; a flush where nothing succeeds, the database being away, counts against no row, so **an outage gives nothing up**. The behaviour no longer depends on the list of driver error classes |
 
 ### authn-revokd
 
@@ -181,6 +185,8 @@ dependencies are left out, except those this documentation version describes.
 | v0.6.5 | built with Go 1.27.3, for GO-2026-6809 (`crypto/x509`: `Certificate.Verify` did not reject known compromised intermediate certificates); the `go` directive is 1.27.3; no change in behaviour |
 | v0.6.6 | release binaries are linked with `-w` instead of `-s -w`, so the symbol table is kept for a precise `govulncheck -mode binary`; no change in behaviour |
 | v0.6.7 | an audit, fuzzing, chaos and performance pass ([what one sync does]({{< relref "/authn-revokd/configuration.md#sync" >}})). A list that lapses is refused when it lapses, not at the next refresh; sources are fetched in parallel (16 at most, two minutes each); `on_change` is killed after a minute and retried; an output file changed behind the agent's back is rewritten at the next sync; a `file://` source must be a regular file; an error shows a URL without its password, query and fragment; a CRL number outside `0..2^159` is refused; the mirror has read, write and idle timeouts; stale temporary files are removed at start. A 100,000-entry CRL polled again: 300,138 allocations and 96,956,946 B per poll, now 37 and 4,776,864 B (exact; times not measured, load 53 to 65). govulncheck still lists GO-2026-5932 (`golang.org/x/crypto/openpgp`), which has no fixed version and is not called |
+| v0.6.8 | security: [an unverifiable state copy keeps its place as an ordering floor]({{< relref "/authn-revokd/verification.md#across-restarts-too" >}}). A state file that was damaged, or written under another CA key, was treated as no copy held, so a replayed older list, signed and unexpired, was accepted and un-revoked what the newer one revoked. Its version and issue time are now kept, unverified, as a floor: a list below it is refused as a rollback until one that verifies and follows it is held, and its content is never used. The log names the file to remove, `<source>.state`, if the CA was replaced and its lists restart at a lower version |
+| v0.7.0 | **the command is cobra**, as the fleet's others: `--config`/`-c`, `--once`/`-o`, `--version`/`-v`, `--help`/`-h`, `--config=PATH`; `--help` prints on standard output. [The single-dash spellings of earlier releases]({{< relref "/authn-revokd/_index.md" >}}) (`-config`, `-once`, `-version`, `-help`) are still accepted, with one deprecation line per flag on standard error, and will be removed in a later release. Exit statuses unchanged. The units of `packaging/` and the install guide use the new spelling; deployed units need no change. **Upgrade:** move your units and scripts to `--config` and `--once` before the old ones go |
 
 ### sshcert
 
@@ -210,6 +216,8 @@ library's page says what earlier ones changed.
 | directory v0.18.0 | [a name held by two entries of one source is `ErrAmbiguous`]({{< relref "/libraries/directory.md" >}}): ldapdir compares the uid without case and names both DNs, `Set.Identities` refuses a name that one source lists twice, and across sources the first still owns it; `ldaptest.Person.UID`. A directory with such duplicates fails to load until one is fixed |
 | directory v0.19.0 | [a password check can be cancelled]({{< relref "/libraries/directory.md" >}}): `directory.WithContextVerifier` and `Identity.VerifyContext(ctx, password)`; for an `ldapdir` identity the upstream connection is closed when the context ends and the answer is `ErrUnavailable` (go-ldap has no context and no default timeout, so a bind to an upstream that accepts and never answers waited for ever). The dial of a check ends at the context's deadline too. `Verify` and `WithVerifier` are unchanged. **Upgrade:** a server that bounds a check should call `VerifyContext` |
 | directory v0.20.0 | [every query has a deadline]({{< relref "/libraries/directory.md" >}}): `sqldir.WithQueryTimeout(d)`, by default `sqldir.DefaultQueryTimeout` (30 s), `0` for none; it covers reading the rows, and the driver drops the connection at the deadline (before, a database that stopped answering blocked the read for ever). `hcldir.Block.QueryTimeout` (`query_timeout` in a `sql` block) reaches it, checked without a network and refused on an `ldap` block. The `Source` interface does not change. **Upgrade:** a query slower than 30 s now fails; say `WithQueryTimeout` for a slower one |
+| directory v0.21.0 | [`Set.GroupNames` reports the sources that failed]({{< relref "/libraries/directory.md" >}}): it returns the names of the sources that answered and an `errors.Join` of `"<describe>: <err>"` for each one that failed (`errors.Is` still matches `ErrUnavailable`); the error used to be dropped whenever another source answered. **Behaviour change:** a caller that tested only `err != nil` now sees an error where it saw a partial list, and the names come back with it. Use the names and log the error |
+| fido v0.6.4 | [`PINToken` with permissions]({{< relref "/libraries/fido.md" >}}) sends `permissions` under key 0x09 and `rpId` under 0x0A, as CTAP 2.1 (§6.5.5) numbers them; it used 0x07 and 0x08, and a YubiKey 5 answered `CTAP2_ERR_MISSING_PARAMETER` (0x14) |
 | kdc v0.4.3 | dependencies only: go-authn/directory v0.12.0 as its minimum |
 | kdc v0.4.5 | a security audit, fuzzing and chaos pass ([what it refuses]({{< relref "/libraries/kdc.md" >}})): a request for another realm is answered `KDC_ERR_WRONG_REALM`, an unreadable directory `KDC_ERR_SVC_UNAVAILABLE` (it was `KDC_ERR_C_PRINCIPAL_UNKNOWN`), a TGT whose start is within `MaxSkew` in the future is accepted, and a decoder panic drops one request instead of crashing the process (a single malformed AS-REQ or TGS-REQ could crash it); principal names are quoted in the log. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | kdc v0.5.0 | [the lookaside]({{< relref "/libraries/kdc.md" >}}) of MIT's KDC: a request seen before, byte for byte, gets its previous reply, for two minutes and under 10 MiB in all; a `KRB-ERROR` is never stored; deliberately no authenticator replay cache, which MIT turns off at the TGS. Tests pin an unreadable directory as `KDC_ERR_SVC_UNAVAILABLE` at the AS, with a correct password, and at the TGS. Two allocations more per request |
@@ -235,7 +243,9 @@ library's page says what earlier ones changed.
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) refuses a name with more than one `@` (`ErrBadName`) |
 | oidc v0.7.0 | [`ASCIILower` and `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}}): the one ASCII-only fold for names, since `strings.ToLower` and `strings.EqualFold` fold Unicode and equate the Kelvin sign U+212A with "k" |
 | saml v0.6.0 | [`schacHomeOrganization` is held to the IdP's `shibmd:Scope` values]({{< relref "/libraries/saml.md" >}}) (exact, case-sensitive) and dropped otherwise, as `eduPersonPrincipalName`, `subject-id`, `pairwise-id` and scoped affiliation already were (the SWITCH and SAFIRE attribute pages ask it of a relying party). **Upgrade:** an IdP whose metadata publishes no Scope for its domain no longer has the attribute read |
+| saml v0.6.1 | [four fuzz targets and hostile-input tests]({{< relref "/libraries/saml.md#fuzzing" >}}): `FuzzAccept`, `FuzzParseMetadata`, `FuzzDecrypt` and `FuzzLimits`, with the corpus committed and replayed by `go test`, and 1.1 to 5.1 million executions of each without a crash, hang or property violation; a billion-laughs bomb, an external entity, 80,000 and 1,048,576 levels of nesting, 60,000 siblings, an oversize `CipherValue` and response are refused with 4 to 8 MiB allocated at most. A `fuzz` job runs each target for 30 s in CI. No change in behaviour |
 | scim v0.2.0 | [an audit, fuzzing, chaos and performance pass]({{< relref "/libraries/scim.md#v020" >}}): `Server.ReadTimeout` (30 s), the optional `ConditionalDeleter`, a PATCH or PUT without `If-Match` redone up to 32 times on a lost race instead of answered 412, removal through a filter that matches nothing succeeds, keys of a PATCH without a path applied in sorted order, `BearerAuth` accepts the scheme in any case, `startIndex` and `count` clamped on every word size. A list request over 10,000 users: a page of 100 from 789,417 to 14,952 allocations, `userName eq` from 797,979 to 90, a full scan from 818,847 to 361,098 (exact; times not measured, load 65) |
+| scim v0.2.1 | [`If-None-Match` per RFC 7232 §3.2]({{< relref "/libraries/scim.md#v021" >}}): lists of entity-tags, `*`, weak comparison, and the 304 carries the `ETag`; `Memory` checks `userName` uniqueness through an index (O(N) instead of O(N^2) `EqualFold` calls to load N users); a list filter no index answers is matched on the top-level attributes it names: 361,095 to 162,695 allocations per request over 10,000 users, 36.1 to 16.3 per user (exact) |
 | servercert v0.5.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | servercert v0.6.0 | [the TLS `KeyFile` and the ACME `EABHMACKeyFile` are refused]({{< relref "/libraries/servercert.md" >}}) when group or others can read or write them, at `New` and on every reload (a readable replacement key is reported to `OnError` and not taken; the current certificate keeps serving); not checked on Windows. **Upgrade:** `chmod 600` both files |
 | totp v0.4.2 | tested with Go 1.27.2; neither the code nor `go.mod` changed |

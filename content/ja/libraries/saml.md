@@ -12,7 +12,7 @@ tags: [ライブラリ, saml, フェデレーション]
 そのプロバイダーが述べることを読み戻します。
 
 ```sh
-go get github.com/go-authn/saml@v0.6.0
+go get github.com/go-authn/saml@v0.6.1
 ```
 
 これは [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) のフェデレーションに面した半分で、
@@ -260,6 +260,32 @@ srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw strin
   Response の署名を取り除いた同じ CBC アサーションは、復号の前に拒否されます。
 
 カバレッジレーンの下限は 92% です。
+
+## ファジングと、悪意ある入力のコスト {#fuzzing}
+
+v0.6.1 から、四つのファズターゲットがパーサーの隣にあり、コーパスは `testdata/fuzz` の下に
+コミットされ、`go test` のたびに再生されます。
+
+- `FuzzAccept`: ファザーが並べ替えた応答は、拒否されるか、IdP が署名したものを正確に述べます。
+  平文の署名付きアサーション、暗号化されたものを囲む署名付き Response、署名ラッピングの
+  レイアウト XSW1 から XSW8 をシードとしています。
+- `FuzzParseMetadata`。
+- `FuzzDecrypt`: GCM と CBC。EncryptedKey は EncryptedData の KeyInfo の中にある場合と、その隣に
+  ある場合。CBC は認証なしでは決して開かれず、GCM が開くものは封印されたものです。
+- `FuzzLimits`: `limits.check` と `parse` は何が拒否されるかについて一致し、`check` は入力に
+  比例してアロケーションします。
+
+シードは `samltest` から来ます。仕込んだ欠陥、つまり CBC のゲートを取り除いたものは、シードだけで
+`FuzzDecrypt` を赤にします。負荷が 8 を超える一台のマシンで、16 ワーカーにより各 130 秒実行すると
+(測るのは実行回数であり、時間ではありません)、1,502,094 (`FuzzAccept`)、2,120,800
+(`FuzzParseMetadata`)、5,146,715 (`FuzzDecrypt`)、1,119,772 (`FuzzLimits`) 回の実行があり、
+クラッシュ、ハング、性質の違反は見つかりませんでした。CI は各ターゲットをプッシュとプルリクエストの
+たびに 30 秒実行し、一つを壊した入力をアーティファクトとして保存します。
+
+`TestHostileInputsAreRefusedCheaply` は、悪意ある入力がパースされるのではなく**拒否される**ことを
+検査します。ソフトメモリ制限の下で、エンティティ展開爆弾 (billion laughs)、外部エンティティ、
+80,000 と 1,048,576 段の入れ子、60,000 個の兄弟要素、150 KiB の `CipherValue`、サイズ上限を超える
+応答、空白だけの応答は、それぞれ拒否され、`TotalAlloc` は 4 から 8 MiB に抑えられます。
 
 ## リファレンス {#reference}
 

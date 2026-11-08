@@ -6,7 +6,7 @@ description: "authn-revokd の revokd.hcl: リストの取得元、署名され�
 tags: [authn-revokd, 設定]
 ---
 
-一つのファイルで、既定は `/etc/authn-revokd/revokd.hcl` です (`-config` で別のものを指定)。
+一つのファイルで、既定は `/etc/authn-revokd/revokd.hcl` です (`--config` で別のものを指定)。
 起動時に一度だけ読み込まれます。
 
 ```hcl
@@ -45,7 +45,7 @@ output "tls" {                               # nginx: ssl_crl /var/lib/authn-rev
 |---|---|---|
 | `state_dir` | | 必須、絶対パス。なければ `0700` で作成される |
 | `refresh` | `1m` | すべてのソースを取得する頻度。一秒以上。各待機は前後一割ずつ変動し、複数台が足並みをそろえ続けないようにする |
-| `listen` | | `host:port`: 検証済みのリストを提供する、ミラー。`-once` では無視される |
+| `listen` | | `host:port`: 検証済みのリストを提供する、ミラー。`--once` では無視される |
 
 **`source "<name>"`**: 一つのリスト。名前は英字、数字、`.`、`_`、`-` で、ドットで始まらず、
 最大 64 文字です。状態ディレクトリ内のファイルと、ミラーのパスの名前になります。
@@ -164,7 +164,7 @@ authn-revokd: v/revoke-keys-crl.hcl: source "bridge-x509": revoke_keys is for a 
 存在しない設定も同様です。
 
 ```
-$ authn-revokd -config nowhere.hcl -once
+$ authn-revokd --config nowhere.hcl --once
 authn-revokd: nowhere.hcl: no such file or directory
 ```
 

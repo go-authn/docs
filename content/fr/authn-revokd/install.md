@@ -16,7 +16,7 @@ Le dépôt fournit trois unités et un compte dans `packaging/` :
 | `/usr/local/bin/authn-revokd` | le binaire | root, `0755` |
 | `/usr/lib/sysusers.d/authn-revokd.conf` | le compte système `authn-revokd` | root, `0644` |
 | `/etc/systemd/system/authn-revokd.service` | le démon | root, `0644` |
-| `/etc/authn-revokd/revokd.hcl` | la configuration, le `-config` par défaut | root, `0644` |
+| `/etc/authn-revokd/revokd.hcl` | la configuration, le `--config` par défaut | root, `0644` |
 | `/etc/authn-revokd/ca/` | les clés et certificats d'AC par lesquels les listes doivent être signées | root, `0755` ; les fichiers qu'il contient `0644` |
 | `/var/lib/authn-revokd/` | `StateDirectory=`, le seul emplacement accessible en écriture | authn-revokd, `0755` |
 | `/var/lib/authn-revokd/state/` | `state_dir` : les copies vérifiées | authn-revokd, `0700` |
@@ -34,12 +34,15 @@ propre utilisateur puissent les lire ; l'état reste en `0700`.
 Une version contient `authn-revokd-<os>-<arch>` pour Linux, macOS et Windows sur
 amd64 et arm64, avec `SHA256SUMS` et la provenance de compilation
 ([vérifier un téléchargement]({{< relref "/security/verifying-releases.md" >}})). Ou
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.7`.
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0`.
 
 Le compte et l'unité viennent du répertoire `packaging/` de l'étiquette de la
 version, la même version que le binaire : copiez ce répertoire à côté du
-binaire, depuis une extraction de l'étiquette ou, pour v0.6.7, depuis
-<https://github.com/go-authn/revocation/tree/v0.6.7/packaging>.
+binaire, depuis une extraction de l'étiquette ou, pour v0.7.0, depuis
+<https://github.com/go-authn/revocation/tree/v0.7.0/packaging>. Depuis la v0.7.0,
+les unités utilisent `--config` et `--once` ; une unité déployée avec les graphies à
+tiret simple continue de fonctionner, avec une ligne d'obsolescence sur l'erreur standard à
+chaque démarrage, jusqu'à ce qu'une version ultérieure les retire.
 
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
@@ -60,7 +63,7 @@ sous son propre utilisateur ne pourrait pas lire la CRL.
 ```ini
 [Service]
 Type=exec
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 ```
@@ -128,10 +131,10 @@ compte `authn-revokd`, qui ne peut pas faire `systemctl reload nginx` : laissez 
 le fichier, en tant que root, avec une unité path (`PathChanged=` sur la sortie) qui
 démarre un `oneshot` exécutant `systemctl reload nginx`.
 
-## Ou : `-once`, sur un minuteur {#or--once-on-a-timer}
+## Ou : `--once`, sur un minuteur {#or-once-on-a-timer}
 
-`authn-revokd -once` synchronise une fois et sort, avec `1` quand une liste n'est pas en vigueur ou
-n'a pas pu être récupérée ([ce que signale `-once`]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
+`authn-revokd --once` synchronise une fois et sort, avec `1` quand une liste n'est pas en vigueur ou
+n'a pas pu être récupérée ([ce que signale `--once`]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
 Les sorties sont écrites dans tous les cas, et refusent en cas de doute pour sshd dès qu'une liste
 expire.
 
@@ -142,7 +145,7 @@ Conflicts=authn-revokd.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl --once
 TimeoutStartSec=5min
 ```
 
@@ -176,7 +179,7 @@ systemctl enable --now authn-revokd-once.timer
 **N'activez jamais les deux** : les unités sont en conflit, donc démarrer l'une arrête l'autre.
 Le démon reste le meilleur choix. Il fait refuser une liste expirée à son prochain
 `refresh`, là où le minuteur attend son prochain déclenchement, et seul le démon sert de
-miroir : `listen` est ignoré avec `-once`. Un minuteur qui cesse de se déclencher est un démon
+miroir : `listen` est ignoré avec `--once`. Un minuteur qui cesse de se déclencher est un démon
 qui s'est arrêté, alors surveillez `systemctl status authn-revokd-once`.
 
 ## Mettre à jour, et revenir en arrière {#upgrading-and-going-back}

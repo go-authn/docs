@@ -24,7 +24,7 @@ signature section, which OpenSSH never verifies.
 A list signed by any other key is refused:
 
 ```
-$ authn-revokd -config revokd-other.hcl -once
+$ authn-revokd --config revokd-other.hcl --once
 bridge-ssh: revocation: the KRL's signature does not verify by SHA256:6iM7YPhdfXxQEj/PUf7CYbqBuSiVTVMx2VADj63cAg4: public key does not match
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/other.krl
@@ -85,17 +85,25 @@ revoked.
 The list held is kept in `state_dir`, one file per source holding the list and
 its signature together, written by a single rename with the directory synced.
 At start each copy is **verified again** (expired or not, it orders what comes
-next), and a copy that no longer verifies is not trusted, not even to order the
-next one, and is said so in the log.
+next), and a copy that no longer verifies (damaged, or written under another CA
+key) is never used as a list, and is said so in the log. Since v0.6.8 it still
+keeps one thing: its version and issue time, read without trusting them, stay as
+an **ordering floor**. Before, such a copy counted as no copy at all, so a
+replayed older list, signed and unexpired, was accepted and un-revoked what the
+newer one revoked. Now a list below the floor is refused as a rollback until one
+that verifies and follows it is held. If the CA was replaced and its lists
+restart at a lower version, the log names the file to remove,
+`<source>.state` in `state_dir`: remove it, and the next list verified by the
+configured key sets a new position.
 
 Here a source is pointed, after a restart, at a list an earlier bridge process
 served nineteen seconds before, still signed and still unexpired:
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
-$ authn-revokd -config revokd-old.hcl -once
+$ authn-revokd --config revokd-old.hcl --once
 bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-26T11:26:49Z, the copy held at 2026-10-26T11:27:10Z
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
@@ -113,9 +121,9 @@ sshd's StrictModes rule ([the configuration]({{< relref "/authn-revokd/configura
 A crash between two writes cannot leave a pair that fails to verify, which
 would take the rollback guard with it: the list and its signature are one file.
 
-## What `-once` reports
+## What `--once` reports {#what--once-reports}
 
-`-once` exits `1` when a source has no current list, when its **last fetch
+`--once` exits `1` when a source has no current list, when its **last fetch
 failed**, or when an output could not be written, and its last line says which
 of the first two it is:
 
@@ -127,7 +135,7 @@ of the first two it is:
 Here the issuer is stopped while both lists held are still current:
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z), bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)

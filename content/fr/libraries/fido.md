@@ -12,7 +12,7 @@ enregistrent un identifiant, demandent une signature et échangent un PIN contre
 pur Go, sur n'importe quel système d'exploitation.
 
 ```sh
-go get github.com/go-authn/fido@v0.6.2
+go get github.com/go-authn/fido@v0.6.4
 ```
 
 Rien ici n'est propre à une plateforme. Un `Transport` achemine des rapports de 64 octets vers
@@ -140,6 +140,15 @@ débrancher était dite verrouillée, et la personne à qui on le disait pouvait
 réinitialiser et perdre tous les identifiants qu'elle contenait.
 {{< /callout >}}
 
+**Un jeton de PIN avec permissions.** `Key.PINToken` demandé avec des permissions envoie
+`permissions` sous la clé `0x09` et `rpId` sous `0x0A`, comme CTAP 2.1 les numérote
+(§6.5.5, authenticatorClientPIN ; il n'a ni `0x07` ni `0x08`). Jusqu'à la v0.6.3, il
+les envoyait sous `0x07` et `0x08`, et une YubiKey 5 répondait
+`CTAP2_ERR_MISSING_PARAMETER` (`0x14`). Aucun autre champ de la requête n'utilisait ces
+clés (`keyAgreement` est `0x03`, `pinHashEnc` `0x06`), donc rien n'entrait en collision. Le
+faux authentificateur des tests lit désormais les clés comme des littéraux tirés de la
+spécification, et un test vérifie les clés de la table de la requête contre la sienne.
+
 ## Ce contre quoi il est vérifié {#what-it-is-checked-against}
 
 La CI n'a pas de clé de sécurité, donc les tests utilisent un faux transport qui reconstitue
@@ -159,4 +168,4 @@ vérifiée contre la clé publique qu'elle a fournie ; cette exécution ne fait 
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.2](https://pkg.go.dev/github.com/go-authn/fido@v0.6.2)
+[pkg.go.dev/github.com/go-authn/fido](https://pkg.go.dev/github.com/go-authn/fido) (la page de v0.6.4 n'était pas encore indexée par pkg.go.dev à l'écriture, c'est pourquoi le lien ne nomme pas de version)

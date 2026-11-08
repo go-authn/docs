@@ -24,7 +24,7 @@ Signaturabschnitt von OpenSSH enthalten, den OpenSSH nie prüft.
 Eine von einem anderen Schlüssel signierte Liste wird abgelehnt:
 
 ```
-$ authn-revokd -config revokd-other.hcl -once
+$ authn-revokd --config revokd-other.hcl --once
 bridge-ssh: revocation: the KRL's signature does not verify by SHA256:6iM7YPhdfXxQEj/PUf7CYbqBuSiVTVMx2VADj63cAg4: public key does not match
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/other.krl
@@ -84,17 +84,25 @@ widerrufen hat.
 Die gehaltene Liste wird in `state_dir` aufbewahrt, eine Datei pro Quelle, die die Liste und
 ihre Signatur zusammen enthält, geschrieben durch eine einzige Umbenennung mit synchronisiertem Verzeichnis.
 Beim Start wird jede Kopie **erneut geprüft** (abgelaufen oder nicht, sie ordnet, was als
-Nächstes kommt), und einer Kopie, die die Prüfung nicht mehr besteht, wird nicht vertraut, nicht einmal, um die
-nächste zu ordnen, und das Log sagt es.
+Nächstes kommt), und eine Kopie, die die Prüfung nicht mehr besteht (beschädigt oder unter einem
+anderen CA-Schlüssel geschrieben), wird nie als Liste verwendet, und das Log sagt es. Seit v0.6.8
+behält sie dennoch eines: Ihre Version und Ausstellungszeit, ohne ihnen zu vertrauen gelesen,
+bleiben als **Ordnungsuntergrenze** bestehen. Vorher zählte eine solche Kopie als gar keine Kopie,
+sodass eine wieder eingespielte ältere Liste, signiert und nicht abgelaufen, angenommen wurde und
+widerrief nicht mehr, was die neuere widerrufen hatte. Jetzt wird eine Liste unter der Untergrenze
+als Rollback abgelehnt, bis eine gehalten wird, die die Prüfung besteht und ihr folgt. Wurde die CA
+ersetzt und beginnen ihre Listen bei einer niedrigeren Version, nennt das Log die zu entfernende
+Datei, `<source>.state` in `state_dir`: Entfernen Sie sie, und die nächste vom konfigurierten
+Schlüssel geprüfte Liste setzt eine neue Position.
 
 Hier wird eine Quelle nach einem Neustart auf eine Liste gerichtet, die ein früherer Bridge-Prozess
 neunzehn Sekunden zuvor bereitgestellt hat, noch signiert und noch nicht abgelaufen:
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
-$ authn-revokd -config revokd-old.hcl -once
+$ authn-revokd --config revokd-old.hcl --once
 bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-26T11:26:49Z, the copy held at 2026-10-26T11:27:10Z
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
@@ -112,9 +120,9 @@ StrictModes-Regel von sshd ([die Konfiguration]({{< relref "/authn-revokd/config
 Ein Absturz zwischen zwei Schreibvorgängen kann kein Paar hinterlassen, das die Prüfung nicht besteht, was
 den Rollback-Schutz mitnehmen würde: Die Liste und ihre Signatur sind eine Datei.
 
-## Was `-once` meldet {#what--once-reports}
+## Was `--once` meldet {#what--once-reports}
 
-`-once` endet mit `1`, wenn eine Quelle keine aktuelle Liste hat, wenn ihr **letzter Abruf
+`--once` endet mit `1`, wenn eine Quelle keine aktuelle Liste hat, wenn ihr **letzter Abruf
 fehlgeschlagen ist** oder wenn eine Ausgabe nicht geschrieben werden konnte, und seine letzte Zeile sagt, welcher
 der ersten beiden Fälle es ist:
 
@@ -126,7 +134,7 @@ der ersten beiden Fälle es ist:
 Hier ist der Aussteller gestoppt, während beide gehaltenen Listen noch aktuell sind:
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z), bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)

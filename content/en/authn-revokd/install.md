@@ -16,7 +16,7 @@ The repository ships three units and an account in `packaging/`:
 | `/usr/local/bin/authn-revokd` | the binary | root, `0755` |
 | `/usr/lib/sysusers.d/authn-revokd.conf` | the `authn-revokd` system account | root, `0644` |
 | `/etc/systemd/system/authn-revokd.service` | the daemon | root, `0644` |
-| `/etc/authn-revokd/revokd.hcl` | the configuration, the default `-config` | root, `0644` |
+| `/etc/authn-revokd/revokd.hcl` | the configuration, the default `--config` | root, `0644` |
 | `/etc/authn-revokd/ca/` | the CA keys and certificates the lists must be signed by | root, `0755`; the files in it `0644` |
 | `/var/lib/authn-revokd/` | `StateDirectory=`, the only writable place | authn-revokd, `0755` |
 | `/var/lib/authn-revokd/state/` | `state_dir`: the verified copies | authn-revokd, `0700` |
@@ -34,12 +34,15 @@ own user can read them; the state stays `0700`.
 A release carries `authn-revokd-<os>-<arch>` for Linux, macOS and Windows on
 amd64 and arm64, with `SHA256SUMS` and build provenance
 ([verifying a download]({{< relref "/security/verifying-releases.md" >}})). Or
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.7`.
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0`.
 
 The account and the unit come from the `packaging/` directory of the release
 tag, the same version as the binary: copy that directory beside the binary,
-from a checkout of the tag or, for v0.6.7, from
-<https://github.com/go-authn/revocation/tree/v0.6.7/packaging>.
+from a checkout of the tag or, for v0.7.0, from
+<https://github.com/go-authn/revocation/tree/v0.7.0/packaging>. From v0.7.0
+the units use `--config` and `--once`; a unit deployed with the single-dash
+spellings keeps working, with a deprecation line on standard error at every
+start, until a later release removes them.
 
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
@@ -60,7 +63,7 @@ as its own user could not read the CRL.
 ```ini
 [Service]
 Type=exec
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 ```
@@ -128,10 +131,10 @@ reloaded when the file changes. An `on_change` command runs as the
 the file instead, as root, with a path unit (`PathChanged=` on the output) that
 starts a `oneshot` running `systemctl reload nginx`.
 
-## Or: `-once`, on a timer
+## Or: `--once`, on a timer {#or-once-on-a-timer}
 
-`authn-revokd -once` syncs once and exits, `1` when a list is not current or
-could not be fetched ([what `-once` reports]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
+`authn-revokd --once` syncs once and exits, `1` when a list is not current or
+could not be fetched ([what `--once` reports]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
 The outputs are written either way, and failed closed for sshd once a list
 lapses.
 
@@ -142,7 +145,7 @@ Conflicts=authn-revokd.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl --once
 TimeoutStartSec=5min
 ```
 
@@ -176,7 +179,7 @@ systemctl enable --now authn-revokd-once.timer
 **Never enable both**: the units conflict, so starting one stops the other.
 The daemon remains the better choice. It fails a lapsed list closed at its next
 `refresh`, where the timer waits for its next tick, and only the daemon serves as
-a mirror: `listen` is ignored with `-once`. A timer that stops firing is a daemon
+a mirror: `listen` is ignored with `--once`. A timer that stops firing is a daemon
 that stopped, so monitor `systemctl status authn-revokd-once`.
 
 ## Upgrading, and going back

@@ -19,8 +19,8 @@ Ces pages décrivent les versions listées sur la [page d'état]({{< relref "/st
 | | ce que c'est | ces pages décrivent |
 |---|---|---|
 | [authnd]({{< relref "/authnd/_index.md" >}}) | un serveur LDAP, et éventuellement un royaume Kerberos, pour des personnes qui vivent ailleurs : un fichier, une base de données SQL, un autre annuaire | v0.18.6 |
-| [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | un fournisseur OpenID Connect devant une fédération SAML (RENATER, eduGAIN), qui émet aussi des certificats SSH et signe les listes qui les révoquent | v0.23.9 |
-| [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | récupère ces listes, vérifie chacune avant qu'un serveur ne la lise, et refuse en cas de doute quand l'une d'elles expire | v0.6.7 |
+| [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) | un fournisseur OpenID Connect devant une fédération SAML (RENATER, eduGAIN), qui émet aussi des certificats SSH et signe les listes qui les révoquent | v0.23.12 |
+| [authn-revokd]({{< relref "/authn-revokd/_index.md" >}}) | récupère ces listes, vérifie chacune avant qu'un serveur ne la lise, et refuse en cas de doute quand l'une d'elles expire | v0.7.0 |
 | [sshcert]({{< relref "/sshcert/_index.md" >}}) | `sshcert-authorize`, à qui sshd demande si la délégation de domaine d'un certificat nomme cet hôte | v0.1.9 |
 
 Chacun est un binaire statique unique pour Linux, macOS et Windows sur amd64 et arm64,
@@ -29,8 +29,8 @@ publié avec `SHA256SUMS` et une provenance de compilation :
 
 ```sh
 go install github.com/go-authn/authnd@v0.18.6
-go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.9
-go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.7
+go install github.com/go-authn/bridge/cmd/authn-bridge@v0.23.12
+go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0
 ```
 
 Les commandes s'appellent `authn-*` (et `authnd`) parce qu'elles sont installées sur

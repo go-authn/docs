@@ -6,7 +6,7 @@ description: "El revokd.hcl de authn-revokd: de dónde proceden las listas, con 
 tags: [authn-revokd, configuración]
 ---
 
-Un solo archivo, `/etc/authn-revokd/revokd.hcl` por defecto (`-config` nombra otro).
+Un solo archivo, `/etc/authn-revokd/revokd.hcl` por defecto (`--config` nombra otro).
 Se lee una sola vez, al arrancar.
 
 ```hcl
@@ -45,7 +45,7 @@ output "tls" {                               # nginx: ssl_crl /var/lib/authn-rev
 |---|---|---|
 | `state_dir` | | obligatoria, absoluta; se crea con `0700` si no existe |
 | `refresh` | `1m` | con qué frecuencia se descarga cada origen, un segundo o más; cada espera varía una décima en un sentido u otro, para que un parque de máquinas no quede sincronizado |
-| `listen` | | `host:port`: servir las listas verificadas, un espejo; se ignora con `-once` |
+| `listen` | | `host:port`: servir las listas verificadas, un espejo; se ignora con `--once` |
 
 **`source "<name>"`**: una lista. El nombre está formado por letras, dígitos, `.`,
 `_` y `-`, no empieza por un punto, y tiene como máximo 64 caracteres: nombra un
@@ -179,7 +179,7 @@ authn-revokd: v/revoke-keys-crl.hcl: source "bridge-x509": revoke_keys is for a 
 Lo mismo ocurre con una configuración que no existe:
 
 ```
-$ authn-revokd -config nowhere.hcl -once
+$ authn-revokd --config nowhere.hcl --once
 authn-revokd: nowhere.hcl: no such file or directory
 ```
 

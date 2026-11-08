@@ -11,7 +11,7 @@ Speicher, einer SQL-Datenbank, einem LDAP-Server oder `user`- und `group`-Blöck
 Konfigurationsdatei – und worauf es ankommt, ist die zweite Hälfte der Frage.
 
 ```sh
-go get github.com/go-authn/directory@v0.20.0
+go get github.com/go-authn/directory@v0.21.0
 ```
 
 Neu in v0.17.0: [`ErrUnavailable`](#unavailable), ein Ausfall, der von einem falschen
@@ -68,6 +68,15 @@ ohne das Geheimnis zu halten. Eine Quelle, die `GroupReader` implementiert (sqld
 ldapdir tun das), liest alle Gruppen einmal im Block; `Set.Frozen()` beantwortet dann
 `Members`, `GroupAttributes`, `GroupObjectClasses` und `GroupNames` aus dem Speicher,
 mit der eigenen Zusammenführung des Sets. Schließen Sie das ursprüngliche Set, nicht das eingefrorene.
+
+**`Set.GroupNames` sagt, welche Quellen fehlgeschlagen sind** (v0.21.0). Es liefert die
+Namen der Quellen, die geantwortet haben, **und** ein `errors.Join` aus
+`"<describe>: <err>"` für jede Quelle, die fehlgeschlagen ist; `errors.Is` stimmt weiterhin
+mit `ErrUnavailable` überein. Vorher wurde der Fehler verworfen, sobald eine andere Quelle
+antwortete, und eine Teilliste kam mit einem nil-Fehler zurück. Ein Aufrufer, der nur
+`err != nil` prüfte, sieht jetzt einen Fehler, wo er eine Teilliste sah, und die Namen
+kommen mit (sie sind nur dann `nil`, wenn jede Quelle fehlgeschlagen ist). Ein Aufrufer, der
+veröffentlichen kann, was er hat, sollte die Namen verwenden und den Fehler protokollieren.
 
 `hcldir` dekodiert kein HCL: Der Aufrufer dekodiert den Block und übergibt ihn.
 Es importiert HCL nur zum Schreiben, für `SetPassword`. Die Build-Tags `nosql` und
@@ -496,4 +505,4 @@ Builds mit `nosql` und `noldap` werden in der CI geprüft.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.20.0](https://pkg.go.dev/github.com/go-authn/directory@v0.20.0)
+[pkg.go.dev/github.com/go-authn/directory](https://pkg.go.dev/github.com/go-authn/directory) (die Seite für v0.21.0 war bei Abfassung noch nicht von pkg.go.dev indexiert, deshalb nennt der Link keine Version)

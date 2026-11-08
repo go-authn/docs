@@ -16,7 +16,7 @@ El repositorio incluye en `packaging/` tres unidades y una cuenta:
 | `/usr/local/bin/authn-revokd` | el binario | root, `0755` |
 | `/usr/lib/sysusers.d/authn-revokd.conf` | la cuenta de sistema `authn-revokd` | root, `0644` |
 | `/etc/systemd/system/authn-revokd.service` | el demonio | root, `0644` |
-| `/etc/authn-revokd/revokd.hcl` | la configuración, el `-config` por defecto | root, `0644` |
+| `/etc/authn-revokd/revokd.hcl` | la configuración, el `--config` por defecto | root, `0644` |
 | `/etc/authn-revokd/ca/` | las claves y los certificados de CA con los que deben estar firmadas las listas | root, `0755`; los archivos que contiene, `0644` |
 | `/var/lib/authn-revokd/` | `StateDirectory=`, el único lugar con escritura | authn-revokd, `0755` |
 | `/var/lib/authn-revokd/state/` | `state_dir`: las copias verificadas | authn-revokd, `0700` |
@@ -34,12 +34,16 @@ que se ejecuta con su propio usuario puedan leerlas; el estado sigue en `0700`.
 Una versión incluye `authn-revokd-<os>-<arch>` para Linux, macOS y Windows en amd64
 y arm64, con `SHA256SUMS` y procedencia de compilación
 ([verificar una descarga]({{< relref "/security/verifying-releases.md" >}})). O bien
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.7`.
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0`.
 
 La cuenta y la unidad vienen del directorio `packaging/` de la etiqueta de la
 versión, la misma versión que el binario: copie ese directorio junto al
-binario, desde una copia de la etiqueta o, para v0.6.7, desde
-<https://github.com/go-authn/revocation/tree/v0.6.7/packaging>.
+binario, desde una copia de la etiqueta o, para v0.7.0, desde
+<https://github.com/go-authn/revocation/tree/v0.7.0/packaging>. Desde la v0.7.0
+las unidades usan `--config` y `--once`; una unidad desplegada con las grafías de
+un solo guion sigue funcionando, con una línea de aviso de obsolescencia en la
+salida de error estándar en cada arranque, hasta que una versión posterior las
+elimine.
 
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
@@ -60,7 +64,7 @@ servidor TLS que se ejecuta con su propio usuario no podría leer la CRL.
 ```ini
 [Service]
 Type=exec
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 ```
@@ -129,11 +133,11 @@ cuando cambia el archivo. Una orden `on_change` se ejecuta con la cuenta
 el archivo en su lugar, como root, con una unidad path (`PathChanged=` sobre la
 salida) que arranque un `oneshot` que ejecute `systemctl reload nginx`.
 
-## O bien: `-once`, con un temporizador {#or--once-on-a-timer}
+## O bien: `--once`, con un temporizador {#or-once-on-a-timer}
 
-`authn-revokd -once` sincroniza una vez y termina, con `1` cuando una lista no está
+`authn-revokd --once` sincroniza una vez y termina, con `1` cuando una lista no está
 vigente o no se pudo descargar
-([lo que informa `-once`]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
+([lo que informa `--once`]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
 Las salidas se escriben en cualquier caso, y quedan en modo cerrado para sshd en
 cuanto una lista caduca.
 
@@ -144,7 +148,7 @@ Conflicts=authn-revokd.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl --once
 TimeoutStartSec=5min
 ```
 
@@ -179,7 +183,7 @@ systemctl enable --now authn-revokd-once.timer
 detiene la otra. El demonio sigue siendo la mejor opción. Pone en modo cerrado una
 lista caducada en su siguiente `refresh`, mientras que el temporizador espera a su
 siguiente disparo, y solo el demonio sirve como espejo: `listen` se ignora con
-`-once`. Un temporizador que deja de dispararse es un demonio que se ha detenido, así
+`--once`. Un temporizador que deja de dispararse es un demonio que se ha detenido, así
 que supervise `systemctl status authn-revokd-once`.
 
 ## Actualizar, y volver atrás {#upgrading-and-going-back}

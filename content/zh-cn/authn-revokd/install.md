@@ -16,7 +16,7 @@ tags: [authn-revokd, 安装, systemd]
 | `/usr/local/bin/authn-revokd` | 二进制文件 | root，`0755` |
 | `/usr/lib/sysusers.d/authn-revokd.conf` | `authn-revokd` 系统账户 | root，`0644` |
 | `/etc/systemd/system/authn-revokd.service` | 守护进程 | root，`0644` |
-| `/etc/authn-revokd/revokd.hcl` | 配置，即默认的 `-config` | root，`0644` |
+| `/etc/authn-revokd/revokd.hcl` | 配置，即默认的 `--config` | root，`0644` |
 | `/etc/authn-revokd/ca/` | 列表必须据以签名的 CA 密钥和证书 | root，`0755`；其中的文件为 `0644` |
 | `/var/lib/authn-revokd/` | `StateDirectory=`，唯一可写的位置 | authn-revokd，`0755` |
 | `/var/lib/authn-revokd/state/` | `state_dir`：已验证的副本 | authn-revokd，`0700` |
@@ -34,12 +34,14 @@ tags: [authn-revokd, 安装, systemd]
 每个发布版本都带有适用于 Linux、macOS 和 Windows（amd64 与
 arm64）的 `authn-revokd-<os>-<arch>`，附带 `SHA256SUMS` 和构建溯源信息
 （[验证下载]({{< relref "/security/verifying-releases.md" >}})）。或者
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.7`。
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0`。
 
 账户和单元来自发布标签的 `packaging/` 目录，与二进制文件的
 版本相同：把该目录复制到二进制文件旁边，可以来自该标签的检出副本，
-或者对于 v0.6.7，来自
-<https://github.com/go-authn/revocation/tree/v0.6.7/packaging>。
+或者对于 v0.7.0，来自
+<https://github.com/go-authn/revocation/tree/v0.7.0/packaging>。自 v0.7.0 起，
+单元使用 `--config` 和 `--once`；以单横线写法部署的单元仍可工作，
+每次启动时在标准错误上输出一行弃用提示，直到以后的发布版本将其移除。
 
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
@@ -59,7 +61,7 @@ systemctl daemon-reload
 ```ini
 [Service]
 Type=exec
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 ```
@@ -127,10 +129,10 @@ TLS 服务器在加载配置时读取其 CRL，因此文件更改时必须
 监视该文件，用路径单元（对输出设置 `PathChanged=`）
 启动一个运行 `systemctl reload nginx` 的 `oneshot`。
 
-## 或者：定时器上的 `-once` {#or--once-on-a-timer}
+## 或者：定时器上的 `--once` {#or-once-on-a-timer}
 
-`authn-revokd -once` 同步一次后退出，当列表不是当前有效的或
-无法获取时退出码为 `1`（[`-once` 报告什么]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})）。
+`authn-revokd --once` 同步一次后退出，当列表不是当前有效的或
+无法获取时退出码为 `1`（[`--once` 报告什么]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})）。
 无论如何输出都会被写入，并且在列表
 过期后对 sshd 故障即拒绝。
 
@@ -141,7 +143,7 @@ Conflicts=authn-revokd.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl --once
 TimeoutStartSec=5min
 ```
 
@@ -175,7 +177,7 @@ systemctl enable --now authn-revokd-once.timer
 **切勿同时启用两者**：这些单元相互冲突，启动其一会停止另一个。
 守护进程仍是更好的选择。它在下一次 `refresh` 时就对过期列表故障即拒绝，
 而定时器要等到下一次触发，并且只有守护进程可以充当
-镜像：`listen` 在 `-once` 下会被忽略。停止触发的定时器就等于
+镜像：`listen` 在 `--once` 下会被忽略。停止触发的定时器就等于
 停止的守护进程，因此请监控 `systemctl status authn-revokd-once`。
 
 ## 升级与回退 {#upgrading-and-going-back}

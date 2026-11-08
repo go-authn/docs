@@ -12,7 +12,7 @@ Users와 Groups(RFC 7643, RFC 7644)를 위한 그 HTTP 엔드포인트이며, �
 `Backend` 위에 있습니다. 순수 Go, `CGO_ENABLED=0`, 표준 라이브러리만 사용합니다.
 
 ```sh
-go get github.com/go-authn/scim@v0.2.0
+go get github.com/go-authn/scim@v0.2.1
 ```
 
 ## 예제 {#example}
@@ -93,6 +93,27 @@ Apple M4 Max:
 0.06초)은 결과가 아닙니다. `FuzzPatchPath`, `FuzzPatchThenDecode`, `FuzzFilter`, `FuzzServer`를 각각 45초, 워커 16개로
 실행했으며 130만에서 240만 회 실행에서 실패를 찾지 못했습니다.
 
+## v0.2.1에서 바뀐 것 {#v021}
+
+- **`If-None-Match`는 RFC 7232 §3.2를 따릅니다.** 엔티티 태그 목록(여러 헤더 줄도
+  포함)을 가진 `GET`은 그중 하나라도 약한 비교로 일치하면(`"x"`는 `W/"x"`와
+  일치) 304로 응답합니다. `*`는 존재하는 모든 리소스에 대해 304로 응답합니다.
+  유효한 `If-None-Match`가 아닌 헤더는 무시됩니다. 304는 `ETag`를 담으며(RFC 7232
+  §4.1), 이전에는 담지 않았습니다. `FuzzIfNoneMatch`로 퍼징했습니다.
+- **`Memory`는 `userName`의 색인을 유지합니다.** 고유성은 모든 사용자를 훑어
+  확인했으므로 사용자 N명을 불러오는 데 `EqualFold` 호출이 O(N^2)번 필요했습니다.
+  이제 O(N)이며, 사용자 10,000명에 대한 1억 번의 호출이 사라졌습니다. 키는 각 룬의
+  `unicode.SimpleFold` 궤도 최솟값으로, `strings.EqualFold`의 동치 관계와 정확히
+  같습니다(예전의 훑기와 대조해 테스트했고 `FuzzFoldKey`로 퍼징했습니다). 생성,
+  교체(PUT과 PATCH), 삭제가 이를 일관되게 유지합니다. `BenchmarkMemoryLoad10k`(사용자
+  10,000명을 생성하고 교체)는 한 번 실행에 할당 119,030회가 들며, 이전에는
+  98,959회였습니다. 색인은 생성마다, 이름 변경마다 키 하나입니다.
+- **어떤 색인도 답할 수 없는 필터가 있는 목록은 필터가 지명하는 최상위 속성만 담은
+  맵에서 일치를 검사하며**, 전체 객체는 페이지에 대해서만 만듭니다.
+  `BenchmarkListFilterCo10k`(사용자 10,000명): 요청당 할당이 이전 361,095회, 지금
+  162,695회이며, 사용자당 36.1회에서 16.3회입니다. 동치성은 필터 50개와 무작위
+  필터로 테스트합니다(`FuzzFilterOnSelectedMap`).
+
 ## 무엇과 대조해 검사하는가 {#what-it-is-checked-against}
 
 **신원 공급자가 실제로 보내는 것**을 그들의 페이로드로 테스트합니다. Entra ID의
@@ -102,4 +123,4 @@ Apple M4 Max:
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim) (작성 시점에 v0.2.1 페이지가 아직 pkg.go.dev에 색인되지 않아 링크에 버전을 적지 않았습니다)

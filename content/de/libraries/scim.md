@@ -13,7 +13,7 @@ dieser HTTP-Endpunkt, für Users und Groups (RFC 7643, RFC 7644), über einem
 `Backend`, das Sie schreiben. Reines Go, `CGO_ENABLED=0`, nur Standardbibliothek.
 
 ```sh
-go get github.com/go-authn/scim@v0.2.0
+go get github.com/go-authn/scim@v0.2.1
 ```
 
 ## Beispiel {#example}
@@ -104,6 +104,29 @@ Die verrauschten Einzelläufe (etwa 1,7 s zu 0,06 s für den durchlaufenden Filt
 Ergebnis. `FuzzPatchPath`, `FuzzPatchThenDecode`, `FuzzFilter` und `FuzzServer` liefen je
 45 s mit 16 Workern, 1,3 bis 2,4 Millionen Ausführungen, und fanden keinen Fehler.
 
+## Was v0.2.1 geändert hat {#v021}
+
+- **`If-None-Match` folgt RFC 7232 §3.2.** Ein `GET` mit einer Liste von Entity-Tags
+  (auch mehrere Headerzeilen) antwortet 304, wenn eines davon im schwachen Vergleich
+  übereinstimmt (`"x"` passt zu `W/"x"`); `*` antwortet 304 für jede vorhandene Ressource;
+  ein Header, der kein gültiges `If-None-Match` ist, wird ignoriert. Die 304 trägt den
+  `ETag` (RFC 7232 §4.1), was sie vorher nicht tat. Gefuzzt von `FuzzIfNoneMatch`.
+- **`Memory` führt einen Index über `userName`.** Die Eindeutigkeit wurde durch Durchlaufen
+  jedes Benutzers geprüft, sodass das Laden von N Benutzern O(N^2) `EqualFold`-Aufrufe
+  kostete; jetzt ist es O(N), und die 100 Millionen Aufrufe für 10.000 Benutzer entfallen.
+  Der Schlüssel ist das Minimum der `unicode.SimpleFold`-Bahn jeder Rune, was genau die
+  Äquivalenz von `strings.EqualFold` ist (gegen den alten Durchlauf getestet und von
+  `FuzzFoldKey` gefuzzt); Anlegen, Ersetzen (PUT und PATCH) und Löschen halten ihn
+  konsistent. `BenchmarkMemoryLoad10k` (10.000 Benutzer anlegen und ersetzen) kostet
+  119.030 Allokationen pro Lauf, wo es 98.959 kostete: Der Index ist ein Schlüssel pro
+  Anlegen und pro Umbenennen.
+- **Eine Liste mit einem Filter, den kein Index beantworten kann, wird auf einer Map
+  abgeglichen, die nur die Attribute der obersten Ebene enthält, die der Filter nennt**, und
+  ganze Objekte werden nur für die Seite gebaut. `BenchmarkListFilterCo10k` (10.000
+  Benutzer): 361.095 Allokationen pro Anfrage vorher, 162.695 jetzt, das sind 36,1 bis 16,3
+  pro Benutzer. Die Äquivalenz ist für 50 Filter und zufällige getestet
+  (`FuzzFilterOnSelectedMap`).
+
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
 
 **Was Identitätsanbieter tatsächlich senden**, mit deren Nutzdaten getestet:
@@ -116,4 +139,4 @@ Coverage-Spur liegt bei 92 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim) (die Seite für v0.2.1 war bei Abfassung noch nicht von pkg.go.dev indexiert, deshalb nennt der Link keine Version)

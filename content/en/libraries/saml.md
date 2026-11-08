@@ -13,7 +13,7 @@ sends people to their own institution's identity provider, and reads back what
 that provider says.
 
 ```sh
-go get github.com/go-authn/saml@v0.6.0
+go get github.com/go-authn/saml@v0.6.1
 ```
 
 It is the half of [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -266,6 +266,35 @@ belongs in production.
   signature removed is refused before decryption.
 
 The coverage lane's floor is 92%.
+
+## Fuzzed, and what hostile input costs {#fuzzing}
+
+Since v0.6.1 four fuzz targets sit next to the parser, and the corpus is
+committed under `testdata/fuzz` and replayed by every `go test`:
+
+- `FuzzAccept`: a response the fuzzer rearranged is refused, or says exactly what
+  the IdP signed. Seeded with a signed assertion in the clear, a signed Response
+  around an encrypted one, and the signature-wrapping layouts XSW1 to XSW8.
+- `FuzzParseMetadata`.
+- `FuzzDecrypt`: GCM and CBC, with the EncryptedKey inside EncryptedData's
+  KeyInfo and beside it. CBC is never opened unauthenticated, and what GCM opens
+  is what was sealed.
+- `FuzzLimits`: `limits.check` and `parse` agree on what is refused, and `check`
+  allocates in proportion to its input.
+
+The seeds come from `samltest`. A planted fault, the CBC gate removed, turns
+`FuzzDecrypt` red from its seeds alone. Run for 130 s each on 16 workers, on one
+machine at a load above 8 (executions, not times, are the measure), they did
+1,502,094 (`FuzzAccept`), 2,120,800 (`FuzzParseMetadata`), 5,146,715
+(`FuzzDecrypt`) and 1,119,772 (`FuzzLimits`) executions, and found no crash, hang
+or property violation. The CI runs each target for 30 s on every push and pull
+request, and keeps the input that broke one as an artifact.
+
+`TestHostileInputsAreRefusedCheaply` checks that hostile input is **refused**,
+not parsed: under a soft memory limit, an entity-expansion bomb (billion
+laughs), an external entity, 80,000 and 1,048,576 levels of nesting, 60,000
+sibling elements, a 150 KiB `CipherValue`, a response over the size cap and an
+all-whitespace one are each refused, with `TotalAlloc` bounded to 4 to 8 MiB.
 
 ## Reference
 

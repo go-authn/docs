@@ -185,8 +185,13 @@ dirección no significa que alguien haya verificado que la persona la lee.
 **Lo que la petición pide al IdP.** `prompt=none` se convierte en `IsPassive`, y
 un IdP sin sesión responde `login_required`. `prompt=login` y `max_age=0` se
 convierten en `ForceAuthn`; para cualquier otro `max_age`, a una persona a la que
-su IdP autenticó hace más tiempo que ese se la devuelve con `ForceAuthn`.
-`acr_values` se convierte en `RequestedAuthnContext`, y un IdP que responde con
+su IdP autenticó hace más tiempo que ese se la devuelve con `ForceAuthn`. Un
+`AuthnInstant` posterior a ahora más los tres minutos de desfase de reloj que se
+conceden a un IdP tampoco es reciente (v0.23.10): se desconoce su tiempo
+transcurrido, como lo establece OIDC Core 3.1.2.1, y a la persona se la devuelve
+con `ForceAuthn` como a una autenticada hace demasiado tiempo; antes, resultaba
+negativo y contaba como reciente con cualquier `max_age`. Dentro del desfase nada
+cambia. `acr_values` se convierte en `RequestedAuthnContext`, y un IdP que responde con
 otro contexto se rechaza: a un cliente que pidió un segundo factor nunca se le
 dice que lo obtuvo cuando no es así.
 

@@ -24,7 +24,7 @@ KRL 本身必须能被 `sshd` 解析，且不得带有 OpenSSH 自己的
 由任何其他密钥签名的列表会被拒绝：
 
 ```
-$ authn-revokd -config revokd-other.hcl -once
+$ authn-revokd --config revokd-other.hcl --once
 bridge-ssh: revocation: the KRL's signature does not verify by SHA256:6iM7YPhdfXxQEj/PUf7CYbqBuSiVTVMx2VADj63cAg4: public key does not match
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/other.krl
@@ -82,17 +82,23 @@ CRL Number）决定，然后是其**签发时间**（KRL 的生成日期，CRL �
 所持有的列表保存在 `state_dir` 中，每个来源一个文件，将列表
 及其签名放在一起，通过一次重命名写入并同步目录。
 启动时每个副本都会**重新验证**（无论是否已过期，它都决定
-接下来的顺序），无法再通过验证的副本不被信任，甚至不能用于为下一个
-列表排序，并会在日志中说明。
+接下来的顺序），无法再通过验证的副本（已损坏，或是在另一把 CA
+密钥下写入的）绝不会被当作列表使用，并会在日志中说明。自 v0.6.8 起，它仍
+保留一样东西：其版本和签发时间在不被信任的前提下读出，作为**排序下限**保留。
+此前，这样的副本被视为根本没有副本，因此重放的较旧列表，只要有签名且未过期，
+就会被接受，并把较新列表所吊销的内容重新恢复。现在低于下限的列表会被当作
+回滚而拒绝，直到持有一个通过验证并排在其后的列表。如果 CA 被更换，其列表从
+更低的版本重新开始，日志会指出要删除的文件，即 `state_dir` 中的
+`<source>.state`：删除它，之后由所配置的密钥验证通过的下一个列表会确立新的位置。
 
 这里，重启之后把一个来源指向了较早的 bridge 进程在十九秒之前
 提供的列表，该列表仍有签名且未过期：
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
-$ authn-revokd -config revokd-old.hcl -once
+$ authn-revokd --config revokd-old.hcl --once
 bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-26T11:26:49Z, the copy held at 2026-10-26T11:27:10Z
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
@@ -110,10 +116,10 @@ sshd 的 StrictModes 规则约束（[配置]({{< relref "/authn-revokd/configura
 两次写入之间的崩溃不会留下无法验证的一对文件，那会连带使
 回滚防护失效：列表及其签名是同一个文件。
 
-## `-once` 报告什么 {#what--once-reports}
+## `--once` 报告什么 {#what--once-reports}
 
 当某个来源没有当前列表、其**最后一次获取失败**，或某个输出
-无法写入时，`-once` 以 `1` 退出，其最后一行会说明
+无法写入时，`--once` 以 `1` 退出，其最后一行会说明
 前两种情形中的哪一种：
 
 | 最后一行 | 来源 | 其输出 |
@@ -124,7 +130,7 @@ sshd 的 StrictModes 规则约束（[配置]({{< relref "/authn-revokd/configura
 这里签发方已停止，而所持有的两个列表仍然有效：
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z), bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)

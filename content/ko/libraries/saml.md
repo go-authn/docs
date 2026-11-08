@@ -12,7 +12,7 @@ tags: [라이브러리, saml, 페더레이션]
 그 공급자가 말하는 것을 읽어 옵니다.
 
 ```sh
-go get github.com/go-authn/saml@v0.6.0
+go get github.com/go-authn/saml@v0.6.1
 ```
 
 이것은 [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})의 페더레이션을 마주하는
@@ -256,6 +256,33 @@ Response를 검증하고 어서션을 복호화하며(xmlsec1이 없으면 이 �
   Response 서명을 제거한 같은 CBC 어서션은 복호화 전에 거부됩니다.
 
 커버리지 레인의 하한은 92%입니다.
+
+## 퍼징, 그리고 적대적 입력의 비용 {#fuzzing}
+
+v0.6.1부터 퍼즈 타깃 네 개가 파서 옆에 있으며, 코퍼스는 `testdata/fuzz`에 커밋되어
+있고 모든 `go test`가 다시 실행합니다.
+
+- `FuzzAccept`: 퍼저가 재배열한 응답은 거부되거나, IdP가 서명한 것을 정확히 말합니다.
+  평문 상태의 서명된 어서션, 암호화된 어서션을 감싼 서명된 Response, 그리고
+  서명 래핑 배치 XSW1부터 XSW8까지를 시드로 씁니다.
+- `FuzzParseMetadata`.
+- `FuzzDecrypt`: GCM과 CBC, EncryptedKey가 EncryptedData의 KeyInfo 안에 있는 경우와
+  그 옆에 있는 경우. CBC는 인증 없이 열리지 않으며, GCM이 여는 것은 봉인된 것입니다.
+- `FuzzLimits`: `limits.check`와 `parse`는 무엇이 거부되는지에 동의하며, `check`는
+  입력에 비례해서 할당합니다.
+
+시드는 `samltest`에서 옵니다. 심어 둔 결함, 즉 제거한 CBC 게이트는 시드만으로
+`FuzzDecrypt`를 빨갛게 만듭니다. 부하가 8을 넘는 한 대의 기계에서 워커 16개로 각각
+130초 실행했을 때(측정 대상은 시간이 아니라 실행 횟수입니다) 1,502,094(`FuzzAccept`),
+2,120,800(`FuzzParseMetadata`), 5,146,715(`FuzzDecrypt`), 1,119,772(`FuzzLimits`)번
+실행했으며 충돌, 멈춤, 속성 위반을 찾지 못했습니다. CI는 모든 푸시와 풀 리퀘스트에서
+각 타깃을 30초씩 실행하고, 하나를 깨뜨린 입력을 아티팩트로 보관합니다.
+
+`TestHostileInputsAreRefusedCheaply`는 적대적 입력이 파싱되는 것이 아니라 **거부되는지**
+검사합니다. 소프트 메모리 한도 아래에서 엔티티 확장 폭탄(billion laughs), 외부 엔티티,
+80,000단계와 1,048,576단계의 중첩, 형제 요소 60,000개, 150 KiB의 `CipherValue`,
+크기 상한을 넘는 응답, 공백만으로 된 응답이 각각 거부되며, `TotalAlloc`은 4~8 MiB로
+제한됩니다.
 
 ## 참고 {#reference}
 

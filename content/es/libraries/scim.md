@@ -13,7 +13,7 @@ de acceso HTTP, para Users y Groups (RFC 7643, RFC 7644), sobre un `Backend`
 que usted escribe. Go puro, `CGO_ENABLED=0`, solo biblioteca estándar.
 
 ```sh
-go get github.com/go-authn/scim@v0.2.0
+go get github.com/go-authn/scim@v0.2.1
 ```
 
 ## Ejemplo {#example}
@@ -104,6 +104,30 @@ sueltas ruidosas (unos 1,7 s a 0,06 s para el filtro que recorre) no son un resu
 `FuzzPatchPath`, `FuzzPatchThenDecode`, `FuzzFilter` y `FuzzServer` corrieron 45 s cada uno
 con 16 trabajadores, de 1,3 a 2,4 millones de ejecuciones, y no encontraron ningún fallo.
 
+## Qué cambió la v0.2.1 {#v021}
+
+- **`If-None-Match` sigue la RFC 7232 §3.2.** Un `GET` con una lista de etiquetas
+  de entidad (también en varias líneas de cabecera) responde 304 cuando alguna
+  coincide por comparación débil (`"x"` coincide con `W/"x"`); `*` responde 304 para
+  cualquier recurso existente; una cabecera que no es un `If-None-Match` válido se
+  ignora. El 304 lleva el `ETag` (RFC 7232 §4.1), lo que antes no hacía. Probado
+  con fuzzing por `FuzzIfNoneMatch`.
+- **`Memory` mantiene un índice de `userName`.** La unicidad se comprobaba
+  recorriendo todos los usuarios, de modo que cargar N usuarios costaba O(N^2)
+  llamadas a `EqualFold`; ahora es O(N), y las 100 millones de llamadas para 10 000
+  usuarios han desaparecido. La clave es el mínimo de la órbita `unicode.SimpleFold`
+  de cada runa, que es exactamente la equivalencia de `strings.EqualFold` (probada
+  contra el recorrido anterior, y con fuzzing por `FuzzFoldKey`); crear, reemplazar
+  (PUT y PATCH) y eliminar la mantienen coherente. `BenchmarkMemoryLoad10k` (crear
+  y reemplazar 10 000 usuarios) cuesta 119 030 asignaciones por ejecución, donde
+  costaba 98 959: el índice es una clave por creación y por cambio de nombre.
+- **Una lista con un filtro que ningún índice puede responder se evalúa sobre un
+  mapa que contiene solo los atributos de primer nivel que el filtro nombra**, y los
+  objetos completos se construyen solo para la página. `BenchmarkListFilterCo10k`
+  (10 000 usuarios): 361 095 asignaciones por petición antes, 162 695 ahora, es
+  decir, 36,1 a 16,3 por usuario. La equivalencia se prueba con 50 filtros y con
+  filtros aleatorios (`FuzzFilterOnSelectedMap`).
+
 ## Contra qué se comprueba {#what-it-is-checked-against}
 
 **Lo que los proveedores de identidad envían de verdad**, probado con sus
@@ -115,4 +139,4 @@ El filtro, PATCH y todo el manejador se prueban con fuzzing (`FuzzFilter`,
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim) (la página de v0.2.1 aún no estaba indexada por pkg.go.dev al escribir esto, por eso el enlace no indica versión)

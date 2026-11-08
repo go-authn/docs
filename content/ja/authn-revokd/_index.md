@@ -11,24 +11,39 @@ tags: [authn-revokd, 失効, krl, crl]
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}}) が公開するリストについて、この二つの
 隙間を塞ぎます。各リストを取得し、検証に通った場合にのみ保持し、`sshd` や TLS サーバーが読む
 場所に書き込み、リストが失効したときは **CA 自体を失効させる**リストを書き込みます。
-純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.6.7 を説明しています。
+純粋な Go、`CGO_ENABLED=0`、単一のバイナリ。これらのページは v0.7.0 を説明しています。
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6
-go: github.com/go-authn/revocation@v0.6.6 requires go >= 1.27.3; switching to go1.27.3
-$ authn-revokd -version
-authn-revokd v0.6.6
-$ authn-revokd -help
-Usage of authn-revokd:
-  -config string
-    	the configuration file (default "/etc/authn-revokd/revokd.hcl")
-  -once
-    	sync once and exit: 1 when a list is not current, or could not be fetched
-  -version
-    	print the version and exit
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0
+go: downloading github.com/go-authn/revocation v0.7.0
+$ authn-revokd --version
+authn-revokd v0.7.0
+$ authn-revokd --help
+authn-revokd fetches revocation lists, keeps only those that verify, writes
+them where sshd and TLS servers read them (failing closed for sshd when a list
+lapses) and, with listen, serves the verified copies as a mirror. SIGHUP syncs now.
+
+The single-dash spellings -config, -once, -version and -help of earlier
+releases are still accepted, with a deprecation warning on stderr.
+
+Usage:
+  authn-revokd [flags]
+
+Flags:
+  -c, --config string   the configuration file (default "/etc/authn-revokd/revokd.hcl")
+  -h, --help            help for authn-revokd
+  -o, --once            sync once and exit: 1 when a list is not current, or could not be fetched
+  -v, --version         version for authn-revokd
 ```
 
-`-help` は 0 で終了します。v0.6.2 より前は 2 で終了していました。
+コマンドは v0.7.0 から cobra です。POSIX フラグ `--config`/`-c`、`--once`/`-o`、
+`--version`/`-v`、`--help`/`-h`、および `--config=PATH`。`--help` は標準出力に出力して 0 で終了します
+(v0.6.2 より前は、旧来の `-help` は 2 で終了していました)。以前のリリースのシングルダッシュの
+綴り (`-config`、`-once`、`-version`、`-help`。`=` でも別の値でも) は引き続き受け付けられ、
+フラグごとに標準エラー出力へ非推奨の行が一行出力されます。後のリリースで削除されます。
+終了ステータスは変わりません (0。失敗、または `--once` のときにリストが current でない場合は 1。
+使い方の誤り、または読めない設定は 2)。したがって `-once` でデプロイされたユニットは
+変更不要です。
 
 v0.6.0 より前は、コマンドは `revokd` で、既定で `/etc/revokd.hcl` を読んでいました。そのファイルは
 もう読まれず、そのファイルがあって新しい既定のファイルがない場合、エラーは両方のパスを
@@ -39,7 +54,7 @@ v0.6.0 より前は、コマンドは `revokd` で、既定で `/etc/revokd.hcl`
 ループバック上のテスト用 authn-bridge に対して、KRL ソースと CRL ソースで:
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
@@ -71,7 +86,7 @@ $ ssh-keygen -Q -l -f out/sshd.krl
 
 | | |
 |---|---|
-| [インストール]({{< relref "/authn-revokd/install.md" >}}) | デーモン、またはタイマーでの `-once`。sshd と nginx の接続 |
+| [インストール]({{< relref "/authn-revokd/install.md" >}}) | デーモン、またはタイマーでの `--once`。sshd と nginx の接続 |
 | [設定]({{< relref "/authn-revokd/configuration.md" >}}) | ソース、出力、ミラー、拒否されるもの |
 | [リストの検証方法]({{< relref "/authn-revokd/verification.md" >}}) | 署名、日付、そして再起動をまたいで、保持しているリストより古くならないこと |
 | [リストが失効したとき]({{< relref "/authn-revokd/lapse.md" >}}) | CA 自体を失効させる KRL |

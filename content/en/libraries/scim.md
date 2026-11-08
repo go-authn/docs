@@ -13,7 +13,7 @@ endpoint, for Users and Groups (RFC 7643, RFC 7644), over a `Backend` you
 write. Pure Go, `CGO_ENABLED=0`, standard library only.
 
 ```sh
-go get github.com/go-authn/scim@v0.2.0
+go get github.com/go-authn/scim@v0.2.1
 ```
 
 ## Example
@@ -103,6 +103,28 @@ single runs (about 1.7 s to 0.06 s for the scanning filter) are not a result.
 `FuzzPatchPath`, `FuzzPatchThenDecode`, `FuzzFilter` and `FuzzServer` ran 45 s
 each with 16 workers, 1.3 to 2.4 million executions, and found no failure.
 
+## What v0.2.1 changed {#v021}
+
+- **`If-None-Match` follows RFC 7232 §3.2.** A `GET` with a list of entity-tags
+  (several header lines too) answers 304 when any of them matches by weak
+  comparison (`"x"` matches `W/"x"`); `*` answers 304 for any existing resource;
+  a header that is not a valid `If-None-Match` is ignored. The 304 carries the
+  `ETag` (RFC 7232 §4.1), which it did not. Fuzzed by `FuzzIfNoneMatch`.
+- **`Memory` keeps an index of `userName`.** Uniqueness was checked by scanning
+  every user, so loading N users was O(N^2) `EqualFold` calls; it is now O(N),
+  and the 100 million calls for 10,000 users are gone. The key is the
+  `unicode.SimpleFold` orbit minimum of each rune, which is exactly
+  `strings.EqualFold`'s equivalence (tested against the old scan, and fuzzed by
+  `FuzzFoldKey`); create, replace (PUT and PATCH) and delete keep it consistent.
+  `BenchmarkMemoryLoad10k` (create and replace 10,000 users) costs 119,030
+  allocations a run, where it cost 98,959: the index is one key per create and
+  per rename.
+- **A list with a filter no index can answer is matched on a map holding only the
+  top-level attributes the filter names**, and whole objects are built for the
+  page only. `BenchmarkListFilterCo10k` (10,000 users): 361,095 allocations a
+  request before, 162,695 now, which is 36.1 to 16.3 per user. Equivalence is
+  tested for 50 filters and random ones (`FuzzFilterOnSelectedMap`).
+
 ## What it is checked against
 
 **What identity providers really send**, tested with their payloads: Entra
@@ -113,4 +135,4 @@ path that repeats the `id`. The filter, PATCH and the whole handler are fuzzed
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim) (the v0.2.1 page was not yet indexed by pkg.go.dev when this was written, which is why the link names no version)

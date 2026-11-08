@@ -170,7 +170,11 @@ IdP는 거부됩니다. 아무도 두 번 인식될 수 없기 때문입니다. 
 **요청이 IdP에 요구하는 것.** `prompt=none`은 `IsPassive`가 되고, 세션이 없는 IdP는
 `login_required`로 응답합니다. `prompt=login`과 `max_age=0`은 `ForceAuthn`이 되며,
 그 밖의 `max_age`에 대해서는 IdP가 그보다 오래 전에 인증한 사람이 `ForceAuthn`과
-함께 다시 보내집니다. `acr_values`는 `RequestedAuthnContext`가 되고, 다른 컨텍스트로
+함께 다시 보내집니다. 지금에 IdP에 허용되는 시계 오차 3분을 더한 것보다 늦은
+`AuthnInstant`도 새롭지 않습니다(v0.23.10). OIDC Core 3.1.2.1의 말대로 경과 시간을
+알 수 없으며, 그 사람은 너무 오래 전에 인증한 사람처럼 `ForceAuthn`과 함께 다시
+보내집니다. 이전에는 음수가 되어 어떤 `max_age`에서도 새로운 것으로 계산되었습니다.
+오차 범위 안에서는 아무것도 바뀌지 않습니다. `acr_values`는 `RequestedAuthnContext`가 되고, 다른 컨텍스트로
 응답하는 IdP는 거부됩니다. 두 번째 인증 요소를 요청한 클라이언트는 받지 못했는데도
 받았다는 말을 절대 듣지 않습니다.
 

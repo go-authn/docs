@@ -11,7 +11,7 @@ tags: [ライブラリ, ディレクトリ, ldap, sql]
 あります。
 
 ```sh
-go get github.com/go-authn/directory@v0.20.0
+go get github.com/go-authn/directory@v0.21.0
 ```
 
 v0.17.0 の新機能: [`ErrUnavailable`](#unavailable)。障害を間違ったパスワードと区別します。また、メンバーの DN は
@@ -58,6 +58,14 @@ v0.17.0 の新機能: [`ErrUnavailable`](#unavailable)。障害を間違った�
 **和集合**です。ソースはサーバーの起動時に読まれます。パスワードの検証は、毎回ソースに到達
 してもよいことになっています。シークレットを保持せずにバインドをキャッシュすることはできない
 からです。`GroupReader` を実装するソース (sqldir と ldapdir が実装しています) は、すべてのグループを一括で 1 回だけ読み込みます。すると `Set.Frozen()` は、`Members`、`GroupAttributes`、`GroupObjectClasses`、`GroupNames` に、`Set` 自身のマージ規則でメモリから答えます。閉じるのは凍結した `Set` ではなく、元の `Set` です。
+
+**`Set.GroupNames` は失敗したソースを知らせます** (v0.21.0)。応答した**すべての**ソースの名前と、
+失敗した各ソースについての `"<describe>: <err>"` の `errors.Join` を返します。`errors.Is` は今も
+`ErrUnavailable` に一致します。以前は、ほかのソースが応答するとエラーは捨てられ、部分的な一覧が
+nil のエラーとともに返っていました。`err != nil` だけを調べていた呼び出し側は、部分的な一覧を
+見ていたところでエラーを見ることになり、名前もそれとともに返ります (`nil` になるのはすべての
+ソースが失敗したときだけです)。持っているものを公開できる呼び出し側は、名前を使い、エラーを
+ログに記録すべきです。
 
 `hcldir` は HCL をデコードしません。呼び出し側がブロックをデコードして渡します。HCL を
 インポートするのは、`SetPassword` のために書き込むためだけです。ビルドタグ `nosql` と `noldap` は、
@@ -445,4 +453,4 @@ CI で確認されます。
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.20.0](https://pkg.go.dev/github.com/go-authn/directory@v0.20.0)
+[pkg.go.dev/github.com/go-authn/directory](https://pkg.go.dev/github.com/go-authn/directory)（執筆時点で v0.21.0 のページは pkg.go.dev にまだ索引されていないため、リンクにバージョンを含めていません）

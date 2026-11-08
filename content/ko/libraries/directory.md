@@ -11,7 +11,7 @@ tags: [라이브러리, 디렉터리, ldap, sql]
 모델이며, 요점은 질문의 후반부에 있습니다.
 
 ```sh
-go get github.com/go-authn/directory@v0.20.0
+go get github.com/go-authn/directory@v0.21.0
 ```
 
 v0.17.0의 새 기능: [`ErrUnavailable`](#unavailable)은 장애를 틀린 비밀번호와 구별하며, 멤버 DN은 훑어 보는 대신
@@ -58,6 +58,14 @@ DN 50개씩의 2,000개 그룹과 10,000명에서 `ldapdir`의 `ReadGroups`는 2
 계정을 LDAP에 넣을 필요가 없습니다. 그룹 구성원은 모든 소스의 **합집합**입니다.
 소스는 서버가 시작할 때 읽습니다. 비밀번호 확인은 매번 소스에 도달할 수 있는데,
 바인드는 비밀 값을 보유하지 않고서는 캐시할 수 없기 때문입니다. `GroupReader`를 구현하는 소스(sqldir과 ldapdir가 구현합니다)는 모든 그룹을 한 번에 일괄로 읽고, 그러면 `Set.Frozen()`은 `Members`, `GroupAttributes`, `GroupObjectClasses`, `GroupNames`를 `Set` 자체의 병합 규칙으로 메모리에서 답합니다. 닫아야 하는 것은 고정된 `Set`이 아니라 원래의 `Set`입니다.
+
+**`Set.GroupNames`는 어느 소스가 실패했는지 알려 줍니다**(v0.21.0). 답한 소스들의
+이름**과** 실패한 각 소스에 대한 `"<describe>: <err>"`의 `errors.Join`을 반환하며,
+`errors.Is`는 여전히 `ErrUnavailable`과 일치합니다. 이전에는 다른 소스가 답하면 오류가
+버려졌고, 부분 목록이 nil 오류와 함께 돌아왔습니다. `err != nil`만 검사하던 호출자는
+이제 부분 목록을 보던 자리에서 오류를 보며, 이름도 함께 돌아옵니다(모든 소스가
+실패했을 때만 `nil`입니다). 가진 것을 게시할 수 있는 호출자는 이름을 사용하고 오류를
+기록해야 합니다.
 
 `hcldir`은 HCL을 디코딩하지 않습니다. 호출자가 블록을 디코딩해서 건넵니다. HCL은
 `SetPassword`를 위해 쓸 때만 import합니다. 빌드 태그 `nosql`과 `noldap`은 한 종류를
@@ -456,4 +464,4 @@ CI에서 검사합니다.
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.20.0](https://pkg.go.dev/github.com/go-authn/directory@v0.20.0)
+[pkg.go.dev/github.com/go-authn/directory](https://pkg.go.dev/github.com/go-authn/directory) (작성 시점에 v0.21.0 페이지가 아직 pkg.go.dev에 색인되지 않아 링크에 버전을 적지 않았습니다)

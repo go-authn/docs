@@ -5,24 +5,25 @@ description: "이 문서가 설명하는 릴리스, 각 릴리스에서 추가�
 tags: [상태, 릴리스]
 ---
 
-이 문서는 문서 버전 **0.10**이며 다음을 설명합니다.
+이 문서는 문서 버전 **0.11**이며 다음을 설명합니다.
 
 | 프로그램 | 릴리스 | 모듈 |
 |---|---|---|
 | authnd | **v0.18.6** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
+| authn-bridge | **v0.23.12** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.7.0** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 라이브러리의 버전은 [해당 페이지]({{< relref "/libraries/_index.md" >}})에
 있습니다. ldap은 DIT 콘텐츠 규칙, 이름 형식, DIT 구조 규칙의 읽기, 적용, 게시와
 빌드되지 않는 스키마를 위한 타입이 있는 `BuildError`, HCL2
 스키마, `ldapschema` 변환기를 갖춘 **v0.12.3**이고,
-directory는 선언된 오브젝트 클래스와 모든 SQL 쿼리의 기한을 갖춘 **v0.20.0**입니다. authnd
+directory는 선언된 오브젝트 클래스, 모든 SQL 쿼리의 기한, 그리고 실패한 소스를
+보고하는 `GroupNames`를 갖춘 **v0.21.0**입니다. authnd
 v0.18.6는 ldap v0.12.3과 directory v0.20.0을 내장합니다.
 위 프로그램 중 어느 것이든 새 마이너 버전이 나오면 새 문서 버전이 됩니다. 따라서
-독자가 `/docs/0.10/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
-페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/`, `/docs/0.8/`, `/docs/0.9/`에 남아 있습니다.
+독자가 `/docs/0.11/`에서 찾는 페이지는 설치한 것을 계속 설명하며, 이전 릴리스의
+페이지는 `/docs/0.1/`, `/docs/0.2/`, `/docs/0.3/`, `/docs/0.4/`, `/docs/0.5/`, `/docs/0.6/`, `/docs/0.7/`, `/docs/0.8/`, `/docs/0.9/`, `/docs/0.10/`에 남아 있습니다.
 
 {{< callout type="warning" >}}
 **authnd를 v0.16.x에서 업그레이드: `max_age`의 기본값은 10분입니다**
@@ -159,6 +160,9 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.23.7 | 보안: `saml { idps }`에서 빠진 IdP에서 온 리프레시 토큰, 애플리케이션 비밀번호, SSH 인증서 요청은 `DisableIdP`처럼 다음에 사용될 때 `institution not configured`로 거부됩니다([관리 API]({{< relref "/authn-bridge/admin.md" >}})). IdP를 다시 넣으면 다시 동작합니다 |
 | v0.23.8 | 보안: [사람은 그 사람 자신으로서 비활성화됩니다]({{< relref "/authn-bridge/admin.md" >}}). 사용자 이름(비활성화 목록, 인증서 프린시펄, subject-id)은 go-authn/oidc v0.7.0의 `ASCIILower`로 ASCII 문자만 접어 비교하므로, `kate`와 켈빈 기호(U+212A)를 쓴 표기는 두 사람이며 비활성화 항목도 인증서 프린시펄도 둘이 됩니다 |
 | v0.23.9 | 보안, go-authn/saml v0.6.0과 함께: [`schac_home_organization`이 발급되는]({{< relref "/authn-bridge/tokens.md" >}}) 것은 토큰과 userinfo에서 어서션하는 IdP의 `shibmd:Scope` 값 중 하나(정확히 일치, 대소문자 구분)일 때뿐입니다. 한 기관의 IdP가 다른 기관의 값을 말할 수 있었고, 이 클레임으로 거르는 서비스(게이트웨이의 `accept`)는 그 기관으로 받아들였습니다. **업그레이드:** 메타데이터가 도메인의 Scope를 게시하지 않는 IdP는 더 이상 클레임이 발급되지 않습니다 |
+| v0.23.10 | 보안: [지금에 시계 오차 3분을 더한 것보다 늦은 `AuthnInstant`]({{< relref "/authn-bridge/federation.md" >}})가 `max_age`에서 새로운 인증으로 계산되었습니다(경과 시간이 음수가 되었습니다). 이제 경과 시간을 알 수 없는 것으로 보며(OIDC Core 3.1.2.1), 오래된 것과 마찬가지로 그 사람은 `ForceAuthn`과 함께 IdP로 다시 보내집니다. 오차 범위 안에서는 아무것도 바뀌지 않습니다 |
+| v0.23.11 | [데이터베이스가 영구적으로 거부하는 상태 행 하나가 더 이상 이후의 모든 플러시를 멈추지 않습니다]({{< relref "/authn-bridge/configuration.md#state-what-a-restart-must-not-forget" >}}). 폐기도 포함됩니다. 삭제는 항상 흘러가며, 영구적으로 거부된 행(PostgreSQL SQLSTATE 클래스 22와 23, MySQL 1048, 1062, 1264, 1265, 1292, 1366, 1406, 1452, SQLite constraint, mismatch, too big)은 한 번 로그에 기록되고, 새 `bridge_state_rows_rejected_total{kind}`에 계산되며 포기됩니다. 메모리에서는 동작하고 재시작을 넘어 남지 않습니다 |
+| v0.23.12 | 어떤 분류기도 모르는 오류로 거부된 상태 행은, 그 행이 계속 실패하는 동안 데이터베이스가 다른 것을 받아 준 플러시가 최소 30초에 걸쳐 다섯 번 있으면 포기됩니다. 아무것도 성공하지 못한 플러시, 즉 데이터베이스가 없는 경우는 어떤 행에도 불리하게 계산되지 않으므로 **장애는 아무것도 포기하게 하지 않습니다**. 동작은 더 이상 드라이버 오류 클래스의 목록에 의존하지 않습니다 |
 
 ### authn-revokd {#authn-revokd}
 
@@ -177,6 +181,8 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.6.5 | Go 1.27.3으로 빌드, GO-2026-6809 대응(`crypto/x509`: `Certificate.Verify`가 알려진 침해된 중간 인증서를 거부하지 않았음). `go` 지시어는 1.27.3. 동작 변경 없음 |
 | v0.6.6 | 릴리스 바이너리를 `-s -w` 대신 `-w`로 링크하므로 정확한 `govulncheck -mode binary`를 위해 심볼 테이블이 남음. 동작 변경 없음 |
 | v0.6.7 | 감사, 퍼징, 카오스, 성능 실행([한 번의 동기화가 하는 일]({{< relref "/authn-revokd/configuration.md#sync" >}})). 만료되는 목록은 다음 새로 고침이 아니라 만료되는 때 거부됩니다. 소스는 병렬로 가져옵니다(최대 16개, 각 2분). `on_change`는 1분 뒤에 종료되고 다시 시도됩니다. 에이전트 모르게 바뀐 출력 파일은 다음 동기화에서 다시 쓰입니다. `file://` 소스는 일반 파일이어야 합니다. 오류는 비밀번호, 쿼리, 프래그먼트 없는 URL을 보여 줍니다. `0..2^159` 범위를 벗어난 CRL 번호는 거부됩니다. 미러에는 읽기, 쓰기, 유휴 기한이 있습니다. 오래된 임시 파일은 시작할 때 제거됩니다. 100,000개 항목의 CRL을 다시 조회: 조회당 할당 300,138회와 96,956,946 B가 37회와 4,776,864 B로(정확. 시간은 측정하지 않음, 부하 53~65). govulncheck는 여전히 GO-2026-5932(`golang.org/x/crypto/openpgp`)를 나열하며, 수정된 버전이 없고 호출되지 않습니다 |
+| v0.6.8 | 보안: [검증할 수 없는 상태 사본은 순서의 하한선으로 자리를 유지합니다]({{< relref "/authn-revokd/verification.md#across-restarts-too" >}}). 손상되었거나 다른 CA 키로 기록된 상태 파일은 사본이 없는 것으로 취급되었으므로, 재생된 오래된 목록이 서명되어 있고 만료되지 않았다면 받아들여졌고 더 새 목록이 폐기한 것을 되돌렸습니다. 그 버전과 발급 시각은 이제 검증되지 않은 채 하한선으로 유지됩니다. 그보다 낮은 목록은 그 뒤를 잇는, 검증되는 목록을 보유할 때까지 롤백으로 거부되며, 그 내용은 절대 쓰이지 않습니다. CA가 교체되어 그 목록이 더 낮은 버전에서 다시 시작하면, 로그가 지울 파일 `<source>.state`를 알려 줍니다 |
+| v0.7.0 | **명령은 cobra입니다.** 이 플릿의 다른 명령처럼 `--config`/`-c`, `--once`/`-o`, `--version`/`-v`, `--help`/`-h`, `--config=PATH`를 받으며, `--help`는 표준 출력에 출력합니다. [이전 릴리스의 단일 대시 철자]({{< relref "/authn-revokd/_index.md" >}})(`-config`, `-once`, `-version`, `-help`)도 여전히 받아들여지며, 플래그마다 표준 오류에 폐기 예정 안내가 한 줄 나오고, 이후 릴리스에서 제거됩니다. 종료 상태는 바뀌지 않습니다. `packaging/`의 유닛과 설치 가이드는 새 철자를 쓰며, 배포된 유닛은 바꿀 필요가 없습니다. **업그레이드:** 예전 철자가 사라지기 전에 유닛과 스크립트를 `--config`와 `--once`로 옮기십시오 |
 
 ### sshcert {#sshcert}
 
@@ -206,6 +212,8 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | directory v0.18.0 | [한 소스의 두 엔트리가 가진 같은 이름은 `ErrAmbiguous`]({{< relref "/libraries/directory.md" >}}): ldapdir는 uid를 대소문자 구분 없이 비교해 두 DN을 밝히고, `Set.Identities`는 한 소스가 두 번 나열하는 이름을 거부합니다. 소스 사이에서는 첫 소스가 계속 그 이름을 가집니다. `ldaptest.Person.UID`. 이런 중복이 있는 디렉터리는 고칠 때까지 로드되지 않습니다 |
 | directory v0.19.0 | [비밀번호 확인을 취소할 수 있습니다]({{< relref "/libraries/directory.md" >}}): `directory.WithContextVerifier`와 `Identity.VerifyContext(ctx, password)`. `ldapdir` ID에서는 컨텍스트가 끝나면 업스트림 연결을 닫고 `ErrUnavailable`로 응답합니다(go-ldap에는 컨텍스트도 기본 타임아웃도 없어서, 연결을 받아들이고 응답하지 않는 업스트림에 대한 bind는 영원히 기다렸습니다). 확인의 연결 수립도 컨텍스트의 기한에 끝납니다. `Verify`와 `WithVerifier`는 그대로입니다. **업그레이드:** 확인에 제한을 두는 서버는 `VerifyContext`를 호출해야 합니다 |
 | directory v0.20.0 | [모든 쿼리에 기한이 있습니다]({{< relref "/libraries/directory.md" >}}): `sqldir.WithQueryTimeout(d)`, 기본값은 `sqldir.DefaultQueryTimeout`(30초), `0`은 제한 없음. 행을 읽는 것까지 포함하며 기한에 드라이버가 연결을 끊습니다(이전에는 응답을 멈춘 데이터베이스가 읽기를 영원히 막았습니다). `hcldir.Block.QueryTimeout`(`sql` 블록의 `query_timeout`)이 여기에 닿으며 네트워크 없이 검사되고 `ldap` 블록에서는 거부됩니다. `Source` 인터페이스는 바뀌지 않습니다. **업그레이드:** 30초보다 느린 쿼리는 이제 실패합니다. 더 느린 쿼리에는 `WithQueryTimeout`을 지정하세요 |
+| directory v0.21.0 | [`Set.GroupNames`는 실패한 소스를 보고합니다]({{< relref "/libraries/directory.md" >}}): 답한 소스의 이름과 실패한 각 소스에 대한 `"<describe>: <err>"`의 `errors.Join`을 반환합니다(`errors.Is`는 여전히 `ErrUnavailable`과 일치). 이전에는 다른 소스가 답하면 오류가 버려졌습니다. **동작 변경:** `err != nil`만 검사하던 호출자는 이제 부분 목록을 보던 자리에서 오류를 보며, 이름도 함께 돌아옵니다. 이름을 사용하고 오류를 기록하십시오 |
+| fido v0.6.4 | [권한이 있는 `PINToken`]({{< relref "/libraries/fido.md" >}})은 CTAP 2.1(§6.5.5)이 번호를 매기는 대로 `permissions`를 키 0x09로, `rpId`를 0x0A로 보냅니다. 이전에는 0x07과 0x08을 썼고, YubiKey 5는 `CTAP2_ERR_MISSING_PARAMETER`(0x14)로 응답했습니다 |
 | kdc v0.4.3 | 의존성만: 최소 요구 버전으로 go-authn/directory v0.12.0 |
 | kdc v0.4.5 | 보안 감사, 퍼징, 카오스 실행([거부하는 것]({{< relref "/libraries/kdc.md" >}})): 다른 렐름에 대한 요청은 `KDC_ERR_WRONG_REALM`, 읽을 수 없는 디렉터리는 `KDC_ERR_SVC_UNAVAILABLE`로 응답하며(이전에는 `KDC_ERR_C_PRINCIPAL_UNKNOWN`), 시작이 `MaxSkew` 안의 미래인 TGT는 받아들이고, 디코더 패닉은 프로세스를 크래시시키는 대신 요청 하나를 버립니다(잘못된 AS-REQ나 TGS-REQ 하나로 크래시할 수 있었습니다). 프린시펄 이름은 로그에서 따옴표로 묶입니다. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT KDC의 [lookaside]({{< relref "/libraries/kdc.md" >}}): 바이트 단위로 이미 본 요청은 이전 응답을 받음(2분 동안, 합계 10 MiB 미만). `KRB-ERROR`는 저장하지 않음. MIT가 TGS에서 끄는 인증자 재전송 캐시는 일부러 두지 않음. 테스트는 읽을 수 없는 디렉터리가 AS(올바른 비밀번호로)와 TGS에서 `KDC_ERR_SVC_UNAVAILABLE`이 됨을 고정함. 요청당 할당 2회 증가 |
@@ -231,7 +239,9 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}})은 `@`가 둘 이상인 이름을 거부합니다(`ErrBadName`) |
 | oidc v0.7.0 | [`ASCIILower`와 `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}}): 이름을 위한 ASCII 전용의 유일한 접기입니다. `strings.ToLower`와 `strings.EqualFold`는 유니코드를 접어서 켈빈 기호 U+212A를 "k"와 같게 보기 때문입니다 |
 | saml v0.6.0 | [`schacHomeOrganization`은 IdP의 `shibmd:Scope` 값으로 제한되며]({{< relref "/libraries/saml.md" >}}) (정확히 일치, 대소문자 구분) 그렇지 않으면 버려집니다. `eduPersonPrincipalName`, `subject-id`, `pairwise-id`, 스코프 소속이 이미 그랬던 것과 같습니다(SWITCH와 SAFIRE의 속성 페이지가 신뢰 당사자에게 요구합니다). **업그레이드:** 메타데이터가 도메인의 Scope를 게시하지 않는 IdP의 속성은 더 이상 읽히지 않습니다 |
+| saml v0.6.1 | [퍼즈 타깃 네 개와 적대적 입력 테스트]({{< relref "/libraries/saml.md#fuzzing" >}}): `FuzzAccept`, `FuzzParseMetadata`, `FuzzDecrypt`, `FuzzLimits`. 코퍼스는 커밋되어 `go test`가 다시 실행하며, 각각 110만에서 510만 번 실행했으나 충돌, 멈춤, 속성 위반이 없었습니다. billion-laughs 폭탄, 외부 엔티티, 80,000단계와 1,048,576단계의 중첩, 형제 60,000개, 너무 큰 `CipherValue`와 응답은 많아야 4~8 MiB를 할당하고 거부됩니다. `fuzz` 작업이 CI에서 각 타깃을 30초씩 실행합니다. 동작 변경 없음 |
 | scim v0.2.0 | [감사, 퍼징, 카오스, 성능 실행]({{< relref "/libraries/scim.md#v020" >}}): `Server.ReadTimeout`(30초), 선택 인터페이스 `ConditionalDeleter`, `If-Match` 없는 PATCH나 PUT은 진 경합에서 412 대신 최대 32번 다시 수행, 아무것도 일치하지 않는 필터로의 제거는 성공, 경로 없는 PATCH의 키는 정렬된 순서로 적용, `BearerAuth`는 스킴을 대소문자 구분 없이 받아들임, `startIndex`와 `count`는 워드 크기와 상관없이 상한으로 잘림. 사용자 10,000명에 대한 목록 요청: 100개 페이지는 789,417회에서 14,952회로, `userName eq`는 797,979회에서 90회로, 전체 훑기는 818,847회에서 361,098회로(정확. 시간은 측정하지 않음, 부하 65) |
+| scim v0.2.1 | [RFC 7232 §3.2에 따른 `If-None-Match`]({{< relref "/libraries/scim.md#v021" >}}): 엔티티 태그 목록, `*`, 약한 비교, 그리고 304가 `ETag`를 담음. `Memory`는 색인으로 `userName` 고유성을 확인함(사용자 N명을 불러오는 데 `EqualFold` 호출이 O(N^2) 대신 O(N)). 어떤 색인도 답하지 못하는 목록 필터는 그것이 지명하는 최상위 속성에서 일치를 검사함: 사용자 10,000명에서 요청당 할당 361,095회가 162,695회로, 사용자당 36.1회가 16.3회로(정확) |
 | servercert v0.5.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | servercert v0.6.0 | [TLS `KeyFile`과 ACME `EABHMACKeyFile`은 거부됩니다]({{< relref "/libraries/servercert.md" >}}). 그룹이나 다른 사용자가 읽거나 쓸 수 있는 경우이며, `New` 시점과 매번 다시 불러올 때 확인합니다(읽을 수 있는 교체 키는 `OnError`로 보고되고 사용되지 않으며, 현재 인증서가 계속 제공됩니다). Windows에서는 확인하지 않습니다. **업그레이드:** 두 파일 모두 `chmod 600` |
 | totp v0.4.2 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |

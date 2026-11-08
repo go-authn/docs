@@ -11,7 +11,7 @@ en memoria, una base de datos SQL, un servidor LDAP, o bloques `user` y `group` 
 archivo de configuración; y lo que importa es la segunda mitad de la pregunta.
 
 ```sh
-go get github.com/go-authn/directory@v0.20.0
+go get github.com/go-authn/directory@v0.21.0
 ```
 
 Nuevo en la v0.17.0: [`ErrUnavailable`](#unavailable), una caída distinguida de una
@@ -66,6 +66,15 @@ bind no puede guardarse en caché sin guardar el secreto. Un origen que implemen
 hacen) lee todos los grupos una sola vez, en bloque; `Set.Frozen()` responde entonces a
 `Members`, `GroupAttributes`, `GroupObjectClasses` y `GroupNames` desde la memoria,
 con la propia fusión del Set. Cierre el Set original, no el congelado.
+
+**`Set.GroupNames` dice qué fuentes fallaron** (v0.21.0). Devuelve los nombres de
+las fuentes que respondieron **y** un `errors.Join` de `"<describe>: <err>"` por
+cada fuente que falló; `errors.Is` sigue reconociendo `ErrUnavailable`. Antes, el
+error se descartaba siempre que otra fuente respondía, y se devolvía una lista
+parcial con un error nulo. Un llamante que solo comprobaba `err != nil` ve ahora
+un error donde veía una lista parcial, y los nombres vuelven con él (son `nil`
+solo cuando todas las fuentes fallaron). Un llamante que pueda publicar lo que
+tiene debería usar los nombres y registrar el error.
 
 `hcldir` no decodifica HCL: el llamante decodifica el bloque y se lo entrega. Solo
 importa HCL para escribir, para `SetPassword`. Las etiquetas de compilación `nosql` y
@@ -498,4 +507,4 @@ compilaciones `nosql` y `noldap` se comprueban en la CI.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.20.0](https://pkg.go.dev/github.com/go-authn/directory@v0.20.0)
+[pkg.go.dev/github.com/go-authn/directory](https://pkg.go.dev/github.com/go-authn/directory) (la página de v0.21.0 aún no estaba indexada por pkg.go.dev al escribir esto, por eso el enlace no indica versión)

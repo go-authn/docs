@@ -11,7 +11,7 @@ tags: [라이브러리, fido, 인증 요소]
 토큰으로 교환하는 CTAP2 명령 — 을 어떤 운영 체제에서든 순수 Go로 제공합니다.
 
 ```sh
-go get github.com/go-authn/fido@v0.6.2
+go get github.com/go-authn/fido@v0.6.4
 ```
 
 여기에는 플랫폼에 종속된 것이 없습니다. `Transport`는 64바이트 리포트를 인증기 하나와
@@ -135,6 +135,14 @@ CTAP는 인증기에 PIN 재시도 카운터를 주며 최대 여덟 번이고, 
 잃을 수 있었습니다.
 {{< /callout >}}
 
+**권한이 있는 PIN 토큰.** 권한과 함께 요청한 `Key.PINToken`은 CTAP 2.1이 번호를
+매기는 대로(§6.5.5, authenticatorClientPIN. `0x07`과 `0x08`은 없습니다) `permissions`를
+키 `0x09`로, `rpId`를 `0x0A`로 보냅니다. v0.6.3까지는 `0x07`과 `0x08`로 보냈고,
+YubiKey 5는 `CTAP2_ERR_MISSING_PARAMETER`(`0x14`)로 응답했습니다. 요청의 다른
+어떤 필드도 그 키를 쓰지 않았으므로(`keyAgreement`는 `0x03`, `pinHashEnc`는 `0x06`)
+충돌한 것은 없습니다. 테스트의 가짜 인증기는 이제 키를 명세에서 가져온 리터럴로
+읽으며, 테스트 하나가 요청의 맵 키를 그 표와 대조해 검사합니다.
+
 ## 무엇과 대조해 검사하는가 {#what-it-is-checked-against}
 
 CI에는 보안 키가 없으므로 테스트는 자신이 받은 것을 재조립하는 가짜 전송을 사용합니다.
@@ -152,4 +160,4 @@ CI에는 보안 키가 없으므로 테스트는 자신이 받은 것을 재조�
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.2](https://pkg.go.dev/github.com/go-authn/fido@v0.6.2)
+[pkg.go.dev/github.com/go-authn/fido](https://pkg.go.dev/github.com/go-authn/fido) (작성 시점에 v0.6.4 페이지가 아직 pkg.go.dev에 색인되지 않아 링크에 버전을 적지 않았습니다)

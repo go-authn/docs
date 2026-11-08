@@ -181,7 +181,12 @@ geprüft hat, ob die Person sie liest.
 **Was die Anfrage vom IdP verlangt.** `prompt=none` wird zu `IsPassive`, und
 ein IdP ohne Sitzung antwortet mit `login_required`. `prompt=login` und `max_age=0`
 werden zu `ForceAuthn`; bei jedem anderen `max_age` wird eine Person, deren IdP sie
-vor längerer Zeit authentifiziert hat, mit `ForceAuthn` zurückgeschickt. `acr_values` wird zu
+vor längerer Zeit authentifiziert hat, mit `ForceAuthn` zurückgeschickt. Ein `AuthnInstant`,
+der später liegt als jetzt plus die drei Minuten Uhrabweichung, die einem IdP zugestanden
+werden, ist ebenfalls nicht frisch (v0.23.10): Seine verstrichene Zeit ist unbekannt, wie
+OIDC Core 3.1.2.1 es vorsieht, und die Person wird wie eine zu lange zurückliegend
+authentifizierte mit `ForceAuthn` zurückgeschickt; vorher kam sie negativ heraus und galt
+unter jedem `max_age` als frisch. Innerhalb der Abweichung ändert sich nichts. `acr_values` wird zu
 `RequestedAuthnContext`, und ein IdP, der mit einem anderen Kontext antwortet, wird
 abgelehnt: Einem Client, der einen zweiten Faktor verlangt hat, wird nie gesagt, er habe einen bekommen,
 wenn das nicht so ist.
