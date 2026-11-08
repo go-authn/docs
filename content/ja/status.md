@@ -9,17 +9,17 @@ tags: [ステータス, リリース]
 
 | プログラム | リリース | モジュール |
 |---|---|---|
-| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.6** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 ライブラリのバージョンは[専用ページ]({{< relref "/libraries/_index.md" >}})にあります。
-ldap は **v0.12.1** で、DIT コンテンツルール、ネームフォーム、DIT 構造ルールの読み込み、適用、公開、
+ldap は **v0.12.3** で、DIT コンテンツルール、ネームフォーム、DIT 構造ルールの読み込み、適用、公開、
 ビルドできないスキーマのための型付きの `BuildError`、
 HCL2 のスキーマと `ldapschema` コンバーターを備えています。
 directory は **v0.20.0** で、宣言されたオブジェクトクラスと、すべての SQL クエリの期限を備えています。
-authnd v0.18.3 は ldap v0.12.1 と directory v0.20.0 を組み込んでいます。
+authnd v0.18.6 は ldap v0.12.3 と directory v0.20.0 を組み込んでいます。
 上記のいずれかのプログラムのマイナーバージョンが新しくなると、新しいドキュメントバージョンになります。
 そのため、`/docs/0.10/` 以下のページは、読者がインストールしたものを説明し続け、
 以前のリリースのページは `/docs/0.1/`、`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/`、`/docs/0.6/`、`/docs/0.7/`、`/docs/0.8/`、`/docs/0.9/` 以下に残ります。
@@ -115,6 +115,9 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | v0.18.1 | [起動のタイムアウトが、開こうとしていた SQL ソースを示す]({{< relref "/authnd/operations.md#limits" >}}): `opening sql pgx (dsn_file …) did not answer`。以前はどの SQL ブロックも `opening sql` でした。ドライバーと DSN を保持するファイルを示し、DSN は決して示しません。テスト: 使い捨てクラスター上の本物の PostgreSQL に対するカオステスト (リフレッシュ中のサーバー停止、クエリの途中での接続リセット、決して応答しないリスナー、障害中の Kerberos レルム)。サーバーのバイナリがなければスキップされ、`AUTHND_REQUIRE_PG=1` を指定した場合は失敗になります。設定の変更はありません |
 | v0.18.2 | [ハングした SQL の読み取りがリフレッシュを止めなくなった]({{< relref "/authnd/people.md" >}}): 接続を受け付けて応答しなくなったデータベースがあると、リフレッシュがクエリの中でブロックされ、以降のティックはすべてスキップされ、`max_age` を過ぎると再起動まですべてが `unavailable` を返しました。`users "sql"` ブロックに `query_timeout` が加わり、既定は `refresh` の 4 分の 3 です (go-authn/directory v0.20.0)。**動作の変更:** 期限より遅い単一のクエリは失敗します。より遅いクエリには `query_timeout` を設定してください |
 | v0.18.3 | [戻ったときは停止している]({{< relref "/authnd/operations.md" >}}): シャットダウンが戻った時点で、LDAP リスナーと Kerberos の 2 つのソケットは閉じられ、サーバーは終了しているため、再起動はすぐにバインドできます。サーバーが Kerberos ライブラリに達する前にシャットダウンが届くと、以前はレルムの UDP と TCP のソケットが開いたまま戻っていました。設定の変更はありません |
+| v0.18.4 | LDAP アップストリームに対するリフレッシュのアロケーションが以前の 4 分の 1 になりました (go-authn/ldap v0.12.2)。公開エントリのスキーマ検査が `member` 値のすべての組を比較し、そのたびに両方の DN を解析していました。10,000 人と 50 個の DN を持つ 2,000 グループのリフレッシュを同一プロセス内の LDAP アップストリームに対して実行すると (`BenchmarkRefreshLDAP10k2k`、正確なカウント)、以前は 3,760 万アロケーションと 2.43 GB、今は 995 万と 651 MB です。設定の変更はありません |
+| v0.18.5 | 応答しないアップストリームに対する bind は、負荷の高いホストでも `timeLimitExceeded` (3) ではなく `unavailable` (52) で応答されます。bind の予算は、ライブラリの `operation_timeout` の期限より、その 10 分の 1 (最小 250 ms、最大でその半分) だけ早く終わります。以前は 10 分の 1 だけ (`"300ms"` で 30 ms) で、負荷の高いホストはそれを使い切っていました。設定の変更はありません |
+| v0.18.6 | go-authn/ldap v0.12.3: 同じリフレッシュは 835 万アロケーションと 573 MB になりました (v0.18.4 では 995 万と 651 MB)。残りは主にクライアント側の LDAP ワイヤライブラリと、同一プロセス内のテストサーバーです。設定の変更はありません |
 
 ### authn-bridge {#authn-bridge}
 
@@ -221,6 +224,8 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | ldap v0.11.3 | 性能のみで、結果は変わらない。`GoverningStructureRule` の割り当ては、アカウントで 12 回から 5 回に減る (RDN の型だけを読む)。DN パーサーは 4 つの RDN をもつ DN で 6 回から 3 回に減る。結果は v0.11.2 と同じで、ランダムなエントリとすべての上位ルールについて v0.11.2 の `GoverningStructureRule` のコピーと照合し、差分ファザーでも確かめた |
 | ldap v0.12.0 | [サーバーのリソース上限]({{< relref "/libraries/ldap.md" >}}): `Server.MaxConnections` と `Server.MaxConnectionsPerIP` (既定 0、無制限。上限を超えた接続には `busy` (51) の切断通知、RFC 4511 4.4.1 が送られて閉じられます)。`Server.Timeout` はサーバーが強制し、ハンドラーがブロックしてコンテキストを無視していても、期限にどの操作にも `timeLimitExceeded` (3) を返します (遅れた結果は捨てられ、ゴルーチンは戻るまで `MaxPending` と `MaxPendingAuth` に数えられます)。クライアントの検索 `timeLimit` はハンドラーのコンテキストに適用されます。ハンドラーの `DeadlineExceeded` は、その操作自身のコンテキストが期限切れのときだけコード 3 になります。操作あたりのアロケーション (正確): `Timeout` なしでは以前も以後も 3、ありでは以前 10、今 16 |
 | ldap v0.12.1 | [bind は進行中のページング検索を中止します]({{< relref "/libraries/ldap.md" >}}) (RFC 4511 4.2.1)。ある人が始めた検索は、接続が匿名や別人のものになった後は結果を返し続けません |
+| ldap v0.12.2 | `Validate` の重複値の検査は、すべての組を比較する代わりにキーで等しい値を見つけます。50 個の `member` DN を持つ `groupOfNames` は、14,907 アロケーションと 959 KB ではなく 1,065 と 68 KB です (正確)。結果は、ランダムなリストで比較した総当たりの検査と同じです |
+| ldap v0.12.3 | 単純な DN (`type=value` の RDN、印字可能な ASCII、エスケープなし) は、そのバイトから 17 回ではなく 1 回のアロケーションでキーを得ます。それ以外の DN は完全な解析を通ります。50 個のグループあたり 265 アロケーション。キーは完全な解析のものと同じで、差分テストとファザー (3,900 万回の実行) で保証しています |
 | oidc v0.4.1 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) は `@` が 2 つ以上ある名前を拒否します（`ErrBadName`） |
 | oidc v0.7.0 | [`ASCIILower` と `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}}): 名前のための ASCII だけの唯一の畳み込み。`strings.ToLower` と `strings.EqualFold` は Unicode を畳み込み、ケルビン記号 U+212A を "k" と同一視するためです |

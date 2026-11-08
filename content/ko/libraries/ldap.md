@@ -11,7 +11,7 @@ tags: [라이브러리, ldap, 디렉터리]
 바인드 정책을 소유하는 서버이며, 이 라이브러리는 바이트를 소유합니다.
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.1
+go get github.com/go-authn/ldap@v0.12.3
 ```
 
 RFC 4511(프로토콜), 4512(루트 DSE와 스키마), 4513(인증), 4514와 4515(DN과 필터 문자열

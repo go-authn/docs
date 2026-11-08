@@ -9,17 +9,17 @@ Estas páginas son la versión **0.10** de la documentación, y describen:
 
 | programa | versión | módulo |
 |---|---|---|
-| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.6** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 Las versiones de las bibliotecas están en [su propia página]({{< relref "/libraries/_index.md" >}});
-ldap está en la **v0.12.1**, con reglas de contenido DIT, formas de nombre y
+ldap está en la **v0.12.3**, con reglas de contenido DIT, formas de nombre y
 reglas de estructura DIT leídas, aplicadas y publicadas, un `BuildError` tipado
 para un esquema que no se construye, los esquemas en HCL2 y el conversor
 `ldapschema`, y directory en la **v0.20.0**, con clases de objeto declaradas y un plazo en cada consulta SQL.
-authnd v0.18.3 incorpora ldap v0.12.1 y directory v0.20.0.
+authnd v0.18.6 incorpora ldap v0.12.3 y directory v0.20.0.
 Una nueva versión menor de cualquiera de los programas anteriores es una nueva
 versión de la documentación, de modo que las páginas que alguien encuentra bajo
 `/docs/0.10/` siguen describiendo lo que instaló; las de las versiones anteriores
@@ -122,6 +122,9 @@ que solo actualizaron dependencias, salvo las que describe esta versión de la d
 | v0.18.1 | [El plazo de arranque nombra la fuente SQL que estaba abriendo]({{< relref "/authnd/operations.md#limits" >}}): `opening sql pgx (dsn_file …) did not answer`, donde antes decía `opening sql` para cualquier bloque SQL; el controlador y el archivo que contiene el DSN, nunca el DSN. Pruebas: caos contra un PostgreSQL real en un clúster desechable (servidor detenido durante un refresco, conexión reiniciada a mitad de consulta, un oyente que nunca responde, el reino Kerberos durante una caída); se omiten sin los binarios del servidor, salvo con `AUTHND_REQUIRE_PG=1`. Sin cambios de configuración |
 | v0.18.2 | [Una lectura SQL colgada ya no congela el refresco]({{< relref "/authnd/people.md" >}}): una base de datos que aceptó la conexión y dejó de responder dejaba el refresco bloqueado en la consulta, cada tic posterior se omitía, y pasado `max_age` todo respondía `unavailable` hasta reiniciar. Un bloque `users "sql"` tiene ahora `query_timeout`, por defecto tres cuartos de `refresh`, con go-authn/directory v0.20.0. **Cambio de comportamiento:** una consulta aislada más lenta que el plazo falla; fije `query_timeout` para una más lenta |
 | v0.18.3 | [Devuelto significa detenido]({{< relref "/authnd/operations.md" >}}): cuando un apagado devuelve el control, la escucha LDAP y los dos sockets Kerberos están cerrados y el servidor ha terminado, de modo que un reinicio puede enlazar de inmediato. Un apagado que llegaba antes de que el servidor alcanzara la biblioteca Kerberos devolvía el control con los sockets UDP y TCP del reino aún abiertos. Sin cambios de configuración |
+| v0.18.4 | Un refresco sobre un upstream LDAP hace una cuarta parte de las asignaciones de antes, con go-authn/ldap v0.12.2: la comprobación de esquema de las entradas publicadas comparaba cada par de valores `member` y analizaba ambos DN cada vez. Un refresco de 10 000 personas y 2000 grupos de 50 DN contra un upstream LDAP en el mismo proceso (`BenchmarkRefreshLDAP10k2k`, recuentos exactos): 37,6 M de asignaciones y 2,43 GB antes, 9,95 M y 651 MB después. Sin cambios de configuración |
+| v0.18.5 | Un bind contra un upstream que no responde se contesta `unavailable` (52), no `timeLimitExceeded` (3), también en un host cargado. El presupuesto del bind termina antes del plazo de `operation_timeout` de la biblioteca en una décima parte de este, al menos 250 ms y como máximo la mitad; antes era solo una décima (30 ms para `"300ms"`), que un host cargado agotaba. Sin cambios de configuración |
+| v0.18.6 | go-authn/ldap v0.12.3: el mismo refresco hace 8,35 M de asignaciones y 573 MB (9,95 M y 651 MB en la v0.18.4). Lo que queda es sobre todo la biblioteca de protocolo LDAP del cliente y el servidor de prueba en el mismo proceso. Sin cambios de configuración |
 
 ### authn-bridge {#authn-bridge}
 
@@ -229,6 +232,8 @@ anteriores.
 | ldap v0.11.3 | Solo rendimiento, sin cambio de resultado: `GoverningStructureRule` hace 5 asignaciones en lugar de 12 para una cuenta (lee solo los tipos del RDN), y el analizador de DN 3 en lugar de 6 para un DN de cuatro RDN. Los resultados son los de la v0.11.2, comprobados contra una copia de su `GoverningStructureRule` con entradas aleatorias y cada regla superior, y con un fuzzer diferencial |
 | ldap v0.12.0 | [límites de recursos para el servidor]({{< relref "/libraries/ldap.md" >}}): `Server.MaxConnections` y `Server.MaxConnectionsPerIP` (0 por defecto, sin límite; una conexión por encima de un tope recibe un aviso de desconexión `busy` (51), RFC 4511 4.4.1, y se cierra); el servidor aplica `Server.Timeout`, y responde `timeLimitExceeded` (3) en cualquier operación al vencer el plazo incluso si el manejador está bloqueado e ignora su contexto (el resultado tardío se descarta, y la goroutine cuenta contra `MaxPending` y `MaxPendingAuth` hasta que vuelve); el `timeLimit` de búsqueda del cliente se aplica al contexto del manejador; un `DeadlineExceeded` de manejador se traduce al código 3 solo cuando el contexto propio de la operación ha vencido. Asignaciones por operación (exacto): 3 antes y después sin `Timeout`; 10 antes y 16 ahora con uno |
 | ldap v0.12.1 | [un bind abandona las búsquedas paginadas en curso]({{< relref "/libraries/ldap.md" >}}) (RFC 4511 4.2.1): una búsqueda iniciada por una persona ya no sigue entregando a la conexión cuando esta es anónima o de otra persona |
+| ldap v0.12.2 | la comprobación de valores duplicados de `Validate` encuentra valores iguales con una clave, en lugar de comparar cada par: un `groupOfNames` de 50 DN `member` hace 1065 asignaciones y 68 KB en lugar de 14 907 y 959 KB (exacto). Las respuestas son las de la comprobación por pares, comparadas en listas aleatorias |
+| ldap v0.12.3 | un DN simple (RDN de `type=value`, ASCII imprimible, sin escape) obtiene su clave de sus bytes con una asignación en lugar de 17, y cualquier otro DN toma el análisis completo; 265 asignaciones por grupo de 50. Las claves son las del análisis completo, sostenidas por una prueba diferencial y un fuzzer (39 M de ejecuciones) |
 | oidc v0.4.1 | probada con Go 1.27.2; no cambian ni el código ni el `go.mod` |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) rechaza un nombre con más de un `@` (`ErrBadName`) |
 | oidc v0.7.0 | [`ASCIILower` y `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}}): el único plegado solo ASCII para nombres, porque `strings.ToLower` y `strings.EqualFold` pliegan Unicode e igualan el signo Kelvin U+212A con "k" |

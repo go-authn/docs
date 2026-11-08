@@ -11,7 +11,7 @@ tags: [ライブラリ, ldap, ディレクトリ]
 ポリシーを所有するサーバーで、これはバイト列を所有します。
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.1
+go get github.com/go-authn/ldap@v0.12.3
 ```
 
 RFC 4511 (プロトコル)、4512 (ルート DSE とスキーマ)、4513 (認証)、4514 と 4515 (DN とフィルターの

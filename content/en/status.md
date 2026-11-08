@@ -9,17 +9,17 @@ These pages are documentation version **0.10**, and describe:
 
 | program | release | module |
 |---|---|---|
-| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.6** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 The libraries' versions are on [their own page]({{< relref "/libraries/_index.md" >}});
-ldap is **v0.12.1**, with DIT content rules, name forms and DIT structure
+ldap is **v0.12.3**, with DIT content rules, name forms and DIT structure
 rules read, enforced and published, a typed `BuildError` for a schema that does
 not build, schemas in HCL2 and the `ldapschema` converter, and
 directory **v0.20.0**, with declared object classes and a deadline on every SQL query. authnd
-v0.18.3 embeds ldap v0.12.1 and directory v0.20.0.
+v0.18.6 embeds ldap v0.12.3 and directory v0.20.0.
 A new minor version of any program above is a new documentation version, so
 the pages a reader finds under `/docs/0.10/` keep describing what they
 installed; those of the previous releases stay under `/docs/0.1/`,
@@ -120,6 +120,9 @@ dependencies are left out, except those this documentation version describes.
 | v0.18.1 | [The startup timeout names the SQL source it was opening]({{< relref "/authnd/operations.md#limits" >}}): `opening sql pgx (dsn_file …) did not answer`, where it said `opening sql` for every SQL block; the driver and the file that holds the DSN, never the DSN. Tests: chaos against a real PostgreSQL on a disposable cluster (server stopped during a refresh, connection reset mid-query, a listener that never answers, the Kerberos realm during an outage); they skip without the server binaries unless `AUTHND_REQUIRE_PG=1`. No configuration change |
 | v0.18.2 | [A SQL read that hangs no longer freezes the refresh]({{< relref "/authnd/people.md" >}}): a database that accepted the connection and stopped answering left the refresh blocked in the query, every later tick was skipped, and past `max_age` everything answered `unavailable` until a restart. A `users "sql"` block now has `query_timeout`, by default three quarters of `refresh`, with go-authn/directory v0.20.0. **Behaviour change:** a single query slower than the deadline fails; set `query_timeout` for a slower one |
 | v0.18.3 | [Returned means stopped]({{< relref "/authnd/operations.md" >}}): when a shutdown returns, the LDAP listener and both Kerberos sockets are closed and the server has finished, so a restart can bind at once. A shutdown that landed before the server reached the Kerberos library used to return with the realm's UDP and TCP sockets still open. No configuration change |
+| v0.18.4 | A refresh over an LDAP upstream makes a quarter of the allocations it did, with go-authn/ldap v0.12.2: the schema check of the published entries compared every pair of `member` values and parsed both DNs each time. One refresh of 10,000 people and 2,000 groups of 50 DNs against an in-process LDAP upstream (`BenchmarkRefreshLDAP10k2k`, exact counts): 37.6 M allocations and 2.43 GB before, 9.95 M and 651 MB after. No configuration change |
+| v0.18.5 | A bind against an upstream that does not answer is answered `unavailable` (52), not `timeLimitExceeded` (3), on a loaded host too. The bind's budget ends before the library's `operation_timeout` deadline by a tenth of it, at least 250 ms and at most half of it; it was a tenth alone (30 ms for `"300ms"`), which a loaded host spent. No configuration change |
+| v0.18.6 | go-authn/ldap v0.12.3: the same refresh makes 8.35 M allocations and 573 MB (9.95 M and 651 MB at v0.18.4). What is left is mostly the LDAP wire library on the client and the in-process test server. No configuration change |
 
 ### authn-bridge
 
@@ -226,6 +229,8 @@ library's page says what earlier ones changed.
 | ldap v0.11.3 | Performance only, no change of result: `GoverningStructureRule` allocates 5 times instead of 12 for an account (it reads only the RDN's types), and the DN parser 3 times instead of 6 for a four-RDN DN. The results are those of v0.11.2, checked against a copy of its `GoverningStructureRule` on random entries and every superior rule, and by a differential fuzzer |
 | ldap v0.12.0 | [resource bounds for the server]({{< relref "/libraries/ldap.md" >}}): `Server.MaxConnections` and `Server.MaxConnectionsPerIP` (default 0, no limit; a connection over a cap gets a `busy` (51) notice of disconnection, RFC 4511 4.4.1, and is closed); `Server.Timeout` is enforced by the server, which answers `timeLimitExceeded` (3) for any operation at the deadline even when the handler is blocked and ignores its context (the late result is dropped, and the goroutine counts against `MaxPending` and `MaxPendingAuth` until it returns); the client's search `timeLimit` applies to the handler's context; a handler's `DeadlineExceeded` maps to code 3 only when the operation's own context has expired. Allocations per operation (exact): 3 before and after without a `Timeout`; 10 before and 16 now with one |
 | ldap v0.12.1 | [a bind abandons the paged searches in progress]({{< relref "/libraries/ldap.md" >}}) (RFC 4511 4.2.1), so a search begun by one person never goes on delivering to the connection once it is anonymous or somebody else's |
+| ldap v0.12.2 | the duplicate-value check of `Validate` finds equal values with a key, not by comparing every pair: a `groupOfNames` of 50 `member` DNs makes 1,065 allocations and 68 KB instead of 14,907 and 959 KB (exact). The answers are those of the pairwise check, compared on random lists |
+| ldap v0.12.3 | a plain DN (RDNs of `type=value`, printable ASCII, no escape) gets its key from its bytes with one allocation instead of 17, any other DN taking the full parse; 265 allocations per group of 50. The keys are those of the full parse, held by a differential test and a fuzzer (39 M executions) |
 | oidc v0.4.1 | tested with Go 1.27.2; neither the code nor `go.mod` changed |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) refuses a name with more than one `@` (`ErrBadName`) |
 | oidc v0.7.0 | [`ASCIILower` and `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}}): the one ASCII-only fold for names, since `strings.ToLower` and `strings.EqualFold` fold Unicode and equate the Kelvin sign U+212A with "k" |
