@@ -12,7 +12,7 @@ es el servidor que la ejecuta y que es dueño de la configuración, de los oríg
 directorio y de la política de bind; esta es dueña de los bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.1
+go get github.com/go-authn/ldap@v0.12.3
 ```
 
 Escrita a partir de los RFC 4511 (el protocolo), 4512 (el root DSE y el

@@ -9,17 +9,17 @@ Ces pages sont la version **0.10** de la documentation, et décrivent :
 
 | programme | version | module |
 |---|---|---|
-| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.6** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 Les versions des bibliothèques sont sur [leur propre page]({{< relref "/libraries/_index.md" >}}) ;
-ldap est en **v0.12.1**, avec les règles de contenu DIT, les formes de noms et
+ldap est en **v0.12.3**, avec les règles de contenu DIT, les formes de noms et
 les règles de structure DIT lues, appliquées et publiées, une `BuildError` typée
 pour un schéma qui ne se construit pas, les schémas en HCL2 et le convertisseur
 `ldapschema`, et directory en **v0.20.0**, avec les classes d'objet déclarées et une échéance sur chaque requête SQL.
-authnd v0.18.3 embarque ldap v0.12.1 et directory v0.20.0.
+authnd v0.18.6 embarque ldap v0.12.3 et directory v0.20.0.
 Une nouvelle version mineure de l'un des programmes ci-dessus est une nouvelle version de la documentation,
 de sorte que les pages qu'une personne trouve sous `/docs/0.10/` continuent de décrire ce
 qu'elle a installé ; celles des versions précédentes restent sous `/docs/0.1/`,
@@ -121,6 +121,9 @@ des dépendances sont omises, sauf celles que décrit cette version de la docume
 | v0.18.1 | [Le délai de démarrage nomme la source SQL qu'il ouvrait]({{< relref "/authnd/operations.md#limits" >}}) : `opening sql pgx (dsn_file …) did not answer`, là où il disait `opening sql` pour tout bloc SQL ; le pilote et le fichier qui contient le DSN, jamais le DSN. Tests : chaos contre un vrai PostgreSQL sur une grappe jetable (serveur arrêté pendant une actualisation, connexion réinitialisée en pleine requête, un écouteur qui ne répond jamais, le royaume Kerberos pendant une panne) ; ils sont ignorés sans les binaires du serveur, sauf avec `AUTHND_REQUIRE_PG=1`. Aucun changement de configuration |
 | v0.18.2 | [Une lecture SQL bloquée ne fige plus l'actualisation]({{< relref "/authnd/people.md" >}}) : une base de données qui avait accepté la connexion puis cessé de répondre laissait l'actualisation bloquée dans la requête, chaque tic suivant était ignoré, et passé `max_age` tout répondait `unavailable` jusqu'à un redémarrage. Un bloc `users "sql"` a désormais `query_timeout`, par défaut les trois quarts de `refresh`, avec go-authn/directory v0.20.0. **Changement de comportement :** une requête isolée plus lente que l'échéance échoue ; fixez `query_timeout` pour une requête plus lente |
 | v0.18.3 | [Retourné veut dire arrêté]({{< relref "/authnd/operations.md" >}}) : quand un arrêt rend la main, l'écouteur LDAP et les deux sockets Kerberos sont fermés et le serveur a terminé, de sorte qu'un redémarrage peut se lier aussitôt. Un arrêt survenu avant que le serveur n'atteigne la bibliothèque Kerberos rendait la main avec les sockets UDP et TCP du royaume encore ouverts. Aucun changement de configuration |
+| v0.18.4 | Un rafraîchissement sur un upstream LDAP fait un quart des allocations d'avant, avec go-authn/ldap v0.12.2 : la vérification de schéma des entrées publiées comparait chaque paire de valeurs `member` et analysait les deux DN à chaque fois. Un rafraîchissement de 10 000 personnes et 2 000 groupes de 50 DN contre un upstream LDAP dans le même processus (`BenchmarkRefreshLDAP10k2k`, comptes exacts) : 37,6 M d'allocations et 2,43 Go avant, 9,95 M et 651 Mo après. Aucun changement de configuration |
+| v0.18.5 | Un bind contre un upstream qui ne répond pas reçoit `unavailable` (52), et non `timeLimitExceeded` (3), y compris sur une machine chargée. Le budget du bind se termine avant l'échéance de `operation_timeout` de la bibliothèque d'un dixième de celle-ci, au moins 250 ms et au plus la moitié ; ce n'était qu'un dixième (30 ms pour `"300ms"`), qu'une machine chargée épuisait. Aucun changement de configuration |
+| v0.18.6 | go-authn/ldap v0.12.3 : le même rafraîchissement fait 8,35 M d'allocations et 573 Mo (9,95 M et 651 Mo à la v0.18.4). Ce qui reste est surtout la bibliothèque du protocole LDAP côté client et le serveur de test dans le même processus. Aucun changement de configuration |
 
 ### authn-bridge {#authn-bridge}
 
@@ -228,6 +231,8 @@ changé les précédentes.
 | ldap v0.11.3 | Performance seulement, aucun changement de résultat : `GoverningStructureRule` fait 5 allocations au lieu de 12 pour un compte (il ne lit que les types du RDN), et l'analyseur de DN 3 au lieu de 6 pour un DN de quatre RDN. Les résultats sont ceux de la v0.11.2, vérifiés contre une copie de son `GoverningStructureRule` sur des entrées aléatoires et chaque règle supérieure, et par un fuzzer différentiel |
 | ldap v0.12.0 | [bornes de ressources pour le serveur]({{< relref "/libraries/ldap.md" >}}) : `Server.MaxConnections` et `Server.MaxConnectionsPerIP` (0 par défaut, aucune limite ; une connexion au-delà d'un plafond reçoit une notification de déconnexion `busy` (51), RFC 4511 4.4.1, et est fermée) ; `Server.Timeout` est appliqué par le serveur, qui répond `timeLimitExceeded` (3) pour toute opération à l'échéance même si le gestionnaire est bloqué et ignore son contexte (le résultat tardif est abandonné, et la goroutine compte dans `MaxPending` et `MaxPendingAuth` jusqu'à son retour) ; le `timeLimit` de recherche du client s'applique au contexte du gestionnaire ; un `DeadlineExceeded` de gestionnaire devient le code 3 seulement quand le contexte propre de l'opération a expiré. Allocations par opération (exact) : 3 avant et après sans `Timeout` ; 10 avant et 16 maintenant avec un |
 | ldap v0.12.1 | [un bind abandonne les recherches paginées en cours]({{< relref "/libraries/ldap.md" >}}) (RFC 4511 4.2.1) : une recherche commencée par une personne ne continue plus de livrer à la connexion une fois celle-ci anonyme ou à quelqu'un d'autre |
+| ldap v0.12.2 | la détection des valeurs en double de `Validate` trouve les valeurs égales par une clé, au lieu de comparer chaque paire : un `groupOfNames` de 50 DN `member` fait 1 065 allocations et 68 Ko au lieu de 14 907 et 959 Ko (exact). Les réponses sont celles de la comparaison par paires, vérifiées sur des listes aléatoires |
+| ldap v0.12.3 | un DN simple (RDN de `type=value`, ASCII imprimable, sans échappement) reçoit sa clé directement depuis ses octets avec une allocation au lieu de 17, tout autre DN prenant l'analyse complète ; 265 allocations par groupe de 50. Les clés sont celles de l'analyse complète, tenues par un test différentiel et un fuzzer (39 M d'exécutions) |
 | oidc v0.4.1 | testée avec Go 1.27.2 ; ni le code ni le `go.mod` n'ont changé |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) refuse un nom avec plus d'un `@` (`ErrBadName`) |
 | oidc v0.7.0 | [`ASCIILower` et `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}}) : l'unique repli ASCII pour les noms, car `strings.ToLower` et `strings.EqualFold` replient Unicode et assimilent le signe Kelvin U+212A à « k » |

@@ -9,15 +9,15 @@ tags: [状态, 发布版本]
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
-| authnd | **v0.18.3** | `github.com/go-authn/authnd` |
+| authnd | **v0.18.6** | `github.com/go-authn/authnd` |
 | authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
 | authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
-ldap 为 **v0.12.1**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
+ldap 为 **v0.12.3**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
 directory 为 **v0.20.0**，带有已声明的对象类，并为每个 SQL 查询设置截止时间。authnd
-v0.18.3 内嵌 ldap v0.12.1 和 directory v0.20.0。
+v0.18.6 内嵌 ldap v0.12.3 和 directory v0.20.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
 因此读者在 `/docs/0.10/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
@@ -114,6 +114,9 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.18.1 | [启动超时会指出它正在打开的 SQL 来源]({{< relref "/authnd/operations.md#limits" >}})：`opening sql pgx (dsn_file …) did not answer`，以前每个 SQL 块都只显示 `opening sql`；指出驱动程序和保存 DSN 的文件，绝不指出 DSN。测试：针对一个一次性集群上真实 PostgreSQL 的混沌测试（刷新期间停止服务器、查询中途重置连接、从不应答的监听器、故障期间的 Kerberos 域）；没有服务器二进制文件时会跳过，设置 `AUTHND_REQUIRE_PG=1` 则视为失败。配置没有变化 |
 | v0.18.2 | [挂起的 SQL 读取不再冻结刷新]({{< relref "/authnd/people.md" >}})：接受了连接却不再应答的数据库会让刷新阻塞在查询中，之后每个节拍都被跳过，超过 `max_age` 后一切都返回 `unavailable`，直到重启。`users "sql"` 块现在有 `query_timeout`，默认是 `refresh` 的四分之三（go-authn/directory v0.20.0）。**行为变化：**比截止时间更慢的单个查询会失败；对更慢的查询请设置 `query_timeout` |
 | v0.18.3 | [返回即已停止]({{< relref "/authnd/operations.md" >}})：关闭返回时，LDAP 监听器和两个 Kerberos 套接字都已关闭，服务器已结束，因此重启可以立即绑定。以前，如果关闭发生在服务器到达 Kerberos 库之前，返回时域的 UDP 和 TCP 套接字仍然是打开的。配置没有变化 |
+| v0.18.4 | 针对 LDAP 上游的刷新，内存分配降至原来的四分之一（go-authn/ldap v0.12.2）：已发布条目的模式检查会比较 `member` 值的每一对，并且每次都解析两个 DN。对同进程内的 LDAP 上游刷新 10,000 人和 2,000 个各含 50 个 DN 的组（`BenchmarkRefreshLDAP10k2k`，精确计数）：之前为 3760 万次分配和 2.43 GB，之后为 995 万次和 651 MB。配置没有变化 |
+| v0.18.5 | 对不应答的上游执行的 bind，即使在高负载主机上也以 `unavailable`（52）而不是 `timeLimitExceeded`（3）应答。bind 的预算比库的 `operation_timeout` 截止时间提前其十分之一结束，至少 250 ms，至多一半；此前只有十分之一（`"300ms"` 时为 30 ms），高负载主机会把它用光。配置没有变化 |
+| v0.18.6 | go-authn/ldap v0.12.3：同一次刷新为 835 万次分配和 573 MB（v0.18.4 为 995 万次和 651 MB）。剩下的主要是客户端的 LDAP 线路库和同进程的测试服务器。配置没有变化 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -220,6 +223,8 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | ldap v0.11.3 | 仅优化性能，结果不变：`GoverningStructureRule` 对一个账户的分配从 12 次降为 5 次（只读取 RDN 的类型），DN 解析器对含四个 RDN 的 DN 从 6 次降为 3 次。结果与 v0.11.2 相同，已用随机条目和每条上级规则对 v0.11.2 的 `GoverningStructureRule` 副本核对，并用差分模糊测试检验 |
 | ldap v0.12.0 | [服务器的资源上限]({{< relref "/libraries/ldap.md" >}})：`Server.MaxConnections` 和 `Server.MaxConnectionsPerIP`（默认 0，不限；超出上限的连接会收到 `busy`（51）断开通知，RFC 4511 4.4.1，并被关闭）；`Server.Timeout` 由服务器强制执行，到期时即使处理程序被阻塞并忽略其上下文，对任何操作都回答 `timeLimitExceeded`（3）（迟到的结果被丢弃，goroutine 在返回之前计入 `MaxPending` 和 `MaxPendingAuth`）；客户端的搜索 `timeLimit` 适用于处理程序的上下文；处理程序的 `DeadlineExceeded` 只有在该操作自身的上下文已到期时才映射为代码 3。每次操作的分配次数（精确）：没有 `Timeout` 时之前和之后都是 3；有 `Timeout` 时之前 10，现在 16 |
 | ldap v0.12.1 | [bind 会放弃正在进行的分页搜索]({{< relref "/libraries/ldap.md" >}})（RFC 4511 4.2.1）：某人发起的搜索，在连接变为匿名或属于他人之后，不会再继续向该连接交付结果 |
+| ldap v0.12.2 | `Validate` 的重复值检查用键找出相等的值，而不是比较每一对：含 50 个 `member` DN 的 `groupOfNames` 为 1,065 次分配和 68 KB，而不是 14,907 次和 959 KB（精确）。结果与逐对检查相同，已在随机列表上比较 |
+| ldap v0.12.3 | 普通 DN（由 `type=value` 构成的 RDN、可打印 ASCII、无转义）直接从字节得到键，只需 1 次分配而不是 17 次；其他 DN 走完整解析；每个 50 个成员的组 265 次分配。键与完整解析的相同，由差分测试和模糊测试（3900 万次执行）保证 |
 | oidc v0.4.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) 拒绝含多于一个 `@` 的名称（`ErrBadName`） |
 | oidc v0.7.0 | [`ASCIILower` 和 `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}})：名称唯一的纯 ASCII 折叠，因为 `strings.ToLower` 和 `strings.EqualFold` 折叠 Unicode，会把开尔文符号 U+212A 与 "k" 视为相同 |

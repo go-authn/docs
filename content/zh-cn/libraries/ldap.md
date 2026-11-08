@@ -12,7 +12,7 @@ tags: [库, ldap, 目录]
 绑定策略；本库拥有字节。
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.1
+go get github.com/go-authn/ldap@v0.12.3
 ```
 
 依据 RFC 4511（协议）、4512（根 DSE 和模式）、
