@@ -160,4 +160,4 @@ CI에는 보안 키가 없으므로 테스트는 자신이 받은 것을 재조�
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.4](https://pkg.go.dev/github.com/go-authn/fido@v0.6.4)
+[pkg.go.dev/github.com/go-authn/fido](https://pkg.go.dev/github.com/go-authn/fido) (작성 시점에 v0.6.4 페이지가 아직 pkg.go.dev에 색인되지 않아 링크에 버전을 적지 않았습니다)

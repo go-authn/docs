@@ -464,4 +464,4 @@ CI에서 검사합니다.
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.21.0](https://pkg.go.dev/github.com/go-authn/directory@v0.21.0)
+[pkg.go.dev/github.com/go-authn/directory](https://pkg.go.dev/github.com/go-authn/directory) (작성 시점에 v0.21.0 페이지가 아직 pkg.go.dev에 색인되지 않아 링크에 버전을 적지 않았습니다)

@@ -512,4 +512,4 @@ compilations `nosql` et `noldap` sont vérifiées en CI.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.21.0](https://pkg.go.dev/github.com/go-authn/directory@v0.21.0)
+[pkg.go.dev/github.com/go-authn/directory](https://pkg.go.dev/github.com/go-authn/directory) (la page de v0.21.0 n'était pas encore indexée par pkg.go.dev à l'écriture, c'est pourquoi le lien ne nomme pas de version)

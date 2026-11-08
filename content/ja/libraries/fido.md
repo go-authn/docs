@@ -158,4 +158,4 @@ YubiKey に対して行った登録とアサーションの実行が記録され
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.4](https://pkg.go.dev/github.com/go-authn/fido@v0.6.4)
+[pkg.go.dev/github.com/go-authn/fido](https://pkg.go.dev/github.com/go-authn/fido)（執筆時点で v0.6.4 のページは pkg.go.dev にまだ索引されていないため、リンクにバージョンを含めていません）

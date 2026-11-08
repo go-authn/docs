@@ -131,7 +131,7 @@ compte `authn-revokd`, qui ne peut pas faire `systemctl reload nginx` : laissez 
 le fichier, en tant que root, avec une unité path (`PathChanged=` sur la sortie) qui
 démarre un `oneshot` exécutant `systemctl reload nginx`.
 
-## Ou : `--once`, sur un minuteur {#or--once-on-a-timer}
+## Ou : `--once`, sur un minuteur {#or-once-on-a-timer}
 
 `authn-revokd --once` synchronise une fois et sort, avec `1` quand une liste n'est pas en vigueur ou
 n'a pas pu être récupérée ([ce que signale `--once`]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).

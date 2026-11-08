@@ -123,4 +123,4 @@ Apple M4 Max:
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.1](https://pkg.go.dev/github.com/go-authn/scim@v0.2.1)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim) (작성 시점에 v0.2.1 페이지가 아직 pkg.go.dev에 색인되지 않아 링크에 버전을 적지 않았습니다)

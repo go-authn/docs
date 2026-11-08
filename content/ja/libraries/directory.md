@@ -453,4 +453,4 @@ CI で確認されます。
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.21.0](https://pkg.go.dev/github.com/go-authn/directory@v0.21.0)
+[pkg.go.dev/github.com/go-authn/directory](https://pkg.go.dev/github.com/go-authn/directory)（執筆時点で v0.21.0 のページは pkg.go.dev にまだ索引されていないため、リンクにバージョンを含めていません）

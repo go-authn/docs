@@ -120,4 +120,4 @@ Apple M4 Max:
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.1](https://pkg.go.dev/github.com/go-authn/scim@v0.2.1)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim)（執筆時点で v0.2.1 のページは pkg.go.dev にまだ索引されていないため、リンクにバージョンを含めていません）

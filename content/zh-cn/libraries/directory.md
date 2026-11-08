@@ -476,4 +476,4 @@ CI 中还会检查 `nosql` 和 `noldap` 构建。
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.21.0](https://pkg.go.dev/github.com/go-authn/directory@v0.21.0)
+[pkg.go.dev/github.com/go-authn/directory](https://pkg.go.dev/github.com/go-authn/directory)（撰写时 pkg.go.dev 尚未收录 v0.21.0 的页面，所以链接不带版本）

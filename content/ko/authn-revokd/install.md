@@ -129,7 +129,7 @@ nginx`를 할 수 없습니다. 대신 systemd가 root로 파일을 지켜보게
 경로 유닛(`PathChanged=`)이 `systemctl reload nginx`를 실행하는 `oneshot`을
 시작하게 합니다.
 
-## 또는: 타이머의 `--once` {#or--once-on-a-timer}
+## 또는: 타이머의 `--once` {#or-once-on-a-timer}
 
 `authn-revokd --once`는 한 번 동기화하고 종료하며, 목록이 현재가 아니거나 가져올 수
 없으면 `1`입니다

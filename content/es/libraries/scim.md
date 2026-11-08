@@ -139,4 +139,4 @@ El filtro, PATCH y todo el manejador se prueban con fuzzing (`FuzzFilter`,
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.1](https://pkg.go.dev/github.com/go-authn/scim@v0.2.1)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim) (la página de v0.2.1 aún no estaba indexada por pkg.go.dev al escribir esto, por eso el enlace no indica versión)

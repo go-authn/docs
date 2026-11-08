@@ -168,4 +168,4 @@ vérifiée contre la clé publique qu'elle a fournie ; cette exécution ne fait 
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.4](https://pkg.go.dev/github.com/go-authn/fido@v0.6.4)
+[pkg.go.dev/github.com/go-authn/fido](https://pkg.go.dev/github.com/go-authn/fido) (la page de v0.6.4 n'était pas encore indexée par pkg.go.dev à l'écriture, c'est pourquoi le lien ne nomme pas de version)

@@ -116,4 +116,4 @@ ID 的 `"Replace"`、其字符串形式的布尔值（`"active": "False"`）、�
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.1](https://pkg.go.dev/github.com/go-authn/scim@v0.2.1)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim)（撰写时 pkg.go.dev 尚未收录 v0.2.1 的页面，所以链接不带版本）

@@ -167,4 +167,4 @@ CI 中没有安全密钥，因此测试使用一个会重新拼合所收内容�
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.4](https://pkg.go.dev/github.com/go-authn/fido@v0.6.4)
+[pkg.go.dev/github.com/go-authn/fido](https://pkg.go.dev/github.com/go-authn/fido)（撰写时 pkg.go.dev 尚未收录 v0.6.4 的页面，所以链接不带版本）

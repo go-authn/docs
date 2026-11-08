@@ -168,4 +168,4 @@ verified against the public key it handed out; that run is not part of CI.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.4](https://pkg.go.dev/github.com/go-authn/fido@v0.6.4)
+[pkg.go.dev/github.com/go-authn/fido](https://pkg.go.dev/github.com/go-authn/fido) (the v0.6.4 page was not yet indexed by pkg.go.dev when this was written, which is why the link names no version)

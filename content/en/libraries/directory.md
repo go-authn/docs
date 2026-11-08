@@ -498,4 +498,4 @@ The coverage lane fails below 85% (its stated standard is 100%), and the
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/directory@v0.21.0](https://pkg.go.dev/github.com/go-authn/directory@v0.21.0)
+[pkg.go.dev/github.com/go-authn/directory](https://pkg.go.dev/github.com/go-authn/directory) (the v0.21.0 page was not yet indexed by pkg.go.dev when this was written, which is why the link names no version)

@@ -141,4 +141,4 @@ couverture est de 92 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.1](https://pkg.go.dev/github.com/go-authn/scim@v0.2.1)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim) (la page de v0.2.1 n'était pas encore indexée par pkg.go.dev à l'écriture, c'est pourquoi le lien ne nomme pas de version)

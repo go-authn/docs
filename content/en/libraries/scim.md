@@ -135,4 +135,4 @@ path that repeats the `id`. The filter, PATCH and the whole handler are fuzzed
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.1](https://pkg.go.dev/github.com/go-authn/scim@v0.2.1)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim) (the v0.2.1 page was not yet indexed by pkg.go.dev when this was written, which is why the link names no version)

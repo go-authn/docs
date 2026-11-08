@@ -139,4 +139,4 @@ Coverage-Spur liegt bei 92 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.1](https://pkg.go.dev/github.com/go-authn/scim@v0.2.1)
+[pkg.go.dev/github.com/go-authn/scim](https://pkg.go.dev/github.com/go-authn/scim) (die Seite für v0.2.1 war bei Abfassung noch nicht von pkg.go.dev indexiert, deshalb nennt der Link keine Version)
