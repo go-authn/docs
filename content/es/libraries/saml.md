@@ -13,7 +13,7 @@ federación, envía a las personas al proveedor de identidad de su propia
 institución, y lee lo que ese proveedor responde.
 
 ```sh
-go get github.com/go-authn/saml@v0.6.0
+go get github.com/go-authn/saml@v0.6.1
 ```
 
 Es la mitad de [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) que da a
@@ -269,6 +269,38 @@ en producción.
   de la Response se rechaza antes de descifrarla.
 
 El umbral de la vía de cobertura es el 92 %.
+
+## Fuzzing, y lo que cuesta una entrada hostil {#fuzzing}
+
+Desde la v0.6.1 hay cuatro objetivos de fuzzing junto al analizador, y el corpus
+está versionado en `testdata/fuzz` y lo reproduce cada `go test`:
+
+- `FuzzAccept`: una respuesta que el fuzzer reordenó se rechaza, o dice
+  exactamente lo que firmó el IdP. Con semillas de una aserción firmada en claro,
+  una Response firmada alrededor de una cifrada, y las disposiciones de
+  envoltura de firma XSW1 a XSW8.
+- `FuzzParseMetadata`.
+- `FuzzDecrypt`: GCM y CBC, con la EncryptedKey dentro del KeyInfo de
+  EncryptedData y junto a él. CBC nunca se abre sin autenticar, y lo que GCM abre
+  es lo que se selló.
+- `FuzzLimits`: `limits.check` y `parse` coinciden en lo que se rechaza, y `check`
+  asigna en proporción a su entrada.
+
+Las semillas proceden de `samltest`. Un fallo plantado, quitar la puerta de CBC,
+pone en rojo `FuzzDecrypt` solo con sus semillas. Ejecutados 130 s cada uno con 16
+trabajadores, en una máquina con una carga superior a 8 (la medida son las
+ejecuciones, no los tiempos), hicieron 1 502 094 (`FuzzAccept`), 2 120 800
+(`FuzzParseMetadata`), 5 146 715 (`FuzzDecrypt`) y 1 119 772 (`FuzzLimits`)
+ejecuciones, y no encontraron ningún cuelgue, fallo ni violación de propiedad. La CI
+ejecuta cada objetivo 30 s en cada push y pull request, y conserva como artefacto la
+entrada que rompió alguno.
+
+`TestHostileInputsAreRefusedCheaply` comprueba que la entrada hostil se **rechaza**,
+no se analiza: bajo un límite blando de memoria, una bomba de expansión de entidades
+(billion laughs), una entidad externa, 80 000 y 1 048 576 niveles de anidamiento,
+60 000 elementos hermanos, un `CipherValue` de 150 KiB, una respuesta por encima del
+límite de tamaño y una compuesta solo de espacios en blanco se rechazan, con
+`TotalAlloc` acotado a entre 4 y 8 MiB.
 
 ## Referencia {#reference}
 

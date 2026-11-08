@@ -5,23 +5,24 @@ description: "这些页面描述哪些版本、每个版本新增了什么，以
 tags: [状态, 发布版本]
 ---
 
-这些页面是文档版本 **0.10**，描述的内容如下：
+这些页面是文档版本 **0.11**，描述的内容如下：
 
 | 程序 | 版本 | 模块 |
 |---|---|---|
 | authnd | **v0.18.6** | `github.com/go-authn/authnd` |
-| authn-bridge | **v0.23.9** | `github.com/go-authn/bridge` |
-| authn-revokd | **v0.6.7** | `github.com/go-authn/revocation` |
+| authn-bridge | **v0.23.12** | `github.com/go-authn/bridge` |
+| authn-revokd | **v0.7.0** | `github.com/go-authn/revocation` |
 | sshcert-authorize | **v0.1.9** | `github.com/go-authn/sshcert` |
 
 各个库的版本见[其自己的页面]({{< relref "/libraries/_index.md" >}})；
 ldap 为 **v0.12.3**，可读取、强制执行并发布 DIT 内容规则、名称形式和 DIT 结构规则，带有针对无法构建的模式的类型化 `BuildError`、HCL2 模式和 `ldapschema` 转换器，
-directory 为 **v0.20.0**，带有已声明的对象类，并为每个 SQL 查询设置截止时间。authnd
+directory 为 **v0.21.0**，带有已声明的对象类、为每个 SQL 查询设置的截止时间，
+以及会报告失败来源的 `GroupNames`。authnd
 v0.18.6 内嵌 ldap v0.12.3 和 directory v0.20.0。
 上述任何程序的新次版本号都对应一个新的文档版本，
-因此读者在 `/docs/0.10/` 下找到的页面始终描述其所安装的版本；
+因此读者在 `/docs/0.11/` 下找到的页面始终描述其所安装的版本；
 之前各版本的页面保留在 `/docs/0.1/`、
-`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/`、`/docs/0.6/`、`/docs/0.7/`、`/docs/0.8/` 和 `/docs/0.9/` 之下。
+`/docs/0.2/`、`/docs/0.3/`、`/docs/0.4/`、`/docs/0.5/`、`/docs/0.6/`、`/docs/0.7/`、`/docs/0.8/`、`/docs/0.9/` 和 `/docs/0.10/` 之下。
 
 {{< callout type="warning" >}}
 **从 v0.16.x 升级 authnd：`max_age` 默认为十分钟**
@@ -157,6 +158,9 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.23.7 | 安全：来自已从 `saml { idps }` 中移除的 IdP 的刷新令牌、应用密码或 SSH 证书请求，会像 `DisableIdP` 一样在下次使用时以 `institution not configured` 被拒绝（[管理 API]({{< relref "/authn-bridge/admin.md" >}})）；把 IdP 放回去它们就重新可用 |
 | v0.23.8 | 安全：[一个人按其本来身份被禁用]({{< relref "/authn-bridge/admin.md" >}})：用户名（禁用列表、证书主体、subject-id）只折叠 ASCII 字母，使用 go-authn/oidc v0.7.0 的 `ASCIILower`，因此 `kate` 和带开尔文符号（U+212A）的写法是两个人，有两个禁用条目和两个证书主体 |
 | v0.23.9 | 安全，随 go-authn/saml v0.6.0：[`schac_home_organization` 的发放]({{< relref "/authn-bridge/tokens.md" >}})，在令牌和 userinfo 中仅当它是声明方 IdP 的 `shibmd:Scope` 值之一（完全匹配，区分大小写）。一个机构的 IdP 可以声明另一个机构的值，而按该声明过滤的服务（网关的 `accept`）会把它当作那个机构接纳。**升级：** 元数据没有为其域名发布 Scope 的 IdP，不再发放该声明 |
+| v0.23.10 | 安全：[晚于现在加上三分钟时钟偏差的 `AuthnInstant`]({{< relref "/authn-bridge/federation.md" >}})，在 `max_age` 下被算作新鲜的认证（其经过的时间算出来是负数）。现在它被视为经过的时间未知（OIDC Core 3.1.2.1），该人员会像对待过期的认证一样，被带着 `ForceAuthn` 送回 IdP。在偏差之内一切不变 |
+| v0.23.11 | [数据库永久拒绝的一个状态行不再使之后的每次刷新都停下]({{< relref "/authn-bridge/configuration.md#state-what-a-restart-must-not-forget" >}})，吊销也包括在内：删除始终会送达，永久被拒绝的行（PostgreSQL SQLSTATE 类别 22 和 23，MySQL 1048、1062、1264、1265、1292、1366、1406、1452，SQLite 的 constraint、mismatch、too big）会被记录一次，计入新的 `bridge_state_rows_rejected_total{kind}` 并被放弃：它在内存中有效，但无法在重启后保留 |
+| v0.23.12 | 因任何分类器都不认识的错误而被拒绝的状态行，在至少三十秒内经过五次刷新后被放弃，条件是在此期间该行持续失败而数据库接受了别的东西；一次刷新中什么都没有成功，即数据库不在，不会计入任何一行，因此**中断不会放弃任何东西**。该行为不再取决于驱动程序错误类别的列表 |
 
 ### authn-revokd {#authn-revokd}
 
@@ -175,6 +179,8 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.6.5 | 使用 Go 1.27.3 构建，针对 GO-2026-6809（`crypto/x509`：`Certificate.Verify` 未拒绝已知被攻破的中间证书）；`go` 指令为 1.27.3；行为没有变化 |
 | v0.6.6 | 发布的二进制文件改用 `-w` 链接，不再用 `-s -w`，符号表得以保留，使 `govulncheck -mode binary` 精确；行为不变 |
 | v0.6.7 | 审计、模糊测试、混沌测试和性能改进（[一次同步做什么]({{< relref "/authn-revokd/configuration.md#sync" >}})）。失效的列表在失效时就被拒绝，而不是等到下次刷新；来源并行获取（最多 16 个，每个两分钟）；`on_change` 在一分钟后被终止并重试；在代理背后被改动的输出文件会在下次同步时重写；`file://` 来源必须是普通文件；错误显示不带密码、查询和片段的 URL；`0..2^159` 之外的 CRL 编号被拒绝；镜像有读取、写入和空闲期限；过期的临时文件在启动时清除。再次轮询一个含 100,000 条记录的 CRL：每次轮询 300,138 次分配和 96,956,946 B，现在 37 次和 4,776,864 B（精确；时间未测量，负载 53 到 65）。govulncheck 仍列出 GO-2026-5932（`golang.org/x/crypto/openpgp`），它没有修复版本，也不会被调用 |
+| v0.6.8 | 安全：[无法验证的状态副本作为排序下限保留其位置]({{< relref "/authn-revokd/verification.md#across-restarts-too" >}})。已损坏或在另一把 CA 密钥下写入的状态文件，过去被视为没有持有副本，因此重放的较旧列表，只要有签名且未过期，就会被接受，并把较新列表所吊销的内容重新恢复。现在其版本和签发时间在未经验证的前提下作为下限保留：低于它的列表被当作回滚而拒绝，直到持有一个通过验证并排在其后的列表，而它的内容绝不被使用。如果 CA 被更换，其列表从更低的版本重新开始，日志会指出要删除的文件 `<source>.state` |
+| v0.7.0 | **该命令使用 cobra**，与本系列的其他程序一样：`--config`/`-c`、`--once`/`-o`、`--version`/`-v`、`--help`/`-h`、`--config=PATH`；`--help` 输出到标准输出。[早期发布版本的单横线写法]({{< relref "/authn-revokd/_index.md" >}})（`-config`、`-once`、`-version`、`-help`）仍然被接受，每个标志在标准错误上输出一行弃用提示，并将在以后的发布版本中移除。退出状态不变。`packaging/` 中的单元和安装指南使用新的写法；已部署的单元无需更改。**升级：**在旧写法被移除之前，把您的单元和脚本改为 `--config` 和 `--once` |
 
 ### sshcert {#sshcert}
 
@@ -204,6 +210,8 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | directory v0.18.0 | [同一个来源中两个条目持有的同一个名称是 `ErrAmbiguous`]({{< relref "/libraries/directory.md" >}})：ldapdir 比较 uid 时不区分大小写并指出两个 DN，`Set.Identities` 拒绝一个来源列出两次的名称，跨来源时仍由第一个来源拥有该名称；`ldaptest.Person.UID`。含有这类重复的目录在修正之前无法加载 |
 | directory v0.19.0 | [密码检查可以取消]({{< relref "/libraries/directory.md" >}})：`directory.WithContextVerifier` 和 `Identity.VerifyContext(ctx, password)`；对于 `ldapdir` 身份，context 结束时会关闭到上游的连接，并返回 `ErrUnavailable`（go-ldap 没有 context，也没有默认超时，对接受连接却从不应答的上游发起 bind 会永远等待）。检查的拨号也在 context 的截止时间结束。`Verify` 和 `WithVerifier` 不变。**升级：**限制检查时间的服务器应调用 `VerifyContext` |
 | directory v0.20.0 | [每个查询都有截止时间]({{< relref "/libraries/directory.md" >}})：`sqldir.WithQueryTimeout(d)`，默认为 `sqldir.DefaultQueryTimeout`（30 秒），`0` 表示不限；它涵盖读取各行，到截止时间驱动程序会断开连接（以前，不再应答的数据库会让读取永远阻塞）。`hcldir.Block.QueryTimeout`（`sql` 块中的 `query_timeout`）可以到达它，在没有网络的情况下检查，在 `ldap` 块中被拒绝。`Source` 接口不变。**升级：**超过 30 秒的查询现在会失败；对更慢的查询请指定 `WithQueryTimeout` |
+| directory v0.21.0 | [`Set.GroupNames` 会报告失败的来源]({{< relref "/libraries/directory.md" >}})：它返回已应答的来源的名称，以及一个 `errors.Join`，其中对每个失败的来源有一项 `"<describe>: <err>"`（`errors.Is` 仍然匹配 `ErrUnavailable`）；此前，只要有另一个来源应答，错误就会被丢弃。**行为变化：**只检查 `err != nil` 的调用方，现在在原本得到部分列表的地方会看到一个错误，而名称会随之一起返回。请使用这些名称并记录该错误 |
+| fido v0.6.4 | [带权限的 `PINToken`]({{< relref "/libraries/fido.md" >}}) 把 `permissions` 放在键 0x09 下，把 `rpId` 放在 0x0A 下，这是 CTAP 2.1（§6.5.5）的编号；它过去使用 0x07 和 0x08，而 YubiKey 5 应答 `CTAP2_ERR_MISSING_PARAMETER`（0x14） |
 | kdc v0.4.3 | 仅依赖项：以 go-authn/directory v0.12.0 为最低版本 |
 | kdc v0.4.5 | 安全审计、模糊测试和混沌测试（[它拒绝什么]({{< relref "/libraries/kdc.md" >}})）：针对另一个域的请求回答 `KDC_ERR_WRONG_REALM`，无法读取的目录回答 `KDC_ERR_SVC_UNAVAILABLE`（以前是 `KDC_ERR_C_PRINCIPAL_UNKNOWN`），开始时间在 `MaxSkew` 之内的未来的 TGT 会被接受，解码器 panic 只丢弃一个请求，而不是使进程崩溃（一个格式错误的 AS-REQ 或 TGS-REQ 就能使其崩溃）；主体名称在日志中加引号。golang.org/x/net v0.62.0，go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT KDC 的 [lookaside]({{< relref "/libraries/kdc.md" >}})：逐字节已见过的请求会得到之前的应答（两分钟内，总计 10 MiB 以下）；`KRB-ERROR` 从不保存；有意不设 MIT 在 TGS 上关闭的认证符重放缓存。测试固定了无法读取的目录在 AS（密码正确）和 TGS 上都回答 `KDC_ERR_SVC_UNAVAILABLE`。每个请求多两次分配 |
@@ -229,7 +237,9 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) 拒绝含多于一个 `@` 的名称（`ErrBadName`） |
 | oidc v0.7.0 | [`ASCIILower` 和 `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}})：名称唯一的纯 ASCII 折叠，因为 `strings.ToLower` 和 `strings.EqualFold` 折叠 Unicode，会把开尔文符号 U+212A 与 "k" 视为相同 |
 | saml v0.6.0 | [`schacHomeOrganization` 受限于该 IdP 的 `shibmd:Scope` 值]({{< relref "/libraries/saml.md" >}})（完全匹配，区分大小写），否则丢弃，正如 `eduPersonPrincipalName`、`subject-id`、`pairwise-id` 和带 scope 的归属此前已经如此（SWITCH 和 SAFIRE 的属性页面对依赖方有此要求）。**升级：** 元数据没有为其域名发布 Scope 的 IdP，其该属性不再被读取 |
+| saml v0.6.1 | [四个模糊测试目标和恶意输入测试]({{< relref "/libraries/saml.md#fuzzing" >}})：`FuzzAccept`、`FuzzParseMetadata`、`FuzzDecrypt` 和 `FuzzLimits`，语料库已提交并由 `go test` 重放，每个目标执行 110 万到 510 万次，没有崩溃、挂起或属性违反；billion-laughs 炸弹、外部实体、80,000 层和 1,048,576 层嵌套、60,000 个同级元素、超大的 `CipherValue` 和响应都会被拒绝，最多分配 4 到 8 MiB。CI 中的 `fuzz` 作业对每个目标运行 30 秒。行为不变 |
 | scim v0.2.0 | [审计、模糊测试、混沌测试和性能改进]({{< relref "/libraries/scim.md#v020" >}})：`Server.ReadTimeout`（30 秒）、可选接口 `ConditionalDeleter`、没有 `If-Match` 的 PATCH 或 PUT 在输掉竞争后最多重做 32 次而不是回答 412、通过不匹配任何内容的过滤器移除会成功、没有路径的 PATCH 的键按排序顺序应用、`BearerAuth` 接受任意大小写的方案、`startIndex` 和 `count` 无论字长都被限定。针对 10,000 个用户的列表请求：100 条的一页从 789,417 次分配降到 14,952 次，`userName eq` 从 797,979 次降到 90 次，完整扫描从 818,847 次降到 361,098 次（精确；时间未测量，负载 65） |
+| scim v0.2.1 | [`If-None-Match` 遵循 RFC 7232 §3.2]({{< relref "/libraries/scim.md#v021" >}})：实体标签列表、`*`、弱比较，并且 304 带有 `ETag`；`Memory` 通过索引检查 `userName` 的唯一性（加载 N 个用户时是 O(N) 而不是 O(N^2) 次 `EqualFold` 调用）；没有索引能回答的列表过滤器，在它所指名的顶层属性上匹配：10,000 个用户时每个请求从 361,095 次分配降到 162,695 次，每个用户从 36.1 次降到 16.3 次（精确） |
 | servercert v0.5.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | servercert v0.6.0 | [TLS 的 `KeyFile` 和 ACME 的 `EABHMACKeyFile` 会被拒绝]({{< relref "/libraries/servercert.md" >}})，当组或其他用户可读写它们时，在 `New` 时以及每次重新加载时检查（可读的替换密钥会报告给 `OnError` 且不被采用，当前证书继续提供服务）；Windows 上不检查。**升级：**两个文件都执行 `chmod 600` |
 | totp v0.4.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |

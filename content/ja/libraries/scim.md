@@ -13,7 +13,7 @@ ID プロバイダー (Entra ID、Okta、Keycloak、…) は、あなたのア�
 標準ライブラリのみ。
 
 ```sh
-go get github.com/go-authn/scim@v0.2.0
+go get github.com/go-authn/scim@v0.2.1
 ```
 
 ## 例 {#example}
@@ -92,6 +92,25 @@ Apple M4 Max:
 0.06 秒) は結果ではありません。`FuzzPatchPath`、`FuzzPatchThenDecode`、`FuzzFilter`、`FuzzServer` をそれぞれ 45 秒、
 16 ワーカーで実行し、130 万から 240 万回の実行で失敗は見つかりませんでした。
 
+## v0.2.1 で変わったこと {#v021}
+
+- **`If-None-Match` は RFC 7232 §3.2 に従います。** エンティティタグの一覧 (複数のヘッダー行でも) を持つ
+  `GET` は、そのうちのいずれかが弱い比較で一致すれば 304 を返します (`"x"` は `W/"x"` に一致)。`*` は
+  存在するどのリソースにも 304 を返します。有効な `If-None-Match` でないヘッダーは無視されます。
+  304 は `ETag` を伴います (RFC 7232 §4.1)。以前は伴っていませんでした。`FuzzIfNoneMatch` でファジング済みです。
+- **`Memory` は `userName` の索引を持ちます。** 一意性は全ユーザーの走査で確認していたため、N 人の
+  ユーザーの読み込みは O(N^2) 回の `EqualFold` 呼び出しでした。今は O(N) で、10,000 ユーザーでの
+  1 億回の呼び出しはなくなりました。キーは各ルーンの `unicode.SimpleFold` 軌道の最小値で、これは
+  `strings.EqualFold` の同値関係とまったく同じです (古い走査と照合してテスト済み、`FuzzFoldKey` で
+  ファジング済み)。作成、置換 (PUT と PATCH)、削除はそれを一貫したままにします。
+  `BenchmarkMemoryLoad10k` (10,000 ユーザーの作成と置換) は一回の実行で 119,030 回のアロケーションで、
+  以前は 98,959 回でした。索引は作成ごと、名前変更ごとに一つのキーです。
+- **どの索引も答えられないフィルターを持つリストは、フィルターが名指しするトップレベルの属性だけを
+  持つマップで照合され**、オブジェクト全体はページの分だけが作られます。`BenchmarkListFilterCo10k`
+  (10,000 ユーザー): 一回のリクエストあたり以前は 361,095 回、今は 162,695 回のアロケーションで、
+  ユーザーあたり 36.1 から 16.3 です。同値性は 50 のフィルターとランダムなフィルターでテストされています
+  (`FuzzFilterOnSelectedMap`)。
+
 ## 何に対して検証されているか {#what-it-is-checked-against}
 
 **ID プロバイダーが実際に送るもの**を、そのペイロードでテストしています。Entra ID の `"Replace"`、
@@ -101,4 +120,4 @@ Apple M4 Max:
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/scim@v0.2.0](https://pkg.go.dev/github.com/go-authn/scim@v0.2.0)
+[pkg.go.dev/github.com/go-authn/scim@v0.2.1](https://pkg.go.dev/github.com/go-authn/scim@v0.2.1)

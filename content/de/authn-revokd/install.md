@@ -16,7 +16,7 @@ Das Repository liefert in `packaging/` drei Units und ein Konto mit:
 | `/usr/local/bin/authn-revokd` | das Binary | root, `0755` |
 | `/usr/lib/sysusers.d/authn-revokd.conf` | das Systemkonto `authn-revokd` | root, `0644` |
 | `/etc/systemd/system/authn-revokd.service` | der Daemon | root, `0644` |
-| `/etc/authn-revokd/revokd.hcl` | die Konfiguration, das Standard-`-config` | root, `0644` |
+| `/etc/authn-revokd/revokd.hcl` | die Konfiguration, das Standard-`--config` | root, `0644` |
 | `/etc/authn-revokd/ca/` | die CA-Schlüssel und -Zertifikate, von denen die Listen signiert sein müssen | root, `0755`; die Dateien darin `0644` |
 | `/var/lib/authn-revokd/` | `StateDirectory=`, der einzige beschreibbare Ort | authn-revokd, `0755` |
 | `/var/lib/authn-revokd/state/` | `state_dir`: die geprüften Kopien | authn-revokd, `0700` |
@@ -34,12 +34,16 @@ eigenen Benutzer läuft, sie lesen können; der Zustand bleibt `0700`.
 Ein Release enthält `authn-revokd-<os>-<arch>` für Linux, macOS und Windows auf
 amd64 und arm64, mit `SHA256SUMS` und Build-Provenienz
 ([einen Download prüfen]({{< relref "/security/verifying-releases.md" >}})). Oder
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.7`.
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0`.
 
 Das Konto und die Unit stammen aus dem Verzeichnis `packaging/` des
 Release-Tags, derselben Version wie das Binary: Kopieren Sie dieses Verzeichnis
-neben das Binary, aus einem Checkout des Tags oder, für v0.6.7, von
-<https://github.com/go-authn/revocation/tree/v0.6.7/packaging>.
+neben das Binary, aus einem Checkout des Tags oder, für v0.7.0, von
+<https://github.com/go-authn/revocation/tree/v0.7.0/packaging>. Ab v0.7.0
+verwenden die Units `--config` und `--once`; eine Unit, die mit den
+Einzelstrich-Schreibweisen eingerichtet wurde, funktioniert weiter, mit einer
+Deprecation-Zeile auf der Standardfehlerausgabe bei jedem Start, bis ein späteres
+Release sie entfernt.
 
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
@@ -60,7 +64,7 @@ Benutzer läuft, könnte die CRL nicht lesen.
 ```ini
 [Service]
 Type=exec
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 ```
@@ -128,10 +132,10 @@ Konto `authn-revokd`, das kein `systemctl reload nginx` ausführen kann: Lassen 
 die Datei überwachen, als root, mit einer Path-Unit (`PathChanged=` auf die Ausgabe), die
 einen `oneshot` startet, der `systemctl reload nginx` ausführt.
 
-## Oder: `-once`, mit einem Timer {#or--once-on-a-timer}
+## Oder: `--once`, mit einem Timer {#or-once-on-a-timer}
 
-`authn-revokd -once` synchronisiert einmal und endet, mit `1`, wenn eine Liste nicht aktuell ist oder
-nicht abgerufen werden konnte ([was `-once` meldet]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
+`authn-revokd --once` synchronisiert einmal und endet, mit `1`, wenn eine Liste nicht aktuell ist oder
+nicht abgerufen werden konnte ([was `--once` meldet]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
 Die Ausgaben werden in jedem Fall geschrieben, und für sshd fail-closed, sobald eine Liste
 verfällt.
 
@@ -142,7 +146,7 @@ Conflicts=authn-revokd.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl --once
 TimeoutStartSec=5min
 ```
 
@@ -176,7 +180,7 @@ systemctl enable --now authn-revokd-once.timer
 **Aktivieren Sie nie beide**: Die Units stehen in Konflikt, sodass das Starten der einen die andere stoppt.
 Der Daemon bleibt die bessere Wahl. Er lässt eine verfallene Liste bei seinem nächsten
 `refresh` geschlossen fehlschlagen, wo der Timer auf seinen nächsten Takt wartet, und nur der Daemon dient als
-Spiegel: `listen` wird mit `-once` ignoriert. Ein Timer, der nicht mehr auslöst, ist ein Daemon,
+Spiegel: `listen` wird mit `--once` ignoriert. Ein Timer, der nicht mehr auslöst, ist ein Daemon,
 der angehalten hat; überwachen Sie also `systemctl status authn-revokd-once`.
 
 ## Aktualisieren und zurückgehen {#upgrading-and-going-back}

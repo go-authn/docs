@@ -11,7 +11,7 @@ tags: [库, 目录, ldap, sql]
 块——其要点在于这个问题的后半部分。
 
 ```sh
-go get github.com/go-authn/directory@v0.20.0
+go get github.com/go-authn/directory@v0.21.0
 ```
 
 v0.17.0 的新内容：[`ErrUnavailable`](#unavailable)，把故障与密码错误区分开；以及成员 DN 通过一次查找而不是一次扫描
@@ -61,6 +61,14 @@ DN 查找不分配任何东西（0 次分配，0 B；过去是对人员的线性
 绑定。实现了 `GroupReader` 的来源（sqldir 和 ldapdir 都实现了）会批量一次读取所有组；
 随后 `Set.Frozen()` 以 `Set` 自身的合并规则，从内存中应答 `Members`、`GroupAttributes`、
 `GroupObjectClasses` 和 `GroupNames`。请关闭原来的 `Set`，而不是冻结后的那个。
+
+**`Set.GroupNames` 会说明哪些来源失败了**（v0.21.0）。它返回已应答的来源的
+名称，**并**返回一个 `errors.Join`，其中对每个失败的来源有一项
+`"<describe>: <err>"`；`errors.Is` 仍然匹配 `ErrUnavailable`。此前，只要有
+另一个来源应答，错误就会被丢弃，返回的是部分列表和 nil 错误。只检查
+`err != nil` 的调用方，现在在原本得到部分列表的地方会看到一个错误，而名称
+会随之一起返回（只有当所有来源都失败时，它们才是 `nil`）。能够发布已有内容的
+调用方应使用这些名称并记录该错误。
 
 `hcldir` 不解码 HCL：调用方解码该块并交给它。
 它导入 HCL 只是为了写入，用于 `SetPassword`。构建标签 `nosql` 和
@@ -468,4 +476,4 @@ CI 中还会检查 `nosql` 和 `noldap` 构建。
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/directory@v0.20.0](https://pkg.go.dev/github.com/go-authn/directory@v0.20.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.21.0](https://pkg.go.dev/github.com/go-authn/directory@v0.21.0)

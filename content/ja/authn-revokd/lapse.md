@@ -27,7 +27,7 @@ tags: [authn-revokd, 失効, フェイルクローズ, sshd]
 ものです。
 
 ```
-$ authn-revokd -config revokd-maxage.hcl -once
+$ authn-revokd --config revokd-maxage.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
@@ -44,7 +44,7 @@ ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 
 `bridge-ssh` は `not current` で、その出力はフェイルクローズされています。`bridge-x509` は
 `not fetched` にすぎず、その CRL はそのまま残されています
-([`-once` が報告するもの]({{< relref "/authn-revokd/verification.md#what--once-reports" >}}))。
+([`--once` が報告するもの]({{< relref "/authn-revokd/verification.md#what--once-reports" >}}))。
 `SHA256:AnDb/...` は bridge の SSH CA です。それが署名した証明書は、ファイルを読むものにとっては
 失効済みとなります。上のコマンドは `out/` がある `revokd` ディレクトリで実行しました。次のものは
 その隣の、テスト用証明書を保持するディレクトリで実行します。

@@ -17,18 +17,18 @@ All of them are pure Go and build with `CGO_ENABLED=0`.
 |---|---|---|---|
 | [mfa]({{< relref "/libraries/mfa.md" >}}) | did enough factors answer, of enough kinds, and which ones? | v0.5.0 | `github.com/go-authn/mfa` |
 | [totp]({{< relref "/libraries/totp.md" >}}) | is this six-digit code right, and has it been used before? | v0.4.2 | `github.com/go-authn/totp` |
-| [fido]({{< relref "/libraries/fido.md" >}}) | how is a security key spoken to, over 64-byte reports? | v0.6.2 | `github.com/go-authn/fido` |
+| [fido]({{< relref "/libraries/fido.md" >}}) | how is a security key spoken to, over 64-byte reports? | v0.6.4 | `github.com/go-authn/fido` |
 | [keyfactor]({{< relref "/libraries/keyfactor.md" >}}) | did *the registered* key answer, and did a person touch it? | v0.4.2 | `github.com/go-authn/keyfactor` |
-| [directory]({{< relref "/libraries/directory.md" >}}) | who is somebody, and what can prove them? | v0.20.0 | `github.com/go-authn/directory` |
+| [directory]({{< relref "/libraries/directory.md" >}}) | who is somebody, and what can prove them? | v0.21.0 | `github.com/go-authn/directory` |
 | [ldap]({{< relref "/libraries/ldap.md" >}}) | what are the bytes of an LDAP server? | v0.12.3 | `github.com/go-authn/ldap` |
 | [krb5]({{< relref "/libraries/krb5.md" >}}) | is this Kerberos ticket good for this service? | v0.3.3 | `github.com/go-authn/krb5` |
 | [kdc]({{< relref "/libraries/kdc.md" >}}) | how does a realm issue tickets from a directory? | v0.6.0 | `github.com/go-authn/kdc` |
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | who does this bearer token say is asking, and should it be believed? | v0.7.0 | `github.com/go-authn/oidc` |
-| [saml]({{< relref "/libraries/saml.md" >}}) | what did a federation's identity provider say about this person? | v0.6.0 | `github.com/go-authn/saml` |
+| [saml]({{< relref "/libraries/saml.md" >}}) | what did a federation's identity provider say about this person? | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | is this SSH certificate or key revoked, as sshd would answer? | v0.6.1 | `github.com/go-authn/krl` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | where does a daemon's TLS server certificate come from? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | may this WireGuard key connect, and whose is it? | v0.1.4 | `github.com/go-authn/wireguard` |
-| [scim]({{< relref "/libraries/scim.md" >}}) | who has the identity provider just created, changed or deleted? | v0.2.0 | `github.com/go-authn/scim` |
+| [scim]({{< relref "/libraries/scim.md" >}}) | who has the identity provider just created, changed or deleted? | v0.2.1 | `github.com/go-authn/scim` |
 
 ## How they group
 

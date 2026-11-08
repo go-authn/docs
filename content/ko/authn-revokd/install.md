@@ -15,7 +15,7 @@ tags: [authn-revokd, 설치, systemd]
 | `/usr/local/bin/authn-revokd` | 바이너리 | root, `0755` |
 | `/usr/lib/sysusers.d/authn-revokd.conf` | `authn-revokd` 시스템 계정 | root, `0644` |
 | `/etc/systemd/system/authn-revokd.service` | 데몬 | root, `0644` |
-| `/etc/authn-revokd/revokd.hcl` | 구성, 기본 `-config` | root, `0644` |
+| `/etc/authn-revokd/revokd.hcl` | 구성, 기본 `--config` | root, `0644` |
 | `/etc/authn-revokd/ca/` | 목록이 서명되어야 하는 CA 키와 인증서 | root, `0755`, 그 안의 파일은 `0644` |
 | `/var/lib/authn-revokd/` | `StateDirectory=`, 유일하게 쓸 수 있는 곳 | authn-revokd, `0755` |
 | `/var/lib/authn-revokd/state/` | `state_dir`: 검증된 사본 | authn-revokd, `0700` |
@@ -33,12 +33,14 @@ tags: [authn-revokd, 설치, systemd]
 릴리스에는 amd64와 arm64의 Linux, macOS, Windows용 `authn-revokd-<os>-<arch>`가
 `SHA256SUMS`와 빌드 출처 증명과 함께 들어 있습니다
 ([다운로드 검증하기]({{< relref "/security/verifying-releases.md" >}})). 또는
-`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.7`.
+`go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0`.
 
 계정과 유닛은 바이너리와 같은 버전인 릴리스 태그의 `packaging/` 디렉터리에서
-가져옵니다. 태그의 체크아웃에서, 또는 v0.6.7의 경우
-<https://github.com/go-authn/revocation/tree/v0.6.7/packaging>에서 그 디렉터리를
-바이너리 옆에 복사하십시오.
+가져옵니다. 태그의 체크아웃에서, 또는 v0.7.0의 경우
+<https://github.com/go-authn/revocation/tree/v0.7.0/packaging>에서 그 디렉터리를
+바이너리 옆에 복사하십시오. v0.7.0부터 유닛은 `--config`와 `--once`를 씁니다.
+단일 대시 철자로 배포된 유닛은 이후 릴리스가 제거할 때까지 계속 동작하며, 시작할
+때마다 표준 오류에 폐기 예정 안내가 한 줄 나옵니다.
 
 ```sh
 install -m 0755 authn-revokd-linux-amd64 /usr/local/bin/authn-revokd
@@ -59,7 +61,7 @@ systemctl daemon-reload
 ```ini
 [Service]
 Type=exec
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 ```
@@ -127,11 +129,11 @@ nginx`를 할 수 없습니다. 대신 systemd가 root로 파일을 지켜보게
 경로 유닛(`PathChanged=`)이 `systemctl reload nginx`를 실행하는 `oneshot`을
 시작하게 합니다.
 
-## 또는: 타이머의 `-once` {#or--once-on-a-timer}
+## 또는: 타이머의 `--once` {#or--once-on-a-timer}
 
-`authn-revokd -once`는 한 번 동기화하고 종료하며, 목록이 현재가 아니거나 가져올 수
+`authn-revokd --once`는 한 번 동기화하고 종료하며, 목록이 현재가 아니거나 가져올 수
 없으면 `1`입니다
-([`-once`가 보고하는 것]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
+([`--once`가 보고하는 것]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
 출력은 어느 쪽이든 기록되며, 목록이 만료되면 sshd에 대해 실패 시 차단 상태가 됩니다.
 
 ```ini
@@ -141,7 +143,7 @@ Conflicts=authn-revokd.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/authn-revokd -config /etc/authn-revokd/revokd.hcl -once
+ExecStart=/usr/local/bin/authn-revokd --config /etc/authn-revokd/revokd.hcl --once
 TimeoutStartSec=5min
 ```
 
@@ -174,7 +176,7 @@ systemctl enable --now authn-revokd-once.timer
 **둘을 함께 켜지 마십시오.** 유닛이 충돌하므로 하나를 시작하면 다른 하나가 멈춥니다.
 데몬이 더 나은 선택으로 남습니다. 만료된 목록을 타이머가 다음 틱을 기다리는 동안 데몬은
 다음 `refresh`에서 실패 시 차단 처리하며, 미러로 동작하는 것도 데몬뿐입니다.
-`listen`은 `-once`에서 무시됩니다. 발사를 멈춘 타이머는 멈춘 데몬과 같으므로
+`listen`은 `--once`에서 무시됩니다. 발사를 멈춘 타이머는 멈춘 데몬과 같으므로
 `systemctl status authn-revokd-once`를 모니터링하십시오.
 
 ## 업그레이드와 되돌리기 {#upgrading-and-going-back}

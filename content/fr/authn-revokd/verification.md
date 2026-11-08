@@ -24,7 +24,7 @@ section de signature d'OpenSSH, qu'OpenSSH ne vérifie jamais.
 Une liste signée par toute autre clé est refusée :
 
 ```
-$ authn-revokd -config revokd-other.hcl -once
+$ authn-revokd --config revokd-other.hcl --once
 bridge-ssh: revocation: the KRL's signature does not verify by SHA256:6iM7YPhdfXxQEj/PUf7CYbqBuSiVTVMx2VADj63cAg4: public key does not match
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/other.krl
@@ -84,17 +84,25 @@ révoqué.
 La liste détenue est conservée dans `state_dir`, un fichier par source contenant la liste et
 sa signature ensemble, écrit par un seul renommage avec synchronisation du répertoire.
 Au démarrage, chaque copie est **vérifiée de nouveau** (expirée ou non, elle ordonne ce qui vient
-ensuite), et une copie qui ne se vérifie plus n'est pas digne de confiance, pas même pour ordonner la
-suivante, et le journal le dit.
+ensuite), et une copie qui ne se vérifie plus (abîmée, ou écrite sous une autre clé d'AC) n'est
+jamais utilisée comme liste, et le journal le dit. Depuis la v0.6.8 elle conserve pourtant une
+chose : sa version et sa date d'émission, lues sans leur faire confiance, restent comme un
+**plancher d'ordre**. Auparavant, une telle copie comptait comme aucune copie, si bien qu'une
+liste plus ancienne rejouée, signée et non expirée, était acceptée et rétablissait ce que la
+plus récente révoquait. Désormais une liste en dessous du plancher est refusée comme un retour
+en arrière jusqu'à ce qu'une liste qui se vérifie et lui succède soit détenue. Si l'AC a été
+remplacée et que ses listes repartent d'une version plus basse, le journal nomme le fichier à
+supprimer, `<source>.state` dans `state_dir` : supprimez-le, et la prochaine liste vérifiée par la
+clé configurée fixe une nouvelle position.
 
 Ici, une source est dirigée, après un redémarrage, vers une liste qu'un processus bridge antérieur
 avait servie dix-neuf secondes plus tôt, toujours signée et toujours non expirée :
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
-$ authn-revokd -config revokd-old.hcl -once
+$ authn-revokd --config revokd-old.hcl --once
 bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-10-26T11:26:49Z, the copy held at 2026-10-26T11:27:10Z
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
@@ -112,9 +120,9 @@ règle StrictModes de sshd ([la configuration]({{< relref "/authn-revokd/configu
 Un plantage entre deux écritures ne peut pas laisser une paire qui ne se vérifie pas, ce qui
 emporterait avec elle la protection contre le retour en arrière : la liste et sa signature sont un seul fichier.
 
-## Ce que signale `-once` {#what--once-reports}
+## Ce que signale `--once` {#what--once-reports}
 
-`-once` sort avec `1` quand une source n'a aucune liste en vigueur, quand sa **dernière récupération
+`--once` sort avec `1` quand une source n'a aucune liste en vigueur, quand sa **dernière récupération
 a échoué**, ou quand une sortie n'a pas pu être écrite, et sa dernière ligne dit lequel
 des deux premiers cas c'est :
 
@@ -126,7 +134,7 @@ des deux premiers cas c'est :
 Ici, l'émetteur est arrêté alors que les deux listes détenues sont toujours en vigueur :
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-10-26T12:27:10Z), bridge-x509 (the list held is current until 2026-10-26T12:27:10Z)

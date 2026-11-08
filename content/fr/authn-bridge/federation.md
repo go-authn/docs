@@ -178,7 +178,12 @@ ait vérifié que la personne la lit.
 **Ce que la requête demande à l'IdP.** `prompt=none` devient `IsPassive`, et
 un IdP sans session répond `login_required`. `prompt=login` et `max_age=0`
 deviennent `ForceAuthn` ; pour tout autre `max_age`, une personne que son IdP a authentifiée
-il y a plus longtemps que cela est renvoyée avec `ForceAuthn`. `acr_values` devient
+il y a plus longtemps que cela est renvoyée avec `ForceAuthn`. Un `AuthnInstant`
+postérieur à maintenant plus les trois minutes de décalage d'horloge accordées à un IdP n'est pas
+frais non plus (v0.23.10) : son temps écoulé est inconnu, comme le veut OIDC Core 3.1.2.1, et la
+personne est renvoyée avec `ForceAuthn` comme une personne authentifiée il y a trop longtemps ;
+auparavant, il sortait négatif et comptait comme frais sous n'importe quel `max_age`.
+Dans la limite du décalage, rien ne change. `acr_values` devient
 `RequestedAuthnContext`, et un IdP qui répond avec un autre contexte est
 refusé : un client qui a demandé un second facteur ne se voit jamais dire qu'il l'a obtenu
 quand ce n'est pas le cas.

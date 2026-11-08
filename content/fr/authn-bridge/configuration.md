@@ -143,6 +143,25 @@ livrés : écrits au fil de l'eau dans une seule table, `bridge_state` (créée 
 lus au démarrage. Un jeton de rafraîchissement est conservé sous forme de son SHA-256, jamais tel quel.
 Sans ce bloc, ils vivent en mémoire, et un redémarrage déconnecte tout le monde.
 
+**Ce que fait le fournisseur quand la base de données refuse une ligne** (v0.23.11 et
+v0.23.12). Les suppressions passent toujours : une famille de jetons de rafraîchissement ou un
+jeton d'accès mis en file pour suppression, une révocation, parvient à la base de données même
+quand une écriture mise en file avant elle est refusée (auparavant, une seule ligne refusée
+arrêtait tous les vidages suivants, et le fournisseur restait non prêt jusqu'à ce qu'un
+redémarrage recharge ce qui aurait dû être révoqué). Une ligne que la base de données refuse
+pour de bon (une contrainte, un type incompatible, une valeur trop grande : classe SQLSTATE 22
+ou 23 de PostgreSQL, MySQL 1048, 1062, 1264, 1265, 1292, 1366, 1406, 1452, SQLite constraint,
+mismatch, too big) est journalisée une fois et **abandonnée** : elle continue de fonctionner en
+mémoire mais ne survit pas à un redémarrage. Une ligne refusée avec une erreur qu'aucun
+classificateur ne connaît est réessayée, et abandonnée de la même façon après cinq vidages
+répartis sur au moins trente secondes pendant lesquels la base de données a accepté autre chose
+(une écriture, une suppression ou une sonde sans effet) alors que cette ligne continuait
+d'échouer. Un vidage où rien ne réussit, la base de données étant absente, ne compte contre
+aucune ligne, si bien qu'**une panne n'abandonne rien**. Chaque ligne abandonnée est comptée
+dans `bridge_state_rows_rejected_total{kind}`, `kind` étant l'opération (`write`) ; sa hausse
+est à lire par l'opérateur, puisque ce qui a été abandonné ne sera plus là après un
+redémarrage.
+
 Une connexion en cours n'y figure pas. Elle voyage dans son propre cookie, scellé avec
 AES-256-GCM sous une clé dérivée du sel des sujets, si bien que le navigateur ne peut
 ni le lire ni le modifier.

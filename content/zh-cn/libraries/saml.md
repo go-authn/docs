@@ -13,7 +13,7 @@ tags: [库, saml, 联邦]
 该提供方所说的内容。
 
 ```sh
-go get github.com/go-authn/saml@v0.6.0
+go get github.com/go-authn/saml@v0.6.1
 ```
 
 它是 [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -259,6 +259,34 @@ srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw strin
   在解密之前就被拒绝。
 
 覆盖率通道的下限是 92%。
+
+## 模糊测试，以及恶意输入的代价 {#fuzzing}
+
+自 v0.6.1 起，解析器旁有四个模糊测试目标，语料库提交在 `testdata/fuzz` 下，
+并由每次 `go test` 重放：
+
+- `FuzzAccept`：被模糊器重新排列的响应要么被拒绝，要么准确说出 IdP 所签署的内容。
+  种子包括：明文中已签名的断言、围绕一个加密断言的已签名 Response，以及
+  签名包装布局 XSW1 到 XSW8。
+- `FuzzParseMetadata`。
+- `FuzzDecrypt`：GCM 和 CBC，EncryptedKey 既在 EncryptedData 的
+  KeyInfo 之内，也在其旁边。CBC 绝不会在未经认证的情况下打开，而 GCM 打开的
+  就是被密封的内容。
+- `FuzzLimits`：`limits.check` 和 `parse` 对拒绝什么意见一致，
+  并且 `check` 的分配量与其输入成正比。
+
+种子来自 `samltest`。一个被植入的故障，即去掉 CBC 关卡，仅凭其种子就会使
+`FuzzDecrypt` 变红。在一台负载高于 8 的机器上，每个以 16 个工作进程运行 130 秒
+（衡量标准是执行次数，而不是时间），它们分别执行了
+1,502,094 次（`FuzzAccept`）、2,120,800 次（`FuzzParseMetadata`）、5,146,715 次
+（`FuzzDecrypt`）和 1,119,772 次（`FuzzLimits`），没有发现崩溃、挂起
+或属性违反。CI 在每次推送和拉取请求时对每个目标运行 30 秒，
+并把使某个目标失败的输入保留为产物。
+
+`TestHostileInputsAreRefusedCheaply` 检查恶意输入是被**拒绝**而不是被解析：
+在软内存限制下，实体扩展炸弹（billion laughs）、外部实体、80,000 层和
+1,048,576 层嵌套、60,000 个同级元素、150 KiB 的 `CipherValue`、超过大小上限的
+响应以及全空白的响应，都会被拒绝，且 `TotalAlloc` 被限制在 4 到 8 MiB。
 
 ## 参考 {#reference}
 

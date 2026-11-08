@@ -13,7 +13,7 @@ signées de la fédération, envoie les personnes vers le fournisseur d'identit�
 de leur propre établissement, et relit ce que ce fournisseur affirme.
 
 ```sh
-go get github.com/go-authn/saml@v0.6.0
+go get github.com/go-authn/saml@v0.6.1
 ```
 
 C'est la moitié d'[authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -268,6 +268,35 @@ appel : rien de tout cela n'a sa place en production.
   la Response a été retirée est refusée avant déchiffrement.
 
 Le plancher de la voie de couverture est de 92 %.
+
+## Fuzzée, et ce que coûte une entrée hostile {#fuzzing}
+
+Depuis la v0.6.1, quatre cibles de fuzzing se trouvent à côté de l'analyseur, et le corpus
+est versionné sous `testdata/fuzz` et rejoué par chaque `go test` :
+
+- `FuzzAccept` : une réponse que le fuzzer a réarrangée est refusée, ou dit exactement ce
+  que l'IdP a signé. Amorcée avec une assertion signée en clair, une Response signée
+  autour d'une assertion chiffrée, et les dispositions d'enveloppement de signature XSW1 à XSW8.
+- `FuzzParseMetadata`.
+- `FuzzDecrypt` : GCM et CBC, avec l'EncryptedKey dans le KeyInfo d'EncryptedData et à côté
+  de lui. CBC n'est jamais ouvert sans authentification, et ce que GCM ouvre
+  est ce qui a été scellé.
+- `FuzzLimits` : `limits.check` et `parse` s'accordent sur ce qui est refusé, et `check`
+  alloue en proportion de son entrée.
+
+Les amorces viennent de `samltest`. Une faute plantée, la porte CBC retirée, fait passer
+`FuzzDecrypt` au rouge à partir de ses seules amorces. Lancées 130 s chacune sur 16 workers, sur une
+machine à une charge supérieure à 8 (les exécutions, non les temps, sont la mesure), elles ont fait
+1 502 094 (`FuzzAccept`), 2 120 800 (`FuzzParseMetadata`), 5 146 715
+(`FuzzDecrypt`) et 1 119 772 (`FuzzLimits`) exécutions, et n'ont trouvé aucun plantage, blocage
+ni violation de propriété. La CI lance chaque cible 30 s à chaque push et chaque pull
+request, et garde comme artefact l'entrée qui en a cassé une.
+
+`TestHostileInputsAreRefusedCheaply` vérifie qu'une entrée hostile est **refusée**,
+non analysée : sous une limite de mémoire souple, une bombe d'expansion d'entités (billion
+laughs), une entité externe, 80 000 et 1 048 576 niveaux d'imbrication, 60 000
+éléments frères, un `CipherValue` de 150 Kio, une réponse au-delà du plafond de taille et une
+réponse faite uniquement d'espaces sont chacune refusées, avec `TotalAlloc` borné à 4 à 8 Mio.
 
 ## Référence {#reference}
 

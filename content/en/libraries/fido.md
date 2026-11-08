@@ -12,7 +12,7 @@ register a credential, ask for a signature and exchange a PIN for a token — in
 pure Go, on any operating system.
 
 ```sh
-go get github.com/go-authn/fido@v0.6.2
+go get github.com/go-authn/fido@v0.6.4
 ```
 
 Nothing here is platform-specific. A `Transport` moves 64-byte reports to and
@@ -140,6 +140,15 @@ unplugged was called locked, and somebody told that might reset it and lose
 every credential on it.
 {{< /callout >}}
 
+**A PIN token with permissions.** `Key.PINToken` asked with permissions sends
+`permissions` under key `0x09` and `rpId` under `0x0A`, as CTAP 2.1 numbers them
+(§6.5.5, authenticatorClientPIN; it has no `0x07` or `0x08`). Up to v0.6.3 it
+sent them under `0x07` and `0x08`, and a YubiKey 5 answered
+`CTAP2_ERR_MISSING_PARAMETER` (`0x14`). No other field of the request used those
+keys (`keyAgreement` is `0x03`, `pinHashEnc` `0x06`), so nothing collided. The
+fake authenticator of the tests now reads the keys as literals from the
+specification, and a test checks the request's map keys against its table.
+
 ## What it is checked against
 
 The CI has no security key, so the tests use a fake transport that reassembles
@@ -159,4 +168,4 @@ verified against the public key it handed out; that run is not part of CI.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.2](https://pkg.go.dev/github.com/go-authn/fido@v0.6.2)
+[pkg.go.dev/github.com/go-authn/fido@v0.6.4](https://pkg.go.dev/github.com/go-authn/fido@v0.6.4)

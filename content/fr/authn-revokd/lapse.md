@@ -29,7 +29,7 @@ copie détenue expire en moins d'une minute au lieu d'une heure. La source CRL n
 `max_age`, et sa copie est toujours en vigueur :
 
 ```
-$ authn-revokd -config revokd-maxage.hcl -once
+$ authn-revokd --config revokd-maxage.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
@@ -46,7 +46,7 @@ ca-ssh.pub (go-authn/bridge SSH CA): REVOKED
 
 `bridge-ssh` est `not current`, et sa sortie refuse en cas de doute ; `bridge-x509`
 est seulement `not fetched`, et sa CRL est laissée telle quelle
-([ce que signale `-once`]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
+([ce que signale `--once`]({{< relref "/authn-revokd/verification.md#what--once-reports" >}})).
 `SHA256:AnDb/...` est l'AC SSH du bridge. Un certificat qu'elle a signé est désormais
 révoqué pour tout ce qui lit le fichier. Les commandes ci-dessus ont tourné dans le
 répertoire `revokd`, où se trouve `out/` ; celle-ci tourne à côté, dans le répertoire

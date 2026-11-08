@@ -173,7 +173,11 @@ IdP 的实体 ID 限定，而 `sub` 是在主体盐值之下对它计算的 HMAC
 **请求向 IdP 提出什么要求。** `prompt=none` 变为 `IsPassive`，
 没有会话的 IdP 会答复 `login_required`。`prompt=login` 和 `max_age=0`
 变为 `ForceAuthn`；对于任何其他 `max_age`，如果其 IdP 认证该人员的
-时间比这更早，则该人员会被带着 `ForceAuthn` 送回。`acr_values` 变为
+时间比这更早，则该人员会被带着 `ForceAuthn` 送回。晚于现在加上允许 IdP
+存在的三分钟时钟偏差的 `AuthnInstant` 同样不算新鲜（v0.23.10）：其经过的时间
+未知，如 OIDC Core 3.1.2.1 所述，该人员会像认证过久的人一样被带着 `ForceAuthn`
+送回；此前它算出来是负数，在任何 `max_age` 下都算新鲜。
+在偏差之内，一切不变。`acr_values` 变为
 `RequestedAuthnContext`，而以另一个上下文作答的 IdP 会被
 拒绝：要求第二因素的客户端绝不会在实际上
 没有得到时被告知已经得到。

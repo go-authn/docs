@@ -143,6 +143,25 @@ Ereignisse: in eine Tabelle durchgeschrieben, `bridge_state` (angelegt, falls si
 beim Start gelesen. Ein Refresh-Token wird als sein SHA-256 aufbewahrt, nie als es selbst.
 Ohne den Block leben sie im Speicher, und ein Neustart meldet alle ab.
 
+**Was der Anbieter tut, wenn die Datenbank eine Zeile ablehnt** (v0.23.11 und
+v0.23.12). Löschungen fließen immer: Eine Refresh-Familie oder ein Access-Token, die
+zum Löschen eingereiht sind, ein Widerruf, erreicht die Datenbank auch dann, wenn ein
+davor eingereihter Schreibvorgang abgelehnt wird (vorher hielt eine abgelehnte Zeile
+jeden späteren Flush an, und der Anbieter blieb nicht bereit, bis ein Neustart wieder
+lud, was widerrufen sein sollte). Eine Zeile, die die Datenbank endgültig ablehnt (eine
+Constraint-Verletzung, ein Typkonflikt, ein zu großer Wert: PostgreSQL-SQLSTATE-Klasse 22
+oder 23, MySQL 1048, 1062, 1264, 1265, 1292, 1366, 1406, 1452, SQLite constraint,
+mismatch, too big), wird einmal protokolliert und **aufgegeben**: Sie arbeitet weiter im
+Speicher, überlebt aber keinen Neustart. Eine Zeile, die mit einem Fehler abgelehnt wird,
+den kein Klassifizierer kennt, wird wiederholt und auf dieselbe Weise aufgegeben, nach
+fünf Flushes über mindestens dreißig Sekunden, in denen die Datenbank etwas anderes
+annahm (einen Schreibvorgang, eine Löschung oder eine leere Sonde), während diese Zeile
+weiter fehlschlug. Ein Flush, in dem nichts gelingt, weil die Datenbank nicht erreichbar
+ist, zählt gegen keine Zeile, sodass **ein Ausfall nichts aufgibt**. Jede aufgegebene
+Zeile wird in `bridge_state_rows_rejected_total{kind}` gezählt, wobei `kind` die
+Operation ist (`write`); ein Anstieg davon ist von der Betreiberin oder dem Betreiber zu
+lesen, denn was aufgegeben wurde, ist nach einem Neustart nicht mehr da.
+
 Eine laufende Anmeldung ist nicht darin. Sie reist in ihrem eigenen Cookie, versiegelt mit
 AES-256-GCM unter einem aus dem Subject-Salt abgeleiteten Schlüssel, sodass der Browser sie
 weder lesen noch ändern kann.

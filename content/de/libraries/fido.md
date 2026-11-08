@@ -12,7 +12,7 @@ ein Credential registrieren, eine Signatur anfordern und eine PIN gegen ein Toke
 reinem Go, auf jedem Betriebssystem.
 
 ```sh
-go get github.com/go-authn/fido@v0.6.2
+go get github.com/go-authn/fido@v0.6.4
 ```
 
 Nichts hier ist plattformspezifisch. Ein `Transport` bewegt 64-Byte-Reports zu und
@@ -140,6 +140,15 @@ werden musste, galt als gesperrt, und wer das las, setzte ihn womöglich zurück
 verlor jedes Credential darauf.
 {{< /callout >}}
 
+**Ein PIN-Token mit Berechtigungen.** `Key.PINToken`, mit Berechtigungen angefordert,
+sendet `permissions` unter dem Schlüssel `0x09` und `rpId` unter `0x0A`, wie CTAP 2.1 sie
+nummeriert (§6.5.5, authenticatorClientPIN; es hat kein `0x07` und kein `0x08`). Bis v0.6.3
+sendete es sie unter `0x07` und `0x08`, und ein YubiKey 5 antwortete
+`CTAP2_ERR_MISSING_PARAMETER` (`0x14`). Kein anderes Feld der Anfrage verwendete diese
+Schlüssel (`keyAgreement` ist `0x03`, `pinHashEnc` `0x06`), es kollidierte also nichts. Der
+gefälschte Authenticator der Tests liest die Schlüssel jetzt als Literale aus der
+Spezifikation, und ein Test prüft die Map-Schlüssel der Anfrage gegen seine Tabelle.
+
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
 
 Die CI hat keinen Sicherheitsschlüssel, daher verwenden die Tests einen gefälschten Transport, der
@@ -159,4 +168,4 @@ gegen den öffentlichen Schlüssel geprüft wurde, den er herausgegeben hat; die
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.2](https://pkg.go.dev/github.com/go-authn/fido@v0.6.2)
+[pkg.go.dev/github.com/go-authn/fido@v0.6.4](https://pkg.go.dev/github.com/go-authn/fido@v0.6.4)

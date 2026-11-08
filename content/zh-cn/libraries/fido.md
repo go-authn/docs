@@ -12,7 +12,7 @@ tags: [库, fido, 认证因素]
 适用于任何操作系统。
 
 ```sh
-go get github.com/go-authn/fido@v0.6.2
+go get github.com/go-authn/fido@v0.6.4
 ```
 
 这里没有任何平台相关的内容。`Transport` 在一个认证器之间
@@ -139,6 +139,15 @@ CTAP2_ERR_PIN_BLOCKED（`0x32`），只有重置才能解除，其信息为
 从而丢失密钥上的所有凭据。
 {{< /callout >}}
 
+**带权限的 PIN 令牌。** 带权限请求的 `Key.PINToken` 把 `permissions` 放在键
+`0x09` 下，把 `rpId` 放在 `0x0A` 下，这是 CTAP 2.1 的编号（§6.5.5，
+authenticatorClientPIN；它没有 `0x07` 或 `0x08`）。直到 v0.6.3，它把它们放在
+`0x07` 和 `0x08` 下，而 YubiKey 5 应答
+`CTAP2_ERR_MISSING_PARAMETER`（`0x14`）。请求中没有其他字段使用这些键
+（`keyAgreement` 是 `0x03`，`pinHashEnc` 是 `0x06`），因此没有冲突。
+测试用的假认证器现在以字面量从规范中读取这些键，并且有一个测试把请求的
+映射键与它的表核对。
+
 ## 它对照什么检查 {#what-it-is-checked-against}
 
 CI 中没有安全密钥，因此测试使用一个会重新拼合所收内容的
@@ -158,4 +167,4 @@ CI 中没有安全密钥，因此测试使用一个会重新拼合所收内容�
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.2](https://pkg.go.dev/github.com/go-authn/fido@v0.6.2)
+[pkg.go.dev/github.com/go-authn/fido@v0.6.4](https://pkg.go.dev/github.com/go-authn/fido@v0.6.4)

@@ -169,7 +169,11 @@ IdP のエンティティ ID で修飾され、`sub` はそれをサブジェク
 
 **リクエストが IdP に求めること。** `prompt=none` は `IsPassive` になり、セッションのない IdP は
 `login_required` を返します。`prompt=login` と `max_age=0` は `ForceAuthn` になります。それ以外の
-`max_age` では、IdP がそれより前に認証した人は `ForceAuthn` 付きで送り返されます。`acr_values` は
+`max_age` では、IdP がそれより前に認証した人は `ForceAuthn` 付きで送り返されます。現在時刻に IdP に許される
+クロックスキューの 3 分を加えたものより後の `AuthnInstant` も新しいとは見なされません (v0.23.10)。
+OIDC Core 3.1.2.1 の定めどおり経過時間は不明であり、その人は長く前に認証した人と同じく
+`ForceAuthn` 付きで送り返されます。以前は負の値になり、どの `max_age` でも新しいと数えられていました。
+スキューの範囲内では何も変わりません。`acr_values` は
 `RequestedAuthnContext` になり、別のコンテキストで応答する IdP は拒否されます。第二要素を求めた
 クライアントが、実際にはそうでないのに得たと告げられることは決してありません。
 

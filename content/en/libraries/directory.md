@@ -11,7 +11,7 @@ memory, a SQL database, an LDAP server, or `user` and `group` blocks in a
 configuration file — and the point of it is the second half of the question.
 
 ```sh
-go get github.com/go-authn/directory@v0.20.0
+go get github.com/go-authn/directory@v0.21.0
 ```
 
 New in v0.17.0: [`ErrUnavailable`](#unavailable), an outage told apart from a
@@ -67,6 +67,15 @@ without holding the secret. A source that implements `GroupReader` (sqldir and
 ldapdir do) reads every group once, in bulk; `Set.Frozen()` then answers
 `Members`, `GroupAttributes`, `GroupObjectClasses` and `GroupNames` from memory,
 with the Set's own merging. Close the original Set, not the frozen one.
+
+**`Set.GroupNames` says which sources failed** (v0.21.0). It returns the names
+of the sources that answered **and** an `errors.Join` of `"<describe>: <err>"`
+for each source that failed; `errors.Is` still matches `ErrUnavailable`. Before,
+the error was dropped whenever another source answered, and a partial list came
+back with a nil error. A caller that tested only `err != nil` now sees an error
+where it saw a partial list, and the names come back with it (they are `nil`
+only when every source failed). A caller that can publish what it has should use
+the names and log the error.
 
 `hcldir` does not decode HCL: the caller decodes the block and hands it over.
 It imports HCL only to write, for `SetPassword`. The build tags `nosql` and
@@ -489,4 +498,4 @@ The coverage lane fails below 85% (its stated standard is 100%), and the
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/directory@v0.20.0](https://pkg.go.dev/github.com/go-authn/directory@v0.20.0)
+[pkg.go.dev/github.com/go-authn/directory@v0.21.0](https://pkg.go.dev/github.com/go-authn/directory@v0.21.0)

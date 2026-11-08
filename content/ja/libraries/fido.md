@@ -11,7 +11,7 @@ tags: [ライブラリ, fido, 要素]
 を、あらゆるオペレーティングシステム上の純粋な Go で。
 
 ```sh
-go get github.com/go-authn/fido@v0.6.2
+go get github.com/go-authn/fido@v0.6.4
 ```
 
 ここにプラットフォーム固有のものはありません。`Transport` は一つの認証器との間で 64 バイトの
@@ -133,6 +133,14 @@ CTAP2_ERR_PIN_AUTH_BLOCKED (`0x34`) は
 しれませんでした。
 {{< /callout >}}
 
+**権限付きの PIN トークン。** 権限付きで要求された `Key.PINToken` は、CTAP 2.1 の番号付けどおり
+(§6.5.5、authenticatorClientPIN。`0x07` と `0x08` はありません)、`permissions` をキー `0x09` で、
+`rpId` を `0x0A` で送ります。v0.6.3 までは `0x07` と `0x08` で送っており、YubiKey 5 は
+`CTAP2_ERR_MISSING_PARAMETER` (`0x14`) を返しました。リクエストのほかのフィールドはそれらのキーを
+使っていない (`keyAgreement` は `0x03`、`pinHashEnc` は `0x06`) ので、衝突はありませんでした。
+テストの偽の認証器は、今はキーを仕様書からのリテラルとして読み、テストがリクエストのマップのキーを
+その表と照合します。
+
 ## 何に対して検証されているか {#what-it-is-checked-against}
 
 CI にはセキュリティキーがないので、テストは、送られたものを再構成するフェイクのトランスポートを
@@ -150,4 +158,4 @@ YubiKey に対して行った登録とアサーションの実行が記録され
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/fido@v0.6.2](https://pkg.go.dev/github.com/go-authn/fido@v0.6.2)
+[pkg.go.dev/github.com/go-authn/fido@v0.6.4](https://pkg.go.dev/github.com/go-authn/fido@v0.6.4)

@@ -12,24 +12,40 @@ list. authn-revokd closes both gaps for the lists
 [authn-bridge]({{< relref "/authn-bridge/revocation.md" >}}) publishes: it
 fetches each list, keeps it only if it verifies, writes it where `sshd` or a TLS
 server reads it, and, when a list lapses, writes one that **revokes the CA
-itself**. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe v0.6.7.
+itself**. Pure Go, `CGO_ENABLED=0`, one binary. These pages describe v0.7.0.
 
 ```
-$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.6.6
-go: github.com/go-authn/revocation@v0.6.6 requires go >= 1.27.3; switching to go1.27.3
-$ authn-revokd -version
-authn-revokd v0.6.6
-$ authn-revokd -help
-Usage of authn-revokd:
-  -config string
-    	the configuration file (default "/etc/authn-revokd/revokd.hcl")
-  -once
-    	sync once and exit: 1 when a list is not current, or could not be fetched
-  -version
-    	print the version and exit
+$ go install github.com/go-authn/revocation/cmd/authn-revokd@v0.7.0
+go: downloading github.com/go-authn/revocation v0.7.0
+$ authn-revokd --version
+authn-revokd v0.7.0
+$ authn-revokd --help
+authn-revokd fetches revocation lists, keeps only those that verify, writes
+them where sshd and TLS servers read them (failing closed for sshd when a list
+lapses) and, with listen, serves the verified copies as a mirror. SIGHUP syncs now.
+
+The single-dash spellings -config, -once, -version and -help of earlier
+releases are still accepted, with a deprecation warning on stderr.
+
+Usage:
+  authn-revokd [flags]
+
+Flags:
+  -c, --config string   the configuration file (default "/etc/authn-revokd/revokd.hcl")
+  -h, --help            help for authn-revokd
+  -o, --once            sync once and exit: 1 when a list is not current, or could not be fetched
+  -v, --version         version for authn-revokd
 ```
 
-`-help` exits 0; before v0.6.2 it exited 2.
+The command is cobra since v0.7.0: POSIX flags `--config`/`-c`, `--once`/`-o`,
+`--version`/`-v`, `--help`/`-h`, and `--config=PATH`. `--help` prints to
+standard output and exits 0 (before v0.6.2 the old `-help` exited 2). The
+single-dash spellings of earlier releases (`-config`, `-once`, `-version`,
+`-help`, with `=` or a separate value) are still accepted, with one
+deprecation line per flag on standard error, and will be removed in a later
+release; the exit statuses are unchanged (0; 1 for a failure or a list not
+current under `--once`; 2 for a usage error or an unreadable configuration),
+so a unit deployed with `-once` needs no change.
 
 Before v0.6.0 the command was `revokd`, and read `/etc/revokd.hcl` by default.
 Nothing reads that file any more; when it is there and the new default is not,
@@ -40,7 +56,7 @@ the error names both paths.
 Against a test authn-bridge on loopback, with a KRL source and a CRL source:
 
 ```
-$ authn-revokd -config revokd.hcl -once
+$ authn-revokd --config revokd.hcl --once
 bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
 output sshd: wrote /tmp/authn/revokd/out/sshd.krl
@@ -73,7 +89,7 @@ forged or stale list is taken.
 
 | | |
 |---|---|
-| [Installing it]({{< relref "/authn-revokd/install.md" >}}) | the daemon, or `-once` on a timer; wiring sshd and nginx |
+| [Installing it]({{< relref "/authn-revokd/install.md" >}}) | the daemon, or `--once` on a timer; wiring sshd and nginx |
 | [The configuration]({{< relref "/authn-revokd/configuration.md" >}}) | sources, outputs, the mirror, and what is refused |
 | [How a list is verified]({{< relref "/authn-revokd/verification.md" >}}) | signature, dates, and never older than the list held, across restarts |
 | [When a list lapses]({{< relref "/authn-revokd/lapse.md" >}}) | the KRL that revokes the CA itself |
