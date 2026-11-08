@@ -53,17 +53,19 @@ l'erreur nomme les deux chemins.
 
 ## Ce qu'il fait, en une exécution {#what-it-does-in-one-run}
 
-Face à un authn-bridge de test sur l'interface de bouclage, avec une source KRL et une source CRL :
+Face à un émetteur de substitution sur l'interface de bouclage (un petit programme qui sert une KRL et une CRL
+signées par des clés de test, avec les mêmes points d'accès qu'authn-bridge), avec une source KRL
+et une source CRL :
 
 ```
 $ authn-revokd --config revokd.hcl --once
-bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
-bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
-output sshd: wrote /tmp/authn/revokd/out/sshd.krl
-output tls: wrote /tmp/authn/revokd/out/bridge.crl
+bridge-ssh: version 0, issued 2026-11-08T11:25:43Z, expires 2026-11-08T12:25:43Z
+bridge-x509: version 1794137143000, issued 2026-11-08T11:25:43Z, expires 2026-11-08T12:25:43Z
+output sshd: wrote /Users/david_delavennat/Documents/VCS/GIT/localhost/authn-lab/run/out/sshd.krl
+output tls: wrote /Users/david_delavennat/Documents/VCS/GIT/localhost/authn-lab/run/out/bridge.crl
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
-# Generated at 20261026T122710
+# Generated at 20261108T122543
 # Comment: authn-revokd sshd
 ```
 

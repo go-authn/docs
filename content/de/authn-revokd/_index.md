@@ -54,17 +54,17 @@ nennt die Fehlermeldung beide Pfade.
 
 ## Was es tut, in einem Durchlauf {#what-it-does-in-one-run}
 
-Gegen eine Test-authn-bridge auf Loopback, mit einer KRL-Quelle und einer CRL-Quelle:
+Gegen einen Stellvertreter-Aussteller auf Loopback (ein kleines Programm, das eine KRL und eine CRL, von Testschlüsseln signiert, an denselben Endpunkten wie authn-bridge ausliefert), mit einer KRL-Quelle und einer CRL-Quelle:
 
 ```
 $ authn-revokd --config revokd.hcl --once
-bridge-ssh: version 0, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
-bridge-x509: version 1793014030593, issued 2026-10-26T11:27:10Z, expires 2026-10-26T12:27:10Z
-output sshd: wrote /tmp/authn/revokd/out/sshd.krl
-output tls: wrote /tmp/authn/revokd/out/bridge.crl
+bridge-ssh: version 0, issued 2026-11-08T11:25:43Z, expires 2026-11-08T12:25:43Z
+bridge-x509: version 1794137143000, issued 2026-11-08T11:25:43Z, expires 2026-11-08T12:25:43Z
+output sshd: wrote /Users/david_delavennat/Documents/VCS/GIT/localhost/authn-lab/run/out/sshd.krl
+output tls: wrote /Users/david_delavennat/Documents/VCS/GIT/localhost/authn-lab/run/out/bridge.crl
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
-# Generated at 20261026T122710
+# Generated at 20261108T122543
 # Comment: authn-revokd sshd
 ```
 
