@@ -12,7 +12,7 @@ tags: [库, tls, acme, 证书]
 Account Binding。
 
 ```sh
-go get github.com/go-authn/servercert@v0.6.0
+go get github.com/go-authn/servercert@v0.7.0
 ```
 
 `Config` 恰好指名一个来源——`CertFile` 和 `KeyFile`，或 `ACME`——
@@ -100,8 +100,30 @@ servercert: ACME.DirectoryURL "http://acme.example.org/directory" is not an http
 
 autocert 应答两种质询类型，别无其他：`tls-alpn-01`（RFC 8737，
 端口 443，ALPN `acme-tls/1`），以及在设置 `HTTPChallenge` 时的 `http-01`（RFC 8555
-§8.3，端口 80，由 `Source.HTTPHandler` 提供）。没有 `dns-01`，因此没有
-通配符证书，也没有 IP 地址证书。
+§8.3，端口 80，由 `Source.HTTPHandler` 提供）。没有 `ACME.DNS` 就没有 `dns-01`，
+因此没有通配符证书；IP 地址证书则永远不会签发。
+
+### dns-01：CA 无法访问的服务器（自 v0.7.0 起）
+
+`ACME.DNS` 通过 `_acme-challenge.<名称>` 处的 TXT 记录证明对名称的控制权（RFC 8555 §8.4）。
+服务器不需要任何入站端口，可以位于局域网的私有地址；`Domains` 可以包含通配符
+（`*.school.example`，它不覆盖 `school.example` 本身：请两者都列出）。签发直接通过
+`x/crypto/acme` 进行（autocert 没有 dns-01）：一张覆盖所有名称的证书，以 0600 保存在 `CacheDir`，
+在后台续期，期间继续使用旧证书。`DNS` 与 `HTTPChallenge` 互斥。
+
+```go
+DNS: &servercert.DNS{
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600，属于运行用户
+    Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
+    Resolver: "192.0.2.53:53", // 可选：等到 TXT 在该处可见
+}
+```
+
+提供方是两个方法，`Present(ctx, name, value)` 与 `CleanUp(ctx, name, value)`，各自处理一个 TXT 值
+（通配符与其基础名称共用一个记录名）。凭据文件按 `EABHMACKeyFile` 的检查读取并交给 `Provider`；
+绝不通过参数、环境变量或 URL 传递。模块 `github.com/go-authn/servercert/rfc2136`（v0.1.0）是面向接受
+TSIG（RFC 8945）签名的 RFC 2136 动态更新的名称服务器的提供方：`server`、`zone`、`key`、
+`algorithm`（hmac-sha256、-384 或 -512）和 `secret` 写在同一个文件中。
 
 证书在第一次 SNI 指名 `Domains` 之一的握手时获取，或在任何客户端之前由
 `Source.Prefetch` 获取，并由 autocert 在过期之前续期。通过 IP 地址连接的客户端
@@ -159,4 +181,4 @@ TCS，由 HARICA 提供服务，适用于 Enterprise Admin 账户。无法从互
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)
+[pkg.go.dev/github.com/go-authn/servercert@v0.7.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.7.0)

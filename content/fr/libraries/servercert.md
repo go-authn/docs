@@ -12,7 +12,7 @@ ACME via [`autocert`](https://pkg.go.dev/golang.org/x/crypto/acme/autocert),
 External Account Binding compris.
 
 ```sh
-go get github.com/go-authn/servercert@v0.6.0
+go get github.com/go-authn/servercert@v0.7.0
 ```
 
 Une `Config` nomme exactement une source — `CertFile` et `KeyFile`, ou `ACME` —
@@ -101,8 +101,37 @@ après l'autre ne fait donc jamais tomber le serveur.
 
 autocert répond à deux types de défi et à aucun autre : `tls-alpn-01` (RFC 8737,
 port 443, ALPN `acme-tls/1`) et, avec `HTTPChallenge`, `http-01` (RFC 8555
-§8.3, port 80, servi par `Source.HTTPHandler`). Il n'y a pas de `dns-01`, donc ni
-joker ni certificat pour une adresse IP.
+§8.3, port 80, servi par `Source.HTTPHandler`). Sans `ACME.DNS` il n'y a pas de
+`dns-01`, donc pas de joker ; un certificat pour une adresse IP n'est jamais émis.
+
+### dns-01 : un serveur que l'AC ne peut pas joindre (depuis v0.7.0)
+
+`ACME.DNS` prouve la maîtrise des noms par un enregistrement TXT à
+`_acme-challenge.<nom>` (RFC 8555 §8.4). Le serveur n'a besoin d'aucun port
+entrant et peut se trouver sur une adresse privée du réseau local ; `Domains`
+peut contenir un joker (`*.ecole.example`, qui ne couvre pas `ecole.example` :
+indiquer les deux). L'émission passe directement par `x/crypto/acme` (autocert
+n'a pas de dns-01) : un certificat pour tous les noms, conservé en 0600 dans
+`CacheDir`, renouvelé en arrière-plan, l'ancien servant entre-temps. `DNS`
+exclut `HTTPChallenge`.
+
+```go
+DNS: &servercert.DNS{
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, appartenant à l'utilisateur
+    Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
+    Resolver: "192.0.2.53:53", // facultatif : attendre que le TXT y soit visible
+}
+```
+
+Un fournisseur tient en deux méthodes, `Present(ctx, name, value)` et
+`CleanUp(ctx, name, value)`, chacune sur une valeur TXT (un joker et son nom de
+base partagent un nom d'enregistrement). Le fichier d'identifiants est lu sous les
+contrôles de `EABHMACKeyFile` et remis à `Provider` ; jamais en argument, en
+variable d'environnement ni en URL. Le module
+`github.com/go-authn/servercert/rfc2136` (v0.1.0) est le fournisseur pour un
+serveur de noms qui accepte les mises à jour dynamiques RFC 2136 signées TSIG
+(RFC 8945) : `server`, `zone`, `key`, `algorithm` (hmac-sha256, -384 ou -512) et
+`secret` dans un seul fichier.
 
 Les certificats sont obtenus à la première poignée de main dont le SNI nomme l'un
 des `Domains`, ou avant tout client par `Source.Prefetch`, et renouvelés par autocert
@@ -162,4 +191,4 @@ qu'elle échoue. Le plancher de couverture est de 100 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)
+[pkg.go.dev/github.com/go-authn/servercert@v0.7.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.7.0)
