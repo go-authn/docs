@@ -49,7 +49,7 @@ v0.17.0 の新機能: [`ErrUnavailable`](#unavailable)。障害を間違った�
 |---|---|---|
 | `directory` | `Static` リストと、順序付きのソースの `Set` | 標準ライブラリのみ |
 | `directory/sqldir` | 任意の `*sql.DB`。**あなたの**クエリで | ドライバーなし: プログラムが選ぶ |
-| `directory/ldapdir` | LDAP サーバー | `go-ldap/ldap/v3` |
+| `directory/ldapdir` | LDAP サーバー | `go-authn/ldap` (v0.23.0 以降はそのクライアント。パケットの木を作らず、更新ごとの割り当ては 4.3 M から 0.38 M に)。`go-ldap/ldap/v3` は単純でない DN の解析にのみ使用 |
 | `directory/hcldir` | データベースや LDAP サーバーを指す `users` ブロックと、人を保持する `user`/`group` ブロック | `x/crypto/ssh`、`hashicorp/hcl/v2`、`zclconf/go-cty` |
 | `directory/ldaptest` | テスト対象となる LDAP サーバー | `glauth/ldap` |
 

@@ -56,7 +56,7 @@ Methode:
 |---|---|---|
 | `directory` | eine `Static`-Liste und ein `Set` von Quellen in Reihenfolge | nur die Standardbibliothek |
 | `directory/sqldir` | eine beliebige `*sql.DB`, mit **Ihren** Abfragen | keinen Treiber: Das Programm wählt einen |
-| `directory/ldapdir` | einen LDAP-Server | `go-ldap/ldap/v3` |
+| `directory/ldapdir` | einen LDAP-Server | `go-authn/ldap` (dessen Client, seit v0.23.0: kein Paketbaum, 4,3 M -> 0,38 M Allokationen pro Aktualisierung); `go-ldap/ldap/v3` nur, um eine DN zu parsen, die nicht schlicht ist |
 | `directory/hcldir` | einen `users`-Block, der eine Datenbank oder einen LDAP-Server benennt, und `user`-/`group`-Blöcke, die Personen enthalten | `x/crypto/ssh`, `hashicorp/hcl/v2`, `zclconf/go-cty` |
 | `directory/ldaptest` | einen LDAP-Server, gegen den getestet wird | `glauth/ldap` |
 

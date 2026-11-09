@@ -50,7 +50,7 @@ DN 查找不分配任何东西（0 次分配，0 B；过去是对人员的线性
 |---|---|---|
 | `directory` | `Static` 列表，以及按顺序排列的来源 `Set` | 仅标准库 |
 | `directory/sqldir` | 任何 `*sql.DB`，使用**你自己的**查询 | 没有驱动：由程序选择 |
-| `directory/ldapdir` | LDAP 服务器 | `go-ldap/ldap/v3` |
+| `directory/ldapdir` | LDAP 服务器 | `go-authn/ldap`（自 v0.23.0 起使用其客户端：不再构建数据包树，每次刷新的分配从 4.3 M 降到 0.38 M）；`go-ldap/ldap/v3` 仅用于解析不简单的 DN |
 | `directory/hcldir` | 指名数据库或 LDAP 服务器的 `users` 块，以及保存人员的 `user`/`group` 块 | `x/crypto/ssh`、`hashicorp/hcl/v2`、`zclconf/go-cty` |
 | `directory/ldaptest` | 用于测试的 LDAP 服务器 | `glauth/ldap` |
 
