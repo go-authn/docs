@@ -348,6 +348,7 @@ ignorée, ni fusionnée ni une erreur. (authnd le dit dans `check`.)
 | `group_filter` / `GroupFilter` | `(\|(objectClass=posixGroup)(objectClass=groupOfNames))`, `ldapdir.DefaultGroupFilter` | `(objectClass=posixGroup)` |
 | `group_attribute` / `GroupAttribute` | `cn` | le même |
 | `group_member_attribute` / `MemberAttribute` | aucun : `memberUid` (des noms) **et** `member` (des DN) ; s'il est défini, c'est le seul attribut lu | `memberUid` |
+| `page_size` / `PageSize` | `500` : toute recherche de nombreuses entrées est paginée (RFC 2696) ; une valeur négative n'envoie pas le contrôle | `1000` |
 
 Les trois classes sont les classes standard qui portent un `uid` :
 `posixAccount` (RFC 2307), `account` (RFC 4524 §3.1) et `uidObject` (RFC 4519

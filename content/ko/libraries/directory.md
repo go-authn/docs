@@ -323,6 +323,7 @@ true directory: not an object class name: "x)(objectClass=*" is not a descriptor
 | `group_filter` / `GroupFilter` | `(\|(objectClass=posixGroup)(objectClass=groupOfNames))`, `ldapdir.DefaultGroupFilter` | `(objectClass=posixGroup)` |
 | `group_attribute` / `GroupAttribute` | `cn` | 동일 |
 | `group_member_attribute` / `MemberAttribute` | 없음: `memberUid`(이름) **그리고** `member`(DN). 설정하면 그 속성 하나만 읽음 | `memberUid` |
+| `page_size` / `PageSize` | `500`: 많은 항목을 반환하는 모든 검색을 페이지 단위로 수행(RFC 2696). 음수면 컨트롤을 보내지 않음 | `1000` |
 
 세 클래스는 `uid`를 가지는 표준 클래스입니다. `posixAccount`(RFC 2307), `account`(RFC
 4524 §3.1), `uidObject`(RFC 4519 §3.14). go-authn/authnd v0.11.0부터는 POSIX 속성이

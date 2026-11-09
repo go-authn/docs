@@ -343,6 +343,7 @@ schließt sie; `hcldir.Open` gibt nun die `*sqldir.Source` selbst zurück.
 | `group_filter` / `GroupFilter` | `(\|(objectClass=posixGroup)(objectClass=groupOfNames))`, `ldapdir.DefaultGroupFilter` | `(objectClass=posixGroup)` |
 | `group_attribute` / `GroupAttribute` | `cn` | derselbe |
 | `group_member_attribute` / `MemberAttribute` | keiner: `memberUid` (Namen) **und** `member` (DNs); gesetzt, ist es das eine Attribut, das gelesen wird | `memberUid` |
+| `page_size` / `PageSize` | `500`: jede Suche nach vielen Einträgen wird seitenweise gestellt (RFC 2696); ein negativer Wert sendet kein Control | `1000` |
 
 Die drei Klassen sind die Standardklassen, die eine `uid` tragen: `posixAccount`
 (RFC 2307), `account` (RFC 4524 §3.1) und `uidObject` (RFC 4519 §3.14).

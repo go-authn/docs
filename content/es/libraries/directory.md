@@ -344,6 +344,7 @@ lista distinta de un origen posterior se ignora, ni fusionada ni como error.
 | `group_filter` / `GroupFilter` | `(\|(objectClass=posixGroup)(objectClass=groupOfNames))`, `ldapdir.DefaultGroupFilter` | `(objectClass=posixGroup)` |
 | `group_attribute` / `GroupAttribute` | `cn` | el mismo |
 | `group_member_attribute` / `MemberAttribute` | ninguno: `memberUid` (nombres) **y** `member` (DN); si se define, es el único atributo que se lee | `memberUid` |
+| `page_size` / `PageSize` | `500`: toda búsqueda de muchas entradas se pagina (RFC 2696); un valor negativo no envía el control | `1000` |
 
 Las tres clases son las estándar que llevan un `uid`: `posixAccount`
 (RFC 2307), `account` (RFC 4524 §3.1) y `uidObject` (RFC 4519 §3.14).

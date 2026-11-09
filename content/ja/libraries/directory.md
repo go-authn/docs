@@ -317,6 +317,7 @@ true directory: not an object class name: "x)(objectClass=*" is not a descriptor
 | `group_filter` / `GroupFilter` | `(\|(objectClass=posixGroup)(objectClass=groupOfNames))`、`ldapdir.DefaultGroupFilter` | `(objectClass=posixGroup)` |
 | `group_attribute` / `GroupAttribute` | `cn` | 同じ |
 | `group_member_attribute` / `MemberAttribute` | なし: `memberUid` (名前)**と** `member` (DN)。設定すると、それが読まれる唯一の属性になる | `memberUid` |
+| `page_size` / `PageSize` | `500`: 多数のエントリを返す検索はすべてページ分割される (RFC 2696)。負の値ではコントロールを送らない | `1000` |
 
 三つのクラスは `uid` を運ぶ標準のクラスです。`posixAccount` (RFC 2307)、`account`
 (RFC 4524 §3.1)、`uidObject` (RFC 4519 §3.14) です。go-authn/authnd は v0.11.0 から、POSIX 属性の
