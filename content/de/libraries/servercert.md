@@ -12,7 +12,7 @@ Schlüssel auf der Festplatte, neu gelesen, wenn sie sich ändern, oder eine ACM
 Account Binding eingeschlossen.
 
 ```sh
-go get github.com/go-authn/servercert@v0.6.0
+go get github.com/go-authn/servercert@v0.7.0
 ```
 
 Eine `Config` nennt genau eine Quelle – `CertFile` und `KeyFile` oder `ACME` –,
@@ -100,8 +100,37 @@ der die beiden Dateien nacheinander schreibt, den Server nie lahmlegt.
 
 autocert beantwortet zwei Challenge-Typen und keine anderen: `tls-alpn-01` (RFC 8737,
 Port 443, ALPN `acme-tls/1`) und, mit `HTTPChallenge`, `http-01` (RFC 8555
-§8.3, Port 80, bereitgestellt von `Source.HTTPHandler`). Es gibt kein `dns-01`, daher kein
-Wildcard- und kein IP-Adressen-Zertifikat.
+§8.3, Port 80, bereitgestellt von `Source.HTTPHandler`). Ohne `ACME.DNS` gibt es kein
+`dns-01`, daher kein Wildcard; ein IP-Adressen-Zertifikat wird nie ausgestellt.
+
+### dns-01: ein Server, den die CA nicht erreicht (seit v0.7.0) {#dns-01-a-server-the-ca-cannot-reach-since-v070}
+
+`ACME.DNS` beweist die Kontrolle über die Namen mit einem TXT-Eintrag bei
+`_acme-challenge.<name>` (RFC 8555 §8.4). Der Server braucht keinen eingehenden
+Port und darf an einer privaten LAN-Adresse stehen; `Domains` darf ein Wildcard
+enthalten (`*.schule.example`, das `schule.example` nicht abdeckt: beide
+auflisten). Die Ausstellung läuft direkt über `x/crypto/acme` (autocert kennt
+kein dns-01): ein Zertifikat für alle Namen, mit 0600 in `CacheDir` abgelegt,
+im Hintergrund erneuert, das alte bedient bis dahin weiter. `DNS` schließt
+`HTTPChallenge` aus.
+
+```go
+DNS: &servercert.DNS{
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, owned by the user
+    Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
+    Resolver: "192.0.2.53:53", // optional: wait until the TXT is visible there
+}
+```
+
+Ein Provider besteht aus zwei Methoden, `Present(ctx, name, value)` und
+`CleanUp(ctx, name, value)`, je für einen TXT-Wert (ein Wildcard und sein
+Basisname teilen sich einen Eintragsnamen). Die Zugangsdaten-Datei wird unter den
+Prüfungen von `EABHMACKeyFile` gelesen und an `Provider` übergeben; nie als
+Argument, Umgebungsvariable oder URL. Das Modul
+`github.com/go-authn/servercert/rfc2136` (v0.1.0) ist der Provider für einen
+Nameserver mit dynamischen RFC-2136-Updates, signiert mit TSIG (RFC 8945):
+`server`, `zone`, `key`, `algorithm` (hmac-sha256, -384 oder -512) und `secret`
+in einer Datei.
 
 Zertifikate werden beim ersten Handshake bezogen, dessen SNI eine der
 `Domains` nennt, oder vor jedem Client durch `Source.Prefetch`, und von autocert
@@ -161,4 +190,4 @@ dass sie fehlschlägt. Die Coverage-Untergrenze liegt bei 100 %.
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)
+[pkg.go.dev/github.com/go-authn/servercert@v0.7.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.7.0)

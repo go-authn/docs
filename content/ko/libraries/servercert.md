@@ -11,7 +11,7 @@ tags: [라이브러리, tls, acme, 인증서]
 ACME CA로, External Account Binding을 포함합니다.
 
 ```sh
-go get github.com/go-authn/servercert@v0.6.0
+go get github.com/go-authn/servercert@v0.7.0
 ```
 
 `Config`는 정확히 하나의 소스 — `CertFile`과 `KeyFile`, 또는 `ACME` — 를 지정하며,
@@ -98,8 +98,32 @@ servercert: ACME.DirectoryURL "http://acme.example.org/directory" is not an http
 
 autocert는 두 가지 챌린지 타입에만 응답합니다. `tls-alpn-01`(RFC 8737, 443 포트, ALPN
 `acme-tls/1`)과, `HTTPChallenge`가 있을 때 `http-01`(RFC 8555 §8.3, 80 포트,
-`Source.HTTPHandler`가 제공)입니다. `dns-01`은 없으므로 와일드카드도 IP 주소
-인증서도 없습니다.
+`Source.HTTPHandler`가 제공)입니다. `ACME.DNS` 없이는 `dns-01`이 없으므로
+와일드카드도 없습니다. IP 주소 인증서는 발급되지 않습니다.
+
+### dns-01: CA가 접근할 수 없는 서버 (v0.7.0부터) {#dns-01-a-server-the-ca-cannot-reach-since-v070}
+
+`ACME.DNS`는 `_acme-challenge.<이름>`의 TXT 레코드로 이름의 통제권을 증명합니다(RFC 8555 §8.4).
+서버는 인바운드 포트가 필요 없고 사설 LAN 주소에 있어도 됩니다. `Domains`에는 와일드카드
+(`*.school.example`, `school.example` 자체는 포함하지 않으므로 둘 다 나열)를 쓸 수 있습니다.
+발급은 `x/crypto/acme`를 직접 사용하며(autocert에는 dns-01이 없습니다), 모든 이름에 대한 인증서 하나를
+`CacheDir`에 0600으로 보관하고 백그라운드에서 갱신하며 그동안 이전 인증서가 제공됩니다. `DNS`와
+`HTTPChallenge`는 함께 쓸 수 없습니다.
+
+```go
+DNS: &servercert.DNS{
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, owned by the user
+    Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
+    Resolver: "192.0.2.53:53", // optional: wait until the TXT is visible there
+}
+```
+
+프로바이더는 `Present(ctx, name, value)`와 `CleanUp(ctx, name, value)` 두 메서드이며 각각 TXT 값 하나를
+다룹니다(와일드카드와 그 기본 이름은 레코드 이름 하나를 공유합니다). 자격 증명 파일은
+`EABHMACKeyFile`과 같은 검사를 거쳐 읽히고 `Provider`에 전달되며, 인자·환경 변수·URL로는 절대
+전달되지 않습니다. 모듈 `github.com/go-authn/servercert/rfc2136`(v0.1.0)은 TSIG(RFC 8945)로 서명된
+RFC 2136 동적 업데이트를 받는 네임서버용 프로바이더입니다. `server`, `zone`, `key`, `algorithm`
+(hmac-sha256, -384, -512), `secret`을 한 파일에 적습니다.
 
 인증서는 SNI가 `Domains` 중 하나를 지정하는 첫 핸드셰이크에서, 또는 어떤 클라이언트보다
 먼저 `Source.Prefetch`로 받으며, 만료 전에 autocert가 갱신합니다. IP 주소로 연결하는
@@ -154,4 +178,4 @@ Windows에서는 모드와 소유자를 검사하지 않습니다. ACL이 둘 �
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)
+[pkg.go.dev/github.com/go-authn/servercert@v0.7.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.7.0)

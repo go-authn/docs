@@ -12,7 +12,7 @@ key on disk, re-read when they change, or an ACME CA through
 Account Binding included.
 
 ```sh
-go get github.com/go-authn/servercert@v0.6.0
+go get github.com/go-authn/servercert@v0.7.0
 ```
 
 A `Config` names exactly one source — `CertFile` and `KeyFile`, or `ACME` —
@@ -100,8 +100,35 @@ that writes the two files one after the other never takes the server down.
 
 autocert answers two challenge types and no other: `tls-alpn-01` (RFC 8737,
 port 443, ALPN `acme-tls/1`) and, with `HTTPChallenge`, `http-01` (RFC 8555
-§8.3, port 80, served by `Source.HTTPHandler`). There is no `dns-01`, hence no
-wildcard and no IP-address certificate.
+§8.3, port 80, served by `Source.HTTPHandler`). Without `ACME.DNS` there is no
+`dns-01`, hence no wildcard; an IP-address certificate is never issued.
+
+### dns-01: a server the CA cannot reach (since v0.7.0)
+
+`ACME.DNS` proves control of the names with a TXT record at
+`_acme-challenge.<name>` (RFC 8555 §8.4). The server needs no inbound port and
+may sit on a private LAN address, and `Domains` may hold a wildcard
+(`*.school.example`, which does not cover `school.example`: list both).
+Issuance goes through `x/crypto/acme` (autocert has no dns-01): one certificate
+for every name, kept 0600 in `CacheDir`, renewed in the background, the old one
+serving meanwhile. `DNS` excludes `HTTPChallenge`.
+
+```go
+DNS: &servercert.DNS{
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, owned by the user
+    Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
+    Resolver: "192.0.2.53:53", // optional: wait until the TXT is visible there
+}
+```
+
+A provider is two methods, `Present(ctx, name, value)` and
+`CleanUp(ctx, name, value)`, each on one TXT value (a wildcard and its base name
+share one record name). The credentials file is read under the checks of
+`EABHMACKeyFile` and handed to `Provider`; never an argument, an environment
+variable or a URL. The module `github.com/go-authn/servercert/rfc2136` (v0.1.0)
+is the provider for a name server that takes RFC 2136 dynamic updates signed
+with TSIG (RFC 8945): `server`, `zone`, `key`, `algorithm` (hmac-sha256, -384
+or -512) and `secret` in one file.
 
 Certificates are obtained at the first handshake whose SNI names one of
 `Domains`, or before any client by `Source.Prefetch`, and renewed by autocert
@@ -161,4 +188,4 @@ it to fail. The coverage floor is 100%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)
+[pkg.go.dev/github.com/go-authn/servercert@v0.7.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.7.0)

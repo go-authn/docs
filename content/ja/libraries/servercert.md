@@ -11,7 +11,7 @@ tags: [ライブラリ, tls, acme, 証明書]
 External Account Binding を含みます。
 
 ```sh
-go get github.com/go-authn/servercert@v0.6.0
+go get github.com/go-authn/servercert@v0.7.0
 ```
 
 `Config` はちょうど一つのソースを指名します。`CertFile` と `KeyFile`、または `ACME` です。`New` は
@@ -95,7 +95,31 @@ servercert: ACME.DirectoryURL "http://acme.example.org/directory" is not an http
 
 autocert は二種類のチャレンジに答え、他には答えません。`tls-alpn-01` (RFC 8737、ポート 443、ALPN
 `acme-tls/1`) と、`HTTPChallenge` がある場合の `http-01` (RFC 8555 §8.3、ポート 80、
-`Source.HTTPHandler` が提供) です。`dns-01` はないので、ワイルドカードも IP アドレスの証明書もありません。
+`Source.HTTPHandler` が提供) です。`ACME.DNS` がなければ `dns-01` はなく、ワイルドカードもありません。IP アドレスの証明書は発行されません。
+
+### dns-01: CA から到達できないサーバ (v0.7.0 以降) {#dns-01-a-server-the-ca-cannot-reach-since-v070}
+
+`ACME.DNS` は、`_acme-challenge.<名前>` の TXT レコードで名前の管理を証明します (RFC 8555 §8.4)。
+サーバは受信ポートを必要とせず、LAN のプライベートアドレスにあって構いません。`Domains` には
+ワイルドカード (`*.school.example`。`school.example` 自体は含まれないので両方を列挙) を書けます。
+発行は `x/crypto/acme` を直接使います (autocert に dns-01 はありません)。全ての名前に対する 1 枚の証明書を
+`CacheDir` に 0600 で保存し、バックグラウンドで更新します。その間は古い証明書が使われます。`DNS` と
+`HTTPChallenge` は併用できません。
+
+```go
+DNS: &servercert.DNS{
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, owned by the user
+    Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
+    Resolver: "192.0.2.53:53", // optional: wait until the TXT is visible there
+}
+```
+
+プロバイダは 2 つのメソッド `Present(ctx, name, value)` と `CleanUp(ctx, name, value)` で、それぞれ 1 つの
+TXT 値を扱います (ワイルドカードとその基底名は 1 つのレコード名を共有します)。認証情報ファイルは
+`EABHMACKeyFile` と同じ検査を経て読まれ、`Provider` に渡されます。引数、環境変数、URL では渡しません。
+モジュール `github.com/go-authn/servercert/rfc2136` (v0.1.0) は、TSIG (RFC 8945) で署名された RFC 2136
+動的更新を受け付けるネームサーバ用のプロバイダです。`server`、`zone`、`key`、`algorithm`
+(hmac-sha256、-384、-512)、`secret` を 1 つのファイルに書きます。
 
 証明書は、SNI が `Domains` のいずれかを指す最初のハンドシェイクで、または `Source.Prefetch` により
 どのクライアントよりも前に取得され、期限切れの前に autocert により更新されます。IP アドレスで接続する
@@ -150,4 +174,4 @@ tls-alpn-01、`HTTPHandler` を通じた http-01 と、`HTTPChallenge` をオフ
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/servercert@v0.6.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.6.0)
+[pkg.go.dev/github.com/go-authn/servercert@v0.7.0](https://pkg.go.dev/github.com/go-authn/servercert@v0.7.0)
