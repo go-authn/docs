@@ -103,7 +103,7 @@ puerto 443, ALPN `acme-tls/1`) y, con `HTTPChallenge`, `http-01` (RFC 8555
 §8.3, puerto 80, servido por `Source.HTTPHandler`). Sin `ACME.DNS` no hay `dns-01`,
 y por tanto no hay comodines; nunca se emite un certificado para una dirección IP.
 
-### dns-01: un servidor que la CA no puede alcanzar (desde v0.7.0)
+### dns-01: un servidor que la CA no puede alcanzar (desde v0.7.0) {#dns-01-a-server-the-ca-cannot-reach-since-v070}
 
 `ACME.DNS` demuestra el control de los nombres con un registro TXT en
 `_acme-challenge.<nombre>` (RFC 8555 §8.4). El servidor no necesita ningún puerto
@@ -116,9 +116,9 @@ tiene dns-01): un certificado para todos los nombres, guardado con 0600 en
 
 ```go
 DNS: &servercert.DNS{
-    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, del usuario
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, owned by the user
     Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
-    Resolver: "192.0.2.53:53", // opcional: esperar a que el TXT sea visible ahí
+    Resolver: "192.0.2.53:53", // optional: wait until the TXT is visible there
 }
 ```
 

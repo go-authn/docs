@@ -101,7 +101,7 @@ autocert는 두 가지 챌린지 타입에만 응답합니다. `tls-alpn-01`(RFC
 `Source.HTTPHandler`가 제공)입니다. `ACME.DNS` 없이는 `dns-01`이 없으므로
 와일드카드도 없습니다. IP 주소 인증서는 발급되지 않습니다.
 
-### dns-01: CA가 접근할 수 없는 서버 (v0.7.0부터)
+### dns-01: CA가 접근할 수 없는 서버 (v0.7.0부터) {#dns-01-a-server-the-ca-cannot-reach-since-v070}
 
 `ACME.DNS`는 `_acme-challenge.<이름>`의 TXT 레코드로 이름의 통제권을 증명합니다(RFC 8555 §8.4).
 서버는 인바운드 포트가 필요 없고 사설 LAN 주소에 있어도 됩니다. `Domains`에는 와일드카드
@@ -112,9 +112,9 @@ autocert는 두 가지 챌린지 타입에만 응답합니다. `tls-alpn-01`(RFC
 
 ```go
 DNS: &servercert.DNS{
-    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, 실행 사용자 소유
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, owned by the user
     Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
-    Resolver: "192.0.2.53:53", // 선택: 그곳에서 TXT가 보일 때까지 대기
+    Resolver: "192.0.2.53:53", // optional: wait until the TXT is visible there
 }
 ```
 

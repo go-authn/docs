@@ -103,7 +103,7 @@ Port 443, ALPN `acme-tls/1`) und, mit `HTTPChallenge`, `http-01` (RFC 8555
 §8.3, Port 80, bereitgestellt von `Source.HTTPHandler`). Ohne `ACME.DNS` gibt es kein
 `dns-01`, daher kein Wildcard; ein IP-Adressen-Zertifikat wird nie ausgestellt.
 
-### dns-01: ein Server, den die CA nicht erreicht (seit v0.7.0)
+### dns-01: ein Server, den die CA nicht erreicht (seit v0.7.0) {#dns-01-a-server-the-ca-cannot-reach-since-v070}
 
 `ACME.DNS` beweist die Kontrolle über die Namen mit einem TXT-Eintrag bei
 `_acme-challenge.<name>` (RFC 8555 §8.4). Der Server braucht keinen eingehenden
@@ -116,9 +116,9 @@ im Hintergrund erneuert, das alte bedient bis dahin weiter. `DNS` schließt
 
 ```go
 DNS: &servercert.DNS{
-    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, dem Benutzer gehörend
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, owned by the user
     Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
-    Resolver: "192.0.2.53:53", // optional: warten, bis der TXT dort sichtbar ist
+    Resolver: "192.0.2.53:53", // optional: wait until the TXT is visible there
 }
 ```
 

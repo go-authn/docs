@@ -97,7 +97,7 @@ autocert は二種類のチャレンジに答え、他には答えません。`t
 `acme-tls/1`) と、`HTTPChallenge` がある場合の `http-01` (RFC 8555 §8.3、ポート 80、
 `Source.HTTPHandler` が提供) です。`ACME.DNS` がなければ `dns-01` はなく、ワイルドカードもありません。IP アドレスの証明書は発行されません。
 
-### dns-01: CA から到達できないサーバ (v0.7.0 以降)
+### dns-01: CA から到達できないサーバ (v0.7.0 以降) {#dns-01-a-server-the-ca-cannot-reach-since-v070}
 
 `ACME.DNS` は、`_acme-challenge.<名前>` の TXT レコードで名前の管理を証明します (RFC 8555 §8.4)。
 サーバは受信ポートを必要とせず、LAN のプライベートアドレスにあって構いません。`Domains` には
@@ -108,9 +108,9 @@ autocert は二種類のチャレンジに答え、他には答えません。`t
 
 ```go
 DNS: &servercert.DNS{
-    CredentialsFile: "/etc/relay/dns-update.conf", // 0600、実行ユーザ所有
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, owned by the user
     Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
-    Resolver: "192.0.2.53:53", // 任意: そこで TXT が見えるまで待つ
+    Resolver: "192.0.2.53:53", // optional: wait until the TXT is visible there
 }
 ```
 

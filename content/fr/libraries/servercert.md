@@ -104,7 +104,7 @@ port 443, ALPN `acme-tls/1`) et, avec `HTTPChallenge`, `http-01` (RFC 8555
 §8.3, port 80, servi par `Source.HTTPHandler`). Sans `ACME.DNS` il n'y a pas de
 `dns-01`, donc pas de joker ; un certificat pour une adresse IP n'est jamais émis.
 
-### dns-01 : un serveur que l'AC ne peut pas joindre (depuis v0.7.0)
+### dns-01 : un serveur que l'AC ne peut pas joindre (depuis v0.7.0) {#dns-01-a-server-the-ca-cannot-reach-since-v070}
 
 `ACME.DNS` prouve la maîtrise des noms par un enregistrement TXT à
 `_acme-challenge.<nom>` (RFC 8555 §8.4). Le serveur n'a besoin d'aucun port
@@ -117,9 +117,9 @@ exclut `HTTPChallenge`.
 
 ```go
 DNS: &servercert.DNS{
-    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, appartenant à l'utilisateur
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, owned by the user
     Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
-    Resolver: "192.0.2.53:53", // facultatif : attendre que le TXT y soit visible
+    Resolver: "192.0.2.53:53", // optional: wait until the TXT is visible there
 }
 ```
 

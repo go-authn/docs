@@ -103,7 +103,7 @@ autocert 应答两种质询类型，别无其他：`tls-alpn-01`（RFC 8737，
 §8.3，端口 80，由 `Source.HTTPHandler` 提供）。没有 `ACME.DNS` 就没有 `dns-01`，
 因此没有通配符证书；IP 地址证书则永远不会签发。
 
-### dns-01：CA 无法访问的服务器（自 v0.7.0 起）
+### dns-01：CA 无法访问的服务器（自 v0.7.0 起） {#dns-01-a-server-the-ca-cannot-reach-since-v070}
 
 `ACME.DNS` 通过 `_acme-challenge.<名称>` 处的 TXT 记录证明对名称的控制权（RFC 8555 §8.4）。
 服务器不需要任何入站端口，可以位于局域网的私有地址；`Domains` 可以包含通配符
@@ -113,9 +113,9 @@ autocert 应答两种质询类型，别无其他：`tls-alpn-01`（RFC 8737，
 
 ```go
 DNS: &servercert.DNS{
-    CredentialsFile: "/etc/relay/dns-update.conf", // 0600，属于运行用户
+    CredentialsFile: "/etc/relay/dns-update.conf", // 0600, owned by the user
     Provider: func(b []byte) (servercert.DNSSolver, error) { return rfc2136.New(b) },
-    Resolver: "192.0.2.53:53", // 可选：等到 TXT 在该处可见
+    Resolver: "192.0.2.53:53", // optional: wait until the TXT is visible there
 }
 ```
 
