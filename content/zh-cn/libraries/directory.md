@@ -330,6 +330,7 @@ true directory: not an object class name: "x)(objectClass=*" is not a descriptor
 | `group_filter` / `GroupFilter` | `(\|(objectClass=posixGroup)(objectClass=groupOfNames))`，`ldapdir.DefaultGroupFilter` | `(objectClass=posixGroup)` |
 | `group_attribute` / `GroupAttribute` | `cn` | 相同 |
 | `group_member_attribute` / `MemberAttribute` | 无：`memberUid`（名称）**和** `member`（DN）；设置后，只读取这一个属性 | `memberUid` |
+| `page_size` / `PageSize` | `500`：每个返回大量条目的搜索都分页（RFC 2696）；负值则不发送该控件 | `1000` |
 
 这三个类是携带 `uid` 的标准类：`posixAccount`
 （RFC 2307）、`account`（RFC 4524 §3.1）和 `uidObject`（RFC 4519 §3.14）。
