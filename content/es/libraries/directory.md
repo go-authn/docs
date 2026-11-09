@@ -54,7 +54,7 @@ alguien se encuentre con un rechazo al montar. Cada protocolo tiene su propio m�
 |---|---|---|
 | `directory` | una lista `Static`, y un `Set` de orígenes en orden | solo la biblioteca estándar |
 | `directory/sqldir` | cualquier `*sql.DB`, con **sus** consultas | ningún controlador: lo elige el programa |
-| `directory/ldapdir` | un servidor LDAP | `go-ldap/ldap/v3` |
+| `directory/ldapdir` | un servidor LDAP | `go-authn/ldap` (su cliente, desde la v0.23.0: sin árbol de paquetes, de 4,3 M a 0,38 M asignaciones por actualización); `go-ldap/ldap/v3` solo para analizar un DN que no es simple |
 | `directory/hcldir` | un bloque `users` que nombra una base de datos o un servidor LDAP, y bloques `user`/`group` que contienen personas | `x/crypto/ssh`, `hashicorp/hcl/v2`, `zclconf/go-cty` |
 | `directory/ldaptest` | un servidor LDAP contra el que probar | `glauth/ldap` |
 

@@ -50,7 +50,7 @@ DN 50개씩의 2,000개 그룹과 10,000명에서 `ldapdir`의 `ReadGroups`는 2
 |---|---|---|
 | `directory` | `Static` 목록, 그리고 순서가 있는 소스의 `Set` | 표준 라이브러리만 |
 | `directory/sqldir` | 임의의 `*sql.DB`, **당신의** 쿼리로 | 드라이버 없음: 프로그램이 선택 |
-| `directory/ldapdir` | LDAP 서버 | `go-ldap/ldap/v3` |
+| `directory/ldapdir` | LDAP 서버 | `go-authn/ldap`(v0.23.0부터 그 클라이언트: 패킷 트리 없음, 새로 고침당 할당 4.3 M에서 0.38 M으로); `go-ldap/ldap/v3`는 단순하지 않은 DN을 파싱할 때만 |
 | `directory/hcldir` | 데이터베이스나 LDAP 서버를 지정하는 `users` 블록, 그리고 사람을 담은 `user`/`group` 블록 | `x/crypto/ssh`, `hashicorp/hcl/v2`, `zclconf/go-cty` |
 | `directory/ldaptest` | 대조해 테스트할 LDAP 서버 | `glauth/ldap` |
 
