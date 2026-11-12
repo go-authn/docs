@@ -25,10 +25,10 @@ Une liste signée par toute autre clé est refusée :
 
 ```
 $ authn-revokd --config revokd-other.hcl --once
-bridge-ssh: revocation: the KRL's signature does not verify by SHA256:0APu/o5hIUoYPPxdpgK+mfhgNigAaDQyWNnelHvOHpc: public key does not match
-bridge-x509: version 1794137143000, issued 2026-11-08T11:25:43Z, expires 2026-11-08T12:25:43Z
-output sshd: wrote /Users/david_delavennat/Documents/VCS/GIT/localhost/authn-lab/run/out/other.krl
-output tls: wrote /Users/david_delavennat/Documents/VCS/GIT/localhost/authn-lab/run/out/other.crl
+bridge-ssh: revocation: the KRL's signature does not verify by SHA256:aQXaFOvGLPCpIi4ol/IicApW+NEUM/6THyb/Yl1dpOY: public key does not match
+bridge-x509: version 1794481424000, issued 2026-11-12T11:03:44Z, expires 2026-11-12T12:03:44Z
+output sshd: wrote /tmp/authn/revokd/out/other.krl
+output tls: wrote /tmp/authn/revokd/out/other.crl
 authn-revokd: not current: bridge-ssh
 ```
 
@@ -100,14 +100,14 @@ avait servie dix-neuf secondes plus tôt, toujours signée et toujours non expir
 
 ```
 $ authn-revokd --config revokd.hcl --once
-bridge-ssh: version 0, issued 2026-11-08T11:25:43Z, expires 2026-11-08T12:25:43Z
-bridge-x509: version 1794137143000, issued 2026-11-08T11:25:43Z, expires 2026-11-08T12:25:43Z
+bridge-ssh: version 0, issued 2026-11-12T11:03:44Z, expires 2026-11-12T12:03:44Z
+bridge-x509: version 1794481424000, issued 2026-11-12T11:03:44Z, expires 2026-11-12T12:03:44Z
 $ authn-revokd --config revokd-old.hcl --once
-bridge-ssh: file:///Users/david_delavennat/Documents/VCS/GIT/localhost/authn-lab/run/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-11-08T11:25:24Z, the copy held at 2026-11-08T11:25:43Z
-authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-11-08T12:25:43Z)
+bridge-ssh: file:///tmp/authn/revokd/old/bridge.krl: revocation: the list is older than the one held: version 0 issued at 2026-11-12T11:03:25Z, the copy held at 2026-11-12T11:03:44Z
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-11-12T12:03:44Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
-# Generated at 20261108T122543
+# Generated at 20261112T120344
 # Comment: authn-revokd sshd
 ```
 
@@ -137,7 +137,7 @@ Ici, l'émetteur est arrêté alors que les deux listes détenues sont toujours 
 $ authn-revokd --config revokd.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
-authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-11-08T12:25:43Z), bridge-x509 (the list held is current until 2026-11-08T12:25:43Z)
+authn-revokd: not fetched: bridge-ssh (the list held is current until 2026-11-12T12:03:44Z), bridge-x509 (the list held is current until 2026-11-12T12:03:44Z)
 ```
 
 Cette exécution a laissé `sshd.krl` tel quel. Une fois qu'une liste détenue expire, la même source est

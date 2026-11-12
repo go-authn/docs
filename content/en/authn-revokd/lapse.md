@@ -32,14 +32,14 @@ copy held lapses within a minute instead of an hour. The CRL source has no
 $ authn-revokd --config revokd-maxage.hcl --once
 bridge-ssh: revocation: Get "http://127.0.0.1:28473/ssh/krl": dial tcp 127.0.0.1:28473: connect: connection refused
 bridge-x509: revocation: Get "http://127.0.0.1:28473/x509/crl": dial tcp 127.0.0.1:28473: connect: connection refused
-output sshd: wrote /Users/david_delavennat/Documents/VCS/GIT/localhost/authn-lab/run/out/sshd.krl
-authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-11-08T12:25:43Z)
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+authn-revokd: not current: bridge-ssh; not fetched: bridge-x509 (the list held is current until 2026-11-12T12:03:44Z)
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
 # Generated at 19700101T010000
 # Comment: authn-revokd sshd: FAIL CLOSED, every certificate refused from bridge-ssh
 
-hash: SHA256:FBBa5cgFZ9zgA8jSlBwNh8ILOE54y0l1oj21Qtzpan0 # ssh-ed25519
+hash: SHA256:0cJ2kHDJrofEcbBIqubPSUGvh+B3jGmes5a35WLR9KI # ssh-ed25519
 $ ssh-keygen -Q -f out/sshd.krl ca-ssh.pub
 ca-ssh.pub (ca-ssh.pub): REVOKED
 ```
