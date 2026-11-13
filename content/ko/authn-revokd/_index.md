@@ -56,13 +56,13 @@ v0.6.0 이전에는 명령이 `revokd`였고 기본값으로 `/etc/revokd.hcl`�
 
 ```
 $ authn-revokd --config revokd.hcl --once
-bridge-ssh: version 0, issued 2026-11-08T11:25:43Z, expires 2026-11-08T12:25:43Z
-bridge-x509: version 1794137143000, issued 2026-11-08T11:25:43Z, expires 2026-11-08T12:25:43Z
-output sshd: wrote /Users/david_delavennat/Documents/VCS/GIT/localhost/authn-lab/run/out/sshd.krl
-output tls: wrote /Users/david_delavennat/Documents/VCS/GIT/localhost/authn-lab/run/out/bridge.crl
+bridge-ssh: version 0, issued 2026-11-12T11:03:44Z, expires 2026-11-12T12:03:44Z
+bridge-x509: version 1794481424000, issued 2026-11-12T11:03:44Z, expires 2026-11-12T12:03:44Z
+output sshd: wrote /tmp/authn/revokd/out/sshd.krl
+output tls: wrote /tmp/authn/revokd/out/bridge.crl
 $ ssh-keygen -Q -l -f out/sshd.krl
 # KRL version 0
-# Generated at 20261108T122543
+# Generated at 20261112T120344
 # Comment: authn-revokd sshd
 ```
 
