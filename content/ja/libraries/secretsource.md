@@ -11,11 +11,11 @@ tags: [ライブラリ, secretsource, シークレット]
 含まないので、フラグ、スクリプト、シェルの履歴に書いても構いません。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.2.0
+go get github.com/go-authn/secretsource@v0.3.0
 ```
 
 ```go
-s, err := secretsource.Open(ctx, "keepassxc:by-path/Keys/Yubikey PIN")
+s, err := secretsource.Open(ctx, "keepassxc:https://fido.invalid/yubikey-5c")
 if err != nil { ... }
 defer s.Close()          // overwrites the bytes
 use(s.Bytes())
@@ -27,9 +27,10 @@ use(s.Bytes())
 | `keychain:SERVICE/ACCOUNT` | macOS キーチェーンの汎用パスワード項目 |
 | `secretservice:SERVICE/ACCOUNT` | 属性 `service=SERVICE`、`account=ACCOUNT` を持つ freedesktop Secret Service の項目 (GNOME Keyring、KWallet、KeePassXC の Secret Service 連携) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | それらすべての属性を持つ唯一の Secret Service 項目。複数一致は拒否されます |
-| `keepassxc:by-uuid/HEX` | その UUID (16 進 32 桁) を持つ KeePassXC のエントリ |
-| `keepassxc:by-path/Group/Title` | そのパスのエントリ (ルートグループの名前は省く)。2 つのグループが同じタイトルを持つと曖昧として拒否されるため、`by-uuid/` を使ってください |
-| `keepassxc:URL` | URL フィールドが一致するエントリ |
+| `keepassxc:URL` | **URL フィールド**がその URL である KeePassXC のエントリ (`https://NAME.invalid/...` は、名前解決されることのない良い選択です)。同じ URL のエントリが 2 つあると曖昧として拒否されます |
+
+`keepassxc:by-uuid/...` と `keepassxc:by-path/...` は**拒否されます**:
+KeePassXC 2.8.0 は、検索が URL のないエントリを見つけるとクラッシュします。
 
 **コマンドを実行するスキームはありません**: フラグがプロセスを起動できては
 ならないからです。スキームのない参照は、パスと推測されずに拒否されます
@@ -48,9 +49,11 @@ Windows は未実装です)。
    go install github.com/go-authn/secretsource/cmd/secretsource@latest
    secretsource keepassxc associate
    ```
-3. シークレットを表示せずに参照を確認します:
+3. エントリを作成し、その **URL フィールド**に `https://fido.invalid/yubikey-5c`
+   を入力します (他のエントリが使っていない任意の URL。参照はその URL です)。
+   シークレットを表示せずに参照を確認します:
    ```sh
-   secretsource check 'keepassxc:by-path/Yubikey PIN'
+   secretsource check 'keepassxc:https://fido.invalid/yubikey-5c'
    ```
 
 エントリの最初の読み取りで、KeePassXC のアクセス確認ダイアログが表示されます。

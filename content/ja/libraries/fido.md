@@ -94,12 +94,12 @@ fido: the report belongs to another channel
 `--new-pin-from REF` です。参照は
 [secretsource]({{< relref "/libraries/secretsource.md" >}}) のものです:
 `file:PATH`、`keychain:SERVICE/ACCOUNT`、`secretservice:SERVICE/ACCOUNT` または
-`secretservice:KEY=VALUE[,KEY=VALUE]`、そして `keepassxc:by-uuid/HEX`、
-`keepassxc:by-path/Group/Title` または URL (`keychain`、`secretservice`、`file`
-は cmd/fido v0.3.0 から、`keepassxc` と属性は v0.5.0 から)。
+`secretservice:KEY=VALUE[,KEY=VALUE]`、そして `keepassxc:URL` (URL フィールドが
+その URL であるエントリ) (`keychain`、`secretservice`、`file` は cmd/fido
+v0.3.0 から、`keepassxc` と属性は v0.5.0 から、URL 形式のみは v0.6.0 から)。
 
 ```sh
-fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from 'keepassxc:https://fido.invalid/yubikey-5c'
 fido fingerprint list --pin-from keychain:fido/yubikey-5c
 ```
 

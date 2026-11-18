@@ -11,11 +11,11 @@ tags: [라이브러리, secretsource, 비밀]
 있지 않으므로 플래그, 스크립트, 셸 기록에 있어도 됩니다.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.2.0
+go get github.com/go-authn/secretsource@v0.3.0
 ```
 
 ```go
-s, err := secretsource.Open(ctx, "keepassxc:by-path/Keys/Yubikey PIN")
+s, err := secretsource.Open(ctx, "keepassxc:https://fido.invalid/yubikey-5c")
 if err != nil { ... }
 defer s.Close()          // overwrites the bytes
 use(s.Bytes())
@@ -27,9 +27,10 @@ use(s.Bytes())
 | `keychain:SERVICE/ACCOUNT` | macOS 키체인의 일반 암호 항목 |
 | `secretservice:SERVICE/ACCOUNT` | 속성 `service=SERVICE`, `account=ACCOUNT`를 가진 freedesktop Secret Service 항목 (GNOME Keyring, KWallet, KeePassXC의 Secret Service 연동) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | 그 속성을 모두 가진 단 하나의 Secret Service 항목; 여러 개가 일치하면 거부됩니다 |
-| `keepassxc:by-uuid/HEX` | 해당 UUID(16진수 32자리)의 KeePassXC 항목 |
-| `keepassxc:by-path/Group/Title` | 해당 경로의 항목(루트 그룹 이름은 생략); 두 그룹이 같은 제목을 가지면 모호하다고 거부되므로 `by-uuid/`를 쓰세요 |
-| `keepassxc:URL` | URL 필드가 일치하는 항목 |
+| `keepassxc:URL` | **URL 필드**가 그 URL인 KeePassXC 항목(`https://NAME.invalid/...`는 결코 해석되지 않는 좋은 선택); 같은 URL의 항목이 둘이면 모호하다고 거부됩니다 |
+
+`keepassxc:by-uuid/...`와 `keepassxc:by-path/...`는 **거부됩니다**: KeePassXC
+2.8.0은 조회가 URL이 없는 항목을 찾으면 비정상 종료합니다.
 
 **명령을 실행하는 스킴은 없습니다**: 플래그가 프로세스를 시작할 수 있어서는 안
 되기 때문입니다. 스킴이 없는 참조는 경로로 추측되지 않고 거부됩니다(경로는
@@ -48,9 +49,11 @@ KeePassXC는 브라우저 통합 프로토콜로 연결합니다(macOS와 Linux;
    go install github.com/go-authn/secretsource/cmd/secretsource@latest
    secretsource keepassxc associate
    ```
-3. 비밀을 출력하지 않고 참조를 확인합니다:
+3. 항목을 만들고 **URL 필드**에 `https://fido.invalid/yubikey-5c`를 채웁니다
+   (다른 항목이 쓰지 않는 아무 URL; 참조가 곧 그 URL입니다). 비밀을 출력하지
+   않고 참조를 확인합니다:
    ```sh
-   secretsource check 'keepassxc:by-path/Yubikey PIN'
+   secretsource check 'keepassxc:https://fido.invalid/yubikey-5c'
    ```
 
 항목을 처음 읽을 때 KeePassXC의 접근 대화 상자가 나타납니다.
