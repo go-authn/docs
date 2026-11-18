@@ -11,7 +11,7 @@ tags: [ライブラリ, secretsource, シークレット]
 含まないので、フラグ、スクリプト、シェルの履歴に書いても構いません。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.3.0
+go get github.com/go-authn/secretsource@v0.5.0
 ```
 
 ```go
@@ -60,6 +60,31 @@ Windows は未実装です)。
 
 `fido --pin-from` ([fido]({{< relref "/libraries/fido.md" >}}) を参照) と、
 `theca --pin-from`、`--password-from`、`--recovery-from` が使用します。
+
+## シークレットを保存する: `secretsource store` {#store}
+
+エントリを手で作る必要はありません。`secretsource store REF [--group G]
+[--login L] [--replace] [--generate N]` は、`keychain:`、
+`secretservice:SERVICE/ACCOUNT`、`secretservice:KEY=VALUE`、`keepassxc:URL` に
+シークレットを書き込みます:
+
+```sh
+secretsource store 'keepassxc:https://fido.invalid/yubikey-5c'
+secretsource store 'keepassxc:https://fido.invalid/yubikey-5c' --generate 24
+printf '%s' "$PIN" | secretsource store keychain:fido/yubikey-5c
+```
+
+シークレットはエコーなしで 2 回入力するか、標準入力がターミナルでなければそこから
+読み取ります。引数や環境変数からは決して取りません。`--generate N` は N 文字の
+英数字を生成し、秘密の内容は何も表示しません。既存のエントリは `--replace` が
+ない限り拒否されます (KeePassXC では、URL で見つけたそのエントリを更新します)。
+`file:` は拒否されます。
+
+`keepassxc:` ではブラウザープロトコルの `set-login` を使うため、エントリは常に
+それを再び見つけるための URL を持ち、重複は URL で調べます。ログインの既定は
+URL のホスト (`--login`)、グループは、ルート直下の名前を `--group` で指定しない限り
+`KeePassXC-Browser Passwords` で、`--title` は KeePassXC 2.8.0 が無視するため
+拒否されます。KeePassXC は独自のダイアログを表示します。
 
 ## リファレンス {#reference}
 

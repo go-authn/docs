@@ -29,7 +29,7 @@ Alle sind reines Go und bauen mit `CGO_ENABLED=0`.
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | Woher kommt das TLS-Serverzertifikat eines Daemons? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | Darf dieser WireGuard-Schlüssel sich verbinden, und wem gehört er? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | Wen hat der Identitätsanbieter gerade angelegt, geändert oder gelöscht? | v0.2.1 | `github.com/go-authn/scim` |
-| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | Woher kommt eine PIN oder ein Passwort, wenn es nicht in einer Datei liegen soll? | v0.3.0 | `github.com/go-authn/secretsource` |
+| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | Woher kommt eine PIN oder ein Passwort, wenn es nicht in einer Datei liegen soll? | v0.5.0 | `github.com/go-authn/secretsource` |
 
 ## Wie sie sich gruppieren {#how-they-group}
 

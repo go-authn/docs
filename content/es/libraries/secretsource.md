@@ -12,7 +12,7 @@ referencia no contiene ningún secreto, así que puede estar en una opción, un
 script o el historial del shell.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.3.0
+go get github.com/go-authn/secretsource@v0.5.0
 ```
 
 ```go
@@ -62,6 +62,31 @@ La primera lectura de una entrada muestra el diálogo de acceso de KeePassXC.
 
 Lo usan `fido --pin-from` (véase [fido]({{< relref "/libraries/fido.md" >}})) y
 `theca --pin-from`, `--password-from` y `--recovery-from`.
+
+## Guardar un secreto: `secretsource store` {#store}
+
+No hace falta crear ninguna entrada a mano. `secretsource store REF [--group G]
+[--login L] [--replace] [--generate N]` escribe el secreto para `keychain:`,
+`secretservice:SERVICE/ACCOUNT`, `secretservice:KEY=VALUE` y `keepassxc:URL`:
+
+```sh
+secretsource store 'keepassxc:https://fido.invalid/yubikey-5c'
+secretsource store 'keepassxc:https://fido.invalid/yubikey-5c' --generate 24
+printf '%s' "$PIN" | secretsource store keychain:fido/yubikey-5c
+```
+
+El secreto se escribe dos veces sin eco, o se lee de la entrada estándar cuando
+no es un terminal; nunca se toma de un argumento ni del entorno. `--generate N`
+genera N letras y dígitos y no imprime nada secreto. Una entrada existente se
+rechaza salvo con `--replace` (en KeePassXC actualiza esa entrada, hallada por
+su URL). `file:` se rechaza.
+
+Para `keepassxc:` usa el `set-login` del protocolo del navegador: la entrada
+siempre lleva la URL que permite encontrarla de nuevo, y un duplicado se busca
+por URL. El usuario por defecto es el host de la URL (`--login`), el grupo es
+`KeePassXC-Browser Passwords` salvo que `--group` nombre uno bajo la raíz, y
+`--title` se rechaza porque KeePassXC 2.8.0 lo ignora. KeePassXC muestra sus
+propios diálogos.
 
 ## Referencia {#reference}
 

@@ -11,7 +11,7 @@ tags: [库, secretsource, 密钥]
 shell 历史记录里。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.3.0
+go get github.com/go-authn/secretsource@v0.5.0
 ```
 
 ```go
@@ -57,6 +57,28 @@ KeePassXC 通过其浏览器集成协议访问，支持 macOS 和 Linux；Window
 
 `fido --pin-from`（见 [fido]({{< relref "/libraries/fido.md" >}})）以及
 `theca --pin-from`、`--password-from` 和 `--recovery-from` 使用它。
+
+## 保存密钥：`secretsource store` {#store}
+
+不必手工创建条目。`secretsource store REF [--group G] [--login L] [--replace]
+[--generate N]` 为 `keychain:`、`secretservice:SERVICE/ACCOUNT`、
+`secretservice:KEY=VALUE` 和 `keepassxc:URL` 写入密钥：
+
+```sh
+secretsource store 'keepassxc:https://fido.invalid/yubikey-5c'
+secretsource store 'keepassxc:https://fido.invalid/yubikey-5c' --generate 24
+printf '%s' "$PIN" | secretsource store keychain:fido/yubikey-5c
+```
+
+密钥在关闭回显的情况下输入两次，或在标准输入不是终端时从标准输入读取；绝不从
+参数或环境变量获取。`--generate N` 生成 N 个字母和数字，不打印任何机密内容。
+已存在的条目会被拒绝，除非加 `--replace`（对 KeePassXC，这会更新按 URL 找到的
+那个条目）。`file:` 会被拒绝。
+
+对 `keepassxc:`，它使用浏览器协议的 `set-login`，因此条目始终带有能再次找到它的
+URL，重复项按 URL 查找。登录名默认为 URL 的主机（`--login`），分组为
+`KeePassXC-Browser Passwords`，除非 `--group` 指定了根下的某个分组；`--title`
+会被拒绝，因为 KeePassXC 2.8.0 会忽略它。KeePassXC 会显示它自己的对话框。
 
 ## 参考 {#reference}
 

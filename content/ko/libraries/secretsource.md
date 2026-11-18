@@ -11,7 +11,7 @@ tags: [라이브러리, secretsource, 비밀]
 있지 않으므로 플래그, 스크립트, 셸 기록에 있어도 됩니다.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.3.0
+go get github.com/go-authn/secretsource@v0.5.0
 ```
 
 ```go
@@ -60,6 +60,31 @@ KeePassXC는 브라우저 통합 프로토콜로 연결합니다(macOS와 Linux;
 
 `fido --pin-from`([fido]({{< relref "/libraries/fido.md" >}}) 참고)과
 `theca --pin-from`, `--password-from`, `--recovery-from`이 사용합니다.
+
+## 비밀 저장하기: `secretsource store` {#store}
+
+항목을 손으로 만들 필요가 없습니다. `secretsource store REF [--group G]
+[--login L] [--replace] [--generate N]`은 `keychain:`,
+`secretservice:SERVICE/ACCOUNT`, `secretservice:KEY=VALUE`, `keepassxc:URL`에
+비밀을 기록합니다:
+
+```sh
+secretsource store 'keepassxc:https://fido.invalid/yubikey-5c'
+secretsource store 'keepassxc:https://fido.invalid/yubikey-5c' --generate 24
+printf '%s' "$PIN" | secretsource store keychain:fido/yubikey-5c
+```
+
+비밀은 에코 없이 두 번 입력하거나, 표준 입력이 터미널이 아니면 거기서 읽습니다.
+인자나 환경 변수에서는 절대 가져오지 않습니다. `--generate N`은 N개의 영문자와
+숫자를 만들고 비밀 내용은 아무것도 출력하지 않습니다. 이미 있는 항목은
+`--replace`가 없으면 거부됩니다(KeePassXC에서는 URL로 찾은 그 항목을 갱신합니다).
+`file:`은 거부됩니다.
+
+`keepassxc:`에서는 브라우저 프로토콜의 `set-login`을 쓰므로 항목은 항상 다시 찾을
+수 있는 URL을 가지며, 중복은 URL로 찾습니다. 로그인 기본값은 URL의 호스트
+(`--login`)이고, 그룹은 `--group`이 루트 아래 이름을 지정하지 않는 한
+`KeePassXC-Browser Passwords`이며, `--title`은 KeePassXC 2.8.0이 무시하므로
+거부됩니다. KeePassXC는 자체 대화 상자를 표시합니다.
 
 ## 참조 문서 {#reference}
 
