@@ -96,12 +96,12 @@ fido: the report belongs to another channel
 `--pin-from REF`，以及修改时用于新 PIN 的 `--new-pin-from REF`。引用就是
 [secretsource]({{< relref "/libraries/secretsource.md" >}}) 的那些：
 `file:PATH`、`keychain:SERVICE/ACCOUNT`、`secretservice:SERVICE/ACCOUNT` 或
-`secretservice:KEY=VALUE[,KEY=VALUE]`，以及 `keepassxc:by-uuid/HEX`、
-`keepassxc:by-path/Group/Title` 或一个 URL（`keychain`、`secretservice` 和
+`secretservice:KEY=VALUE[,KEY=VALUE]`，以及 `keepassxc:URL`（URL 字段为该 URL
+的条目；仅 URL 形式自 v0.6.0 起）（`keychain`、`secretservice` 和
 `file` 自 cmd/fido v0.3.0 起；`keepassxc` 和属性自 v0.5.0 起）。
 
 ```sh
-fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from 'keepassxc:https://fido.invalid/yubikey-5c'
 fido fingerprint list --pin-from keychain:fido/yubikey-5c
 ```
 

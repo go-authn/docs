@@ -95,12 +95,12 @@ archivo en claro tenga que quedar en el disco: `--pin-from REF`, y
 `--new-pin-from REF` para el PIN nuevo de un cambio. Las referencias son las de
 [secretsource]({{< relref "/libraries/secretsource.md" >}}): `file:PATH`,
 `keychain:SERVICE/ACCOUNT`, `secretservice:SERVICE/ACCOUNT` o
-`secretservice:KEY=VALUE[,KEY=VALUE]`, y `keepassxc:by-uuid/HEX`,
-`keepassxc:by-path/Group/Title` o una URL (`keychain`, `secretservice` y `file`
-desde cmd/fido v0.3.0; `keepassxc` y los atributos desde v0.5.0).
+`secretservice:KEY=VALUE[,KEY=VALUE]`, y `keepassxc:URL`, la entrada cuyo campo
+URL es esa URL (`keychain`, `secretservice` y `file` desde cmd/fido v0.3.0;
+`keepassxc` y los atributos desde v0.5.0, solo la forma URL desde v0.6.0).
 
 ```sh
-fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from 'keepassxc:https://fido.invalid/yubikey-5c'
 fido fingerprint list --pin-from keychain:fido/yubikey-5c
 ```
 

@@ -97,12 +97,13 @@ has to stay on disk: `--pin-from REF`, and `--new-pin-from REF` for the new PIN
 of a change. The references are those of
 [secretsource]({{< relref "/libraries/secretsource.md" >}}): `file:PATH`,
 `keychain:SERVICE/ACCOUNT`, `secretservice:SERVICE/ACCOUNT` or
-`secretservice:KEY=VALUE[,KEY=VALUE]`, and `keepassxc:by-uuid/HEX`,
-`keepassxc:by-path/Group/Title` or a URL (`keychain`, `secretservice` and `file`
-since cmd/fido v0.3.0; `keepassxc` and attributes since v0.5.0).
+`secretservice:KEY=VALUE[,KEY=VALUE]`, and `keepassxc:URL`, the entry whose URL
+field is that URL (`keychain`, `secretservice` and `file` since cmd/fido
+v0.3.0; `keepassxc` and attributes since v0.5.0, the URL form only since
+v0.6.0).
 
 ```sh
-fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from 'keepassxc:https://fido.invalid/yubikey-5c'
 fido fingerprint list --pin-from keychain:fido/yubikey-5c
 ```
 

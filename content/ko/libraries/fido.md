@@ -94,12 +94,12 @@ fido: the report belongs to another channel
 `--new-pin-from REF`입니다. 참조는
 [secretsource]({{< relref "/libraries/secretsource.md" >}})의 것입니다:
 `file:PATH`, `keychain:SERVICE/ACCOUNT`, `secretservice:SERVICE/ACCOUNT` 또는
-`secretservice:KEY=VALUE[,KEY=VALUE]`, 그리고 `keepassxc:by-uuid/HEX`,
-`keepassxc:by-path/Group/Title` 또는 URL (`keychain`, `secretservice`, `file`은
-cmd/fido v0.3.0부터, `keepassxc`와 속성은 v0.5.0부터).
+`secretservice:KEY=VALUE[,KEY=VALUE]`, 그리고 `keepassxc:URL`(URL 필드가 그
+URL인 항목) (`keychain`, `secretservice`, `file`은 cmd/fido v0.3.0부터,
+`keepassxc`와 속성은 v0.5.0부터, URL 형식만은 v0.6.0부터).
 
 ```sh
-fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from 'keepassxc:https://fido.invalid/yubikey-5c'
 fido fingerprint list --pin-from keychain:fido/yubikey-5c
 ```
 

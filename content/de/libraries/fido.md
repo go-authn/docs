@@ -97,12 +97,12 @@ Klartextdatei auf der Platte bleiben muss: `--pin-from REF`, und
 `--new-pin-from REF` für die neue PIN bei einer Änderung. Die Referenzen sind
 die von [secretsource]({{< relref "/libraries/secretsource.md" >}}):
 `file:PATH`, `keychain:SERVICE/ACCOUNT`, `secretservice:SERVICE/ACCOUNT` oder
-`secretservice:KEY=VALUE[,KEY=VALUE]`, und `keepassxc:by-uuid/HEX`,
-`keepassxc:by-path/Group/Title` oder eine URL (`keychain`, `secretservice` und
-`file` seit cmd/fido v0.3.0; `keepassxc` und Attribute seit v0.5.0).
+`secretservice:KEY=VALUE[,KEY=VALUE]`, und `keepassxc:URL`, der Eintrag, dessen
+URL-Feld diese URL ist (`keychain`, `secretservice` und `file` seit cmd/fido
+v0.3.0; `keepassxc` und Attribute seit v0.5.0, nur die URL-Form seit v0.6.0).
 
 ```sh
-fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from 'keepassxc:https://fido.invalid/yubikey-5c'
 fido fingerprint list --pin-from keychain:fido/yubikey-5c
 ```
 

@@ -11,11 +11,11 @@ names where a secret lives; `secretsource.Open` fetches it. The reference holds
 no secret, so it may sit in a flag, a script or a shell history.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.2.0
+go get github.com/go-authn/secretsource@v0.3.0
 ```
 
 ```go
-s, err := secretsource.Open(ctx, "keepassxc:by-path/Keys/Yubikey PIN")
+s, err := secretsource.Open(ctx, "keepassxc:https://fido.invalid/yubikey-5c")
 if err != nil { ... }
 defer s.Close()          // overwrites the bytes
 use(s.Bytes())
@@ -27,9 +27,10 @@ use(s.Bytes())
 | `keychain:SERVICE/ACCOUNT` | a macOS Keychain generic-password item |
 | `secretservice:SERVICE/ACCOUNT` | a freedesktop Secret Service item with attributes `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, KeePassXC's Secret Service integration) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | the one Secret Service item carrying all those attributes; several matches are refused |
-| `keepassxc:by-uuid/HEX` | the KeePassXC entry with that UUID (32 hex digits) |
-| `keepassxc:by-path/Group/Title` | the entry at that path (the root group's name is left out); a title shared by two groups is refused as ambiguous, use `by-uuid/` |
-| `keepassxc:URL` | the entry whose URL field matches |
+| `keepassxc:URL` | the KeePassXC entry whose **URL field** is that URL (`https://NAME.invalid/...` is a good, never-resolving choice); two entries with the same URL are refused as ambiguous |
+
+`keepassxc:by-uuid/...` and `keepassxc:by-path/...` are **refused**: KeePassXC
+2.8.0 crashes when a lookup finds an entry with no URL.
 
 **No scheme runs a command**: a flag must never be able to start a process. A
 reference with no scheme is refused, not guessed to be a path (`file:` is how a
@@ -48,9 +49,11 @@ Linux; Windows is not implemented yet.
    go install github.com/go-authn/secretsource/cmd/secretsource@latest
    secretsource keepassxc associate
    ```
-3. Check a reference without printing the secret:
+3. Create the entry and **fill its URL field** with
+   `https://fido.invalid/yubikey-5c` (any URL no other entry uses: the
+   reference is that URL). Check the reference without printing the secret:
    ```sh
-   secretsource check 'keepassxc:by-path/Yubikey PIN'
+   secretsource check 'keepassxc:https://fido.invalid/yubikey-5c'
    ```
 
 The first read of an entry shows KeePassXC's access dialog.
