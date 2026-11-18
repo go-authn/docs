@@ -90,6 +90,25 @@ fido: the report belongs to another channel
 With a key, `fido.Open(ctx, transport)` does the handshake and the `*Key` it
 returns carries every later command.
 
+## The command line: `--pin-from` {#pin-from}
+
+`cmd/fido` takes a key's PIN from a **reference**, so that no plaintext file
+has to stay on disk: `--pin-from REF`, and `--new-pin-from REF` for the new PIN
+of a change. The references are those of
+[secretsource]({{< relref "/libraries/secretsource.md" >}}): `file:PATH`,
+`keychain:SERVICE/ACCOUNT`, `secretservice:SERVICE/ACCOUNT` or
+`secretservice:KEY=VALUE[,KEY=VALUE]`, and `keepassxc:by-uuid/HEX`,
+`keepassxc:by-path/Group/Title` or a URL (`keychain`, `secretservice` and `file`
+since cmd/fido v0.3.0; `keepassxc` and attributes since v0.5.0).
+
+```sh
+fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from keychain:fido/yubikey-5c
+```
+
+No reference runs a command. The `-file` flags are unchanged and exclusive with
+the `-from` flags.
+
 ## What it refuses, and why
 
 **A key is not trusted to answer what it was asked.** A reply that carries a

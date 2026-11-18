@@ -90,6 +90,23 @@ fido: the report belongs to another channel
 有密钥时，`fido.Open(ctx, transport)` 完成握手，它
 返回的 `*Key` 承载之后的每个命令。
 
+## 命令行：`--pin-from` {#pin-from}
+
+`cmd/fido` 从**引用**读取密钥的 PIN，因此不必在磁盘上留下明文文件：
+`--pin-from REF`，以及修改时用于新 PIN 的 `--new-pin-from REF`。引用就是
+[secretsource]({{< relref "/libraries/secretsource.md" >}}) 的那些：
+`file:PATH`、`keychain:SERVICE/ACCOUNT`、`secretservice:SERVICE/ACCOUNT` 或
+`secretservice:KEY=VALUE[,KEY=VALUE]`，以及 `keepassxc:by-uuid/HEX`、
+`keepassxc:by-path/Group/Title` 或一个 URL（`keychain`、`secretservice` 和
+`file` 自 cmd/fido v0.3.0 起；`keepassxc` 和属性自 v0.5.0 起）。
+
+```sh
+fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from keychain:fido/yubikey-5c
+```
+
+没有任何引用会执行命令。`-file` 选项不变，并且与 `-from` 选项互斥。
+
 ## 它拒绝什么，以及原因 {#what-it-refuses-and-why}
 
 **不信任密钥会如实回答所问的问题。** 携带的命令与所发送命令

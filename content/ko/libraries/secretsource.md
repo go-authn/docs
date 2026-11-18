@@ -1,0 +1,65 @@
+---
+title: "secretsource — 참조에서 비밀 가져오기"
+linkTitle: "secretsource"
+weight: 35
+description: "go-authn/secretsource는 PIN, 비밀번호, 복구 코드를 참조(파일, macOS 키체인, Secret Service, KeePassXC)에서 가져와 평문 파일이 디스크에 남지 않게 합니다."
+tags: [라이브러리, secretsource, 비밀]
+---
+
+**파일에 남겨 두면 안 되는 PIN은 어디에서 가져오는가?** **참조**는 비밀이 있는
+곳을 가리키고, `secretsource.Open`이 그것을 가져옵니다. 참조에는 비밀이 들어
+있지 않으므로 플래그, 스크립트, 셸 기록에 있어도 됩니다.
+
+```sh
+go get github.com/go-authn/secretsource@v0.2.0
+```
+
+```go
+s, err := secretsource.Open(ctx, "keepassxc:by-path/Keys/Yubikey PIN")
+if err != nil { ... }
+defer s.Close()          // overwrites the bytes
+use(s.Bytes())
+```
+
+| 참조 | 읽는 대상 |
+|---|---|
+| `file:PATH` | 소유자만 읽을 수 있는 일반 파일(모드 0600 이하); 끝의 줄바꿈 하나는 제거됩니다 |
+| `keychain:SERVICE/ACCOUNT` | macOS 키체인의 일반 암호 항목 |
+| `secretservice:SERVICE/ACCOUNT` | 속성 `service=SERVICE`, `account=ACCOUNT`를 가진 freedesktop Secret Service 항목 (GNOME Keyring, KWallet, KeePassXC의 Secret Service 연동) |
+| `secretservice:KEY=VALUE[,KEY=VALUE...]` | 그 속성을 모두 가진 단 하나의 Secret Service 항목; 여러 개가 일치하면 거부됩니다 |
+| `keepassxc:by-uuid/HEX` | 해당 UUID(16진수 32자리)의 KeePassXC 항목 |
+| `keepassxc:by-path/Group/Title` | 해당 경로의 항목(루트 그룹 이름은 생략); 두 그룹이 같은 제목을 가지면 모호하다고 거부되므로 `by-uuid/`를 쓰세요 |
+| `keepassxc:URL` | URL 필드가 일치하는 항목 |
+
+**명령을 실행하는 스킴은 없습니다**: 플래그가 프로세스를 시작할 수 있어서는 안
+되기 때문입니다. 스킴이 없는 참조는 경로로 추측되지 않고 거부됩니다(경로는
+`file:`로 씁니다). 4096바이트보다 긴 비밀이나 관리자가 돌려준 빈 비밀은
+거부되며, 호출은 컨텍스트(기한이 없으면 2분)와 함께 끝납니다. 관리자가 잠금
+해제를 기다리고 있어도 마찬가지입니다.
+
+## KeePassXC {#keepassxc}
+
+KeePassXC는 브라우저 통합 프로토콜로 연결합니다(macOS와 Linux; Windows는 아직
+구현되지 않았습니다).
+
+1. KeePassXC에서 *Settings > Browser Integration*을 켭니다.
+2. 데이터베이스마다 한 번 이 컴퓨터를 연결하고 KeePassXC에서 승인합니다:
+   ```sh
+   go install github.com/go-authn/secretsource/cmd/secretsource@latest
+   secretsource keepassxc associate
+   ```
+3. 비밀을 출력하지 않고 참조를 확인합니다:
+   ```sh
+   secretsource check 'keepassxc:by-path/Yubikey PIN'
+   ```
+
+항목을 처음 읽을 때 KeePassXC의 접근 대화 상자가 나타납니다.
+
+`fido --pin-from`([fido]({{< relref "/libraries/fido.md" >}}) 참고)과
+`theca --pin-from`, `--password-from`, `--recovery-from`이 사용합니다.
+
+## 참조 문서 {#reference}
+
+이 페이지의 기준은
+[github.com/go-authn/secretsource](https://github.com/go-authn/secretsource)의
+README입니다.

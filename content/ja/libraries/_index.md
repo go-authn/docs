@@ -2,7 +2,7 @@
 title: "ライブラリ、一つにつき一つの問い"
 linkTitle: "ライブラリ"
 weight: 50
-description: "十四の go-authn Go モジュール: それぞれが答える問い、これらのページが説明するバージョン、そして別々のモジュールである理由。"
+description: "十五の go-authn Go モジュール: それぞれが答える問い、これらのページが説明するバージョン、そして別々のモジュールである理由。"
 tags: [ライブラリ]
 ---
 
@@ -28,6 +28,7 @@ tags: [ライブラリ]
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | デーモンの TLS サーバー証明書はどこから来るか | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | この WireGuard 鍵は接続してよいか。誰のものか | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | ID プロバイダーが作成、変更、削除したのは誰か | v0.2.1 | `github.com/go-authn/scim` |
+| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | ファイルに置きたくない PIN やパスワードは、どこから取得するのか | v0.2.0 | `github.com/go-authn/secretsource` |
 
 ## グループ分け {#how-they-group}
 

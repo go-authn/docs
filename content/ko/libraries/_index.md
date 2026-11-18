@@ -2,7 +2,7 @@
 title: "라이브러리, 질문 하나씩"
 linkTitle: "라이브러리"
 weight: 50
-description: "열네 개의 go-authn Go 모듈: 각각이 답하는 질문, 이 문서가 설명하는 버전, 그리고 별도의 모듈인 이유."
+description: "열다섯 개의 go-authn Go 모듈: 각각이 답하는 질문, 이 문서가 설명하는 버전, 그리고 별도의 모듈인 이유."
 tags: [라이브러리]
 ---
 
@@ -29,6 +29,7 @@ tags: [라이브러리]
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | 데몬의 TLS 서버 인증서는 어디서 오는가? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 이 WireGuard 키가 연결해도 되는가, 그리고 누구의 것인가? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | 신원 공급자가 방금 누구를 생성, 변경, 삭제했는가? | v0.2.1 | `github.com/go-authn/scim` |
+| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | 파일에 남겨 두면 안 되는 PIN이나 비밀번호는 어디에서 가져오는가? | v0.2.0 | `github.com/go-authn/secretsource` |
 
 ## 모듈의 묶음 {#how-they-group}
 

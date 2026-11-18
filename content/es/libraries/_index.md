@@ -2,7 +2,7 @@
 title: "Las bibliotecas, una pregunta cada una"
 linkTitle: "Bibliotecas"
 weight: 50
-description: "Los catorce módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
+description: "Los quince módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
 tags: [bibliotecas]
 ---
 
@@ -29,6 +29,7 @@ Todos son Go puro y se compilan con `CGO_ENABLED=0`.
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | ¿de dónde procede el certificado de servidor TLS de un demonio? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | ¿puede conectarse esta clave WireGuard, y de quién es? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | ¿a quién acaba de crear, cambiar o eliminar el proveedor de identidad? | v0.2.1 | `github.com/go-authn/scim` |
+| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | ¿de dónde sale un PIN o una contraseña, cuando no debe quedar en un archivo? | v0.2.0 | `github.com/go-authn/secretsource` |
 
 ## Cómo se agrupan {#how-they-group}
 

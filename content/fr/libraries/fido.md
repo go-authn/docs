@@ -90,6 +90,25 @@ fido: the report belongs to another channel
 Avec une clé, `fido.Open(ctx, transport)` fait la poignée de main, et la `*Key` qu'il
 renvoie porte toutes les commandes suivantes.
 
+## La ligne de commande : `--pin-from` {#pin-from}
+
+`cmd/fido` lit le PIN d'une clé depuis une **référence**, pour qu'aucun fichier
+en clair ne reste sur le disque : `--pin-from REF`, et `--new-pin-from REF`
+pour le nouveau PIN d'un changement. Les références sont celles de
+[secretsource]({{< relref "/libraries/secretsource.md" >}}) : `file:PATH`,
+`keychain:SERVICE/ACCOUNT`, `secretservice:SERVICE/ACCOUNT` ou
+`secretservice:KEY=VALUE[,KEY=VALUE]`, et `keepassxc:by-uuid/HEX`,
+`keepassxc:by-path/Group/Title` ou une URL (`keychain`, `secretservice` et
+`file` depuis cmd/fido v0.3.0 ; `keepassxc` et les attributs depuis v0.5.0).
+
+```sh
+fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from keychain:fido/yubikey-5c
+```
+
+Aucune référence n'exécute de commande. Les options `-file` sont inchangées et
+exclusives avec les options `-from`.
+
 ## Ce qu'il refuse, et pourquoi {#what-it-refuses-and-why}
 
 **On ne fait pas confiance à une clé pour répondre à ce qu'on lui a demandé.** Une réponse qui porte
