@@ -87,6 +87,25 @@ fido: the report belongs to another channel
 鍵がある場合は、`fido.Open(ctx, transport)` がハンドシェイクを行い、返される `*Key` がその後の
 すべてのコマンドを運びます。
 
+## コマンドライン: `--pin-from` {#pin-from}
+
+`cmd/fido` はキーの PIN を**参照**から読み取るので、平文のファイルをディスクに
+残す必要がありません。`--pin-from REF` と、変更時の新しい PIN のための
+`--new-pin-from REF` です。参照は
+[secretsource]({{< relref "/libraries/secretsource.md" >}}) のものです:
+`file:PATH`、`keychain:SERVICE/ACCOUNT`、`secretservice:SERVICE/ACCOUNT` または
+`secretservice:KEY=VALUE[,KEY=VALUE]`、そして `keepassxc:by-uuid/HEX`、
+`keepassxc:by-path/Group/Title` または URL (`keychain`、`secretservice`、`file`
+は cmd/fido v0.3.0 から、`keepassxc` と属性は v0.5.0 から)。
+
+```sh
+fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from keychain:fido/yubikey-5c
+```
+
+どの参照もコマンドを実行しません。`-file` フラグは変わらず、`-from` フラグとは
+同時に指定できません。
+
 ## 拒否するものと、その理由 {#what-it-refuses-and-why}
 
 **鍵は、尋ねられたことに答えると信頼されません。** 送ったものとは別のコマンドを運ぶ応答は拒否

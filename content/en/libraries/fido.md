@@ -90,7 +90,7 @@ fido: the report belongs to another channel
 With a key, `fido.Open(ctx, transport)` does the handshake and the `*Key` it
 returns carries every later command.
 
-## The command line: `--pin-from`
+## The command line: `--pin-from` {#pin-from}
 
 `cmd/fido` takes a key's PIN from a **reference**, so that no plaintext file
 has to stay on disk: `--pin-from REF`, and `--new-pin-from REF` for the new PIN

@@ -90,6 +90,25 @@ fido: the report belongs to another channel
 Mit einem Schlüssel führt `fido.Open(ctx, transport)` den Handshake aus, und der `*Key`, den es
 zurückgibt, trägt jeden späteren Befehl.
 
+## Die Kommandozeile: `--pin-from` {#pin-from}
+
+`cmd/fido` liest die PIN eines Schlüssels aus einer **Referenz**, damit keine
+Klartextdatei auf der Platte bleiben muss: `--pin-from REF`, und
+`--new-pin-from REF` für die neue PIN bei einer Änderung. Die Referenzen sind
+die von [secretsource]({{< relref "/libraries/secretsource.md" >}}):
+`file:PATH`, `keychain:SERVICE/ACCOUNT`, `secretservice:SERVICE/ACCOUNT` oder
+`secretservice:KEY=VALUE[,KEY=VALUE]`, und `keepassxc:by-uuid/HEX`,
+`keepassxc:by-path/Group/Title` oder eine URL (`keychain`, `secretservice` und
+`file` seit cmd/fido v0.3.0; `keepassxc` und Attribute seit v0.5.0).
+
+```sh
+fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from keychain:fido/yubikey-5c
+```
+
+Keine Referenz führt einen Befehl aus. Die `-file`-Optionen sind unverändert und
+schließen sich mit den `-from`-Optionen gegenseitig aus.
+
 ## Was es ablehnt und warum {#what-it-refuses-and-why}
 
 **Einem Schlüssel wird nicht vertraut, dass er auf das antwortet, was gefragt wurde.** Eine Antwort, die einen

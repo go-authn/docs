@@ -2,7 +2,7 @@
 title: "各个库，每个只回答一个问题"
 linkTitle: "库"
 weight: 50
-description: "十四个 go-authn Go 模块：每个模块回答的问题、这些页面所描述的版本，以及它们为什么是独立的模块。"
+description: "十五个 go-authn Go 模块：每个模块回答的问题、这些页面所描述的版本，以及它们为什么是独立的模块。"
 tags: [库]
 ---
 
@@ -29,6 +29,7 @@ tags: [库]
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | 守护进程的 TLS 服务器证书从哪里来？ | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 这把 WireGuard 密钥是否可以连接，它是谁的？ | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | 身份提供方刚刚创建、更改或删除了谁？ | v0.2.1 | `github.com/go-authn/scim` |
+| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | 不应留在文件里的 PIN 或密码，从哪里取得？ | v0.2.0 | `github.com/go-authn/secretsource` |
 
 ## 它们如何分组 {#how-they-group}
 

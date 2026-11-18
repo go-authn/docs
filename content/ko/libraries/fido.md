@@ -87,6 +87,25 @@ fido: the report belongs to another channel
 키가 있으면 `fido.Open(ctx, transport)`가 핸드셰이크를 수행하고, 반환된 `*Key`가 이후의
 모든 명령을 담당합니다.
 
+## 명령줄: `--pin-from` {#pin-from}
+
+`cmd/fido`는 키의 PIN을 **참조**에서 읽으므로 평문 파일을 디스크에 남겨 둘
+필요가 없습니다. `--pin-from REF`, 그리고 변경할 때의 새 PIN을 위한
+`--new-pin-from REF`입니다. 참조는
+[secretsource]({{< relref "/libraries/secretsource.md" >}})의 것입니다:
+`file:PATH`, `keychain:SERVICE/ACCOUNT`, `secretservice:SERVICE/ACCOUNT` 또는
+`secretservice:KEY=VALUE[,KEY=VALUE]`, 그리고 `keepassxc:by-uuid/HEX`,
+`keepassxc:by-path/Group/Title` 또는 URL (`keychain`, `secretservice`, `file`은
+cmd/fido v0.3.0부터, `keepassxc`와 속성은 v0.5.0부터).
+
+```sh
+fido fingerprint list --pin-from 'keepassxc:by-path/Yubikey PIN'
+fido fingerprint list --pin-from keychain:fido/yubikey-5c
+```
+
+어떤 참조도 명령을 실행하지 않습니다. `-file` 플래그는 그대로이며 `-from`
+플래그와 함께 쓸 수 없습니다.
+
 ## 거부하는 것과 그 이유 {#what-it-refuses-and-why}
 
 **키는 질문받은 것에 대해 답한다고 신뢰되지 않습니다.** 보낸 것과 다른 명령을 담은
