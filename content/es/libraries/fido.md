@@ -104,6 +104,12 @@ fido fingerprint list --pin-from 'keepassxc:https://fido.invalid/yubikey-5c'
 fido fingerprint list --pin-from keychain:fido/yubikey-5c
 ```
 
+Para guardar un PIN en lugar de escribirlo en un archivo, `fido pin set --save-to REF`
+y `fido pin change --save-to REF` (cmd/fido v0.7.0) guardan el PIN nuevo, como lo
+hace `secretsource store`, **antes** de tocar la llave. `--generate N` lo genera y
+`--replace` sobrescribe una entrada existente; con `pin change --replace`, el PIN
+actual se restituye si la llave rechaza el cambio.
+
 Ninguna referencia ejecuta un comando. Las opciones `-file` no cambian y son
 excluyentes con las opciones `-from`.
 
