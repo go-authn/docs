@@ -218,6 +218,9 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | kdc v0.4.5 | 보안 감사, 퍼징, 카오스 실행([거부하는 것]({{< relref "/libraries/kdc.md" >}})): 다른 렐름에 대한 요청은 `KDC_ERR_WRONG_REALM`, 읽을 수 없는 디렉터리는 `KDC_ERR_SVC_UNAVAILABLE`로 응답하며(이전에는 `KDC_ERR_C_PRINCIPAL_UNKNOWN`), 시작이 `MaxSkew` 안의 미래인 TGT는 받아들이고, 디코더 패닉은 프로세스를 크래시시키는 대신 요청 하나를 버립니다(잘못된 AS-REQ나 TGS-REQ 하나로 크래시할 수 있었습니다). 프린시펄 이름은 로그에서 따옴표로 묶입니다. golang.org/x/net v0.62.0, go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT KDC의 [lookaside]({{< relref "/libraries/kdc.md" >}}): 바이트 단위로 이미 본 요청은 이전 응답을 받음(2분 동안, 합계 10 MiB 미만). `KRB-ERROR`는 저장하지 않음. MIT가 TGS에서 끄는 인증자 재전송 캐시는 일부러 두지 않음. 테스트는 읽을 수 없는 디렉터리가 AS(올바른 비밀번호로)와 TGS에서 `KDC_ERR_SVC_UNAVAILABLE`이 됨을 고정함. 요청당 할당 2회 증가 |
 | kdc v0.6.0 | [`Finder`]({{< relref "/libraries/kdc.md#finder" >}}): 이름 색인을 가진 소스는 순회하지 않고 질의함. 10,000명일 때 순회가 AS-REQ CPU의 절반이었고, `Finder`가 있으면 조회는 프로파일 임계값 아래로 내려감. 이름이 프린시펄과 다른 응답은 알 수 없는 프린시펄로 처리함(프린시펄은 대소문자를 구분함) |
+| kdc v0.7.0 | Windows 클라이언트의 TGS-REQ를 받아들임: 그 RSA-MD5 authenticator 체크섬은 MIT도 받아들임. 티켓과 응답 부분은 플래그와 starttime을 가짐 |
+| kdc v0.8.0 | [`Mint`]({{< relref "/libraries/kdc.md" >}}): 키가 없는 사람의 TGT를, 상호 인증된 TLS를 통해 허용 목록의 호출자가 요청하고 KRB-CRED로 돌려받음(기본값은 꺼짐). TGS는 authenticator가 티켓과 다른 클라이언트를 지정하면 `KRB_AP_ERR_BADMATCH`로 응답함 |
+| kdc v0.8.1 | additional-tickets 필드가 `[11] SEQUENCE`가 아닌 요청은 gokrb5가 디코딩하기 전에 버려짐(v8.4.4는 패닉했음). recover는 남아 있고, 퍼즈 테스트는 요청이 그곳에 도달하면 이제 실패함 |
 | keyfactor v0.4.2 | 의존성만: 최소 요구 버전으로 go-authn/fido v0.6.2와 golang.org/x/crypto v0.58.0 |
 | krb5 v0.3.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | krb5 v0.3.3 | 의존성만: golang.org/x/net v0.62.0, golang.org/x/crypto v0.58.0, go-uuid v1.0.4로 요구하지만 호출되지 않는 모듈에서 `govulncheck` 결과 46건 중 45건이 해소됩니다. GO-2026-5932(`x/crypto/openpgp`)는 수정이 없고 어떤 go-authn 모듈도 가져오지 않습니다. API 변경 없음 |

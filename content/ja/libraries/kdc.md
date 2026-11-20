@@ -13,10 +13,17 @@ tags: [ライブラリ, kerberos, ディレクトリ]
 これを土台にした単独のデーモンが [kdcd]({{< relref "/libraries/kdcd.md" >}}) です。
 
 ```sh
-go get github.com/go-authn/kdc@v0.6.0
+go get github.com/go-authn/kdc@v0.8.1
 ```
 
-v0.6.0 では、その `go.mod` が少なくとも `go-authn/directory` v0.17.0 と gokrb5 v8.4.4 を要求します。
+v0.7.0 から v0.8.1 まで: Windows クライアントの TGS-REQ を受け入れます (その RSA-MD5 のオーセンティケーター
+チェックサムは MIT も受け入れます)。チケットはフラグと starttime を持ちます。`Server.Mint`、`Server.MintHandler`、
+`Config.MintCallers` は、鍵を持たない人のための TGT を、相互認証された TLS 越しに許可リストにある呼び出し元へ
+KRB-CRED として発行します (既定では無効)。TGS は、オーセンティケーターがチケットと別のクライアントを
+名指ししたとき `KRB_AP_ERR_BADMATCH` で答えます。additional-tickets フィールドが不正なリクエストは、
+gokrb5 がデコードする前に破棄されます。
+
+v0.8.1 では、その `go.mod` が少なくとも `go-authn/directory` v0.17.0 と gokrb5 v8.4.4 を要求します。
 これは最小バージョンなので、directory v0.17.0 を要求する
 プログラムは、authnd v0.16.2 と同様に v0.18.0 でビルドされます。受け入れ側の半分は
 [krb5]({{< relref "/libraries/krb5.md" >}}) で、チケットを検証するだけのサービスは、このモジュールを
@@ -193,11 +200,13 @@ Unix エポックを本物の終了時刻と受け取り、`klist` で `>>>Expir
 - オーセンティケーターがそのセッション鍵で、`MaxSkew` 以内に復号される
 - そのチェックサムが、届いたとおりのこのリクエストの本体に対するもので、セッション鍵で
   鍵付けされている (欠けているか鍵付けされていなければ `KRB_AP_ERR_INAPP_CKSUM`、間違っていれば
-  `KRB_AP_ERR_MODIFIED`)
+  `KRB_AP_ERR_MODIFIED`)。v0.7.0 から、Windows クライアントが送る RSA-MD5 (type 7) チェックサム
+  (鍵なしだがセッション鍵で封じられている) は MIT と同様に受け入れられる。CRC32、MD4、SHA-1 は拒否のまま
 - TGT が終了時刻を過ぎておらず (`KRB_AP_ERR_TKT_EXPIRED`)、開始時刻より前でなく、無効のフラグも
   立っておらず (`KRB_AP_ERR_TKT_NYV`)、時計のずれは許されない: その時刻はこの KDC の時計が
   書いたものだから
 - クライアントがこのレルムのもので、まだディレクトリにいる (`KDC_ERR_C_PRINCIPAL_UNKNOWN`)
+- オーセンティケーターが名指しするクライアントが、チケットのものと同じ (名前とレルム。`KRB_AP_ERR_BADMATCH`、v0.8.0 から)
 
 **v0.5.0 から**、バイト単位でまったく同じリクエストが再び届いたとき (UDP
 で応答を失ったクライアント、または再送する攻撃者) は、再処理せずに以前の応答を
@@ -222,6 +231,8 @@ AS と TGS で `KDC_ERR_SVC_UNAVAILABLE` になり、`KDC_ERR_PREAUTH_FAILED` �
 - **不正な AS-REQ または TGS-REQ 一つでプロセスがクラッシュし得ました**。gokrb5 v8.4.4 の
   `unmarshalTicketsSequence` が、認証の前にパニックします。デコーダーをパニックさせるリクエストは破棄され、
   パニックとそのスタックがログに記録されます。
+  v0.8.1 から、その既知の形、つまり `[11] SEQUENCE` でない additional-tickets フィールドは、gokrb5 が
+  デコードする前に破棄されます。デコーダーのそれ以外のパニックは、依然としてリクエスト一つを失います。
 - ネットワークから来たプリンシパル名は、行を偽造できないようにログで引用符で囲まれます。
 - 依存関係は golang.org/x/net v0.62.0 (GO-2026-6866、GO-2026-6860) と go-authn/directory v0.16.1 です。
   GO-2026-5932 (`golang.org/x/crypto/openpgp`) は上流に修正がなく、呼び出されていません。
@@ -252,4 +263,4 @@ AS と TGS で `KDC_ERR_SVC_UNAVAILABLE` になり、`KDC_ERR_PREAUTH_FAILED` �
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.8.1](https://pkg.go.dev/github.com/go-authn/kdc@v0.8.1)

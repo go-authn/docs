@@ -14,10 +14,15 @@ keytab 所持有的服务。它运行在
 [kdcd]({{< relref "/libraries/kdcd.md" >}})。
 
 ```sh
-go get github.com/go-authn/kdc@v0.6.0
+go get github.com/go-authn/kdc@v0.8.1
 ```
 
-在 v0.6.0，其 `go.mod` 至少要求 `go-authn/directory` v0.17.0 和
+v0.7.0 至 v0.8.1：接受 Windows 客户端的 TGS-REQ（其 RSA-MD5 认证符校验和，MIT 同样接受）；票据带有标志和
+starttime；`Server.Mint`、`Server.MintHandler` 和 `Config.MintCallers` 通过双向认证的 TLS，为白名单中的调用方
+签发无密钥人员的 TGT，形式为 KRB-CRED，默认关闭；当认证符所指的客户端与票据不同时，TGS 回答
+`KRB_AP_ERR_BADMATCH`；additional-tickets 字段格式错误的请求会在 gokrb5 解码之前被丢弃。
+
+在 v0.8.1，其 `go.mod` 至少要求 `go-authn/directory` v0.17.0 和
 gokrb5 v8.4.4：这只是最低版本，因此要求 directory v0.17.0
 的程序会用 v0.18.0 构建，authnd v0.16.2 就是如此。
 接受的一半是 [krb5]({{< relref "/libraries/krb5.md" >}})，只
@@ -200,12 +205,15 @@ RFC 4120 §5.4.1：`till` 为 19700101000000Z 表示请求 KDC 策略
 - 认证符能用其会话密钥解密，且在 `MaxSkew` 之内；
 - 其校验和是针对本请求的正文（以其到达时的字节），并用
   会话密钥作密钥（缺失或无密钥时为 `KRB_AP_ERR_INAPP_CKSUM`，
-  错误时为 `KRB_AP_ERR_MODIFIED`）；
+  错误时为 `KRB_AP_ERR_MODIFIED`）。自 v0.7.0 起，Windows 客户端发送的 RSA-MD5（类型 7）校验和
+  （无密钥，但由会话密钥封装）会被接受，与 MIT 相同；CRC32、MD4 和 SHA-1 仍被拒绝；
 - TGT 未过结束时间（`KRB_AP_ERR_TKT_EXPIRED`），未早于其开始时间，
   也未被标记为无效（`KRB_AP_ERR_TKT_NYV`），且不允许时钟偏差：
   这些时间是此 KDC 的时钟写入的；
 - 客户端属于本域，且仍在目录中
-  （`KDC_ERR_C_PRINCIPAL_UNKNOWN`）。
+  （`KDC_ERR_C_PRINCIPAL_UNKNOWN`）；
+- 认证符所指的客户端与票据中的相同，名称和域都一致
+  （`KRB_AP_ERR_BADMATCH`，自 v0.8.0 起）。
 
 **自 v0.5.0 起**，逐字节完全相同的请求再次到达时（通过 UDP 丢失了应答的客户端，
 或重放者），会得到它已经得到过的应答，而不再重新处理：移植自 MIT KDC 的
@@ -224,7 +232,9 @@ AS 和 TGS 上都返回 `KDC_ERR_SVC_UNAVAILABLE`，即使密码正确也是如�
 - 无法读取的目录回答 `KDC_ERR_SVC_UNAVAILABLE`，不再回答 `KDC_ERR_C_PRINCIPAL_UNKNOWN`；
 - 开始时间在 `MaxSkew` 之内的未来的 TGT 会被接受（时钟跳变），而以前 TGT 的开始时间不允许任何偏差；
 - **一个格式错误的 AS-REQ 或 TGS-REQ 就能使进程崩溃**：gokrb5 v8.4.4 的 `unmarshalTicketsSequence`
-  在任何认证之前就会 panic。现在，使解码器 panic 的请求会被丢弃，panic 及其堆栈会被记录；
+  在任何认证之前就会 panic。现在，使解码器 panic 的请求会被丢弃，panic 及其堆栈会被记录。
+  自 v0.8.1 起，导致它的已知形态，即不是 `[11] SEQUENCE` 的 additional-tickets 字段，会在 gokrb5 解码之前被丢弃；
+  解码器的其他 panic 仍会使一个请求丢失；
 - 来自网络的主体名称在日志中加引号，使其无法伪造一行；
 - 依赖项为 golang.org/x/net v0.62.0（GO-2026-6866、GO-2026-6860）和 go-authn/directory v0.16.1。
   GO-2026-5932（`golang.org/x/crypto/openpgp`）在上游没有修复，且不会被调用。
@@ -257,4 +267,4 @@ AS-REQ 请求的服务、TGS 处伪造的服务票据，以及由验证器支撑
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.8.1](https://pkg.go.dev/github.com/go-authn/kdc@v0.8.1)
