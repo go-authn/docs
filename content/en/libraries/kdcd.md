@@ -30,23 +30,31 @@ Pure Go, `CGO_ENABLED=0`; releases carry a `SHA256SUMS` manifest and a build
 provenance attestation per binary. As a service: `packaging/systemd/` (unit and
 sysusers file; see [Running it](#running-it)).
 
-## What the directory must hold {#what-the-directory-must-hold}
+## No passwords {#no-passwords}
 
-A KDC decrypts the client's pre-authentication with that person's long-term key,
-so an **AS-REQ** can only be served for a person whose source holds a
-**password**: a `user` block with `password_file`, or a `users "sql"` block that
-returns one. A source that can only *verify* one (a bind against somebody
-else's LDAP, a hash) cannot serve an AS-REQ, however well it answers "is this
-the password". That is a property of Kerberos, explained in the
-[library's documentation](https://github.com/go-authn/kdc#readme) and on
-the [kdc page]({{< relref "/libraries/kdc.md#only-a-source-holding-the-password-can-back-a-realm" >}}).
+**There is no password path in `kdcd`, and none can be turned on** (removed in
+v0.2.0; v0.1.0 had `password_file`). A person has no long-term key here, so an
+**AS-REQ** for a person is answered `KDC_ERR_NULL_KEY` by design, whatever the
+client sends. A person gets a TGT only through the **mint listener**, from a
+caller that authenticated them with a passkey (go-authn/bridge).
 
-A passkey-era realm needs none of that. A person with **no password** (a
-`user "alice" {}` block, or a row of any `users` block) is in the directory, has
-no key, and is refused an AS-REQ with `KDC_ERR_NULL_KEY`. They get a TGT only
-through the **mint listener**, from a caller that authenticated them. `kdcd`
-adds no password path of its own: no flag, no environment variable, no inline
-value; `password_file` exists because the library's AS path needs it.
+- A directory says **who exists, and their groups**. Nothing a source carries
+  reaches the KDC but the name: every identity is rebuilt name-only before the
+  library sees it (`nameOnly`), so even a password a source did publish derives
+  no key. The load-time refusals below are there to say why, not to be the only
+  guard.
+- Services and `krbtgt/REALM` keep their keys in the keytab: **random keys**,
+  never derived from a password (generate them, for example, with 32 bytes from
+  `/dev/urandom` through your keytab tool).
+- `password_file`, a `users` query or attribute naming a password or NT-hash
+  column, a `bind_password_file`, a `bind_dn` (a simple bind is a password), or a
+  DSN holding a password: refused at load, naming the removal and the version.
+- An `ldap` source is read **anonymously**. A service bind by client certificate
+  or SASL EXTERNAL is not available yet because `go-authn/directory`'s
+  `hcldir.Block` has no field for it; until it has, `bind_dn` is refused.
+
+The library side is explained on the
+[kdc page]({{< relref "/libraries/kdc.md#only-a-source-holding-the-password-can-back-a-realm" >}}).
 
 ## Configuration {#configuration}
 
@@ -72,27 +80,22 @@ mint {                                    # optional: absent, there is no second
   callers        = ["https://login.poc.test"]   # URI subjectAltNames, matched exactly
 }
 
-# The directory: any number of these, in any mix.
-user "alice" {}                           # a person with no password: mint only
-user "bob" { password_file = "/etc/kdcd/bob.pw" }
+# The directory: who exists. Any number of these, in any mix.
+user "alice@poc.test" {}                  # a name; a TGT only through mint
 
 users "sql" {                             # go-authn/directory hcldir blocks
   driver   = "postgres"                   # sqlite, postgres or mysql
-  dsn_file = "/etc/kdcd/dsn"
-  users    = "select login, password from staff"
+  dsn_file = "/etc/kdcd/dsn"              # no password in it: a client certificate or a socket
+  users    = "select login as name from staff"
 }
-users "ldap" {
-  url                = "ldaps://ldap.example.org"
-  base_dn            = "ou=people,dc=example,dc=org"
-  bind_dn            = "cn=reader,dc=example,dc=org"
-  bind_password_file = "/etc/kdcd/bind.pw"
+users "ldap" {                            # read anonymously
+  url      = "ldaps://ldap.example.org"
+  base_dn  = "ou=people,dc=example,dc=org"
 }
 ```
 
-The `users` blocks are [go-authn/directory/hcldir](https://github.com/go-authn/directory)'s,
-unchanged. A source that can only verify a password, such as a bind against an
-LDAP server, gives mint callers a directory to check a principal against and
-cannot serve an AS-REQ.
+The `users` blocks are [go-authn/directory/hcldir](https://github.com/go-authn/directory)'s;
+kdcd refuses the parts of them that carry a password (see above).
 
 `kdcd check --config FILE` reads and builds everything the daemon would, opens
 the directory, listens on nothing, and prints what it serves: the realm,
@@ -104,7 +107,8 @@ people the directory holds, the mint callers. Exit status 0 and a last line
 
 | Refused | Why |
 | --- | --- |
-| a keytab, mint key, password file, DSN or bind password that **group or others can read or write**, or that belongs to a uid other than root or the daemon's | a copy another account can read forges tickets for every person of the realm |
+| a keytab, mint key or DSN file that **group or others can read or write**, or that belongs to a uid other than root or the daemon's | a copy another account can read forges tickets for every person of the realm |
+| **any password path**: `password_file` (even empty), `bind_password_file`, `bind_dn`, a `users`/`groups` query or attribute naming `password`, `passwd`, `nt_hash`, `userPassword`..., a DSN carrying a password | removed in v0.2.0: no person has a key here; the message says so. The query and DSN checks are best effort; `nameOnly` holds whatever they miss |
 | a secret written inline (`password = "..."` is not an argument) | secrets live in files, never in the configuration, a backup of it, or a log |
 | a configuration file that group or others can write | whoever writes it chooses the mint callers |
 | a keytab with no `krbtgt/REALM` key, or lacking a listed service, **in aes256-cts-hmac-sha1-96** (the one type the library issues) | it would start and fail at the first `kinit` |
@@ -114,8 +118,8 @@ people the directory holds, the mint callers. Exit status 0 and a last line
 
 Secret files are opened **once** and the open file is checked (regular file,
 mode, owner), so a check cannot be about one file and the read about another
-(the model is go-fileshare's `readKeytab`). `dsn_file` and `bind_password_file`
-are read by `hcldir` by name, after being checked the same way.
+(the model is go-fileshare's `readKeytab`). `dsn_file` is read by
+`hcldir` by name, after being checked the same way.
 
 ## The mint trust model {#the-mint-trust-model}
 
@@ -185,4 +189,4 @@ reload and no metrics endpoint yet.
 
 ## Reference {#reference}
 
-[github.com/go-authn/kdcd](https://github.com/go-authn/kdcd), v0.1.0.
+[github.com/go-authn/kdcd](https://github.com/go-authn/kdcd), v0.2.0.

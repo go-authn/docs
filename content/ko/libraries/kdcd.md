@@ -27,23 +27,27 @@ go install github.com/go-authn/kdcd/cmd/kdcd@latest
 순수 Go, `CGO_ENABLED=0`; 릴리스에는 바이너리마다 `SHA256SUMS` 매니페스트와 빌드 출처
 증명이 붙습니다. 서비스로: `packaging/systemd/`(유닛과 sysusers 파일. [실행하기](#running-it) 참조).
 
-## 디렉터리가 보유해야 하는 것 {#what-the-directory-must-hold}
+## 비밀번호 없음 {#no-passwords}
 
-KDC는 클라이언트의 사전 인증을 그 사람의 장기 키로 복호화하므로, **AS-REQ**는 소스가
-**비밀번호**를 보유한 사람에 대해서만 처리할 수 있습니다. 즉 `password_file`이 있는 `user`
-블록, 또는 비밀번호를 반환하는 `users "sql"` 블록입니다. 비밀번호를 *검증*만 할 수 있는
-소스(남의 LDAP에 대한 바인드, 해시)는 "이것이 비밀번호인가"에 아무리 잘 답해도 AS-REQ를
-처리할 수 없습니다. 이는 Kerberos의 특성이며,
-[라이브러리 문서](https://github.com/go-authn/kdc#readme)와
-[kdc 페이지]({{< relref "/libraries/kdc.md#only-a-source-holding-the-password-can-back-a-realm" >}})에
-설명되어 있습니다.
+**`kdcd`에는 비밀번호 경로가 없으며, 켤 수도 없습니다**(v0.2.0에서 제거됨. v0.1.0에는
+`password_file`이 있었습니다). 여기서 사람은 장기 키가 없으므로, 사람에 대한 **AS-REQ**는
+클라이언트가 무엇을 보내든 설계상 `KDC_ERR_NULL_KEY`로 응답됩니다. 사람은 패스키로 그를
+인증한 호출자(go-authn/bridge)로부터 **mint 리스너**를 통해서만 TGT를 얻습니다.
 
-패스키 시대의 렐름에는 그 어느 것도 필요 없습니다. **비밀번호가 없는** 사람(`user "alice" {}`
-블록, 또는 임의의 `users` 블록의 한 행)은 디렉터리에 있고 키가 없으며, AS-REQ는
-`KDC_ERR_NULL_KEY`로 거부됩니다. 그들은 그 사람을 인증한 호출자로부터 **mint 리스너**를
-통해서만 TGT를 얻습니다. `kdcd`는 자체 비밀번호 경로를 추가하지 않습니다: 플래그도,
-환경 변수도, 인라인 값도 없습니다. `password_file`이 있는 것은 라이브러리의 AS 경로가
-필요로 하기 때문입니다.
+- 디렉터리는 **누가 존재하는지, 그리고 그들의 그룹**을 말합니다. 소스가 가진 것 중 이름
+  외에는 KDC에 닿지 않습니다. 모든 ID는 라이브러리가 보기 전에 이름만으로 다시 구성되므로
+  (`nameOnly`), 소스가 실제로 공개한 비밀번호조차 키를 도출하지 않습니다. 아래의 로드 시
+  거부는 이유를 알려 주기 위한 것이며, 유일한 방어가 아닙니다.
+- 서비스와 `krbtgt/REALM`은 키를 keytab에 보관합니다: **무작위 키**이며, 비밀번호에서
+  도출되지 않습니다(예를 들어 keytab 도구로 `/dev/urandom`의 32바이트를 사용해 생성하십시오).
+- `password_file`, 비밀번호 또는 NT 해시 열을 지정하는 `users` 쿼리나 속성,
+  `bind_password_file`, `bind_dn`(단순 바인드는 비밀번호입니다), 비밀번호를 담은 DSN:
+  로드 시 제거 사실과 버전을 밝히며 거부됩니다.
+- `ldap` 소스는 **익명으로** 읽힙니다. 클라이언트 인증서나 SASL EXTERNAL에 의한 서비스
+  바인드는 `go-authn/directory`의 `hcldir.Block`에 그에 필요한 필드가 없어 아직 사용할 수
+  없습니다. 그것이 생길 때까지 `bind_dn`은 거부됩니다.
+
+라이브러리 쪽 설명은 [kdc 페이지]({{< relref "/libraries/kdc.md#only-a-source-holding-the-password-can-back-a-realm" >}})에 있습니다.
 
 ## 설정 {#configuration}
 
@@ -69,26 +73,22 @@ mint {                                    # optional: absent, there is no second
   callers        = ["https://login.poc.test"]   # URI subjectAltNames, matched exactly
 }
 
-# The directory: any number of these, in any mix.
-user "alice" {}                           # a person with no password: mint only
-user "bob" { password_file = "/etc/kdcd/bob.pw" }
+# The directory: who exists. Any number of these, in any mix.
+user "alice@poc.test" {}                  # a name; a TGT only through mint
 
 users "sql" {                             # go-authn/directory hcldir blocks
   driver   = "postgres"                   # sqlite, postgres or mysql
-  dsn_file = "/etc/kdcd/dsn"
-  users    = "select login, password from staff"
+  dsn_file = "/etc/kdcd/dsn"              # no password in it: a client certificate or a socket
+  users    = "select login as name from staff"
 }
-users "ldap" {
-  url                = "ldaps://ldap.example.org"
-  base_dn            = "ou=people,dc=example,dc=org"
-  bind_dn            = "cn=reader,dc=example,dc=org"
-  bind_password_file = "/etc/kdcd/bind.pw"
+users "ldap" {                            # read anonymously
+  url      = "ldaps://ldap.example.org"
+  base_dn  = "ou=people,dc=example,dc=org"
 }
 ```
 
-`users` 블록은 [go-authn/directory/hcldir](https://github.com/go-authn/directory)의 것을
-그대로 씁니다. LDAP 서버에 대한 바인드처럼 비밀번호를 검증만 할 수 있는 소스는 mint
-호출자가 프린시펄을 확인할 디렉터리를 제공하지만, AS-REQ는 처리할 수 없습니다.
+`users` 블록은 [go-authn/directory/hcldir](https://github.com/go-authn/directory)의 것입니다.
+kdcd는 그중 비밀번호를 담은 부분을 거부합니다(위 참조).
 
 `kdcd check --config FILE`은 데몬이 구성할 모든 것을 읽어 구성하고, 디렉터리를 열고,
 어디에서도 listen하지 않은 채, 제공할 내용을 출력합니다: 렐름, 주소, keytab의 프린시펄
@@ -99,7 +99,8 @@ users "ldap" {
 
 | 거부되는 것 | 이유 |
 | --- | --- |
-| **그룹이나 다른 사용자가 읽거나 쓸 수 있는**, 또는 root나 데몬이 아닌 uid가 소유한 keytab, mint 키, 비밀번호 파일, DSN, 바인드 비밀번호 | 다른 계정이 읽을 수 있는 사본은 렐름의 모든 사람에 대한 티켓을 위조한다 |
+| **그룹이나 다른 사용자가 읽거나 쓸 수 있는**, 또는 root나 데몬이 아닌 uid가 소유한 keytab, mint 키, DSN 파일 | 다른 계정이 읽을 수 있는 사본은 렐름의 모든 사람에 대한 티켓을 위조한다 |
+| **모든 비밀번호 경로**: `password_file`(비어 있어도), `bind_password_file`, `bind_dn`, `password`, `passwd`, `nt_hash`, `userPassword`... 를 지정하는 `users`/`groups` 쿼리나 속성, 비밀번호를 담은 DSN | v0.2.0에서 제거됨: 여기서는 누구도 키가 없다. 메시지가 그렇게 알려 준다. 쿼리와 DSN 검사는 최선의 노력이며, 놓친 것은 `nameOnly`가 막는다 |
 | 인라인으로 쓴 비밀(`password = "..."`는 인수가 아님) | 비밀은 파일에 있으며, 설정이나 그 백업, 로그에는 절대 두지 않는다 |
 | 그룹이나 다른 사용자가 쓸 수 있는 설정 파일 | 그것을 쓰는 사람이 mint 호출자를 정한다 |
 | `krbtgt/REALM` 키가 없거나 나열된 서비스가 빠진 keytab. **aes256-cts-hmac-sha1-96으로**(라이브러리가 발급하는 유일한 타입) | 시작은 되지만 첫 `kinit`에서 실패한다 |
@@ -109,7 +110,7 @@ users "ldap" {
 
 비밀 파일은 **한 번만** 열리고, 열린 파일을 검사합니다(일반 파일, 모드, 소유자). 따라서
 검사는 한 파일에 대해, 읽기는 다른 파일에 대해 이루어질 수 없습니다(모델은 go-fileshare의
-`readKeytab`). `dsn_file`과 `bind_password_file`은 같은 방식으로 검사한 뒤 `hcldir`가
+`readKeytab`). `dsn_file`은 같은 방식으로 검사한 뒤 `hcldir`가
 이름으로 읽습니다.
 
 ## mint의 신뢰 모델 {#the-mint-trust-model}
@@ -176,4 +177,4 @@ aes256-cts-hmac-sha1-96 이외의 모든 암호화 타입은 라이브러리 자
 
 ## 참조 {#reference}
 
-[github.com/go-authn/kdcd](https://github.com/go-authn/kdcd), v0.1.0.
+[github.com/go-authn/kdcd](https://github.com/go-authn/kdcd), v0.2.0.

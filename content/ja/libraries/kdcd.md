@@ -29,22 +29,29 @@ go install github.com/go-authn/kdcd/cmd/kdcd@latest
 ビルドの来歴証明が付きます。サービスとして: `packaging/systemd/`(ユニットと sysusers
 ファイル。[実行する](#running-it)を参照)。
 
-## ディレクトリが保持すべきもの {#what-the-directory-must-hold}
+## パスワードなし {#no-passwords}
 
-KDC はクライアントの事前認証をその人の長期鍵で復号するので、**AS-REQ** に応答できるのは、
-ソースが**パスワード**を保持する人だけです。つまり `password_file` を持つ `user` ブロック、
-またはパスワードを返す `users "sql"` ブロックです。パスワードを*検証*することしかできない
-ソース(他人の LDAP へのバインド、ハッシュ)は、「これはパスワードか」にどれほどうまく
-答えても、AS-REQ には応答できません。これは Kerberos の性質であり、
-[ライブラリのドキュメント](https://github.com/go-authn/kdc#readme)と
-[kdc のページ]({{< relref "/libraries/kdc.md#only-a-source-holding-the-password-can-back-a-realm" >}})で説明しています。
+**`kdcd` にはパスワード経路がなく、有効にすることもできません**(v0.2.0 で削除。
+v0.1.0 には `password_file` がありました)。ここでは人は長期鍵を持たないので、人に対する
+**AS-REQ** は、クライアントが何を送っても、設計上 `KDC_ERR_NULL_KEY` で応答されます。
+人が TGT を得られるのは、パスキー(go-authn/bridge)でその人を認証した呼び出し元からの
+**mint リスナー**経由だけです。
 
-パスキー時代のレルムには、そのどれも要りません。**パスワードのない**人(`user "alice" {}`
-ブロック、または任意の `users` ブロックの一行)はディレクトリにいて、鍵を持たず、AS-REQ は
-`KDC_ERR_NULL_KEY` で拒否されます。TGT を得られるのは、その人を認証した呼び出し元からの
-**mint リスナー**経由だけです。`kdcd` は独自のパスワード経路を加えません。フラグも、
-環境変数も、インライン値もありません。`password_file` があるのは、ライブラリの AS 経路が
-それを必要とするからです。
+- ディレクトリは**誰が存在するか、そしてそのグループ**を述べます。ソースが運ぶもののうち、
+  名前以外は KDC に届きません。すべての ID は、ライブラリが目にする前に名前だけで再構築
+  されるので(`nameOnly`)、ソースが公開したパスワードでさえ鍵を導出しません。以下のロード時の
+  拒否は理由を告げるためにあり、唯一の防御ではありません。
+- サービスと `krbtgt/REALM` は鍵をキータブに保持します。**ランダムな鍵**で、パスワードから
+  導出されることは決してありません(たとえば、キータブのツールで `/dev/urandom` の 32 バイトから
+  生成してください)。
+- `password_file`、パスワードまたは NT ハッシュの列を指す `users` のクエリや属性、
+  `bind_password_file`、`bind_dn`(単純バインドはパスワードです)、パスワードを含む DSN:
+  ロード時に、削除とバージョンを示して拒否されます。
+- `ldap` ソースは**匿名で**読み取られます。クライアント証明書または SASL EXTERNAL による
+  サービスバインドは、`go-authn/directory` の `hcldir.Block` にそのためのフィールドが
+  ないため、まだ使えません。それができるまで、`bind_dn` は拒否されます。
+
+ライブラリ側の説明は [kdc のページ]({{< relref "/libraries/kdc.md#only-a-source-holding-the-password-can-back-a-realm" >}})にあります。
 
 ## 設定 {#configuration}
 
@@ -70,27 +77,22 @@ mint {                                    # optional: absent, there is no second
   callers        = ["https://login.poc.test"]   # URI subjectAltNames, matched exactly
 }
 
-# The directory: any number of these, in any mix.
-user "alice" {}                           # a person with no password: mint only
-user "bob" { password_file = "/etc/kdcd/bob.pw" }
+# The directory: who exists. Any number of these, in any mix.
+user "alice@poc.test" {}                  # a name; a TGT only through mint
 
 users "sql" {                             # go-authn/directory hcldir blocks
   driver   = "postgres"                   # sqlite, postgres or mysql
-  dsn_file = "/etc/kdcd/dsn"
-  users    = "select login, password from staff"
+  dsn_file = "/etc/kdcd/dsn"              # no password in it: a client certificate or a socket
+  users    = "select login as name from staff"
 }
-users "ldap" {
-  url                = "ldaps://ldap.example.org"
-  base_dn            = "ou=people,dc=example,dc=org"
-  bind_dn            = "cn=reader,dc=example,dc=org"
-  bind_password_file = "/etc/kdcd/bind.pw"
+users "ldap" {                            # read anonymously
+  url      = "ldaps://ldap.example.org"
+  base_dn  = "ou=people,dc=example,dc=org"
 }
 ```
 
-`users` ブロックは [go-authn/directory/hcldir](https://github.com/go-authn/directory) のものを
-そのまま使います。LDAP サーバーへのバインドのように、パスワードを検証することしかできない
-ソースは、mint の呼び出し元がプリンシパルを照合するためのディレクトリを提供しますが、
-AS-REQ には応答できません。
+`users` ブロックは [go-authn/directory/hcldir](https://github.com/go-authn/directory) のものです。
+kdcd は、そのうちパスワードを運ぶ部分を拒否します(上を参照)。
 
 `kdcd check --config FILE` は、デーモンが構築するものをすべて読み込んで構築し、ディレクトリを
 開き、どこにも listen せずに、提供する内容を表示します。レルム、アドレス、キータブの
@@ -101,7 +103,8 @@ mint の呼び出し元です。終了ステータス 0 で最後の行が `ok`�
 
 | 拒否されるもの | 理由 |
 | --- | --- |
-| **グループまたは他者が読み書きできる**、あるいは root かデーモン以外の uid が所有するキータブ、mint 鍵、パスワードファイル、DSN、バインドパスワード | 他のアカウントが読めるコピーは、レルムのすべての人のチケットを偽造する |
+| **グループまたは他者が読み書きできる**、あるいは root かデーモン以外の uid が所有するキータブ、mint 鍵、DSN ファイル | 他のアカウントが読めるコピーは、レルムのすべての人のチケットを偽造する |
+| **あらゆるパスワード経路**: `password_file`(空でも)、`bind_password_file`、`bind_dn`、`password`、`passwd`、`nt_hash`、`userPassword`... を指す `users`/`groups` のクエリや属性、パスワードを含む DSN | v0.2.0 で削除: ここでは誰も鍵を持たない。メッセージがそう告げる。クエリと DSN の検査はベストエフォートで、取りこぼしは `nameOnly` が受け止める |
 | インラインで書かれた秘密(`password = "..."` は引数ではない) | 秘密はファイルにあり、設定にも、そのバックアップにも、ログにも置かない |
 | グループまたは他者が書き込める設定ファイル | それを書く人が mint の呼び出し元を選ぶ |
 | `krbtgt/REALM` の鍵がない、または列挙したサービスが欠けているキータブ。**aes256-cts-hmac-sha1-96 で**(ライブラリが発行する唯一のタイプ) | 起動はしても、最初の `kinit` で失敗する |
@@ -111,8 +114,8 @@ mint の呼び出し元です。終了ステータス 0 で最後の行が `ok`�
 
 秘密ファイルは**一度だけ**開かれ、開いたファイルが検査されます(通常ファイル、モード、
 所有者)。したがって検査が一つのファイルについてで、読み取りが別のファイルについて、
-ということは起こりません(手本は go-fileshare の `readKeytab`)。`dsn_file` と
-`bind_password_file` は、同じ検査を済ませた後に `hcldir` が名前で読みます。
+ということは起こりません(手本は go-fileshare の `readKeytab`)。`dsn_file` は、
+同じ検査を済ませた後に `hcldir` が名前で読みます。
 
 ## mint の信頼モデル {#the-mint-trust-model}
 
@@ -177,4 +180,4 @@ aes256-cts-hmac-sha1-96 以外のあらゆる暗号化タイプは、ライブ�
 
 ## リファレンス {#reference}
 
-[github.com/go-authn/kdcd](https://github.com/go-authn/kdcd)、v0.1.0。
+[github.com/go-authn/kdcd](https://github.com/go-authn/kdcd)、v0.2.0。
