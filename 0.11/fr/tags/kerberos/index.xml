@@ -295,7 +295,7 @@ présente, répond par l&amp;rsquo;AP-REP qui prouve que le service est authenti
 signe, vérifie, scelle et ouvre des messages sous la clé que cet échange
 a établie.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/krb5@v0.3.3&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/krb5@v0.4.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copier le code"
@@ -307,12 +307,10 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;La v0.3.3 ne change ni l&amp;rsquo;API ni le code : elle relève les dépendances indirectes
-golang.org/x/net à v0.62.0, golang.org/x/crypto à v0.58.0 et
-github.com/hashicorp/go-uuid à v1.0.4. &lt;code&gt;govulncheck&lt;/code&gt; listait 46 résultats dans des
-modules requis et non appelés ; il en liste 1 maintenant, GO-2026-5932(&lt;code&gt;golang.org/x/crypto/openpgp&lt;/code&gt;), qui n&amp;rsquo;a pas de version corrigée et que rien dans
-go-authn n&amp;rsquo;importe. Les résultats atteignables depuis le code étaient 0 avant et
-sont 0 après.&lt;/p&gt;
+&lt;p&gt;La v0.4.0 ajoute &lt;code&gt;(*Context).SessionKey()&lt;/code&gt; et &lt;code&gt;SessionKeyType()&lt;/code&gt;, qui donnent la
+clé du contexte et son type de chiffrement (SMB en dérive sa clé de session), et
+accepte les jetons sous l&amp;rsquo;OID de mécanisme krb5 de Microsoft, 1.2.840.48018.1.2.2,en plus du standard 1.2.840.113554.1.2.2. L&amp;rsquo;AP-REP est encadré sous l&amp;rsquo;OID qu&amp;rsquo;a
+utilisé le client.&lt;/p&gt;
 &lt;p&gt;Il ne parle jamais à un KDC et ne délivre jamais de ticket, donc de qui il accepte les tickets
 est la décision de quelqu&amp;rsquo;un d&amp;rsquo;autre. La moitié qui délivre est&lt;a href="https://go-authn.github.io/docs/0.11/fr/libraries/kdc/"&gt;kdc&lt;/a&gt;, et ce module n&amp;rsquo;en dépend
 pas — voir &lt;a href="https://go-authn.github.io/docs/0.11/fr/libraries/#why-they-are-separate-modules"&gt;pourquoi ce sont des modules distincts&lt;/a&gt;.Le déchiffrement des tickets est celui de &lt;a href="https://github.com/jcmturner/gokrb5" target="_blank" rel="noopener"&gt;gokrb5&lt;/a&gt;.&lt;/p&gt;
@@ -387,9 +385,13 @@ prend ; &lt;code&gt;krb5.Load&lt;/code&gt; lit plutôt un keytab depuis un chemi
 &lt;p&gt;Après &lt;code&gt;Accept&lt;/code&gt;, un &lt;code&gt;*Context&lt;/code&gt; dit qui : &lt;code&gt;Principal()&lt;/code&gt; (&lt;code&gt;alice@EXAMPLE.ORG&lt;/code&gt;), ou&lt;code&gt;User()&lt;/code&gt; et &lt;code&gt;Realm()&lt;/code&gt; séparément. Faire correspondre un principal à un compte local est la
 politique de l&amp;rsquo;appelant : &lt;code&gt;alice@EXAMPLE.ORG&lt;/code&gt; et &lt;code&gt;alice@PARTNER.ORG&lt;/code&gt; répondent tous deux à« alice ». &lt;code&gt;Expires()&lt;/code&gt; est le moment où le ticket qui le sous-tend se termine, au-delà duquel un serveur
 qui maintient une connexion de longue durée devrait cesser de l&amp;rsquo;honorer. &lt;code&gt;MIC&lt;/code&gt;/&lt;code&gt;VerifyMIC&lt;/code&gt;
-et &lt;code&gt;Wrap&lt;/code&gt;/&lt;code&gt;Unwrap&lt;/code&gt; signent ; &lt;code&gt;Seal&lt;/code&gt;/&lt;code&gt;Unseal&lt;/code&gt; ajoutent la confidentialité (&lt;code&gt;sec=krb5p&lt;/code&gt;).Un &lt;code&gt;Context&lt;/code&gt; n&amp;rsquo;est pas sûr en usage concurrent ; un &lt;code&gt;Acceptor&lt;/code&gt; l&amp;rsquo;est.&lt;/p&gt;
+et &lt;code&gt;Wrap&lt;/code&gt;/&lt;code&gt;Unwrap&lt;/code&gt; signent ; &lt;code&gt;Seal&lt;/code&gt;/&lt;code&gt;Unseal&lt;/code&gt; ajoutent la confidentialité (&lt;code&gt;sec=krb5p&lt;/code&gt;).&lt;code&gt;SessionKey()&lt;/code&gt; renvoie une copie de la clé du contexte (la sous-clé de
+l&amp;rsquo;authentifiant, sinon la clé de session du ticket ; RFC 4121 §4.3) et&lt;code&gt;SessionKeyType()&lt;/code&gt; son type de chiffrement ; SMB en prend les 16 premiers octets
+comme clé de session ([MS-SMB2] 3.3.5.5.3). C&amp;rsquo;est un secret : ne la journalisez jamais.Un &lt;code&gt;Context&lt;/code&gt; n&amp;rsquo;est pas sûr en usage concurrent ; un &lt;code&gt;Acceptor&lt;/code&gt; l&amp;rsquo;est.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;Ce qu&amp;rsquo;il refuse, et pourquoi&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
-&lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Un ticket que ce service n&amp;rsquo;acceptera pas&lt;/strong&gt; — mauvais service, mauvaise clé,expiré, rejoué, une horloge au-delà de &lt;code&gt;ClockSkew&lt;/code&gt; (cinq minutes par défaut, comme chez le MIT)— est &lt;code&gt;ErrRejected&lt;/code&gt;. Des octets qui ne sont pas un jeton GSS-API krb5 sont&lt;code&gt;ErrNotAToken&lt;/code&gt;, et un jeton qui n&amp;rsquo;est pas un AP-REQ est &lt;code&gt;ErrNotAPReq&lt;/code&gt;. Les erreurs
+&lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Un ticket que ce service n&amp;rsquo;acceptera pas&lt;/strong&gt; — mauvais service, mauvaise clé,expiré, rejoué, une horloge au-delà de &lt;code&gt;ClockSkew&lt;/code&gt; (cinq minutes par défaut, comme chez le MIT)— est &lt;code&gt;ErrRejected&lt;/code&gt;. Des octets qui ne sont pas un jeton GSS-API krb5 sont&lt;code&gt;ErrNotAToken&lt;/code&gt;, et un jeton qui n&amp;rsquo;est pas un AP-REQ est &lt;code&gt;ErrNotAPReq&lt;/code&gt;. Les jetons sont acceptés sous les deux OID de mécanisme krb5,1.2.840.113554.1.2.2 et celui de Microsoft, 1.2.840.48018.1.2.2 (que le SPNEGO de
+Windows propose en premier), et l&amp;rsquo;AP-REP est encadré sous l&amp;rsquo;OID qu&amp;rsquo;a utilisé le
+client, comme le fait MIT ; un jeton sous tout autre OID de mécanisme est &lt;code&gt;ErrNotAToken&lt;/code&gt;. Les erreurs
 sont délibérément grossières : un client apprend que son ticket a été refusé, jamais
 quelle vérification l&amp;rsquo;a refusé. Une erreur signifie aucun contexte, et le jeton renvoyé est
 vide.&lt;/p&gt;
@@ -426,7 +428,7 @@ n&amp;rsquo;est pas acceptée. &lt;code&gt;TestMITClientSealed&lt;/code&gt; fait
 &lt;p&gt;Les voies macOS, Windows et inter-architectures n&amp;rsquo;ont pas de royaume, et là le
 juge est sauté. Le plancher de la voie de couverture est de 90 %.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Référence&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/krb5@v0.3.3&lt;/a&gt;&lt;/p&gt;</description></item><item><title>kdc — délivrer des tickets Kerberos à partir d'un annuaire</title><link>https://go-authn.github.io/docs/0.11/fr/libraries/kdc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/fr/libraries/kdc/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/krb5@v0.4.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/krb5@v0.4.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>kdc — délivrer des tickets Kerberos à partir d'un annuaire</title><link>https://go-authn.github.io/docs/0.11/fr/libraries/kdc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/fr/libraries/kdc/</guid><description>
 &lt;p&gt;&lt;strong&gt;Comment un royaume délivre-t-il des tickets à partir d&amp;rsquo;un annuaire ?&lt;/strong&gt; AS-REQ et TGS-REQ, sur
 UDP et TCP, avec la pré-authentification par horodatage chiffré exigée, pour les
 personnes qu&amp;rsquo;un &lt;a href="https://go-authn.github.io/docs/0.11/fr/libraries/directory/"&gt;annuaire&lt;/a&gt; connaît et les
