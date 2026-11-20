@@ -9,7 +9,7 @@ tags: [라이브러리, kerberos, 디렉터리]
 **렐름은 디렉터리에서 어떻게 티켓을 발급하는가?** [디렉터리]({{< relref "/libraries/directory.md" >}})가
 아는 사람들과 keytab이 보유한 서비스에 대해, UDP와 TCP로 AS-REQ와 TGS-REQ를 처리하며
 암호화된 타임스탬프 사전 인증이 필수입니다. [authnd]({{< relref "/authnd/_index.md" >}}) 아래에서
-실행됩니다.
+실행됩니다. 이를 기반으로 만든 독립 실행형 데몬이 [kdcd]({{< relref "/libraries/kdcd.md" >}})입니다.
 
 ```sh
 go get github.com/go-authn/kdc@v0.6.0
