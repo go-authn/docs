@@ -12,15 +12,13 @@ cliente, responde con el AP-REP que prueba que el servicio es auténtico, y desp
 firma, verifica, sella y abre mensajes con la clave que estableció ese intercambio.
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.3
+go get github.com/go-authn/krb5@v0.4.0
 ```
 
-La v0.3.3 no cambia ni la API ni el código: sube las dependencias indirectas
-golang.org/x/net a v0.62.0, golang.org/x/crypto a v0.58.0 y
-github.com/hashicorp/go-uuid a v1.0.4. `govulncheck` listaba 46 hallazgos en módulos que
-requiere y no llama; ahora lista 1, GO-2026-5932 (`golang.org/x/crypto/openpgp`), que no
-tiene versión corregida y que nada en go-authn importa. Los hallazgos alcanzables desde el
-código eran 0 antes y son 0 después.
+La v0.4.0 añade `(*Context).SessionKey()` y `SessionKeyType()`, que dan la clave
+del contexto y su tipo de cifrado (SMB deriva de ella su clave de sesión), y acepta
+tokens bajo el OID de mecanismo krb5 de Microsoft, 1.2.840.48018.1.2.2, además del
+estándar 1.2.840.113554.1.2.2. El AP-REP se enmarca bajo el OID que usó el cliente.
 
 Nunca habla con un KDC y nunca emite un ticket, así que de quién acepta tickets es una
 decisión de otro. La mitad emisora es [kdc]({{< relref "/libraries/kdc.md" >}}), y
@@ -89,7 +87,11 @@ política del llamante: `alice@EXAMPLE.ORG` y `alice@PARTNER.ORG` responden ambo
 «alice». `Expires()` es cuándo termina el ticket que hay detrás, momento a partir del
 cual un servidor que mantiene una conexión de larga duración debería dejar de
 respetarlo. `MIC`/`VerifyMIC` y `Wrap`/`Unwrap` firman; `Seal`/`Unseal` añaden
-confidencialidad (`sec=krb5p`). Un `Context` no es seguro para uso concurrente; un
+confidencialidad (`sec=krb5p`). `SessionKey()` devuelve una copia de la clave del contexto (la subclave del
+autenticador o, si no hay, la clave de sesión del ticket; RFC 4121 §4.3) y
+`SessionKeyType()` su tipo de cifrado; SMB toma sus primeros 16 bytes como clave de
+sesión ([MS-SMB2] 3.3.5.5.3). Es un secreto: nunca la registre en un log.
+Un `Context` no es seguro para uso concurrente; un
 `Acceptor` sí.
 
 ## Lo que rechaza, y por qué {#what-it-refuses-and-why}
@@ -97,7 +99,10 @@ confidencialidad (`sec=krb5p`). Un `Context` no es seguro para uso concurrente; 
 **Un ticket que este servicio no acepta** —servicio equivocado, clave equivocada,
 caducado, reproducido, un reloj más allá de `ClockSkew` (cinco minutos por defecto,
 también en MIT)— es `ErrRejected`. Los bytes que no son un token GSS-API krb5 son
-`ErrNotAToken`, y un token que no es un AP-REQ es `ErrNotAPReq`. Los errores son
+`ErrNotAToken`, y un token que no es un AP-REQ es `ErrNotAPReq`. Se aceptan tokens bajo ambos OID de mecanismo krb5,
+1.2.840.113554.1.2.2 y el de Microsoft, 1.2.840.48018.1.2.2 (que el SPNEGO de
+Windows ofrece primero), y el AP-REP se enmarca bajo el OID que usó el cliente,
+como hace MIT; un token bajo cualquier otro OID de mecanismo es `ErrNotAToken`. Los errores son
 deliberadamente gruesos: un cliente sabe que su ticket se rechazó, nunca qué
 comprobación lo rechazó. Un error significa que no hay contexto, y el token devuelto
 está vacío.
@@ -146,4 +151,4 @@ se omite. El mínimo de la línea de cobertura es el 90%.
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.3](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3)
+[pkg.go.dev/github.com/go-authn/krb5@v0.4.0](https://pkg.go.dev/github.com/go-authn/krb5@v0.4.0)

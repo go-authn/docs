@@ -12,13 +12,12 @@ tags: [라이브러리, kerberos]
 검증하고, 봉인하고, 엽니다.
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.3
+go get github.com/go-authn/krb5@v0.4.0
 ```
 
-v0.3.3은 API도 코드도 바꾸지 않습니다. 간접 의존성 golang.org/x/net을 v0.62.0, golang.org/x/crypto를 v0.58.0,
-github.com/hashicorp/go-uuid를 v1.0.4로 올립니다. `govulncheck`는 요구하지만 호출하지 않는 모듈에서 46건을 보고했으나
-지금은 1건, GO-2026-5932(`golang.org/x/crypto/openpgp`)뿐입니다. 이것은 수정된 버전이 없고 go-authn의 어느 것도
-가져오지 않습니다. 코드에서 도달 가능한 결과는 전후 모두 0입니다.
+v0.4.0은 `(*Context).SessionKey()`와 `SessionKeyType()`을 추가합니다. 이들은 컨텍스트 키와 그 암호화 유형을
+돌려주며(SMB는 여기에서 세션 키를 유도합니다), 표준 1.2.840.113554.1.2.2뿐 아니라 Microsoft의 krb5 메커니즘 OID
+1.2.840.48018.1.2.2 아래의 토큰도 받아들입니다. AP-REP은 클라이언트가 사용한 OID 아래에서 프레이밍됩니다.
 
 KDC와 통신하지 않으며 티켓을 발급하지 않으므로, 누구의 티켓을 받아들일지는 다른 쪽의
 결정입니다. 발급 측 절반은 [kdc]({{< relref "/libraries/kdc.md" >}})이며 이 모듈은
@@ -85,14 +84,18 @@ true krb5: keytab "/nonexistent/krb5.keytab": open /nonexistent/krb5.keytab: no 
 정책입니다. `alice@EXAMPLE.ORG`와 `alice@PARTNER.ORG`는 모두 "alice"에 응답합니다.
 `Expires()`는 그 뒤의 티켓이 끝나는 시각이며, 오래 지속되는 연결을 가진 서버는 그
 이후에는 이를 인정하지 않아야 합니다. `MIC`/`VerifyMIC`와 `Wrap`/`Unwrap`은 서명하고,
-`Seal`/`Unseal`은 기밀성을 더합니다(`sec=krb5p`). `Context`는 동시 사용에 안전하지
+`Seal`/`Unseal`은 기밀성을 더합니다(`sec=krb5p`). `SessionKey()`는 컨텍스트 키(authenticator의 서브키, 없으면 티켓의 세션 키; RFC 4121 §4.3)의 사본을 돌려주고
+`SessionKeyType()`은 그 암호화 유형을 돌려줍니다. SMB는 그 처음 16바이트를 세션 키로 사용합니다
+([MS-SMB2] 3.3.5.5.3). 이것은 비밀이므로 절대 로그에 남기지 마십시오. `Context`는 동시 사용에 안전하지
 않으며, `Acceptor`는 안전합니다.
 
 ## 거부하는 것과 그 이유 {#what-it-refuses-and-why}
 
 **이 서비스가 받아들이지 않을 티켓** — 잘못된 서비스, 잘못된 키, 만료, 재생, `ClockSkew`
 (기본값 5분, MIT도 같음)를 넘는 시계 — 은 `ErrRejected`입니다. GSS-API krb5 토큰이
-아닌 바이트는 `ErrNotAToken`이고, AP-REQ가 아닌 토큰은 `ErrNotAPReq`입니다. 오류는
+아닌 바이트는 `ErrNotAToken`이고, AP-REQ가 아닌 토큰은 `ErrNotAPReq`입니다. 토큰은 krb5의 두 메커니즘 OID, 1.2.840.113554.1.2.2와 Microsoft의
+1.2.840.48018.1.2.2(Windows SPNEGO가 먼저 제시합니다) 어느 쪽 아래에서든 받아들여지며, AP-REP은 MIT와 같이
+클라이언트가 사용한 OID 아래에서 프레이밍됩니다. 그 밖의 메커니즘 OID의 토큰은 `ErrNotAToken`입니다. 오류는
 의도적으로 거칠게 나뉩니다. 클라이언트는 자신의 티켓이 거부되었다는 것만 알 뿐 어떤
 검사가 거부했는지는 알지 못합니다. 오류는 컨텍스트가 없다는 뜻이며 반환된 토큰은
 비어 있습니다.
@@ -134,4 +137,4 @@ macOS, Windows, 크로스 아키텍처 레인에는 렐름이 없으며, 거기�
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.3](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3)
+[pkg.go.dev/github.com/go-authn/krb5@v0.4.0](https://pkg.go.dev/github.com/go-authn/krb5@v0.4.0)

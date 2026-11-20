@@ -11,13 +11,12 @@ tags: [ライブラリ, kerberos]
 AP-REP で応答し、その交換が確立した鍵の下でメッセージの署名、検証、封印、開封を行います。
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.3
+go get github.com/go-authn/krb5@v0.4.0
 ```
 
-v0.3.3 は API もコードも変えません。間接依存の golang.org/x/net を v0.62.0、golang.org/x/crypto を v0.58.0、
-github.com/hashicorp/go-uuid を v1.0.4 に上げます。`govulncheck` は、必要としていても呼び出していないモジュールで 46 件を
-報告していましたが、今は 1 件、GO-2026-5932 (`golang.org/x/crypto/openpgp`) だけです。これには修正版がなく、go-authn の
-どれもインポートしていません。コードから到達できる検出は、前も後も 0 です。
+v0.4.0 は `(*Context).SessionKey()` と `SessionKeyType()` を追加します。これらはコンテキスト鍵とその暗号化タイプを
+返し (SMB はそこからセッション鍵を導きます)、標準の 1.2.840.113554.1.2.2 に加えて Microsoft の krb5 メカニズム OID
+1.2.840.48018.1.2.2 のトークンも受け入れます。AP-REP はクライアントが使った OID の下でフレーム化されます。
 
 KDC とは決して話さず、チケットを発行することもないので、誰のチケットを受け入れるかは他の誰かの
 判断です。発行側は [kdc]({{< relref "/libraries/kdc.md" >}}) で、このモジュールはそれに依存しません。
@@ -83,13 +82,17 @@ true krb5: keytab "/nonexistent/krb5.keytab": open /nonexistent/krb5.keytab: no 
 ポリシーです。`alice@EXAMPLE.ORG` と `alice@PARTNER.ORG` はどちらも "alice" に答えます。
 `Expires()` はその背後のチケットが終わる時刻で、長寿命の接続を保持するサーバーは、それを過ぎたら
 尊重を止めるべきです。`MIC`/`VerifyMIC` と `Wrap`/`Unwrap` は署名を行い、`Seal`/`Unseal` は機密性を
-加えます (`sec=krb5p`)。`Context` は並行利用に対して安全ではなく、`Acceptor` は安全です。
+加えます (`sec=krb5p`)。`SessionKey()` はコンテキスト鍵 (オーセンティケーターのサブキー、なければチケットのセッション鍵。RFC 4121 §4.3) の
+コピーを返し、`SessionKeyType()` はその暗号化タイプを返します。SMB はその先頭 16 バイトをセッション鍵として使います
+([MS-SMB2] 3.3.5.5.3)。これは秘密です。決してログに出力しないでください。`Context` は並行利用に対して安全ではなく、`Acceptor` は安全です。
 
 ## 拒否するものと、その理由 {#what-it-refuses-and-why}
 
 **このサービスが受け入れないチケット** — 間違ったサービス、間違った鍵、期限切れ、リプレイ、
 `ClockSkew` (既定は五分で、MIT と同じ) を超える時計 — は `ErrRejected` です。GSS-API krb5 トークンで
-ないバイト列は `ErrNotAToken`、AP-REQ でないトークンは `ErrNotAPReq` です。エラーは意図的に粗くして
+ないバイト列は `ErrNotAToken`、AP-REQ でないトークンは `ErrNotAPReq` です。トークンは krb5 の二つのメカニズム OID、1.2.840.113554.1.2.2 と Microsoft の
+1.2.840.48018.1.2.2 (Windows の SPNEGO が最初に提示します) のどちらでも受け入れられ、AP-REP は MIT と同様に
+クライアントが使った OID の下でフレーム化されます。それ以外のメカニズム OID のトークンは `ErrNotAToken` です。エラーは意図的に粗くして
 あります。クライアントはチケットが拒否されたことを知るだけで、どのチェックが拒否したかは決して
 知りません。エラーはコンテキストがないことを意味し、返されるトークンは空です。
 
@@ -130,4 +133,4 @@ macOS、Windows、クロスアーキテクチャのレーンにはレルムが�
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.3](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3)
+[pkg.go.dev/github.com/go-authn/krb5@v0.4.0](https://pkg.go.dev/github.com/go-authn/krb5@v0.4.0)

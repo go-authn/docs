@@ -12,13 +12,12 @@ tags: [库, kerberos]
 签名、验证、加密和解密消息。
 
 ```sh
-go get github.com/go-authn/krb5@v0.3.3
+go get github.com/go-authn/krb5@v0.4.0
 ```
 
-v0.3.3 不改变 API，也不改变代码：它把间接依赖 golang.org/x/net 提升到 v0.62.0，golang.org/x/crypto 提升到 v0.58.0，
-github.com/hashicorp/go-uuid 提升到 v1.0.4。`govulncheck` 过去在它所需要但不调用的模块中列出 46 项发现，现在列出 1 项，
-GO-2026-5932（`golang.org/x/crypto/openpgp`），它没有修复版本，且 go-authn 中没有任何东西导入它。从代码可达的发现，
-之前是 0，之后也是 0。
+v0.4.0 增加了 `(*Context).SessionKey()` 和 `SessionKeyType()`，它们给出上下文密钥及其加密类型
+（SMB 由它派生会话密钥），并且除标准的 1.2.840.113554.1.2.2 之外，也接受 Microsoft 的 krb5 机制 OID
+1.2.840.48018.1.2.2 下的令牌。AP-REP 按客户端所用的 OID 封装。
 
 它从不与 KDC 通信，也从不签发票据，因此接受谁的票据是
 别人的决定。签发的一半是
@@ -86,14 +85,18 @@ true krb5: keytab "/nonexistent/krb5.keytab": open /nonexistent/krb5.keytab: no 
 “alice”。`Expires()` 是其背后票据的结束时间，过了这个时间，
 持有长连接的服务器就应当不再承认它。`MIC`/`VerifyMIC`
 和 `Wrap`/`Unwrap` 进行签名；`Seal`/`Unseal` 增加机密性（`sec=krb5p`）。
-`Context` 不是并发安全的；`Acceptor` 是。
+`SessionKey()` 返回上下文密钥（authenticator 的子密钥，否则为票据的会话密钥；RFC 4121 §4.3）的副本，
+`SessionKeyType()` 返回其加密类型；SMB 取它的前 16 个字节作为会话密钥（[MS-SMB2] 3.3.5.5.3）。
+它是机密：绝不要记入日志。`Context` 不是并发安全的；`Acceptor` 是。
 
 ## 它拒绝什么，以及原因 {#what-it-refuses-and-why}
 
 **此服务不会接受的票据**——服务错误、密钥错误、
 已过期、被重放、时钟超出 `ClockSkew`（默认五分钟，与 MIT 相同）——
 是 `ErrRejected`。不是 GSS-API krb5 令牌的字节是
-`ErrNotAToken`，不是 AP-REQ 的令牌是 `ErrNotAPReq`。这些错误
+`ErrNotAToken`，不是 AP-REQ 的令牌是 `ErrNotAPReq`。令牌在两个 krb5 机制 OID 下均被接受，即 1.2.840.113554.1.2.2 和 Microsoft 的
+1.2.840.48018.1.2.2（Windows 的 SPNEGO 首先提供它），AP-REP 如 MIT 一样按客户端所用的 OID 封装；
+任何其他机制 OID 下的令牌都是 `ErrNotAToken`。这些错误
 有意保持粗略：客户端只会得知其票据被拒绝，而绝不会知道
 是哪一项检查拒绝了它。出现错误即没有上下文，返回的令牌
 为空。
@@ -140,4 +143,4 @@ macOS、Windows 和跨架构通道没有域，在那里
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/krb5@v0.3.3](https://pkg.go.dev/github.com/go-authn/krb5@v0.3.3)
+[pkg.go.dev/github.com/go-authn/krb5@v0.4.0](https://pkg.go.dev/github.com/go-authn/krb5@v0.4.0)
