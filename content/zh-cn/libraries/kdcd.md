@@ -27,19 +27,24 @@ go install github.com/go-authn/kdcd/cmd/kdcd@latest
 纯 Go，`CGO_ENABLED=0`；发布版附带 `SHA256SUMS` 清单，每个二进制文件还有一份构建来源证明。
 作为服务：`packaging/systemd/`（单元文件和 sysusers 文件；见[运行](#running-it)）。
 
-## 目录必须持有什么 {#what-the-directory-must-hold}
+## 没有密码 {#no-passwords}
 
-KDC 用那个人的长期密钥解密客户端的预认证，因此只有当来源持有**密码**时，才能为该人处理
-**AS-REQ**：带 `password_file` 的 `user` 块，或返回密码的 `users "sql"` 块。只能*验证*
-密码的来源（对他人 LDAP 的绑定、哈希）无法处理 AS-REQ，无论它回答“这是密码吗”回答得多好。
-这是 Kerberos 的性质，在
-[库的文档](https://github.com/go-authn/kdc#readme)和
-[kdc 页面]({{< relref "/libraries/kdc.md#only-a-source-holding-the-password-can-back-a-realm" >}})中有解释。
+**`kdcd` 中没有密码路径，也无法开启**（v0.2.0 中移除；v0.1.0 有 `password_file`）。
+这里的人没有长期密钥，所以针对某人的 **AS-REQ** 无论客户端发送什么，按设计都以
+`KDC_ERR_NULL_KEY` 应答。人只能通过 **mint 监听器**获得 TGT，由用 passkey 对其完成认证的
+调用方（go-authn/bridge）提供。
 
-passkey 时代的域不需要这些。**没有密码**的人（`user "alice" {}` 块，或任意 `users` 块的一行）
-在目录中，没有密钥，AS-REQ 会以 `KDC_ERR_NULL_KEY` 被拒绝。他们只能通过 **mint 监听器**
-获得 TGT，由对其完成认证的调用方提供。`kdcd` 不增加任何自己的密码路径：没有标志、没有环境变量、
-没有内联值；`password_file` 的存在是因为库的 AS 路径需要它。
+- 目录说明**谁存在，以及他们的组**。来源所携带的内容，除名称外都到不了 KDC：每个身份在库看到
+  之前都被仅以名称重建（`nameOnly`），所以即使来源确实公布了密码，也不会派生出密钥。
+  下面加载时的拒绝是为了说明原因，而不是唯一的防线。
+- 服务和 `krbtgt/REALM` 把密钥保存在 keytab 中：**随机密钥**，绝不由密码派生（例如，用您的
+  keytab 工具从 `/dev/urandom` 取 32 字节生成）。
+- `password_file`、指名密码或 NT 哈希列的 `users` 查询或属性、`bind_password_file`、
+  `bind_dn`（简单绑定就是密码），以及含有密码的 DSN：加载时被拒绝，并指明移除及其版本。
+- `ldap` 来源以**匿名**方式读取。通过客户端证书或 SASL EXTERNAL 的服务绑定目前不可用，因为
+  `go-authn/directory` 的 `hcldir.Block` 没有对应字段；在有之前，`bind_dn` 会被拒绝。
+
+库一侧的说明见 [kdc 页面]({{< relref "/libraries/kdc.md#only-a-source-holding-the-password-can-back-a-realm" >}})。
 
 ## 配置 {#configuration}
 
@@ -65,26 +70,22 @@ mint {                                    # optional: absent, there is no second
   callers        = ["https://login.poc.test"]   # URI subjectAltNames, matched exactly
 }
 
-# The directory: any number of these, in any mix.
-user "alice" {}                           # a person with no password: mint only
-user "bob" { password_file = "/etc/kdcd/bob.pw" }
+# The directory: who exists. Any number of these, in any mix.
+user "alice@poc.test" {}                  # a name; a TGT only through mint
 
 users "sql" {                             # go-authn/directory hcldir blocks
   driver   = "postgres"                   # sqlite, postgres or mysql
-  dsn_file = "/etc/kdcd/dsn"
-  users    = "select login, password from staff"
+  dsn_file = "/etc/kdcd/dsn"              # no password in it: a client certificate or a socket
+  users    = "select login as name from staff"
 }
-users "ldap" {
-  url                = "ldaps://ldap.example.org"
-  base_dn            = "ou=people,dc=example,dc=org"
-  bind_dn            = "cn=reader,dc=example,dc=org"
-  bind_password_file = "/etc/kdcd/bind.pw"
+users "ldap" {                            # read anonymously
+  url      = "ldaps://ldap.example.org"
+  base_dn  = "ou=people,dc=example,dc=org"
 }
 ```
 
-`users` 块就是 [go-authn/directory/hcldir](https://github.com/go-authn/directory) 的块，
-原样使用。只能验证密码的来源，例如对 LDAP 服务器的绑定，会给 mint 调用方一个用来核对主体的
-目录，但无法处理 AS-REQ。
+`users` 块就是 [go-authn/directory/hcldir](https://github.com/go-authn/directory) 的块；
+kdcd 拒绝其中携带密码的部分（见上文）。
 
 `kdcd check --config FILE` 读取并构建守护进程会构建的一切，打开目录，不监听任何地址，
 并打印它所提供的内容：域、地址、keytab 的主体（名称、kvno、etype；绝不打印密钥）、
@@ -94,7 +95,8 @@ users "ldap" {
 
 | 被拒绝的 | 原因 |
 | --- | --- |
-| 组或其他用户**可读或可写**的 keytab、mint 密钥、密码文件、DSN 或绑定密码，或属于 root 和守护进程之外的 uid 的 | 另一个账户能读到的副本，可以为域中每个人伪造票据 |
+| 组或其他用户**可读或可写**的 keytab、mint 密钥或 DSN 文件，或属于 root 和守护进程之外的 uid 的 | 另一个账户能读到的副本，可以为域中每个人伪造票据 |
+| **任何密码路径**：`password_file`（即使为空）、`bind_password_file`、`bind_dn`、指名 `password`、`passwd`、`nt_hash`、`userPassword`... 的 `users`/`groups` 查询或属性、携带密码的 DSN | v0.2.0 中移除：这里没有人拥有密钥；消息会这样说明。查询和 DSN 的检查尽力而为；它们漏掉的由 `nameOnly` 兜住 |
 | 内联书写的秘密（`password = "..."` 不是一个参数） | 秘密存放在文件中，绝不放在配置、其备份或日志里 |
 | 组或其他用户可写的配置文件 | 谁能写它，谁就能选择 mint 调用方 |
 | 没有 `krbtgt/REALM` 密钥，或缺少所列服务的 keytab，**以 aes256-cts-hmac-sha1-96**（库所签发的唯一类型） | 它会启动，然后在第一次 `kinit` 时失败 |
@@ -103,8 +105,8 @@ users "ldap" {
 | 没有 `start_tls` 而连向另一台机器的 `ldap://` | 每个密码都会按输入的原样穿过网络 |
 
 秘密文件只被打开**一次**，并且检查的是已打开的文件（常规文件、模式、属主），因此检查不会针对
-一个文件而读取针对另一个文件（模型是 go-fileshare 的 `readKeytab`）。`dsn_file` 和
-`bind_password_file` 在以同样方式检查之后，由 `hcldir` 按名称读取。
+一个文件而读取针对另一个文件（模型是 go-fileshare 的 `readKeytab`）。`dsn_file` 在以同样方式检查之后，
+由 `hcldir` 按名称读取。
 
 ## mint 的信任模型 {#the-mint-trust-model}
 
@@ -163,4 +165,4 @@ systemctl enable --now kdcd
 
 ## 参考 {#reference}
 
-[github.com/go-authn/kdcd](https://github.com/go-authn/kdcd)，v0.1.0。
+[github.com/go-authn/kdcd](https://github.com/go-authn/kdcd)，v0.2.0。

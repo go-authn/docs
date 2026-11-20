@@ -30,23 +30,32 @@ Go puro, `CGO_ENABLED=0`; las versiones llevan un manifiesto `SHA256SUMS` y una
 atestación de procedencia de compilación por binario. Como servicio: `packaging/systemd/`
 (unidad y archivo sysusers; véase [Ejecutarlo](#running-it)).
 
-## Qué debe contener el directorio {#what-the-directory-must-hold}
+## Sin contraseñas {#no-passwords}
 
-Un KDC descifra la preautenticación del cliente con la clave de larga duración de esa
-persona, así que una **AS-REQ** solo puede atenderse para una persona cuyo origen guarda
-una **contraseña**: un bloque `user` con `password_file`, o un bloque `users "sql"` que
-la devuelva. Un origen que solo puede *verificar* una (un bind contra el LDAP de otro,
-un hash) no puede atender una AS-REQ, por bien que responda a «¿es esta la contraseña?».
-Es una propiedad de Kerberos, explicada en la
-[documentación de la biblioteca](https://github.com/go-authn/kdc#readme) y en
-la [página de kdc]({{< relref "/libraries/kdc.md#only-a-source-holding-the-password-can-back-a-realm" >}}).
+**No hay ninguna vía de contraseña en `kdcd`, y no se puede activar ninguna** (eliminada
+en la v0.2.0; la v0.1.0 tenía `password_file`). Aquí una persona no tiene clave de larga
+duración, así que una **AS-REQ** para una persona se responde `KDC_ERR_NULL_KEY` por
+diseño, envíe lo que envíe el cliente. Una persona solo obtiene un TGT por el **oyente
+de mint**, de un llamador que la autenticó con una passkey (go-authn/bridge).
 
-Un reino de la era de las passkeys no necesita nada de eso. Una persona **sin
-contraseña** (un bloque `user "alice" {}`, o una fila de cualquier bloque `users`) está
-en el directorio, no tiene clave y se le rechaza una AS-REQ con `KDC_ERR_NULL_KEY`.
-Solo obtiene un TGT por el **oyente de mint**, de un llamador que la autenticó.
-`kdcd` no añade ninguna vía de contraseña propia: ni opción, ni variable de entorno, ni
-valor en línea; `password_file` existe porque la vía AS de la biblioteca lo necesita.
+- Un directorio dice **quién existe, y sus grupos**. De lo que lleve un origen, al KDC
+  solo llega el nombre: cada identidad se reconstruye solo con el nombre antes de que la
+  biblioteca la vea (`nameOnly`), así que incluso una contraseña que un origen publicara
+  no deriva ninguna clave. Los rechazos al cargar de más abajo están para decir por qué,
+  no para ser la única guarda.
+- Los servicios y `krbtgt/REALM` guardan sus claves en la keytab: **claves aleatorias**,
+  nunca derivadas de una contraseña (genérelas, por ejemplo, con 32 bytes de
+  `/dev/urandom` mediante su herramienta de keytab).
+- `password_file`, una consulta o atributo de `users` que nombre una columna de
+  contraseña o de hash NT, un `bind_password_file`, un `bind_dn` (un bind simple es una
+  contraseña) o un DSN que contenga una contraseña: se rechazan al cargar, nombrando la
+  eliminación y la versión.
+- Un origen `ldap` se lee **de forma anónima**. Un bind de servicio por certificado de
+  cliente o SASL EXTERNAL aún no está disponible porque `hcldir.Block` de
+  `go-authn/directory` no tiene un campo para ello; hasta que lo tenga, `bind_dn` se rechaza.
+
+El lado de la biblioteca se explica en la
+[página de kdc]({{< relref "/libraries/kdc.md#only-a-source-holding-the-password-can-back-a-realm" >}}).
 
 ## Configuración {#configuration}
 
@@ -72,27 +81,22 @@ mint {                                    # optional: absent, there is no second
   callers        = ["https://login.poc.test"]   # URI subjectAltNames, matched exactly
 }
 
-# The directory: any number of these, in any mix.
-user "alice" {}                           # a person with no password: mint only
-user "bob" { password_file = "/etc/kdcd/bob.pw" }
+# The directory: who exists. Any number of these, in any mix.
+user "alice@poc.test" {}                  # a name; a TGT only through mint
 
 users "sql" {                             # go-authn/directory hcldir blocks
   driver   = "postgres"                   # sqlite, postgres or mysql
-  dsn_file = "/etc/kdcd/dsn"
-  users    = "select login, password from staff"
+  dsn_file = "/etc/kdcd/dsn"              # no password in it: a client certificate or a socket
+  users    = "select login as name from staff"
 }
-users "ldap" {
-  url                = "ldaps://ldap.example.org"
-  base_dn            = "ou=people,dc=example,dc=org"
-  bind_dn            = "cn=reader,dc=example,dc=org"
-  bind_password_file = "/etc/kdcd/bind.pw"
+users "ldap" {                            # read anonymously
+  url      = "ldaps://ldap.example.org"
+  base_dn  = "ou=people,dc=example,dc=org"
 }
 ```
 
-Los bloques `users` son los de [go-authn/directory/hcldir](https://github.com/go-authn/directory),
-sin cambios. Un origen que solo puede verificar una contraseña, como un bind contra un
-servidor LDAP, da a los llamadores de mint un directorio contra el que comprobar un
-principal y no puede atender una AS-REQ.
+Los bloques `users` son los de [go-authn/directory/hcldir](https://github.com/go-authn/directory);
+kdcd rechaza las partes de ellos que llevan una contraseña (véase arriba).
 
 `kdcd check --config FILE` lee y construye todo lo que construiría el demonio, abre el
 directorio, no escucha en ninguna parte e imprime lo que sirve: el reino, las
@@ -104,7 +108,8 @@ una última línea `ok`, o el primer rechazo.
 
 | Rechazado | Por qué |
 | --- | --- |
-| una keytab, clave de mint, archivo de contraseña, DSN o contraseña de bind que **el grupo u otros puedan leer o escribir**, o que pertenezca a un uid distinto de root o del demonio | una copia que otra cuenta pueda leer falsifica tickets para cada persona del reino |
+| una keytab, clave de mint o archivo DSN que **el grupo u otros puedan leer o escribir**, o que pertenezca a un uid distinto de root o del demonio | una copia que otra cuenta pueda leer falsifica tickets para cada persona del reino |
+| **cualquier vía de contraseña**: `password_file` (incluso vacío), `bind_password_file`, `bind_dn`, una consulta o atributo de `users`/`groups` que nombre `password`, `passwd`, `nt_hash`, `userPassword`..., un DSN que lleve una contraseña | eliminada en la v0.2.0: aquí ninguna persona tiene clave; el mensaje lo dice. Las comprobaciones de consulta y DSN son de mejor esfuerzo; `nameOnly` retiene lo que se les escape |
 | un secreto escrito en línea (`password = "..."` no es un argumento) | los secretos viven en archivos, nunca en la configuración, una copia de ella o un registro |
 | un archivo de configuración que el grupo u otros puedan escribir | quien lo escribe elige los llamadores de mint |
 | una keytab sin clave `krbtgt/REALM`, o a la que falte un servicio listado, **en aes256-cts-hmac-sha1-96** (el único tipo que emite la biblioteca) | arrancaría y fallaría en el primer `kinit` |
@@ -114,8 +119,8 @@ una última línea `ok`, o el primer rechazo.
 
 Los archivos secretos se abren **una vez** y se comprueba el archivo abierto (archivo
 regular, modo, propietario), de modo que una comprobación no puede referirse a un archivo
-y la lectura a otro (el modelo es `readKeytab` de go-fileshare). `dsn_file` y
-`bind_password_file` los lee `hcldir` por nombre, después de comprobarlos del mismo modo.
+y la lectura a otro (el modelo es `readKeytab` de go-fileshare). `dsn_file` lo
+lee `hcldir` por nombre, después de comprobarlo del mismo modo.
 
 ## El modelo de confianza de mint {#the-mint-trust-model}
 
@@ -184,4 +189,4 @@ tiene recarga ni punto de acceso de métricas.
 
 ## Referencia {#reference}
 
-[github.com/go-authn/kdcd](https://github.com/go-authn/kdcd), v0.1.0.
+[github.com/go-authn/kdcd](https://github.com/go-authn/kdcd), v0.2.0.
