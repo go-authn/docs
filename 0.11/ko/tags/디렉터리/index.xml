@@ -1624,16 +1624,22 @@ data-copied-label="복사됨!"
 &lt;/div&gt;
 &lt;p&gt;순수 Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;; 릴리스에는 바이너리마다 &lt;code&gt;SHA256SUMS&lt;/code&gt; 매니페스트와 빌드 출처
 증명이 붙습니다. 서비스로: &lt;code&gt;packaging/systemd/&lt;/code&gt;(유닛과 sysusers 파일. &lt;a href="#running-it"&gt;실행하기&lt;/a&gt; 참조).&lt;/p&gt;
-&lt;h2 data-hextra-search-id="what-the-directory-must-hold"&gt;디렉터리가 보유해야 하는 것&lt;span class="hx:absolute hx:-mt-20" id="what-the-directory-must-hold"&gt;&lt;/span&gt;
-&lt;a href="#what-the-directory-must-hold" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;KDC는 클라이언트의 사전 인증을 그 사람의 장기 키로 복호화하므로, &lt;strong&gt;AS-REQ&lt;/strong&gt;는 소스가&lt;strong&gt;비밀번호&lt;/strong&gt;를 보유한 사람에 대해서만 처리할 수 있습니다. 즉 &lt;code&gt;password_file&lt;/code&gt;이 있는 &lt;code&gt;user&lt;/code&gt;
-블록, 또는 비밀번호를 반환하는 &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; 블록입니다. 비밀번호를 &lt;em&gt;검증&lt;/em&gt;만 할 수 있는
-소스(남의 LDAP에 대한 바인드, 해시)는 &amp;ldquo;이것이 비밀번호인가&amp;quot;에 아무리 잘 답해도 AS-REQ를
-처리할 수 없습니다. 이는 Kerberos의 특성이며,&lt;a href="https://github.com/go-authn/kdc#readme" target="_blank" rel="noopener"&gt;라이브러리 문서&lt;/a&gt;와&lt;a href="https://go-authn.github.io/docs/0.11/ko/libraries/kdc/#only-a-source-holding-the-password-can-back-a-realm"&gt;kdc 페이지&lt;/a&gt;에
-설명되어 있습니다.&lt;/p&gt;
-&lt;p&gt;패스키 시대의 렐름에는 그 어느 것도 필요 없습니다. &lt;strong&gt;비밀번호가 없는&lt;/strong&gt; 사람(&lt;code&gt;user &amp;quot;alice&amp;quot; {}&lt;/code&gt;
-블록, 또는 임의의 &lt;code&gt;users&lt;/code&gt; 블록의 한 행)은 디렉터리에 있고 키가 없으며, AS-REQ는&lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt;로 거부됩니다. 그들은 그 사람을 인증한 호출자로부터 &lt;strong&gt;mint 리스너&lt;/strong&gt;를
-통해서만 TGT를 얻습니다. &lt;code&gt;kdcd&lt;/code&gt;는 자체 비밀번호 경로를 추가하지 않습니다: 플래그도,환경 변수도, 인라인 값도 없습니다. &lt;code&gt;password_file&lt;/code&gt;이 있는 것은 라이브러리의 AS 경로가
-필요로 하기 때문입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="no-passwords"&gt;비밀번호 없음&lt;span class="hx:absolute hx:-mt-20" id="no-passwords"&gt;&lt;/span&gt;
+&lt;a href="#no-passwords" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;kdcd&lt;/code&gt;에는 비밀번호 경로가 없으며, 켤 수도 없습니다&lt;/strong&gt;(v0.2.0에서 제거됨. v0.1.0에는&lt;code&gt;password_file&lt;/code&gt;이 있었습니다). 여기서 사람은 장기 키가 없으므로, 사람에 대한 &lt;strong&gt;AS-REQ&lt;/strong&gt;는
+클라이언트가 무엇을 보내든 설계상 &lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt;로 응답됩니다. 사람은 패스키로 그를
+인증한 호출자(go-authn/bridge)로부터 &lt;strong&gt;mint 리스너&lt;/strong&gt;를 통해서만 TGT를 얻습니다.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;디렉터리는 &lt;strong&gt;누가 존재하는지, 그리고 그들의 그룹&lt;/strong&gt;을 말합니다. 소스가 가진 것 중 이름
+외에는 KDC에 닿지 않습니다. 모든 ID는 라이브러리가 보기 전에 이름만으로 다시 구성되므로(&lt;code&gt;nameOnly&lt;/code&gt;), 소스가 실제로 공개한 비밀번호조차 키를 도출하지 않습니다. 아래의 로드 시
+거부는 이유를 알려 주기 위한 것이며, 유일한 방어가 아닙니다.&lt;/li&gt;
+&lt;li&gt;서비스와 &lt;code&gt;krbtgt/REALM&lt;/code&gt;은 키를 keytab에 보관합니다: &lt;strong&gt;무작위 키&lt;/strong&gt;이며, 비밀번호에서
+도출되지 않습니다(예를 들어 keytab 도구로 &lt;code&gt;/dev/urandom&lt;/code&gt;의 32바이트를 사용해 생성하십시오).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;password_file&lt;/code&gt;, 비밀번호 또는 NT 해시 열을 지정하는 &lt;code&gt;users&lt;/code&gt; 쿼리나 속성,&lt;code&gt;bind_password_file&lt;/code&gt;, &lt;code&gt;bind_dn&lt;/code&gt;(단순 바인드는 비밀번호입니다), 비밀번호를 담은 DSN:로드 시 제거 사실과 버전을 밝히며 거부됩니다.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ldap&lt;/code&gt; 소스는 &lt;strong&gt;익명으로&lt;/strong&gt; 읽힙니다. 클라이언트 인증서나 SASL EXTERNAL에 의한 서비스
+바인드는 &lt;code&gt;go-authn/directory&lt;/code&gt;의 &lt;code&gt;hcldir.Block&lt;/code&gt;에 그에 필요한 필드가 없어 아직 사용할 수
+없습니다. 그것이 생길 때까지 &lt;code&gt;bind_dn&lt;/code&gt;은 거부됩니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;라이브러리 쪽 설명은 &lt;a href="https://go-authn.github.io/docs/0.11/ko/libraries/kdc/#only-a-source-holding-the-password-can-back-a-realm"&gt;kdc 페이지&lt;/a&gt;에 있습니다.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="configuration"&gt;설정&lt;span class="hx:absolute hx:-mt-20" id="configuration"&gt;&lt;/span&gt;
 &lt;a href="#configuration" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;하나의 HCL 파일. 그 안에는 비밀이 없으며, 모든 비밀은 파일입니다.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -1656,20 +1662,17 @@ data-copied-label="복사됨!"
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; callers&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://login.poc.test&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # URI subjectAltNames, matched exactly
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;span class="c1"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# The directory: any number of these, in any mix.
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt; {}&lt;span class="c1"&gt; # a person with no password: mint only
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;bob&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/bob.pw&amp;#34;&lt;/span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# The directory: who exists. Any number of these, in any mix.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice@poc.test&amp;#34;&lt;/span&gt; {}&lt;span class="c1"&gt; # a name; a TGT only through mint
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # go-authn/directory hcldir blocks
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;postgres&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # sqlite, postgres or mysql
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/dsn&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, password from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/dsn&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # no password in it: a client certificate or a socket
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login as name from staff&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldaps://ldap.example.org&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # read anonymously
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldaps://ldap.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;ou&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;people,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; bind_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; bind_password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/bind.pw&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
@@ -1682,9 +1685,7 @@ data-copied-label="복사됨!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;&lt;code&gt;users&lt;/code&gt; 블록은 &lt;a href="https://github.com/go-authn/directory" target="_blank" rel="noopener"&gt;go-authn/directory/hcldir&lt;/a&gt;의 것을
-그대로 씁니다. LDAP 서버에 대한 바인드처럼 비밀번호를 검증만 할 수 있는 소스는 mint
-호출자가 프린시펄을 확인할 디렉터리를 제공하지만, AS-REQ는 처리할 수 없습니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;users&lt;/code&gt; 블록은 &lt;a href="https://github.com/go-authn/directory" target="_blank" rel="noopener"&gt;go-authn/directory/hcldir&lt;/a&gt;의 것입니다.kdcd는 그중 비밀번호를 담은 부분을 거부합니다(위 참조).&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;kdcd check --config FILE&lt;/code&gt;은 데몬이 구성할 모든 것을 읽어 구성하고, 디렉터리를 열고,어디에서도 listen하지 않은 채, 제공할 내용을 출력합니다: 렐름, 주소, keytab의 프린시펄(이름, kvno, etype. 키는 절대 출력하지 않음), 디렉터리가 보유한 사람 수, mint 호출자.종료 상태 0과 마지막 줄 &lt;code&gt;ok&lt;/code&gt;, 또는 첫 번째 거부입니다.&lt;/p&gt;
 &lt;h3 data-hextra-search-id="what-it-refuses-to-start-with"&gt;시작을 거부하는 경우&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-to-start-with"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-to-start-with" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;table&gt;
@@ -1696,8 +1697,12 @@ data-copied-label="복사됨!"
 &lt;/thead&gt;
 &lt;tbody&gt;
 &lt;tr&gt;
-&lt;td&gt;&lt;strong&gt;그룹이나 다른 사용자가 읽거나 쓸 수 있는&lt;/strong&gt;, 또는 root나 데몬이 아닌 uid가 소유한 keytab, mint 키, 비밀번호 파일, DSN, 바인드 비밀번호&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;그룹이나 다른 사용자가 읽거나 쓸 수 있는&lt;/strong&gt;, 또는 root나 데몬이 아닌 uid가 소유한 keytab, mint 키, DSN 파일&lt;/td&gt;
 &lt;td&gt;다른 계정이 읽을 수 있는 사본은 렐름의 모든 사람에 대한 티켓을 위조한다&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;모든 비밀번호 경로&lt;/strong&gt;: &lt;code&gt;password_file&lt;/code&gt;(비어 있어도), &lt;code&gt;bind_password_file&lt;/code&gt;, &lt;code&gt;bind_dn&lt;/code&gt;, &lt;code&gt;password&lt;/code&gt;, &lt;code&gt;passwd&lt;/code&gt;, &lt;code&gt;nt_hash&lt;/code&gt;, &lt;code&gt;userPassword&lt;/code&gt;&amp;hellip; 를 지정하는 &lt;code&gt;users&lt;/code&gt;/&lt;code&gt;groups&lt;/code&gt; 쿼리나 속성, 비밀번호를 담은 DSN&lt;/td&gt;
+&lt;td&gt;v0.2.0에서 제거됨: 여기서는 누구도 키가 없다. 메시지가 그렇게 알려 준다. 쿼리와 DSN 검사는 최선의 노력이며, 놓친 것은 &lt;code&gt;nameOnly&lt;/code&gt;가 막는다&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;인라인으로 쓴 비밀(&lt;code&gt;password = &amp;quot;...&amp;quot;&lt;/code&gt;는 인수가 아님)&lt;/td&gt;
@@ -1726,7 +1731,7 @@ data-copied-label="복사됨!"
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;비밀 파일은 &lt;strong&gt;한 번만&lt;/strong&gt; 열리고, 열린 파일을 검사합니다(일반 파일, 모드, 소유자). 따라서
-검사는 한 파일에 대해, 읽기는 다른 파일에 대해 이루어질 수 없습니다(모델은 go-fileshare의&lt;code&gt;readKeytab&lt;/code&gt;). &lt;code&gt;dsn_file&lt;/code&gt;과 &lt;code&gt;bind_password_file&lt;/code&gt;은 같은 방식으로 검사한 뒤 &lt;code&gt;hcldir&lt;/code&gt;가
+검사는 한 파일에 대해, 읽기는 다른 파일에 대해 이루어질 수 없습니다(모델은 go-fileshare의&lt;code&gt;readKeytab&lt;/code&gt;). &lt;code&gt;dsn_file&lt;/code&gt;은 같은 방식으로 검사한 뒤 &lt;code&gt;hcldir&lt;/code&gt;가
 이름으로 읽습니다.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-mint-trust-model"&gt;mint의 신뢰 모델&lt;span class="hx:absolute hx:-mt-20" id="the-mint-trust-model"&gt;&lt;/span&gt;
 &lt;a href="#the-mint-trust-model" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;POST https://&amp;lt;mint address&amp;gt;/mint&lt;/code&gt;에 &lt;code&gt;{&amp;quot;principal&amp;quot;: &amp;quot;alice&amp;quot;, &amp;quot;lifetime_seconds&amp;quot;: 36000}&lt;/code&gt;을
@@ -1778,4 +1783,4 @@ data-copied-label="복사됨!"
 &lt;a href="#not-here" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;크로스 렐름, PKINIT, FAST, 갱신 가능하거나 사후 날짜의 티켓, kadmin 프로토콜,aes256-cts-hmac-sha1-96 이외의 모든 암호화 타입은 라이브러리 자체의 한계입니다(&lt;a href="https://github.com/go-authn/kdc#readme" target="_blank" rel="noopener"&gt;go-authn/kdc&lt;/a&gt;). &lt;code&gt;kdcd&lt;/code&gt;에는 아직 다시 읽기도
 메트릭 엔드포인트도 없습니다.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;참조&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/go-authn/kdcd" target="_blank" rel="noopener"&gt;github.com/go-authn/kdcd&lt;/a&gt;, v0.1.0.&lt;/p&gt;</description></item></channel></rss>
+&lt;a href="#reference" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/go-authn/kdcd" target="_blank" rel="noopener"&gt;github.com/go-authn/kdcd&lt;/a&gt;, v0.2.0.&lt;/p&gt;</description></item></channel></rss>

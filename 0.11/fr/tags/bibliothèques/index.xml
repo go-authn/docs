@@ -2943,18 +2943,30 @@ data-copied-label="Copié !"
 &lt;p&gt;Go pur, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt; ; les versions publiées portent un manifeste &lt;code&gt;SHA256SUMS&lt;/code&gt; et une
 attestation de provenance de construction par binaire. Comme service : &lt;code&gt;packaging/systemd/&lt;/code&gt;
 (unité et fichier sysusers ; voir &lt;a href="#running-it"&gt;L&amp;rsquo;exécuter&lt;/a&gt;).&lt;/p&gt;
-&lt;h2 data-hextra-search-id="what-the-directory-must-hold"&gt;Ce que l&amp;rsquo;annuaire doit contenir&lt;span class="hx:absolute hx:-mt-20" id="what-the-directory-must-hold"&gt;&lt;/span&gt;
-&lt;a href="#what-the-directory-must-hold" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un KDC déchiffre la pré-authentification du client avec la clé à long terme de cette
-personne, donc une &lt;strong&gt;AS-REQ&lt;/strong&gt; ne peut être servie que pour une personne dont la source
-détient un &lt;strong&gt;mot de passe&lt;/strong&gt; : un bloc &lt;code&gt;user&lt;/code&gt; avec &lt;code&gt;password_file&lt;/code&gt;, ou un bloc&lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; qui en renvoie un. Une source qui ne peut que &lt;em&gt;vérifier&lt;/em&gt; un mot de passe(une liaison contre le LDAP de quelqu&amp;rsquo;un d&amp;rsquo;autre, une empreinte) ne peut pas servir une
-AS-REQ, si bien qu&amp;rsquo;elle réponde à « est-ce le mot de passe ». C&amp;rsquo;est une propriété de
-Kerberos, expliquée dans la&lt;a href="https://github.com/go-authn/kdc#readme" target="_blank" rel="noopener"&gt;documentation de la bibliothèque&lt;/a&gt; et sur
-la &lt;a href="https://go-authn.github.io/docs/0.11/fr/libraries/kdc/#only-a-source-holding-the-password-can-back-a-realm"&gt;page kdc&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Un royaume de l&amp;rsquo;ère des passkeys n&amp;rsquo;a besoin de rien de cela. Une personne &lt;strong&gt;sans mot de
-passe&lt;/strong&gt; (un bloc &lt;code&gt;user &amp;quot;alice&amp;quot; {}&lt;/code&gt;, ou une ligne de n&amp;rsquo;importe quel bloc &lt;code&gt;users&lt;/code&gt;) est dans
-l&amp;rsquo;annuaire, n&amp;rsquo;a pas de clé, et se voit refuser une AS-REQ avec &lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt;. Elle
-n&amp;rsquo;obtient un TGT que par l&amp;rsquo;&lt;strong&gt;écouteur de mint&lt;/strong&gt;, d&amp;rsquo;un appelant qui l&amp;rsquo;a authentifiée.&lt;code&gt;kdcd&lt;/code&gt; n&amp;rsquo;ajoute aucun chemin de mot de passe : ni option, ni variable d&amp;rsquo;environnement, ni
-valeur en ligne ; &lt;code&gt;password_file&lt;/code&gt; existe parce que le chemin AS de la bibliothèque en a besoin.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="no-passwords"&gt;Pas de mots de passe&lt;span class="hx:absolute hx:-mt-20" id="no-passwords"&gt;&lt;/span&gt;
+&lt;a href="#no-passwords" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Il n&amp;rsquo;y a aucun chemin de mot de passe dans &lt;code&gt;kdcd&lt;/code&gt;, et aucun ne peut être activé&lt;/strong&gt;
+(supprimé en v0.2.0 ; la v0.1.0 avait &lt;code&gt;password_file&lt;/code&gt;). Une personne n&amp;rsquo;a ici aucune clé à
+long terme, donc une &lt;strong&gt;AS-REQ&lt;/strong&gt; pour une personne reçoit &lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt; par
+conception, quoi que le client envoie. Une personne n&amp;rsquo;obtient un TGT que par l&amp;rsquo;&lt;strong&gt;écouteur
+de mint&lt;/strong&gt;, d&amp;rsquo;un appelant qui l&amp;rsquo;a authentifiée par une passkey (go-authn/bridge).&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Un annuaire dit &lt;strong&gt;qui existe, et ses groupes&lt;/strong&gt;. Rien de ce qu&amp;rsquo;une source porte
+n&amp;rsquo;atteint le KDC hors le nom : chaque identité est reconstruite sans rien d&amp;rsquo;autre que
+le nom avant que la bibliothèque ne la voie (&lt;code&gt;nameOnly&lt;/code&gt;), si bien que même un mot de
+passe qu&amp;rsquo;une source aurait publié ne dérive aucune clé. Les refus au chargement
+ci-dessous sont là pour dire pourquoi, pas pour être la seule garde.&lt;/li&gt;
+&lt;li&gt;Les services et &lt;code&gt;krbtgt/REALM&lt;/code&gt; gardent leurs clés dans le keytab : des &lt;strong&gt;clés
+aléatoires&lt;/strong&gt;, jamais dérivées d&amp;rsquo;un mot de passe (générez-les, par exemple, avec 32
+octets de &lt;code&gt;/dev/urandom&lt;/code&gt; au moyen de votre outil de keytab).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;password_file&lt;/code&gt;, une requête ou un attribut de &lt;code&gt;users&lt;/code&gt; nommant une colonne de mot de
+passe ou d&amp;rsquo;empreinte NT, un &lt;code&gt;bind_password_file&lt;/code&gt;, un &lt;code&gt;bind_dn&lt;/code&gt; (une liaison simple est
+un mot de passe), ou un DSN contenant un mot de passe : refusés au chargement, en
+nommant la suppression et la version.&lt;/li&gt;
+&lt;li&gt;Une source &lt;code&gt;ldap&lt;/code&gt; est lue &lt;strong&gt;anonymement&lt;/strong&gt;. Une liaison de service par certificat client
+ou SASL EXTERNAL n&amp;rsquo;est pas encore disponible, car &lt;code&gt;hcldir.Block&lt;/code&gt; de &lt;code&gt;go-authn/directory&lt;/code&gt;
+n&amp;rsquo;a pas de champ pour cela ; tant qu&amp;rsquo;il n&amp;rsquo;en a pas, &lt;code&gt;bind_dn&lt;/code&gt; est refusé.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Le côté bibliothèque est expliqué sur la&lt;a href="https://go-authn.github.io/docs/0.11/fr/libraries/kdc/#only-a-source-holding-the-password-can-back-a-realm"&gt;page kdc&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="configuration"&gt;Configuration&lt;span class="hx:absolute hx:-mt-20" id="configuration"&gt;&lt;/span&gt;
 &lt;a href="#configuration" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un seul fichier HCL. Rien dedans n&amp;rsquo;est un secret ; chaque secret est un fichier.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -2977,20 +2989,17 @@ valeur en ligne ; &lt;code&gt;password_file&lt;/code&gt; existe parce que le che
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; callers&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://login.poc.test&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # URI subjectAltNames, matched exactly
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;span class="c1"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# The directory: any number of these, in any mix.
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt; {}&lt;span class="c1"&gt; # a person with no password: mint only
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;bob&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/bob.pw&amp;#34;&lt;/span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# The directory: who exists. Any number of these, in any mix.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice@poc.test&amp;#34;&lt;/span&gt; {}&lt;span class="c1"&gt; # a name; a TGT only through mint
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # go-authn/directory hcldir blocks
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;postgres&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # sqlite, postgres or mysql
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/dsn&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, password from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/dsn&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # no password in it: a client certificate or a socket
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login as name from staff&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldaps://ldap.example.org&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # read anonymously
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldaps://ldap.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;ou&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;people,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; bind_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; bind_password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/bind.pw&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
@@ -3003,9 +3012,7 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Les blocs &lt;code&gt;users&lt;/code&gt; sont ceux de &lt;a href="https://github.com/go-authn/directory" target="_blank" rel="noopener"&gt;go-authn/directory/hcldir&lt;/a&gt;,inchangés. Une source qui ne peut que vérifier un mot de passe, comme une liaison contre un
-serveur LDAP, donne aux appelants du mint un annuaire contre lequel contrôler un principal
-et ne peut pas servir une AS-REQ.&lt;/p&gt;
+&lt;p&gt;Les blocs &lt;code&gt;users&lt;/code&gt; sont ceux de &lt;a href="https://github.com/go-authn/directory" target="_blank" rel="noopener"&gt;go-authn/directory/hcldir&lt;/a&gt; ;kdcd refuse les parties qui portent un mot de passe (voir plus haut).&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;kdcd check --config FILE&lt;/code&gt; lit et construit tout ce que le démon construirait, ouvre
 l&amp;rsquo;annuaire, n&amp;rsquo;écoute nulle part, et affiche ce qu&amp;rsquo;il sert : le royaume, les adresses, les
 principaux du keytab (nom, kvno, etype ; jamais une clé), le nombre de personnes que
@@ -3020,8 +3027,12 @@ l&amp;rsquo;annuaire contient, les appelants du mint. Code de sortie 0 et une de
 &lt;/thead&gt;
 &lt;tbody&gt;
 &lt;tr&gt;
-&lt;td&gt;un keytab, une clé de mint, un fichier de mot de passe, un DSN ou un mot de passe de liaison que &lt;strong&gt;le groupe ou les autres peuvent lire ou écrire&lt;/strong&gt;, ou qui appartient à un uid autre que root ou celui du démon&lt;/td&gt;
+&lt;td&gt;un keytab, une clé de mint ou un fichier DSN que &lt;strong&gt;le groupe ou les autres peuvent lire ou écrire&lt;/strong&gt;, ou qui appartient à un uid autre que root ou celui du démon&lt;/td&gt;
 &lt;td&gt;une copie qu&amp;rsquo;un autre compte peut lire falsifie des tickets pour chaque personne du royaume&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;tout chemin de mot de passe&lt;/strong&gt; : &lt;code&gt;password_file&lt;/code&gt; (même vide), &lt;code&gt;bind_password_file&lt;/code&gt;, &lt;code&gt;bind_dn&lt;/code&gt;, une requête ou un attribut de &lt;code&gt;users&lt;/code&gt;/&lt;code&gt;groups&lt;/code&gt; nommant &lt;code&gt;password&lt;/code&gt;, &lt;code&gt;passwd&lt;/code&gt;, &lt;code&gt;nt_hash&lt;/code&gt;, &lt;code&gt;userPassword&lt;/code&gt;&amp;hellip;, un DSN portant un mot de passe&lt;/td&gt;
+&lt;td&gt;supprimé en v0.2.0 : aucune personne n&amp;rsquo;a de clé ici ; le message le dit. Les contrôles de requête et de DSN sont au mieux ; &lt;code&gt;nameOnly&lt;/code&gt; retient ce qui leur échappe&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;un secret écrit en ligne (&lt;code&gt;password = &amp;quot;...&amp;quot;&lt;/code&gt; n&amp;rsquo;est pas un argument)&lt;/td&gt;
@@ -3050,8 +3061,8 @@ l&amp;rsquo;annuaire contient, les appelants du mint. Code de sortie 0 et une de
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;Les fichiers secrets sont ouverts &lt;strong&gt;une seule fois&lt;/strong&gt; et le fichier ouvert est vérifié(fichier ordinaire, mode, propriétaire), si bien qu&amp;rsquo;un contrôle ne peut pas porter sur un
-fichier et la lecture sur un autre (le modèle est &lt;code&gt;readKeytab&lt;/code&gt; de go-fileshare).&lt;code&gt;dsn_file&lt;/code&gt; et &lt;code&gt;bind_password_file&lt;/code&gt; sont lus par &lt;code&gt;hcldir&lt;/code&gt; par leur nom, après avoir été
-vérifiés de la même façon.&lt;/p&gt;
+fichier et la lecture sur un autre (le modèle est &lt;code&gt;readKeytab&lt;/code&gt; de go-fileshare).&lt;code&gt;dsn_file&lt;/code&gt; est lu par &lt;code&gt;hcldir&lt;/code&gt; par son nom, après avoir été
+vérifié de la même façon.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-mint-trust-model"&gt;Le modèle de confiance du mint&lt;span class="hx:absolute hx:-mt-20" id="the-mint-trust-model"&gt;&lt;/span&gt;
 &lt;a href="#the-mint-trust-model" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;POST https://&amp;lt;mint address&amp;gt;/mint&lt;/code&gt; avec &lt;code&gt;{&amp;quot;principal&amp;quot;: &amp;quot;alice&amp;quot;, &amp;quot;lifetime_seconds&amp;quot;: 36000}&lt;/code&gt;
 renvoie un KRB-CRED (RFC 4120 5.8) contenant un TGT pour &lt;code&gt;alice&lt;/code&gt;, que l&amp;rsquo;appelant remet à la
@@ -3108,7 +3119,7 @@ tout type de chiffrement autre que aes256-cts-hmac-sha1-96 sont des limites prop
 bibliothèque (&lt;a href="https://github.com/go-authn/kdc#readme" target="_blank" rel="noopener"&gt;go-authn/kdc&lt;/a&gt;). &lt;code&gt;kdcd&lt;/code&gt; n&amp;rsquo;a pas
 encore de rechargement ni de point d&amp;rsquo;accès de métriques.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Référence&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/go-authn/kdcd" target="_blank" rel="noopener"&gt;github.com/go-authn/kdcd&lt;/a&gt;, v0.1.0.&lt;/p&gt;</description></item><item><title>oidc — vérifier un jeton porteur</title><link>https://go-authn.github.io/docs/0.11/fr/libraries/oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/fr/libraries/oidc/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/go-authn/kdcd" target="_blank" rel="noopener"&gt;github.com/go-authn/kdcd&lt;/a&gt;, v0.2.0.&lt;/p&gt;</description></item><item><title>oidc — vérifier un jeton porteur</title><link>https://go-authn.github.io/docs/0.11/fr/libraries/oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/fr/libraries/oidc/</guid><description>
 &lt;p&gt;&lt;strong&gt;Qui ce jeton porteur dit-il être à l&amp;rsquo;origine de la demande, et faut-il le croire ?&lt;/strong&gt;
 La découverte, le jeu de clés, et les vérifications qu&amp;rsquo;un serveur de ressources doit faire — en Go
 pur, &lt;strong&gt;sans aucune dépendance&lt;/strong&gt; en dehors de la bibliothèque standard.&lt;/p&gt;

@@ -2401,11 +2401,15 @@ data-copied-label="已复制！"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;纯 Go，&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;；发布版附带 &lt;code&gt;SHA256SUMS&lt;/code&gt; 清单，每个二进制文件还有一份构建来源证明。作为服务：&lt;code&gt;packaging/systemd/&lt;/code&gt;（单元文件和 sysusers 文件；见&lt;a href="#running-it"&gt;运行&lt;/a&gt;）。&lt;/p&gt;
-&lt;h2 data-hextra-search-id="what-the-directory-must-hold"&gt;目录必须持有什么&lt;span class="hx:absolute hx:-mt-20" id="what-the-directory-must-hold"&gt;&lt;/span&gt;
-&lt;a href="#what-the-directory-must-hold" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;KDC 用那个人的长期密钥解密客户端的预认证，因此只有当来源持有&lt;strong&gt;密码&lt;/strong&gt;时，才能为该人处理&lt;strong&gt;AS-REQ&lt;/strong&gt;：带 &lt;code&gt;password_file&lt;/code&gt; 的 &lt;code&gt;user&lt;/code&gt; 块，或返回密码的 &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; 块。只能&lt;em&gt;验证&lt;/em&gt;
-密码的来源（对他人 LDAP 的绑定、哈希）无法处理 AS-REQ，无论它回答“这是密码吗”回答得多好。这是 Kerberos 的性质，在&lt;a href="https://github.com/go-authn/kdc#readme" target="_blank" rel="noopener"&gt;库的文档&lt;/a&gt;和&lt;a href="https://go-authn.github.io/docs/0.11/zh-cn/libraries/kdc/#only-a-source-holding-the-password-can-back-a-realm"&gt;kdc 页面&lt;/a&gt;中有解释。&lt;/p&gt;
-&lt;p&gt;passkey 时代的域不需要这些。&lt;strong&gt;没有密码&lt;/strong&gt;的人（&lt;code&gt;user &amp;quot;alice&amp;quot; {}&lt;/code&gt; 块，或任意 &lt;code&gt;users&lt;/code&gt; 块的一行）在目录中，没有密钥，AS-REQ 会以 &lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt; 被拒绝。他们只能通过 &lt;strong&gt;mint 监听器&lt;/strong&gt;
-获得 TGT，由对其完成认证的调用方提供。&lt;code&gt;kdcd&lt;/code&gt; 不增加任何自己的密码路径：没有标志、没有环境变量、没有内联值；&lt;code&gt;password_file&lt;/code&gt; 的存在是因为库的 AS 路径需要它。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="no-passwords"&gt;没有密码&lt;span class="hx:absolute hx:-mt-20" id="no-passwords"&gt;&lt;/span&gt;
+&lt;a href="#no-passwords" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;kdcd&lt;/code&gt; 中没有密码路径，也无法开启&lt;/strong&gt;（v0.2.0 中移除；v0.1.0 有 &lt;code&gt;password_file&lt;/code&gt;）。这里的人没有长期密钥，所以针对某人的 &lt;strong&gt;AS-REQ&lt;/strong&gt; 无论客户端发送什么，按设计都以&lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt; 应答。人只能通过 &lt;strong&gt;mint 监听器&lt;/strong&gt;获得 TGT，由用 passkey 对其完成认证的调用方（go-authn/bridge）提供。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;目录说明&lt;strong&gt;谁存在，以及他们的组&lt;/strong&gt;。来源所携带的内容，除名称外都到不了 KDC：每个身份在库看到之前都被仅以名称重建（&lt;code&gt;nameOnly&lt;/code&gt;），所以即使来源确实公布了密码，也不会派生出密钥。下面加载时的拒绝是为了说明原因，而不是唯一的防线。&lt;/li&gt;
+&lt;li&gt;服务和 &lt;code&gt;krbtgt/REALM&lt;/code&gt; 把密钥保存在 keytab 中：&lt;strong&gt;随机密钥&lt;/strong&gt;，绝不由密码派生（例如，用您的keytab 工具从 &lt;code&gt;/dev/urandom&lt;/code&gt; 取 32 字节生成）。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;password_file&lt;/code&gt;、指名密码或 NT 哈希列的 &lt;code&gt;users&lt;/code&gt; 查询或属性、&lt;code&gt;bind_password_file&lt;/code&gt;、&lt;code&gt;bind_dn&lt;/code&gt;（简单绑定就是密码），以及含有密码的 DSN：加载时被拒绝，并指明移除及其版本。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ldap&lt;/code&gt; 来源以&lt;strong&gt;匿名&lt;/strong&gt;方式读取。通过客户端证书或 SASL EXTERNAL 的服务绑定目前不可用，因为&lt;code&gt;go-authn/directory&lt;/code&gt; 的 &lt;code&gt;hcldir.Block&lt;/code&gt; 没有对应字段；在有之前，&lt;code&gt;bind_dn&lt;/code&gt; 会被拒绝。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;库一侧的说明见 &lt;a href="https://go-authn.github.io/docs/0.11/zh-cn/libraries/kdc/#only-a-source-holding-the-password-can-back-a-realm"&gt;kdc 页面&lt;/a&gt;。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="configuration"&gt;配置&lt;span class="hx:absolute hx:-mt-20" id="configuration"&gt;&lt;/span&gt;
 &lt;a href="#configuration" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;一个 HCL 文件。其中没有任何秘密；每个秘密都是一个文件。&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -2428,20 +2432,17 @@ data-copied-label="已复制！"
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; callers&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://login.poc.test&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # URI subjectAltNames, matched exactly
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;span class="c1"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# The directory: any number of these, in any mix.
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt; {}&lt;span class="c1"&gt; # a person with no password: mint only
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;bob&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/bob.pw&amp;#34;&lt;/span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# The directory: who exists. Any number of these, in any mix.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice@poc.test&amp;#34;&lt;/span&gt; {}&lt;span class="c1"&gt; # a name; a TGT only through mint
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # go-authn/directory hcldir blocks
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;postgres&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # sqlite, postgres or mysql
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/dsn&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, password from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/dsn&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # no password in it: a client certificate or a socket
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login as name from staff&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldaps://ldap.example.org&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # read anonymously
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldaps://ldap.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;ou&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;people,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; bind_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; bind_password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/bind.pw&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
@@ -2454,7 +2455,7 @@ data-copied-label="已复制！"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;&lt;code&gt;users&lt;/code&gt; 块就是 &lt;a href="https://github.com/go-authn/directory" target="_blank" rel="noopener"&gt;go-authn/directory/hcldir&lt;/a&gt; 的块，原样使用。只能验证密码的来源，例如对 LDAP 服务器的绑定，会给 mint 调用方一个用来核对主体的目录，但无法处理 AS-REQ。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;users&lt;/code&gt; 块就是 &lt;a href="https://github.com/go-authn/directory" target="_blank" rel="noopener"&gt;go-authn/directory/hcldir&lt;/a&gt; 的块；kdcd 拒绝其中携带密码的部分（见上文）。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;kdcd check --config FILE&lt;/code&gt; 读取并构建守护进程会构建的一切，打开目录，不监听任何地址，并打印它所提供的内容：域、地址、keytab 的主体（名称、kvno、etype；绝不打印密钥）、目录持有的人数、mint 调用方。退出状态 0 且最后一行为 &lt;code&gt;ok&lt;/code&gt;，或者是第一个拒绝。&lt;/p&gt;
 &lt;h3 data-hextra-search-id="what-it-refuses-to-start-with"&gt;它拒绝启动的情形&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-to-start-with"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-to-start-with" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;table&gt;
@@ -2466,8 +2467,12 @@ data-copied-label="已复制！"
 &lt;/thead&gt;
 &lt;tbody&gt;
 &lt;tr&gt;
-&lt;td&gt;组或其他用户&lt;strong&gt;可读或可写&lt;/strong&gt;的 keytab、mint 密钥、密码文件、DSN 或绑定密码，或属于 root 和守护进程之外的 uid 的&lt;/td&gt;
+&lt;td&gt;组或其他用户&lt;strong&gt;可读或可写&lt;/strong&gt;的 keytab、mint 密钥或 DSN 文件，或属于 root 和守护进程之外的 uid 的&lt;/td&gt;
 &lt;td&gt;另一个账户能读到的副本，可以为域中每个人伪造票据&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;任何密码路径&lt;/strong&gt;：&lt;code&gt;password_file&lt;/code&gt;（即使为空）、&lt;code&gt;bind_password_file&lt;/code&gt;、&lt;code&gt;bind_dn&lt;/code&gt;、指名 &lt;code&gt;password&lt;/code&gt;、&lt;code&gt;passwd&lt;/code&gt;、&lt;code&gt;nt_hash&lt;/code&gt;、&lt;code&gt;userPassword&lt;/code&gt;&amp;hellip; 的 &lt;code&gt;users&lt;/code&gt;/&lt;code&gt;groups&lt;/code&gt; 查询或属性、携带密码的 DSN&lt;/td&gt;
+&lt;td&gt;v0.2.0 中移除：这里没有人拥有密钥；消息会这样说明。查询和 DSN 的检查尽力而为；它们漏掉的由 &lt;code&gt;nameOnly&lt;/code&gt; 兜住&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;内联书写的秘密（&lt;code&gt;password = &amp;quot;...&amp;quot;&lt;/code&gt; 不是一个参数）&lt;/td&gt;
@@ -2495,7 +2500,7 @@ data-copied-label="已复制！"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;秘密文件只被打开&lt;strong&gt;一次&lt;/strong&gt;，并且检查的是已打开的文件（常规文件、模式、属主），因此检查不会针对一个文件而读取针对另一个文件（模型是 go-fileshare 的 &lt;code&gt;readKeytab&lt;/code&gt;）。&lt;code&gt;dsn_file&lt;/code&gt; 和&lt;code&gt;bind_password_file&lt;/code&gt; 在以同样方式检查之后，由 &lt;code&gt;hcldir&lt;/code&gt; 按名称读取。&lt;/p&gt;
+&lt;p&gt;秘密文件只被打开&lt;strong&gt;一次&lt;/strong&gt;，并且检查的是已打开的文件（常规文件、模式、属主），因此检查不会针对一个文件而读取针对另一个文件（模型是 go-fileshare 的 &lt;code&gt;readKeytab&lt;/code&gt;）。&lt;code&gt;dsn_file&lt;/code&gt; 在以同样方式检查之后，由 &lt;code&gt;hcldir&lt;/code&gt; 按名称读取。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-mint-trust-model"&gt;mint 的信任模型&lt;span class="hx:absolute hx:-mt-20" id="the-mint-trust-model"&gt;&lt;/span&gt;
 &lt;a href="#the-mint-trust-model" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;向 &lt;code&gt;POST https://&amp;lt;mint address&amp;gt;/mint&lt;/code&gt; 发送 &lt;code&gt;{&amp;quot;principal&amp;quot;: &amp;quot;alice&amp;quot;, &amp;quot;lifetime_seconds&amp;quot;: 36000}&lt;/code&gt;，返回一个 KRB-CRED（RFC 4120 5.8），其中装有 &lt;code&gt;alice&lt;/code&gt; 的 TGT，由调用方交给此人的机器（&lt;a href="https://github.com/go-authn/kinit" target="_blank" rel="noopener"&gt;go-authn/kinit&lt;/a&gt; 把它载入 Windows 登录会话）。其约束是：&lt;/p&gt;
 &lt;ul&gt;
@@ -2530,7 +2535,7 @@ data-copied-label="已复制！"
 &lt;h2 data-hextra-search-id="not-here"&gt;不在此处&lt;span class="hx:absolute hx:-mt-20" id="not-here"&gt;&lt;/span&gt;
 &lt;a href="#not-here" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;跨域、PKINIT、FAST、可续期或后置日期的票据、kadmin 协议，以及 aes256-cts-hmac-sha1-96之外的任何加密类型，都是库自身的限制（&lt;a href="https://github.com/go-authn/kdc#readme" target="_blank" rel="noopener"&gt;go-authn/kdc&lt;/a&gt;）。&lt;code&gt;kdcd&lt;/code&gt; 目前还没有重新加载，也没有指标端点。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;参考&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/go-authn/kdcd" target="_blank" rel="noopener"&gt;github.com/go-authn/kdcd&lt;/a&gt;，v0.1.0。&lt;/p&gt;</description></item><item><title>oidc — 验证持有者令牌</title><link>https://go-authn.github.io/docs/0.11/zh-cn/libraries/oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/zh-cn/libraries/oidc/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/go-authn/kdcd" target="_blank" rel="noopener"&gt;github.com/go-authn/kdcd&lt;/a&gt;，v0.2.0。&lt;/p&gt;</description></item><item><title>oidc — 验证持有者令牌</title><link>https://go-authn.github.io/docs/0.11/zh-cn/libraries/oidc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/zh-cn/libraries/oidc/</guid><description>
 &lt;p&gt;&lt;strong&gt;这个持有者令牌声称是谁在发出请求，是否应当相信？&lt;/strong&gt;
 发现、密钥集，以及资源服务器必须进行的检查——纯 Go，&lt;strong&gt;除标准库之外没有任何依赖&lt;/strong&gt;。&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;

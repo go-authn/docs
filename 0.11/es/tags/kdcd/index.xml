@@ -36,16 +36,26 @@ data-copied-label="¡Copiado!"
 &lt;p&gt;Go puro, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;; las versiones llevan un manifiesto &lt;code&gt;SHA256SUMS&lt;/code&gt; y una
 atestación de procedencia de compilación por binario. Como servicio: &lt;code&gt;packaging/systemd/&lt;/code&gt;
 (unidad y archivo sysusers; véase &lt;a href="#running-it"&gt;Ejecutarlo&lt;/a&gt;).&lt;/p&gt;
-&lt;h2 data-hextra-search-id="what-the-directory-must-hold"&gt;Qué debe contener el directorio&lt;span class="hx:absolute hx:-mt-20" id="what-the-directory-must-hold"&gt;&lt;/span&gt;
-&lt;a href="#what-the-directory-must-hold" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un KDC descifra la preautenticación del cliente con la clave de larga duración de esa
-persona, así que una &lt;strong&gt;AS-REQ&lt;/strong&gt; solo puede atenderse para una persona cuyo origen guarda
-una &lt;strong&gt;contraseña&lt;/strong&gt;: un bloque &lt;code&gt;user&lt;/code&gt; con &lt;code&gt;password_file&lt;/code&gt;, o un bloque &lt;code&gt;users &amp;quot;sql&amp;quot;&lt;/code&gt; que
-la devuelva. Un origen que solo puede &lt;em&gt;verificar&lt;/em&gt; una (un bind contra el LDAP de otro,un hash) no puede atender una AS-REQ, por bien que responda a «¿es esta la contraseña?».Es una propiedad de Kerberos, explicada en la&lt;a href="https://github.com/go-authn/kdc#readme" target="_blank" rel="noopener"&gt;documentación de la biblioteca&lt;/a&gt; y en
-la &lt;a href="https://go-authn.github.io/docs/0.11/es/libraries/kdc/#only-a-source-holding-the-password-can-back-a-realm"&gt;página de kdc&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;Un reino de la era de las passkeys no necesita nada de eso. Una persona &lt;strong&gt;sin
-contraseña&lt;/strong&gt; (un bloque &lt;code&gt;user &amp;quot;alice&amp;quot; {}&lt;/code&gt;, o una fila de cualquier bloque &lt;code&gt;users&lt;/code&gt;) está
-en el directorio, no tiene clave y se le rechaza una AS-REQ con &lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt;.Solo obtiene un TGT por el &lt;strong&gt;oyente de mint&lt;/strong&gt;, de un llamador que la autenticó.&lt;code&gt;kdcd&lt;/code&gt; no añade ninguna vía de contraseña propia: ni opción, ni variable de entorno, ni
-valor en línea; &lt;code&gt;password_file&lt;/code&gt; existe porque la vía AS de la biblioteca lo necesita.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="no-passwords"&gt;Sin contraseñas&lt;span class="hx:absolute hx:-mt-20" id="no-passwords"&gt;&lt;/span&gt;
+&lt;a href="#no-passwords" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;No hay ninguna vía de contraseña en &lt;code&gt;kdcd&lt;/code&gt;, y no se puede activar ninguna&lt;/strong&gt; (eliminada
+en la v0.2.0; la v0.1.0 tenía &lt;code&gt;password_file&lt;/code&gt;). Aquí una persona no tiene clave de larga
+duración, así que una &lt;strong&gt;AS-REQ&lt;/strong&gt; para una persona se responde &lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt; por
+diseño, envíe lo que envíe el cliente. Una persona solo obtiene un TGT por el &lt;strong&gt;oyente
+de mint&lt;/strong&gt;, de un llamador que la autenticó con una passkey (go-authn/bridge).&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Un directorio dice &lt;strong&gt;quién existe, y sus grupos&lt;/strong&gt;. De lo que lleve un origen, al KDC
+solo llega el nombre: cada identidad se reconstruye solo con el nombre antes de que la
+biblioteca la vea (&lt;code&gt;nameOnly&lt;/code&gt;), así que incluso una contraseña que un origen publicara
+no deriva ninguna clave. Los rechazos al cargar de más abajo están para decir por qué,no para ser la única guarda.&lt;/li&gt;
+&lt;li&gt;Los servicios y &lt;code&gt;krbtgt/REALM&lt;/code&gt; guardan sus claves en la keytab: &lt;strong&gt;claves aleatorias&lt;/strong&gt;,nunca derivadas de una contraseña (genérelas, por ejemplo, con 32 bytes de&lt;code&gt;/dev/urandom&lt;/code&gt; mediante su herramienta de keytab).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;password_file&lt;/code&gt;, una consulta o atributo de &lt;code&gt;users&lt;/code&gt; que nombre una columna de
+contraseña o de hash NT, un &lt;code&gt;bind_password_file&lt;/code&gt;, un &lt;code&gt;bind_dn&lt;/code&gt; (un bind simple es una
+contraseña) o un DSN que contenga una contraseña: se rechazan al cargar, nombrando la
+eliminación y la versión.&lt;/li&gt;
+&lt;li&gt;Un origen &lt;code&gt;ldap&lt;/code&gt; se lee &lt;strong&gt;de forma anónima&lt;/strong&gt;. Un bind de servicio por certificado de
+cliente o SASL EXTERNAL aún no está disponible porque &lt;code&gt;hcldir.Block&lt;/code&gt; de&lt;code&gt;go-authn/directory&lt;/code&gt; no tiene un campo para ello; hasta que lo tenga, &lt;code&gt;bind_dn&lt;/code&gt; se rechaza.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;El lado de la biblioteca se explica en la&lt;a href="https://go-authn.github.io/docs/0.11/es/libraries/kdc/#only-a-source-holding-the-password-can-back-a-realm"&gt;página de kdc&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="configuration"&gt;Configuración&lt;span class="hx:absolute hx:-mt-20" id="configuration"&gt;&lt;/span&gt;
 &lt;a href="#configuration" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Un archivo HCL. Nada en él es un secreto; cada secreto es un archivo.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -68,20 +78,17 @@ valor en línea; &lt;code&gt;password_file&lt;/code&gt; existe porque la vía AS
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; callers&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://login.poc.test&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;&lt;span class="c1"&gt; # URI subjectAltNames, matched exactly
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;span class="c1"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# The directory: any number of these, in any mix.
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt; {}&lt;span class="c1"&gt; # a person with no password: mint only
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;bob&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/bob.pw&amp;#34;&lt;/span&gt; }
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# The directory: who exists. Any number of these, in any mix.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;user&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;alice@poc.test&amp;#34;&lt;/span&gt; {}&lt;span class="c1"&gt; # a name; a TGT only through mint
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;sql&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # go-authn/directory hcldir blocks
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; driver&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;postgres&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # sqlite, postgres or mysql
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/dsn&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login, password from staff&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; dsn_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/dsn&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # no password in it: a client certificate or a socket
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; users&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;select login as name from staff&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt; {
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldaps://ldap.example.org&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;users&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldap&amp;#34;&lt;/span&gt; {&lt;span class="c1"&gt; # read anonymously
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; url&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;ldaps://ldap.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;ou&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;people,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; bind_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; bind_password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/kdcd/bind.pw&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
@@ -94,9 +101,7 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Los bloques &lt;code&gt;users&lt;/code&gt; son los de &lt;a href="https://github.com/go-authn/directory" target="_blank" rel="noopener"&gt;go-authn/directory/hcldir&lt;/a&gt;,sin cambios. Un origen que solo puede verificar una contraseña, como un bind contra un
-servidor LDAP, da a los llamadores de mint un directorio contra el que comprobar un
-principal y no puede atender una AS-REQ.&lt;/p&gt;
+&lt;p&gt;Los bloques &lt;code&gt;users&lt;/code&gt; son los de &lt;a href="https://github.com/go-authn/directory" target="_blank" rel="noopener"&gt;go-authn/directory/hcldir&lt;/a&gt;;kdcd rechaza las partes de ellos que llevan una contraseña (véase arriba).&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;kdcd check --config FILE&lt;/code&gt; lee y construye todo lo que construiría el demonio, abre el
 directorio, no escucha en ninguna parte e imprime lo que sirve: el reino, las
 direcciones, los principales de la keytab (nombre, kvno, etype; nunca una clave),cuántas personas contiene el directorio y los llamadores de mint. Estado de salida 0 y
@@ -111,8 +116,12 @@ una última línea &lt;code&gt;ok&lt;/code&gt;, o el primer rechazo.&lt;/p&gt;
 &lt;/thead&gt;
 &lt;tbody&gt;
 &lt;tr&gt;
-&lt;td&gt;una keytab, clave de mint, archivo de contraseña, DSN o contraseña de bind que &lt;strong&gt;el grupo u otros puedan leer o escribir&lt;/strong&gt;, o que pertenezca a un uid distinto de root o del demonio&lt;/td&gt;
+&lt;td&gt;una keytab, clave de mint o archivo DSN que &lt;strong&gt;el grupo u otros puedan leer o escribir&lt;/strong&gt;, o que pertenezca a un uid distinto de root o del demonio&lt;/td&gt;
 &lt;td&gt;una copia que otra cuenta pueda leer falsifica tickets para cada persona del reino&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;strong&gt;cualquier vía de contraseña&lt;/strong&gt;: &lt;code&gt;password_file&lt;/code&gt; (incluso vacío), &lt;code&gt;bind_password_file&lt;/code&gt;, &lt;code&gt;bind_dn&lt;/code&gt;, una consulta o atributo de &lt;code&gt;users&lt;/code&gt;/&lt;code&gt;groups&lt;/code&gt; que nombre &lt;code&gt;password&lt;/code&gt;, &lt;code&gt;passwd&lt;/code&gt;, &lt;code&gt;nt_hash&lt;/code&gt;, &lt;code&gt;userPassword&lt;/code&gt;&amp;hellip;, un DSN que lleve una contraseña&lt;/td&gt;
+&lt;td&gt;eliminada en la v0.2.0: aquí ninguna persona tiene clave; el mensaje lo dice. Las comprobaciones de consulta y DSN son de mejor esfuerzo; &lt;code&gt;nameOnly&lt;/code&gt; retiene lo que se les escape&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;un secreto escrito en línea (&lt;code&gt;password = &amp;quot;...&amp;quot;&lt;/code&gt; no es un argumento)&lt;/td&gt;
@@ -142,7 +151,8 @@ una última línea &lt;code&gt;ok&lt;/code&gt;, o el primer rechazo.&lt;/p&gt;
 &lt;/table&gt;
 &lt;p&gt;Los archivos secretos se abren &lt;strong&gt;una vez&lt;/strong&gt; y se comprueba el archivo abierto (archivo
 regular, modo, propietario), de modo que una comprobación no puede referirse a un archivo
-y la lectura a otro (el modelo es &lt;code&gt;readKeytab&lt;/code&gt; de go-fileshare). &lt;code&gt;dsn_file&lt;/code&gt; y&lt;code&gt;bind_password_file&lt;/code&gt; los lee &lt;code&gt;hcldir&lt;/code&gt; por nombre, después de comprobarlos del mismo modo.&lt;/p&gt;
+y la lectura a otro (el modelo es &lt;code&gt;readKeytab&lt;/code&gt; de go-fileshare). &lt;code&gt;dsn_file&lt;/code&gt; lo
+lee &lt;code&gt;hcldir&lt;/code&gt; por nombre, después de comprobarlo del mismo modo.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-mint-trust-model"&gt;El modelo de confianza de mint&lt;span class="hx:absolute hx:-mt-20" id="the-mint-trust-model"&gt;&lt;/span&gt;
 &lt;a href="#the-mint-trust-model" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;POST https://&amp;lt;mint address&amp;gt;/mint&lt;/code&gt; con &lt;code&gt;{&amp;quot;principal&amp;quot;: &amp;quot;alice&amp;quot;, &amp;quot;lifetime_seconds&amp;quot;: 36000}&lt;/code&gt;
 devuelve un KRB-CRED (RFC 4120 5.8) con un TGT para &lt;code&gt;alice&lt;/code&gt;, para que el llamador lo
@@ -200,4 +210,4 @@ cualquier tipo de cifrado salvo aes256-cts-hmac-sha1-96 son límites de la propi
 biblioteca (&lt;a href="https://github.com/go-authn/kdc#readme" target="_blank" rel="noopener"&gt;go-authn/kdc&lt;/a&gt;). &lt;code&gt;kdcd&lt;/code&gt; aún no
 tiene recarga ni punto de acceso de métricas.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Referencia&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/go-authn/kdcd" target="_blank" rel="noopener"&gt;github.com/go-authn/kdcd&lt;/a&gt;, v0.1.0.&lt;/p&gt;</description></item></channel></rss>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://github.com/go-authn/kdcd" target="_blank" rel="noopener"&gt;github.com/go-authn/kdcd&lt;/a&gt;, v0.2.0.&lt;/p&gt;</description></item></channel></rss>
