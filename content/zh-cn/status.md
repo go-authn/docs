@@ -216,6 +216,9 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | kdc v0.4.5 | 安全审计、模糊测试和混沌测试（[它拒绝什么]({{< relref "/libraries/kdc.md" >}})）：针对另一个域的请求回答 `KDC_ERR_WRONG_REALM`，无法读取的目录回答 `KDC_ERR_SVC_UNAVAILABLE`（以前是 `KDC_ERR_C_PRINCIPAL_UNKNOWN`），开始时间在 `MaxSkew` 之内的未来的 TGT 会被接受，解码器 panic 只丢弃一个请求，而不是使进程崩溃（一个格式错误的 AS-REQ 或 TGS-REQ 就能使其崩溃）；主体名称在日志中加引号。golang.org/x/net v0.62.0，go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT KDC 的 [lookaside]({{< relref "/libraries/kdc.md" >}})：逐字节已见过的请求会得到之前的应答（两分钟内，总计 10 MiB 以下）；`KRB-ERROR` 从不保存；有意不设 MIT 在 TGS 上关闭的认证符重放缓存。测试固定了无法读取的目录在 AS（密码正确）和 TGS 上都回答 `KDC_ERR_SVC_UNAVAILABLE`。每个请求多两次分配 |
 | kdc v0.6.0 | [`Finder`]({{< relref "/libraries/kdc.md#finder" >}})：按名称保有索引的来源会被直接询问，而不是被遍历。10,000 人时，遍历占 AS-REQ CPU 的一半；有 `Finder` 时查找低于性能剖析的阈值。名称与主体不同的应答视为未知主体（主体区分大小写） |
+| kdc v0.7.0 | 接受 Windows 客户端的 TGS-REQ：其 RSA-MD5 认证符校验和，MIT 同样接受；票据和应答部分带有标志和 starttime |
+| kdc v0.8.0 | [`Mint`]({{< relref "/libraries/kdc.md" >}})：为无密钥人员签发的 TGT，由白名单中的调用方通过双向认证的 TLS 请求，以 KRB-CRED 返回，默认关闭；当认证符所指的客户端与票据不同时，TGS 回答 `KRB_AP_ERR_BADMATCH` |
+| kdc v0.8.1 | additional-tickets 字段不是 `[11] SEQUENCE` 的请求会在 gokrb5 解码之前被丢弃（v8.4.4 会 panic）；recover 保留，模糊测试在有请求到达它时现在会失败 |
 | keyfactor v0.4.2 | 仅依赖项：以 go-authn/fido v0.6.2 和 golang.org/x/crypto v0.58.0 为最低版本 |
 | krb5 v0.3.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | krb5 v0.3.3 | 仅依赖项：golang.org/x/net v0.62.0、golang.org/x/crypto v0.58.0 和 go-uuid v1.0.4 清除了 `govulncheck` 在所需但不调用的模块中的 46 项发现中的 45 项；GO-2026-5932（`x/crypto/openpgp`）没有修复，且没有任何 go-authn 模块导入它；API 无变化 |

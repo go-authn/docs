@@ -12,10 +12,16 @@ tags: [라이브러리, kerberos, 디렉터리]
 실행됩니다. 이를 기반으로 만든 독립 실행형 데몬이 [kdcd]({{< relref "/libraries/kdcd.md" >}})입니다.
 
 ```sh
-go get github.com/go-authn/kdc@v0.6.0
+go get github.com/go-authn/kdc@v0.8.1
 ```
 
-v0.6.0의 `go.mod`는 최소 `go-authn/directory` v0.17.0과 gokrb5 v8.4.4를 요구합니다.
+v0.7.0부터 v0.8.1까지: Windows 클라이언트의 TGS-REQ를 받아들입니다(그 RSA-MD5 authenticator 체크섬은
+MIT도 받아들입니다). 티켓은 플래그와 starttime을 가집니다. `Server.Mint`, `Server.MintHandler`,
+`Config.MintCallers`는 키가 없는 사람의 TGT를, 상호 인증된 TLS를 통해 허용 목록에 있는 호출자에게
+KRB-CRED로 발급합니다(기본값은 꺼짐). TGS는 authenticator가 티켓과 다른 클라이언트를 지정하면
+`KRB_AP_ERR_BADMATCH`로 응답합니다. additional-tickets 필드가 잘못된 요청은 gokrb5가 디코딩하기 전에 버려집니다.
+
+v0.8.1의 `go.mod`는 최소 `go-authn/directory` v0.17.0과 gokrb5 v8.4.4를 요구합니다.
 이는 최소 요구 버전이므로, directory v0.17.0을 요구하는 프로그램은
 authnd v0.16.2처럼 v0.18.0으로 빌드됩니다. 받아들이는 쪽 절반은
 [krb5]({{< relref "/libraries/krb5.md" >}})이며, 티켓을 검증하기만 하는 서비스에는 이
@@ -192,12 +198,15 @@ etype 목록에 18이 없는 요청은 누구를 조회하기 전에 `KDC_ERR_ET
   `krbtgt/REALM` 키로 복호화될 때(`KRB_AP_ERR_NOT_US`)
 - authenticator가 세션 키로 복호화되고 `MaxSkew` 이내일 때
 - 체크섬이 도착한 그대로의 이 요청 본문에 대한 것이며 세션 키로 키가 지정되었을 때(없거나
-  키가 지정되지 않았으면 `KRB_AP_ERR_INAPP_CKSUM`, 틀리면 `KRB_AP_ERR_MODIFIED`)
+  키가 지정되지 않았으면 `KRB_AP_ERR_INAPP_CKSUM`, 틀리면 `KRB_AP_ERR_MODIFIED`). v0.7.0부터 Windows 클라이언트가 보내는 RSA-MD5(type 7) 체크섬
+  (키는 없지만 세션 키로 봉인됨)은 MIT처럼 받아들여집니다. CRC32, MD4, SHA-1은 계속 거부됩니다
 - TGT가 끝나지 않았고(`KRB_AP_ERR_TKT_EXPIRED`), 시작 전이 아니며 invalid로 표시되지
   않았을 때(`KRB_AP_ERR_TKT_NYV`), 오차는 허용되지 않음: 그 시각들은 이 KDC의 시계가
   기록했기 때문
 - 클라이언트가 이 렐름의 것이고 여전히 디렉터리에 있을 때
   (`KDC_ERR_C_PRINCIPAL_UNKNOWN`)
+- authenticator가 지정한 클라이언트가 티켓의 클라이언트와 같을 때, 이름과 렐름 모두
+  (`KRB_AP_ERR_BADMATCH`, v0.8.0부터)
 
 **v0.5.0부터**, 바이트 단위로 똑같은 요청이 다시 도착하면(UDP로 응답을 잃은
 클라이언트, 또는 재전송하는 공격자) 다시 처리하지 않고 이전 응답을 돌려줍니다.
@@ -220,7 +229,9 @@ MIT KDC는 TGS에서 이를 끕니다. 재전송이 `KRB_AP_ERR_REPEAT`로 실�
 - 시작이 `MaxSkew` 안의 미래인 TGT는 받아들입니다(시계 단계). 이전에는 TGT의 시작에 허용 오차가 없었습니다.
 - **잘못된 AS-REQ나 TGS-REQ 하나로 프로세스가 크래시할 수 있었습니다**. gokrb5 v8.4.4의
   `unmarshalTicketsSequence`가 인증 이전에 패닉합니다. 디코더를 패닉시키는 요청은 이제 버려지고, 패닉과 그 스택이
-  기록됩니다.
+  기록됩니다. v0.8.1부터 그 원인이 되는 알려진 형태, 즉 `[11] SEQUENCE`가 아닌
+  additional-tickets 필드는 gokrb5가 디코딩하기 전에 버려집니다. 디코더의 다른 패닉은
+  여전히 요청 하나를 잃게 합니다.
 - 네트워크에서 온 프린시펄 이름은 줄을 위조할 수 없도록 로그에서 따옴표로 묶입니다.
 - 의존성은 golang.org/x/net v0.62.0(GO-2026-6866, GO-2026-6860)과 go-authn/directory v0.16.1입니다.
   GO-2026-5932(`golang.org/x/crypto/openpgp`)는 업스트림에 수정이 없고 호출되지 않습니다.
@@ -252,4 +263,4 @@ MIT KDC는 관여하지 않으며 클라이언트만 빌려 옵니다.
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.8.1](https://pkg.go.dev/github.com/go-authn/kdc@v0.8.1)

@@ -14,10 +14,19 @@ services a keytab holds. It runs under
 is [kdcd]({{< relref "/libraries/kdcd.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.6.0
+go get github.com/go-authn/kdc@v0.8.1
 ```
 
-At v0.6.0 its `go.mod` requires at least `go-authn/directory` v0.17.0 and
+v0.7.0 to v0.8.1: a Windows client's TGS-REQ is accepted (its RSA-MD5
+authenticator checksum, which MIT accepts too); tickets carry flags and a
+starttime; `Server.Mint`, `Server.MintHandler` and `Config.MintCallers` issue a
+TGT for a person with no key to an allowlisted caller over mutually
+authenticated TLS, as a KRB-CRED, off by default; the TGS answers
+`KRB_AP_ERR_BADMATCH` when the authenticator names another client than the
+ticket; and a request with a malformed additional-tickets field is dropped
+before gokrb5 decodes it.
+
+At v0.8.1 its `go.mod` requires at least `go-authn/directory` v0.17.0 and
 gokrb5 v8.4.4: minimums, so a program that requires directory v0.17.0 builds
 with v0.18.0, as authnd v0.16.2 does. The
 accepting half is [krb5]({{< relref "/libraries/krb5.md" >}}), and a service
@@ -203,13 +212,17 @@ mistyped password.
 - the authenticator decrypts under its session key, within `MaxSkew`;
 - its checksum is over this request's body, as the bytes arrived, keyed with
   the session key (`KRB_AP_ERR_INAPP_CKSUM` when missing or unkeyed,
-  `KRB_AP_ERR_MODIFIED` when wrong);
+  `KRB_AP_ERR_MODIFIED` when wrong). Since v0.7.0 the RSA-MD5 (type 7)
+  checksum a Windows client sends, unkeyed but sealed under the session key, is
+  accepted, as MIT does; CRC32, MD4 and SHA-1 stay refused;
 - the TGT is not past its end (`KRB_AP_ERR_TKT_EXPIRED`), not before its start
   and not flagged invalid (`KRB_AP_ERR_TKT_NYV`), with no skew allowed at its
   end: this KDC's clock wrote those times. Since v0.4.5 a TGT whose start is
   within `MaxSkew` in the future is accepted (a clock step);
 - the client is of this realm and still in the directory
-  (`KDC_ERR_C_PRINCIPAL_UNKNOWN`).
+  (`KDC_ERR_C_PRINCIPAL_UNKNOWN`);
+- the client named in the authenticator is the ticket's own, name and realm
+  (`KRB_AP_ERR_BADMATCH`, since v0.8.0).
 
 **Since v0.5.0**, a request that arrives again byte for byte — a client that
 lost the reply over UDP, or a replayer — is answered with the reply it already
@@ -234,7 +247,10 @@ a lockout — and a verifier (an `ldap` upstream) is never called by Kerberos
   longer `KDC_ERR_C_PRINCIPAL_UNKNOWN`;
 - **one malformed AS-REQ or TGS-REQ could crash the process**: gokrb5 v8.4.4's
   `unmarshalTicketsSequence` panics before any authentication. A request that
-  panics the decoder is now dropped, and the panic and its stack are logged;
+  panics the decoder is now dropped, and the panic and its stack are logged.
+  Since v0.8.1 the known shape that does it, an additional-tickets field that
+  is not a `[11] SEQUENCE`, is dropped before gokrb5 decodes it; any other
+  decoder panic still costs one request;
 - a principal name from the network is quoted in the log, so that it cannot forge
   a line;
 - the dependencies are golang.org/x/net v0.62.0 (GO-2026-6866, GO-2026-6860) and
@@ -272,4 +288,4 @@ The coverage lane's floor is 80%.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.8.1](https://pkg.go.dev/github.com/go-authn/kdc@v0.8.1)

@@ -14,10 +14,19 @@ services qu'un keytab détient. Il fonctionne sous
 est [kdcd]({{< relref "/libraries/kdcd.md" >}}).
 
 ```sh
-go get github.com/go-authn/kdc@v0.6.0
+go get github.com/go-authn/kdc@v0.8.1
 ```
 
-En v0.6.0, son `go.mod` requiert au moins `go-authn/directory` v0.17.0 et
+De la v0.7.0 à la v0.8.1 : la TGS-REQ d'un client Windows est acceptée (sa somme
+de contrôle RSA-MD5 de l'authentificateur, que le MIT accepte aussi) ; les tickets
+portent des drapeaux et un starttime ; `Server.Mint`, `Server.MintHandler` et
+`Config.MintCallers` délivrent un TGT pour une personne sans clé à un appelant
+d'une liste d'autorisés, par TLS mutuellement authentifié, sous forme de KRB-CRED,
+désactivé par défaut ; le TGS répond `KRB_AP_ERR_BADMATCH` quand l'authentificateur
+nomme un autre client que le ticket ; et une requête dont le champ
+additional-tickets est malformé est abandonnée avant que gokrb5 ne la décode.
+
+En v0.8.1, son `go.mod` requiert au moins `go-authn/directory` v0.17.0 et
 gokrb5 v8.4.4 : des minimums, si bien qu'un programme qui requiert directory v0.17.0
 est compilé avec la v0.18.0, comme authnd v0.16.2. La
 moitié qui accepte est [krb5]({{< relref "/libraries/krb5.md" >}}), et un service
@@ -203,12 +212,16 @@ mot de passe mal tapé.
 - l'authentificateur se déchiffre sous sa clé de session, dans la limite de `MaxSkew` ;
 - sa somme de contrôle porte sur le corps de cette requête, tel que les octets sont arrivés, avec pour clé
   la clé de session (`KRB_AP_ERR_INAPP_CKSUM` si elle est absente ou sans clé,
-  `KRB_AP_ERR_MODIFIED` si elle est fausse) ;
+  `KRB_AP_ERR_MODIFIED` si elle est fausse). Depuis la v0.7.0, la somme RSA-MD5
+  (type 7) qu'envoie un client Windows, sans clé mais scellée sous la clé de
+  session, est acceptée, comme chez le MIT ; CRC32, MD4 et SHA-1 restent refusées ;
 - le TGT n'a pas dépassé sa fin (`KRB_AP_ERR_TKT_EXPIRED`), n'est pas avant son début
   et n'est pas marqué invalide (`KRB_AP_ERR_TKT_NYV`), sans aucune dérive d'horloge tolérée : c'est
   l'horloge de ce KDC qui a écrit ces heures ;
 - le client est de ce royaume et toujours dans l'annuaire
-  (`KDC_ERR_C_PRINCIPAL_UNKNOWN`).
+  (`KDC_ERR_C_PRINCIPAL_UNKNOWN`) ;
+- le client nommé dans l'authentificateur est celui du ticket, nom et royaume
+  (`KRB_AP_ERR_BADMATCH`, depuis la v0.8.0).
 
 **Depuis la v0.5.0**, une requête qui arrive de nouveau octet pour octet — un
 client qui a perdu la réponse en UDP, ou un rejoueur — reçoit la réponse
@@ -238,7 +251,10 @@ vérificateur (un amont `ldap`) n'est jamais appelé par Kerberos
 - **une seule AS-REQ ou TGS-REQ mal formée pouvait faire planter le processus** :
   `unmarshalTicketsSequence` de gokrb5 v8.4.4 panique avant toute authentification.
   Une requête qui fait paniquer le décodeur est désormais abandonnée, et la panique
-  et sa pile sont journalisées ;
+  et sa pile sont journalisées. Depuis la v0.8.1, la forme connue qui en est la
+  cause, un champ additional-tickets qui n'est pas une `[11] SEQUENCE`, est
+  abandonnée avant que gokrb5 ne la décode ; toute autre panique du décodeur coûte
+  toujours une requête ;
 - un nom de principal venu du réseau est mis entre guillemets dans le journal, pour
   qu'il ne puisse pas forger une ligne ;
 - les dépendances sont golang.org/x/net v0.62.0 (GO-2026-6866, GO-2026-6860) et
@@ -276,4 +292,4 @@ Le plancher de la voie de couverture est de 80 %.
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/kdc@v0.6.0](https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0)
+[pkg.go.dev/github.com/go-authn/kdc@v0.8.1](https://pkg.go.dev/github.com/go-authn/kdc@v0.8.1)

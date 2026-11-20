@@ -217,6 +217,9 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | kdc v0.4.5 | セキュリティ監査、ファジング、カオスの実施 ([拒否するもの]({{< relref "/libraries/kdc.md" >}})): 別のレルム向けのリクエストは `KDC_ERR_WRONG_REALM`、読み取れないディレクトリは `KDC_ERR_SVC_UNAVAILABLE` で答えられ (以前は `KDC_ERR_C_PRINCIPAL_UNKNOWN`)、開始が `MaxSkew` 以内の未来にある TGT は受け入れられ、デコーダーのパニックはプロセスをクラッシュさせずリクエスト一つを破棄します (不正な AS-REQ または TGS-REQ 一つでクラッシュし得ました)。プリンシパル名はログで引用符で囲まれます。golang.org/x/net v0.62.0、go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT の KDC の [lookaside]({{< relref "/libraries/kdc.md" >}}): バイト単位で既に見たリクエストには以前の応答を返す (2 分間、合計 10 MiB 未満)。`KRB-ERROR` は保存しない。MIT が TGS で無効にしているオーセンティケータのリプレイキャッシュは意図的に持たない。テストは、読めないディレクトリが AS (正しいパスワードで) と TGS で `KDC_ERR_SVC_UNAVAILABLE` になることを固定する。リクエストあたりアロケーション 2 回増 |
 | kdc v0.6.0 | [`Finder`]({{< relref "/libraries/kdc.md#finder" >}}): 名前による索引を持つソースには、走査せずに問い合わせる。10,000 人では走査が AS-REQ の CPU の半分だった。`Finder` があれば検索はプロファイルのしきい値を下回る。プリンシパルと名前が異なる応答は未知のプリンシパルとする (プリンシパルは大文字と小文字を区別する) |
+| kdc v0.7.0 | Windows クライアントの TGS-REQ を受け入れる: その RSA-MD5 のオーセンティケーターチェックサムは MIT も受け入れる。チケットと応答部はフラグと starttime を持つ |
+| kdc v0.8.0 | [`Mint`]({{< relref "/libraries/kdc.md" >}}): 鍵を持たない人の TGT を、相互認証された TLS 越しに許可リストの呼び出し元が要求し、KRB-CRED として返す (既定では無効)。TGS は、オーセンティケーターがチケットと別のクライアントを名指ししたとき `KRB_AP_ERR_BADMATCH` で答える |
+| kdc v0.8.1 | additional-tickets フィールドが `[11] SEQUENCE` でないリクエストは、gokrb5 がデコードする前に破棄する (v8.4.4 はパニックした)。recover は残り、ファズテストはリクエストがそこに達すると失敗する |
 | keyfactor v0.4.2 | 依存関係のみ: 最小バージョンとして go-authn/fido v0.6.2 と golang.org/x/crypto v0.58.0 |
 | krb5 v0.3.1 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | krb5 v0.3.3 | 依存関係のみ: golang.org/x/net v0.62.0、golang.org/x/crypto v0.58.0、go-uuid v1.0.4 により、必要としていても呼び出していないモジュールでの `govulncheck` の 46 件中 45 件が解消されます。GO-2026-5932 (`x/crypto/openpgp`) には修正がなく、どの go-authn モジュールもインポートしていません。API の変更はありません |
