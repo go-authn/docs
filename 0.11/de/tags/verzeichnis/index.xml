@@ -1433,7 +1433,7 @@ Personen, die ein &lt;a href="https://go-authn.github.io/docs/0.11/de/libraries/
 Dienste, die eine Keytab hält. Es läuft unter&lt;a href="https://go-authn.github.io/docs/0.11/de/authnd/"&gt;authnd&lt;/a&gt;. Der eigenständige Daemon, der darauf
 aufbaut, ist &lt;a href="https://go-authn.github.io/docs/0.11/de/libraries/kdcd/"&gt;kdcd&lt;/a&gt;.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/kdc@v0.6.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/kdc@v0.8.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Code kopieren"
@@ -1445,7 +1445,15 @@ data-copied-label="Kopiert!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;In v0.6.0 verlangt sein &lt;code&gt;go.mod&lt;/code&gt; mindestens &lt;code&gt;go-authn/directory&lt;/code&gt; v0.17.0 und
+&lt;p&gt;v0.7.0 bis v0.8.1: Die TGS-REQ eines Windows-Clients wird angenommen (seine
+RSA-MD5-Authenticator-Prüfsumme, die auch MIT annimmt); Tickets tragen Flags und
+einen Starttime; &lt;code&gt;Server.Mint&lt;/code&gt;, &lt;code&gt;Server.MintHandler&lt;/code&gt; und &lt;code&gt;Config.MintCallers&lt;/code&gt;
+stellen einem Aufrufer auf der Allowlist über gegenseitig authentifiziertes TLS
+ein TGT für eine Person ohne Schlüssel aus, als KRB-CRED, standardmäßig aus; der
+TGS antwortet &lt;code&gt;KRB_AP_ERR_BADMATCH&lt;/code&gt;, wenn der Authenticator einen anderen Client
+nennt als das Ticket; und eine Anfrage mit fehlerhaftem additional-tickets-Feld
+wird verworfen, bevor gokrb5 sie dekodiert.&lt;/p&gt;
+&lt;p&gt;In v0.8.1 verlangt sein &lt;code&gt;go.mod&lt;/code&gt; mindestens &lt;code&gt;go-authn/directory&lt;/code&gt; v0.17.0 und
 gokrb5 v8.4.4: Mindestversionen, sodass ein Programm, das directory v0.17.0 verlangt,mit v0.18.0 gebaut wird, wie authnd v0.16.2. Die
 annehmende Hälfte ist &lt;a href="https://go-authn.github.io/docs/0.11/de/libraries/krb5/"&gt;krb5&lt;/a&gt;, und ein Dienst,der Tickets nur prüft, braucht dieses Modul überhaupt nicht.&lt;/p&gt;
 &lt;p&gt;Nicht implementiert: Cross-Realm-Referrals, PKINIT, FAST, erneuerbare oder vordatierte
@@ -1633,11 +1641,16 @@ vertippten Passwort unterscheiden kann.&lt;/p&gt;
 Ticket angeblich betrifft (&lt;code&gt;KRB_AP_ERR_NOT_US&lt;/code&gt;);&lt;/li&gt;
 &lt;li&gt;der Authenticator sich mit seinem Sitzungsschlüssel entschlüsseln lässt, innerhalb von &lt;code&gt;MaxSkew&lt;/code&gt;;&lt;/li&gt;
 &lt;li&gt;seine Prüfsumme über den Body dieser Anfrage läuft, so wie die Bytes angekommen sind, verschlüsselt mit
-dem Sitzungsschlüssel (&lt;code&gt;KRB_AP_ERR_INAPP_CKSUM&lt;/code&gt;, wenn sie fehlt oder ohne Schlüssel ist,&lt;code&gt;KRB_AP_ERR_MODIFIED&lt;/code&gt;, wenn sie falsch ist);&lt;/li&gt;
+dem Sitzungsschlüssel (&lt;code&gt;KRB_AP_ERR_INAPP_CKSUM&lt;/code&gt;, wenn sie fehlt oder ohne Schlüssel ist,&lt;code&gt;KRB_AP_ERR_MODIFIED&lt;/code&gt;, wenn sie falsch ist). Seit v0.7.0 wird die
+RSA-MD5-Prüfsumme (Typ 7), die ein Windows-Client sendet, ohne Schlüssel, aber
+unter dem Sitzungsschlüssel versiegelt, angenommen, wie bei MIT; CRC32, MD4 und
+SHA-1 bleiben abgelehnt;&lt;/li&gt;
 &lt;li&gt;das TGT nicht über sein Ende hinaus ist (&lt;code&gt;KRB_AP_ERR_TKT_EXPIRED&lt;/code&gt;), nicht vor seinem Beginn
 liegt und nicht als ungültig markiert ist (&lt;code&gt;KRB_AP_ERR_TKT_NYV&lt;/code&gt;), ohne erlaubte Abweichung: Die Uhr
 dieses KDC hat diese Zeiten geschrieben;&lt;/li&gt;
-&lt;li&gt;der Client zu diesem Realm gehört und noch im Verzeichnis steht(&lt;code&gt;KDC_ERR_C_PRINCIPAL_UNKNOWN&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;der Client zu diesem Realm gehört und noch im Verzeichnis steht(&lt;code&gt;KDC_ERR_C_PRINCIPAL_UNKNOWN&lt;/code&gt;);&lt;/li&gt;
+&lt;li&gt;der im Authenticator genannte Client derselbe ist wie der des Tickets, Name und
+Realm (&lt;code&gt;KRB_AP_ERR_BADMATCH&lt;/code&gt;, seit v0.8.0).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;&lt;strong&gt;Seit v0.5.0&lt;/strong&gt; bekommt eine Anfrage, die Byte für Byte erneut eintrifft — ein
 Client, der die Antwort über UDP verloren hat, oder ein Wiederholer —, die
@@ -1659,7 +1672,9 @@ beantwortet, nicht mehr mit &lt;code&gt;KDC_ERR_C_PRINCIPAL_UNKNOWN&lt;/code&gt;
 &lt;li&gt;&lt;strong&gt;eine einzige fehlerhafte AS-REQ oder TGS-REQ konnte den Prozess zum Absturz
 bringen&lt;/strong&gt;: &lt;code&gt;unmarshalTicketsSequence&lt;/code&gt; von gokrb5 v8.4.4 gerät vor jeder
 Authentifizierung in Panik. Eine Anfrage, die den Decoder in Panik versetzt, wird jetzt
-verworfen, und die Panik samt Stack wird protokolliert;&lt;/li&gt;
+verworfen, und die Panik samt Stack wird protokolliert. Seit v0.8.1 wird die
+bekannte Form, die das auslöst, ein additional-tickets-Feld, das keine&lt;code&gt;[11] SEQUENCE&lt;/code&gt; ist, verworfen, bevor gokrb5 sie dekodiert; jede andere Panik des
+Decoders kostet weiterhin eine Anfrage;&lt;/li&gt;
 &lt;li&gt;ein Principal-Name aus dem Netz wird im Log in Anführungszeichen gesetzt, damit er keine
 Zeile fälschen kann;&lt;/li&gt;
 &lt;li&gt;die Abhängigkeiten sind golang.org/x/net v0.62.0 (GO-2026-6866, GO-2026-6860) und
@@ -1682,7 +1697,7 @@ Ablehnungen fest, die ein echter Client nie auslöst: ein Zeitstempel unter dem 
 von vor einer Stunde, eine Drei-Byte-Chiffre, ein Dienst, der direkt über einen
 AS-REQ angefordert wird, ein gefälschtes Service-Ticket beim TGS und ein Realm, der von einem Verifier getragen wird.Die Untergrenze der Coverage-Lane liegt bei 80 %.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Referenz&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
-&lt;a href="#reference" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/kdc@v0.6.0" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/kdc@v0.6.0&lt;/a&gt;&lt;/p&gt;</description></item><item><title>kdcd – ein Kerberos-KDC-Daemon für einen Realm</title><link>https://go-authn.github.io/docs/0.11/de/libraries/kdcd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/de/libraries/kdcd/</guid><description>
+&lt;a href="#reference" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://pkg.go.dev/github.com/go-authn/kdc@v0.8.1" target="_blank" rel="noopener"&gt;pkg.go.dev/github.com/go-authn/kdc@v0.8.1&lt;/a&gt;&lt;/p&gt;</description></item><item><title>kdcd – ein Kerberos-KDC-Daemon für einen Realm</title><link>https://go-authn.github.io/docs/0.11/de/libraries/kdcd/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/de/libraries/kdcd/</guid><description>
 &lt;p&gt;&lt;strong&gt;Wie läuft die Bibliothek &lt;a href="https://go-authn.github.io/docs/0.11/de/libraries/kdc/"&gt;kdc&lt;/a&gt; als Dienst?&lt;/strong&gt;
 &lt;code&gt;kdcd&lt;/code&gt; ist ein Kerberos-KDC-Daemon für einen Realm, gebaut auf der Bibliothek&lt;a href="https://github.com/go-authn/kdc" target="_blank" rel="noopener"&gt;go-authn/kdc&lt;/a&gt;. Er beantwortet AS- und TGS-Anfragen
 über UDP und TCP und &lt;strong&gt;stellt&lt;/strong&gt; optional &lt;strong&gt;ein TGT aus&lt;/strong&gt; für eine Person, die sich
