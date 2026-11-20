@@ -2,7 +2,7 @@
 title: "cms — firmas en CMS SignedData"
 linkTitle: "cms"
 weight: 115
-description: "go-authn/cms lee y verifica CMS SignedData (RFC 5652), el contenedor de las firmas PDF, UEFI y S/MIME, juzgado por OpenSSL."
+description: "go-authn/cms lee, verifica y firma CMS SignedData (RFC 5652), el contenedor de las firmas PDF, UEFI y S/MIME, juzgado por OpenSSL."
 tags: [bibliotecas, firmas, certificados]
 ---
 
@@ -13,10 +13,10 @@ un mensaje S/MIME. La biblioteca estándar lee certificados y verifica firmas,
 pero no tiene CMS.
 
 ```sh
-go get github.com/go-authn/cms@v0.1.0
+go get github.com/go-authn/cms@v0.2.0
 ```
 
-La v0.1.0 **lee y verifica**. La firma llegará en la próxima versión.
+La v0.2.0 **lee, verifica y firma**.
 
 ## Ejemplo {#example}
 
@@ -78,6 +78,108 @@ verificación de CRL de
 [go-authn/revocation](https://github.com/go-authn/revocation) para lo que se ha
 retirado.
 
+## Firmar {#signing}
+
+`cms.Sign` escribe un ContentInfo DER con **un solo firmante**, a partir de
+cualquier `crypto.Signer`: una clave RSA, ECDSA o Ed25519, en un fichero, en una
+tarjeta o en un HSM. Antes de devolver el resultado, verifica la firma con el
+certificado, de modo que un firmante que devuelve una firma errónea es
+rechazado y nunca se emite.
+
+```go
+package main
+
+import (
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"errors"
+	"fmt"
+	"math/big"
+	"time"
+
+	"github.com/go-authn/cms"
+)
+
+func main() {
+	// A key and a self-signed certificate, for the example. In practice the
+	// key may live on a card or in an HSM: any crypto.Signer will do.
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		panic(err)
+	}
+	template := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "signer"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+	}
+	certDER, err := x509.CreateCertificate(rand.Reader, template, template, key.Public(), key)
+	if err != nil {
+		panic(err)
+	}
+	cert, err := x509.ParseCertificate(certDER)
+	if err != nil {
+		panic(err)
+	}
+
+	content := []byte("the bytes to sign")
+	der, err := cms.Sign(content, cms.SignOptions{
+		Signer:      key,
+		Certificate: cert,
+		Hash:        crypto.SHA256,
+		Detached:    true, // as a PDF signature: the content is not inside
+		SigningTime: time.Now(),
+	})
+	switch {
+	case errors.Is(err, cms.ErrSigner):
+		panic(fmt.Sprint("the key or the device failed: ", err))
+	case errors.Is(err, cms.ErrOptions):
+		panic(fmt.Sprint("the request is wrong: ", err))
+	case err != nil: // cms.ErrUnsupported
+		panic(err)
+	}
+
+	// Sign checked its own signature; Verify is the reader's side.
+	sd, err := cms.Parse(der)
+	if err != nil {
+		panic(err)
+	}
+	signers, err := sd.Verify(content)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("signed by", signers[0].Subject.CommonName)
+
+	content[0] ^= 1
+	_, err = sd.Verify(content)
+	fmt.Println("altered content:", errors.Is(err, cms.ErrInvalid))
+}
+```
+
+`SignOptions` admite además `Chain` (intermedios que incrustar), `PSS`
+(RSASSA-PSS), `SigningCertificateV2` (RFC 5035, lo que exigen los perfiles base
+de CAdES y PAdES), `ContentType`, `NoSignedAttrs` y `Rand`. El resumen es
+SHA-256 por defecto, o SHA-384 o SHA-512; Ed25519 usa siempre SHA-512. SHA-1 se
+rechaza.
+
+`Sign` tiene tres errores propios: `ErrOptions` (la petición es errónea),
+`ErrSigner` (la clave o el dispositivo falló, o devolvió una firma que no se
+verifica con el certificado) y `ErrUnsupported` (un algoritmo que no escribe).
+También se rechaza Ed25519 **sin atributos firmados**: la RFC 8419 lo permite,
+pero OpenSSL no verifica lo que este paquete escribiría.
+
+`cms -verify` de OpenSSL y el `Verify` de este paquete coinciden en todas las
+combinaciones consultadas: **58 combinaciones, 203 veredictos**, con RSA
+PKCS #1 v1.5, RSA-PSS y ECDSA P-256 con SHA-256, SHA-384 y SHA-512, y Ed25519
+con SHA-512, adjunta y separada, con y sin atributos firmados. `Verify` todavía
+no comprueba signing-certificate-v2: vincular el certificado del firmante a ese
+atributo corresponde a quien llama.
+
 ## Tres errores, porque quien llama necesita tres respuestas {#three-errors-because-a-caller-needs-three-answers}
 
 | error | significa |
@@ -112,7 +214,9 @@ Según el código, cada uno con una prueba que comprueba su mensaje:
   lo sigue resumiendo entero en cada comprobación.
 
 **Todavía no:** las longitudes indefinidas BER se rechazan en lugar de
-adivinarse; no hay firma; no hay validación de cadena, a propósito.
+adivinarse; la firma es de un solo firmante, sin contrafirmas ni sello de
+tiempo; `Verify` no comprueba signing-certificate-v2; no hay validación de
+cadena, a propósito.
 
 ## Contra qué se comprueba {#what-it-is-checked-against}
 

@@ -26,7 +26,7 @@ All of them are pure Go and build with `CGO_ENABLED=0`.
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | who does this bearer token say is asking, and should it be believed? | v0.7.0 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | what did a federation's identity provider say about this person? | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | is this SSH certificate or key revoked, as sshd would answer? | v0.6.1 | `github.com/go-authn/krl` |
-| [cms]({{< relref "/libraries/cms.md" >}}) | does this signature hold over these bytes, and which certificate made it? | v0.1.0 | `github.com/go-authn/cms` |
+| [cms]({{< relref "/libraries/cms.md" >}}) | does this signature hold over these bytes, and which certificate made it? | v0.2.0 | `github.com/go-authn/cms` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | where does a daemon's TLS server certificate come from? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | may this WireGuard key connect, and whose is it? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | who has the identity provider just created, changed or deleted? | v0.2.1 | `github.com/go-authn/scim` |
@@ -64,9 +64,9 @@ a provider signs — the resource-server half, with no login flow.
 endpoint an identity provider calls to create, update and delete the people and
 groups of your application.
 
-**Signatures.** [cms]({{< relref "/libraries/cms.md" >}}) reads and verifies
-CMS SignedData, the container a PDF, a UEFI variable or a mail is signed in. It
-answers whether a signature holds; whether to trust who made it is left to
+**Signatures.** [cms]({{< relref "/libraries/cms.md" >}}) reads, verifies
+and signs CMS SignedData, the container a PDF, a UEFI variable or a mail is
+signed in. It answers whether a signature holds; whether to trust who made it is left to
 `crypto/x509` and to revocation.
 
 **Revocation and certificates.** [krl]({{< relref "/libraries/krl.md" >}})

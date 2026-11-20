@@ -2,7 +2,7 @@
 title: "cms — CMS SignedData による署名"
 linkTitle: "cms"
 weight: 115
-description: "go-authn/cms は CMS SignedData (RFC 5652) を読み取り検証する。PDF、UEFI、S/MIME の署名を収めるコンテナで、OpenSSL により検証される。"
+description: "go-authn/cms は CMS SignedData (RFC 5652) を読み取り、検証し、署名する。PDF、UEFI、S/MIME の署名を収めるコンテナで、OpenSSL により検証される。"
 tags: [ライブラリ, 署名, 証明書]
 ---
 
@@ -12,10 +12,10 @@ UEFI の認証付き変数、S/MIME メッセージが書かれるコンテナ�
 証明書を読み、署名を検証しますが、CMS は持っていません。
 
 ```sh
-go get github.com/go-authn/cms@v0.1.0
+go get github.com/go-authn/cms@v0.2.0
 ```
 
-v0.1.0 は**読み取りと検証**を行います。署名の作成は次のリリースです。
+v0.2.0 は**読み取り、検証、署名の作成**を行います。
 
 ## 例 {#example}
 
@@ -76,6 +76,106 @@ func main() {
 [go-authn/revocation](https://github.com/go-authn/revocation) の CRL 検証を
 使います。
 
+## 署名の作成 {#signing}
+
+`cms.Sign` は、任意の `crypto.Signer`（ファイル上、カード上、HSM 内のいずれかに
+ある RSA、ECDSA、Ed25519 の鍵）から、**署名者 1 人**の DER ContentInfo を書き出します。
+返す前に証明書でその署名を検証するため、誤った署名を返す署名器は拒否され、
+出力されることはありません。
+
+```go
+package main
+
+import (
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"errors"
+	"fmt"
+	"math/big"
+	"time"
+
+	"github.com/go-authn/cms"
+)
+
+func main() {
+	// A key and a self-signed certificate, for the example. In practice the
+	// key may live on a card or in an HSM: any crypto.Signer will do.
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		panic(err)
+	}
+	template := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "signer"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+	}
+	certDER, err := x509.CreateCertificate(rand.Reader, template, template, key.Public(), key)
+	if err != nil {
+		panic(err)
+	}
+	cert, err := x509.ParseCertificate(certDER)
+	if err != nil {
+		panic(err)
+	}
+
+	content := []byte("the bytes to sign")
+	der, err := cms.Sign(content, cms.SignOptions{
+		Signer:      key,
+		Certificate: cert,
+		Hash:        crypto.SHA256,
+		Detached:    true, // as a PDF signature: the content is not inside
+		SigningTime: time.Now(),
+	})
+	switch {
+	case errors.Is(err, cms.ErrSigner):
+		panic(fmt.Sprint("the key or the device failed: ", err))
+	case errors.Is(err, cms.ErrOptions):
+		panic(fmt.Sprint("the request is wrong: ", err))
+	case err != nil: // cms.ErrUnsupported
+		panic(err)
+	}
+
+	// Sign checked its own signature; Verify is the reader's side.
+	sd, err := cms.Parse(der)
+	if err != nil {
+		panic(err)
+	}
+	signers, err := sd.Verify(content)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("signed by", signers[0].Subject.CommonName)
+
+	content[0] ^= 1
+	_, err = sd.Verify(content)
+	fmt.Println("altered content:", errors.Is(err, cms.ErrInvalid))
+}
+```
+
+`SignOptions` には他に `Chain`（埋め込む中間証明書）、`PSS`（RSASSA-PSS）、
+`SigningCertificateV2`（RFC 5035。CAdES と PAdES のベースラインが要求するもの）、
+`ContentType`、`NoSignedAttrs`、`Rand` があります。ダイジェストは既定で SHA-256、
+ほかに SHA-384 と SHA-512 を選べ、Ed25519 は常に SHA-512 です。SHA-1 は拒否されます。
+
+`Sign` には独自のエラーが 3 つあります。`ErrOptions`（要求が誤っている）、
+`ErrSigner`（鍵またはデバイスが失敗した、あるいは証明書で検証できない署名を
+返した）、`ErrUnsupported`（書き出さないアルゴリズム）です。**署名付き属性なし**の
+Ed25519 も拒否されます。RFC 8419 は認めていますが、このパッケージが書き出す形を
+OpenSSL は検証しないためです。
+
+OpenSSL の `cms -verify` とこのパッケージの `Verify` は、試したすべての組み合わせで
+一致します。**58 の組み合わせ、203 の判定**で、RSA PKCS #1 v1.5、RSA-PSS、
+ECDSA P-256 と SHA-256、SHA-384、SHA-512、および Ed25519 と SHA-512 を、添付・分離の
+両方、署名付き属性の有無の両方で試しています。`Verify` はまだ
+signing-certificate-v2 を検証しません。署名者の証明書をその属性に結び付けるのは
+呼び出し側の役目です。
+
 ## 3 つのエラー。呼び出し側には 3 つの答えが必要だから {#three-errors-because-a-caller-needs-three-answers}
 
 | エラー | 意味 |
@@ -109,7 +209,8 @@ func main() {
   全体をハッシュする
 
 **まだ対応していないもの：** BER の不定長は推測せずに拒否します。署名の作成は
-なく、チェーン検証も意図的に行いません。
+署名者 1 人で、副署名もタイムスタンプトークンもありません。`Verify` は
+signing-certificate-v2 を検証せず、チェーン検証も意図的に行いません。
 
 ## 何に対して検証されるか {#what-it-is-checked-against}
 

@@ -25,7 +25,7 @@ tags: [ライブラリ]
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | このベアラートークンは誰が尋ねていると述べ、それを信じるべきか | v0.7.0 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | フェデレーションの ID プロバイダーは、この人について何と述べたか | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | この SSH 証明書または鍵は、sshd が答えるとおりに失効しているか | v0.6.1 | `github.com/go-authn/krl` |
-| [cms]({{< relref "/libraries/cms.md" >}}) | この署名はこのバイト列に対して成り立つか、そしてどの証明書が作ったか | v0.1.0 | `github.com/go-authn/cms` |
+| [cms]({{< relref "/libraries/cms.md" >}}) | この署名はこのバイト列に対して成り立つか、そしてどの証明書が作ったか | v0.2.0 | `github.com/go-authn/cms` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | デーモンの TLS サーバー証明書はどこから来るか | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | この WireGuard 鍵は接続してよいか。誰のものか | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | ID プロバイダーが作成、変更、削除したのは誰か | v0.2.1 | `github.com/go-authn/scim` |
@@ -59,8 +59,8 @@ tags: [ライブラリ]
 [scim]({{< relref "/libraries/scim.md" >}}) は逆方向です。ID プロバイダーが、アプリケーションの
 人々とグループを作成、更新、削除するために呼び出す SCIM 2.0 エンドポイントです。
 
-**署名。** [cms]({{< relref "/libraries/cms.md" >}}) は CMS SignedData を読み取り
-検証します。PDF、UEFI 変数、メールが署名されるコンテナです。署名が成り立つかに
+**署名。** [cms]({{< relref "/libraries/cms.md" >}}) は CMS SignedData を読み取り、
+検証し、署名します。PDF、UEFI 変数、メールが署名されるコンテナです。署名が成り立つかに
 答え、作成者を信頼すべきかは `crypto/x509` と失効確認に委ねます。
 
 **失効と証明書。** [krl]({{< relref "/libraries/krl.md" >}}) は OpenSSH の鍵失効リストを読み、書き、

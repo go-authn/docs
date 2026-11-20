@@ -2,7 +2,7 @@
 title: "cms — Signaturen in CMS SignedData"
 linkTitle: "cms"
 weight: 115
-description: "go-authn/cms liest und prüft CMS SignedData (RFC 5652), den Container hinter PDF-, UEFI- und S/MIME-Signaturen, beurteilt von OpenSSL."
+description: "go-authn/cms liest, prüft und signiert CMS SignedData (RFC 5652), den Container hinter PDF-, UEFI- und S/MIME-Signaturen, beurteilt von OpenSSL."
 tags: [Bibliotheken, Signaturen, Zertifikate]
 ---
 
@@ -13,10 +13,10 @@ UEFI-Variable und eine S/MIME-Nachricht geschrieben werden. Die
 Standardbibliothek liest Zertifikate und prüft Signaturen, kennt aber kein CMS.
 
 ```sh
-go get github.com/go-authn/cms@v0.1.0
+go get github.com/go-authn/cms@v0.2.0
 ```
 
-v0.1.0 **liest und prüft**. Das Signieren folgt im nächsten Release.
+v0.2.0 **liest, prüft und signiert**.
 
 ## Beispiel {#example}
 
@@ -78,6 +78,109 @@ die CRL-Prüfung von
 [go-authn/revocation](https://github.com/go-authn/revocation) für das, was
 zurückgezogen wurde.
 
+## Signieren {#signing}
+
+`cms.Sign` schreibt ein DER-ContentInfo mit **einem Unterzeichner**, aus jedem
+`crypto.Signer`: einem RSA-, ECDSA- oder Ed25519-Schlüssel, in einer Datei, auf
+einer Karte oder in einem HSM. Bevor es zurückkehrt, prüft es die Signatur unter
+dem Zertifikat; ein Signierer, der eine falsche Signatur liefert, wird
+abgelehnt und nie ausgegeben.
+
+```go
+package main
+
+import (
+	"crypto"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"errors"
+	"fmt"
+	"math/big"
+	"time"
+
+	"github.com/go-authn/cms"
+)
+
+func main() {
+	// A key and a self-signed certificate, for the example. In practice the
+	// key may live on a card or in an HSM: any crypto.Signer will do.
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		panic(err)
+	}
+	template := &x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject:      pkix.Name{CommonName: "signer"},
+		NotBefore:    time.Now().Add(-time.Hour),
+		NotAfter:     time.Now().Add(time.Hour),
+		KeyUsage:     x509.KeyUsageDigitalSignature,
+	}
+	certDER, err := x509.CreateCertificate(rand.Reader, template, template, key.Public(), key)
+	if err != nil {
+		panic(err)
+	}
+	cert, err := x509.ParseCertificate(certDER)
+	if err != nil {
+		panic(err)
+	}
+
+	content := []byte("the bytes to sign")
+	der, err := cms.Sign(content, cms.SignOptions{
+		Signer:      key,
+		Certificate: cert,
+		Hash:        crypto.SHA256,
+		Detached:    true, // as a PDF signature: the content is not inside
+		SigningTime: time.Now(),
+	})
+	switch {
+	case errors.Is(err, cms.ErrSigner):
+		panic(fmt.Sprint("the key or the device failed: ", err))
+	case errors.Is(err, cms.ErrOptions):
+		panic(fmt.Sprint("the request is wrong: ", err))
+	case err != nil: // cms.ErrUnsupported
+		panic(err)
+	}
+
+	// Sign checked its own signature; Verify is the reader's side.
+	sd, err := cms.Parse(der)
+	if err != nil {
+		panic(err)
+	}
+	signers, err := sd.Verify(content)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("signed by", signers[0].Subject.CommonName)
+
+	content[0] ^= 1
+	_, err = sd.Verify(content)
+	fmt.Println("altered content:", errors.Is(err, cms.ErrInvalid))
+}
+```
+
+`SignOptions` kennt außerdem `Chain` (einzubettende Zwischenzertifikate), `PSS`
+(RSASSA-PSS), `SigningCertificateV2` (RFC 5035, was die Basisprofile von CAdES
+und PAdES verlangen), `ContentType`, `NoSignedAttrs` und `Rand`. Der Hashwert
+ist standardmäßig SHA-256, wahlweise SHA-384 oder SHA-512; Ed25519 verwendet
+immer SHA-512. SHA-1 wird abgelehnt.
+
+`Sign` hat drei eigene Fehler: `ErrOptions` (die Anfrage ist falsch),
+`ErrSigner` (der Schlüssel oder das Gerät ist ausgefallen oder lieferte eine
+Signatur, die unter dem Zertifikat nicht prüfbar ist) und `ErrUnsupported` (ein
+Algorithmus, den es nicht schreibt). Auch Ed25519 **ohne signierte Attribute**
+wird abgelehnt: RFC 8419 erlaubt es, aber OpenSSL prüft nicht, was dieses Paket
+schreiben würde.
+
+`cms -verify` von OpenSSL und das `Verify` dieses Pakets stimmen bei jeder
+gefragten Kombination überein: **58 Kombinationen, 203 Urteile**, über RSA
+PKCS #1 v1.5, RSA-PSS und ECDSA P-256 mit SHA-256, SHA-384 und SHA-512 sowie
+Ed25519 mit SHA-512, angehängt und abgetrennt, mit und ohne signierte
+Attribute. `Verify` prüft signing-certificate-v2 noch nicht: Das Zertifikat des
+Unterzeichners an dieses Attribut zu binden, ist Sache des Aufrufers.
+
 ## Drei Fehler, weil ein Aufrufer drei Antworten braucht {#three-errors-because-a-caller-needs-three-answers}
 
 | Fehler | bedeutet |
@@ -111,8 +214,10 @@ Aus dem Code, jeweils mit einem Test, der die Meldung prüft:
   einmal pro Hashalgorithmus gehasht, aber ein Ed25519-Unterzeichner ohne
   signierte Attribute hasht ihn bei jeder Prüfung noch vollständig.
 
-**Noch nicht:** BER mit unbestimmter Länge wird abgelehnt statt geraten; kein
-Signieren; keine Kettenprüfung, mit Absicht.
+**Noch nicht:** BER mit unbestimmter Länge wird abgelehnt statt geraten; das
+Signieren hat einen Unterzeichner, ohne Gegensignaturen und ohne
+Zeitstempel-Token; `Verify` prüft signing-certificate-v2 nicht; keine
+Kettenprüfung, mit Absicht.
 
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
 
