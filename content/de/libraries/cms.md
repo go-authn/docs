@@ -102,10 +102,14 @@ Aus dem Code, jeweils mit einem Test, der die Meldung prüft:
 - einen Signaturalgorithmus, dessen eigener Hash nicht der des Hashwerts ist;
 - SHA-1, ausdrücklich abgelehnt;
 - Ed25519 über etwas anderes als SHA-512 (RFC 8419);
-- signierte Attribute, die kein DER sind — einschließlich eines primitiven
-  `[0]`-Tags, ein Bit von einer gültigen Signatur entfernt;
+- signierte Attribute in vier Nicht-DER-Formen: ein primitives `[0]`-Tag (ein
+  Bit von einer gültigen Signatur entfernt), ein Attribut, das keine SEQUENCE
+  ist, Werte, die kein SET sind, und überzählige Bytes in einem Attribut. Die
+  Reihenfolge des SET wird nicht geprüft;
 - mehr als **16 Unterzeichner** und mehr als **16 MiB**. Eine Größengrenze ist
-  keine Arbeitsgrenze: Jeder Unterzeichner wird über den ganzen Inhalt geprüft.
+  keine Arbeitsgrenze, daher die Obergrenze für Unterzeichner: Der Inhalt wird
+  einmal pro Hashalgorithmus gehasht, aber ein Ed25519-Unterzeichner ohne
+  signierte Attribute hasht ihn bei jeder Prüfung noch vollständig.
 
 **Noch nicht:** BER mit unbestimmter Länge wird abgelehnt statt geraten; kein
 Signieren; keine Kettenprüfung, mit Absicht.

@@ -103,10 +103,14 @@ D'après le code, chacun avec un test qui vérifie son message :
   l'empreinte ;
 - SHA-1, refusé nommément ;
 - Ed25519 sur autre chose que SHA-512 (RFC 8419) ;
-- des attributs signés qui ne sont pas du DER — y compris une étiquette `[0]`
-  primitive, à un bit d'une signature valide ;
+- des attributs signés sous quatre formes non DER : une étiquette `[0]`
+  primitive (à un bit d'une signature valide), un attribut qui n'est pas une
+  SEQUENCE, des valeurs qui ne sont pas un SET, et des octets en trop dans un
+  attribut. L'ordre du SET n'est pas vérifié ;
 - plus de **16 signataires**, et plus de **16 Mio**. Une borne de taille n'est
-  pas une borne de travail : chaque signataire est vérifié sur tout le contenu.
+  pas une borne de travail, d'où le plafond de signataires : le contenu est
+  haché une fois par algorithme d'empreinte, mais un signataire Ed25519 sans
+  attributs signés le hache encore en entier à chaque vérification.
 
 **Pas encore :** les longueurs indéfinies BER sont refusées plutôt que
 devinées ; pas de signature ; pas de validation de chaîne, à dessein.

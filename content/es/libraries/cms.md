@@ -102,10 +102,14 @@ Según el código, cada uno con una prueba que comprueba su mensaje:
 - un algoritmo de firma cuyo propio hash no es el del resumen;
 - SHA-1, rechazado por su nombre;
 - Ed25519 sobre algo distinto de SHA-512 (RFC 8419);
-- atributos firmados que no son DER — incluida una etiqueta `[0]` primitiva, a
-  un bit de una firma válida;
+- atributos firmados en cuatro formas no DER: una etiqueta `[0]` primitiva (a
+  un bit de una firma válida), un atributo que no es una SEQUENCE, valores que
+  no son un SET, y bytes sobrantes dentro de un atributo. El orden del SET no se
+  comprueba;
 - más de **16 firmantes**, y más de **16 MiB**. Un límite de tamaño no es un
-  límite de trabajo: cada firmante se verifica sobre todo el contenido.
+  límite de trabajo, de ahí el tope de firmantes: el contenido se resume una
+  vez por algoritmo de resumen, pero un firmante Ed25519 sin atributos firmados
+  lo sigue resumiendo entero en cada comprobación.
 
 **Todavía no:** las longitudes indefinidas BER se rechazan en lugar de
 adivinarse; no hay firma; no hay validación de cadena, a propósito.

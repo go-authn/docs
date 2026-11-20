@@ -101,10 +101,14 @@ From the code, each with a test that asserts its message:
 - a signature algorithm whose own hash is not the digest's;
 - SHA-1, refused by name;
 - Ed25519 over anything but SHA-512 (RFC 8419);
-- signed attributes that are not DER — including a primitive `[0]` tag, which
-  is one bit away from a valid signature;
+- signed attributes in four non-DER shapes: a primitive `[0]` tag (one bit
+  away from a valid signature), an attribute that is not a SEQUENCE, values
+  that are not a SET, and bytes trailing inside an attribute. The order of the
+  SET is not checked;
 - more than **16 signers**, and more than **16 MiB**. A size bound is not a
-  work bound: every signer is checked over the whole content.
+  work bound, which is why the signers are capped: the content is hashed once
+  per digest algorithm, but an Ed25519 signer without signed attributes still
+  hashes all of it on every check.
 
 **Not yet:** BER indefinite lengths are refused rather than guessed at; no
 signing; no chain validation, on purpose.
