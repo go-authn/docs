@@ -2,7 +2,7 @@
 title: "各个库，每个只回答一个问题"
 linkTitle: "库"
 weight: 50
-description: "十五个 go-authn Go 模块：每个模块回答的问题、这些页面所描述的版本，以及它们为什么是独立的模块。"
+description: "十六个 go-authn Go 模块：每个模块回答的问题、这些页面所描述的版本，以及它们为什么是独立的模块。"
 tags: [库]
 ---
 
@@ -26,6 +26,7 @@ tags: [库]
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | 这个持有者令牌声称是谁在发出请求，是否应当相信？ | v0.7.0 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | 联邦的身份提供方对此人说了什么？ | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | 按 sshd 的回答，这个 SSH 证书或密钥是否已被吊销？ | v0.6.1 | `github.com/go-authn/krl` |
+| [cms]({{< relref "/libraries/cms.md" >}}) | 这个签名对这些字节是否成立，又是哪个证书做出的？ | v0.1.0 | `github.com/go-authn/cms` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | 守护进程的 TLS 服务器证书从哪里来？ | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 这把 WireGuard 密钥是否可以连接，它是谁的？ | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | 身份提供方刚刚创建、更改或删除了谁？ | v0.2.1 | `github.com/go-authn/scim` |
@@ -62,6 +63,10 @@ RENATER 或 eduGAIN 等联邦之前的 SAML 2.0 服务提供方。
 [scim]({{< relref "/libraries/scim.md" >}})是另一个方向：身份提供方调用的
 SCIM 2.0 端点，用来创建、更新和删除你的应用程序的人员和
 组。
+
+**签名。** [cms]({{< relref "/libraries/cms.md" >}}) 读取并验证 CMS
+SignedData，即 PDF、UEFI 变量或邮件进行签名所用的容器。它回答签名是否成立；
+是否信任签名者则交给 `crypto/x509` 和吊销检查。
 
 **吊销与证书。** [krl]({{< relref "/libraries/krl.md" >}})
 读取、写入并检查 OpenSSH 密钥吊销列表。

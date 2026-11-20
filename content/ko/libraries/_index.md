@@ -2,7 +2,7 @@
 title: "라이브러리, 질문 하나씩"
 linkTitle: "라이브러리"
 weight: 50
-description: "열다섯 개의 go-authn Go 모듈: 각각이 답하는 질문, 이 문서가 설명하는 버전, 그리고 별도의 모듈인 이유."
+description: "열여섯 개의 go-authn Go 모듈: 각각이 답하는 질문, 이 문서가 설명하는 버전, 그리고 별도의 모듈인 이유."
 tags: [라이브러리]
 ---
 
@@ -26,6 +26,7 @@ tags: [라이브러리]
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | 이 베어러 토큰은 누가 요청한다고 말하며, 믿어야 하는가? | v0.7.0 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | 페더레이션의 신원 공급자는 이 사람에 대해 무엇을 말했는가? | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | sshd가 답하는 대로, 이 SSH 인증서나 키는 폐기되었는가? | v0.6.1 | `github.com/go-authn/krl` |
+| [cms]({{< relref "/libraries/cms.md" >}}) | 이 서명이 이 바이트들에 대해 성립하는가, 그리고 어떤 인증서가 만들었는가? | v0.1.0 | `github.com/go-authn/cms` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | 데몬의 TLS 서버 인증서는 어디서 오는가? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 이 WireGuard 키가 연결해도 되는가, 그리고 누구의 것인가? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | 신원 공급자가 방금 누구를 생성, 변경, 삭제했는가? | v0.2.1 | `github.com/go-authn/scim` |
@@ -60,6 +61,10 @@ keytab이 있고, AP-REQ가 들어오고, AP-REP가 나갑니다.
 검증합니다. 로그인 흐름 없이 리소스 서버 쪽 절반입니다.
 [scim]({{< relref "/libraries/scim.md" >}})은 반대 방향입니다. 신원 공급자가 애플리케이션의
 사람과 그룹을 생성, 갱신, 삭제하려고 호출하는 SCIM 2.0 엔드포인트입니다.
+
+**서명.** [cms]({{< relref "/libraries/cms.md" >}})는 CMS SignedData를 읽고
+검증합니다. PDF, UEFI 변수, 메일이 서명되는 컨테이너입니다. 서명이 성립하는지에
+답하고, 만든 이를 신뢰할지는 `crypto/x509`와 폐기 확인에 맡깁니다.
 
 **폐기와 인증서.** [krl]({{< relref "/libraries/krl.md" >}})은 OpenSSH 키 폐기 목록을
 읽고, 쓰고, 확인합니다. [servercert]({{< relref "/libraries/servercert.md" >}})는 데몬에
