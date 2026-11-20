@@ -10,7 +10,8 @@ tags: [libraries, kerberos, directory]
 UDP and TCP, with encrypted-timestamp pre-authentication required, for the
 people a [directory]({{< relref "/libraries/directory.md" >}}) knows and the
 services a keytab holds. It runs under
-[authnd]({{< relref "/authnd/_index.md" >}}).
+[authnd]({{< relref "/authnd/_index.md" >}}). The standalone daemon built on it
+is [kdcd]({{< relref "/libraries/kdcd.md" >}}).
 
 ```sh
 go get github.com/go-authn/kdc@v0.6.0

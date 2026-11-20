@@ -10,6 +10,7 @@ tags: [bibliotecas, kerberos, directorio]
 y TCP, con preautenticación por marca de tiempo cifrada obligatoria, para las personas
 que conoce un [directorio]({{< relref "/libraries/directory.md" >}}) y los servicios que
 guarda una keytab. Se ejecuta bajo [authnd]({{< relref "/authnd/_index.md" >}}).
+El demonio independiente construido sobre él es [kdcd]({{< relref "/libraries/kdcd.md" >}}).
 
 ```sh
 go get github.com/go-authn/kdc@v0.6.0

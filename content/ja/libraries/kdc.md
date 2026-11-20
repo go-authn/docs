@@ -10,6 +10,7 @@ tags: [ライブラリ, kerberos, ディレクトリ]
 タイムスタンプによる事前認証を必須として、[ディレクトリ]({{< relref "/libraries/directory.md" >}})が
 知る人々と、キータブが保持するサービスのために処理します。
 [authnd]({{< relref "/authnd/_index.md" >}}) の下で動作します。
+これを土台にした単独のデーモンが [kdcd]({{< relref "/libraries/kdcd.md" >}}) です。
 
 ```sh
 go get github.com/go-authn/kdc@v0.6.0

@@ -10,7 +10,8 @@ tags: [bibliothèques, kerberos, annuaire]
 UDP et TCP, avec la pré-authentification par horodatage chiffré exigée, pour les
 personnes qu'un [annuaire]({{< relref "/libraries/directory.md" >}}) connaît et les
 services qu'un keytab détient. Il fonctionne sous
-[authnd]({{< relref "/authnd/_index.md" >}}).
+[authnd]({{< relref "/authnd/_index.md" >}}). Le démon autonome construit dessus
+est [kdcd]({{< relref "/libraries/kdcd.md" >}}).
 
 ```sh
 go get github.com/go-authn/kdc@v0.6.0

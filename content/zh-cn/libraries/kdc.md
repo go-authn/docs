@@ -10,7 +10,8 @@ tags: [库, kerberos, 目录]
 要求加密时间戳预认证，面向
 [directory]({{< relref "/libraries/directory.md" >}})所了解的人员以及
 keytab 所持有的服务。它运行在
-[authnd]({{< relref "/authnd/_index.md" >}})之下。
+[authnd]({{< relref "/authnd/_index.md" >}})之下。基于它构建的独立守护进程是
+[kdcd]({{< relref "/libraries/kdcd.md" >}})。
 
 ```sh
 go get github.com/go-authn/kdc@v0.6.0
