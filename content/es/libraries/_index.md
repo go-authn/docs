@@ -2,7 +2,7 @@
 title: "Las bibliotecas, una pregunta cada una"
 linkTitle: "Bibliotecas"
 weight: 50
-description: "Los quince módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
+description: "Los dieciséis módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
 tags: [bibliotecas]
 ---
 
@@ -26,6 +26,7 @@ Todos son Go puro y se compilan con `CGO_ENABLED=0`.
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | ¿quién dice este token bearer que pregunta, y hay que creerlo? | v0.7.0 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | ¿qué dijo de esta persona el proveedor de identidad de una federación? | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | ¿está revocado este certificado o esta clave SSH, tal como respondería sshd? | v0.6.1 | `github.com/go-authn/krl` |
+| [cms]({{< relref "/libraries/cms.md" >}}) | ¿se sostiene esta firma sobre estos bytes, y qué certificado la hizo? | v0.1.0 | `github.com/go-authn/cms` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | ¿de dónde procede el certificado de servidor TLS de un demonio? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | ¿puede conectarse esta clave WireGuard, y de quién es? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | ¿a quién acaba de crear, cambiar o eliminar el proveedor de identidad? | v0.2.1 | `github.com/go-authn/scim` |
@@ -63,6 +64,11 @@ firma un proveedor: la mitad del servidor de recursos, sin flujo de inicio de se
 [scim]({{< relref "/libraries/scim.md" >}}) va en el otro sentido: el punto de
 acceso SCIM 2.0 al que llama un proveedor de identidad para crear, actualizar y
 eliminar las personas y los grupos de su aplicación.
+
+**Firmas.** [cms]({{< relref "/libraries/cms.md" >}}) lee y verifica CMS
+SignedData, el contenedor en el que se firman un PDF, una variable UEFI o un
+correo. Responde si una firma se sostiene; si hay que confiar en quien la hizo
+se deja a `crypto/x509` y a la revocación.
 
 **Revocación y certificados.** [krl]({{< relref "/libraries/krl.md" >}}) lee, escribe
 y comprueba las listas de revocación de claves de OpenSSH.

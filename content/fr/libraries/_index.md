@@ -2,7 +2,7 @@
 title: "Les bibliothèques, une question chacune"
 linkTitle: "Bibliothèques"
 weight: 50
-description: "Les quinze modules Go de go-authn : la question à laquelle chacun répond, la version que ces pages décrivent, et pourquoi ce sont des modules distincts."
+description: "Les seize modules Go de go-authn : la question à laquelle chacun répond, la version que ces pages décrivent, et pourquoi ce sont des modules distincts."
 tags: [bibliothèques]
 ---
 
@@ -26,6 +26,7 @@ Tous sont en pur Go et se compilent avec `CGO_ENABLED=0`.
 | [oidc]({{< relref "/libraries/oidc.md" >}}) | qui ce jeton porteur dit-il être en train de demander, et faut-il le croire ? | v0.7.0 | `github.com/go-authn/oidc` |
 | [saml]({{< relref "/libraries/saml.md" >}}) | qu'a dit le fournisseur d'identité d'une fédération à propos de cette personne ? | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | ce certificat ou cette clé SSH est-il révoqué, comme sshd répondrait ? | v0.6.1 | `github.com/go-authn/krl` |
+| [cms]({{< relref "/libraries/cms.md" >}}) | cette signature tient-elle sur ces octets, et quel certificat l'a faite ? | v0.1.0 | `github.com/go-authn/cms` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | d'où vient le certificat de serveur TLS d'un démon ? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | cette clé WireGuard peut-elle se connecter, et à qui est-elle ? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | qui le fournisseur d'identité vient-il de créer, de modifier ou de supprimer ? | v0.2.1 | `github.com/go-authn/scim` |
@@ -63,6 +64,11 @@ qu'un fournisseur signe — la moitié serveur de ressources, sans parcours de c
 [scim]({{< relref "/libraries/scim.md" >}}) va dans l'autre sens : le point d'accès
 SCIM 2.0 qu'un fournisseur d'identité appelle pour créer, mettre à jour et
 supprimer les personnes et les groupes de votre application.
+
+**Signatures.** [cms]({{< relref "/libraries/cms.md" >}}) lit et vérifie le
+CMS SignedData, le conteneur dans lequel se signent un PDF, une variable UEFI ou
+un courriel. Il dit si une signature tient ; s'il faut faire confiance à qui l'a
+faite est laissé à `crypto/x509` et à la révocation.
 
 **Révocation et certificats.** [krl]({{< relref "/libraries/krl.md" >}})
 lit, écrit et vérifie les listes de révocation de clés OpenSSH.
