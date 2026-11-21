@@ -292,4 +292,4 @@ v0.6.1부터 퍼즈 타깃 네 개가 파서 옆에 있으며, 코퍼스는 `tes
 
 ## 참고 {#reference}
 
-[pkg.go.dev/github.com/go-authn/saml@v0.4.1](https://pkg.go.dev/github.com/go-authn/saml@v0.4.1)
+[pkg.go.dev/github.com/go-authn/saml](https://pkg.go.dev/github.com/go-authn/saml)

@@ -313,4 +313,4 @@ límite de tamaño y una compuesta solo de espacios en blanco se rechazan, con
 
 ## Referencia {#reference}
 
-[pkg.go.dev/github.com/go-authn/saml@v0.4.1](https://pkg.go.dev/github.com/go-authn/saml@v0.4.1)
+[pkg.go.dev/github.com/go-authn/saml](https://pkg.go.dev/github.com/go-authn/saml)

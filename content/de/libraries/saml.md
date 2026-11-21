@@ -309,4 +309,4 @@ eine nur aus Leerraum bestehende jeweils abgelehnt, mit `TotalAlloc` auf 4 bis 8
 
 ## Referenz {#reference}
 
-[pkg.go.dev/github.com/go-authn/saml@v0.4.1](https://pkg.go.dev/github.com/go-authn/saml@v0.4.1)
+[pkg.go.dev/github.com/go-authn/saml](https://pkg.go.dev/github.com/go-authn/saml)

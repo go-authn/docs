@@ -295,4 +295,4 @@ v0.6.1 から、四つのファズターゲットがパーサーの隣にあり�
 
 ## リファレンス {#reference}
 
-[pkg.go.dev/github.com/go-authn/saml@v0.4.1](https://pkg.go.dev/github.com/go-authn/saml@v0.4.1)
+[pkg.go.dev/github.com/go-authn/saml](https://pkg.go.dev/github.com/go-authn/saml)
