@@ -11,8 +11,18 @@ tags: [ライブラリ, ディレクトリ, ldap, sql]
 あります。
 
 ```sh
-go get github.com/go-authn/directory@v0.21.0
+go get github.com/go-authn/directory@v0.24.0
 ```
+
+v0.24.0 以降 (go-authn/ldap v0.14.0 が必要)、`ldapdir` は `caseIgnoreMatch` が同一視する 2 つの uid を
+1 つの名前として扱います。"alice" と "alice " (末尾の空白)、"al ice" と "al  ice"、全角の "ａlice"、
+"ſam" と "sam"、ソフトハイフンを含む名前は `ErrAmbiguous` となり、以前は 2 人の人でした。キーは標準
+スキーマにおける属性の等価キー (`schema.Schema.EqualityKey`、RFC 4518 の準備処理) です。標準スキーマが
+知らない `UserAttribute` は従来の小文字化のままです。**アップグレード:** そのような組を持つディレクトリは、
+どちらかのエントリが修正されるまで読み込みに失敗するようになります。`Set.Identities` は今もバイト単位で
+名前を比較し、ソースをまたぐ場合は、その名前を最初に知るソースがそれを所有します。`ldapdir` は証明書を
+URL のホストに対しても検証します (`tls.Config.ServerName`、コピーされ変更されません。明示された
+ServerName が今も優先されます)。これは go-authn/ldap v0.14.0 とともに StartTLS も修正します。
 
 v0.17.0 の新機能: [`ErrUnavailable`](#unavailable)。障害を間違ったパスワードと区別します。また、メンバーの DN は
 走査ではなく一回の検索で人に対応づけられます (結果は同じ)。`ldaptest` (同じプロセス内のサーバー) に対して `Frozen`

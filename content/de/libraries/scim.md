@@ -13,7 +13,7 @@ dieser HTTP-Endpunkt, für Users und Groups (RFC 7643, RFC 7644), über einem
 `Backend`, das Sie schreiben. Reines Go, `CGO_ENABLED=0`, nur Standardbibliothek.
 
 ```sh
-go get github.com/go-authn/scim@v0.2.1
+go get github.com/go-authn/scim@v0.3.0
 ```
 
 ## Beispiel {#example}
@@ -51,7 +51,8 @@ Alles hier kommt von außen, also gehören die Grenzen zur API:
 | eine Gruppe mit mehr als `MaxMembers` (10 000) | 400 `invalidValue` |
 | ein Filter über 4 KiB, tiefer als 32 verschachtelt, mit unbekanntem Operator oder `gt` auf einem Boolean | 400 `invalidFilter` |
 | Schreibzugriffe auf `id`, `meta`, `schemas` oder die `groups` eines Benutzers | 400 `mutability` |
-| eine Ressource ohne ihr Kernschema, ein `userName`, der leer ist, über 256 Bytes lang ist oder Steuerzeichen enthält, zwei primäre E-Mail-Adressen | 400 |
+| eine Ressource ohne ihr Kernschema, ein `userName`, der leer ist, über 256 Bytes lang ist, Steuerzeichen oder Formatzeichen (Cf) enthält oder mit Leerraum beginnt oder endet (seit v0.3.0), zwei primäre E-Mail-Adressen | 400 |
+| ein `userName`, den `Memory` schon hält, verglichen nach NFKC-Normalisierung und Case Folding (seit v0.3.0) | 409 `uniqueness` |
 | ein fehlendes oder falsches Bearer-Token (`BearerAuth`, in konstanter Zeit; ein leeres Token lässt niemanden ein) | 401 |
 | jeder Backend-Fehler, der keine der Sentinels ist | 500 mit einem Body, der nichts sagt; der Fehler geht an `ErrorLog` |
 
@@ -126,6 +127,27 @@ Ergebnis. `FuzzPatchPath`, `FuzzPatchThenDecode`, `FuzzFilter` und `FuzzServer` 
   Benutzer): 361.095 Allokationen pro Anfrage vorher, 162.695 jetzt, das sind 36,1 bis 16,3
   pro Benutzer. Die Äquivalenz ist für 50 Filter und zufällige getestet
   (`FuzzFilterOnSelectedMap`).
+
+## Was v0.3.0 geändert hat {#v030}
+
+- **`userName`-Doppelgänger sind ein Name.** `"alice "`, `" alice"`, ein Name mit
+  U+200B, U+202E oder einem weichen Trennstrich und ein Vollbreiten-`ａlice` wurden
+  alle neben `alice` angelegt (201), weil die Eindeutigkeit allein
+  `strings.EqualFold` war (v0.2.1 oben) und nur Steuerzeichen (Cc) abgelehnt wurden.
+  RFC 7643 §4.1.1 verlangt nur einen nicht leeren, eindeutigen, von der
+  Groß-/Kleinschreibung unabhängigen `userName` und nennt keine Normalisierung,
+  also ist das die Richtlinie des Servers. Ein `userName` lehnt jetzt Formatzeichen
+  (Cf) an jeder Stelle und Leerraum an beiden Enden ab (400 `invalidValue`), und
+  `Memory` vergleicht die Eindeutigkeit (Anlegen, Umbenennen und die Einengung
+  `userName eq`) nach NFKC plus Case Folding, sodass Kompatibilitätsvarianten und
+  zusammengesetzte oder zerlegte Schreibweisen ein Name sind (409).
+- **Upgrade:** Ein Client, der einen `userName` mit führendem oder nachgestelltem
+  Leerzeichen oder mit einem Zero-Width-Joiner oder -Non-Joiner oder einem anderen
+  Cf-Zeichen sendet (einige persische und indische Namen verwenden sie), wird jetzt
+  mit 400 beantwortet. Unter solchen Namen gespeicherte Benutzer bleiben lesbar,
+  lassen sich aber nicht erneut speichern, ohne den Namen zu bereinigen. Ein eigenes
+  `Backend` sollte dasselbe NFKC und Folding auf seine Eindeutigkeitsprüfung
+  anwenden; das Modul hängt jetzt von `golang.org/x/text` (unicode/norm) ab.
 
 ## Wogegen es geprüft wird {#what-it-is-checked-against}
 

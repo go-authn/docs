@@ -13,8 +13,13 @@ federación, envía a las personas al proveedor de identidad de su propia
 institución, y lee lo que ese proveedor responde.
 
 ```sh
-go get github.com/go-authn/saml@v0.7.0
+go get github.com/go-authn/saml@v0.7.1
 ```
+
+Desde la v0.7.1, `Federation` entiende por loopback `localhost` o un literal IP que es
+loopback (`127.0.0.0/8`, `::1`). Antes contaba cualquier nombre DNS que empezara por
+`127.` (`127.evil.example`), lo que le permitía obtener metadatos por http sin cifrar
+y seguir una redirección de https a http hacia tal host.
 
 Es la mitad de [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) que da a
 la federación, y puede usarla por sí sola cualquier cosa que quiera ser un SP

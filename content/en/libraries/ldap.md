@@ -12,8 +12,18 @@ server that runs it and owns the configuration, the directory sources and the
 bind policy; this owns the bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.3
+go get github.com/go-authn/ldap@v0.14.0
 ```
+
+Since v0.14.0, the client (`Dial`, `Bind`, `StartTLS`, `Search`) verifies and bounds
+more of what a server does. `StartTLS` verifies the certificate against the host of
+the URL, where it verified the peer's IP address (an explicit `tls.Config.ServerName`
+still wins; a `ClientConn` made by `NewClientConn` has no URL and keeps verifying
+the peer address). The TLS handshake lasts at most the dialer's timeout (30 s by
+default) and never more than `DialOptions.Timeout`, for `ldaps://` and for
+`StartTLS`. Search continuation references and intermediate responses count against
+`ClientLimits.MaxEntries`. `schema.Schema.EqualityKey` gives a key such that two
+values of an attribute type have one key exactly when `Equal` is true.
 
 Written from RFC 4511 (the protocol), 4512 (the root DSE and the schema),
 4513 (authentication), 4514 and 4515 (DN and filter string forms), 4517 and

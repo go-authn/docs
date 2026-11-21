@@ -12,8 +12,19 @@ Server, der sie ausführt und dem die Konfiguration, die Verzeichnisquellen und 
 Bind-Richtlinie gehören; dieser Bibliothek gehören die Bytes.
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.3
+go get github.com/go-authn/ldap@v0.14.0
 ```
+
+Seit v0.14.0 prüft und begrenzt der Client (`Dial`, `Bind`, `StartTLS`, `Search`)
+mehr von dem, was ein Server tut. `StartTLS` prüft das Zertifikat gegen den Host der
+URL, wo es die IP-Adresse des Peers prüfte (ein ausdrücklich gesetztes
+`tls.Config.ServerName` gewinnt weiterhin; eine mit `NewClientConn` erzeugte
+`ClientConn` hat keine URL und prüft weiter die Peer-Adresse). Der TLS-Handshake
+dauert höchstens das Timeout des Dialers (standardmäßig 30 s) und nie länger als
+`DialOptions.Timeout`, für `ldaps://` und für `StartTLS`. Fortsetzungsreferenzen und
+Zwischenantworten einer Suche zählen gegen `ClientLimits.MaxEntries`.
+`schema.Schema.EqualityKey` liefert einen Schlüssel, sodass zwei Werte eines
+Attributtyps genau dann einen Schlüssel haben, wenn `Equal` wahr ist.
 
 Geschrieben nach RFC 4511 (das Protokoll), 4512 (das Root-DSE und das Schema),
 4513 (Authentifizierung), 4514 und 4515 (String-Formen von DN und Filter), 4517 und

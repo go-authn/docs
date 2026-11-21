@@ -13,8 +13,15 @@ signiert, prüft, versiegelt und öffnet dann Nachrichten mit dem Schlüssel, de
 festgelegt hat.
 
 ```sh
-go get github.com/go-authn/krb5@v0.4.0
+go get github.com/go-authn/krb5@v0.4.1
 ```
+
+Seit v0.4.1 lehnt ein Acceptor, der mit der Option `Principal` gebaut ist, jedes Ticket
+ab, dessen Klartext-Dienstname vom konfigurierten Principal abweicht, bevor gokrb5 es
+sieht: Ein Ticket mit leerem Klartext-Dienstnamen ließ `Accept` in gokrb5 in Panik
+geraten, und das Umschreiben des Klartextnamens umging den Replay-Cache von gokrb5,
+sodass ein abgefangener AP-REQ wiederholt werden konnte. `Accept` fängt außerdem eine
+Panik in gokrb5 als Ablehnung ab. Acceptor ohne `Principal` sind unverändert.
 
 v0.4.0 fügt `(*Context).SessionKey()` und `SessionKeyType()` hinzu, die den
 Kontextschlüssel und seinen Verschlüsselungstyp liefern (SMB leitet seinen

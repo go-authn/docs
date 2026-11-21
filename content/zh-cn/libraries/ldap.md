@@ -12,8 +12,15 @@ tags: [库, ldap, 目录]
 绑定策略；本库拥有字节。
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.3
+go get github.com/go-authn/ldap@v0.14.0
 ```
+
+自 v0.14.0 起，客户端（`Dial`、`Bind`、`StartTLS`、`Search`）对服务器所做的事验证和限制得更多。
+`StartTLS` 针对 URL 的主机验证证书，此前它验证的是对端的 IP 地址（显式给出的 `tls.Config.ServerName`
+仍然优先；由 `NewClientConn` 创建的 `ClientConn` 没有 URL，继续验证对端地址）。TLS 握手最长持续
+拨号器的超时（默认 30 秒），且绝不超过 `DialOptions.Timeout`，对 `ldaps://` 和 `StartTLS` 都一样。
+搜索的延续引用和中间响应计入 `ClientLimits.MaxEntries`。`schema.Schema.EqualityKey` 给出一个键，
+使一个属性类型的两个值有同一个键，当且仅当 `Equal` 为真。
 
 依据 RFC 4511（协议）、4512（根 DSE 和模式）、
 4513（认证）、4514 和 4515（DN 和过滤器的字符串形式）、4517 和

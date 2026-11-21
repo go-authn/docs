@@ -11,7 +11,7 @@ tags: [库, secretsource, 密钥]
 shell 历史记录里。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.5.0
+go get github.com/go-authn/secretsource@v0.6.0
 ```
 
 ```go
@@ -23,7 +23,7 @@ use(s.Bytes())
 
 | 引用 | 读取 |
 |---|---|
-| `file:PATH` | 仅所有者可读的普通文件（权限 0600 或更严格）；去掉结尾的一个换行符 |
+| `file:PATH` | 仅所有者可读的普通文件（权限 0600 或更严格）；去掉结尾的一个换行符；为空、或只含一个行结束符的文件以 `ErrEmpty` 被拒绝（自 v0.6.0 起），FIFO 则因不是普通文件而被拒绝 |
 | `keychain:SERVICE/ACCOUNT` | macOS 钥匙串中的一个通用密码项 |
 | `secretservice:SERVICE/ACCOUNT` | 属性为 `service=SERVICE`、`account=ACCOUNT` 的 freedesktop Secret Service 项（GNOME Keyring、KWallet、KeePassXC 的 Secret Service 集成） |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | 带有所有这些属性的唯一一个 Secret Service 项；匹配到多个则拒绝 |
@@ -33,13 +33,16 @@ use(s.Bytes())
 URL 的条目时，KeePassXC 2.8.0 会崩溃。
 
 **没有任何方案会执行命令**：选项绝不能能够启动进程。没有方案的引用会被拒绝，
-而不是被猜成路径（路径要写成 `file:`）。超过 4096 字节的密钥，或管理器返回的
-空密钥，都会被拒绝；一次调用随其上下文结束（没有截止时间时为 2 分钟），即使
+而不是被猜成路径（路径要写成 `file:`）。超过 4096 字节的密钥，或管理器或 `file:` 返回的
+空密钥，都会被拒绝（`ErrEmpty`）；一次调用随其上下文结束（没有截止时间时为 2 分钟），即使
 管理器正在等你解锁。
 
 ## KeePassXC {#keepassxc}
 
-KeePassXC 通过其浏览器集成协议访问，支持 macOS 和 Linux；Windows 尚未实现。
+KeePassXC 通过其浏览器集成协议访问，支持 macOS 和 Linux；Windows 尚未实现。自 v0.6.0 起，在 Unix 上，当套接字是符号链接，或其所在目录归其他用户所有、
+或组或其他人可写时，套接字被拒绝，拨号之后会检查已连接对端的 uid；不再跟随旧的
+`$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer` 符号链接（而是跟随
+`app/org.keepassxc.KeePassXC/` 下的真实套接字）。
 
 1. 在 KeePassXC 中启用 *Settings > Browser Integration*。
 2. 每个数据库关联这台机器一次，并在 KeePassXC 中批准：

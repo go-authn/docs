@@ -12,8 +12,13 @@ tags: [ライブラリ, saml, フェデレーション]
 そのプロバイダーが述べることを読み戻します。
 
 ```sh
-go get github.com/go-authn/saml@v0.7.0
+go get github.com/go-authn/saml@v0.7.1
 ```
+
+v0.7.1 以降、`Federation` はループバックを `localhost`、またはループバックである IP リテラル
+(`127.0.0.0/8`、`::1`) とみなします。`127.` で始まる DNS 名 (`127.evil.example`) は以前すべて
+ループバックとみなされ、平文 http でメタデータを取得し、https から http へのリダイレクトをそのような
+ホストへ辿ることができました。
 
 これは [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) のフェデレーションに面した半分で、
 SAML SP になりたいものなら単独でも使えます。ここにないもの: IdP、シングルログアウト、アーティファクト

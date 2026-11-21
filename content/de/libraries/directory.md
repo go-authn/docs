@@ -11,8 +11,22 @@ Speicher, einer SQL-Datenbank, einem LDAP-Server oder `user`- und `group`-Blöck
 Konfigurationsdatei – und worauf es ankommt, ist die zweite Hälfte der Frage.
 
 ```sh
-go get github.com/go-authn/directory@v0.21.0
+go get github.com/go-authn/directory@v0.24.0
 ```
+
+Seit v0.24.0, das go-authn/ldap v0.14.0 braucht, hält `ldapdir` zwei uids, die
+`caseIgnoreMatch` gleichsetzt, für einen Namen: "alice" und "alice " (Leerzeichen am
+Ende), "al ice" und "al  ice", ein Vollbreiten-"ａlice", "ſam" und "sam" oder ein Name
+mit einem weichen Trennstrich sind `ErrAmbiguous`, wo sie zwei Personen waren. Der
+Schlüssel ist der Gleichheitsschlüssel des Attributs aus dem Standardschema
+(`schema.Schema.EqualityKey`, Aufbereitung nach RFC 4518); ein `UserAttribute`, das
+das Standardschema nicht kennt, behält die Kleinschreibung. **Upgrade:** Ein
+Verzeichnis mit solchen Paaren lässt sich jetzt nicht mehr laden, bis ein Eintrag
+korrigiert ist. `Set.Identities` vergleicht Namen weiterhin byteweise, und über
+Quellen hinweg gehört ein Name der ersten Quelle, die ihn kennt. `ldapdir` prüft
+außerdem das Zertifikat gegen den Host der URL (`tls.Config.ServerName`, kopiert und
+nicht verändert; ein ausdrücklich gesetzter ServerName gewinnt weiterhin), was mit
+go-authn/ldap v0.14.0 auch StartTLS behebt.
 
 Neu in v0.17.0: [`ErrUnavailable`](#unavailable), ein Ausfall, der von einem falschen
 Passwort unterschieden wird, und ein Member-DN, der einer Person mit einem einzigen

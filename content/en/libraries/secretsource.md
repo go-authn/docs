@@ -11,7 +11,7 @@ names where a secret lives; `secretsource.Open` fetches it. The reference holds
 no secret, so it may sit in a flag, a script or a shell history.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.5.0
+go get github.com/go-authn/secretsource@v0.6.0
 ```
 
 ```go
@@ -23,7 +23,7 @@ use(s.Bytes())
 
 | Reference | Reads |
 |---|---|
-| `file:PATH` | a regular file readable by its owner alone (mode 0600 or stricter); one trailing newline is stripped |
+| `file:PATH` | a regular file readable by its owner alone (mode 0600 or stricter); one trailing newline is stripped; a file that is empty, or holds only a line ending, is refused with `ErrEmpty` (since v0.6.0), and a FIFO is refused as not a regular file |
 | `keychain:SERVICE/ACCOUNT` | a macOS Keychain generic-password item |
 | `secretservice:SERVICE/ACCOUNT` | a freedesktop Secret Service item with attributes `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, KeePassXC's Secret Service integration) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | the one Secret Service item carrying all those attributes; several matches are refused |
@@ -35,13 +35,18 @@ use(s.Bytes())
 **No scheme runs a command**: a flag must never be able to start a process. A
 reference with no scheme is refused, not guessed to be a path (`file:` is how a
 path is written). A secret longer than 4096 bytes, or an empty one from a
-manager, is refused, and a call ends with its context (2 minutes when it has no
+manager or a `file:`, is refused (`ErrEmpty`), and a call ends with its context (2 minutes when it has no
 deadline) even while the manager waits for you to unlock it.
 
 ## KeePassXC
 
 KeePassXC is reached through its browser-integration protocol, on macOS and
-Linux; Windows is not implemented yet.
+Linux; Windows is not implemented yet. Since v0.6.0, on Unix, the socket is
+refused when it is a symbolic link or when its directory is owned by another user
+or writable by group or others, and the uid of the connected peer is checked after
+the dial; the legacy `$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer`
+symlink is no longer followed (the real socket under `app/org.keepassxc.KeePassXC/`
+is).
 
 1. In KeePassXC, enable *Settings > Browser Integration*.
 2. Associate this machine once per database, and approve it in KeePassXC:

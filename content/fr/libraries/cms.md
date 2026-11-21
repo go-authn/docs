@@ -13,8 +13,15 @@ UEFI et un message S/MIME. La bibliothèque standard lit les certificats et
 vérifie les signatures, mais n'a pas de CMS.
 
 ```sh
-go get github.com/go-authn/cms@v0.2.0
+go get github.com/go-authn/cms@v0.2.1
 ```
+
+Depuis la v0.2.1, `Verify` refuse une signature sans attributs dont le contenu signé
+est lui-même un `SET OF Attribute` DER portant à la fois un attribut content-type et
+un attribut message-digest. Une signature faite avec des attributs signés couvre leur
+DER (RFC 5652 §5.4) ; reconditionnée sans la clé en SignedData sans attributs signés,
+dont le contenu est ces attributs, elle était vérifiée et désignait le signataire pour
+un contenu jamais signé en tant que contenu.
 
 La v0.2.0 **lit, vérifie et signe**.
 

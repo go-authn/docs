@@ -13,8 +13,15 @@ un mensaje S/MIME. La biblioteca estándar lee certificados y verifica firmas,
 pero no tiene CMS.
 
 ```sh
-go get github.com/go-authn/cms@v0.2.0
+go get github.com/go-authn/cms@v0.2.1
 ```
+
+Desde la v0.2.1, `Verify` rechaza una firma sin atributos cuyo contenido firmado es
+en sí un `SET OF Attribute` DER que lleva a la vez un atributo content-type y un
+atributo message-digest. Una firma hecha con atributos firmados cubre su DER (RFC 5652
+§5.4); reempaquetada sin la clave como un SignedData sin atributos firmados, cuyo
+contenido son esos atributos, se verificaba y nombraba al firmante por un contenido
+nunca firmado como contenido.
 
 La v0.2.0 **lee, verifica y firma**.
 

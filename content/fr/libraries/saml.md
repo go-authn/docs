@@ -13,8 +13,13 @@ signées de la fédération, envoie les personnes vers le fournisseur d'identit�
 de leur propre établissement, et relit ce que ce fournisseur affirme.
 
 ```sh
-go get github.com/go-authn/saml@v0.7.0
+go get github.com/go-authn/saml@v0.7.1
 ```
+
+Depuis la v0.7.1, `Federation` tient pour boucle locale `localhost` ou un littéral IP de
+boucle locale (`127.0.0.0/8`, `::1`). Tout nom DNS commençant par `127.`
+(`127.evil.example`) comptait auparavant, ce qui lui faisait récupérer des métadonnées
+en http clair et suivre une redirection de https vers http vers un tel hôte.
 
 C'est la moitié d'[authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
 tournée vers la fédération, et utilisable seule par tout ce qui veut être

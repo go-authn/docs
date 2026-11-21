@@ -12,8 +12,13 @@ CMS SignedData（[RFC 5652](https://www.rfc-editor.org/rfc/rfc5652)）是 PDF
 但没有 CMS。
 
 ```sh
-go get github.com/go-authn/cms@v0.2.0
+go get github.com/go-authn/cms@v0.2.1
 ```
+
+自 v0.2.1 起，`Verify` 拒绝没有签名属性的签名，如果其被签名的内容本身是一个同时带有
+content-type 和 message-digest 属性的 DER `SET OF Attribute`。带签名属性的签名所覆盖的是
+这些属性的 DER（RFC 5652 §5.4）；在没有密钥的情况下把它重新打包成没有签名属性的
+SignedData，使其内容就是这些属性，它此前会通过验证，并为从未作为内容被签名的内容指认签名者。
 
 v0.2.0 **读取、验证并生成签名**。
 

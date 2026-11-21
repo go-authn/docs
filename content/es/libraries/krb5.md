@@ -12,8 +12,16 @@ cliente, responde con el AP-REP que prueba que el servicio es auténtico, y desp
 firma, verifica, sella y abre mensajes con la clave que estableció ese intercambio.
 
 ```sh
-go get github.com/go-authn/krb5@v0.4.0
+go get github.com/go-authn/krb5@v0.4.1
 ```
+
+Desde la v0.4.1, un aceptador construido con la opción `Principal` rechaza todo ticket
+cuyo nombre de servicio en claro difiere del principal configurado, antes de que
+gokrb5 lo vea: un ticket cuyo nombre de servicio en claro estaba vacío hacía que
+`Accept` entrara en pánico dentro de gokrb5, y reescribir el nombre en claro burlaba
+la caché de repetición de gokrb5, de modo que un AP-REQ capturado podía repetirse.
+`Accept` también se recupera de un pánico en gokrb5 como un rechazo. Los aceptadores
+sin `Principal` no cambian.
 
 La v0.4.0 añade `(*Context).SessionKey()` y `SessionKeyType()`, que dan la clave
 del contexto y su tipo de cifrado (SMB deriva de ella su clave de sesión), y acepta

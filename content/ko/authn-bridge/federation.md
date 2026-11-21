@@ -118,6 +118,8 @@ strict 모드의 PostgreSQL과 MySQL이 거부했고, 그래서 쓰기가 보류
 
 **schacHomeOrganization.** 어서션하는 IdP의 scope 중 하나일 때만 발급됩니다(정확히 일치, 대소문자 구분; go-authn/saml v0.6.0, bridge v0.23.9). 위의 식별자와 같습니다. 한 기관의 IdP는 다른 기관의 값을 말할 수 없습니다. 메타데이터가 도메인의 Scope를 게시하지 않는 IdP는 더 이상 읽히지 않습니다.
 
+**로컬 스코프의 페더레이션 이름 {#local-scope}.** `local { scope }`가 페더레이션 IdP의 스코프와 같으면, 로컬 `alice`와 페더레이션 `alice@<scope>`는 같은 Kerberos 프린시펄, 같은 `eduperson_principal_name`, 따라서 같은 SSH 프린시펄이었습니다. 사용자 이름이나 eppn이 로컬 스코프에 있는 페더레이션 로그인은 이제 발급 시점에 거부되고(`access_denied`, bridge v0.31.0), 메타데이터의 스코프는 갱신할 때마다 바뀌기 때문입니다. 그래도 존재하는 페더레이션 토큰은 Kerberos 티켓을 받지 못하며, 사용 가능한 IdP의 스코프가 로컬 스코프이면 `authn-bridge check`가 실패합니다. **업그레이드:** `check`가 이 충돌을 보고하면 `local` 블록에 다른 스코프를 지정하세요(로컬 계정의 프린시펄과 eppn이 함께 바뀝니다).
+
 **그룹.** 로그인이 허용된 IdP가 둘 이상이면 `eduPersonEntitlement` 또는
 `isMemberOf` 값은 그 네임스페이스가 해당 IdP의 스코프 중 하나이거나 그 아래에
 있을 때만 유지됩니다.

@@ -118,6 +118,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.18.4 | 针对 LDAP 上游的刷新，内存分配降至原来的四分之一（go-authn/ldap v0.12.2）：已发布条目的模式检查会比较 `member` 值的每一对，并且每次都解析两个 DN。对同进程内的 LDAP 上游刷新 10,000 人和 2,000 个各含 50 个 DN 的组（`BenchmarkRefreshLDAP10k2k`，精确计数）：之前为 3760 万次分配和 2.43 GB，之后为 995 万次和 651 MB。配置没有变化 |
 | v0.18.5 | 对不应答的上游执行的 bind，即使在高负载主机上也以 `unavailable`（52）而不是 `timeLimitExceeded`（3）应答。bind 的预算比库的 `operation_timeout` 截止时间提前其十分之一结束，至少 250 ms，至多一半；此前只有十分之一（`"300ms"` 时为 30 ms），高负载主机会把它用光。配置没有变化 |
 | v0.18.6 | go-authn/ldap v0.12.3：同一次刷新为 835 万次分配和 573 MB（v0.18.4 为 995 万次和 651 MB）。剩下的主要是客户端的 LDAP 线路库和同进程的测试服务器。配置没有变化 |
+| v0.18.7 | 安全：[匿名的慢速绑定不再能让一个来源上的每次绑定都回答 `unavailable`]({{< relref "/authnd/operations.md#outage" >}})。每个来源 64 次检查的上限原先从检查开始的那一刻起就计数，因此 64 个未认证连接发起慢速的错误密码绑定，就会饿死合法的绑定；现在它只统计已超出其绑定预算且仍在运行的检查，这正是它原本要限制的对象（挂起的上游），而预算之内的检查由 `max_connections` 限制。`max_connections_per_ip` 的默认值不变（无限制）：请在客户端直接连接的地方设置它 |
 
 ### authn-bridge {#authn-bridge}
 
@@ -161,6 +162,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.23.10 | 安全：[晚于现在加上三分钟时钟偏差的 `AuthnInstant`]({{< relref "/authn-bridge/federation.md" >}})，在 `max_age` 下被算作新鲜的认证（其经过的时间算出来是负数）。现在它被视为经过的时间未知（OIDC Core 3.1.2.1），该人员会像对待过期的认证一样，被带着 `ForceAuthn` 送回 IdP。在偏差之内一切不变 |
 | v0.23.11 | [数据库永久拒绝的一个状态行不再使之后的每次刷新都停下]({{< relref "/authn-bridge/configuration.md#state-what-a-restart-must-not-forget" >}})，吊销也包括在内：删除始终会送达，永久被拒绝的行（PostgreSQL SQLSTATE 类别 22 和 23，MySQL 1048、1062、1264、1265、1292、1366、1406、1452，SQLite 的 constraint、mismatch、too big）会被记录一次，计入新的 `bridge_state_rows_rejected_total{kind}` 并被放弃：它在内存中有效，但无法在重启后保留 |
 | v0.23.12 | 因任何分类器都不认识的错误而被拒绝的状态行，在至少三十秒内经过五次刷新后被放弃，条件是在此期间该行持续失败而数据库接受了别的东西；一次刷新中什么都没有成功，即数据库不在，不会计入任何一行，因此**中断不会放弃任何东西**。该行为不再取决于驱动程序错误类别的列表 |
+| v0.31.0 | 安全：[联合身份的人和本地账户不再能成为同一个主体]({{< relref "/authn-bridge/federation.md#local-scope" >}})。当 `local { scope }` 等于某个联合 IdP 的 scope 时，本地的 `alice` 与联合的 `alice@<scope>` 是同一个 Kerberos 主体、同一个 `eduperson_principal_name`，因此也是同一个 SSH 主体。用户名或 eppn 位于本地 scope 的联合登录，现在在签发时就被拒绝（`access_denied`），因为元数据中的 scope 在每次刷新时都会变化；已经存在的联合令牌得不到 Kerberos 票据；当某个可用 IdP 的 scope 就是本地 scope 时，`authn-bridge check` 会失败。**升级：**如果 `check` 现在报告了这一冲突，请给 `local` 块换一个 scope（本地账户的主体和 eppn 会随之改变）。v0.23.12 与 v0.31.0 之间的各个版本记录在 [CHANGELOG](https://github.com/go-authn/bridge/blob/v0.31.0/CHANGELOG.md) 中，不在这些页面里 |
 
 ### authn-revokd {#authn-revokd}
 
@@ -202,6 +204,8 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 
 | | |
 |---|---|
+| awscred v0.2.0 | 重定向被限制为 https 或回环：此前来自令牌端点或 STS 端点的 307 会把已签名的客户端断言或 web 身份令牌重新 POST 到明文 http 主机（调用方自己的 `CheckRedirect` 仍会运行）。**行为变化：**在 Unix 上，缓存文件只有在满足以下条件时才被信任：它是本用户的普通文件，组和其他人不可写，且位于本用户拥有、组和其他人不可写的目录中（/tmp 这样的粘滞目录可接受）；否则一律忽略并重新获取凭据，也不会向这样的目录写入任何内容。Windows 不变。**升级：**权限过宽的共享 `--cache-dir` 现在需要 `chmod 700` |
+| cms v0.2.1 | [`Verify`]({{< relref "/libraries/cms.md" >}}) 拒绝没有签名属性的签名，如果其被签名的内容本身是一个同时带有 content-type 和 message-digest 属性的 DER `SET OF Attribute`。带签名属性的签名所覆盖的是这些属性的 DER（RFC 5652 §5.4）；在没有密钥的情况下把它重新打包成没有签名属性的 SignedData，使其内容就是这些属性，它此前会通过验证，并为从未作为内容被签名的内容指认签名者 |
 | directory v0.13.0 | [属性]({{< relref "/libraries/directory.md#attributes" >}})：除凭据之外，描述某人但不证明任何事的内容，以及永远不能作为属性的名称；`user` 和 `group` 块中的 `attributes`、`users_attributes` 和 `groups_attributes` 查询、ldapdir 的 `attributes` 和 `group_attributes` |
 | directory v0.14.0 | ⛔ ldapdir 的[默认值]({{< relref "/libraries/directory.md#ldapdir-defaults" >}})读取 `account` 和 `uidObject` 人员以及 `groupOfNames` 组，这扩大了机构目录所提供的内容；`member` DN 只映射到来源已导入的人员 |
 | directory v0.15.0 | [对象类]({{< relref "/libraries/directory.md#object-classes" >}})，声明出来而从不推断：`users` 块中的 `object_classes` 和 `group_object_classes`，`user` 和 `group` 块中的 `object_classes`，sqldir 的 `WithObjectClasses` 和 ldapdir 的 `Config.ObjectClasses`；第一个声明某组的类的来源决定；`sqldir.ClosesDB` |
@@ -211,7 +215,9 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | directory v0.19.0 | [密码检查可以取消]({{< relref "/libraries/directory.md" >}})：`directory.WithContextVerifier` 和 `Identity.VerifyContext(ctx, password)`；对于 `ldapdir` 身份，context 结束时会关闭到上游的连接，并返回 `ErrUnavailable`（go-ldap 没有 context，也没有默认超时，对接受连接却从不应答的上游发起 bind 会永远等待）。检查的拨号也在 context 的截止时间结束。`Verify` 和 `WithVerifier` 不变。**升级：**限制检查时间的服务器应调用 `VerifyContext` |
 | directory v0.20.0 | [每个查询都有截止时间]({{< relref "/libraries/directory.md" >}})：`sqldir.WithQueryTimeout(d)`，默认为 `sqldir.DefaultQueryTimeout`（30 秒），`0` 表示不限；它涵盖读取各行，到截止时间驱动程序会断开连接（以前，不再应答的数据库会让读取永远阻塞）。`hcldir.Block.QueryTimeout`（`sql` 块中的 `query_timeout`）可以到达它，在没有网络的情况下检查，在 `ldap` 块中被拒绝。`Source` 接口不变。**升级：**超过 30 秒的查询现在会失败；对更慢的查询请指定 `WithQueryTimeout` |
 | directory v0.21.0 | [`Set.GroupNames` 会报告失败的来源]({{< relref "/libraries/directory.md" >}})：它返回已应答的来源的名称，以及一个 `errors.Join`，其中对每个失败的来源有一项 `"<describe>: <err>"`（`errors.Is` 仍然匹配 `ErrUnavailable`）；此前，只要有另一个来源应答，错误就会被丢弃。**行为变化：**只检查 `err != nil` 的调用方，现在在原本得到部分列表的地方会看到一个错误，而名称会随之一起返回。请使用这些名称并记录该错误 |
+| directory v0.24.0 | 安全，[ldapdir]({{< relref "/libraries/directory.md" >}})，配合 go-authn/ldap v0.14.0：`caseIgnoreMatch` 视为相等的两个 uid 就是同一个名称，因此 "alice" 与 "alice "（尾部空格）、"al ice" 与 "al  ice"、全角的 "ａlice"、"ſam" 与 "sam"，或带有软连字符的名称都是 `ErrAmbiguous`，`Identities` 不再同时返回两者（键是标准模式中该属性的相等键，即 RFC 4518 的预处理；标准模式不认识的 `UserAttribute` 保持小写化）；证书针对 URL 的主机进行验证（`tls.Config.ServerName`，复制而不修改，显式给出的仍然优先），这也修复了 StartTLS。`Set.Identities` 仍按字节比较名称，跨来源时第一个认识某个名称的来源拥有它。**升级：**含有此类名称对的目录现在加载失败，直到其中一个条目被更正 |
 | fido v0.6.4 | [带权限的 `PINToken`]({{< relref "/libraries/fido.md" >}}) 把 `permissions` 放在键 0x09 下，把 `rpId` 放在 0x0A 下，这是 CTAP 2.1（§6.5.5）的编号；它过去使用 0x07 和 0x08，而 YubiKey 5 应答 `CTAP2_ERR_MISSING_PARAMETER`（0x14） |
+| fido cmd/fido v0.7.2 | 安全（低）：密钥提供的文本不再原样到达终端。指纹模板名称（`fingerprint list`）、密钥名称（`name show`）、USB 产品或序列号字符串（`list`、密钥选择）、版本或选项名称（`info`）以及引用它们的错误文本，都经过同一个函数，该函数把控制字符、ESC、CR、双向文字控制字符和其他格式字符、行分隔符以及无效的 UTF-8 写成转义；可打印文本不变 |
 | kdc v0.4.3 | 仅依赖项：以 go-authn/directory v0.12.0 为最低版本 |
 | kdc v0.4.5 | 安全审计、模糊测试和混沌测试（[它拒绝什么]({{< relref "/libraries/kdc.md" >}})）：针对另一个域的请求回答 `KDC_ERR_WRONG_REALM`，无法读取的目录回答 `KDC_ERR_SVC_UNAVAILABLE`（以前是 `KDC_ERR_C_PRINCIPAL_UNKNOWN`），开始时间在 `MaxSkew` 之内的未来的 TGT 会被接受，解码器 panic 只丢弃一个请求，而不是使进程崩溃（一个格式错误的 AS-REQ 或 TGS-REQ 就能使其崩溃）；主体名称在日志中加引号。golang.org/x/net v0.62.0，go-authn/directory v0.16.1 |
 | kdc v0.5.0 | MIT KDC 的 [lookaside]({{< relref "/libraries/kdc.md" >}})：逐字节已见过的请求会得到之前的应答（两分钟内，总计 10 MiB 以下）；`KRB-ERROR` 从不保存；有意不设 MIT 在 TGS 上关闭的认证符重放缓存。测试固定了无法读取的目录在 AS（密码正确）和 TGS 上都回答 `KDC_ERR_SVC_UNAVAILABLE`。每个请求多两次分配 |
@@ -222,6 +228,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | keyfactor v0.4.2 | 仅依赖项：以 go-authn/fido v0.6.2 和 golang.org/x/crypto v0.58.0 为最低版本 |
 | krb5 v0.3.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | krb5 v0.3.3 | 仅依赖项：golang.org/x/net v0.62.0、golang.org/x/crypto v0.58.0 和 go-uuid v1.0.4 清除了 `govulncheck` 在所需但不调用的模块中的 46 项发现中的 45 项；GO-2026-5932（`x/crypto/openpgp`）没有修复，且没有任何 go-authn 模块导入它；API 无变化 |
+| krb5 v0.4.1 | 安全，针对用 [`Principal` 选项]({{< relref "/libraries/krb5.md" >}})构建的接受方：`Accept` 在 gokrb5 看到之前就拒绝任何明文服务名与所配置主体不同的票据（明文服务名为空的票据会使 `Accept` 在 gokrb5 内部 panic，而改写明文名称会使 gokrb5 的重放缓存失效），并把 gokrb5 中的 panic 恢复为一次拒绝。没有 `Principal` 的接受方不变 |
 | krl v0.6.1 | 仅依赖项：golang.org/x/crypto v0.58.0；已用 Go 1.27.2 测试 |
 | ldap v0.8.0 | [`schema` 包]({{< relref "/libraries/ldap.md#the-schema" >}})和 `Server.Schema`：`cn=Subschema`（RFC 4512 §4.2）、`Validate`、RFC 4517 匹配规则；`uidNumber` 和 `gidNumber` 按整数排序；分页搜索仅返回所请求的属性 |
 | ldap v0.9.0 | [HCL2 模式]({{< relref "/libraries/ldap.md#hcl2-and-the-converter" >}})：包 `schema/hclschema` 和 `ldapschema` 命令（`to-hcl`、`to-schema`、`check`），在 OpenLDAP `.schema`、cn=config LDIF 与 HCL2 之间转换；读取器像 slapd 一样读取文件；不支持 DIT 内容和结构规则、名称形式、`include` 和 `X-SUBST`（v0.11.0 支持这些规则） |
@@ -236,17 +243,24 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | ldap v0.12.1 | [bind 会放弃正在进行的分页搜索]({{< relref "/libraries/ldap.md" >}})（RFC 4511 4.2.1）：某人发起的搜索，在连接变为匿名或属于他人之后，不会再继续向该连接交付结果 |
 | ldap v0.12.2 | `Validate` 的重复值检查用键找出相等的值，而不是比较每一对：含 50 个 `member` DN 的 `groupOfNames` 为 1,065 次分配和 68 KB，而不是 14,907 次和 959 KB（精确）。结果与逐对检查相同，已在随机列表上比较 |
 | ldap v0.12.3 | 普通 DN（由 `type=value` 构成的 RDN、可打印 ASCII、无转义）直接从字节得到键，只需 1 次分配而不是 17 次；其他 DN 走完整解析；每个 50 个成员的组 265 次分配。键与完整解析的相同，由差分测试和模糊测试（3900 万次执行）保证 |
+| ldap v0.14.0 | 安全，[客户端]({{< relref "/libraries/ldap.md" >}})：**`StartTLS` 验证 URL 的主机**，此前它针对来自 `RemoteAddr` 的对端 IP 地址验证证书（`ldaps://` 本来就是对的）；`Dial` 保留 URL 的主机，`StartTLS` 用它作名称，显式给出的 `tls.Config.ServerName` 仍然优先，而由 `NewClientConn` 创建的 `ClientConn` 没有 URL，继续验证对端地址。**TLS 握手有时间上限**：它最长持续拨号器的超时（默认 30 秒），且绝不超过 `DialOptions.Timeout`，对 `ldaps://` 和 `StartTLS` 都一样。**搜索引用被计数**：延续引用和中间响应都计入该次搜索的 `ClientLimits.MaxEntries`。新增：`schema.Schema.EqualityKey`，为每个值给出一个键，使一个属性类型的两个值有同一个键，当且仅当 `Equal` 为真，因此一遍扫描加一个 map 就能找出重复项 |
 | oidc v0.4.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | oidc v0.6.1 | [`ScopedName`]({{< relref "/libraries/oidc.md#scoped-names" >}}) 拒绝含多于一个 `@` 的名称（`ErrBadName`） |
 | oidc v0.7.0 | [`ASCIILower` 和 `EqualASCIIFold`]({{< relref "/libraries/oidc.md#scoped-names" >}})：名称唯一的纯 ASCII 折叠，因为 `strings.ToLower` 和 `strings.EqualFold` 折叠 Unicode，会把开尔文符号 U+212A 与 "k" 视为相同 |
+| rp v0.4.1 | `Discover` 拒绝重定向之后经由明文传来的文档；`go` 指令为 1.27.4（GO-2026-6859）；每夜工作流对每个目标做模糊测试 |
 | saml v0.6.0 | [`schacHomeOrganization` 受限于该 IdP 的 `shibmd:Scope` 值]({{< relref "/libraries/saml.md" >}})（完全匹配，区分大小写），否则丢弃，正如 `eduPersonPrincipalName`、`subject-id`、`pairwise-id` 和带 scope 的归属此前已经如此（SWITCH 和 SAFIRE 的属性页面对依赖方有此要求）。**升级：** 元数据没有为其域名发布 Scope 的 IdP，其该属性不再被读取 |
 | saml v0.6.1 | [四个模糊测试目标和恶意输入测试]({{< relref "/libraries/saml.md#fuzzing" >}})：`FuzzAccept`、`FuzzParseMetadata`、`FuzzDecrypt` 和 `FuzzLimits`，语料库已提交并由 `go test` 重放，每个目标执行 110 万到 510 万次，没有崩溃、挂起或属性违反；billion-laughs 炸弹、外部实体、80,000 层和 1,048,576 层嵌套、60,000 个同级元素、超大的 `CipherValue` 和响应都会被拒绝，最多分配 4 到 8 MiB。CI 中的 `fuzz` 作业对每个目标运行 30 秒。行为不变 |
 | saml v0.7.0 | [`samltest`]({{< relref "/libraries/saml.md#samltest" >}}) 能写出更多 IdP 可以发送的内容，程序的测试不再需要 xmlsec1 来构造这些响应：`Assertion.Status`（顶层代码不是 Success 的响应不含断言，例如被拒绝的被动登录）、以 NameID 的格式和限定符取代 `NameID` 字符串的 `Assertion.Subject`、与 `Now` 分开的 `Assertion.AuthnInstant`，以及 `Attribute.NameIDs`（eduPersonTargetedID）。零值写出的内容与 v0.6.1 相同 |
+| saml v0.7.1 | 安全：[`Federation`]({{< relref "/libraries/saml.md" >}}) 曾把任何以 `127.` 开头的 DNS 名称（`127.evil.example`）视为回环，这使它能通过明文 http 获取元数据，并跟随从 https 到此类主机的 http 重定向。现在回环只是 `localhost` 或属于回环的 IP 字面量（`127.0.0.0/8`、`::1`） |
 | scim v0.2.0 | [审计、模糊测试、混沌测试和性能改进]({{< relref "/libraries/scim.md#v020" >}})：`Server.ReadTimeout`（30 秒）、可选接口 `ConditionalDeleter`、没有 `If-Match` 的 PATCH 或 PUT 在输掉竞争后最多重做 32 次而不是回答 412、通过不匹配任何内容的过滤器移除会成功、没有路径的 PATCH 的键按排序顺序应用、`BearerAuth` 接受任意大小写的方案、`startIndex` 和 `count` 无论字长都被限定。针对 10,000 个用户的列表请求：100 条的一页从 789,417 次分配降到 14,952 次，`userName eq` 从 797,979 次降到 90 次，完整扫描从 818,847 次降到 361,098 次（精确；时间未测量，负载 65） |
 | scim v0.2.1 | [`If-None-Match` 遵循 RFC 7232 §3.2]({{< relref "/libraries/scim.md#v021" >}})：实体标签列表、`*`、弱比较，并且 304 带有 `ETag`；`Memory` 通过索引检查 `userName` 的唯一性（加载 N 个用户时是 O(N) 而不是 O(N^2) 次 `EqualFold` 调用）；没有索引能回答的列表过滤器，在它所指名的顶层属性上匹配：10,000 个用户时每个请求从 361,095 次分配降到 162,695 次，每个用户从 36.1 次降到 16.3 次（精确） |
+| scim v0.3.0 | 安全：[`userName` 的形近名称是同一个名称]({{< relref "/libraries/scim.md#v030" >}})。`"alice "`、`" alice"`、含有 U+200B、U+202E 或软连字符的名称，以及全角的 `ａlice`，此前都能在 `alice` 旁边被创建（201），因为唯一性只靠 `strings.EqualFold`，而且只拒绝控制字符（Cc）。`userName` 现在在任何位置拒绝格式字符（Cf），并拒绝两端的空白（400 `invalidValue`），而 `Memory` 按 NFKC 加大小写折叠比较唯一性（创建、重命名以及 `userName eq` 的缩窄），因此兼容变体以及组合与分解的写法都是同一个名称（409）。**升级：**发送带有前导或尾随空格、或带有零宽连接符或非连接符或其他 Cf 字符的 `userName`（一些波斯语和印度语系的名称会用到它们）的客户端，现在会得到 400；已经以此类名称存储的用户仍可读取，但不清理名称就无法重新保存。自定义的 `Backend` 应当在其唯一性检查中应用同样的 NFKC 和折叠；该模块现在依赖 `golang.org/x/text`（unicode/norm） |
+| secretsource v0.6.0 | 安全审计：[文件为空的 `file:` 引用]({{< relref "/libraries/secretsource.md" >}})（或只含一个行结束符）与其他每个后端一样以 `ErrEmpty` 失败，而不是返回空密钥（被截断的密码文件此前会变成空 PIN）；对 FIFO 的 `file:` 不再阻塞到上下文之后（以 `O_NONBLOCK` 打开，作为非普通文件被拒绝）；对 Unix 上的 `keepassxc:`，当套接字是符号链接，或其所在目录归其他用户所有、或组或其他人可写时，套接字被拒绝，拨号之后会检查已连接对端的 uid（macOS 和 Linux），并且不再跟随旧的 `$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer` 符号链接（而是跟随 `app/org.keepassxc.KeePassXC/` 下的真实套接字）。**升级：**依赖空文件表示“没有密钥”的调用方必须处理 `ErrEmpty` |
 | servercert v0.5.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | servercert v0.6.0 | [TLS 的 `KeyFile` 和 ACME 的 `EABHMACKeyFile` 会被拒绝]({{< relref "/libraries/servercert.md" >}})，当组或其他用户可读写它们时，在 `New` 时以及每次重新加载时检查（可读的替换密钥会报告给 `OnError` 且不被采用，当前证书继续提供服务）；Windows 上不检查。**升级：**两个文件都执行 `chmod 600` |
 | totp v0.4.2 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
+| totp v0.4.4 | `Verifier` 在每次尝试之前清扫空闲的名称；go-authn/mfa v0.5.1；`go` 指令为 1.27.4（GO-2026-6859） |
+| webauthn v0.1.1 | 当任一计数器非零时，`VerifyAssertion` 拒绝为零的 signCount |
 | wireguard v0.1.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | wireguard v0.1.4 | 来源的令牌请求和列表请求不再跟随重定向，因为它们携带 Basic 密钥或 Bearer 令牌；重定向是一个错误（[它拒绝什么]({{< relref "/libraries/wireguard.md" >}})） |
 

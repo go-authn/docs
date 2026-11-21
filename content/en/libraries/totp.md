@@ -12,8 +12,10 @@ to, the codes already used and the wrong ones; and a factor that an
 [mfa]({{< relref "/libraries/mfa.md" >}}) policy can ask for.
 
 ```sh
-go get github.com/go-authn/totp@v0.4.2
+go get github.com/go-authn/totp@v0.4.4
 ```
+
+Since v0.4.4, the `Verifier` sweeps idle names before every attempt.
 
 Its one dependency is `go-authn/mfa`.
 

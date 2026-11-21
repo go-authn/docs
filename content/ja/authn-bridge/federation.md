@@ -120,6 +120,8 @@ openssl x509 -in /etc/authn-bridge/metadata-signature-2026.pem -noout -fingerpri
 
 **schacHomeOrganization。** 表明する IdP のスコープのいずれかである場合にのみ発行されます (完全一致、大文字小文字を区別。go-authn/saml v0.6.0、bridge v0.23.9)。上の識別子と同じです。ある機関の IdP は別の機関のものを述べられません。メタデータがそのドメインの Scope を公開していない IdP からは、読まれなくなります。
 
+**ローカルスコープにある連合の名前。{#local-scope}** `local { scope }` が連合 IdP のスコープと等しいと、ローカルの `alice` と連合の `alice@<scope>` は、同じ Kerberos プリンシパル、同じ `eduperson_principal_name`、したがって同じ SSH プリンシパルでした。ユーザー名または eppn がローカルスコープにある連合ログインは、発行時に拒否されるようになりました (`access_denied`、bridge v0.31.0)。メタデータのスコープはリフレッシュのたびに変わるためです。それでも存在する連合トークンには Kerberos チケットが渡されません。また、使用可能な IdP のスコープがローカルスコープであると `authn-bridge check` は失敗します。**アップグレード:** `check` がこの衝突を報告するようになった場合は、`local` ブロックに別のスコープを与えてください (ローカルアカウントのプリンシパルと eppn もそれに伴って変わります)。
+
 **グループ。** ログインを許された IdP が複数ある場合、`eduPersonEntitlement` または
 `isMemberOf` の値は、その名前空間がその IdP のスコープのいずれか、またはその配下にある場合に
 のみ保持されます。

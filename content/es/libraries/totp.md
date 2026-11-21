@@ -12,8 +12,10 @@ servidor debe recordar, los códigos ya usados y los erróneos; y un factor que 
 política de [mfa]({{< relref "/libraries/mfa.md" >}}) puede pedir.
 
 ```sh
-go get github.com/go-authn/totp@v0.4.2
+go get github.com/go-authn/totp@v0.4.4
 ```
+
+Desde la v0.4.4, el `Verifier` barre los nombres inactivos antes de cada intento.
 
 Su única dependencia es `go-authn/mfa`.
 

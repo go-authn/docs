@@ -13,7 +13,7 @@ de acceso HTTP, para Users y Groups (RFC 7643, RFC 7644), sobre un `Backend`
 que usted escribe. Go puro, `CGO_ENABLED=0`, solo biblioteca estándar.
 
 ```sh
-go get github.com/go-authn/scim@v0.2.1
+go get github.com/go-authn/scim@v0.3.0
 ```
 
 ## Ejemplo {#example}
@@ -51,7 +51,8 @@ Todo lo de aquí viene de fuera, así que los límites son parte de la API:
 | un grupo con más de `MaxMembers` (10 000) | 400 `invalidValue` |
 | un filtro de más de 4 KiB, anidado a más de 32 niveles, con un operador desconocido, o `gt` sobre un booleano | 400 `invalidFilter` |
 | escrituras en `id`, `meta`, `schemas` o los `groups` de un usuario | 400 `mutability` |
-| un recurso sin su esquema base, un `userName` vacío, de más de 256 bytes o con caracteres de control, dos correos principales | 400 |
+| un recurso sin su esquema base, un `userName` vacío, de más de 256 bytes, con caracteres de control o de formato (Cf), o que empieza o termina con espacio en blanco (desde la v0.3.0), dos correos principales | 400 |
+| un `userName` que `Memory` ya tiene, comparado tras la normalización NFKC y el plegado de mayúsculas (desde la v0.3.0) | 409 `uniqueness` |
 | un token de portador ausente o incorrecto (`BearerAuth`, en tiempo constante; un token vacío no admite a nadie) | 401 |
 | cualquier error del Backend que no sea uno de los centinelas | 500 con un cuerpo que no dice nada; el error va a `ErrorLog` |
 
@@ -127,6 +128,27 @@ con 16 trabajadores, de 1,3 a 2,4 millones de ejecuciones, y no encontraron ning
   (10 000 usuarios): 361 095 asignaciones por petición antes, 162 695 ahora, es
   decir, 36,1 a 16,3 por usuario. La equivalencia se prueba con 50 filtros y con
   filtros aleatorios (`FuzzFilterOnSelectedMap`).
+
+## Qué cambió la v0.3.0 {#v030}
+
+- **Los `userName` parecidos son un mismo nombre.** `"alice "`, `" alice"`, un nombre
+  con U+200B, U+202E o un guion blando, y una `ａlice` de ancho completo se creaban
+  todos (201) junto a `alice`, porque la unicidad era solo `strings.EqualFold` (v0.2.1
+  más arriba) y únicamente se rechazaban los caracteres de control (Cc). La RFC 7643
+  §4.1.1 solo exige un `userName` no vacío, único y sin distinción de mayúsculas, y no
+  nombra ninguna normalización, así que esta es una política del servidor. Un
+  `userName` rechaza ahora los caracteres de formato (Cf) en cualquier posición y el
+  espacio en blanco en cualquiera de los extremos (400 `invalidValue`), y `Memory`
+  compara la unicidad (creación, cambio de nombre y el estrechamiento `userName eq`)
+  en NFKC más plegado de mayúsculas, de modo que las variantes de compatibilidad y las
+  grafías compuestas o descompuestas son un mismo nombre (409).
+- **Actualización:** un cliente que envía un `userName` con un espacio inicial o
+  final, o con un carácter de unión (ZWJ) o de no unión (ZWNJ) de ancho cero u otro
+  carácter Cf (algunos nombres persas e indios los usan), recibe ahora 400. Los
+  usuarios ya almacenados con tales nombres siguen siendo legibles pero no pueden
+  volver a guardarse sin limpiar el nombre. Un `Backend` propio debería aplicar el
+  mismo NFKC y plegado a su comprobación de unicidad; el módulo depende ahora de
+  `golang.org/x/text` (unicode/norm).
 
 ## Contra qué se comprueba {#what-it-is-checked-against}
 

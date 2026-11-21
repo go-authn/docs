@@ -13,8 +13,15 @@ are written in. The standard library reads certificates and checks signatures,
 but has no CMS.
 
 ```sh
-go get github.com/go-authn/cms@v0.2.0
+go get github.com/go-authn/cms@v0.2.1
 ```
+
+Since v0.2.1, `Verify` refuses an attribute-less signature whose signed content is
+itself a DER `SET OF Attribute` carrying both a content-type and a message-digest
+attribute. A signature made with signed attributes covers their DER (RFC 5652
+§5.4); re-packed without the key as a SignedData without signed attributes, whose
+content is those attributes, it verified and named the signer for content never
+signed as content.
 
 v0.2.0 **reads, verifies and signs**.
 

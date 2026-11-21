@@ -12,8 +12,14 @@ UEFI の認証付き変数、S/MIME メッセージが書かれるコンテナ�
 証明書を読み、署名を検証しますが、CMS は持っていません。
 
 ```sh
-go get github.com/go-authn/cms@v0.2.0
+go get github.com/go-authn/cms@v0.2.1
 ```
+
+v0.2.1 以降、`Verify` は、署名対象のコンテンツ自体が、content-type 属性と message-digest 属性の
+両方を持つ DER の `SET OF Attribute` である、属性なしの署名を拒否します。署名属性付きで作られた署名は
+その DER を対象とします (RFC 5652 §5.4)。鍵なしで、その属性をコンテンツとする署名属性なしの
+SignedData に詰め替えると、検証に通り、コンテンツとして署名されたことのない内容について署名者を
+名指ししていました。
 
 v0.2.0 は**読み取り、検証、署名の作成**を行います。
 

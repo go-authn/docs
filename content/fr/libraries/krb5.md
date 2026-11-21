@@ -13,8 +13,15 @@ signe, vérifie, scelle et ouvre des messages sous la clé que cet échange
 a établie.
 
 ```sh
-go get github.com/go-authn/krb5@v0.4.0
+go get github.com/go-authn/krb5@v0.4.1
 ```
+
+Depuis la v0.4.1, un accepteur construit avec l'option `Principal` refuse tout ticket
+dont le nom de service en clair diffère du principal configuré, avant que gokrb5 ne le
+voie : un ticket dont le nom de service en clair était vide faisait paniquer `Accept`
+dans gokrb5, et la réécriture du nom en clair déjouait le cache anti-rejeu de gokrb5,
+si bien qu'un AP-REQ capturé pouvait être rejoué. `Accept` récupère aussi une panique
+de gokrb5 sous forme de refus. Les accepteurs sans `Principal` sont inchangés.
 
 La v0.4.0 ajoute `(*Context).SessionKey()` et `SessionKeyType()`, qui donnent la
 clé du contexte et son type de chiffrement (SMB en dérive sa clé de session), et

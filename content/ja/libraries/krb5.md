@@ -11,8 +11,14 @@ tags: [ライブラリ, kerberos]
 AP-REP で応答し、その交換が確立した鍵の下でメッセージの署名、検証、封印、開封を行います。
 
 ```sh
-go get github.com/go-authn/krb5@v0.4.0
+go get github.com/go-authn/krb5@v0.4.1
 ```
+
+v0.4.1 以降、`Principal` オプションで作られたアクセプターは、平文のサービス名が設定された
+プリンシパルと異なるチケットを、gokrb5 に渡す前に拒否します。平文のサービス名が空のチケットは
+gokrb5 内で `Accept` をパニックさせ、平文の名前を書き換えると gokrb5 のリプレイキャッシュが無効に
+なったため、捕捉した AP-REQ を再生できました。`Accept` は gokrb5 内のパニックからも回復し、拒否として
+扱います。`Principal` のないアクセプターは変更ありません。
 
 v0.4.0 は `(*Context).SessionKey()` と `SessionKeyType()` を追加します。これらはコンテキスト鍵とその暗号化タイプを
 返し (SMB はそこからセッション鍵を導きます)、標準の 1.2.840.113554.1.2.2 に加えて Microsoft の krb5 メカニズム OID
