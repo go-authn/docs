@@ -12,8 +12,19 @@ serveur qui l'exécute et qui détient la configuration, les sources d'annuaire 
 politique de liaison ; celle-ci détient les octets.
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.3
+go get github.com/go-authn/ldap@v0.14.0
 ```
+
+Depuis la v0.14.0, le client (`Dial`, `Bind`, `StartTLS`, `Search`) vérifie et borne
+davantage de ce que fait un serveur. `StartTLS` vérifie le certificat contre l'hôte de
+l'URL, là où il vérifiait l'adresse IP du pair (un `tls.Config.ServerName` explicite
+l'emporte toujours ; un `ClientConn` créé par `NewClientConn` n'a pas d'URL et continue
+de vérifier l'adresse du pair). La poignée de main TLS dure au plus le délai du
+composeur (30 s par défaut) et jamais plus que `DialOptions.Timeout`, pour `ldaps://`
+et pour `StartTLS`. Les références de continuation et les réponses intermédiaires d'une
+recherche comptent contre `ClientLimits.MaxEntries`. `schema.Schema.EqualityKey` donne
+une clé telle que deux valeurs d'un type d'attribut ont la même clé exactement quand
+`Equal` est vrai.
 
 Écrite d'après les RFC 4511 (le protocole), 4512 (le root DSE et le schéma),
 4513 (l'authentification), 4514 et 4515 (formes textuelles des DN et des

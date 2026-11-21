@@ -12,7 +12,7 @@ referencia no contiene ningún secreto, así que puede estar en una opción, un
 script o el historial del shell.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.5.0
+go get github.com/go-authn/secretsource@v0.6.0
 ```
 
 ```go
@@ -24,7 +24,7 @@ use(s.Bytes())
 
 | Referencia | Lee |
 |---|---|
-| `file:PATH` | un archivo regular legible solo por su propietario (modo 0600 o más estricto); se quita un salto de línea final |
+| `file:PATH` | un archivo regular legible solo por su propietario (modo 0600 o más estricto); se quita un salto de línea final; un archivo vacío, o que solo contiene un fin de línea, se rechaza con `ErrEmpty` (desde la v0.6.0), y una FIFO se rechaza por no ser un archivo regular |
 | `keychain:SERVICE/ACCOUNT` | un elemento de contraseña genérica del Llavero de macOS |
 | `secretservice:SERVICE/ACCOUNT` | un elemento de Secret Service de freedesktop con atributos `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, integración Secret Service de KeePassXC) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | el único elemento de Secret Service con todos esos atributos; varias coincidencias se rechazan |
@@ -36,13 +36,18 @@ use(s.Bytes())
 **Ningún esquema ejecuta un comando**: una opción nunca debe poder iniciar un
 proceso. Una referencia sin esquema se rechaza, no se adivina como ruta (`file:`
 es la forma de escribir una ruta). Un secreto de más de 4096 bytes, o vacío
-desde un gestor, se rechaza, y una llamada termina con su contexto (2 minutos
+desde un gestor o un `file:`, se rechaza (`ErrEmpty`), y una llamada termina con su contexto (2 minutos
 sin plazo) aunque el gestor esté esperando que lo desbloquee.
 
 ## KeePassXC {#keepassxc}
 
 KeePassXC se alcanza por su protocolo de integración con el navegador, en macOS
-y Linux; Windows aún no está implementado.
+y Linux; Windows aún no está implementado. Desde la v0.6.0, en Unix, el socket se
+rechaza cuando es un enlace simbólico o cuando su directorio es propiedad de otro
+usuario o es escribible por el grupo u otros, y el uid del par conectado se comprueba
+tras el dial; el enlace simbólico heredado
+`$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer` ya no se sigue (sí el socket
+real bajo `app/org.keepassxc.KeePassXC/`).
 
 1. En KeePassXC, active *Settings > Browser Integration*.
 2. Asocie esta máquina una vez por base de datos y apruébelo en KeePassXC:

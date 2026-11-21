@@ -13,8 +13,15 @@ signs, verifies, seals and opens messages under the key that exchange
 established.
 
 ```sh
-go get github.com/go-authn/krb5@v0.4.0
+go get github.com/go-authn/krb5@v0.4.1
 ```
+
+Since v0.4.1, an acceptor built with the `Principal` option refuses any ticket whose
+cleartext service name differs from the configured principal, before gokrb5 sees it:
+a ticket whose cleartext service name was empty made `Accept` panic inside gokrb5,
+and rewriting the cleartext name defeated gokrb5's replay cache, so a captured
+AP-REQ could be replayed. `Accept` also recovers from a panic in gokrb5 as a
+refusal. Acceptors without `Principal` are unchanged.
 
 v0.4.0 adds `(*Context).SessionKey()` and `SessionKeyType()`, which give the
 context key and its encryption type (SMB derives its session key from it), and

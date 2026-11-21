@@ -11,8 +11,18 @@ tags: [라이브러리, 디렉터리, ldap, sql]
 모델이며, 요점은 질문의 후반부에 있습니다.
 
 ```sh
-go get github.com/go-authn/directory@v0.21.0
+go get github.com/go-authn/directory@v0.24.0
 ```
+
+v0.24.0부터(go-authn/ldap v0.14.0 필요) `ldapdir`는 `caseIgnoreMatch`가 같다고 보는 두 uid를
+한 이름으로 취급합니다. "alice"와 "alice "(끝의 공백), "al ice"와 "al  ice", 전각 "ａlice",
+"ſam"과 "sam", 소프트 하이픈이 든 이름은 이전에는 두 사람이었지만 이제 `ErrAmbiguous`입니다.
+키는 표준 스키마가 정의한 속성의 동등 키이며(`schema.Schema.EqualityKey`, RFC 4518 준비),
+표준 스키마가 모르는 `UserAttribute`는 소문자 변환을 유지합니다. **업그레이드:** 이런 쌍이 있는
+디렉터리는 항목 하나를 고칠 때까지 로드되지 않습니다. `Set.Identities`는 여전히 이름을 바이트
+단위로 비교하며, 소스 사이에서는 그 이름을 아는 첫 소스가 가집니다. `ldapdir`는 또한 인증서를
+URL의 호스트에 대해 검증하며(`tls.Config.ServerName`, 복사되며 바뀌지 않고 명시한 값이 여전히
+우선), go-authn/ldap v0.14.0과 함께 StartTLS도 고쳐집니다.
 
 v0.17.0의 새 기능: [`ErrUnavailable`](#unavailable)은 장애를 틀린 비밀번호와 구별하며, 멤버 DN은 훑어 보는 대신
 한 번의 조회로 사람에게 대응됩니다(결과는 같음). `ldaptest`(같은 프로세스의 서버)에 대해 `Frozen`을 통해 읽은,

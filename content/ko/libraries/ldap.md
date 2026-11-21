@@ -11,8 +11,16 @@ tags: [라이브러리, ldap, 디렉터리]
 바인드 정책을 소유하는 서버이며, 이 라이브러리는 바이트를 소유합니다.
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.3
+go get github.com/go-authn/ldap@v0.14.0
 ```
+
+v0.14.0부터 클라이언트(`Dial`, `Bind`, `StartTLS`, `Search`)는 서버가 하는 일을 더 많이 검증하고
+제한합니다. `StartTLS`는 피어의 IP 주소가 아니라 URL의 호스트에 대해 인증서를 검증합니다(명시한
+`tls.Config.ServerName`이 여전히 우선하며, `NewClientConn`으로 만든 `ClientConn`은 URL이 없으므로
+피어 주소를 계속 검증합니다). TLS 핸드셰이크는 `ldaps://`와 `StartTLS` 모두에서 최대 다이얼러의
+타임아웃(기본 30초)까지 걸리며 `DialOptions.Timeout`을 넘지 않습니다. 검색의 연속 참조와 중간
+응답은 `ClientLimits.MaxEntries`에 계산됩니다. `schema.Schema.EqualityKey`는 속성 타입의 두 값이
+`Equal`이 참일 때에 한해 같은 키를 갖는 키를 줍니다.
 
 RFC 4511(프로토콜), 4512(루트 DSE와 스키마), 4513(인증), 4514와 4515(DN과 필터 문자열
 형식), 4517과 4518(구문, 매칭 규칙, 문자열 준비), 4526, 2696(페이지 결과), 3672

@@ -126,6 +126,8 @@ portée.
 
 **schacHomeOrganization.** Délivré seulement s'il fait partie des scopes de l'IdP qui l'affirme (exact, sensible à la casse ; go-authn/saml v0.6.0, bridge v0.23.9), comme les identifiants ci-dessus : un IdP d'un établissement ne peut pas énoncer celui d'un autre. Un IdP dont les métadonnées ne publient aucun Scope pour son domaine ne l'a plus lu.
 
+**Un nom fédéré dans la portée locale.** Avec un `local { scope }` égal à la portée d'un IdP fédéré, `alice` local et `alice@<scope>` fédéré étaient le même principal Kerberos, le même `eduperson_principal_name` et donc le même principal SSH. Une connexion fédérée dont le nom d'utilisateur ou l'eppn est dans la portée locale est désormais refusée (`access_denied`) à l'émission du jeton (bridge v0.31.0), parce que les portées des métadonnées changent à chaque rafraîchissement ; un jeton fédéré qui existe malgré tout n'obtient aucun ticket Kerberos ; et `authn-bridge check` échoue quand la portée d'un IdP utilisable est la portée locale. **Mise à jour :** si `check` signale désormais le conflit, donnez au bloc `local` une autre portée (les principaux et l'eppn des comptes locaux changent avec elle).
+
 **Groupes.** Lorsque plus d'un IdP est autorisé à se connecter, une valeur `eduPersonEntitlement`
 ou `isMemberOf` n'est conservée que si son espace de noms est l'une des portées de cet IdP
 ou se trouve sous l'une d'elles :

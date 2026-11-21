@@ -13,7 +13,7 @@ tags: [库, scim, 账户开通]
 编写的 `Backend`。纯 Go，`CGO_ENABLED=0`，仅依赖标准库。
 
 ```sh
-go get github.com/go-authn/scim@v0.2.1
+go get github.com/go-authn/scim@v0.3.0
 ```
 
 ## 示例 {#example}
@@ -50,7 +50,8 @@ id 的 get、`PUT`、`PATCH` 和 `DELETE`，带 `ETag` 和 `If-Match`）、`/Use
 | 成员数超过 `MaxMembers`（10 000）的组 | 400 `invalidValue` |
 | 超过 4 KiB、嵌套深于 32、使用未知运算符，或对布尔值使用 `gt` 的过滤器 | 400 `invalidFilter` |
 | 对 `id`、`meta`、`schemas` 或用户的 `groups` 的写入 | 400 `mutability` |
-| 没有其核心模式的资源、为空、超过 256 字节或含有控制字符的 `userName`、两个主要电子邮件 | 400 |
+| 没有其核心模式的资源、为空、超过 256 字节、含有控制字符或格式字符（Cf）、或以空白开头或结尾（自 v0.3.0 起）的 `userName`、两个主要电子邮件 | 400 |
+| `Memory` 已经持有的 `userName`，按 NFKC 规范化和大小写折叠后比较（自 v0.3.0 起） | 409 `uniqueness` |
 | 缺失或错误的持有者令牌（`BearerAuth`，常量时间；空令牌不放行任何人） | 401 |
 | 不属于哨兵值的任何 Backend 错误 | 500，响应体不透露任何信息；错误写入 `ErrorLog` |
 
@@ -105,6 +106,19 @@ id 的 get、`PUT`、`PATCH` 和 `DELETE`，带 `ETag` 和 `If-Match`）、`/Use
   完整的对象只为该页构建。`BenchmarkListFilterCo10k`（10,000 个用户）：每个请求此前为 361,095 次分配，
   现在为 162,695 次，即每个用户 36.1 次降到 16.3 次。等价性已针对 50 个过滤器和随机过滤器做过测试
   （`FuzzFilterOnSelectedMap`）。
+
+## v0.3.0 改变了什么 {#v030}
+
+- **`userName` 的形近名称是同一个名称。** `"alice "`、`" alice"`、含有 U+200B、U+202E 或软连字符的名称，
+  以及全角的 `ａlice`，此前都能在 `alice` 旁边被创建（201），因为唯一性只靠 `strings.EqualFold`
+  （见上文 v0.2.1），而且只拒绝控制字符（Cc）。RFC 7643 §4.1.1 只要求 `userName` 非空、唯一且不区分大小写，
+  没有规定任何规范化，所以这是服务器的策略。`userName` 现在在任何位置拒绝格式字符（Cf），并拒绝两端的空白
+  （400 `invalidValue`），而 `Memory` 按 NFKC 加大小写折叠比较唯一性（创建、重命名以及 `userName eq` 的缩窄），
+  因此兼容变体以及组合与分解的写法都是同一个名称（409）。
+- **升级：**发送带有前导或尾随空格、或带有零宽连接符或非连接符或其他 Cf 字符的 `userName`
+  （一些波斯语和印度语系的名称会用到它们）的客户端，现在会得到 400。已经以此类名称存储的用户仍可读取，
+  但不清理名称就无法重新保存。自定义的 `Backend` 应当在其唯一性检查中应用同样的 NFKC 和折叠；
+  该模块现在依赖 `golang.org/x/text`（unicode/norm）。
 
 ## 它对照什么检查 {#what-it-is-checked-against}
 

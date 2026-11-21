@@ -11,8 +11,21 @@ tenue en mémoire, une base de données SQL, un serveur LDAP, ou des blocs `user
 fichier de configuration — et ce qui compte, c'est la seconde moitié de la question.
 
 ```sh
-go get github.com/go-authn/directory@v0.21.0
+go get github.com/go-authn/directory@v0.24.0
 ```
+
+Depuis la v0.24.0, qui demande go-authn/ldap v0.14.0, `ldapdir` tient pour un seul nom
+deux uid que `caseIgnoreMatch` assimile : « alice » et « alice » suivi d'une espace,
+« al ice » et « al  ice », un « ａlice » pleine chasse, « ſam » et « sam », ou un nom
+avec un trait d'union conditionnel sont `ErrAmbiguous`, là où ils étaient deux
+personnes. La clé est la clé d'égalité de l'attribut selon le schéma standard
+(`schema.Schema.EqualityKey`, préparation de la RFC 4518) ; un `UserAttribute` que le
+schéma standard ne connaît pas garde la mise en minuscules. **Mise à jour :** un
+annuaire contenant de telles paires ne se charge plus tant qu'une entrée n'est pas
+corrigée. `Set.Identities` compare toujours les noms octet par octet, et entre sources
+la première qui connaît un nom le possède. `ldapdir` vérifie aussi le certificat contre
+l'hôte de l'URL (`tls.Config.ServerName`, copié et non modifié ; un ServerName explicite
+l'emporte toujours), ce qui, avec go-authn/ldap v0.14.0, corrige aussi StartTLS.
 
 Nouveau en v0.17.0 : [`ErrUnavailable`](#unavailable), une panne distinguée d'un
 mauvais mot de passe, et un DN de membre associé à une personne par une seule

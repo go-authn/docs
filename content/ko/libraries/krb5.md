@@ -12,8 +12,14 @@ tags: [라이브러리, kerberos]
 검증하고, 봉인하고, 엽니다.
 
 ```sh
-go get github.com/go-authn/krb5@v0.4.0
+go get github.com/go-authn/krb5@v0.4.1
 ```
+
+v0.4.1부터 `Principal` 옵션으로 만든 acceptor는 평문 서비스 이름이 설정된 프린시펄과 다른
+티켓을 gokrb5가 보기 전에 거부합니다. 평문 서비스 이름이 빈 티켓은 `Accept`가 gokrb5 안에서
+패닉하게 했고, 평문 이름을 다시 쓰면 gokrb5의 재전송 캐시가 무력화되어 가로챈 AP-REQ를
+재전송할 수 있었습니다. `Accept`는 gokrb5의 패닉도 복구하여 거부로 응답합니다. `Principal`이
+없는 acceptor는 그대로입니다.
 
 v0.4.0은 `(*Context).SessionKey()`와 `SessionKeyType()`을 추가합니다. 이들은 컨텍스트 키와 그 암호화 유형을
 돌려주며(SMB는 여기에서 세션 키를 유도합니다), 표준 1.2.840.113554.1.2.2뿐 아니라 Microsoft의 krb5 메커니즘 OID

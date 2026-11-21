@@ -11,8 +11,21 @@ memory, a SQL database, an LDAP server, or `user` and `group` blocks in a
 configuration file — and the point of it is the second half of the question.
 
 ```sh
-go get github.com/go-authn/directory@v0.21.0
+go get github.com/go-authn/directory@v0.24.0
 ```
+
+Since v0.24.0, which needs go-authn/ldap v0.14.0, `ldapdir` holds two uids that
+`caseIgnoreMatch` equates to be one name: "alice" and "alice " (trailing space),
+"al ice" and "al  ice", a fullwidth "ａlice", "ſam" and "sam", or a name with a soft
+hyphen are `ErrAmbiguous`, where they were two people. The key is the attribute's
+equality key from the standard schema (`schema.Schema.EqualityKey`, RFC 4518
+preparation); a `UserAttribute` the standard schema does not know keeps the
+lower-casing. **Upgrade:** a directory with such pairs now fails to load until one
+entry is corrected. `Set.Identities` still compares names byte for byte, and across
+sources the first one that knows a name owns it. `ldapdir` also verifies the
+certificate against the host of the URL (`tls.Config.ServerName`, copied and not
+changed; an explicit ServerName still wins), which with go-authn/ldap v0.14.0 fixes
+StartTLS too.
 
 New in v0.17.0: [`ErrUnavailable`](#unavailable), an outage told apart from a
 wrong password, and a member DN mapped to a person by one lookup instead of a

@@ -12,8 +12,13 @@ tags: [库, kerberos]
 签名、验证、加密和解密消息。
 
 ```sh
-go get github.com/go-authn/krb5@v0.4.0
+go get github.com/go-authn/krb5@v0.4.1
 ```
+
+自 v0.4.1 起，用 `Principal` 选项构建的接受方会在 gokrb5 看到之前，拒绝任何明文服务名与所配置主体
+不同的票据：明文服务名为空的票据会使 `Accept` 在 gokrb5 内部 panic，而改写明文名称会使 gokrb5 的
+重放缓存失效，因此被捕获的 AP-REQ 可以被重放。`Accept` 还会把 gokrb5 中的 panic 恢复为一次拒绝。
+没有 `Principal` 的接受方不变。
 
 v0.4.0 增加了 `(*Context).SessionKey()` 和 `SessionKeyType()`，它们给出上下文密钥及其加密类型
 （SMB 由它派生会话密钥），并且除标准的 1.2.840.113554.1.2.2 之外，也接受 Microsoft 的 krb5 机制 OID

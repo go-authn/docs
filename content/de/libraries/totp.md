@@ -12,8 +12,10 @@ die schon verwendeten und die falschen Codes; und ein Faktor, den eine
 [mfa]({{< relref "/libraries/mfa.md" >}})-Richtlinie verlangen kann.
 
 ```sh
-go get github.com/go-authn/totp@v0.4.2
+go get github.com/go-authn/totp@v0.4.4
 ```
+
+Seit v0.4.4 räumt der `Verifier` vor jedem Versuch untätige Namen ab.
 
 Seine einzige Abhängigkeit ist `go-authn/mfa`.
 

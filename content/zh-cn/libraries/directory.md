@@ -11,8 +11,17 @@ tags: [库, 目录, ldap, sql]
 块——其要点在于这个问题的后半部分。
 
 ```sh
-go get github.com/go-authn/directory@v0.21.0
+go get github.com/go-authn/directory@v0.24.0
 ```
+
+自 v0.24.0 起（它需要 go-authn/ldap v0.14.0），`ldapdir` 把 `caseIgnoreMatch` 视为相等的两个 uid
+当作同一个名称："alice" 与 "alice "（尾部空格）、"al ice" 与 "al  ice"、全角的 "ａlice"、"ſam" 与 "sam"，
+或带有软连字符的名称都是 `ErrAmbiguous`，而此前它们是两个人。键是标准模式中该属性的相等键
+（`schema.Schema.EqualityKey`，RFC 4518 预处理）；标准模式不认识的 `UserAttribute` 保持小写化。
+**升级：**含有此类名称对的目录现在加载失败，直到其中一个条目被更正。`Set.Identities` 仍按字节比较名称，
+跨来源时第一个认识某个名称的来源拥有它。`ldapdir` 还针对 URL 的主机验证证书
+（`tls.Config.ServerName`，复制而不修改；显式给出的 ServerName 仍然优先），配合 go-authn/ldap v0.14.0，
+这也修复了 StartTLS。
 
 v0.17.0 的新内容：[`ErrUnavailable`](#unavailable)，把故障与密码错误区分开；以及成员 DN 通过一次查找而不是一次扫描
 映射到人员（结果相同）。在针对 `ldaptest`（同一进程内的服务器）通过 `Frozen` 读取的 10,000 人和 2,000 个各含 50 个 DN

@@ -13,7 +13,7 @@ endpoint, for Users and Groups (RFC 7643, RFC 7644), over a `Backend` you
 write. Pure Go, `CGO_ENABLED=0`, standard library only.
 
 ```sh
-go get github.com/go-authn/scim@v0.2.1
+go get github.com/go-authn/scim@v0.3.0
 ```
 
 ## Example
@@ -50,7 +50,8 @@ Everything here comes from outside, so the limits are part of the API:
 | a group with more than `MaxMembers` (10 000) | 400 `invalidValue` |
 | a filter over 4 KiB, nested deeper than 32, with an unknown operator, or `gt` on a boolean | 400 `invalidFilter` |
 | writes to `id`, `meta`, `schemas` or a user's `groups` | 400 `mutability` |
-| a resource without its core schema, a `userName` that is empty, over 256 bytes or has control characters, two primary emails | 400 |
+| a resource without its core schema, a `userName` that is empty, over 256 bytes, has control characters or format characters (Cf), or starts or ends with white space (since v0.3.0), two primary emails | 400 |
+| a `userName` that `Memory` already holds, compared after NFKC normalisation and case folding (since v0.3.0) | 409 `uniqueness` |
 | a missing or wrong bearer token (`BearerAuth`, constant time; an empty token admits nobody) | 401 |
 | any Backend error that is not one of the sentinels | 500 with a body that says nothing; the error goes to `ErrorLog` |
 
@@ -124,6 +125,25 @@ each with 16 workers, 1.3 to 2.4 million executions, and found no failure.
   page only. `BenchmarkListFilterCo10k` (10,000 users): 361,095 allocations a
   request before, 162,695 now, which is 36.1 to 16.3 per user. Equivalence is
   tested for 50 filters and random ones (`FuzzFilterOnSelectedMap`).
+
+## What v0.3.0 changed {#v030}
+
+- **`userName` look-alikes are one name.** `"alice "`, `" alice"`, a name with
+  U+200B, U+202E or a soft hyphen, and a fullwidth `ａlice` were all created
+  (201) beside `alice`, because uniqueness was `strings.EqualFold` alone (v0.2.1
+  above) and only control characters (Cc) were refused. RFC 7643 §4.1.1 requires
+  only a non-empty, unique, case-insensitive `userName` and names no
+  normalisation, so this is the server's policy. A `userName` now refuses format
+  characters (Cf) anywhere and white space at either end (400 `invalidValue`),
+  and `Memory` compares uniqueness (create, rename, and the `userName eq`
+  narrowing) on NFKC plus case fold, so compatibility variants and composed or
+  decomposed spellings are one name (409).
+- **Upgrade:** a client that sends a `userName` with a leading or trailing space,
+  or with a zero-width joiner or non-joiner or another Cf character (some Persian
+  and Indic names use them), is now answered 400. Users already stored under such
+  names stay readable but cannot be re-saved without cleaning the name. A custom
+  `Backend` should apply the same NFKC and fold to its uniqueness check; the
+  module now depends on `golang.org/x/text` (unicode/norm).
 
 ## What it is checked against
 

@@ -13,8 +13,13 @@ schickt Personen zum Identitätsanbieter ihrer eigenen Einrichtung und liest zur
 dieser Anbieter sagt.
 
 ```sh
-go get github.com/go-authn/saml@v0.7.0
+go get github.com/go-authn/saml@v0.7.1
 ```
+
+Seit v0.7.1 versteht `Federation` unter Loopback `localhost` oder ein IP-Literal, das
+Loopback ist (`127.0.0.0/8`, `::1`). Jeder DNS-Name, der mit `127.` beginnt
+(`127.evil.example`), zählte bisher, sodass er Metadaten über unverschlüsseltes http
+abrufen und einer Weiterleitung von https auf http zu einem solchen Host folgen konnte.
 
 Er ist die Hälfte von [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}),
 die der Föderation zugewandt ist, und für sich allein von allem nutzbar, was

@@ -11,8 +11,10 @@ tags: [ライブラリ, totp, 要素]
 覚えている `Verifier`。そして [mfa]({{< relref "/libraries/mfa.md" >}}) ポリシーが求められる要素です。
 
 ```sh
-go get github.com/go-authn/totp@v0.4.2
+go get github.com/go-authn/totp@v0.4.4
 ```
+
+v0.4.4 以降、`Verifier` は試行のたびに先立って、使われていない名前を掃除します。
 
 唯一の依存関係は `go-authn/mfa` です。
 

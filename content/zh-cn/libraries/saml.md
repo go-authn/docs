@@ -13,8 +13,12 @@ tags: [库, saml, 联邦]
 该提供方所说的内容。
 
 ```sh
-go get github.com/go-authn/saml@v0.7.0
+go get github.com/go-authn/saml@v0.7.1
 ```
+
+自 v0.7.1 起，`Federation` 把回环定义为 `localhost` 或属于回环的 IP 字面量（`127.0.0.0/8`、`::1`）。
+此前任何以 `127.` 开头的 DNS 名称（`127.evil.example`）都算数，这使它能通过明文 http 获取元数据，
+并跟随从 https 到此类主机的 http 重定向。
 
 它是 [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
 面向联邦的那一半，任何想要成为

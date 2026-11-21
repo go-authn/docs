@@ -12,7 +12,7 @@ Referenz enthält kein Geheimnis und darf daher in einer Option, einem Skript
 oder der Shell-Historie stehen.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.5.0
+go get github.com/go-authn/secretsource@v0.6.0
 ```
 
 ```go
@@ -24,7 +24,7 @@ use(s.Bytes())
 
 | Referenz | Liest |
 |---|---|
-| `file:PATH` | eine reguläre Datei, nur für den Besitzer lesbar (Modus 0600 oder strenger); ein abschließender Zeilenumbruch wird entfernt |
+| `file:PATH` | eine reguläre Datei, nur für den Besitzer lesbar (Modus 0600 oder strenger); ein abschließender Zeilenumbruch wird entfernt; eine Datei, die leer ist oder nur einen Zeilenumbruch enthält, wird mit `ErrEmpty` abgelehnt (seit v0.6.0), und eine FIFO wird als keine reguläre Datei abgelehnt |
 | `keychain:SERVICE/ACCOUNT` | ein generisches Passwort-Objekt im macOS-Schlüsselbund |
 | `secretservice:SERVICE/ACCOUNT` | ein freedesktop-Secret-Service-Objekt mit den Attributen `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, Secret-Service-Integration von KeePassXC) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | das eine Secret-Service-Objekt mit all diesen Attributen; mehrere Treffer werden abgelehnt |
@@ -36,14 +36,19 @@ KeePassXC 2.8.0 stürzt ab, wenn eine Suche einen Eintrag ohne URL findet.
 **Kein Schema führt einen Befehl aus**: eine Option darf nie einen Prozess
 starten können. Eine Referenz ohne Schema wird abgelehnt, nicht als Pfad erraten
 (`file:` ist die Schreibweise eines Pfads). Ein Geheimnis über 4096 Bytes oder
-ein leeres von einem Manager wird abgelehnt, und ein Aufruf endet mit seinem
+ein leeres von einem Manager oder einer `file:`-Referenz wird abgelehnt (`ErrEmpty`), und ein Aufruf endet mit seinem
 Kontext (2 Minuten ohne Frist), auch wenn der Manager darauf wartet, dass Sie
 ihn entsperren.
 
 ## KeePassXC {#keepassxc}
 
 KeePassXC wird über sein Browser-Integrationsprotokoll erreicht, unter macOS und
-Linux; Windows ist noch nicht umgesetzt.
+Linux; Windows ist noch nicht umgesetzt. Seit v0.6.0 wird unter Unix der Socket
+abgelehnt, wenn er ein symbolischer Link ist oder sein Verzeichnis einem anderen
+Benutzer gehört oder für Gruppe oder andere beschreibbar ist, und die uid des
+verbundenen Peers wird nach dem Dial geprüft; dem alten Symlink
+`$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer` wird nicht mehr gefolgt
+(dem echten Socket unter `app/org.keepassxc.KeePassXC/` schon).
 
 1. Aktivieren Sie in KeePassXC *Settings > Browser Integration*.
 2. Verknüpfen Sie diesen Rechner einmal je Datenbank und bestätigen Sie es in

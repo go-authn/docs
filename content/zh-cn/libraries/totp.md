@@ -12,8 +12,10 @@ tags: [库, totp, 认证因素]
 [mfa]({{< relref "/libraries/mfa.md" >}})策略请求的因素。
 
 ```sh
-go get github.com/go-authn/totp@v0.4.2
+go get github.com/go-authn/totp@v0.4.4
 ```
+
+自 v0.4.4 起，`Verifier` 在每次尝试之前清扫空闲的名称。
 
 它唯一的依赖是 `go-authn/mfa`。
 

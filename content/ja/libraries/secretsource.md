@@ -11,7 +11,7 @@ tags: [ライブラリ, secretsource, シークレット]
 含まないので、フラグ、スクリプト、シェルの履歴に書いても構いません。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.5.0
+go get github.com/go-authn/secretsource@v0.6.0
 ```
 
 ```go
@@ -23,7 +23,7 @@ use(s.Bytes())
 
 | 参照 | 読み取るもの |
 |---|---|
-| `file:PATH` | 所有者だけが読める通常ファイル (モード 0600 以下)。末尾の改行 1 つは取り除かれます |
+| `file:PATH` | 所有者だけが読める通常ファイル (モード 0600 以下)。末尾の改行 1 つは取り除かれます。空のファイル、または行末だけを含むファイルは `ErrEmpty` で拒否され (v0.6.0 以降)、FIFO は通常ファイルではないとして拒否されます |
 | `keychain:SERVICE/ACCOUNT` | macOS キーチェーンの汎用パスワード項目 |
 | `secretservice:SERVICE/ACCOUNT` | 属性 `service=SERVICE`、`account=ACCOUNT` を持つ freedesktop Secret Service の項目 (GNOME Keyring、KWallet、KeePassXC の Secret Service 連携) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | それらすべての属性を持つ唯一の Secret Service 項目。複数一致は拒否されます |
@@ -35,13 +35,17 @@ KeePassXC 2.8.0 は、検索が URL のないエントリを見つけるとク�
 **コマンドを実行するスキームはありません**: フラグがプロセスを起動できては
 ならないからです。スキームのない参照は、パスと推測されずに拒否されます
 (パスは `file:` で書きます)。4096 バイトを超えるシークレットや、マネージャーから
-の空のシークレットは拒否されます。呼び出しはそのコンテキスト (期限がなければ
+または `file:` からの空のシークレットは拒否され (`ErrEmpty`)、呼び出しはそのコンテキスト (期限がなければ
 2 分) で終わり、マネージャーがロック解除を待っていても同じです。
 
 ## KeePassXC {#keepassxc}
 
 KeePassXC には、そのブラウザー連携プロトコルで接続します (macOS と Linux。
-Windows は未実装です)。
+Windows は未実装です)。v0.6.0 以降、Unix では、ソケットがシンボリックリンクである場合、またはその
+ディレクトリが別のユーザーの所有であるか、グループまたはその他に書き込み可能な場合にソケットは拒否され、
+接続したピアの uid がダイヤルの後に確認されます。従来の
+`$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer` シンボリックリンクはもう辿られません
+(`app/org.keepassxc.KeePassXC/` 配下の実際のソケットは辿られます)。
 
 1. KeePassXC で *Settings > Browser Integration* を有効にします。
 2. データベースごとに 1 回、このマシンを関連付け、KeePassXC で承認します:

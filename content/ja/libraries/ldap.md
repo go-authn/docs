@@ -11,8 +11,17 @@ tags: [ライブラリ, ldap, ディレクトリ]
 ポリシーを所有するサーバーで、これはバイト列を所有します。
 
 ```sh
-go get github.com/go-authn/ldap@v0.12.3
+go get github.com/go-authn/ldap@v0.14.0
 ```
+
+v0.14.0 以降、クライアント (`Dial`、`Bind`、`StartTLS`、`Search`) は、サーバーの行うことをより多く
+検証し、制限します。`StartTLS` は証明書を URL のホストに対して検証します。以前はピアの IP アドレスに
+対して検証していました (明示された `tls.Config.ServerName` が今も優先されます。`NewClientConn` で
+作られた `ClientConn` は URL を持たず、ピアのアドレスを検証したままです)。TLS ハンドシェイクは、
+`ldaps://` でも `StartTLS` でも、最長でダイヤラーのタイムアウト (既定 30 秒) までで、
+`DialOptions.Timeout` を超えることはありません。検索の継続参照と中間レスポンスは
+`ClientLimits.MaxEntries` に数えられます。`schema.Schema.EqualityKey` は、属性型の 2 つの値が 1 つの
+キーを持つのは `Equal` が真であるときに限る、というキーを与えます。
 
 RFC 4511 (プロトコル)、4512 (ルート DSE とスキーマ)、4513 (認証)、4514 と 4515 (DN とフィルターの
 文字列形式)、4517 と 4518 (構文、マッチングルール、文字列の準備)、4526、2696 (ページング結果)、

@@ -127,6 +127,8 @@ scope.
 
 **schacHomeOrganization.** Released only when it is one of the asserting IdP's scopes (exact, case-sensitive; go-authn/saml v0.6.0, bridge v0.23.9), like the identifiers above: an IdP of one institution cannot state another's. An IdP whose metadata publishes no Scope for its domain no longer has it read.
 
+**A federated name in the local scope.** With a `local { scope }` equal to a federated IdP's scope, local `alice` and federated `alice@<scope>` were the same Kerberos principal, the same `eduperson_principal_name` and so the same SSH principal. A federated login whose username or eppn is in the local scope is now refused (`access_denied`) when it is minted (bridge v0.31.0), because metadata scopes change at every refresh; a federated token that exists anyway gets no Kerberos ticket; and `authn-bridge check` fails when a usable IdP's scope is the local scope. **Upgrade:** if `check` now reports the clash, give the `local` block another scope (local accounts' principals and eppn change with it).
+
 **Groups.** With more than one IdP allowed to log in, an `eduPersonEntitlement`
 or `isMemberOf` value is kept only if its namespace is one of that IdP's scopes
 or under one:

@@ -12,8 +12,10 @@ tags: [라이브러리, totp, 인증 요소]
 있는 인증 요소.
 
 ```sh
-go get github.com/go-authn/totp@v0.4.2
+go get github.com/go-authn/totp@v0.4.4
 ```
+
+v0.4.4부터 `Verifier`는 매 시도 전에 유휴 이름을 정리합니다.
 
 유일한 의존성은 `go-authn/mfa`입니다.
 

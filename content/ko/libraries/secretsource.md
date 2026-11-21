@@ -11,7 +11,7 @@ tags: [라이브러리, secretsource, 비밀]
 있지 않으므로 플래그, 스크립트, 셸 기록에 있어도 됩니다.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.5.0
+go get github.com/go-authn/secretsource@v0.6.0
 ```
 
 ```go
@@ -23,7 +23,7 @@ use(s.Bytes())
 
 | 참조 | 읽는 대상 |
 |---|---|
-| `file:PATH` | 소유자만 읽을 수 있는 일반 파일(모드 0600 이하); 끝의 줄바꿈 하나는 제거됩니다 |
+| `file:PATH` | 소유자만 읽을 수 있는 일반 파일(모드 0600 이하); 끝의 줄바꿈 하나는 제거됩니다; 비어 있거나 줄 끝만 든 파일은 `ErrEmpty`로 거부되며(v0.6.0부터), FIFO는 일반 파일이 아니라며 거부됩니다 |
 | `keychain:SERVICE/ACCOUNT` | macOS 키체인의 일반 암호 항목 |
 | `secretservice:SERVICE/ACCOUNT` | 속성 `service=SERVICE`, `account=ACCOUNT`를 가진 freedesktop Secret Service 항목 (GNOME Keyring, KWallet, KeePassXC의 Secret Service 연동) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | 그 속성을 모두 가진 단 하나의 Secret Service 항목; 여러 개가 일치하면 거부됩니다 |
@@ -34,14 +34,18 @@ use(s.Bytes())
 
 **명령을 실행하는 스킴은 없습니다**: 플래그가 프로세스를 시작할 수 있어서는 안
 되기 때문입니다. 스킴이 없는 참조는 경로로 추측되지 않고 거부됩니다(경로는
-`file:`로 씁니다). 4096바이트보다 긴 비밀이나 관리자가 돌려준 빈 비밀은
-거부되며, 호출은 컨텍스트(기한이 없으면 2분)와 함께 끝납니다. 관리자가 잠금
+`file:`로 씁니다). 4096바이트보다 긴 비밀이나 관리자나 `file:`이 돌려준 빈 비밀은
+거부되며(`ErrEmpty`), 호출은 컨텍스트(기한이 없으면 2분)와 함께 끝납니다. 관리자가 잠금
 해제를 기다리고 있어도 마찬가지입니다.
 
 ## KeePassXC {#keepassxc}
 
 KeePassXC는 브라우저 통합 프로토콜로 연결합니다(macOS와 Linux; Windows는 아직
-구현되지 않았습니다).
+구현되지 않았습니다). v0.6.0부터 Unix에서는 소켓이 심볼릭 링크이거나 그 디렉터리가 다른
+사용자 소유이거나 그룹이나 다른 사용자가 쓸 수 있으면 소켓을 거부하고, 다이얼 뒤에 연결된
+피어의 uid를 확인하며, 레거시 `$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer`
+심볼릭 링크는 더 이상 따라가지 않습니다(`app/org.keepassxc.KeePassXC/` 아래의 실제 소켓은
+따라갑니다).
 
 1. KeePassXC에서 *Settings > Browser Integration*을 켭니다.
 2. 데이터베이스마다 한 번 이 컴퓨터를 연결하고 KeePassXC에서 승인합니다:

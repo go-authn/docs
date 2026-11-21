@@ -12,8 +12,12 @@ tags: [라이브러리, saml, 페더레이션]
 그 공급자가 말하는 것을 읽어 옵니다.
 
 ```sh
-go get github.com/go-authn/saml@v0.7.0
+go get github.com/go-authn/saml@v0.7.1
 ```
+
+v0.7.1부터 `Federation`은 루프백을 `localhost`이거나 루프백인 IP 리터럴(`127.0.0.0/8`, `::1`)로
+봅니다. `127.`로 시작하는 모든 DNS 이름(`127.evil.example`)이 이전에는 루프백으로 계산되어, 평문
+http로 메타데이터를 가져오고 https에서 http로의 리디렉션을 그런 호스트로 따라갈 수 있었습니다.
 
 이것은 [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})의 페더레이션을 마주하는
 절반이며, SAML SP가 되고 싶은 무엇이든 단독으로 사용할 수 있습니다. 여기에 없는 것:
