@@ -2737,7 +2737,7 @@ data-copied-label="已复制！"
 &lt;p&gt;&lt;strong&gt;此人的身份提供方对他们说了什么？&lt;/strong&gt; 面向 RENATER 的 Fédération
 Éducation-Recherche 或 eduGAIN 等身份联邦的 SAML 2.0服务提供方：它读取联邦的已签名元数据，把人员送到其所属机构的身份提供方，并读回该提供方所说的内容。&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/saml@v0.6.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/saml@v0.7.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="复制代码"
@@ -3073,6 +3073,8 @@ data-copied-label="已复制！"
 &lt;ul&gt;
 &lt;li&gt;&lt;strong&gt;元数据&lt;/strong&gt;：由联盟密钥签名的 &lt;code&gt;EntitiesDescriptor&lt;/code&gt;，包含每个 IdP 的 scope、显示名称、签名证书和HTTP-Redirect SSO 地址。&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;响应&lt;/strong&gt;：&lt;code&gt;IdP.Response&lt;/code&gt; 接收带有请求 ID、受众、ACS 和属性的 &lt;code&gt;Assertion&lt;/code&gt;。Response 使用 RSA-SHA256、独占 c14n、enveloped 方式，在 Issuer 之后签名。断言用 SP 的证书以 AES-128-GCM 和RSA-OAEP MGF1-SHA1（Shibboleth IdP v5 的默认值）加密；当 &lt;code&gt;EncryptTo&lt;/code&gt; 为 nil 时，断言本身以明文签名。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;拒绝、主体与属性形态&lt;/strong&gt;（自 v0.7.0 起）：&lt;code&gt;Assertion.Status&lt;/code&gt; 携带 StatusCode 及其嵌套代码，顶层代码不是 Success的 Response 不含断言（&lt;code&gt;Responder&lt;/code&gt; 加 &lt;code&gt;NoPassive&lt;/code&gt; 即被拒绝的被动登录）；&lt;code&gt;Assertion.Subject&lt;/code&gt;（&lt;code&gt;samltest.NameID&lt;/code&gt;：值、格式、NameQualifier、SPNameQualifier）取代 &lt;code&gt;NameID&lt;/code&gt; 字符串，同时设置两者会被拒绝；&lt;code&gt;Assertion.AuthnInstant&lt;/code&gt;
+与 &lt;code&gt;Now&lt;/code&gt; 分开移动认证时间，因此有效期窗口不动；&lt;code&gt;Attribute.NameIDs&lt;/code&gt; 提供作为 &lt;code&gt;saml:NameID&lt;/code&gt; 元素的值（eduPersonTargetedID）。零值写出的内容与 v0.6.1 相同。&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;登录&lt;/strong&gt;：&lt;code&gt;IdP.Handler&lt;/code&gt; 针对 AuthnRequest 显示用户名和密码表单，并以向 ACS 提交 &lt;code&gt;SAMLResponse&lt;/code&gt; 和&lt;code&gt;RelayState&lt;/code&gt; 的表单作答；测试的 HTTP 客户端像浏览器脚本那样提交它。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;它的输出由并非它的作者的各方来判定：&lt;strong&gt;xmlsec1&lt;/strong&gt; 验证元数据和两种 Response 并解密断言（缺少 xmlsec1时该测试会说明并跳过；设置 &lt;code&gt;SAML_REQUIRE_JUDGE=1&lt;/code&gt; 时则失败），而本包的 &lt;strong&gt;SP&lt;/strong&gt; 接受它们，并拒绝被篡改、被重放或由联盟未列出的密钥签名的版本。密钥在每次调用时生成，所以这里的任何东西都不应用于生产环境。&lt;/p&gt;
