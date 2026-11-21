@@ -13,7 +13,7 @@ federación, envía a las personas al proveedor de identidad de su propia
 institución, y lee lo que ese proveedor responde.
 
 ```sh
-go get github.com/go-authn/saml@v0.6.1
+go get github.com/go-authn/saml@v0.7.0
 ```
 
 Es la mitad de [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) que da a
@@ -239,6 +239,15 @@ srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw strin
   exclusiva, envuelta, tras el Issuer. La aserción se cifra para el certificado del SP
   con AES-128-GCM y RSA-OAEP MGF1-SHA1 (valores por defecto de un IdP Shibboleth v5),
   o se firma ella misma en claro cuando `EncryptTo` es nil.
+- **Rechazos, sujetos y formas de atributo** (desde la v0.7.0): `Assertion.Status`
+  lleva el StatusCode y sus códigos anidados, y una Response cuyo código de nivel
+  superior no es Success no lleva aserción (`Responder` y luego `NoPassive` es un
+  inicio de sesión pasivo rechazado); `Assertion.Subject` (`samltest.NameID`: valor,
+  formato, NameQualifier, SPNameQualifier) sustituye a la cadena `NameID`, y se
+  rechaza fijar ambos; `Assertion.AuthnInstant` mueve la autenticación aparte de
+  `Now`, de modo que la ventana de validez no cambia; `Attribute.NameIDs` da valores
+  que son un elemento `saml:NameID` (eduPersonTargetedID). Un valor cero escribe lo
+  que escribía la v0.6.1.
 - **El inicio de sesión**: `IdP.Handler` muestra un formulario de usuario y contraseña
   para una AuthnRequest y responde con el formulario que envía `SAMLResponse` y
   `RelayState` al ACS; el cliente HTTP de una prueba lo envía como lo haría el script
