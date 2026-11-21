@@ -5,7 +5,7 @@ elimina personas y grupos en su aplicación por HTTP; este paquete es ese punto
 de acceso HTTP, para Users y Groups (RFC 7643, RFC 7644), sobre un &lt;code&gt;Backend&lt;/code&gt;
 que usted escribe. Go puro, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, solo biblioteca estándar.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/scim@v0.2.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/scim@v0.3.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copiar código"
@@ -68,8 +68,12 @@ como estaba.&lt;/p&gt;
 &lt;td&gt;400 &lt;code&gt;mutability&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;un recurso sin su esquema base, un &lt;code&gt;userName&lt;/code&gt; vacío, de más de 256 bytes o con caracteres de control, dos correos principales&lt;/td&gt;
+&lt;td&gt;un recurso sin su esquema base, un &lt;code&gt;userName&lt;/code&gt; vacío, de más de 256 bytes, con caracteres de control o de formato (Cf), o que empieza o termina con espacio en blanco (desde la v0.3.0), dos correos principales&lt;/td&gt;
 &lt;td&gt;400&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;un &lt;code&gt;userName&lt;/code&gt; que &lt;code&gt;Memory&lt;/code&gt; ya tiene, comparado tras la normalización NFKC y el plegado de mayúsculas (desde la v0.3.0)&lt;/td&gt;
+&lt;td&gt;409 &lt;code&gt;uniqueness&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;un token de portador ausente o incorrecto (&lt;code&gt;BearerAuth&lt;/code&gt;, en tiempo constante; un token vacío no admite a nadie)&lt;/td&gt;
@@ -161,6 +165,23 @@ objetos completos se construyen solo para la página. &lt;code&gt;BenchmarkListF
 (10 000 usuarios): 361 095 asignaciones por petición antes, 162 695 ahora, es
 decir, 36,1 a 16,3 por usuario. La equivalencia se prueba con 50 filtros y con
 filtros aleatorios (&lt;code&gt;FuzzFilterOnSelectedMap&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="v030"&gt;Qué cambió la v0.3.0&lt;span class="hx:absolute hx:-mt-20" id="v030"&gt;&lt;/span&gt;
+&lt;a href="#v030" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Los &lt;code&gt;userName&lt;/code&gt; parecidos son un mismo nombre.&lt;/strong&gt; &lt;code&gt;&amp;quot;alice &amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot; alice&amp;quot;&lt;/code&gt;, un nombre
+con U+200B, U+202E o un guion blando, y una &lt;code&gt;ａlice&lt;/code&gt; de ancho completo se creaban
+todos (201) junto a &lt;code&gt;alice&lt;/code&gt;, porque la unicidad era solo &lt;code&gt;strings.EqualFold&lt;/code&gt; (v0.2.1
+más arriba) y únicamente se rechazaban los caracteres de control (Cc). La RFC 7643§4.1.1 solo exige un &lt;code&gt;userName&lt;/code&gt; no vacío, único y sin distinción de mayúsculas, y no
+nombra ninguna normalización, así que esta es una política del servidor. Un&lt;code&gt;userName&lt;/code&gt; rechaza ahora los caracteres de formato (Cf) en cualquier posición y el
+espacio en blanco en cualquiera de los extremos (400 &lt;code&gt;invalidValue&lt;/code&gt;), y &lt;code&gt;Memory&lt;/code&gt;
+compara la unicidad (creación, cambio de nombre y el estrechamiento &lt;code&gt;userName eq&lt;/code&gt;)en NFKC más plegado de mayúsculas, de modo que las variantes de compatibilidad y las
+grafías compuestas o descompuestas son un mismo nombre (409).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Actualización:&lt;/strong&gt; un cliente que envía un &lt;code&gt;userName&lt;/code&gt; con un espacio inicial o
+final, o con un carácter de unión (ZWJ) o de no unión (ZWNJ) de ancho cero u otro
+carácter Cf (algunos nombres persas e indios los usan), recibe ahora 400. Los
+usuarios ya almacenados con tales nombres siguen siendo legibles pero no pueden
+volver a guardarse sin limpiar el nombre. Un &lt;code&gt;Backend&lt;/code&gt; propio debería aplicar el
+mismo NFKC y plegado a su comprobación de unicidad; el módulo depende ahora de&lt;code&gt;golang.org/x/text&lt;/code&gt; (unicode/norm).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;Contra qué se comprueba&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
 &lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Lo que los proveedores de identidad envían de verdad&lt;/strong&gt;, probado con sus

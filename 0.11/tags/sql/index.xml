@@ -1060,7 +1060,7 @@ with no ORDERING rule, such as &lt;code&gt;uid&lt;/code&gt;, is Undefined and ma
 memory, a SQL database, an LDAP server, or &lt;code&gt;user&lt;/code&gt; and &lt;code&gt;group&lt;/code&gt; blocks in a
 configuration file — and the point of it is the second half of the question.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/directory@v0.21.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/directory@v0.24.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -1072,6 +1072,16 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;p&gt;Since v0.24.0, which needs go-authn/ldap v0.14.0, &lt;code&gt;ldapdir&lt;/code&gt; holds two uids that&lt;code&gt;caseIgnoreMatch&lt;/code&gt; equates to be one name: &amp;ldquo;alice&amp;rdquo; and &amp;ldquo;alice &amp;quot; (trailing space),&amp;ldquo;al ice&amp;rdquo; and &amp;ldquo;al ice&amp;rdquo;, a fullwidth &amp;ldquo;ａlice&amp;rdquo;, &amp;ldquo;ſam&amp;rdquo; and &amp;ldquo;sam&amp;rdquo;, or a name with a soft
+hyphen are &lt;code&gt;ErrAmbiguous&lt;/code&gt;, where they were two people. The key is the attribute&amp;rsquo;s
+equality key from the standard schema (&lt;code&gt;schema.Schema.EqualityKey&lt;/code&gt;, RFC 4518
+preparation); a &lt;code&gt;UserAttribute&lt;/code&gt; the standard schema does not know keeps the
+lower-casing. &lt;strong&gt;Upgrade:&lt;/strong&gt; a directory with such pairs now fails to load until one
+entry is corrected. &lt;code&gt;Set.Identities&lt;/code&gt; still compares names byte for byte, and across
+sources the first one that knows a name owns it. &lt;code&gt;ldapdir&lt;/code&gt; also verifies the
+certificate against the host of the URL (&lt;code&gt;tls.Config.ServerName&lt;/code&gt;, copied and not
+changed; an explicit ServerName still wins), which with go-authn/ldap v0.14.0 fixes
+StartTLS too.&lt;/p&gt;
 &lt;p&gt;New in v0.17.0: &lt;a href="#unavailable"&gt;&lt;code&gt;ErrUnavailable&lt;/code&gt;&lt;/a&gt;, an outage told apart from a
 wrong password, and a member DN mapped to a person by one lookup instead of a
 scan (same results). On 10,000 people and 2,000 groups of 50 DNs read through&lt;code&gt;Frozen&lt;/code&gt; against &lt;code&gt;ldaptest&lt;/code&gt; (a server in the same process), &lt;code&gt;ldapdir&lt;/code&gt;&amp;rsquo;s&lt;code&gt;ReadGroups&lt;/code&gt; allocated 50.6 MB in 2.20 M objects and allocates 13.1 MB in

@@ -292,6 +292,7 @@ ignorée, pas honorée.&lt;/p&gt;
 qui l&amp;rsquo;affirme est &lt;strong&gt;écartée&lt;/strong&gt;, et une valeur comportant plus d&amp;rsquo;un &lt;code&gt;@&lt;/code&gt; n&amp;rsquo;est dans aucune
 portée.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;schacHomeOrganization.&lt;/strong&gt; Délivré seulement s&amp;rsquo;il fait partie des scopes de l&amp;rsquo;IdP qui l&amp;rsquo;affirme (exact, sensible à la casse ; go-authn/saml v0.6.0, bridge v0.23.9), comme les identifiants ci-dessus : un IdP d&amp;rsquo;un établissement ne peut pas énoncer celui d&amp;rsquo;un autre. Un IdP dont les métadonnées ne publient aucun Scope pour son domaine ne l&amp;rsquo;a plus lu.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Un nom fédéré dans la portée locale.&lt;/strong&gt; Avec un &lt;code&gt;local { scope }&lt;/code&gt; égal à la portée d&amp;rsquo;un IdP fédéré, &lt;code&gt;alice&lt;/code&gt; local et &lt;code&gt;alice@&amp;lt;scope&amp;gt;&lt;/code&gt; fédéré étaient le même principal Kerberos, le même &lt;code&gt;eduperson_principal_name&lt;/code&gt; et donc le même principal SSH. Une connexion fédérée dont le nom d&amp;rsquo;utilisateur ou l&amp;rsquo;eppn est dans la portée locale est désormais refusée (&lt;code&gt;access_denied&lt;/code&gt;) à l&amp;rsquo;émission du jeton (bridge v0.31.0), parce que les portées des métadonnées changent à chaque rafraîchissement ; un jeton fédéré qui existe malgré tout n&amp;rsquo;obtient aucun ticket Kerberos ; et &lt;code&gt;authn-bridge check&lt;/code&gt; échoue quand la portée d&amp;rsquo;un IdP utilisable est la portée locale. &lt;strong&gt;Mise à jour :&lt;/strong&gt; si &lt;code&gt;check&lt;/code&gt; signale désormais le conflit, donnez au bloc &lt;code&gt;local&lt;/code&gt; une autre portée (les principaux et l&amp;rsquo;eppn des comptes locaux changent avec elle).&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Groupes.&lt;/strong&gt; Lorsque plus d&amp;rsquo;un IdP est autorisé à se connecter, une valeur &lt;code&gt;eduPersonEntitlement&lt;/code&gt;
 ou &lt;code&gt;isMemberOf&lt;/code&gt; n&amp;rsquo;est conservée que si son espace de noms est l&amp;rsquo;une des portées de cet IdP
 ou se trouve sous l&amp;rsquo;une d&amp;rsquo;elles :&lt;/p&gt;
@@ -472,7 +473,7 @@ Fédération Éducation-Recherche de RENATER ou eduGAIN : il lit les métadonné
 signées de la fédération, envoie les personnes vers le fournisseur d&amp;rsquo;identité
 de leur propre établissement, et relit ce que ce fournisseur affirme.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/saml@v0.7.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/saml@v0.7.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copier le code"
@@ -484,6 +485,10 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;p&gt;Depuis la v0.7.1, &lt;code&gt;Federation&lt;/code&gt; tient pour boucle locale &lt;code&gt;localhost&lt;/code&gt; ou un littéral IP de
+boucle locale (&lt;code&gt;127.0.0.0/8&lt;/code&gt;, &lt;code&gt;::1&lt;/code&gt;). Tout nom DNS commençant par &lt;code&gt;127.&lt;/code&gt;
+(&lt;code&gt;127.evil.example&lt;/code&gt;) comptait auparavant, ce qui lui faisait récupérer des métadonnées
+en http clair et suivre une redirection de https vers http vers un tel hôte.&lt;/p&gt;
 &lt;p&gt;C&amp;rsquo;est la moitié d&amp;rsquo;&lt;a href="https://go-authn.github.io/docs/0.11/fr/authn-bridge/"&gt;authn-bridge&lt;/a&gt;
 tournée vers la fédération, et utilisable seule par tout ce qui veut être
 un SP SAML. Pas ici : un IdP, le Single Logout, le binding artifact, les

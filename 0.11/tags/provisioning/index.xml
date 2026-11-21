@@ -5,7 +5,7 @@ people and groups in your application over HTTP; this package is that HTTP
 endpoint, for Users and Groups (RFC 7643, RFC 7644), over a &lt;code&gt;Backend&lt;/code&gt; you
 write. Pure Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, standard library only.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/scim@v0.2.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/scim@v0.3.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -71,8 +71,12 @@ operation that fails leaves the resource as it was.&lt;/p&gt;
 &lt;td&gt;400 &lt;code&gt;mutability&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;a resource without its core schema, a &lt;code&gt;userName&lt;/code&gt; that is empty, over 256 bytes or has control characters, two primary emails&lt;/td&gt;
+&lt;td&gt;a resource without its core schema, a &lt;code&gt;userName&lt;/code&gt; that is empty, over 256 bytes, has control characters or format characters (Cf), or starts or ends with white space (since v0.3.0), two primary emails&lt;/td&gt;
 &lt;td&gt;400&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;a &lt;code&gt;userName&lt;/code&gt; that &lt;code&gt;Memory&lt;/code&gt; already holds, compared after NFKC normalisation and case folding (since v0.3.0)&lt;/td&gt;
+&lt;td&gt;409 &lt;code&gt;uniqueness&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;a missing or wrong bearer token (&lt;code&gt;BearerAuth&lt;/code&gt;, constant time; an empty token admits nobody)&lt;/td&gt;
@@ -153,6 +157,21 @@ top-level attributes the filter names&lt;/strong&gt;, and whole objects are buil
 page only. &lt;code&gt;BenchmarkListFilterCo10k&lt;/code&gt; (10,000 users): 361,095 allocations a
 request before, 162,695 now, which is 36.1 to 16.3 per user. Equivalence is
 tested for 50 filters and random ones (&lt;code&gt;FuzzFilterOnSelectedMap&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="v030"&gt;What v0.3.0 changed&lt;span class="hx:absolute hx:-mt-20" id="v030"&gt;&lt;/span&gt;
+&lt;a href="#v030" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;userName&lt;/code&gt; look-alikes are one name.&lt;/strong&gt; &lt;code&gt;&amp;quot;alice &amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot; alice&amp;quot;&lt;/code&gt;, a name with
+U+200B, U+202E or a soft hyphen, and a fullwidth &lt;code&gt;ａlice&lt;/code&gt; were all created(201) beside &lt;code&gt;alice&lt;/code&gt;, because uniqueness was &lt;code&gt;strings.EqualFold&lt;/code&gt; alone (v0.2.1
+above) and only control characters (Cc) were refused. RFC 7643 §4.1.1 requires
+only a non-empty, unique, case-insensitive &lt;code&gt;userName&lt;/code&gt; and names no
+normalisation, so this is the server&amp;rsquo;s policy. A &lt;code&gt;userName&lt;/code&gt; now refuses format
+characters (Cf) anywhere and white space at either end (400 &lt;code&gt;invalidValue&lt;/code&gt;),and &lt;code&gt;Memory&lt;/code&gt; compares uniqueness (create, rename, and the &lt;code&gt;userName eq&lt;/code&gt;
+narrowing) on NFKC plus case fold, so compatibility variants and composed or
+decomposed spellings are one name (409).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Upgrade:&lt;/strong&gt; a client that sends a &lt;code&gt;userName&lt;/code&gt; with a leading or trailing space,or with a zero-width joiner or non-joiner or another Cf character (some Persian
+and Indic names use them), is now answered 400. Users already stored under such
+names stay readable but cannot be re-saved without cleaning the name. A custom&lt;code&gt;Backend&lt;/code&gt; should apply the same NFKC and fold to its uniqueness check; the
+module now depends on &lt;code&gt;golang.org/x/text&lt;/code&gt; (unicode/norm).&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;What it is checked against&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
 &lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;What identity providers really send&lt;/strong&gt;, tested with their payloads: Entra

@@ -2,7 +2,7 @@
 &lt;p&gt;&lt;strong&gt;신원 공급자가 방금 누구를 생성, 변경, 삭제했는가?&lt;/strong&gt; 신원 공급자(Entra ID, Okta,Keycloak, …)는 HTTP로 애플리케이션의 사람과 그룹을 생성, 갱신, 삭제합니다. 이 패키지가
 Users와 Groups(RFC 7643, RFC 7644)를 위한 그 HTTP 엔드포인트이며, 직접 작성하는&lt;code&gt;Backend&lt;/code&gt; 위에 있습니다. 순수 Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, 표준 라이브러리만 사용합니다.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/scim@v0.2.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/scim@v0.3.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="코드 복사"
@@ -63,8 +63,12 @@ data-copied-label="복사됨!"
 &lt;td&gt;400 &lt;code&gt;mutability&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;핵심 스키마가 없는 리소스, 비어 있거나 256바이트를 넘거나 제어 문자를 가진 &lt;code&gt;userName&lt;/code&gt;, 기본 이메일 두 개&lt;/td&gt;
+&lt;td&gt;핵심 스키마가 없는 리소스, 비어 있거나 256바이트를 넘거나 제어 문자나 서식 문자(Cf)를 가지거나 공백으로 시작하거나 끝나는(v0.3.0부터) &lt;code&gt;userName&lt;/code&gt;, 기본 이메일 두 개&lt;/td&gt;
 &lt;td&gt;400&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Memory&lt;/code&gt;가 이미 가진 &lt;code&gt;userName&lt;/code&gt;(NFKC 정규화와 대소문자 접기 뒤에 비교, v0.3.0부터)&lt;/td&gt;
+&lt;td&gt;409 &lt;code&gt;uniqueness&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;없거나 잘못된 베어러 토큰 (&lt;code&gt;BearerAuth&lt;/code&gt;, 상수 시간. 빈 토큰은 아무도 들이지 않음)&lt;/td&gt;
@@ -141,6 +145,17 @@ data-copied-label="복사됨!"
 맵에서 일치를 검사하며&lt;/strong&gt;, 전체 객체는 페이지에 대해서만 만듭니다.&lt;code&gt;BenchmarkListFilterCo10k&lt;/code&gt;(사용자 10,000명): 요청당 할당이 이전 361,095회, 지금
 162,695회이며, 사용자당 36.1회에서 16.3회입니다. 동치성은 필터 50개와 무작위
 필터로 테스트합니다(&lt;code&gt;FuzzFilterOnSelectedMap&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="v030"&gt;v0.3.0에서 바뀐 것&lt;span class="hx:absolute hx:-mt-20" id="v030"&gt;&lt;/span&gt;
+&lt;a href="#v030" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;userName&lt;/code&gt; 유사 문자열은 하나의 이름입니다.&lt;/strong&gt; &lt;code&gt;&amp;quot;alice &amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot; alice&amp;quot;&lt;/code&gt;, U+200B, U+202E 또는
+소프트 하이픈이 든 이름, 전각 &lt;code&gt;ａlice&lt;/code&gt;는 모두 &lt;code&gt;alice&lt;/code&gt; 옆에 생성되었습니다(201). 고유성이&lt;code&gt;strings.EqualFold&lt;/code&gt;뿐이었고(위의 v0.2.1) 제어 문자(Cc)만 거부되었기 때문입니다. RFC 7643§4.1.1은 비어 있지 않고 고유하며 대소문자를 구분하지 않는 &lt;code&gt;userName&lt;/code&gt;만 요구하고 정규화는
+지정하지 않으므로, 이것은 서버의 정책입니다. &lt;code&gt;userName&lt;/code&gt;은 이제 서식 문자(Cf)를 어디서든,공백을 양 끝에서 거부하며(400 &lt;code&gt;invalidValue&lt;/code&gt;), &lt;code&gt;Memory&lt;/code&gt;는 고유성(생성, 이름 변경, &lt;code&gt;userName eq&lt;/code&gt;
+좁히기)을 NFKC와 대소문자 접기로 비교하므로 호환 변형과 조합형·분해형 표기는 하나의
+이름입니다(409).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;업그레이드:&lt;/strong&gt; 앞이나 뒤에 공백이 있거나, 폭 없는 연결자나 비연결자 또는 다른 Cf 문자(일부
+페르시아어와 인도 계통 이름이 사용함)가 든 &lt;code&gt;userName&lt;/code&gt;을 보내는 클라이언트는 이제 400을 받습니다.그런 이름으로 이미 저장된 사용자는 읽을 수 있지만 이름을 정리하지 않으면 다시 저장할 수
+없습니다. 사용자 정의 &lt;code&gt;Backend&lt;/code&gt;는 고유성 검사에 같은 NFKC와 접기를 적용해야 하며, 모듈은 이제&lt;code&gt;golang.org/x/text&lt;/code&gt;(unicode/norm)에 의존합니다.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;무엇과 대조해 검사하는가&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
 &lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;신원 공급자가 실제로 보내는 것&lt;/strong&gt;을 그들의 페이로드로 테스트합니다. Entra ID의&lt;code&gt;&amp;quot;Replace&amp;quot;&lt;/code&gt;, 문자열 불리언(&lt;code&gt;&amp;quot;active&amp;quot;: &amp;quot;False&amp;quot;&lt;/code&gt;), 값 목록에 의한 구성원 제거, 이메일을

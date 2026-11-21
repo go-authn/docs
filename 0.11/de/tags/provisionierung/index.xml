@@ -4,7 +4,7 @@ Ein Identitätsanbieter (Entra ID, Okta, Keycloak, …) legt Personen und Gruppe
 in Ihrer Anwendung über HTTP an, aktualisiert und löscht sie; dieses Paket ist
 dieser HTTP-Endpunkt, für Users und Groups (RFC 7643, RFC 7644), über einem&lt;code&gt;Backend&lt;/code&gt;, das Sie schreiben. Reines Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;, nur Standardbibliothek.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/scim@v0.2.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/scim@v0.3.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Code kopieren"
@@ -69,8 +69,12 @@ war.&lt;/p&gt;
 &lt;td&gt;400 &lt;code&gt;mutability&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;eine Ressource ohne ihr Kernschema, ein &lt;code&gt;userName&lt;/code&gt;, der leer ist, über 256 Bytes lang ist oder Steuerzeichen enthält, zwei primäre E-Mail-Adressen&lt;/td&gt;
+&lt;td&gt;eine Ressource ohne ihr Kernschema, ein &lt;code&gt;userName&lt;/code&gt;, der leer ist, über 256 Bytes lang ist, Steuerzeichen oder Formatzeichen (Cf) enthält oder mit Leerraum beginnt oder endet (seit v0.3.0), zwei primäre E-Mail-Adressen&lt;/td&gt;
 &lt;td&gt;400&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;ein &lt;code&gt;userName&lt;/code&gt;, den &lt;code&gt;Memory&lt;/code&gt; schon hält, verglichen nach NFKC-Normalisierung und Case Folding (seit v0.3.0)&lt;/td&gt;
+&lt;td&gt;409 &lt;code&gt;uniqueness&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;ein fehlendes oder falsches Bearer-Token (&lt;code&gt;BearerAuth&lt;/code&gt;, in konstanter Zeit; ein leeres Token lässt niemanden ein)&lt;/td&gt;
@@ -154,6 +158,19 @@ abgeglichen, die nur die Attribute der obersten Ebene enthält, die der Filter n
 ganze Objekte werden nur für die Seite gebaut. &lt;code&gt;BenchmarkListFilterCo10k&lt;/code&gt; (10.000
 Benutzer): 361.095 Allokationen pro Anfrage vorher, 162.695 jetzt, das sind 36,1 bis 16,3
 pro Benutzer. Die Äquivalenz ist für 50 Filter und zufällige getestet(&lt;code&gt;FuzzFilterOnSelectedMap&lt;/code&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="v030"&gt;Was v0.3.0 geändert hat&lt;span class="hx:absolute hx:-mt-20" id="v030"&gt;&lt;/span&gt;
+&lt;a href="#v030" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;userName&lt;/code&gt;-Doppelgänger sind ein Name.&lt;/strong&gt; &lt;code&gt;&amp;quot;alice &amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot; alice&amp;quot;&lt;/code&gt;, ein Name mit
+U+200B, U+202E oder einem weichen Trennstrich und ein Vollbreiten-&lt;code&gt;ａlice&lt;/code&gt; wurden
+alle neben &lt;code&gt;alice&lt;/code&gt; angelegt (201), weil die Eindeutigkeit allein&lt;code&gt;strings.EqualFold&lt;/code&gt; war (v0.2.1 oben) und nur Steuerzeichen (Cc) abgelehnt wurden.RFC 7643 §4.1.1 verlangt nur einen nicht leeren, eindeutigen, von der
+Groß-/Kleinschreibung unabhängigen &lt;code&gt;userName&lt;/code&gt; und nennt keine Normalisierung,also ist das die Richtlinie des Servers. Ein &lt;code&gt;userName&lt;/code&gt; lehnt jetzt Formatzeichen(Cf) an jeder Stelle und Leerraum an beiden Enden ab (400 &lt;code&gt;invalidValue&lt;/code&gt;), und&lt;code&gt;Memory&lt;/code&gt; vergleicht die Eindeutigkeit (Anlegen, Umbenennen und die Einengung&lt;code&gt;userName eq&lt;/code&gt;) nach NFKC plus Case Folding, sodass Kompatibilitätsvarianten und
+zusammengesetzte oder zerlegte Schreibweisen ein Name sind (409).&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Upgrade:&lt;/strong&gt; Ein Client, der einen &lt;code&gt;userName&lt;/code&gt; mit führendem oder nachgestelltem
+Leerzeichen oder mit einem Zero-Width-Joiner oder -Non-Joiner oder einem anderen
+Cf-Zeichen sendet (einige persische und indische Namen verwenden sie), wird jetzt
+mit 400 beantwortet. Unter solchen Namen gespeicherte Benutzer bleiben lesbar,lassen sich aber nicht erneut speichern, ohne den Namen zu bereinigen. Ein eigenes&lt;code&gt;Backend&lt;/code&gt; sollte dasselbe NFKC und Folding auf seine Eindeutigkeitsprüfung
+anwenden; das Modul hängt jetzt von &lt;code&gt;golang.org/x/text&lt;/code&gt; (unicode/norm) ab.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;Wogegen es geprüft wird&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
 &lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;Was Identitätsanbieter tatsächlich senden&lt;/strong&gt;, mit deren Nutzdaten getestet:das &lt;code&gt;&amp;quot;Replace&amp;quot;&lt;/code&gt; von Entra ID, seine Boolean-Werte als Zeichenketten(&lt;code&gt;&amp;quot;active&amp;quot;: &amp;quot;False&amp;quot;&lt;/code&gt;), sein Entfernen von Mitgliedern per Werteliste, sein

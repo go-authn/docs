@@ -2,7 +2,7 @@
 &lt;p&gt;&lt;strong&gt;身份提供方刚刚创建、更改或删除了谁？&lt;/strong&gt;
 身份提供方（Entra ID、Okta、Keycloak 等）通过 HTTP 在你的应用程序中创建、更新和删除人员和组；本包就是这个 HTTP端点，面向 Users 和 Groups（RFC 7643、RFC 7644），基于你编写的 &lt;code&gt;Backend&lt;/code&gt;。纯 Go，&lt;code&gt;CGO_ENABLED=0&lt;/code&gt;，仅依赖标准库。&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/scim@v0.2.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/scim@v0.3.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="复制代码"
@@ -61,8 +61,12 @@ data-copied-label="已复制！"
 &lt;td&gt;400 &lt;code&gt;mutability&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;没有其核心模式的资源、为空、超过 256 字节或含有控制字符的 &lt;code&gt;userName&lt;/code&gt;、两个主要电子邮件&lt;/td&gt;
+&lt;td&gt;没有其核心模式的资源、为空、超过 256 字节、含有控制字符或格式字符（Cf）、或以空白开头或结尾（自 v0.3.0 起）的 &lt;code&gt;userName&lt;/code&gt;、两个主要电子邮件&lt;/td&gt;
 &lt;td&gt;400&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;Memory&lt;/code&gt; 已经持有的 &lt;code&gt;userName&lt;/code&gt;，按 NFKC 规范化和大小写折叠后比较（自 v0.3.0 起）&lt;/td&gt;
+&lt;td&gt;409 &lt;code&gt;uniqueness&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;缺失或错误的持有者令牌（&lt;code&gt;BearerAuth&lt;/code&gt;，常量时间；空令牌不放行任何人）&lt;/td&gt;
@@ -124,6 +128,13 @@ data-copied-label="已复制！"
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;If-None-Match&lt;/code&gt; 遵循 RFC 7232 §3.2。&lt;/strong&gt; 带实体标签列表的 &lt;code&gt;GET&lt;/code&gt;（多个头部行也一样）在其中任何一个按弱比较匹配时答复 304（&lt;code&gt;&amp;quot;x&amp;quot;&lt;/code&gt; 匹配 &lt;code&gt;W/&amp;quot;x&amp;quot;&lt;/code&gt;）；&lt;code&gt;*&lt;/code&gt; 对任何已存在的资源答复 304；不是有效 &lt;code&gt;If-None-Match&lt;/code&gt; 的头部会被忽略。304 带有 &lt;code&gt;ETag&lt;/code&gt;（RFC 7232 §4.1），此前没有。由 &lt;code&gt;FuzzIfNoneMatch&lt;/code&gt; 做模糊测试。&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;&lt;code&gt;Memory&lt;/code&gt; 保有 &lt;code&gt;userName&lt;/code&gt; 的索引。&lt;/strong&gt; 唯一性过去通过扫描每个用户来检查，所以加载 N 个用户是O(N^2) 次 &lt;code&gt;EqualFold&lt;/code&gt; 调用；现在是 O(N)，10,000 个用户的 1 亿次调用不复存在。键是每个 rune 的&lt;code&gt;unicode.SimpleFold&lt;/code&gt; 轨道最小值，这恰好就是 &lt;code&gt;strings.EqualFold&lt;/code&gt; 的等价关系（已对照旧的扫描做过测试，并由 &lt;code&gt;FuzzFoldKey&lt;/code&gt; 做模糊测试）；创建、替换（PUT 和 PATCH）和删除都会保持它的一致。&lt;code&gt;BenchmarkMemoryLoad10k&lt;/code&gt;（创建并替换 10,000 个用户）每次运行花费 119,030 次分配，此前为 98,959：索引是每次创建和每次重命名一个键。&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;索引无法回答其过滤器的列表，在只保存该过滤器所指名的顶层属性的映射上匹配&lt;/strong&gt;，完整的对象只为该页构建。&lt;code&gt;BenchmarkListFilterCo10k&lt;/code&gt;（10,000 个用户）：每个请求此前为 361,095 次分配，现在为 162,695 次，即每个用户 36.1 次降到 16.3 次。等价性已针对 50 个过滤器和随机过滤器做过测试（&lt;code&gt;FuzzFilterOnSelectedMap&lt;/code&gt;）。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="v030"&gt;v0.3.0 改变了什么&lt;span class="hx:absolute hx:-mt-20" id="v030"&gt;&lt;/span&gt;
+&lt;a href="#v030" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;userName&lt;/code&gt; 的形近名称是同一个名称。&lt;/strong&gt; &lt;code&gt;&amp;quot;alice &amp;quot;&lt;/code&gt;、&lt;code&gt;&amp;quot; alice&amp;quot;&lt;/code&gt;、含有 U+200B、U+202E 或软连字符的名称，以及全角的 &lt;code&gt;ａlice&lt;/code&gt;，此前都能在 &lt;code&gt;alice&lt;/code&gt; 旁边被创建（201），因为唯一性只靠 &lt;code&gt;strings.EqualFold&lt;/code&gt;
+（见上文 v0.2.1），而且只拒绝控制字符（Cc）。RFC 7643 §4.1.1 只要求 &lt;code&gt;userName&lt;/code&gt; 非空、唯一且不区分大小写，没有规定任何规范化，所以这是服务器的策略。&lt;code&gt;userName&lt;/code&gt; 现在在任何位置拒绝格式字符（Cf），并拒绝两端的空白（400 &lt;code&gt;invalidValue&lt;/code&gt;），而 &lt;code&gt;Memory&lt;/code&gt; 按 NFKC 加大小写折叠比较唯一性（创建、重命名以及 &lt;code&gt;userName eq&lt;/code&gt; 的缩窄），因此兼容变体以及组合与分解的写法都是同一个名称（409）。&lt;/li&gt;
+&lt;li&gt;**升级：**发送带有前导或尾随空格、或带有零宽连接符或非连接符或其他 Cf 字符的 &lt;code&gt;userName&lt;/code&gt;
+（一些波斯语和印度语系的名称会用到它们）的客户端，现在会得到 400。已经以此类名称存储的用户仍可读取，但不清理名称就无法重新保存。自定义的 &lt;code&gt;Backend&lt;/code&gt; 应当在其唯一性检查中应用同样的 NFKC 和折叠；该模块现在依赖 &lt;code&gt;golang.org/x/text&lt;/code&gt;（unicode/norm）。&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;它对照什么检查&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
 &lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;身份提供方实际发送的内容&lt;/strong&gt;，使用它们的载荷进行测试：Entra
