@@ -163,6 +163,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.23.11 | [数据库永久拒绝的一个状态行不再使之后的每次刷新都停下]({{< relref "/authn-bridge/configuration.md#state-what-a-restart-must-not-forget" >}})，吊销也包括在内：删除始终会送达，永久被拒绝的行（PostgreSQL SQLSTATE 类别 22 和 23，MySQL 1048、1062、1264、1265、1292、1366、1406、1452，SQLite 的 constraint、mismatch、too big）会被记录一次，计入新的 `bridge_state_rows_rejected_total{kind}` 并被放弃：它在内存中有效，但无法在重启后保留 |
 | v0.23.12 | 因任何分类器都不认识的错误而被拒绝的状态行，在至少三十秒内经过五次刷新后被放弃，条件是在此期间该行持续失败而数据库接受了别的东西；一次刷新中什么都没有成功，即数据库不在，不会计入任何一行，因此**中断不会放弃任何东西**。该行为不再取决于驱动程序错误类别的列表 |
 | v0.31.0 | 安全：[联合身份的人和本地账户不再能成为同一个主体]({{< relref "/authn-bridge/federation.md" >}})。当 `local { scope }` 等于某个联合 IdP 的 scope 时，本地的 `alice` 与联合的 `alice@<scope>` 是同一个 Kerberos 主体、同一个 `eduperson_principal_name`，因此也是同一个 SSH 主体。用户名或 eppn 位于本地 scope 的联合登录，现在在签发时就被拒绝（`access_denied`），因为元数据中的 scope 在每次刷新时都会变化；已经存在的联合令牌得不到 Kerberos 票据；当某个可用 IdP 的 scope 就是本地 scope 时，`authn-bridge check` 会失败。**升级：**如果 `check` 现在报告了这一冲突，请给 `local` 块换一个 scope（本地账户的主体和 eppn 会随之改变）。v0.23.12 与 v0.31.0 之间的各个版本记录在 [CHANGELOG](https://github.com/go-authn/bridge/blob/v0.31.0/CHANGELOG.md) 中，不在这些页面里 |
+| v0.31.1 | 安全：纳入 bridge 所依赖的 directory v0.24.0、saml v0.7.1 和 webauthn v0.1.1 的修复。bridge 的配置和行为均不变。**升级：**更新到 v0.31.1；无需更改配置 |
 
 ### authn-revokd {#authn-revokd}
 

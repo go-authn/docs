@@ -165,6 +165,7 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.23.11 | [데이터베이스가 영구적으로 거부하는 상태 행 하나가 더 이상 이후의 모든 플러시를 멈추지 않습니다]({{< relref "/authn-bridge/configuration.md#state-what-a-restart-must-not-forget" >}}). 폐기도 포함됩니다. 삭제는 항상 흘러가며, 영구적으로 거부된 행(PostgreSQL SQLSTATE 클래스 22와 23, MySQL 1048, 1062, 1264, 1265, 1292, 1366, 1406, 1452, SQLite constraint, mismatch, too big)은 한 번 로그에 기록되고, 새 `bridge_state_rows_rejected_total{kind}`에 계산되며 포기됩니다. 메모리에서는 동작하고 재시작을 넘어 남지 않습니다 |
 | v0.23.12 | 어떤 분류기도 모르는 오류로 거부된 상태 행은, 그 행이 계속 실패하는 동안 데이터베이스가 다른 것을 받아 준 플러시가 최소 30초에 걸쳐 다섯 번 있으면 포기됩니다. 아무것도 성공하지 못한 플러시, 즉 데이터베이스가 없는 경우는 어떤 행에도 불리하게 계산되지 않으므로 **장애는 아무것도 포기하게 하지 않습니다**. 동작은 더 이상 드라이버 오류 클래스의 목록에 의존하지 않습니다 |
 | v0.31.0 | 보안: [페더레이션된 사람과 로컬 계정이 더 이상 하나의 프린시펄이 될 수 없습니다]({{< relref "/authn-bridge/federation.md" >}}). `local { scope }`가 페더레이션 IdP의 스코프와 같으면, 로컬 `alice`와 페더레이션 `alice@<scope>`는 같은 Kerberos 프린시펄, 같은 `eduperson_principal_name`, 따라서 같은 SSH 프린시펄이었습니다. 사용자 이름이나 eppn이 로컬 스코프에 있는 페더레이션 로그인은 이제 발급 시점에 거부되고(`access_denied`), 메타데이터의 스코프는 갱신할 때마다 바뀌기 때문입니다. 그래도 존재하는 페더레이션 토큰은 Kerberos 티켓을 받지 못하며, 사용 가능한 IdP의 스코프가 로컬 스코프이면 `authn-bridge check`가 실패합니다. **업그레이드:** `check`가 이 충돌을 보고하면 `local` 블록에 다른 스코프를 지정하세요(로컬 계정의 프린시펄과 eppn이 함께 바뀝니다). v0.23.12와 v0.31.0 사이의 릴리스는 이 페이지가 아니라 [CHANGELOG](https://github.com/go-authn/bridge/blob/v0.31.0/CHANGELOG.md)에 설명되어 있습니다 |
+| v0.31.1 | 보안: bridge가 의존하는 directory v0.24.0, saml v0.7.1, webauthn v0.1.1의 수정 사항을 가져옵니다. bridge의 설정과 동작은 바뀌지 않습니다. **업그레이드:** v0.31.1로 업데이트하세요. 설정 변경은 필요하지 않습니다 |
 
 ### authn-revokd {#authn-revokd}
 
