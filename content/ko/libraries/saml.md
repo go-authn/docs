@@ -12,7 +12,7 @@ tags: [라이브러리, saml, 페더레이션]
 그 공급자가 말하는 것을 읽어 옵니다.
 
 ```sh
-go get github.com/go-authn/saml@v0.6.1
+go get github.com/go-authn/saml@v0.7.0
 ```
 
 이것은 [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})의 페더레이션을 마주하는
@@ -231,6 +231,12 @@ srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw strin
   Response는 RSA-SHA256, 배타적 c14n, enveloped 방식으로 Issuer 뒤에 서명됩니다.
   어서션은 SP의 인증서로 AES-128-GCM과 RSA-OAEP MGF1-SHA1(Shibboleth IdP v5의 기본값)으로
   암호화되며, `EncryptTo`가 nil이면 평문 상태로 어서션 자체가 서명됩니다.
+- **거부, 서브젝트, 속성 형태**(v0.7.0부터): `Assertion.Status`는 StatusCode와 그 중첩 코드를 담으며,
+  최상위 코드가 Success가 아닌 Response는 어서션을 담지 않습니다(`Responder` 다음 `NoPassive`는 거부된 패시브
+  로그인). `Assertion.Subject`(`samltest.NameID`: 값, 형식, NameQualifier, SPNameQualifier)는 `NameID` 문자열을
+  대신하며, 둘 다 설정하면 거부됩니다. `Assertion.AuthnInstant`는 `Now`와 따로 인증 시각을 옮기므로 유효 기간은
+  움직이지 않습니다. `Attribute.NameIDs`는 `saml:NameID` 요소인 값을 줍니다(eduPersonTargetedID).
+  영값은 v0.6.1이 쓰던 것을 씁니다.
 - **로그인**: `IdP.Handler`는 AuthnRequest에 대해 사용자 이름과 비밀번호 폼을 보여 주고,
   `SAMLResponse`와 `RelayState`를 ACS로 보내는 폼으로 응답합니다. 테스트의 HTTP 클라이언트는
   브라우저의 스크립트처럼 이를 제출합니다.

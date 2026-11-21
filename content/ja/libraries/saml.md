@@ -12,7 +12,7 @@ tags: [ライブラリ, saml, フェデレーション]
 そのプロバイダーが述べることを読み戻します。
 
 ```sh
-go get github.com/go-authn/saml@v0.6.1
+go get github.com/go-authn/saml@v0.7.0
 ```
 
 これは [authn-bridge]({{< relref "/authn-bridge/_index.md" >}}) のフェデレーションに面した半分で、
@@ -233,6 +233,12 @@ srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw strin
   Issuer の後に署名されます。アサーションは SP の証明書宛てに AES-128-GCM と
   RSA-OAEP MGF1-SHA1（Shibboleth IdP v5 の既定値）で暗号化されます。`EncryptTo` が
   nil のときは、平文のままアサーション自身が署名されます。
+- **拒否、サブジェクト、属性の形** (v0.7.0 から): `Assertion.Status` は StatusCode とその入れ子のコードを持ち、
+  最上位のコードが Success でない Response はアサーションを含みません (`Responder` に続く `NoPassive` は拒否された
+  パッシブログイン)。`Assertion.Subject` (`samltest.NameID`: 値、フォーマット、NameQualifier、SPNameQualifier) は
+  `NameID` 文字列に代わり、両方を設定すると拒否されます。`Assertion.AuthnInstant` は `Now` とは別に認証の時刻を動かすので、
+  有効期間は動きません。`Attribute.NameIDs` は `saml:NameID` 要素である値を与えます (eduPersonTargetedID)。
+  ゼロ値は v0.6.1 が書いたものを書きます。
 - **ログイン**: `IdP.Handler` は AuthnRequest に対してユーザー名とパスワードの
   フォームを表示し、`SAMLResponse` と `RelayState` を ACS に POST するフォームで
   応答します。テストの HTTP クライアントは、ブラウザーのスクリプトと同じように

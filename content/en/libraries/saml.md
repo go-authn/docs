@@ -13,7 +13,7 @@ sends people to their own institution's identity provider, and reads back what
 that provider says.
 
 ```sh
-go get github.com/go-authn/saml@v0.6.1
+go get github.com/go-authn/saml@v0.7.0
 ```
 
 It is the half of [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -237,6 +237,14 @@ srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw strin
   enveloped, after the Issuer. The assertion is encrypted to the SP's certificate with
   AES-128-GCM and RSA-OAEP MGF1-SHA1 (a Shibboleth IdP v5's defaults), or signed
   itself in the clear when `EncryptTo` is nil.
+- **Refusals, subjects and attribute shapes** (since v0.7.0): `Assertion.Status`
+  carries the StatusCode and its nested codes, and a Response whose top-level code
+  is not Success carries no assertion (`Responder` then `NoPassive` is a refused
+  passive login); `Assertion.Subject` (`samltest.NameID`: value, format,
+  NameQualifier, SPNameQualifier) replaces the `NameID` string, and setting both is
+  refused; `Assertion.AuthnInstant` moves the authentication apart from `Now`, so
+  the validity window stays; `Attribute.NameIDs` gives values that are a
+  `saml:NameID` element (eduPersonTargetedID). A zero value writes what v0.6.1 wrote.
 - **The login**: `IdP.Handler` shows a username and password form for an
   AuthnRequest and answers with the form that posts `SAMLResponse` and `RelayState`
   to the ACS; a test's HTTP client submits it as a browser's script would.

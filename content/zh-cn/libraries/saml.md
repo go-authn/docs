@@ -13,7 +13,7 @@ tags: [库, saml, 联邦]
 该提供方所说的内容。
 
 ```sh
-go get github.com/go-authn/saml@v0.6.1
+go get github.com/go-authn/saml@v0.7.0
 ```
 
 它是 [authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -234,6 +234,11 @@ srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw strin
 - **响应**：`IdP.Response` 接收带有请求 ID、受众、ACS 和属性的 `Assertion`。Response 使用 RSA-SHA256、
   独占 c14n、enveloped 方式，在 Issuer 之后签名。断言用 SP 的证书以 AES-128-GCM 和
   RSA-OAEP MGF1-SHA1（Shibboleth IdP v5 的默认值）加密；当 `EncryptTo` 为 nil 时，断言本身以明文签名。
+- **拒绝、主体与属性形态**（自 v0.7.0 起）：`Assertion.Status` 携带 StatusCode 及其嵌套代码，顶层代码不是 Success
+  的 Response 不含断言（`Responder` 加 `NoPassive` 即被拒绝的被动登录）；`Assertion.Subject`（`samltest.NameID`：
+  值、格式、NameQualifier、SPNameQualifier）取代 `NameID` 字符串，同时设置两者会被拒绝；`Assertion.AuthnInstant`
+  与 `Now` 分开移动认证时间，因此有效期窗口不动；`Attribute.NameIDs` 提供作为 `saml:NameID` 元素的值
+  （eduPersonTargetedID）。零值写出的内容与 v0.6.1 相同。
 - **登录**：`IdP.Handler` 针对 AuthnRequest 显示用户名和密码表单，并以向 ACS 提交 `SAMLResponse` 和
   `RelayState` 的表单作答；测试的 HTTP 客户端像浏览器脚本那样提交它。
 

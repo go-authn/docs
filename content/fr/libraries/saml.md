@@ -13,7 +13,7 @@ signées de la fédération, envoie les personnes vers le fournisseur d'identit�
 de leur propre établissement, et relit ce que ce fournisseur affirme.
 
 ```sh
-go get github.com/go-authn/saml@v0.6.1
+go get github.com/go-authn/saml@v0.7.0
 ```
 
 C'est la moitié d'[authn-bridge]({{< relref "/authn-bridge/_index.md" >}})
@@ -238,6 +238,15 @@ srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw strin
   exclusive, enveloppée, après l'Issuer. L'assertion est chiffrée pour le certificat
   du SP en AES-128-GCM et RSA-OAEP MGF1-SHA1 (valeurs par défaut d'un IdP Shibboleth
   v5), ou signée elle-même en clair quand `EncryptTo` est nil.
+- **Refus, sujets et formes d'attribut** (depuis la v0.7.0) : `Assertion.Status`
+  porte le StatusCode et ses codes imbriqués, et une Response dont le code de
+  premier niveau n'est pas Success ne porte aucune assertion (`Responder` puis
+  `NoPassive` est une connexion passive refusée) ; `Assertion.Subject`
+  (`samltest.NameID` : valeur, format, NameQualifier, SPNameQualifier) remplace la
+  chaîne `NameID`, et renseigner les deux est refusé ; `Assertion.AuthnInstant`
+  déplace l'authentification indépendamment de `Now`, si bien que la fenêtre de
+  validité ne bouge pas ; `Attribute.NameIDs` donne des valeurs qui sont un élément
+  `saml:NameID` (eduPersonTargetedID). Une valeur zéro écrit ce qu'écrivait la v0.6.1.
 - **La connexion** : `IdP.Handler` affiche un formulaire identifiant et mot de passe
   pour une AuthnRequest et répond par le formulaire qui poste `SAMLResponse` et
   `RelayState` à l'ACS ; le client HTTP d'un test le soumet comme le ferait le script
