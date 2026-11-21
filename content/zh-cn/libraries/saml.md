@@ -295,4 +295,4 @@ srv.Config.Handler = idp.Handler(spEntityID, acsURL, spCert, func(user, pw strin
 
 ## 参考 {#reference}
 
-[pkg.go.dev/github.com/go-authn/saml@v0.4.1](https://pkg.go.dev/github.com/go-authn/saml@v0.4.1)
+[pkg.go.dev/github.com/go-authn/saml](https://pkg.go.dev/github.com/go-authn/saml)

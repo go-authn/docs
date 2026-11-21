@@ -309,4 +309,4 @@ réponse faite uniquement d'espaces sont chacune refusées, avec `TotalAlloc` bo
 
 ## Référence {#reference}
 
-[pkg.go.dev/github.com/go-authn/saml@v0.4.1](https://pkg.go.dev/github.com/go-authn/saml@v0.4.1)
+[pkg.go.dev/github.com/go-authn/saml](https://pkg.go.dev/github.com/go-authn/saml)
