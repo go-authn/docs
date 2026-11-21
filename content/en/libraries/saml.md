@@ -306,4 +306,4 @@ all-whitespace one are each refused, with `TotalAlloc` bounded to 4 to 8 MiB.
 
 ## Reference
 
-[pkg.go.dev/github.com/go-authn/saml](https://pkg.go.dev/github.com/go-authn/saml) (the v0.5.0 page was not yet indexed by pkg.go.dev when this was written, which is why the link names no version)
+[pkg.go.dev/github.com/go-authn/saml](https://pkg.go.dev/github.com/go-authn/saml)
