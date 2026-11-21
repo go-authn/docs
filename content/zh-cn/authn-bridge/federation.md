@@ -121,7 +121,7 @@ HTTP-Redirect `SingleSignOnService` 时才会保留。被描述了两次的实�
 
 **schacHomeOrganization。** 仅当它是声明方 IdP 的 scope 之一时才会发放（完全匹配，区分大小写；go-authn/saml v0.6.0，bridge v0.23.9），与上面的标识符一样：一个机构的 IdP 不能声明另一个机构的值。元数据没有为其域名发布 Scope 的 IdP，其该属性不再被读取。
 
-**本地 scope 中的联合名称 {#local-scope}。** 当 `local { scope }` 等于某个联合 IdP 的 scope 时，本地的 `alice` 与联合的 `alice@<scope>` 是同一个 Kerberos 主体、同一个 `eduperson_principal_name`，因此也是同一个 SSH 主体。用户名或 eppn 位于本地 scope 的联合登录，现在在签发时就被拒绝（`access_denied`，bridge v0.31.0），因为元数据中的 scope 在每次刷新时都会变化；已经存在的联合令牌得不到 Kerberos 票据；当某个可用 IdP 的 scope 就是本地 scope 时，`authn-bridge check` 会失败。**升级：**如果 `check` 现在报告了这一冲突，请给 `local` 块换一个 scope（本地账户的主体和 eppn 会随之改变）。
+**本地 scope 中的联合名称。** 当 `local { scope }` 等于某个联合 IdP 的 scope 时，本地的 `alice` 与联合的 `alice@<scope>` 是同一个 Kerberos 主体、同一个 `eduperson_principal_name`，因此也是同一个 SSH 主体。用户名或 eppn 位于本地 scope 的联合登录，现在在签发时就被拒绝（`access_denied`，bridge v0.31.0），因为元数据中的 scope 在每次刷新时都会变化；已经存在的联合令牌得不到 Kerberos 票据；当某个可用 IdP 的 scope 就是本地 scope 时，`authn-bridge check` 会失败。**升级：**如果 `check` 现在报告了这一冲突，请给 `local` 块换一个 scope（本地账户的主体和 eppn 会随之改变）。
 
 **组。** 当允许登录的 IdP 多于一个时，`eduPersonEntitlement`
 或 `isMemberOf` 的值只有在其命名空间是该 IdP 的某个 scope
