@@ -11,7 +11,7 @@ tags: [라이브러리, secretsource, 비밀]
 있지 않으므로 플래그, 스크립트, 셸 기록에 있어도 됩니다.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.7.0
+go get github.com/go-authn/secretsource@v0.8.0
 ```
 
 ```go
@@ -28,6 +28,7 @@ use(s.Bytes())
 | `secretservice:SERVICE/ACCOUNT` | 속성 `service=SERVICE`, `account=ACCOUNT`를 가진 freedesktop Secret Service 항목 (GNOME Keyring, KWallet, KeePassXC의 Secret Service 연동) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | 그 속성을 모두 가진 단 하나의 Secret Service 항목; 여러 개가 일치하면 거부됩니다 |
 | `keepassxc:URL` | **URL 필드**가 그 URL인 KeePassXC 항목(`https://NAME.invalid/...`는 결코 해석되지 않는 좋은 선택); 같은 URL의 항목이 둘이면 모호하다고 거부됩니다 |
+| `systemd-creds:NAME` | (Linux, v0.8.0부터) systemd 자격 증명을 바이트 그대로 반환합니다. `file:`과 달리 끝의 줄바꿈을 제거하지 않습니다. 먼저 `$CREDENTIALS_DIRECTORY`의 `NAME` 파일(`LoadCredential=`, `LoadCredentialEncrypted=`, `SetCredentialEncrypted=`가 배치), 없으면 `/etc`, `/run`, `/usr/lib`의 `credstore.encrypted`에 있는 `NAME` 또는 `NAME.cred`를 `systemd-creds decrypt`로 복호화합니다. 다른 시스템에서는 `ErrUnavailable`로 거부됩니다 |
 
 `keepassxc:by-uuid/...`와 `keepassxc:by-path/...`는 **거부됩니다**: KeePassXC
 2.8.0은 조회가 URL이 없는 항목을 찾으면 비정상 종료합니다.
@@ -37,6 +38,34 @@ use(s.Bytes())
 `file:`로 씁니다). 4096바이트보다 긴 비밀이나 관리자나 `file:`이 돌려준 빈 비밀은
 거부되며(`ErrEmpty`), 호출은 컨텍스트(기한이 없으면 2분)와 함께 끝납니다. 관리자가 잠금
 해제를 기다리고 있어도 마찬가지입니다.
+
+## systemd 자격 증명 {#systemd-creds}
+
+문법은 정확히 `systemd-creds:NAME`입니다. 소문자 스킴, 콜론, 그리고
+`LoadCredential=`, `LoadCredentialEncrypted=`, `systemd-creds encrypt --name=`에
+준 자격 증명 이름이 옵니다. 예: `systemd-creds:smtp`. `NAME`은 1~255바이트의
+단순한 파일 이름이며, `/`가 없고(경로가 아님), `.`나 `..`가 아니며, 제어 문자가
+없고, `.cred` 접미사도 붙이지 않습니다(접미사는 파일의 것이며, `smtp`는 `smtp`
+또는 `smtp.cred`를 찾습니다).
+
+- `$CREDENTIALS_DIRECTORY`의 파일은 `O_NOFOLLOW`로 열리며, root 또는 호출자가
+  소유하고 "기타" 사용자에게 접근 권한이 없는 일반 파일이어야 합니다(그룹 비트는
+  허용됩니다. systemd는 `User=` 서비스에 ACL이 있는 root 소유 0440 파일을
+  줍니다). 디렉터리도 마찬가지입니다. 심볼릭 링크나 너무 느슨한 모드는
+  거부됩니다.
+- 그렇지 않으면 `systemd-creds decrypt --name=NAME PATH -`를 직접 실행합니다.
+  셸 없이, 빈 환경으로, 비밀은 표준 출력에서만 읽고, 최대 4096바이트이며,
+  컨텍스트로 끝납니다. root가 아닌 호출자는 먼저 `--user`(systemd 256 이상)를
+  시도합니다.
+- 다듬기 없음: 끝의 줄바꿈, NUL 바이트, UTF-8이 아닌 바이트가 그대로
+  유지되므로 비밀번호는 `printf %s`로 봉인하십시오.
+- systemd 257(Debian 13)에서 `--with-key=host`로 측정했으며, TPM2 키로는 측정하지
+  않았습니다. 복호화에 실패하면 `ErrUnavailable`을 반환하고 자격 증명을 다시
+  봉인해야 할 수 있다고 알려 줍니다.
+- PCR 바인딩: `--tpm2-pcrs=`의 기본값은 없음입니다. `--tpm2-pcrs=7`만 쓰면
+  펌웨어나 shim 업데이트, vTPM 마이그레이션 후 모든 자격 증명이 잠길 수
+  있습니다. `--with-key=host+tpm2`, 서명된 PCR 정책(`--tpm2-public-key`, PCR 11)
+  또는 `systemd-pcrlock`을 쓰고, 다시 봉인할 수 있도록 비밀의 사본을 보관하십시오.
 
 ## KeePassXC {#keepassxc}
 

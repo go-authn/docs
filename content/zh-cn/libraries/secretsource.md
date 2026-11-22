@@ -11,7 +11,7 @@ tags: [库, secretsource, 密钥]
 shell 历史记录里。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.7.0
+go get github.com/go-authn/secretsource@v0.8.0
 ```
 
 ```go
@@ -28,6 +28,7 @@ use(s.Bytes())
 | `secretservice:SERVICE/ACCOUNT` | 属性为 `service=SERVICE`、`account=ACCOUNT` 的 freedesktop Secret Service 项（GNOME Keyring、KWallet、KeePassXC 的 Secret Service 集成） |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | 带有所有这些属性的唯一一个 Secret Service 项；匹配到多个则拒绝 |
 | `keepassxc:URL` | **URL 字段**为该 URL 的 KeePassXC 条目（`https://NAME.invalid/...` 是个好选择，永远不会被解析）；两个条目 URL 相同会因有歧义而被拒绝 |
+| `systemd-creds:NAME` | (Linux，自 v0.8.0 起)一个 systemd 凭据，按字节原样返回：与 `file:` 不同，不去掉末尾换行。先找 `$CREDENTIALS_DIRECTORY` 中的文件 `NAME`(由 `LoadCredential=`、`LoadCredentialEncrypted=`、`SetCredentialEncrypted=` 放置)；否则在 `/etc`、`/run`、`/usr/lib` 的 `credstore.encrypted` 中找 `NAME` 或 `NAME.cred`，用 `systemd-creds decrypt` 解密。在其他系统上以 `ErrUnavailable` 拒绝 |
 
 `keepassxc:by-uuid/...` 和 `keepassxc:by-path/...` 会被**拒绝**：当查找命中没有
 URL 的条目时，KeePassXC 2.8.0 会崩溃。
@@ -36,6 +37,27 @@ URL 的条目时，KeePassXC 2.8.0 会崩溃。
 而不是被猜成路径（路径要写成 `file:`）。超过 4096 字节的密钥，或管理器或 `file:` 返回的
 空密钥，都会被拒绝（`ErrEmpty`）；一次调用随其上下文结束（没有截止时间时为 2 分钟），即使
 管理器正在等你解锁。
+
+## systemd 凭据 {#systemd-creds}
+
+语法严格为 `systemd-creds:NAME`：小写的方案名、冒号，然后是传给
+`LoadCredential=`、`LoadCredentialEncrypted=` 或 `systemd-creds encrypt --name=`
+的凭据名，例如 `systemd-creds:smtp`。`NAME` 是 1 到 255 字节的普通文件名：不含
+`/`(因此不是路径)，不是 `.` 或 `..`，不含控制字符，也不带 `.cred` 后缀(后缀属于
+文件；`smtp` 会找到 `smtp` 或 `smtp.cred`)。
+
+- `$CREDENTIALS_DIRECTORY` 中的文件以 `O_NOFOLLOW` 打开，必须是属于 root 或调用者的
+  普通文件，且"其他人"无任何访问权限(接受组权限位：systemd 会给 `User=` 服务一个带
+  ACL 的 root 所有 0440 文件)；目录同样如此。符号链接或过宽的权限会被拒绝。
+- 否则直接运行 `systemd-creds decrypt --name=NAME PATH -`：不经 shell、环境为空，
+  只从标准输出读取机密，最多 4096 字节，随上下文结束。非 root 的调用者先尝试
+  `--user`(systemd 256 或更高版本)。
+- 不做裁剪：末尾换行、NUL 字节和非 UTF-8 字节都会保留，因此请用 `printf %s` 封存密码。
+- 在 systemd 257(Debian 13)上用 `--with-key=host` 测得；未用 TPM2 密钥测量。解密
+  失败会返回 `ErrUnavailable`，并提示凭据可能需要重新封存。
+- PCR 绑定：`--tpm2-pcrs=` 默认为空。单独的 `--tpm2-pcrs=7` 可能在固件或 shim 更新、
+  或 vTPM 迁移后锁死所有凭据。请优先使用 `--with-key=host+tpm2`、签名的 PCR 策略
+  (`--tpm2-public-key`，PCR 11)或 `systemd-pcrlock`，并保留机密的副本以便重新封存。
 
 ## KeePassXC {#keepassxc}
 
