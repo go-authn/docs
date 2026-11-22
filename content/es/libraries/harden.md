@@ -2,7 +2,7 @@
 title: "harden — dos primitivas de seguridad, compartidas"
 linkTitle: "harden"
 weight: 36
-description: "go-authn/harden reúne las dos primitivas de seguridad que los repositorios de go-authn habían copiado cada uno: la regla de redirección https-o-loopback y un archivo privado escrito de forma atómica."
+description: "go-authn/harden reúne las primitivas de seguridad que los repositorios de go-authn habían copiado cada uno: la regla de redirección https-o-loopback, un archivo privado escrito de forma atómica y el bloqueo de memoria con endurecimiento contra los volcados de core."
 tags: [bibliotecas, harden, seguridad]
 ---
 
@@ -10,7 +10,7 @@ tags: [bibliotecas, harden, seguridad]
 solo módulo sin más dependencia que la biblioteca estándar.
 
 ```sh
-go get github.com/go-authn/harden@v0.2.0
+go get github.com/go-authn/harden@v0.3.0
 ```
 
 ## `redirect` {#redirect}
@@ -83,6 +83,38 @@ través de un reinicio, pero no comparten el suelo: wireguard guarda una versió
 y una hora de emisión desnudas en un pequeño archivo propio, revocation guarda
 toda la lista firmada y recalcula el suelo verificándola. Solo la escritura del
 archivo es común, y eso es `privfile`.
+
+## `memlock` {#memlock}
+
+Desde la v0.3.0 (llegado de theca): mantener el material de claves fuera del
+swap, de los archivos core y de los depuradores.
+
+```go
+import "github.com/go-authn/harden/memlock"
+
+region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
+if err != nil { ... } // refused: say so, or stop
+defer region.Release()
+```
+
+| Función | |
+|---|---|
+| `Lock(p, n) (*Region, error)` | bloquea las páginas del rango con `mlock` (Linux, macOS, los BSD) o `VirtualLock` (Windows). **Un rechazo es un error**: nada queda bloqueado y quien llama decide. Las páginas que comparten dos regiones siguen bloqueadas hasta que se liberan ambas |
+| `(*Locker).LockBestEffort(p, n, report)` | igual, pero cada rechazo se entrega a `report` y el resto se bloquea de todos modos. El nombre lo dice: úsese solo donde ejecutar sin bloqueo sea aceptable |
+| `(*Region).Release()` | desbloquea; es inocua con nil y llamada dos veces |
+| `DisableDumps() error` | `RLIMIT_CORE` a 0 y, en Linux, `PR_SET_DUMPABLE` a 0; solo en macOS, además, `PT_DENY_ATTACH` |
+
+Cualquier otra plataforma recibe un `*UnsupportedError` (coincide con
+`errors.ErrUnsupported`), nunca un éxito silencioso.
+
+**Garantiza** que las páginas del rango están bloqueadas en memoria desde
+`Lock` hasta `Release`, o que recibe un error. **No garantiza** que no exista
+ninguna copia: el recolector de basura de Go puede copiar un objeto del heap
+antes de bloquearlo; bloquee, por tanto, memoria que no se mueve y guarde el
+secreto en un solo lugar. Los límites del sistema siguen aplicándose
+(`RLIMIT_MEMLOCK`; en Windows, el tamaño del working set). Windows no tiene
+equivalente de `PR_SET_DUMPABLE` ni de `PT_DENY_ATTACH`: un depurador del mismo
+usuario o un administrador puede leer el proceso.
 
 ## Referencia {#reference}
 

@@ -2,7 +2,7 @@
 title: "harden — zwei Sicherheitsbausteine, geteilt"
 linkTitle: "harden"
 weight: 36
-description: "go-authn/harden enthält die zwei Sicherheitsbausteine, die die go-authn-Repositories bisher je für sich kopiert hatten: die Regel „https oder Loopback“ für Umleitungen und eine atomar geschriebene private Datei."
+description: "go-authn/harden enthält die Sicherheitsbausteine, die die go-authn-Repositories bisher je für sich kopiert hatten: die Regel „https oder Loopback“ für Umleitungen, eine atomar geschriebene private Datei und das Sperren von Speicher mit Härtung gegen Core-Dumps."
 tags: [bibliotheken, harden, sicherheit]
 ---
 
@@ -10,7 +10,7 @@ tags: [bibliotheken, harden, sicherheit]
 einem Modul ohne andere Abhängigkeit als die Standardbibliothek.
 
 ```sh
-go get github.com/go-authn/harden@v0.2.0
+go get github.com/go-authn/harden@v0.3.0
 ```
 
 ## `redirect` {#redirect}
@@ -86,6 +86,39 @@ Ordnungsuntergrenze, teilen sie aber nicht: wireguard hält nur Version und
 Ausstellungszeit in einer eigenen kleinen Datei, revocation hält die ganze
 signierte Liste und berechnet die Untergrenze durch deren Prüfung neu.
 Gemeinsam ist nur das Schreiben der Datei, und das ist `privfile`.
+
+## `memlock` {#memlock}
+
+Seit v0.3.0 (aus theca übernommen): Schlüsselmaterial aus dem Swap, aus
+Core-Dateien und aus Debuggern heraushalten.
+
+```go
+import "github.com/go-authn/harden/memlock"
+
+region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
+if err != nil { ... } // refused: say so, or stop
+defer region.Release()
+```
+
+| Funktion | |
+|---|---|
+| `Lock(p, n) (*Region, error)` | sperrt die Seiten des Bereichs mit `mlock` (Linux, macOS, die BSDs) oder `VirtualLock` (Windows). **Eine Ablehnung ist ein Fehler**: nichts bleibt gesperrt, und der Aufrufer entscheidet. Seiten, die zwei Regionen teilen, bleiben gesperrt, bis beide freigegeben sind |
+| `(*Locker).LockBestEffort(p, n, report)` | dasselbe, aber jede Ablehnung geht an `report`, und der Rest wird trotzdem gesperrt. Der Name sagt es: nur dort verwenden, wo ein Lauf ohne Sperre hinnehmbar ist |
+| `(*Region).Release()` | entsperrt; ungefährlich bei nil und bei doppeltem Aufruf |
+| `DisableDumps() error` | `RLIMIT_CORE` auf 0 und unter Linux `PR_SET_DUMPABLE` auf 0; nur unter macOS zusätzlich `PT_DENY_ATTACH` |
+
+Jede andere Plattform erhält einen `*UnsupportedError` (er passt zu
+`errors.ErrUnsupported`), niemals einen stillen Erfolg.
+
+**Sie garantiert**, dass die Seiten des Bereichs von `Lock` bis `Release` im
+Speicher gesperrt sind, oder dass Sie einen Fehler erhalten. **Sie garantiert
+nicht**, dass keine Kopie existiert: Der Go-Garbage-Collector kann ein
+Heap-Objekt kopieren, bevor es gesperrt wird; sperren Sie daher Speicher, der
+sich nicht bewegt, und halten Sie das Geheimnis an einer einzigen Stelle. Die
+Systemgrenzen gelten weiter (`RLIMIT_MEMLOCK`; unter Windows die Größe des
+Working Sets). Windows kennt kein Gegenstück zu `PR_SET_DUMPABLE` oder
+`PT_DENY_ATTACH`: Ein Debugger desselben Benutzers oder ein Administrator kann
+den Prozess lesen.
 
 ## Referenz {#reference}
 
