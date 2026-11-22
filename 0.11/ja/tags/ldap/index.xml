@@ -84,7 +84,7 @@ data-copied-label="コピーしました！"
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # required
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;systemd-creds:reader&amp;#34;&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;alice&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/passwords/alice.pw&amp;#34;&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
@@ -162,7 +162,7 @@ data-copied-label="コピーしました！"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;&lt;code&gt;reader&lt;/code&gt; は、バインド DN と &lt;code&gt;password&lt;/code&gt; または &lt;code&gt;password_file&lt;/code&gt; を持つサービスアカウントです。どちらも持たない reader は起動時に拒否されます (&lt;em&gt;何も証明しない reader は、手間が増えただけの匿名検索です&lt;/em&gt;)。reader が一つもなければ、何も検索できず、&lt;code&gt;check&lt;/code&gt; がそのことを知らせます。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;reader&lt;/code&gt; は、バインド DN とパスワードを持つサービスアカウントで、パスワードは&lt;code&gt;password_from&lt;/code&gt; (&lt;a href="https://go-authn.github.io/docs/0.11/ja/authnd/install/#secrets-as-references"&gt;シークレット参照&lt;/a&gt;) で指定します。&lt;code&gt;password_file&lt;/code&gt; と &lt;code&gt;password&lt;/code&gt; は非推奨の書き方です。どれも持たない reader は起動時に拒否されます (&lt;em&gt;何も証明しない reader は、手間が増えただけの匿名検索です&lt;/em&gt;)。reader が一つもなければ、何も検索できず、&lt;code&gt;check&lt;/code&gt; がそのことを知らせます。&lt;/p&gt;
 &lt;p&gt;ルート DSE は、探索に必要なため、匿名のクライアントにも応答されます。&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; &amp;#39;&amp;#43;&amp;#39; &amp;#39;*&amp;#39;
@@ -322,6 +322,8 @@ data-copied-label="コピーしました！"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
+&lt;p&gt;これらのシークレットのフィールドは、&lt;code&gt;user&lt;/code&gt; または &lt;code&gt;users&lt;/code&gt; ブロックでは独自の書き方のままです。今のところ、&lt;a href="https://go-authn.github.io/docs/0.11/ja/authnd/install/#secrets-as-references"&gt;シークレット参照&lt;/a&gt;
+(&lt;code&gt;password_from&lt;/code&gt;、&lt;code&gt;totp_secret_from&lt;/code&gt;) を受け付けるのは &lt;code&gt;reader&lt;/code&gt; ブロックだけです。&lt;/p&gt;
 &lt;p&gt;起動時に、その人の名前を挙げて拒否されるもの:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;password&lt;/code&gt; と &lt;code&gt;password_file&lt;/code&gt; の併用 — どちらかを指定してください&lt;/li&gt;

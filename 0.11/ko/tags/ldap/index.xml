@@ -108,7 +108,7 @@ data-copied-label="복사됨!"
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # required
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;systemd-creds:reader&amp;#34;&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;alice&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/passwords/alice.pw&amp;#34;&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
@@ -192,7 +192,9 @@ data-copied-label="복사됨!"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;&lt;code&gt;reader&lt;/code&gt;는 바인드 DN과 &lt;code&gt;password&lt;/code&gt; 또는 &lt;code&gt;password_file&lt;/code&gt;을 가진 서비스 계정입니다.둘 다 없는 reader는 시작 시 거부됩니다(&lt;em&gt;아무것도 증명하지 않는 reader는 단계만
+&lt;p&gt;&lt;code&gt;reader&lt;/code&gt;는 바인드 DN과 비밀번호를 가진 서비스 계정이며, 비밀번호는&lt;code&gt;password_from&lt;/code&gt;(&lt;a href="https://go-authn.github.io/docs/0.11/ko/authnd/install/#secrets-as-references"&gt;비밀 값 참조&lt;/a&gt;)으로
+지정합니다. &lt;code&gt;password_file&lt;/code&gt;과 &lt;code&gt;password&lt;/code&gt;는 사용 중단된 표기입니다. 아무것도 없는
+reader는 시작 시 거부됩니다(&lt;em&gt;아무것도 증명하지 않는 reader는 단계만
 늘어난 익명 검색입니다&lt;/em&gt;). reader가 하나도 없으면 아무도 검색할 수 없으며,&lt;code&gt;check&lt;/code&gt;가 이를 알려 줍니다.&lt;/p&gt;
 &lt;p&gt;루트 DSE는 디스커버리에 필요하므로 익명 클라이언트에게 응답합니다.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -359,6 +361,8 @@ data-copied-label="복사됨!"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
+&lt;p&gt;이 비밀 값 필드들은 &lt;code&gt;user&lt;/code&gt; 또는 &lt;code&gt;users&lt;/code&gt; 블록에서 자체 표기를 유지합니다. 당분간&lt;code&gt;reader&lt;/code&gt; 블록만 &lt;a href="https://go-authn.github.io/docs/0.11/ko/authnd/install/#secrets-as-references"&gt;비밀 값 참조&lt;/a&gt;
+(&lt;code&gt;password_from&lt;/code&gt;, &lt;code&gt;totp_secret_from&lt;/code&gt;)를 받습니다.&lt;/p&gt;
 &lt;p&gt;시작 시 거부되며 해당 사람의 이름을 지정합니다.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;password&lt;/code&gt;와 &lt;code&gt;password_file&lt;/code&gt;이 함께 있는 경우 — 어느 쪽인지 지정하십시오&lt;/li&gt;

@@ -338,6 +338,63 @@ data-copied-label="已复制！"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;证书是为签发方的主机而设。&lt;code&gt;cache_dir&lt;/code&gt; 保存私钥，当其他用户可以访问或重新指向该目录时，提供方会拒绝启动。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="mail-the-smtp-password-is-a-reference"&gt;&lt;code&gt;mail&lt;/code&gt;：SMTP 密码是一个引用&lt;span class="hx:absolute hx:-mt-20" id="mail-the-smtp-password-is-a-reference"&gt;&lt;/span&gt;
+&lt;a href="#mail-the-smtp-password-is-a-reference" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;mail&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;smtp.example.org&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; security&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34; # &amp;#34;tls&amp;#34; (port 465, the default) or &amp;#34;starttls&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="m"&gt;587&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; username&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;authn-bridge&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; password_from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;systemd-creds:smtp&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # a secretsource reference, never the password
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;authn-bridge@example.org&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt; # window = &amp;#34;10m&amp;#34; # least time between two mails to one account
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;password_from&lt;/code&gt; 是一个 &lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt;
+引用：&lt;code&gt;systemd-creds:NAME&lt;/code&gt;、&lt;code&gt;file:PATH&lt;/code&gt;（仅所有者可读的普通文件，&lt;code&gt;0600&lt;/code&gt;）、&lt;code&gt;keychain:SERVICE/ACCOUNT&lt;/code&gt;，以及 secretsource 的其他方案。密码是一行非空内容，至多 4096 字节，并且不会从其他任何地方读取：不是环境变量，不是命令行，也不是配置文件本身。没有方案的引用、过大或多行的密钥、权限过宽的文件，以及缺少 &lt;code&gt;username&lt;/code&gt; 和&lt;code&gt;password_from&lt;/code&gt; 的 &lt;code&gt;mail&lt;/code&gt; 块，在启动时都会被拒绝。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;password_file = &amp;quot;PATH&amp;quot;&lt;/code&gt; 仍然可用，但已&lt;strong&gt;弃用&lt;/strong&gt;：它被当作&lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt; 读取。同时设置两者是配置错误。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;file:&lt;/code&gt; 会拒绝符号链接，也会拒绝属于运行 bridge 的用户之外其他用户的文件。由 systemd 传递的凭据应使用 &lt;code&gt;systemd-creds:NAME&lt;/code&gt; 读取，绝不要使用&lt;code&gt;file:$CREDENTIALS_DIRECTORY/NAME&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;在 systemd 主机上，把密码封存到本机，并作为凭据交给服务：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s1"&gt;&amp;#39;the-smtp-password&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; sudo systemd-creds encrypt --name&lt;span class="o"&gt;=&lt;/span&gt;smtp &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; --with-key&lt;span class="o"&gt;=&lt;/span&gt;host+tpm2 - /etc/credstore.encrypted/smtp.cred&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# systemctl edit authn-bridge&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;LoadCredentialEncrypted&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;smtp:/etc/credstore.encrypted/smtp.cred&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;请使用 &lt;code&gt;--with-key=host+tpm2&lt;/code&gt;，不要带 &lt;code&gt;--tpm2-pcrs&lt;/code&gt;：密钥由 TPM2芯片和主机密钥文件派生，在固件和 Secure Boot 更新后依然有效。不要单独使用 &lt;code&gt;--tpm2-pcrs=7&lt;/code&gt;：固件或 shim 更新会使凭据无法读取，网桥将拒绝启动。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;恢复。&lt;/strong&gt; 一旦丢失 TPM2 芯片或&lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt;，凭据也随之丢失，解密失败会使网桥在启动时停止。请把密码保存在不依赖这台机器的地方（离线副本），用上面的命令从该副本重新封存，然后&lt;code&gt;systemctl restart authn-bridge&lt;/code&gt;。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;启动时拒绝什么&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;以下每一项都是 &lt;code&gt;authn-bridge check&lt;/code&gt; 对提出该请求的配置所输出的内容。服务器拒绝同样的配置：每一项都是从配置及其所指名的文件中读出的。&lt;code&gt;check&lt;/code&gt; 额外增加的唯一一项拒绝是联邦没有列出的 &lt;code&gt;idps&lt;/code&gt; 条目，见&lt;a href="#check-before-a-restart"&gt;上文&lt;/a&gt;：服务器在监听之前会获取同样的元数据，但不会用它来约束 &lt;code&gt;idps&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;会泄露的签发方、重定向和密钥：&lt;/strong&gt;&lt;/p&gt;
@@ -751,6 +808,8 @@ data-copied-label="已复制！"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
+&lt;p&gt;这些密钥字段在 &lt;code&gt;user&lt;/code&gt; 或 &lt;code&gt;users&lt;/code&gt; 块中保留各自的写法；目前只有&lt;code&gt;reader&lt;/code&gt; 块接受&lt;a href="https://go-authn.github.io/docs/0.11/zh-cn/authnd/install/#secrets-as-references"&gt;密钥引用&lt;/a&gt;
+（&lt;code&gt;password_from&lt;/code&gt;、&lt;code&gt;totp_secret_from&lt;/code&gt;）。&lt;/p&gt;
 &lt;p&gt;启动时被拒绝，并指名相关人员：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;同时有 &lt;code&gt;password&lt;/code&gt; 和 &lt;code&gt;password_file&lt;/code&gt;——请指明用哪一个；&lt;/li&gt;

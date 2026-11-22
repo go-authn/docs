@@ -108,7 +108,7 @@ data-copied-label="복사됨!"
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # required
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;systemd-creds:reader&amp;#34;&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;alice&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/passwords/alice.pw&amp;#34;&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
@@ -192,7 +192,9 @@ data-copied-label="복사됨!"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;&lt;code&gt;reader&lt;/code&gt;는 바인드 DN과 &lt;code&gt;password&lt;/code&gt; 또는 &lt;code&gt;password_file&lt;/code&gt;을 가진 서비스 계정입니다.둘 다 없는 reader는 시작 시 거부됩니다(&lt;em&gt;아무것도 증명하지 않는 reader는 단계만
+&lt;p&gt;&lt;code&gt;reader&lt;/code&gt;는 바인드 DN과 비밀번호를 가진 서비스 계정이며, 비밀번호는&lt;code&gt;password_from&lt;/code&gt;(&lt;a href="https://go-authn.github.io/docs/0.11/ko/authnd/install/#secrets-as-references"&gt;비밀 값 참조&lt;/a&gt;)으로
+지정합니다. &lt;code&gt;password_file&lt;/code&gt;과 &lt;code&gt;password&lt;/code&gt;는 사용 중단된 표기입니다. 아무것도 없는
+reader는 시작 시 거부됩니다(&lt;em&gt;아무것도 증명하지 않는 reader는 단계만
 늘어난 익명 검색입니다&lt;/em&gt;). reader가 하나도 없으면 아무도 검색할 수 없으며,&lt;code&gt;check&lt;/code&gt;가 이를 알려 줍니다.&lt;/p&gt;
 &lt;p&gt;루트 DSE는 디스커버리에 필요하므로 익명 클라이언트에게 응답합니다.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -536,7 +538,7 @@ data-copied-label="복사됨!"
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;reader &amp;quot;&amp;lt;dn&amp;gt;&amp;quot;&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;없음&lt;/td&gt;
-&lt;td&gt;검색할 수 있는 서비스 계정. &lt;a href="https://go-authn.github.io/docs/0.11/ko/authnd/#who-may-bind-and-who-may-read"&gt;누가 읽을 수 있는가&lt;/a&gt;를 참조&lt;/td&gt;
+&lt;td&gt;검색할 수 있는 서비스 계정. &lt;code&gt;password_from&lt;/code&gt;(및 &lt;code&gt;totp_secret_from&lt;/code&gt;)을 가지며, &lt;a href="#secrets-as-references"&gt;비밀 값 참조&lt;/a&gt;입니다. &lt;a href="https://go-authn.github.io/docs/0.11/ko/authnd/#who-may-bind-and-who-may-read"&gt;누가 읽을 수 있는가&lt;/a&gt;를 참조&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;refresh&lt;/code&gt;&lt;/td&gt;
@@ -597,6 +599,73 @@ data-copied-label="복사됨!"
 &lt;/table&gt;
 &lt;p&gt;구성의 상대 경로는 구성 파일이 아니라 프로세스가 실행되는 디렉터리를 기준으로
 해석됩니다. 유닛은 &lt;code&gt;/&lt;/code&gt;에서 실행되므로 경로는 절대 경로로 쓰십시오.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="secrets-as-references"&gt;참조로서의 비밀 값&lt;span class="hx:absolute hx:-mt-20" id="secrets-as-references"&gt;&lt;/span&gt;
+&lt;a href="#secrets-as-references" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;reader&lt;/code&gt; 블록은 비밀 값을 직접 담는 대신&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt; 참조로 지정합니다.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;field&lt;/th&gt;
+&lt;th&gt;meaning&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the reader&amp;rsquo;s password: &lt;code&gt;systemd-creds:NAME&lt;/code&gt;, &lt;code&gt;file:PATH&lt;/code&gt; (a regular file readable by its owner alone), &lt;code&gt;keychain:SERVICE/ACCOUNT&lt;/code&gt;, &amp;hellip;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;totp_secret_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the reader&amp;rsquo;s base32 TOTP secret (with &lt;code&gt;mfa { readers = true }&lt;/code&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password_file&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;deprecated&lt;/strong&gt;: read as &lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password&lt;/code&gt;, &lt;code&gt;totp_secret&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;deprecated&lt;/strong&gt;: the secret itself, written in the configuration; logged at startup&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;code&gt;password_from&lt;/code&gt;, &lt;code&gt;password_file&lt;/code&gt;, &lt;code&gt;password&lt;/code&gt; 중 정확히 하나만 허용되며,&lt;code&gt;totp_secret&lt;/code&gt;을 &lt;code&gt;totp_secret_from&lt;/code&gt;과 함께 쓰면 거부됩니다. 비밀 값은 4096바이트
+이하의 비어 있지 않은 한 줄입니다(끝의 줄바꿈은 버려집니다). 스킴이 없거나 잘못된
+참조, 또는 너무 크거나 비어 있거나 여러 줄인 비밀 값은 서버를 시작 시 멈춥니다.&lt;code&gt;user&lt;/code&gt;와 &lt;code&gt;users&lt;/code&gt; 블록은 당분간 자체 &lt;code&gt;*_file&lt;/code&gt; 표기를 유지합니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;file:&lt;/code&gt;은 심볼릭 링크와, authnd를 실행하는 사용자가 아닌 다른 사용자가 소유한
+파일을 거부합니다. systemd가 넘겨준 자격 증명은 &lt;code&gt;systemd-creds:NAME&lt;/code&gt;으로 읽으며,&lt;code&gt;file:$CREDENTIALS_DIRECTORY/NAME&lt;/code&gt;으로는 절대 읽지 않습니다.&lt;/p&gt;
+&lt;p&gt;systemd에서는 비밀 값을 머신에 봉인하고 자격 증명으로 전달하십시오.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s1"&gt;&amp;#39;the-reader-password&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; sudo systemd-creds encrypt --name&lt;span class="o"&gt;=&lt;/span&gt;reader &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; --with-key&lt;span class="o"&gt;=&lt;/span&gt;host+tpm2 - /etc/credstore.encrypted/reader.cred&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# systemctl edit authnd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;LoadCredentialEncrypted&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;reader:/etc/credstore.encrypted/reader.cred&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;--with-key=host+tpm2&lt;/code&gt;를 쓰고 &lt;code&gt;--tpm2-pcrs&lt;/code&gt;는 쓰지 마십시오. &lt;code&gt;--tpm2-pcrs=7&lt;/code&gt;만
+쓰면 펌웨어나 Secure Boot 업데이트 후 자격 증명을 읽을 수 없게 되고, authnd는 시작을
+거부합니다. &lt;strong&gt;복구:&lt;/strong&gt; 비밀 값을 오프라인 사본에 보관하고, TPM, 호스트 키 또는 펌웨어가
+바뀐 뒤에는 위 명령으로 다시 봉인한 다음 &lt;code&gt;systemctl restart authnd&lt;/code&gt;를 실행하십시오.&lt;/p&gt;
 &lt;p&gt;매번 시작하기 전에:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
@@ -733,6 +802,8 @@ data-copied-label="복사됨!"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
+&lt;p&gt;이 비밀 값 필드들은 &lt;code&gt;user&lt;/code&gt; 또는 &lt;code&gt;users&lt;/code&gt; 블록에서 자체 표기를 유지합니다. 당분간&lt;code&gt;reader&lt;/code&gt; 블록만 &lt;a href="https://go-authn.github.io/docs/0.11/ko/authnd/install/#secrets-as-references"&gt;비밀 값 참조&lt;/a&gt;
+(&lt;code&gt;password_from&lt;/code&gt;, &lt;code&gt;totp_secret_from&lt;/code&gt;)를 받습니다.&lt;/p&gt;
 &lt;p&gt;시작 시 거부되며 해당 사람의 이름을 지정합니다.&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;password&lt;/code&gt;와 &lt;code&gt;password_file&lt;/code&gt;이 함께 있는 경우 — 어느 쪽인지 지정하십시오&lt;/li&gt;
@@ -3876,7 +3947,7 @@ data-copied-label="복사됨!"
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;readers&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.11/ko/authnd/#who-may-bind-and-who-may-read"&gt;reader&lt;/a&gt;도 코드를 담는지 여부. 서비스 계정에는 휴대전화가 없습니다. 있는 계정은 &lt;code&gt;reader&lt;/code&gt; 블록에 &lt;code&gt;totp_secret&lt;/code&gt;을 둡니다&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.11/ko/authnd/#who-may-bind-and-who-may-read"&gt;reader&lt;/a&gt;도 코드를 담는지 여부. 서비스 계정에는 휴대전화가 없습니다. 있는 계정은 &lt;code&gt;reader&lt;/code&gt; 블록에 &lt;code&gt;totp_secret_from&lt;/code&gt;을 둡니다(&lt;a href="https://go-authn.github.io/docs/0.11/ko/authnd/install/#secrets-as-references"&gt;비밀 값 참조&lt;/a&gt;. 인라인 &lt;code&gt;totp_secret&lt;/code&gt;은 사용 중단됨)&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;

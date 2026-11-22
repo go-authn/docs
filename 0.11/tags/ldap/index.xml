@@ -114,7 +114,7 @@ data-copied-label="Copied!"
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # required
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;systemd-creds:reader&amp;#34;&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;alice&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/passwords/alice.pw&amp;#34;&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
@@ -201,8 +201,9 @@ data-copied-label="Copied!"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;A &lt;code&gt;reader&lt;/code&gt; is a service account with a bind DN and &lt;code&gt;password&lt;/code&gt; or&lt;code&gt;password_file&lt;/code&gt;; a reader with neither is refused at startup (&lt;em&gt;a reader that
-proves nothing is anonymous search with extra steps&lt;/em&gt;). Without any reader,nothing may search, and &lt;code&gt;check&lt;/code&gt; says so.&lt;/p&gt;
+&lt;p&gt;A &lt;code&gt;reader&lt;/code&gt; is a service account with a bind DN and a password, named by&lt;code&gt;password_from&lt;/code&gt; (a &lt;a href="https://go-authn.github.io/docs/0.11/authnd/install/#secrets-as-references"&gt;secret reference&lt;/a&gt;);&lt;code&gt;password_file&lt;/code&gt; and &lt;code&gt;password&lt;/code&gt; are deprecated spellings. A reader with none is
+refused at startup (&lt;em&gt;a reader that proves nothing is anonymous search with
+extra steps&lt;/em&gt;). Without any reader,nothing may search, and &lt;code&gt;check&lt;/code&gt; says so.&lt;/p&gt;
 &lt;p&gt;The root DSE is answered to an anonymous client, as discovery needs:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ ldapsearch -x -LLL -H ldap://127.0.0.1:3893 -s base -b &amp;#39;&amp;#39; &amp;#39;&amp;#43;&amp;#39; &amp;#39;*&amp;#39;
@@ -367,6 +368,9 @@ data-copied-label="Copied!"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
+&lt;p&gt;These secret fields keep their own spellings in a &lt;code&gt;user&lt;/code&gt; or &lt;code&gt;users&lt;/code&gt; block; only
+the &lt;code&gt;reader&lt;/code&gt; block takes &lt;a href="https://go-authn.github.io/docs/0.11/authnd/install/#secrets-as-references"&gt;secret references&lt;/a&gt;
+(&lt;code&gt;password_from&lt;/code&gt;, &lt;code&gt;totp_secret_from&lt;/code&gt;) for now.&lt;/p&gt;
 &lt;p&gt;Refused at startup, naming the person:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;password&lt;/code&gt; and &lt;code&gt;password_file&lt;/code&gt; together — say which one;&lt;/li&gt;

@@ -774,7 +774,7 @@ data-copied-label="Kopiert!"
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;reader &amp;quot;&amp;lt;dn&amp;gt;&amp;quot;&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;keiner&lt;/td&gt;
-&lt;td&gt;ein Dienstkonto, das suchen darf; siehe &lt;a href="https://go-authn.github.io/docs/0.11/de/authnd/#who-may-bind-and-who-may-read"&gt;wer lesen darf&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;ein Dienstkonto, das suchen darf, mit &lt;code&gt;password_from&lt;/code&gt; (und &lt;code&gt;totp_secret_from&lt;/code&gt;), &lt;a href="#secrets-as-references"&gt;Geheimnis-Referenzen&lt;/a&gt;; siehe &lt;a href="https://go-authn.github.io/docs/0.11/de/authnd/#who-may-bind-and-who-may-read"&gt;wer lesen darf&lt;/a&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;refresh&lt;/code&gt;&lt;/td&gt;
@@ -836,6 +836,77 @@ data-copied-label="Kopiert!"
 &lt;p&gt;Ein relativer Pfad in der Konfiguration wird gegen das Verzeichnis aufgelöst, in dem der
 Prozess läuft, nicht gegen das der Konfigurationsdatei; die Unit läuft in &lt;code&gt;/&lt;/code&gt;, also schreiben
 Sie Pfade absolut.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="secrets-as-references"&gt;Geheimnisse als Referenzen&lt;span class="hx:absolute hx:-mt-20" id="secrets-as-references"&gt;&lt;/span&gt;
+&lt;a href="#secrets-as-references" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Ein &lt;code&gt;reader&lt;/code&gt;-Block benennt seine Geheimnisse mit&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt;-Referenzen, statt sie
+selbst zu enthalten:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Feld&lt;/th&gt;
+&lt;th&gt;Bedeutung&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;das Passwort des Readers: &lt;code&gt;systemd-creds:NAME&lt;/code&gt;, &lt;code&gt;file:PATH&lt;/code&gt; (eine reguläre Datei, die nur ihr Eigentümer lesen darf), &lt;code&gt;keychain:SERVICE/ACCOUNT&lt;/code&gt;, &amp;hellip;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;totp_secret_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;das base32-TOTP-Geheimnis des Readers (mit &lt;code&gt;mfa { readers = true }&lt;/code&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password_file&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;veraltet&lt;/strong&gt;: wird als &lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt; gelesen&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password&lt;/code&gt;, &lt;code&gt;totp_secret&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;veraltet&lt;/strong&gt;: das Geheimnis selbst, in der Konfiguration geschrieben; beim Start protokolliert&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Genau eines von &lt;code&gt;password_from&lt;/code&gt;, &lt;code&gt;password_file&lt;/code&gt; und &lt;code&gt;password&lt;/code&gt; ist erlaubt, und&lt;code&gt;totp_secret&lt;/code&gt; zusammen mit &lt;code&gt;totp_secret_from&lt;/code&gt; wird abgelehnt. Ein Geheimnis ist
+eine nicht leere Zeile von höchstens 4096 Byte (ein abschließender Zeilenumbruch
+entfällt); eine Referenz ohne Schema, eine ungültige oder ein zu großes, leeres
+oder mehrzeiliges Geheimnis hält den Server beim Start an. Die Blöcke &lt;code&gt;user&lt;/code&gt; und&lt;code&gt;users&lt;/code&gt; behalten vorerst ihre eigenen &lt;code&gt;*_file&lt;/code&gt;-Schreibweisen.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;file:&lt;/code&gt; verweigert einen Symlink und eine Datei, die einem anderen Benutzer
+gehört als dem, unter dem authnd läuft. Ein von systemd übergebenes Credential
+wird mit &lt;code&gt;systemd-creds:NAME&lt;/code&gt; gelesen, nie mit&lt;code&gt;file:$CREDENTIALS_DIRECTORY/NAME&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Mit systemd versiegeln Sie das Geheimnis an die Maschine und übergeben es als
+Credential:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s1"&gt;&amp;#39;the-reader-password&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; sudo systemd-creds encrypt --name&lt;span class="o"&gt;=&lt;/span&gt;reader &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; --with-key&lt;span class="o"&gt;=&lt;/span&gt;host+tpm2 - /etc/credstore.encrypted/reader.cred&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# systemctl edit authnd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;LoadCredentialEncrypted&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;reader:/etc/credstore.encrypted/reader.cred&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Verwenden Sie &lt;code&gt;--with-key=host+tpm2&lt;/code&gt; und kein &lt;code&gt;--tpm2-pcrs&lt;/code&gt;: Ein nacktes&lt;code&gt;--tpm2-pcrs=7&lt;/code&gt; macht das Credential nach einem Firmware- oder Secure-Boot-Update
+unlesbar, und authnd verweigert dann den Start. &lt;strong&gt;Wiederherstellung:&lt;/strong&gt; Bewahren
+Sie das Geheimnis in einer Offline-Kopie auf, versiegeln Sie es nach einem Wechsel
+von TPM, Host-Schlüssel oder Firmware mit dem obigen Befehl neu und führen Sie dann&lt;code&gt;systemctl restart authnd&lt;/code&gt; aus.&lt;/p&gt;
 &lt;p&gt;Vor jedem Start:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd

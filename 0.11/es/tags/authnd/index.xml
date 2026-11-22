@@ -111,7 +111,7 @@ data-copied-label="¡Copiado!"
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;listen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;127.0.0.1:3893&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # the default
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;base_dn&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt; &amp;#34;dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="k"&gt;org&lt;/span&gt;&lt;span class="err"&gt;&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # required
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/reader.pw&amp;#34;&lt;/span&gt; }
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;reader &amp;#34;cn&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;reader,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;example,dc&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;org&amp;#34; { password_from&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;systemd-creds:reader&amp;#34;&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt;user &amp;#34;alice&amp;#34; { password_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authnd/passwords/alice.pw&amp;#34;&lt;/span&gt; }
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
@@ -202,7 +202,7 @@ data-copied-label="¡Copiado!"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;Un &lt;code&gt;reader&lt;/code&gt; es una cuenta de servicio con un DN de bind y &lt;code&gt;password&lt;/code&gt; o&lt;code&gt;password_file&lt;/code&gt;; un reader sin ninguno de los dos se rechaza al arrancar (&lt;em&gt;a reader that
+&lt;p&gt;Un &lt;code&gt;reader&lt;/code&gt; es una cuenta de servicio con un DN de bind y una contraseña, indicada por&lt;code&gt;password_from&lt;/code&gt; (una &lt;a href="https://go-authn.github.io/docs/0.11/es/authnd/install/#secrets-as-references"&gt;referencia a un secreto&lt;/a&gt;);&lt;code&gt;password_file&lt;/code&gt; y &lt;code&gt;password&lt;/code&gt; son grafías obsoletas. Un reader sin ninguna se rechaza al arrancar (&lt;em&gt;a reader that
 proves nothing is anonymous search with extra steps&lt;/em&gt;). Sin ningún
 reader, nada puede buscar, y &lt;code&gt;check&lt;/code&gt; lo dice.&lt;/p&gt;
 &lt;p&gt;El root DSE se responde a un cliente anónimo, como exige el descubrimiento:&lt;/p&gt;
@@ -552,7 +552,7 @@ data-copied-label="¡Copiado!"
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;reader &amp;quot;&amp;lt;dn&amp;gt;&amp;quot;&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;ninguno&lt;/td&gt;
-&lt;td&gt;una cuenta de servicio que puede buscar; consulte &lt;a href="https://go-authn.github.io/docs/0.11/es/authnd/#who-may-bind-and-who-may-read"&gt;quién puede leer&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;una cuenta de servicio que puede buscar, con &lt;code&gt;password_from&lt;/code&gt; (y &lt;code&gt;totp_secret_from&lt;/code&gt;), &lt;a href="#secrets-as-references"&gt;referencias a secretos&lt;/a&gt;; consulte &lt;a href="https://go-authn.github.io/docs/0.11/es/authnd/#who-may-bind-and-who-may-read"&gt;quién puede leer&lt;/a&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;refresh&lt;/code&gt;&lt;/td&gt;
@@ -613,6 +613,78 @@ data-copied-label="¡Copiado!"
 &lt;/table&gt;
 &lt;p&gt;Una ruta relativa en la configuración se resuelve respecto al directorio en el que
 se ejecuta el proceso, no al del archivo de configuración; la unidad se ejecuta desde&lt;code&gt;/&lt;/code&gt;, así que escriba las rutas absolutas.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="secrets-as-references"&gt;Secretos como referencias&lt;span class="hx:absolute hx:-mt-20" id="secrets-as-references"&gt;&lt;/span&gt;
+&lt;a href="#secrets-as-references" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Un bloque &lt;code&gt;reader&lt;/code&gt; nombra sus secretos con referencias de&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt; en lugar de
+contenerlos:&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;campo&lt;/th&gt;
+&lt;th&gt;significado&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;la contraseña del reader: &lt;code&gt;systemd-creds:NAME&lt;/code&gt;, &lt;code&gt;file:PATH&lt;/code&gt; (un archivo regular que solo su propietario puede leer), &lt;code&gt;keychain:SERVICE/ACCOUNT&lt;/code&gt;, &amp;hellip;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;totp_secret_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;el secreto TOTP en base32 del reader (con &lt;code&gt;mfa { readers = true }&lt;/code&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password_file&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;obsoleto&lt;/strong&gt;: se lee como &lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password&lt;/code&gt;, &lt;code&gt;totp_secret&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;obsoleto&lt;/strong&gt;: el propio secreto, escrito en la configuración; se registra en el log al arrancar&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Se permite exactamente uno de &lt;code&gt;password_from&lt;/code&gt;, &lt;code&gt;password_file&lt;/code&gt; y &lt;code&gt;password&lt;/code&gt;, y&lt;code&gt;totp_secret&lt;/code&gt; junto con &lt;code&gt;totp_secret_from&lt;/code&gt; se rechaza. Un secreto es una línea no
+vacía de como máximo 4096 bytes (se descarta un salto de línea final); una
+referencia sin esquema, una incorrecta, o un secreto demasiado grande, vacío o de
+varias líneas detiene el servidor al arrancar. Los bloques &lt;code&gt;user&lt;/code&gt; y &lt;code&gt;users&lt;/code&gt;
+conservan por ahora sus propias grafías &lt;code&gt;*_file&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;file:&lt;/code&gt; rechaza un enlace simbólico y un archivo que pertenezca a un usuario
+distinto de aquel con el que se ejecuta authnd. Una credencial entregada por
+systemd se lee con &lt;code&gt;systemd-creds:NAME&lt;/code&gt;, nunca con&lt;code&gt;file:$CREDENTIALS_DIRECTORY/NAME&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Con systemd, selle el secreto a la máquina y páselo como una credencial:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s1"&gt;&amp;#39;the-reader-password&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; sudo systemd-creds encrypt --name&lt;span class="o"&gt;=&lt;/span&gt;reader &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; --with-key&lt;span class="o"&gt;=&lt;/span&gt;host+tpm2 - /etc/credstore.encrypted/reader.cred&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# systemctl edit authnd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;LoadCredentialEncrypted&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;reader:/etc/credstore.encrypted/reader.cred&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Use &lt;code&gt;--with-key=host+tpm2&lt;/code&gt; y no &lt;code&gt;--tpm2-pcrs&lt;/code&gt;: un &lt;code&gt;--tpm2-pcrs=7&lt;/code&gt; a secas deja la
+credencial ilegible tras una actualización del firmware o de Secure Boot, y
+authnd entonces se niega a arrancar. &lt;strong&gt;Recuperación:&lt;/strong&gt; guarde el secreto en una
+copia sin conexión, vuelva a sellarlo con el comando de arriba tras un cambio de
+TPM, de clave del host o de firmware, y luego&lt;code&gt;systemctl restart authnd&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Antes de cada arranque:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
@@ -756,6 +828,9 @@ data-copied-label="¡Copiado!"
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
+&lt;p&gt;Estos campos de secretos conservan sus propias grafías en un bloque &lt;code&gt;user&lt;/code&gt; o &lt;code&gt;users&lt;/code&gt;; por ahora solo el
+bloque &lt;code&gt;reader&lt;/code&gt; admite &lt;a href="https://go-authn.github.io/docs/0.11/es/authnd/install/#secrets-as-references"&gt;referencias a secretos&lt;/a&gt;
+(&lt;code&gt;password_from&lt;/code&gt;, &lt;code&gt;totp_secret_from&lt;/code&gt;).&lt;/p&gt;
 &lt;p&gt;Se rechaza al arrancar, nombrando a la persona:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;password&lt;/code&gt; y &lt;code&gt;password_file&lt;/code&gt; juntos: indique cuál;&lt;/li&gt;
@@ -4009,7 +4084,7 @@ data-copied-label="¡Copiado!"
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;readers&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;si los &lt;a href="https://go-authn.github.io/docs/0.11/es/authnd/#who-may-bind-and-who-may-read"&gt;readers&lt;/a&gt; también llevan un código. Una cuenta de servicio no tiene teléfono; la que lo tenga recibe un &lt;code&gt;totp_secret&lt;/code&gt; en su bloque &lt;code&gt;reader&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;si los &lt;a href="https://go-authn.github.io/docs/0.11/es/authnd/#who-may-bind-and-who-may-read"&gt;readers&lt;/a&gt; también llevan un código. Una cuenta de servicio no tiene teléfono; la que lo tenga recibe un &lt;code&gt;totp_secret_from&lt;/code&gt; en su bloque &lt;code&gt;reader&lt;/code&gt; (una &lt;a href="https://go-authn.github.io/docs/0.11/es/authnd/install/#secrets-as-references"&gt;referencia a un secreto&lt;/a&gt;; el &lt;code&gt;totp_secret&lt;/code&gt; en línea está obsoleto)&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;

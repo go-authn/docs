@@ -698,7 +698,7 @@ data-copied-label="コピーしました！"
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;reader &amp;quot;&amp;lt;dn&amp;gt;&amp;quot;&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;なし&lt;/td&gt;
-&lt;td&gt;検索できるサービスアカウント。&lt;a href="https://go-authn.github.io/docs/0.11/ja/authnd/#who-may-bind-and-who-may-read"&gt;誰が読めるか&lt;/a&gt;を参照&lt;/td&gt;
+&lt;td&gt;検索できるサービスアカウント。&lt;code&gt;password_from&lt;/code&gt; (と &lt;code&gt;totp_secret_from&lt;/code&gt;) を持つ、&lt;a href="#secrets-as-references"&gt;シークレット参照&lt;/a&gt;。&lt;a href="https://go-authn.github.io/docs/0.11/ja/authnd/#who-may-bind-and-who-may-read"&gt;誰が読めるか&lt;/a&gt;を参照&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;refresh&lt;/code&gt;&lt;/td&gt;
@@ -758,6 +758,67 @@ data-copied-label="コピーしました！"
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;設定内の相対パスは、設定ファイルのあるディレクトリではなく、プロセスが動いているディレクトリを基準に解決されます。ユニットは &lt;code&gt;/&lt;/code&gt; から実行されるので、パスは絶対パスで書いてください。&lt;/p&gt;
+&lt;h3 data-hextra-search-id="secrets-as-references"&gt;シークレットは参照で&lt;span class="hx:absolute hx:-mt-20" id="secrets-as-references"&gt;&lt;/span&gt;
+&lt;a href="#secrets-as-references" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;&lt;code&gt;reader&lt;/code&gt; ブロックは、シークレットを保持せず、&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt; の参照で指定します。&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;フィールド&lt;/th&gt;
+&lt;th&gt;意味&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;reader のパスワード: &lt;code&gt;systemd-creds:NAME&lt;/code&gt;、&lt;code&gt;file:PATH&lt;/code&gt; (所有者だけが読める通常ファイル)、&lt;code&gt;keychain:SERVICE/ACCOUNT&lt;/code&gt;、&amp;hellip;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;totp_secret_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;reader の base32 TOTP シークレット (&lt;code&gt;mfa { readers = true }&lt;/code&gt; と併用)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password_file&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;非推奨&lt;/strong&gt;: &lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt; として読まれる&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password&lt;/code&gt;、&lt;code&gt;totp_secret&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;非推奨&lt;/strong&gt;: シークレットそのものを設定に書く。起動時にログに出力される&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;code&gt;password_from&lt;/code&gt;、&lt;code&gt;password_file&lt;/code&gt;、&lt;code&gt;password&lt;/code&gt; のうち指定できるのはちょうど一つで、&lt;code&gt;totp_secret&lt;/code&gt; と &lt;code&gt;totp_secret_from&lt;/code&gt; の併用は拒否されます。シークレットは 4096 バイト以下の空でない 1 行です (末尾の改行は取り除かれます)。スキームのない参照、不正な参照、または大きすぎる、空の、複数行のシークレットがあると、サーバーは起動時に停止します。&lt;code&gt;user&lt;/code&gt; と&lt;code&gt;users&lt;/code&gt; ブロックは、今のところ独自の &lt;code&gt;*_file&lt;/code&gt; の書き方のままです。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;file:&lt;/code&gt; はシンボリックリンクと、authnd の実行ユーザー以外が所有するファイルを拒否します。systemd から渡された認証情報は &lt;code&gt;systemd-creds:NAME&lt;/code&gt; で読み、&lt;code&gt;file:$CREDENTIALS_DIRECTORY/NAME&lt;/code&gt; では決して読みません。&lt;/p&gt;
+&lt;p&gt;systemd では、シークレットをマシンに封印し、クレデンシャルとして渡します。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s1"&gt;&amp;#39;the-reader-password&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; sudo systemd-creds encrypt --name&lt;span class="o"&gt;=&lt;/span&gt;reader &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; --with-key&lt;span class="o"&gt;=&lt;/span&gt;host+tpm2 - /etc/credstore.encrypted/reader.cred&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# systemctl edit authnd&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;LoadCredentialEncrypted&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;reader:/etc/credstore.encrypted/reader.cred&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="コードをコピー"
+aria-label="コードをコピー"
+data-copied-label="コピーしました！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;--with-key=host+tpm2&lt;/code&gt; を使い、&lt;code&gt;--tpm2-pcrs&lt;/code&gt; は付けないでください。&lt;code&gt;--tpm2-pcrs=7&lt;/code&gt; だけを使うと、ファームウェアや Secure Boot の更新後にクレデンシャルが読めなくなり、authnd は起動を拒否します。&lt;strong&gt;復旧:&lt;/strong&gt; シークレットをオフラインのコピーに保管し、TPM、ホスト鍵、ファームウェアの変更後は上のコマンドで再び封印してから、&lt;code&gt;systemctl restart authnd&lt;/code&gt; を実行してください。&lt;/p&gt;
 &lt;p&gt;起動のたびに、事前に実行します。&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo -u authnd authnd check /etc/authnd
