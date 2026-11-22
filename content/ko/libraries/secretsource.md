@@ -11,7 +11,7 @@ tags: [라이브러리, secretsource, 비밀]
 있지 않으므로 플래그, 스크립트, 셸 기록에 있어도 됩니다.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.1
+go get github.com/go-authn/secretsource@v0.7.0
 ```
 
 ```go
@@ -23,7 +23,7 @@ use(s.Bytes())
 
 | 참조 | 읽는 대상 |
 |---|---|
-| `file:PATH` | 소유자만 읽을 수 있는 일반 파일(모드 0600 이하); 끝의 줄바꿈 하나는 제거됩니다; 비어 있거나 줄 끝만 든 파일은 `ErrEmpty`로 거부되며(v0.6.0부터), FIFO는 일반 파일이 아니라며 거부됩니다 |
+| `file:PATH` | 소유자만 읽을 수 있는 일반 파일(Unix: 모드 0600 이하; Windows, v0.7.0부터: 소유자, SYSTEM, Administrators 그룹 외에는 누구에게도 읽기나 쓰기 권한을 주지 않는 액세스 목록); 끝의 줄바꿈 하나는 제거됩니다; 비어 있거나 줄 끝만 든 파일은 `ErrEmpty`로 거부되며(v0.6.0부터), FIFO는 일반 파일이 아니라며 거부됩니다 |
 | `keychain:SERVICE/ACCOUNT` | macOS 키체인의 일반 암호 항목 |
 | `secretservice:SERVICE/ACCOUNT` | 속성 `service=SERVICE`, `account=ACCOUNT`를 가진 freedesktop Secret Service 항목 (GNOME Keyring, KWallet, KeePassXC의 Secret Service 연동) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | 그 속성을 모두 가진 단 하나의 Secret Service 항목; 여러 개가 일치하면 거부됩니다 |

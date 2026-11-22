@@ -12,7 +12,7 @@ référence ne contient aucun secret : elle peut figurer dans une option, un
 script ou l'historique du shell.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.1
+go get github.com/go-authn/secretsource@v0.7.0
 ```
 
 ```go
@@ -24,7 +24,7 @@ use(s.Bytes())
 
 | Référence | Lit |
 |---|---|
-| `file:PATH` | un fichier ordinaire lisible par son propriétaire seul (mode 0600 ou plus strict) ; un saut de ligne final est retiré ; un fichier vide, ou qui ne contient qu'une fin de ligne, est refusé avec `ErrEmpty` (depuis la v0.6.0), et un FIFO est refusé comme n'étant pas un fichier ordinaire |
+| `file:PATH` | un fichier ordinaire lisible par son propriétaire seul (Unix : mode 0600 ou plus strict ; Windows, depuis la v0.7.0 : une liste d'accès qui n'accorde de droit de lecture ou d'écriture à personne d'autre que le propriétaire, SYSTEM et le groupe Administrateurs) ; un saut de ligne final est retiré ; un fichier vide, ou qui ne contient qu'une fin de ligne, est refusé avec `ErrEmpty` (depuis la v0.6.0), et un FIFO est refusé comme n'étant pas un fichier ordinaire |
 | `keychain:SERVICE/ACCOUNT` | un élément de mot de passe générique du Trousseau macOS |
 | `secretservice:SERVICE/ACCOUNT` | un élément Secret Service freedesktop d'attributs `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, intégration Secret Service de KeePassXC) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | l'unique élément Secret Service portant tous ces attributs ; plusieurs correspondances sont refusées |

@@ -12,7 +12,7 @@ Referenz enthält kein Geheimnis und darf daher in einer Option, einem Skript
 oder der Shell-Historie stehen.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.1
+go get github.com/go-authn/secretsource@v0.7.0
 ```
 
 ```go
@@ -24,7 +24,7 @@ use(s.Bytes())
 
 | Referenz | Liest |
 |---|---|
-| `file:PATH` | eine reguläre Datei, nur für den Besitzer lesbar (Modus 0600 oder strenger); ein abschließender Zeilenumbruch wird entfernt; eine Datei, die leer ist oder nur einen Zeilenumbruch enthält, wird mit `ErrEmpty` abgelehnt (seit v0.6.0), und eine FIFO wird als keine reguläre Datei abgelehnt |
+| `file:PATH` | eine reguläre Datei, nur für den Besitzer lesbar (Unix: Modus 0600 oder strenger; Windows, seit v0.7.0: eine Zugriffsliste, die niemandem außer Besitzer, SYSTEM und der Gruppe Administratoren ein Lese- oder Schreibrecht gewährt); ein abschließender Zeilenumbruch wird entfernt; eine Datei, die leer ist oder nur einen Zeilenumbruch enthält, wird mit `ErrEmpty` abgelehnt (seit v0.6.0), und eine FIFO wird als keine reguläre Datei abgelehnt |
 | `keychain:SERVICE/ACCOUNT` | ein generisches Passwort-Objekt im macOS-Schlüsselbund |
 | `secretservice:SERVICE/ACCOUNT` | ein freedesktop-Secret-Service-Objekt mit den Attributen `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, Secret-Service-Integration von KeePassXC) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | das eine Secret-Service-Objekt mit all diesen Attributen; mehrere Treffer werden abgelehnt |

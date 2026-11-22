@@ -11,7 +11,7 @@ tags: [ライブラリ, secretsource, シークレット]
 含まないので、フラグ、スクリプト、シェルの履歴に書いても構いません。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.1
+go get github.com/go-authn/secretsource@v0.7.0
 ```
 
 ```go
@@ -23,7 +23,7 @@ use(s.Bytes())
 
 | 参照 | 読み取るもの |
 |---|---|
-| `file:PATH` | 所有者だけが読める通常ファイル (モード 0600 以下)。末尾の改行 1 つは取り除かれます。空のファイル、または行末だけを含むファイルは `ErrEmpty` で拒否され (v0.6.0 以降)、FIFO は通常ファイルではないとして拒否されます |
+| `file:PATH` | 所有者だけが読める通常ファイル (Unix: モード 0600 以下。Windows (v0.7.0 以降): 所有者、SYSTEM、Administrators グループ以外に読み取りや書き込みの権利を与えないアクセスリスト)。末尾の改行 1 つは取り除かれます。空のファイル、または行末だけを含むファイルは `ErrEmpty` で拒否され (v0.6.0 以降)、FIFO は通常ファイルではないとして拒否されます |
 | `keychain:SERVICE/ACCOUNT` | macOS キーチェーンの汎用パスワード項目 |
 | `secretservice:SERVICE/ACCOUNT` | 属性 `service=SERVICE`、`account=ACCOUNT` を持つ freedesktop Secret Service の項目 (GNOME Keyring、KWallet、KeePassXC の Secret Service 連携) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | それらすべての属性を持つ唯一の Secret Service 項目。複数一致は拒否されます |

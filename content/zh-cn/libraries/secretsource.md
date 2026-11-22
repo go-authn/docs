@@ -11,7 +11,7 @@ tags: [库, secretsource, 密钥]
 shell 历史记录里。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.1
+go get github.com/go-authn/secretsource@v0.7.0
 ```
 
 ```go
@@ -23,7 +23,7 @@ use(s.Bytes())
 
 | 引用 | 读取 |
 |---|---|
-| `file:PATH` | 仅所有者可读的普通文件（权限 0600 或更严格）；去掉结尾的一个换行符；为空、或只含一个行结束符的文件以 `ErrEmpty` 被拒绝（自 v0.6.0 起），FIFO 则因不是普通文件而被拒绝 |
+| `file:PATH` | 仅所有者可读的普通文件（Unix：权限 0600 或更严格；Windows，自 v0.7.0 起：除所有者、SYSTEM 和 Administrators 组外，不向任何人授予读写权利的访问列表）；去掉结尾的一个换行符；为空、或只含一个行结束符的文件以 `ErrEmpty` 被拒绝（自 v0.6.0 起），FIFO 则因不是普通文件而被拒绝 |
 | `keychain:SERVICE/ACCOUNT` | macOS 钥匙串中的一个通用密码项 |
 | `secretservice:SERVICE/ACCOUNT` | 属性为 `service=SERVICE`、`account=ACCOUNT` 的 freedesktop Secret Service 项（GNOME Keyring、KWallet、KeePassXC 的 Secret Service 集成） |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | 带有所有这些属性的唯一一个 Secret Service 项；匹配到多个则拒绝 |
