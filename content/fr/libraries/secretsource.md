@@ -118,6 +118,25 @@ KeePassXC.
 Utilisé par `fido --pin-from` (voir [fido]({{< relref "/libraries/fido.md" >}}))
 et par `theca --pin-from`, `--password-from` et `--recovery-from`.
 
+## Prendre un secret depuis un drapeau de ligne de commande : `secretsource/secretflag` {#secretflag}
+
+Un secret passé comme valeur de drapeau est visible dans `ps`. Le paquet
+`secretflag` donne à une commande la paire `--<nom>` (obsolète, avertit sur
+stderr) et `--<nom>-from <réf>`, mutuellement exclusifs, la référence étant
+résolue par `secretsource.Open` :
+
+```go
+var password string
+b := secretflag.Add(cmd, "password", &password, "the admin password") // cobra
+// or: secretflag.AddStd(fs, os.Stderr, "password", &password, "the admin password", "p")
+// ... after parsing:
+if err := secretflag.Resolve(ctx, b); err != nil { return err }
+```
+
+`Add` enregistre la paire sur une commande cobra, `AddStd` sur un
+`flag.FlagSet` de la bibliothèque standard (avec des alias comme `-t`) ;
+`Resolve` lit les références. Disponible depuis la v0.10.0.
+
 ## Stocker un secret : `secretsource store` {#store}
 
 Aucune entrée n'a à être créée à la main. `secretsource store REF [--group G]

@@ -103,6 +103,25 @@ v0.6.1 以降、関連付けファイル (macOS のキーチェーンも Secret 
 `fido --pin-from` ([fido]({{< relref "/libraries/fido.md" >}}) を参照) と、
 `theca --pin-from`、`--password-from`、`--recovery-from` が使用します。
 
+## コマンドラインフラグからシークレットを受け取る: `secretsource/secretflag` {#secretflag}
+
+フラグの値として渡したシークレットは `ps` に見えてしまいます。`secretflag`
+パッケージは、コマンドに `--<name>`（非推奨、stderr に警告）と
+`--<name>-from <ref>` の組を、相互排他で提供し、参照は `secretsource.Open`
+で解決されます:
+
+```go
+var password string
+b := secretflag.Add(cmd, "password", &password, "the admin password") // cobra
+// or: secretflag.AddStd(fs, os.Stderr, "password", &password, "the admin password", "p")
+// ... after parsing:
+if err := secretflag.Resolve(ctx, b); err != nil { return err }
+```
+
+`Add` は cobra コマンドに、`AddStd` は標準ライブラリの `flag.FlagSet` に
+（`-t` のような別名付きで）この組を登録し、`Resolve` が参照を読み取ります。
+v0.10.0 から利用できます。
+
 ## シークレットを保存する: `secretsource store` {#store}
 
 エントリを手で作る必要はありません。`secretsource store REF [--group G]

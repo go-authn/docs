@@ -116,6 +116,25 @@ La primera lectura de una entrada muestra el diálogo de acceso de KeePassXC.
 Lo usan `fido --pin-from` (véase [fido]({{< relref "/libraries/fido.md" >}})) y
 `theca --pin-from`, `--password-from` y `--recovery-from`.
 
+## Tomar un secreto de una opción de la línea de comandos: `secretsource/secretflag` {#secretflag}
+
+Un secreto pasado como valor de una opción es visible en `ps`. El paquete
+`secretflag` da a un comando el par `--<nombre>` (obsoleta, avisa por stderr) y
+`--<nombre>-from <ref>`, mutuamente excluyentes, con la referencia resuelta por
+`secretsource.Open`:
+
+```go
+var password string
+b := secretflag.Add(cmd, "password", &password, "the admin password") // cobra
+// or: secretflag.AddStd(fs, os.Stderr, "password", &password, "the admin password", "p")
+// ... after parsing:
+if err := secretflag.Resolve(ctx, b); err != nil { return err }
+```
+
+`Add` registra el par en un comando de cobra, `AddStd` en un `flag.FlagSet` de
+la biblioteca estándar (con alias como `-t`); `Resolve` lee las referencias.
+Disponible desde v0.10.0.
+
 ## Guardar un secreto: `secretsource store` {#store}
 
 No hace falta crear ninguna entrada a mano. `secretsource store REF [--group G]

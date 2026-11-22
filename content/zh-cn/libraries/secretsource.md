@@ -90,6 +90,23 @@ KeePassXC 通过其浏览器集成协议访问，支持 macOS 和 Linux；Window
 `fido --pin-from`（见 [fido]({{< relref "/libraries/fido.md" >}})）以及
 `theca --pin-from`、`--password-from` 和 `--recovery-from` 使用它。
 
+## 从命令行标志获取密钥：`secretsource/secretflag` {#secretflag}
+
+作为标志值传入的密钥会在 `ps` 中可见。`secretflag` 包为命令提供一对互斥的
+`--<name>`（已弃用，会在 stderr 给出警告）和 `--<name>-from <ref>`，引用由
+`secretsource.Open` 解析：
+
+```go
+var password string
+b := secretflag.Add(cmd, "password", &password, "the admin password") // cobra
+// or: secretflag.AddStd(fs, os.Stderr, "password", &password, "the admin password", "p")
+// ... after parsing:
+if err := secretflag.Resolve(ctx, b); err != nil { return err }
+```
+
+`Add` 在 cobra 命令上注册这一对，`AddStd` 在标准库的 `flag.FlagSet` 上注册
+（支持 `-t` 之类的别名）；`Resolve` 读取引用。自 v0.10.0 起可用。
+
 ## 保存密钥：`secretsource store` {#store}
 
 不必手工创建条目。`secretsource store REF [--group G] [--login L] [--replace]
