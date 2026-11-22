@@ -38,11 +38,13 @@ user "tess" {
 | `digits` | 6 | de 6 a 10 (RFC 4226) |
 | `period` | 30 | segundos que dura un código |
 | `window` | 1 | pasos a cada lado del momento actual que se aceptan, para relojes que difieren. Cada paso es un paso más de tiempo para que otro adivine: fíjelo a propósito |
-| `readers` | `false` | si los [readers]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) también llevan un código. Una cuenta de servicio no tiene teléfono; la que lo tenga recibe un `totp_secret` en su bloque `reader` |
+| `readers` | `false` | si los [readers]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) también llevan un código. Una cuenta de servicio no tiene teléfono; la que lo tenga recibe un `totp_secret_from` en su bloque `reader` (una [referencia a un secreto]({{< relref "/authnd/install.md#secrets-as-references" >}}); el `totp_secret` en línea está obsoleto) |
 
 El secreto también puede proceder de una columna de base de datos (la quinta) o de
 un atributo LDAP (`totp_attribute`); consulte [las personas]({{< relref "/authnd/people.md" >}}).
-Un `totp_secret` de menos de 128 bits (RFC 4226 R6) en un bloque `user` o `reader`
+Un `user` también toma su secreto como `totp_secret_from` (una
+[referencia a un secreto]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+`systemd-creds:NAME` para uno sellado). Un secreto TOTP de menos de 128 bits (RFC 4226 R6) en un bloque `user` o `reader`
 detiene el servidor, nombrando a la persona, en lugar de hacer fallar después cada
 uno de sus inicios de sesión:
 

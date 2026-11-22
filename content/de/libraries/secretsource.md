@@ -12,7 +12,7 @@ Referenz enthält kein Geheimnis und darf daher in einer Option, einem Skript
 oder der Shell-Historie stehen.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.1
+go get github.com/go-authn/secretsource@v0.9.0
 ```
 
 ```go
@@ -30,6 +30,16 @@ use(s.Bytes())
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | das eine Secret-Service-Objekt mit all diesen Attributen; mehrere Treffer werden abgelehnt |
 | `keepassxc:URL` | der KeePassXC-Eintrag, dessen **URL-Feld** diese URL ist (`https://NAME.invalid/...` ist eine gute Wahl, die sich nie auflöst); zwei Einträge mit derselben URL werden als mehrdeutig abgelehnt |
 | `systemd-creds:NAME` | (Linux, seit v0.8.0) ein systemd-Credential, Byte für Byte zurückgegeben: kein Entfernen des abschließenden Zeilenumbruchs, anders als bei `file:`. Zuerst die Datei `NAME` in `$CREDENTIALS_DIRECTORY` (angelegt durch `LoadCredential=`, `LoadCredentialEncrypted=`, `SetCredentialEncrypted=`); sonst `NAME` oder `NAME.cred` in `credstore.encrypted` unter `/etc`, `/run`, `/usr/lib`, entschlüsselt mit `systemd-creds decrypt`. Auf anderen Systemen mit `ErrUnavailable` abgelehnt |
+
+**`file:` folgt keinem symbolischen Link** (seit v0.9.0). Ein Link an der
+letzten Komponente des Pfads, hängend oder nicht, wird abgelehnt: Unter Unix
+wird die Datei mit `O_NOFOLLOW` geöffnet, unter Windows mit
+`FILE_FLAG_OPEN_REPARSE_POINT`, und jeder Reparse-Punkt wird abgelehnt (auch
+ein Cloud-Files-Platzhalter: auf eine gewöhnliche lokale Kopie verweisen). Unter
+Unix muss die Datei außerdem dem aufrufenden Benutzer gehören; root ist nicht
+ausgenommen. **Migration:** auf die echte Datei verweisen (`readlink -f PATH`).
+Ein symbolischer Link in einem Verzeichnis weiter vorn im Pfad funktioniert
+weiterhin.
 
 `keepassxc:by-uuid/...` und `keepassxc:by-path/...` werden **abgelehnt**:
 KeePassXC 2.8.0 stürzt ab, wenn eine Suche einen Eintrag ohne URL findet.
@@ -115,6 +125,25 @@ Beim ersten Lesen eines Eintrags zeigt KeePassXC seinen Zugriffsdialog.
 
 Verwendet von `fido --pin-from` (siehe [fido]({{< relref "/libraries/fido.md" >}}))
 und von `theca --pin-from`, `--password-from` und `--recovery-from`.
+
+## Ein Geheimnis aus einem Kommandozeilen-Flag übernehmen: `secretsource/secretflag` {#secretflag}
+
+Ein Geheimnis, das als Flag-Wert übergeben wird, ist in `ps` sichtbar. Das
+Paket `secretflag` gibt einem Befehl das Paar `--<name>` (veraltet, warnt auf
+stderr) und `--<name>-from <ref>`, sich gegenseitig ausschließend, wobei die
+Referenz von `secretsource.Open` aufgelöst wird:
+
+```go
+var password string
+b := secretflag.Add(cmd, "password", &password, "the admin password") // cobra
+// or: secretflag.AddStd(fs, os.Stderr, "password", &password, "the admin password", "p")
+// ... after parsing:
+if err := secretflag.Resolve(ctx, b); err != nil { return err }
+```
+
+`Add` registriert das Paar an einem cobra-Befehl, `AddStd` an einem
+`flag.FlagSet` der Standardbibliothek (mit Aliasen wie `-t`); `Resolve` liest
+die Referenzen. Verfügbar seit v0.10.0.
 
 ## Ein Geheimnis speichern: `secretsource store` {#store}
 

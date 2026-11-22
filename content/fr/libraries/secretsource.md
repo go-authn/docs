@@ -12,7 +12,7 @@ référence ne contient aucun secret : elle peut figurer dans une option, un
 script ou l'historique du shell.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.1
+go get github.com/go-authn/secretsource@v0.9.0
 ```
 
 ```go
@@ -30,6 +30,15 @@ use(s.Bytes())
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | l'unique élément Secret Service portant tous ces attributs ; plusieurs correspondances sont refusées |
 | `keepassxc:URL` | l'entrée KeePassXC dont le **champ URL** est cette URL (`https://NOM.invalid/...` est un bon choix, qui ne se résout jamais) ; deux entrées de même URL sont refusées comme ambiguës |
 | `systemd-creds:NAME` | (Linux, depuis v0.8.0) un credential systemd, rendu octet pour octet : pas de retrait du saut de ligne final, contrairement à `file:`. D'abord le fichier `NAME` dans `$CREDENTIALS_DIRECTORY` (placé par `LoadCredential=`, `LoadCredentialEncrypted=`, `SetCredentialEncrypted=`) ; sinon `NAME` ou `NAME.cred` dans `credstore.encrypted` sous `/etc`, `/run`, `/usr/lib`, déchiffré par `systemd-creds decrypt`. Refusé avec `ErrUnavailable` sur les autres systèmes |
+
+**`file:` ne suit pas un lien symbolique** (depuis v0.9.0). Un lien au dernier
+composant du chemin, pendant ou non, est refusé : sous Unix le fichier est ouvert
+avec `O_NOFOLLOW`, sous Windows avec `FILE_FLAG_OPEN_REPARSE_POINT` et tout point
+d'analyse est refusé (un espace réservé de fichiers dans le nuage aussi : visez
+une copie locale ordinaire). Sous Unix, le fichier doit en outre appartenir à
+l'utilisateur appelant ; root n'y échappe pas. **Migration :** visez le vrai
+fichier (`readlink -f PATH`). Un lien symbolique dans un répertoire situé plus
+haut dans le chemin fonctionne toujours.
 
 `keepassxc:by-uuid/...` et `keepassxc:by-path/...` sont **refusés** : KeePassXC
 2.8.0 plante quand une recherche trouve une entrée sans URL.
@@ -114,6 +123,25 @@ KeePassXC.
 
 Utilisé par `fido --pin-from` (voir [fido]({{< relref "/libraries/fido.md" >}}))
 et par `theca --pin-from`, `--password-from` et `--recovery-from`.
+
+## Prendre un secret depuis un drapeau de ligne de commande : `secretsource/secretflag` {#secretflag}
+
+Un secret passé comme valeur de drapeau est visible dans `ps`. Le paquet
+`secretflag` donne à une commande la paire `--<nom>` (obsolète, avertit sur
+stderr) et `--<nom>-from <réf>`, mutuellement exclusifs, la référence étant
+résolue par `secretsource.Open` :
+
+```go
+var password string
+b := secretflag.Add(cmd, "password", &password, "the admin password") // cobra
+// or: secretflag.AddStd(fs, os.Stderr, "password", &password, "the admin password", "p")
+// ... after parsing:
+if err := secretflag.Resolve(ctx, b); err != nil { return err }
+```
+
+`Add` enregistre la paire sur une commande cobra, `AddStd` sur un
+`flag.FlagSet` de la bibliothèque standard (avec des alias comme `-t`) ;
+`Resolve` lit les références. Disponible depuis la v0.10.0.
 
 ## Stocker un secret : `secretsource store` {#store}
 

@@ -38,11 +38,22 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | from v0.11.0, what describes the person and proves nothing — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — as a map of strings or lists of strings; a `group` block takes it too. They decide what the entry is published as: see [the entries]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 | `object_classes` | from v0.12.0, the auxiliary classes this person (or, in a `group` block, this group) is published with, such as `["siteMember"]`: declared, never inferred, and defined in a [site schema]({{< relref "/authnd/schemas.md#object-classes" >}}) |
 
+Each secret field also has a [secret reference]({{< relref "/authnd/install.md#secrets-as-references" >}})
+spelling, which is the one to use: `password_from`, `totp_secret_from` and
+`nt_hash_from` on a `user`, `dsn_from` and `bind_password_from` on a `users`
+block (`systemd-creds:NAME`, `file:PATH`, ...). `password`, `password_file`,
+`nt_hash`, `totp_secret`, `dsn_file` and `bind_password_file` are deprecated
+aliases and are logged at startup. A person whose password is a reference cannot
+have it changed through `authnd`'s password change: edit the source of the
+reference.
+
 Refused at startup, naming the person:
 
-- `password` and `password_file` together — say which one;
-- `password` and `nt_hash` together — the hash is derived from the password,
-  so two of them can disagree;
+- more than one of `password_from`, `password_file` and `password` — say which
+  one (likewise `nt_hash` with `nt_hash_from`, `totp_secret` with
+  `totp_secret_from`, `dsn_file` with `dsn_from`);
+- a password in any spelling together with `nt_hash` or `nt_hash_from` — the hash
+  is derived from the password, so two of them can disagree;
 - `authorized_keys` and `authorized_keys_file` together;
 - an `nt_hash` that is not 32 hex characters, an `authorized_keys` line that
   does not parse, a `totp_secret` under 128 bits;

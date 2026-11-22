@@ -11,7 +11,7 @@ names where a secret lives; `secretsource.Open` fetches it. The reference holds
 no secret, so it may sit in a flag, a script or a shell history.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.1
+go get github.com/go-authn/secretsource@v0.9.0
 ```
 
 ```go
@@ -29,6 +29,14 @@ use(s.Bytes())
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | the one Secret Service item carrying all those attributes; several matches are refused |
 | `keepassxc:URL` | the KeePassXC entry whose **URL field** is that URL (`https://NAME.invalid/...` is a good, never-resolving choice); two entries with the same URL are refused as ambiguous |
 | `systemd-creds:NAME` | (Linux, since v0.8.0) a systemd credential, returned byte for byte: no trailing-newline stripping, unlike `file:`. First the file `NAME` in `$CREDENTIALS_DIRECTORY` (placed by `LoadCredential=`, `LoadCredentialEncrypted=`, `SetCredentialEncrypted=`); else `NAME` or `NAME.cred` in `/etc`, `/run`, `/usr/lib` `credstore.encrypted`, decrypted by `systemd-creds decrypt`. Refused with `ErrUnavailable` on other systems |
+
+**`file:` does not follow a symbolic link** (since v0.9.0). A link at the last
+component of the path, dangling or not, is refused: on Unix the file is opened
+with `O_NOFOLLOW`, on Windows with `FILE_FLAG_OPEN_REPARSE_POINT` and any
+reparse point is refused (a cloud-files placeholder too: point at a plain local
+copy). On Unix the file must also be owned by the calling user; root is not
+exempt. **Migrating:** point at the real file (`readlink -f PATH`). A symbolic
+link in a directory earlier in the path still works.
 
 `keepassxc:by-uuid/...` and `keepassxc:by-path/...` are **refused**: KeePassXC
 2.8.0 crashes when a lookup finds an entry with no URL.
@@ -106,6 +114,25 @@ The first read of an entry shows KeePassXC's access dialog.
 
 Used by `fido --pin-from` (see [fido]({{< relref "/libraries/fido.md" >}})) and
 by `theca --pin-from`, `--password-from` and `--recovery-from`.
+
+## Taking a secret from a command-line flag: `secretsource/secretflag` {#secretflag}
+
+A secret passed as a flag value is visible in `ps`. The `secretflag` package
+gives a command the pair `--<name>` (deprecated, warns on stderr) and
+`--<name>-from <ref>`, mutually exclusive, with the reference resolved by
+`secretsource.Open`:
+
+```go
+var password string
+b := secretflag.Add(cmd, "password", &password, "the admin password") // cobra
+// or: secretflag.AddStd(fs, os.Stderr, "password", &password, "the admin password", "p")
+// ... after parsing:
+if err := secretflag.Resolve(ctx, b); err != nil { return err }
+```
+
+`Add` registers the pair on a cobra command, `AddStd` on a standard-library
+`flag.FlagSet` (with aliases such as `-t`); `Resolve` reads the references.
+Available since v0.10.0.
 
 ## Storing a secret: `secretsource store` {#store}
 

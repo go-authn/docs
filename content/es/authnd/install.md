@@ -163,7 +163,7 @@ Por qué ese directorio y no el archivo se explica en
 |---|---|---|
 | `base_dn` | — (obligatorio) | la raíz del árbol, p. ej. `dc=example,dc=org`; un valor sin `=` se rechaza |
 | `listen` | `127.0.0.1:3893` | una dirección. Loopback por defecto: un directorio que aparece en todas las interfaces en cuanto arranca es una decisión que alguien debería tomar a propósito. Un sitio que necesita LDAP y LDAPS ejecuta dos instancias |
-| `reader "<dn>"` | ninguno | una cuenta de servicio que puede buscar; consulte [quién puede leer]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
+| `reader "<dn>"` | ninguno | una cuenta de servicio que puede buscar, con `password_from` (y `totp_secret_from`), [referencias a secretos](#secrets-as-references); consulte [quién puede leer]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | con qué frecuencia se vuelve a leer cada origen; `0` lo desactiva; consulte [ponerlo en marcha]({{< relref "/authnd/operations.md" >}}) |
 | `max_age` | `10m` (v0.17.0; `"0"` = sin límite) | rechazar los datos obsoletos (`unavailable`) cuando los datos servidos son más antiguos; consulte [ponerlo en marcha]({{< relref "/authnd/operations.md" >}}) |
 | `max_connections` | `4096` | el máximo de conexiones abiertas a la vez, `0` para ningún límite; por encima, una conexión recibe `busy` y se cierra; consulte [límites]({{< relref "/authnd/operations.md#limits" >}}) |
@@ -179,6 +179,57 @@ Por qué ese directorio y no el archivo se explica en
 Una ruta relativa en la configuración se resuelve respecto al directorio en el que
 se ejecuta el proceso, no al del archivo de configuración; la unidad se ejecuta desde
 `/`, así que escriba las rutas absolutas.
+
+### Secretos como referencias {#secrets-as-references}
+
+Los bloques `reader`, `user` y `users` nombran sus secretos con referencias de
+[secretsource](https://github.com/go-authn/secretsource) en lugar de
+contenerlos (los campos de `user` y `users` requieren authnd con
+go-authn/directory v0.27.0):
+
+| campo | significado |
+|---|---|
+| `password_from` | la contraseña de un `reader` o `user`: `systemd-creds:NAME`, `file:PATH` (un archivo regular que solo su propietario puede leer), `keychain:SERVICE/ACCOUNT`, ... |
+| `totp_secret_from` | el secreto TOTP en base32 de un `reader` (con `mfa { readers = true }`) o de un `user` |
+| `nt_hash_from` | el hash NT de un `user`, leído de una referencia: ninguna capacidad nueva, y se rechaza junto a una contraseña |
+| `dsn_from` | el DSN de base de datos de un bloque `users` (puede contener una contraseña) |
+| `bind_password_from` | la contraseña del `bind_dn` de un bloque `users` |
+| `password_file`, `dsn_file`, `bind_password_file` | **obsoleto**: se leen como la misma referencia con `file:PATH` |
+| `password`, `totp_secret`, `nt_hash` | **obsoleto**: el propio secreto, escrito en la configuración; se registra en el log al arrancar |
+
+Se permite exactamente una grafía de un secreto (`password_from`, `password_file`
+o `password`; `dsn_from` o `dsn_file`; y así sucesivamente). Un secreto es una línea no
+vacía de como máximo 4096 bytes (se descarta un salto de línea final); una
+referencia sin esquema, una incorrecta, o un secreto demasiado grande, vacío o de
+varias líneas detiene el servidor al arrancar. Las grafías obsoletas siguen
+funcionando y se registran en el log al arrancar, nunca con el secreto; las
+`*_file` ahora pasan por `file:`, así que rechazan un enlace simbólico y un
+archivo que pertenezca a otro usuario.
+
+`file:` rechaza un enlace simbólico y un archivo que pertenezca a un usuario
+distinto de aquel con el que se ejecuta authnd. Una credencial entregada por
+systemd se lee con `systemd-creds:NAME`, nunca con
+`file:$CREDENTIALS_DIRECTORY/NAME`.
+
+Con systemd, selle el secreto a la máquina y páselo como una credencial:
+
+```sh
+printf %s 'the-reader-password' | sudo systemd-creds encrypt --name=reader \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/reader.cred
+```
+
+```ini
+# systemctl edit authnd
+[Service]
+LoadCredentialEncrypted=reader:/etc/credstore.encrypted/reader.cred
+```
+
+Use `--with-key=host+tpm2` y no `--tpm2-pcrs`: un `--tpm2-pcrs=7` a secas deja la
+credencial ilegible tras una actualización del firmware o de Secure Boot, y
+authnd entonces se niega a arrancar. **Recuperación:** guarde el secreto en una
+copia sin conexión, vuelva a sellarlo con el comando de arriba tras un cambio de
+TPM, de clave del host o de firmware, y luego
+`systemctl restart authnd`.
 
 Antes de cada arranque:
 

@@ -37,11 +37,13 @@ user "tess" {
 | `digits` | 6 | 6 到 10（RFC 4226） |
 | `period` | 30 | 一个代码有效的秒数 |
 | `window` | 1 | 当前时刻前后所接受的步数，用于时钟不一致的情况。每一步都是别人多出的一步猜测时间：请有意识地设置它 |
-| `readers` | `false` | [reader]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})是否也携带代码。服务账户没有手机；有手机的服务账户会在其 `reader` 块中获得一个 `totp_secret` |
+| `readers` | `false` | [reader]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})是否也携带代码。服务账户没有手机；有手机的服务账户会在其 `reader` 块中获得一个 `totp_secret_from`（一个[密钥引用]({{< relref "/authnd/install.md#secrets-as-references" >}})；内联的 `totp_secret` 已弃用） |
 
 密钥同样可以来自数据库列（第五列）或 LDAP
 属性（`totp_attribute`）；参见[人员]({{< relref "/authnd/people.md" >}})。
-`user` 或 `reader` 块中不足 128 位的 `totp_secret`（RFC 4226 R6）
+`user` 也可以用 `totp_secret_from` 提供密钥（一个
+[密钥引用]({{< relref "/authnd/install.md#secrets-as-references" >}})，
+密封的密钥用 `systemd-creds:NAME`）。`user` 或 `reader` 块中不足 128 位的 TOTP 密钥（RFC 4226 R6）
 会使服务器停止，并指名相关人员，而不是在之后让此人的
 每次登录都失败：
 

@@ -111,7 +111,7 @@ authnd check /etc/authnd         # say what would be served, without listening
 listen  = "127.0.0.1:3893"            # the default
 base_dn = "dc=example,dc=org"         # required
 
-reader "cn=reader,dc=example,dc=org" { password_file = "/etc/authnd/reader.pw" }
+reader "cn=reader,dc=example,dc=org" { password_from = "systemd-creds:reader" }
 
 user "alice" { password_file = "/etc/authnd/passwords/alice.pw" }
 
@@ -165,8 +165,9 @@ Additional information: only a reader may search
 | `reader` 以外による検索 | `insufficientAccessRights` | バインドは自分が誰であるかを証明するだけです。全員を読むことは、別に許可されるべきことです |
 | `add`、`delete`、`modifyDN` | `unwillingToPerform` | ハンドラーが接続されていません。唯一の書き込みは[本人自身のパスワード]({{< relref "/authnd/passwords.md" >}})です |
 
-`reader` は、バインド DN と `password` または `password_file` を持つサービスアカウントです。
-どちらも持たない reader は起動時に拒否されます (*何も証明しない reader は、手間が増えただけの
+`reader` は、バインド DN とパスワードを持つサービスアカウントで、パスワードは
+`password_from` ([シークレット参照]({{< relref "/authnd/install.md#secrets-as-references" >}})) で指定します。
+`password_file` と `password` は非推奨の書き方です。どれも持たない reader は起動時に拒否されます (*何も証明しない reader は、手間が増えただけの
 匿名検索です*)。reader が一つもなければ、何も検索できず、`check` がそのことを知らせます。
 
 ルート DSE は、探索に必要なため、匿名のクライアントにも応答されます。

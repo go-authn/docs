@@ -2,7 +2,7 @@
 title: "Die Bibliotheken, je eine Frage"
 linkTitle: "Bibliotheken"
 weight: 50
-description: "Die sechzehn Go-Module von go-authn: die Frage, die jedes beantwortet, die Version, die diese Seiten beschreiben, und warum sie getrennte Module sind."
+description: "Die siebzehn Go-Module von go-authn: die Frage, die jedes beantwortet, die Version, die diese Seiten beschreiben, und warum sie getrennte Module sind."
 tags: [bibliotheken]
 ---
 
@@ -27,10 +27,11 @@ Alle sind reines Go und bauen mit `CGO_ENABLED=0`.
 | [saml]({{< relref "/libraries/saml.md" >}}) | Was hat der Identitätsanbieter einer Föderation über diese Person gesagt? | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | Ist dieses SSH-Zertifikat oder dieser Schlüssel widerrufen, so wie sshd antworten würde? | v0.6.1 | `github.com/go-authn/krl` |
 | [cms]({{< relref "/libraries/cms.md" >}}) | Hält diese Signatur über diesen Bytes, und welches Zertifikat hat sie erstellt? | v0.2.0 | `github.com/go-authn/cms` |
+| [pkcs12]({{< relref "/libraries/pkcs12.md" >}}) | Welchen privaten Schlüssel und welche Zertifikate enthält dieser `.p12`-Upload? | v0.1.0 | `github.com/go-authn/pkcs12` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | Woher kommt das TLS-Serverzertifikat eines Daemons? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | Darf dieser WireGuard-Schlüssel sich verbinden, und wem gehört er? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | Wen hat der Identitätsanbieter gerade angelegt, geändert oder gelöscht? | v0.2.1 | `github.com/go-authn/scim` |
-| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | Woher kommt eine PIN oder ein Passwort, wenn es nicht in einer Datei liegen soll? | v0.5.0 | `github.com/go-authn/secretsource` |
+| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | Woher kommt eine PIN oder ein Passwort, wenn es nicht in einer Datei liegen soll? | v0.10.0 | `github.com/go-authn/secretsource` |
 | [harden]({{< relref "/libraries/harden.md" >}}) | Ist diese URL https oder dieser Rechner, wie wird eine private Datei sicher geschrieben, und wie bleibt ein Schlüssel aus dem Swap? | v0.3.0 | `github.com/go-authn/harden` |
 
 ## Wie sie sich gruppieren {#how-they-group}

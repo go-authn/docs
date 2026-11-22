@@ -38,11 +38,24 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | ab v0.11.0 das, was die Person beschreibt und nichts beweist – `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… –, als Map aus Zeichenketten oder Listen von Zeichenketten; ein `group`-Block nimmt es ebenfalls. Sie entscheiden, als was der Eintrag veröffentlicht wird: siehe [die Einträge]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 | `object_classes` | ab v0.12.0 die Hilfsklassen (AUXILIARY), mit denen diese Person (oder, in einem `group`-Block, diese Gruppe) veröffentlicht wird, etwa `["siteMember"]`: deklariert, nie abgeleitet, und in einem [Standort-Schema]({{< relref "/authnd/schemas.md#object-classes" >}}) definiert |
 
+Jedes Geheimnis-Feld hat auch eine Schreibweise als
+[Geheimnis-Referenz]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+und das ist die, die man verwenden sollte: `password_from`, `totp_secret_from` und
+`nt_hash_from` bei einem `user`, `dsn_from` und `bind_password_from` bei einem
+`users`-Block (`systemd-creds:NAME`, `file:PATH`, ...). `password`, `password_file`,
+`nt_hash`, `totp_secret`, `dsn_file` und `bind_password_file` sind veraltete
+Aliase und werden beim Start protokolliert. Eine Person, deren Passwort eine
+Referenz ist, kann es nicht über die Passwortänderung von `authnd` ändern:
+bearbeiten Sie die Quelle der Referenz.
+
 Beim Start abgelehnt, unter Nennung der Person:
 
-- `password` und `password_file` zusammen – sagen Sie, welches von beiden;
-- `password` und `nt_hash` zusammen – der Hash wird aus dem Passwort abgeleitet,
-  also können zwei davon einander widersprechen;
+- mehr als eines von `password_from`, `password_file` und `password` – sagen Sie,
+  welches (ebenso `nt_hash` mit `nt_hash_from`, `totp_secret` mit
+  `totp_secret_from`, `dsn_file` mit `dsn_from`);
+- ein Passwort in irgendeiner Schreibweise zusammen mit `nt_hash` oder
+  `nt_hash_from` – der Hash wird aus dem Passwort abgeleitet, also können zwei
+  davon einander widersprechen;
 - `authorized_keys` und `authorized_keys_file` zusammen;
 - ein `nt_hash`, der nicht aus 32 Hexadezimalzeichen besteht, eine `authorized_keys`-Zeile, die
   sich nicht parsen lässt, ein `totp_secret` unter 128 Bit;

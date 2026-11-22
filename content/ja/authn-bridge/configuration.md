@@ -189,23 +189,55 @@ v0.32.0 以降。パスキーはいつでも保留中の削除を取り消せる
 ```hcl
 mail {
   host          = "smtp.example.org"
-  security      = "tls"                              # "tls" (port 465, the default) or "starttls" (587)
+  security      = "tls"                      # "tls" (port 465, the default) or "starttls" (587)
   username      = "authn-bridge"
-  password_file = "/etc/authn-bridge/smtp.password"  # the one source of the SMTP password
+  password_from = "systemd-creds:smtp"       # a secretsource reference, never the password
   from          = "authn-bridge@example.org"
-  # window      = "10m"                              # least time between two mails to one account (1m to 24h)
+  # window      = "10m"                      # least time between two mails to one account
 }
 ```
+
+`password_from` は [secretsource](https://github.com/go-authn/secretsource) の参照です。
+`systemd-creds:NAME`、`file:PATH` (所有者だけが読める通常ファイル、`0600`)、
+`keychain:SERVICE/ACCOUNT`、そして secretsource のその他のスキームが使えます。
+パスワードは 4096 バイト以下の空でない 1 行で、他のどこからも読まれません。環境変数からも、
+コマンドラインからも、設定ファイル自体からも読まれません。スキームのない参照、大きすぎる
+または複数行のシークレット、パーミッションの緩いファイル、`username` と `password_from` の
+ない `mail` ブロックは、起動時に拒否されます。
+
+`password_file = "PATH"` は今も動きますが、**非推奨**です。`password_from = "file:PATH"` として
+読まれます。両方を指定すると設定エラーです。
+
+`file:` はシンボリックリンクと、ブリッジの実行ユーザー以外が所有するファイルを
+拒否します。systemd から渡された認証情報は `systemd-creds:NAME` で読み、
+`file:$CREDENTIALS_DIRECTORY/NAME` では決して読みません。
+
+systemd のホストでは、パスワードをマシンに封印し、クレデンシャルとしてサービスに渡します。
+
+```sh
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
+```
+
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+`--tpm2-pcrs` を付けずに `--with-key=host+tpm2` を使ってください。鍵は TPM2 チップとホストの
+鍵ファイルから導出され、ファームウェアや Secure Boot の更新後も有効です。`--tpm2-pcrs=7` だけを
+使ってはいけません。ファームウェアや shim の更新でクレデンシャルが読めなくなり、bridge は
+起動を拒否します。
+
+**復旧。** クレデンシャルは TPM2 チップまたは `/var/lib/systemd/credential.secret` とともに
+失われ、復号の失敗は bridge を起動時に停止させます。パスワードは、このマシンに依存しない場所
+(オフラインのコピー) に保管し、そのコピーから上のコマンドで再び封印してから、
+`systemctl restart authn-bridge` を実行してください。
 
 - **通知される人。** ローカルアカウントファイルにあるアカウントの `mail` で、ブリッジが知っている
   とおりのものです。リクエストから取ったアドレスは決して使いません。このブロックには `local`
   ブロックが必要です。通知はローカルアカウントのパスキーについてのものだからです。
-- **パスワード**は `password_file` から、それ以外のどこからも取りません (環境変数、コマンドライン、
-  この設定ファイルからは取りません)。ファイルは通常ファイルで、サービスのユーザーが所有し、
-  グループにもその他にも権限がなく (`0600`)、一度の open で読まれ、空でない 1 行でなければなりません。
-  それ以外のもの、および `username` と `password_file` のないブロックは、起動時に拒否されます。
-  [インストールのページ]({{< relref "/authn-bridge/install.md#the-smtp-password" >}})を参照して
-  ください。
 - **常に TLS。** 暗黙の TLS、またはサーバーが提示して完了させる STARTTLS です (そうでなければ
   通知は送られません。平文のやり取りは決してしません)。サーバー証明書はシステムのルートとホスト名に
   対して検証されます。ブリッジが認証 (PLAIN、なければ LOGIN) するのは TLS が確立してからだけで、

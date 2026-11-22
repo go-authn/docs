@@ -37,11 +37,13 @@ user "tess" {
 | `digits` | 6 | 6 bis 10 (RFC 4226) |
 | `period` | 30 | Sekunden, die ein Code gilt |
 | `window` | 1 | Schritte vor und nach dem aktuellen Zeitpunkt, die akzeptiert werden, für abweichende Uhren. Jeder Schritt ist ein Schritt mehr Ratezeit für jemand anderen: Setzen Sie ihn bewusst |
-| `readers` | `false` | ob auch [Reader]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) einen Code mitsenden. Ein Dienstkonto hat kein Telefon; eines, das einen hat, bekommt ein `totp_secret` in seinem `reader`-Block |
+| `readers` | `false` | ob auch [Reader]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) einen Code mitsenden. Ein Dienstkonto hat kein Telefon; eines, das einen hat, bekommt ein `totp_secret_from` in seinem `reader`-Block (eine [Geheimnis-Referenz]({{< relref "/authnd/install.md#secrets-as-references" >}}); das Inline-`totp_secret` ist veraltet) |
 
 Das Geheimnis kann ebenso aus einer Datenbankspalte (der fünften) oder einem LDAP-Attribut
 (`totp_attribute`) kommen; siehe [Personen]({{< relref "/authnd/people.md" >}}).
-Ein `totp_secret` in einem `user`- oder `reader`-Block unter 128 Bit (RFC 4226 R6) hält den
+Ein `user` nimmt sein Geheimnis auch als `totp_secret_from` (eine
+[Geheimnis-Referenz]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+`systemd-creds:NAME` für ein versiegeltes). Ein TOTP-Geheimnis in einem `user`- oder `reader`-Block unter 128 Bit (RFC 4226 R6) hält den
 Server an und nennt die Person, statt später jede ihrer Anmeldungen scheitern zu lassen:
 
 ```

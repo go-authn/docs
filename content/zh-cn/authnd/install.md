@@ -160,7 +160,7 @@ ReadWritePaths=/etc/authnd/passwords
 |---|---|---|
 | `base_dn` | —（必需） | 树的根，例如 `dc=example,dc=org`；不含 `=` 的值会被拒绝 |
 | `listen` | `127.0.0.1:3893` | 一个地址。默认环回：目录一启动就出现在每个接口上，这是应当有人有意作出的决定。需要 LDAP 和 LDAPS 的站点运行两个实例 |
-| `reader "<dn>"` | 无 | 可以搜索的服务账户；参见[谁可以读取]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
+| `reader "<dn>"` | 无 | 可以搜索的服务账户，带有 `password_from`（以及 `totp_secret_from`），即[密钥引用](#secrets-as-references)；参见[谁可以读取]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | 每个来源被重新读取的频率；`0` 表示关闭；参见[运行]({{< relref "/authnd/operations.md" >}}) |
 | `max_age` | `10m`（v0.17.0；`"0"` = 无限制） | 一旦所提供的数据比它更旧就拒绝过期数据（`unavailable`）；参见[运行]({{< relref "/authnd/operations.md" >}}) |
 | `max_connections` | `4096` | 同时打开的连接数上限，`0` 表示不限；超出的连接会收到 `busy` 并被关闭；参见[限制]({{< relref "/authnd/operations.md#limits" >}}) |
@@ -176,6 +176,52 @@ ReadWritePaths=/etc/authnd/passwords
 配置中的相对路径相对于进程运行所在的目录解析，
 而不是配置文件所在的目录；单元从 `/` 运行，因此
 请写绝对路径。
+
+### 作为引用的密钥 {#secrets-as-references}
+
+`reader`、`user` 和 `users` 块通过 [secretsource](https://github.com/go-authn/secretsource)
+引用来指明它们的密钥，而不是直接保存
+（`user` 和 `users` 的字段需要带有 go-authn/directory v0.27.0 的 authnd）：
+
+| 字段 | 含义 |
+|---|---|
+| `password_from` | `reader` 或 `user` 的密码：`systemd-creds:NAME`、`file:PATH`（仅其所有者可读的普通文件）、`keychain:SERVICE/ACCOUNT`，…… |
+| `totp_secret_from` | `reader`（配合 `mfa { readers = true }`）或 `user` 的 base32 TOTP 密钥 |
+| `nt_hash_from` | `user` 的 NT 哈希，从引用中读取：没有新增能力，且与密码同时出现会被拒绝 |
+| `dsn_from` | `users` 块的数据库 DSN（其中可能包含密码） |
+| `bind_password_from` | `users` 块的 `bind_dn` 的密码 |
+| `password_file`、`dsn_file`、`bind_password_file` | **已弃用**：按带 `file:PATH` 的同一引用读取 |
+| `password`、`totp_secret`、`nt_hash` | **已弃用**：密钥本身，写在配置中；启动时会记录日志 |
+
+一个密钥只允许使用一种写法（`password_from`、`password_file` 或
+`password` 之一；`dsn_from` 或 `dsn_file` 之一；依此类推）。密钥是一行非空内容，
+至多 4096 字节（末尾换行会被去掉）；没有方案的引用、错误的引用，
+或者过大、为空或多行的密钥，都会使服务器在启动时停止。
+已弃用的写法仍然有效，并会在启动时记录日志，但绝不包含密钥本身；
+`*_file` 现在改走 `file:`，因此会拒绝符号链接和属于其他用户的文件。
+
+`file:` 会拒绝符号链接，也会拒绝属于运行 authnd 的用户之外其他用户的文件。
+由 systemd 传递的凭据应使用 `systemd-creds:NAME` 读取，绝不要使用
+`file:$CREDENTIALS_DIRECTORY/NAME`。
+
+使用 systemd 时，把密钥封存到本机，并作为凭据传入：
+
+```sh
+printf %s 'the-reader-password' | sudo systemd-creds encrypt --name=reader \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/reader.cred
+```
+
+```ini
+# systemctl edit authnd
+[Service]
+LoadCredentialEncrypted=reader:/etc/credstore.encrypted/reader.cred
+```
+
+请使用 `--with-key=host+tpm2`，不要带 `--tpm2-pcrs`：单独使用 `--tpm2-pcrs=7` 会使
+凭据在固件或 Secure Boot 更新后无法读取，authnd 随即
+拒绝启动。**恢复：** 把密钥保存在离线副本中，在 TPM、主机密钥或固件
+变更之后用上面的命令重新封存，然后执行
+`systemctl restart authnd`。
 
 每次启动之前：
 

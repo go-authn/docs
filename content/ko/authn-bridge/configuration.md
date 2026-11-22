@@ -191,22 +191,56 @@ bridge는 패스키 삭제가 요청되거나 취소될 때 **계정 자신의 �
 ```hcl
 mail {
   host          = "smtp.example.org"
-  security      = "tls"                              # "tls" (port 465, the default) or "starttls" (587)
+  security      = "tls"                      # "tls" (port 465, the default) or "starttls" (587)
   username      = "authn-bridge"
-  password_file = "/etc/authn-bridge/smtp.password"  # the one source of the SMTP password
+  password_from = "systemd-creds:smtp"       # a secretsource reference, never the password
   from          = "authn-bridge@example.org"
-  # window      = "10m"                              # least time between two mails to one account (1m to 24h)
+  # window      = "10m"                      # least time between two mails to one account
 }
 ```
+
+`password_from`은 [secretsource](https://github.com/go-authn/secretsource)
+참조입니다. `systemd-creds:NAME`, `file:PATH`(소유자만 읽을 수 있는 일반 파일,
+`0600`), `keychain:SERVICE/ACCOUNT`, 그리고 secretsource의 다른 스킴들이 있습니다.
+비밀번호는 4096바이트 이하의 비어 있지 않은 한 줄이며, 다른 어디에서도 읽지
+않습니다. 환경 변수도, 명령줄도, 구성 파일 자체도 아닙니다. 스킴이 없는 참조,
+너무 크거나 여러 줄인 비밀 값, 권한이 느슨한 파일, 그리고 `username`과
+`password_from`이 없는 `mail` 블록은 시작 시 거부됩니다.
+
+`password_file = "PATH"`도 여전히 동작하지만 **사용 중단**되었습니다.
+`password_from = "file:PATH"`로 읽힙니다. 둘 다 지정하면 구성 오류입니다.
+
+`file:`은 심볼릭 링크와, 브리지를 실행하는 사용자가 아닌 다른 사용자가 소유한
+파일을 거부합니다. systemd가 넘겨준 자격 증명은 `systemd-creds:NAME`으로 읽으며,
+`file:$CREDENTIALS_DIRECTORY/NAME`으로는 절대 읽지 않습니다.
+
+systemd 호스트에서는 비밀번호를 머신에 봉인하고 서비스에 자격 증명으로
+전달하십시오.
+
+```sh
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
+```
+
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+`--tpm2-pcrs` 없이 `--with-key=host+tpm2`를 사용하십시오. 키는 TPM2 칩과 호스트 키
+파일에서 유도되며 펌웨어와 Secure Boot 업데이트를 견딥니다. `--tpm2-pcrs=7`만
+단독으로 쓰지 마십시오. 펌웨어나 shim 업데이트로 자격 증명을 읽을 수 없게 되어
+브리지가 시작을 거부하게 됩니다.
+
+**복구.** 자격 증명은 TPM2 칩이나 `/var/lib/systemd/credential.secret`을 잃으면
+함께 사라지며, 복호화 실패는 시작 시 브리지를 멈춥니다. 비밀번호를 이 머신에
+의존하지 않는 곳(오프라인 사본)에 보관하고, 그 사본으로 위 명령으로 다시 봉인한
+다음 `systemctl restart authn-bridge`를 실행하십시오.
 
 - **누가 알림을 받는가.** bridge가 아는 로컬 계정 파일 속 계정의 `mail`이며, 요청에서 가져온
   주소는 결코 아닙니다. 이 블록에는 `local` 블록이 필요합니다. 알림은 로컬 계정의 패스키에
   관한 것이기 때문입니다.
-- **비밀번호**는 `password_file`에서만 오며 다른 곳에서는 오지 않습니다(환경 변수도, 명령줄도,
-  이 파일도 아닙니다). 파일은 일반 파일이고, 서비스의 사용자 소유이며, 그룹이나 다른 사용자의
-  권한이 없어야 하고(`0600`), 한 번 열어서 읽으며, 비어 있지 않은 한 줄이어야 합니다. 그 밖의
-  것, 그리고 `username`과 `password_file`이 없는 블록은 시작할 때 거부됩니다.
-  [설치 페이지]({{< relref "/authn-bridge/install.md#the-smtp-password" >}})를 참조하십시오.
 - **항상 TLS.** 암시적 TLS, 또는 서버가 제공하고 완료하는 STARTTLS입니다(그렇지 않으면
   알림은 보내지지 않으며, 평문 대화는 결코 하지 않습니다). 서버 인증서는 시스템 루트와
   호스트 이름에 대해 검증됩니다. bridge는 TLS가 성립한 뒤에만(PLAIN, 없으면 LOGIN) 인증하며,

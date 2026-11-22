@@ -2,7 +2,7 @@
 title: "Las bibliotecas, una pregunta cada una"
 linkTitle: "Bibliotecas"
 weight: 50
-description: "Los dieciséis módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
+description: "Los diecisiete módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
 tags: [bibliotecas]
 ---
 
@@ -27,10 +27,11 @@ Todos son Go puro y se compilan con `CGO_ENABLED=0`.
 | [saml]({{< relref "/libraries/saml.md" >}}) | ¿qué dijo de esta persona el proveedor de identidad de una federación? | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | ¿está revocado este certificado o esta clave SSH, tal como respondería sshd? | v0.6.1 | `github.com/go-authn/krl` |
 | [cms]({{< relref "/libraries/cms.md" >}}) | ¿se sostiene esta firma sobre estos bytes, y qué certificado la hizo? | v0.2.0 | `github.com/go-authn/cms` |
+| [pkcs12]({{< relref "/libraries/pkcs12.md" >}}) | ¿qué clave privada y qué certificados contiene este `.p12` subido? | v0.1.0 | `github.com/go-authn/pkcs12` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | ¿de dónde procede el certificado de servidor TLS de un demonio? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | ¿puede conectarse esta clave WireGuard, y de quién es? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | ¿a quién acaba de crear, cambiar o eliminar el proveedor de identidad? | v0.2.1 | `github.com/go-authn/scim` |
-| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | ¿de dónde sale un PIN o una contraseña, cuando no debe quedar en un archivo? | v0.5.0 | `github.com/go-authn/secretsource` |
+| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | ¿de dónde sale un PIN o una contraseña, cuando no debe quedar en un archivo? | v0.10.0 | `github.com/go-authn/secretsource` |
 | [harden]({{< relref "/libraries/harden.md" >}}) | ¿esta URL es https o esta máquina, y cómo se escribe con seguridad un archivo privado y cómo se mantiene una clave fuera del swap? | v0.3.0 | `github.com/go-authn/harden` |
 
 ## Cómo se agrupan {#how-they-group}

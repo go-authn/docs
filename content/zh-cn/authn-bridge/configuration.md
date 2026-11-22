@@ -189,20 +189,55 @@ acme {
 ```hcl
 mail {
   host          = "smtp.example.org"
-  security      = "tls"                              # "tls" (port 465, the default) or "starttls" (587)
+  security      = "tls"                      # "tls" (port 465, the default) or "starttls" (587)
   username      = "authn-bridge"
-  password_file = "/etc/authn-bridge/smtp.password"  # the one source of the SMTP password
+  password_from = "systemd-creds:smtp"       # a secretsource reference, never the password
   from          = "authn-bridge@example.org"
-  # window      = "10m"                              # least time between two mails to one account (1m to 24h)
+  # window      = "10m"                      # least time between two mails to one account
 }
 ```
 
+`password_from` 是一个 [secretsource](https://github.com/go-authn/secretsource)
+引用：`systemd-creds:NAME`、`file:PATH`（仅所有者可读的普通文件，
+`0600`）、`keychain:SERVICE/ACCOUNT`，以及 secretsource 的其他方案。
+密码是一行非空内容，至多 4096 字节，并且不会从其他任何地方读取：
+不是环境变量，不是命令行，也不是配置文件本身。没有方案的引用、过大或
+多行的密钥、权限过宽的文件，以及缺少 `username` 和
+`password_from` 的 `mail` 块，在启动时都会被拒绝。
+
+`password_file = "PATH"` 仍然可用，但已**弃用**：它被当作
+`password_from = "file:PATH"` 读取。同时设置两者是配置错误。
+
+`file:` 会拒绝符号链接，也会拒绝属于运行 bridge 的用户之外其他用户的文件。
+由 systemd 传递的凭据应使用 `systemd-creds:NAME` 读取，绝不要使用
+`file:$CREDENTIALS_DIRECTORY/NAME`。
+
+在 systemd 主机上，把密码封存到本机，并作为凭据交给服务：
+
+```sh
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
+```
+
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+请使用 `--with-key=host+tpm2`，不要带 `--tpm2-pcrs`：密钥由 TPM2
+芯片和主机密钥文件派生，在固件和 Secure Boot 更新后依然有效。
+不要单独使用 `--tpm2-pcrs=7`：固件或 shim 更新会使
+凭据无法读取，网桥将拒绝启动。
+
+**恢复。** 一旦丢失 TPM2 芯片或
+`/var/lib/systemd/credential.secret`，凭据也随之丢失，解密失败会使网桥在
+启动时停止。请把密码保存在不依赖这台机器的地方
+（离线副本），用上面的命令从该副本重新封存，然后
+`systemctl restart authn-bridge`。
+
 - **通知谁。** 本地账户文件中该账户的 `mail`，以网桥所知为准，绝不使用取自请求的地址。该块需要 `local` 块：
   通知针对的是本地账户的通行密钥。
-- **密码**来自 `password_file`，且只来自它（不来自环境变量、命令行或本文件）。该文件必须是普通文件，
-  归服务的用户所有，不带任何组或其他用户权限（`0600`），只打开一次读取；一行非空内容。
-  其他任何情况，以及缺少 `username` 和 `password_file` 的块，都会在启动时被拒绝。参见
-  [安装页面]({{< relref "/authn-bridge/install.md#the-smtp-password" >}})。
 - **始终使用 TLS。** 隐式 TLS，或服务器提供并完成的 STARTTLS（否则不发送通知：绝不进行明文会话）。
   服务器证书按系统根证书和主机名验证。网桥只在 TLS 建立之后才进行认证（PLAIN，否则 LOGIN），
   绝不通过明文，即使对 127.0.0.1 也是如此；在 TLS 之后不宣告任何可用机制的服务器会被拒绝。

@@ -53,11 +53,22 @@ archivo del directorio de estado y una ruta del espejo.
 
 | clave | |
 |---|---|
+| `url_from` | una referencia de secretsource a la URL, para una URL que lleva una credencial, por ejemplo `systemd-creds:univ-a-url`; exactamente una de `url` y `url_from` |
 | `url` | `https://`, `http://` o `file://`; la firma de una KRL se descarga de la misma URL con `.sig` añadido |
 | `ssh_ca` | la clave pública de la CA SSH, una línea `authorized_keys`: un origen KRL. Aquí se rechaza un certificado |
 | `x509_ca` | el certificado PEM de la CA: un origen CRL |
 | `max_age` | rechazar también una lista emitida hace más tiempo que esto, además de su propia caducidad; se rechaza en un origen que alimenta una salida CRL |
 | `revoke_keys` | permitir que la lista de este origen revoque **claves simples** en una salida compartida con otros orígenes; solo orígenes KRL |
+
+**Una credencial en una URL.** Una `url` que lleva una contraseña (`user:pass@`) o un
+parámetro de consulta con nombre de credencial (`token`, `api_key`, `secret`...) se rechaza
+al arrancar, y el mensaje nombra `url_from`: la configuración no es un secreto. Ponga la URL
+en una credencial, sellada con `systemd-creds encrypt --with-key=host+tpm2` (nunca un
+`--tpm2-pcrs=7` a secas), cárguela con
+`LoadCredentialEncrypted=univ-a-url:/etc/credstore.encrypted/univ-a-url` y escriba
+`url_from = "systemd-creds:univ-a-url"`. Si cambia la clave del host, selle de nuevo la
+credencial desde su origen. Desde secretsource v0.9.0, una referencia `file:` rechaza un
+enlace simbólico y un archivo de otro uid.
 
 **`output "<name>"`**: un archivo que lee un servidor.
 

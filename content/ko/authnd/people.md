@@ -37,11 +37,21 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | v0.11.0부터, 사람을 설명하되 아무것도 증명하지 않는 것 — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — 을 문자열 또는 문자열 목록의 맵으로. `group` 블록도 받습니다. 이것들이 엔트리가 무엇으로 게시되는지를 결정합니다. [엔트리]({{< relref "/authnd/entries.md#adding-attributes" >}})를 참조 |
 | `object_classes` | v0.12.0부터, 이 사람(`group` 블록에서는 이 그룹)이 함께 게시되는 보조 클래스, 예: `["siteMember"]`. 선언되는 것이지 추론되지 않으며, [사이트 스키마]({{< relref "/authnd/schemas.md#object-classes" >}})에서 정의됩니다 |
 
+각 비밀 값 필드에는 [비밀 값 참조]({{< relref "/authnd/install.md#secrets-as-references" >}})
+표기도 있으며, 사용해야 하는 쪽은 이것입니다. `user`에서는 `password_from`,
+`totp_secret_from`, `nt_hash_from`, `users` 블록에서는 `dsn_from`과
+`bind_password_from`입니다(`systemd-creds:NAME`, `file:PATH`, ...). `password`,
+`password_file`, `nt_hash`, `totp_secret`, `dsn_file`, `bind_password_file`은
+사용 중단된 별칭이며 시작 시 로그에 기록됩니다. 비밀번호가 참조인 사람은
+`authnd`의 비밀번호 변경으로 바꿀 수 없습니다. 참조의 원본을 편집하십시오.
+
 시작 시 거부되며 해당 사람의 이름을 지정합니다.
 
-- `password`와 `password_file`이 함께 있는 경우 — 어느 쪽인지 지정하십시오
-- `password`와 `nt_hash`가 함께 있는 경우 — 해시는 비밀번호에서 파생되므로 둘이
-  서로 다를 수 있습니다
+- `password_from`, `password_file`, `password` 중 둘 이상이 있는 경우 — 어느 쪽인지
+  지정하십시오(`nt_hash`와 `nt_hash_from`, `totp_secret`과 `totp_secret_from`,
+  `dsn_file`과 `dsn_from`도 마찬가지입니다)
+- 어떤 표기든 비밀번호가 `nt_hash` 또는 `nt_hash_from`과 함께 있는 경우 — 해시는
+  비밀번호에서 파생되므로 둘이 서로 다를 수 있습니다
 - `authorized_keys`와 `authorized_keys_file`이 함께 있는 경우
 - 16진수 32자가 아닌 `nt_hash`, 구문 분석되지 않는 `authorized_keys` 줄, 128비트
   미만의 `totp_secret`

@@ -37,11 +37,13 @@ user "tess" {
 | `digits` | 6 | 6에서 10까지 (RFC 4226) |
 | `period` | 30 | 코드 하나가 유지되는 초 |
 | `window` | 1 | 시계가 다른 경우를 위해 지금의 앞뒤로 허용되는 단계 수. 각 단계는 다른 사람이 추측할 수 있는 시간의 한 단계이므로 의도를 갖고 설정하십시오 |
-| `readers` | `false` | [reader]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})도 코드를 담는지 여부. 서비스 계정에는 휴대전화가 없습니다. 있는 계정은 `reader` 블록에 `totp_secret`을 둡니다 |
+| `readers` | `false` | [reader]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})도 코드를 담는지 여부. 서비스 계정에는 휴대전화가 없습니다. 있는 계정은 `reader` 블록에 `totp_secret_from`을 둡니다([비밀 값 참조]({{< relref "/authnd/install.md#secrets-as-references" >}}). 인라인 `totp_secret`은 사용 중단됨) |
 
 비밀 값은 데이터베이스 열(다섯 번째)이나 LDAP 속성(`totp_attribute`)에서도 가져올
 수 있습니다. [사람들]({{< relref "/authnd/people.md" >}})을 참조하십시오.
-`user` 또는 `reader` 블록의 `totp_secret`이 128비트 미만이면(RFC 4226 R6),
+`user`도 비밀 값을 `totp_secret_from`으로 받습니다
+([비밀 값 참조]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+봉인된 것에는 `systemd-creds:NAME`). `user` 또는 `reader` 블록의 TOTP 비밀 값이 128비트 미만이면(RFC 4226 R6),
 나중에 그 사람의 모든 로그인이 실패하게 두는 대신 서버가 그 사람의 이름을 지정하며
 멈춥니다.
 

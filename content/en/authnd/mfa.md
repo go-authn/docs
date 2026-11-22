@@ -37,11 +37,13 @@ user "tess" {
 | `digits` | 6 | 6 to 10 (RFC 4226) |
 | `period` | 30 | seconds one code lasts |
 | `window` | 1 | steps either side of now that are accepted, for clocks that differ. Each step is a step of somebody else's guessing time: set it on purpose |
-| `readers` | `false` | whether [readers]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) carry a code too. A service account has no phone; one that does gets a `totp_secret` in its `reader` block |
+| `readers` | `false` | whether [readers]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) carry a code too. A service account has no phone; one that does gets a `totp_secret_from` in its `reader` block (a [secret reference]({{< relref "/authnd/install.md#secrets-as-references" >}}); the inline `totp_secret` is deprecated) |
 
 The secret can equally come from a database column (the fifth) or an LDAP
 attribute (`totp_attribute`); see [people]({{< relref "/authnd/people.md" >}}).
-A `totp_secret` in a `user` or `reader` block under 128 bits (RFC 4226 R6)
+A `user` takes its secret as `totp_secret_from` too (a
+[secret reference]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+`systemd-creds:NAME` for a sealed one). A TOTP secret in a `user` or `reader` block under 128 bits (RFC 4226 R6)
 stops the server, naming the person, rather than failing every one of their
 logins later:
 

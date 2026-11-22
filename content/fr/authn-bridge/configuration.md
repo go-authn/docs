@@ -198,23 +198,62 @@ Sans bloc `mail`, rien ne change.
 ```hcl
 mail {
   host          = "smtp.example.org"
-  security      = "tls"                              # "tls" (port 465, the default) or "starttls" (587)
+  security      = "tls"                      # "tls" (port 465, the default) or "starttls" (587)
   username      = "authn-bridge"
-  password_file = "/etc/authn-bridge/smtp.password"  # the one source of the SMTP password
+  password_from = "systemd-creds:smtp"       # a secretsource reference, never the password
   from          = "authn-bridge@example.org"
-  # window      = "10m"                              # least time between two mails to one account (1m to 24h)
+  # window      = "10m"                      # least time between two mails to one account
 }
 ```
+
+`password_from` est une référence [secretsource](https://github.com/go-authn/secretsource) :
+`systemd-creds:NAME`, `file:PATH` (un fichier ordinaire lisible par son seul
+propriétaire, `0600`), `keychain:SERVICE/ACCOUNT`, et les autres schémas de
+secretsource. Le mot de passe tient en une ligne non vide d'au plus 4096 octets,
+et il n'est lu nulle part ailleurs : ni dans l'environnement, ni sur une ligne de
+commande, ni dans le fichier de configuration lui-même. Une référence sans
+schéma, un secret trop long ou sur plusieurs lignes, un fichier aux droits trop
+larges, et un bloc `mail` sans `username` ni `password_from` sont refusés au
+démarrage.
+
+`password_file = "PATH"` fonctionne encore mais est **obsolète** : il est lu
+comme `password_from = "file:PATH"`. Fixer les deux est une erreur de
+configuration.
+
+`file:` refuse un lien symbolique et un fichier appartenant à un autre
+utilisateur que celui sous lequel le bridge s'exécute. Un identifiant transmis
+par systemd se lit avec `systemd-creds:NAME`, jamais avec
+`file:$CREDENTIALS_DIRECTORY/NAME`.
+
+Sur un hôte systemd, scellez le mot de passe à la machine et transmettez-le au
+service comme identifiant (credential) :
+
+```sh
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
+```
+
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+Utilisez `--with-key=host+tpm2` sans `--tpm2-pcrs` : la clé dérive de la puce
+TPM2 et du fichier de clé de l'hôte, et survit aux mises à jour du micrologiciel
+et de Secure Boot. N'utilisez pas un `--tpm2-pcrs=7` seul : une mise à jour du
+micrologiciel ou de shim rendrait l'identifiant illisible et le pont refuserait
+de démarrer.
+
+**Reprise.** L'identifiant est perdu avec la puce TPM2 ou
+`/var/lib/systemd/credential.secret`, et un échec de déchiffrement arrête le pont
+au démarrage. Gardez le mot de passe dans un endroit qui ne dépend pas de cette
+machine (une copie hors ligne), re-scellez depuis cette copie avec la commande
+ci-dessus, puis `systemctl restart authn-bridge`.
 
 - **Qui est prévenu.** Le `mail` du compte dans le fichier des comptes locaux, tel que
   le pont le connaît, jamais une adresse tirée de la requête. Le bloc exige un bloc
   `local` : l'avis concerne les clés d'accès des comptes locaux.
-- **Le mot de passe** vient de `password_file` et de nulle part ailleurs (ni
-  l'environnement, ni une ligne de commande, ni ce fichier). Le fichier doit être un
-  fichier ordinaire, appartenant à l'utilisateur du service, sans permission de groupe
-  ni d'autres (`0600`), lu en une seule ouverture ; une seule ligne non vide. Tout
-  autre cas, et un bloc sans `username` ni `password_file`, est refusé au démarrage.
-  Voir [la page d'installation]({{< relref "/authn-bridge/install.md#the-smtp-password" >}}).
 - **TLS, toujours.** TLS implicite, ou STARTTLS que le serveur propose et mène à
   terme (sinon l'avis n'est pas envoyé : jamais de conversation en clair). Le
   certificat du serveur est vérifié contre les racines du système et le nom d'hôte. Le

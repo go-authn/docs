@@ -94,6 +94,8 @@ users "ldap" {                            # read anonymously
 `users` ブロックは [go-authn/directory/hcldir](https://github.com/go-authn/directory) のものです。
 kdcd は、そのうちパスワードを運ぶ部分を拒否します(上を参照)。
 
+**シークレット: ファイルか参照か。** `keytab_file` と `key_file`（`mint` 内）はファイルを指し、後述のとおり検査されます。代わりに `keytab_from` と `key_from` には secretsource の参照、たとえば `systemd-creds:kdc-keytab` を書けます。これは systemd がサービスのために復号するクレデンシャルです（`LoadCredentialEncrypted=`、`systemd-creds encrypt --with-key=host+tpm2` で封印。`--tpm2-pcrs=7` だけは使わない）。どちらか一方だけを指定します。`_from` キーでは `file:` は拒否されます。`keytab_file` は残り、非推奨ではありません。keytab と鍵はバイナリで、`file:` は末尾の改行を 1 つ取り除くため（末尾がバイト 0x0a の鍵が壊れます）、また参照は最大 4096 バイトなので、それより大きい keytab は `keytab_file` に置きます。secretsource v0.9.0 以降、`file:` はシンボリックリンクと他の uid が所有するファイルも拒否します。`dsn_file` はパスワードを含まないので `_from` はありません。
+
 `kdcd check --config FILE` は、デーモンが構築するものをすべて読み込んで構築し、ディレクトリを
 開き、どこにも listen せずに、提供する内容を表示します。レルム、アドレス、キータブの
 プリンシパル(名前、kvno、etype。鍵は決して表示しない)、ディレクトリが保持する人数、

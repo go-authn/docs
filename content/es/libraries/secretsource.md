@@ -12,7 +12,7 @@ referencia no contiene ningún secreto, así que puede estar en una opción, un
 script o el historial del shell.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.1
+go get github.com/go-authn/secretsource@v0.9.0
 ```
 
 ```go
@@ -30,6 +30,15 @@ use(s.Bytes())
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | el único elemento de Secret Service con todos esos atributos; varias coincidencias se rechazan |
 | `keepassxc:URL` | la entrada de KeePassXC cuyo **campo URL** es esa URL (`https://NOMBRE.invalid/...` es una buena elección, que nunca se resuelve); dos entradas con la misma URL se rechazan por ambiguas |
 | `systemd-creds:NAME` | (Linux, desde v0.8.0) una credencial de systemd, devuelta byte a byte: no se elimina el salto de línea final, a diferencia de `file:`. Primero el archivo `NAME` en `$CREDENTIALS_DIRECTORY` (colocado por `LoadCredential=`, `LoadCredentialEncrypted=`, `SetCredentialEncrypted=`); si no, `NAME` o `NAME.cred` en `credstore.encrypted` de `/etc`, `/run`, `/usr/lib`, descifrado con `systemd-creds decrypt`. Se rechaza con `ErrUnavailable` en otros sistemas |
+
+**`file:` no sigue un enlace simbólico** (desde v0.9.0). Un enlace en el último
+componente de la ruta, colgante o no, se rechaza: en Unix el archivo se abre con
+`O_NOFOLLOW`, en Windows con `FILE_FLAG_OPEN_REPARSE_POINT` y cualquier punto de
+reanálisis se rechaza (también un marcador de posición de archivos en la nube:
+apunte a una copia local ordinaria). En Unix, el archivo debe además pertenecer
+al usuario que llama; root no queda exento. **Migración:** apunte al archivo
+real (`readlink -f PATH`). Un enlace simbólico en un directorio anterior de la
+ruta sigue funcionando.
 
 `keepassxc:by-uuid/...` y `keepassxc:by-path/...` se **rechazan**: KeePassXC
 2.8.0 se cierra con un fallo cuando una búsqueda encuentra una entrada sin URL.
@@ -112,6 +121,25 @@ La primera lectura de una entrada muestra el diálogo de acceso de KeePassXC.
 
 Lo usan `fido --pin-from` (véase [fido]({{< relref "/libraries/fido.md" >}})) y
 `theca --pin-from`, `--password-from` y `--recovery-from`.
+
+## Tomar un secreto de una opción de la línea de comandos: `secretsource/secretflag` {#secretflag}
+
+Un secreto pasado como valor de una opción es visible en `ps`. El paquete
+`secretflag` da a un comando el par `--<nombre>` (obsoleta, avisa por stderr) y
+`--<nombre>-from <ref>`, mutuamente excluyentes, con la referencia resuelta por
+`secretsource.Open`:
+
+```go
+var password string
+b := secretflag.Add(cmd, "password", &password, "the admin password") // cobra
+// or: secretflag.AddStd(fs, os.Stderr, "password", &password, "the admin password", "p")
+// ... after parsing:
+if err := secretflag.Resolve(ctx, b); err != nil { return err }
+```
+
+`Add` registra el par en un comando de cobra, `AddStd` en un `flag.FlagSet` de
+la biblioteca estándar (con alias como `-t`); `Resolve` lee las referencias.
+Disponible desde v0.10.0.
 
 ## Guardar un secreto: `secretsource store` {#store}
 

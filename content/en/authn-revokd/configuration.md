@@ -53,11 +53,22 @@ state directory and a path of the mirror.
 
 | key | |
 |---|---|
+| `url_from` | a secretsource reference to the URL, for a URL that carries a credential, for example `systemd-creds:univ-a-url`; exactly one of `url` and `url_from` |
 | `url` | `https://`, `http://` or `file://`; a KRL's signature is fetched from the same URL with `.sig` appended |
 | `ssh_ca` | the SSH CA's public key, one `authorized_keys` line: a KRL source. A certificate is refused here |
 | `x509_ca` | the CA's PEM certificate: a CRL source |
 | `max_age` | also refuse a list issued longer ago than this, besides its own expiry; refused on a source that feeds a CRL output |
 | `revoke_keys` | let this source's list revoke **plain keys** in an output shared with other sources; KRL sources only |
+
+**A credential in a URL.** A `url` that carries a password (`user:pass@`) or a
+query parameter named like a credential (`token`, `api_key`, `secret`...) is
+refused at start, and the message names `url_from`: the configuration is not a
+secret. Put the URL in a credential, sealed with
+`systemd-creds encrypt --with-key=host+tpm2` (never a bare `--tpm2-pcrs=7`),
+load it with `LoadCredentialEncrypted=univ-a-url:/etc/credstore.encrypted/univ-a-url`,
+and write `url_from = "systemd-creds:univ-a-url"`. If the host key changes, seal
+the credential again from its source. Since secretsource v0.9.0, a `file:`
+reference refuses a symlink and a file owned by another uid.
 
 **`output "<name>"`**: one file a server reads.
 

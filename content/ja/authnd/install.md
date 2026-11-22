@@ -156,7 +156,7 @@ ReadWritePaths=/etc/authnd/passwords
 |---|---|---|
 | `base_dn` | — (必須) | ツリーのルート。例: `dc=example,dc=org`。`=` を含まない値は拒否されます |
 | `listen` | `127.0.0.1:3893` | 一つのアドレス。既定ではループバックです。起動した途端にすべてのインターフェースに現れるディレクトリは、誰かが意図して決めるべきことです。LDAP と LDAPS の両方が必要なサイトは、二つのインスタンスを動かします |
-| `reader "<dn>"` | なし | 検索できるサービスアカウント。[誰が読めるか]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})を参照 |
+| `reader "<dn>"` | なし | 検索できるサービスアカウント。`password_from` (と `totp_secret_from`) を持つ、[シークレット参照](#secrets-as-references)。[誰が読めるか]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})を参照 |
 | `refresh` | `60s` | すべてのソースを読み直す間隔。`0` で無効。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
 | `max_age` | `10m` (v0.17.0。`"0"` = 無制限) | 提供中のデータがこれより古くなったら、古いデータを拒否 (`unavailable`)。[運用]({{< relref "/authnd/operations.md" >}})を参照 |
 | `max_connections` | `4096` | 同時に開く接続の最大数、`0` は無制限。超えた接続には `busy` が送られて閉じられます。[制限]({{< relref "/authnd/operations.md#limits" >}})を参照 |
@@ -171,6 +171,52 @@ ReadWritePaths=/etc/authnd/passwords
 
 設定内の相対パスは、設定ファイルのあるディレクトリではなく、プロセスが動いているディレクトリを
 基準に解決されます。ユニットは `/` から実行されるので、パスは絶対パスで書いてください。
+
+### シークレットは参照で {#secrets-as-references}
+
+`reader`、`user`、`users` ブロックは、シークレットを保持せず、
+[secretsource](https://github.com/go-authn/secretsource) の参照で指定します
+(`user` と `users` のフィールドには、go-authn/directory v0.27.0 を含む authnd が必要です)。
+
+| フィールド | 意味 |
+|---|---|
+| `password_from` | `reader` または `user` のパスワード: `systemd-creds:NAME`、`file:PATH` (所有者だけが読める通常ファイル)、`keychain:SERVICE/ACCOUNT`、... |
+| `totp_secret_from` | `reader` (`mfa { readers = true }` と併用) または `user` の base32 TOTP シークレット |
+| `nt_hash_from` | `user` の NT ハッシュ。参照から読まれる: 新しい機能ではなく、パスワードと併用すると拒否される |
+| `dsn_from` | `users` ブロックのデータベース DSN (パスワードを含むことがある) |
+| `bind_password_from` | `users` ブロックの `bind_dn` のパスワード |
+| `password_file`、`dsn_file`、`bind_password_file` | **非推奨**: `file:PATH` を付けた同じ参照として読まれる |
+| `password`、`totp_secret`、`nt_hash` | **非推奨**: シークレットそのものを設定に書く。起動時にログに出力される |
+
+シークレットの書き方として指定できるのはちょうど一つです (`password_from`、`password_file`、
+`password` のうち一つ。`dsn_from` と `dsn_file` のうち一つ。以下同様)。シークレットは 4096 バイト以下の
+空でない 1 行です (末尾の改行は取り除かれます)。スキームのない参照、不正な参照、または
+大きすぎる、空の、複数行のシークレットがあると、サーバーは起動時に停止します。非推奨の書き方も
+引き続き動作し、起動時にログに出力されますが、シークレット自体は出力されません。`*_file` は
+今後 `file:` を経由するため、シンボリックリンクと、他のユーザーが所有するファイルを拒否します。
+
+`file:` はシンボリックリンクと、authnd の実行ユーザー以外が所有するファイルを
+拒否します。systemd から渡された認証情報は `systemd-creds:NAME` で読み、
+`file:$CREDENTIALS_DIRECTORY/NAME` では決して読みません。
+
+systemd では、シークレットをマシンに封印し、クレデンシャルとして渡します。
+
+```sh
+printf %s 'the-reader-password' | sudo systemd-creds encrypt --name=reader \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/reader.cred
+```
+
+```ini
+# systemctl edit authnd
+[Service]
+LoadCredentialEncrypted=reader:/etc/credstore.encrypted/reader.cred
+```
+
+`--with-key=host+tpm2` を使い、`--tpm2-pcrs` は付けないでください。`--tpm2-pcrs=7` だけを
+使うと、ファームウェアや Secure Boot の更新後にクレデンシャルが読めなくなり、authnd は
+起動を拒否します。**復旧:** シークレットをオフラインのコピーに保管し、TPM、ホスト鍵、
+ファームウェアの変更後は上のコマンドで再び封印してから、
+`systemctl restart authnd` を実行してください。
 
 起動のたびに、事前に実行します。
 

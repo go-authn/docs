@@ -53,11 +53,14 @@ output "tls" {                               # nginx: ssl_crl /var/lib/authn-rev
 
 | 键 | |
 |---|---|
+| `url_from` | 指向该 URL 的 secretsource 引用，用于携带凭据的 URL，例如 `systemd-creds:univ-a-url`；`url` 与 `url_from` 恰好设置其一 |
 | `url` | `https://`、`http://` 或 `file://`；KRL 的签名从同一 URL 加上 `.sig` 获取 |
 | `ssh_ca` | SSH CA 的公钥，一行 `authorized_keys`：即 KRL 来源。这里不接受证书 |
 | `x509_ca` | CA 的 PEM 证书：即 CRL 来源 |
 | `max_age` | 除其自身的过期时间之外，还拒绝签发时间早于此值的列表；在为 CRL 输出提供数据的来源上会被拒绝 |
 | `revoke_keys` | 允许此来源的列表在与其他来源共用的输出中吊销**普通密钥**；仅限 KRL 来源 |
+
+**URL 中的凭据。** 携带密码（`user:pass@`）或名称像凭据的查询参数（`token`、`api_key`、`secret` 等）的 `url` 在启动时被拒绝，消息会指出 `url_from`：配置文件不是机密。把 URL 放进用 `systemd-creds encrypt --with-key=host+tpm2` 封存的凭据（切勿只用 `--tpm2-pcrs=7`），用 `LoadCredentialEncrypted=univ-a-url:/etc/credstore.encrypted/univ-a-url` 加载，并写 `url_from = "systemd-creds:univ-a-url"`。若主机密钥改变，从原始值重新封存凭据。自 secretsource v0.9.0 起，`file:` 引用会拒绝符号链接和属于其他 uid 的文件。
 
 **`output "<name>"`**：服务器读取的一个文件。
 

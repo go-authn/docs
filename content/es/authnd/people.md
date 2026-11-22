@@ -38,11 +38,23 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | desde la v0.11.0, lo que describe a la persona y no prueba nada —`sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`…—, como un mapa de cadenas o de listas de cadenas; un bloque `group` también lo admite. Deciden como qué se publica la entrada: consulte [las entradas]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 | `object_classes` | desde la v0.12.0, las clases auxiliares con las que se publica a esta persona (o, en un bloque `group`, a este grupo), como `["siteMember"]`: declaradas, nunca deducidas, y definidas en un [esquema de un sitio]({{< relref "/authnd/schemas.md#object-classes" >}}) |
 
+Cada campo de secreto tiene también una grafía como
+[referencia a un secreto]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+que es la que conviene usar: `password_from`, `totp_secret_from` y
+`nt_hash_from` en un `user`, `dsn_from` y `bind_password_from` en un bloque
+`users` (`systemd-creds:NAME`, `file:PATH`, ...). `password`, `password_file`,
+`nt_hash`, `totp_secret`, `dsn_file` y `bind_password_file` son alias obsoletos
+y se registran en el log al arrancar. Una persona cuya contraseña es una
+referencia no puede cambiarla mediante el cambio de contraseña de `authnd`:
+edite el origen de la referencia.
+
 Se rechaza al arrancar, nombrando a la persona:
 
-- `password` y `password_file` juntos: indique cuál;
-- `password` y `nt_hash` juntos: el hash se deriva de la contraseña, así que los
-  dos pueden no coincidir;
+- más de uno de `password_from`, `password_file` y `password`: indique cuál
+  (igualmente `nt_hash` con `nt_hash_from`, `totp_secret` con
+  `totp_secret_from`, `dsn_file` con `dsn_from`);
+- una contraseña en cualquier grafía junto con `nt_hash` o `nt_hash_from`: el
+  hash se deriva de la contraseña, así que los dos pueden no coincidir;
 - `authorized_keys` y `authorized_keys_file` juntos;
 - un `nt_hash` que no tiene 32 caracteres hexadecimales, una línea de
   `authorized_keys` que no se puede analizar, un `totp_secret` de menos de 128 bits;

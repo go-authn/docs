@@ -11,7 +11,7 @@ tags: [库, secretsource, 密钥]
 shell 历史记录里。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.1
+go get github.com/go-authn/secretsource@v0.9.0
 ```
 
 ```go
@@ -29,6 +29,8 @@ use(s.Bytes())
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | 带有所有这些属性的唯一一个 Secret Service 项；匹配到多个则拒绝 |
 | `keepassxc:URL` | **URL 字段**为该 URL 的 KeePassXC 条目（`https://NAME.invalid/...` 是个好选择，永远不会被解析）；两个条目 URL 相同会因有歧义而被拒绝 |
 | `systemd-creds:NAME` | (Linux，自 v0.8.0 起)一个 systemd 凭据，按字节原样返回：与 `file:` 不同，不去掉末尾换行。先找 `$CREDENTIALS_DIRECTORY` 中的文件 `NAME`(由 `LoadCredential=`、`LoadCredentialEncrypted=`、`SetCredentialEncrypted=` 放置)；否则在 `/etc`、`/run`、`/usr/lib` 的 `credstore.encrypted` 中找 `NAME` 或 `NAME.cred`，用 `systemd-creds decrypt` 解密。在其他系统上以 `ErrUnavailable` 拒绝 |
+
+**`file:` 不跟随符号链接**（自 v0.9.0 起）。路径最后一个组成部分若是链接，无论是否悬空，都会被拒绝：在 Unix 上以 `O_NOFOLLOW` 打开文件，在 Windows 上以 `FILE_FLAG_OPEN_REPARSE_POINT` 打开，并拒绝任何重解析点（云文件占位符同样被拒绝：请指向普通的本地副本）。在 Unix 上，文件还必须归调用用户所有；root 也不例外。**迁移：** 指向真实文件（`readlink -f PATH`）。路径前面的目录中若有符号链接，仍然可用。
 
 `keepassxc:by-uuid/...` 和 `keepassxc:by-path/...` 会被**拒绝**：当查找命中没有
 URL 的条目时，KeePassXC 2.8.0 会崩溃。
@@ -92,6 +94,23 @@ KeePassXC 通过其浏览器集成协议访问，支持 macOS 和 Linux；Window
 
 `fido --pin-from`（见 [fido]({{< relref "/libraries/fido.md" >}})）以及
 `theca --pin-from`、`--password-from` 和 `--recovery-from` 使用它。
+
+## 从命令行标志获取密钥：`secretsource/secretflag` {#secretflag}
+
+作为标志值传入的密钥会在 `ps` 中可见。`secretflag` 包为命令提供一对互斥的
+`--<name>`（已弃用，会在 stderr 给出警告）和 `--<name>-from <ref>`，引用由
+`secretsource.Open` 解析：
+
+```go
+var password string
+b := secretflag.Add(cmd, "password", &password, "the admin password") // cobra
+// or: secretflag.AddStd(fs, os.Stderr, "password", &password, "the admin password", "p")
+// ... after parsing:
+if err := secretflag.Resolve(ctx, b); err != nil { return err }
+```
+
+`Add` 在 cobra 命令上注册这一对，`AddStd` 在标准库的 `flag.FlagSet` 上注册
+（支持 `-t` 之类的别名）；`Resolve` 读取引用。自 v0.10.0 起可用。
 
 ## 保存密钥：`secretsource store` {#store}
 

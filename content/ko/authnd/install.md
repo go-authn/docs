@@ -159,7 +159,7 @@ ReadWritePaths=/etc/authnd/passwords
 |---|---|---|
 | `base_dn` | — (필수) | 트리의 루트, 예: `dc=example,dc=org`. `=`가 없는 값은 거부됩니다 |
 | `listen` | `127.0.0.1:3893` | 주소 하나. 기본값은 루프백입니다. 시작하는 순간 모든 인터페이스에 나타나는 디렉터리는 누군가 의도적으로 내려야 하는 결정입니다. LDAP과 LDAPS가 모두 필요한 사이트는 인스턴스 두 개를 실행합니다 |
-| `reader "<dn>"` | 없음 | 검색할 수 있는 서비스 계정. [누가 읽을 수 있는가]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})를 참조 |
+| `reader "<dn>"` | 없음 | 검색할 수 있는 서비스 계정. `password_from`(및 `totp_secret_from`)을 가지며, [비밀 값 참조](#secrets-as-references)입니다. [누가 읽을 수 있는가]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})를 참조 |
 | `refresh` | `60s` | 모든 소스를 다시 읽는 주기. `0`이면 끔. [운영]({{< relref "/authnd/operations.md" >}})을 참조 |
 | `max_age` | `10m` (v0.17.0; `"0"` = 제한 없음) | 제공 중인 데이터가 이보다 오래되면 오래된 데이터를 거부(`unavailable`). [운영]({{< relref "/authnd/operations.md" >}})을 참조 |
 | `max_connections` | `4096` | 동시에 열려 있는 연결의 최대 수, `0`은 제한 없음. 넘은 연결은 `busy`를 받고 닫힘. [제한]({{< relref "/authnd/operations.md#limits" >}})을 참조 |
@@ -174,6 +174,51 @@ ReadWritePaths=/etc/authnd/passwords
 
 구성의 상대 경로는 구성 파일이 아니라 프로세스가 실행되는 디렉터리를 기준으로
 해석됩니다. 유닛은 `/`에서 실행되므로 경로는 절대 경로로 쓰십시오.
+
+### 참조로서의 비밀 값 {#secrets-as-references}
+
+`reader`, `user`, `users` 블록은 비밀 값을 직접 담는 대신
+[secretsource](https://github.com/go-authn/secretsource) 참조로 지정합니다
+(`user`와 `users`의 필드에는 go-authn/directory v0.27.0을 포함한 authnd가 필요합니다).
+
+| 필드 | 의미 |
+|---|---|
+| `password_from` | `reader` 또는 `user`의 비밀번호: `systemd-creds:NAME`, `file:PATH`(소유자만 읽을 수 있는 일반 파일), `keychain:SERVICE/ACCOUNT`, ... |
+| `totp_secret_from` | `reader`(`mfa { readers = true }`와 함께) 또는 `user`의 base32 TOTP 비밀 값 |
+| `nt_hash_from` | `user`의 NT 해시. 참조에서 읽음: 새로운 기능은 아니며, 비밀번호와 함께 쓰면 거부됨 |
+| `dsn_from` | `users` 블록의 데이터베이스 DSN(비밀번호를 담을 수 있음) |
+| `bind_password_from` | `users` 블록의 `bind_dn`의 비밀번호 |
+| `password_file`, `dsn_file`, `bind_password_file` | **사용 중단됨**: `file:PATH`를 붙인 같은 참조로 읽음 |
+| `password`, `totp_secret`, `nt_hash` | **사용 중단됨**: 비밀 값 자체를 설정에 적은 것. 시작 시 로그에 기록됨 |
+
+비밀 값의 표기는 정확히 하나만 허용됩니다(`password_from`, `password_file`,
+`password` 중 하나, `dsn_from` 또는 `dsn_file` 중 하나, 등등). 비밀 값은 4096바이트
+이하의 비어 있지 않은 한 줄입니다(끝의 줄바꿈은 버려집니다). 스킴이 없거나 잘못된
+참조, 또는 너무 크거나 비어 있거나 여러 줄인 비밀 값은 서버를 시작 시 멈춥니다.
+사용 중단된 표기도 계속 동작하며 시작 시 로그에 기록되지만 비밀 값은 기록되지 않습니다.
+`*_file` 표기는 이제 `file:`을 거치므로 심볼릭 링크와 다른 사용자가 소유한 파일을 거부합니다.
+
+`file:`은 심볼릭 링크와, authnd를 실행하는 사용자가 아닌 다른 사용자가 소유한
+파일을 거부합니다. systemd가 넘겨준 자격 증명은 `systemd-creds:NAME`으로 읽으며,
+`file:$CREDENTIALS_DIRECTORY/NAME`으로는 절대 읽지 않습니다.
+
+systemd에서는 비밀 값을 머신에 봉인하고 자격 증명으로 전달하십시오.
+
+```sh
+printf %s 'the-reader-password' | sudo systemd-creds encrypt --name=reader \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/reader.cred
+```
+
+```ini
+# systemctl edit authnd
+[Service]
+LoadCredentialEncrypted=reader:/etc/credstore.encrypted/reader.cred
+```
+
+`--with-key=host+tpm2`를 쓰고 `--tpm2-pcrs`는 쓰지 마십시오. `--tpm2-pcrs=7`만
+쓰면 펌웨어나 Secure Boot 업데이트 후 자격 증명을 읽을 수 없게 되고, authnd는 시작을
+거부합니다. **복구:** 비밀 값을 오프라인 사본에 보관하고, TPM, 호스트 키 또는 펌웨어가
+바뀐 뒤에는 위 명령으로 다시 봉인한 다음 `systemctl restart authnd`를 실행하십시오.
 
 매번 시작하기 전에:
 
