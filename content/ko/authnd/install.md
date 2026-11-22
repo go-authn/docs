@@ -177,21 +177,26 @@ ReadWritePaths=/etc/authnd/passwords
 
 ### 참조로서의 비밀 값 {#secrets-as-references}
 
-`reader` 블록은 비밀 값을 직접 담는 대신
-[secretsource](https://github.com/go-authn/secretsource) 참조로 지정합니다.
+`reader`, `user`, `users` 블록은 비밀 값을 직접 담는 대신
+[secretsource](https://github.com/go-authn/secretsource) 참조로 지정합니다
+(`user`와 `users`의 필드에는 go-authn/directory v0.27.0을 포함한 authnd가 필요합니다).
 
-| field | meaning |
+| 필드 | 의미 |
 |---|---|
-| `password_from` | the reader's password: `systemd-creds:NAME`, `file:PATH` (a regular file readable by its owner alone), `keychain:SERVICE/ACCOUNT`, ... |
-| `totp_secret_from` | the reader's base32 TOTP secret (with `mfa { readers = true }`) |
-| `password_file` | **deprecated**: read as `password_from = "file:PATH"` |
-| `password`, `totp_secret` | **deprecated**: the secret itself, written in the configuration; logged at startup |
+| `password_from` | `reader` 또는 `user`의 비밀번호: `systemd-creds:NAME`, `file:PATH`(소유자만 읽을 수 있는 일반 파일), `keychain:SERVICE/ACCOUNT`, ... |
+| `totp_secret_from` | `reader`(`mfa { readers = true }`와 함께) 또는 `user`의 base32 TOTP 비밀 값 |
+| `nt_hash_from` | `user`의 NT 해시. 참조에서 읽음: 새로운 기능은 아니며, 비밀번호와 함께 쓰면 거부됨 |
+| `dsn_from` | `users` 블록의 데이터베이스 DSN(비밀번호를 담을 수 있음) |
+| `bind_password_from` | `users` 블록의 `bind_dn`의 비밀번호 |
+| `password_file`, `dsn_file`, `bind_password_file` | **사용 중단됨**: `file:PATH`를 붙인 같은 참조로 읽음 |
+| `password`, `totp_secret`, `nt_hash` | **사용 중단됨**: 비밀 값 자체를 설정에 적은 것. 시작 시 로그에 기록됨 |
 
-`password_from`, `password_file`, `password` 중 정확히 하나만 허용되며,
-`totp_secret`을 `totp_secret_from`과 함께 쓰면 거부됩니다. 비밀 값은 4096바이트
+비밀 값의 표기는 정확히 하나만 허용됩니다(`password_from`, `password_file`,
+`password` 중 하나, `dsn_from` 또는 `dsn_file` 중 하나, 등등). 비밀 값은 4096바이트
 이하의 비어 있지 않은 한 줄입니다(끝의 줄바꿈은 버려집니다). 스킴이 없거나 잘못된
 참조, 또는 너무 크거나 비어 있거나 여러 줄인 비밀 값은 서버를 시작 시 멈춥니다.
-`user`와 `users` 블록은 당분간 자체 `*_file` 표기를 유지합니다.
+사용 중단된 표기도 계속 동작하며 시작 시 로그에 기록되지만 비밀 값은 기록되지 않습니다.
+`*_file` 표기는 이제 `file:`을 거치므로 심볼릭 링크와 다른 사용자가 소유한 파일을 거부합니다.
 
 `file:`은 심볼릭 링크와, authnd를 실행하는 사용자가 아닌 다른 사용자가 소유한
 파일을 거부합니다. systemd가 넘겨준 자격 증명은 `systemd-creds:NAME`으로 읽으며,

@@ -179,23 +179,28 @@ write paths absolute.
 
 ### Secrets as references
 
-A `reader` block names its secrets with
+The `reader`, `user` and `users` blocks name their secrets with
 [secretsource](https://github.com/go-authn/secretsource) references instead of
-holding them:
+holding them (the `user` and `users` fields need authnd with go-authn/directory
+v0.27.0):
 
 | field | meaning |
 |---|---|
-| `password_from` | the reader's password: `systemd-creds:NAME`, `file:PATH` (a regular file readable by its owner alone), `keychain:SERVICE/ACCOUNT`, ... |
-| `totp_secret_from` | the reader's base32 TOTP secret (with `mfa { readers = true }`) |
-| `password_file` | **deprecated**: read as `password_from = "file:PATH"` |
-| `password`, `totp_secret` | **deprecated**: the secret itself, written in the configuration; logged at startup |
+| `password_from` | the password of a `reader` or `user`: `systemd-creds:NAME`, `file:PATH` (a regular file readable by its owner alone), `keychain:SERVICE/ACCOUNT`, ... |
+| `totp_secret_from` | the base32 TOTP secret of a `reader` (with `mfa { readers = true }`) or of a `user` |
+| `nt_hash_from` | a `user`'s NT hash, read from a reference: no new capability, and refused beside a password |
+| `dsn_from` | a `users` block's database DSN (it may hold a password) |
+| `bind_password_from` | the password of a `users` block's `bind_dn` |
+| `password_file`, `dsn_file`, `bind_password_file` | **deprecated**: read as the same reference with `file:PATH` |
+| `password`, `totp_secret`, `nt_hash` | **deprecated**: the secret itself, written in the configuration; logged at startup |
 
-Exactly one of `password_from`, `password_file` and `password` is allowed, and
-`totp_secret` with `totp_secret_from` is refused. A secret is one non-empty line
+Exactly one spelling of a secret is allowed (`password_from`, `password_file` or
+`password`; `dsn_from` or `dsn_file`; and so on). A secret is one non-empty line
 of at most 4096 bytes (a trailing newline is dropped); a reference with no
 scheme, a bad one, or an oversized, empty or multi-line secret stops the server
-at startup. The `user` and `users` blocks keep their own `*_file` spellings for
-now.
+at startup. The deprecated spellings still work and are logged at startup,
+never with the secret; the `*_file` ones now go through `file:`, so they refuse
+a symlink and a file owned by another user.
 
 `file:` refuses a symlink and a file owned by another user than the one authnd
 runs as. A credential handed over by systemd is read with `systemd-creds:NAME`,

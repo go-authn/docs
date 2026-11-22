@@ -174,21 +174,26 @@ ReadWritePaths=/etc/authnd/passwords
 
 ### シークレットは参照で {#secrets-as-references}
 
-`reader` ブロックは、シークレットを保持せず、
-[secretsource](https://github.com/go-authn/secretsource) の参照で指定します。
+`reader`、`user`、`users` ブロックは、シークレットを保持せず、
+[secretsource](https://github.com/go-authn/secretsource) の参照で指定します
+(`user` と `users` のフィールドには、go-authn/directory v0.27.0 を含む authnd が必要です)。
 
 | フィールド | 意味 |
 |---|---|
-| `password_from` | reader のパスワード: `systemd-creds:NAME`、`file:PATH` (所有者だけが読める通常ファイル)、`keychain:SERVICE/ACCOUNT`、... |
-| `totp_secret_from` | reader の base32 TOTP シークレット (`mfa { readers = true }` と併用) |
-| `password_file` | **非推奨**: `password_from = "file:PATH"` として読まれる |
-| `password`、`totp_secret` | **非推奨**: シークレットそのものを設定に書く。起動時にログに出力される |
+| `password_from` | `reader` または `user` のパスワード: `systemd-creds:NAME`、`file:PATH` (所有者だけが読める通常ファイル)、`keychain:SERVICE/ACCOUNT`、... |
+| `totp_secret_from` | `reader` (`mfa { readers = true }` と併用) または `user` の base32 TOTP シークレット |
+| `nt_hash_from` | `user` の NT ハッシュ。参照から読まれる: 新しい機能ではなく、パスワードと併用すると拒否される |
+| `dsn_from` | `users` ブロックのデータベース DSN (パスワードを含むことがある) |
+| `bind_password_from` | `users` ブロックの `bind_dn` のパスワード |
+| `password_file`、`dsn_file`、`bind_password_file` | **非推奨**: `file:PATH` を付けた同じ参照として読まれる |
+| `password`、`totp_secret`、`nt_hash` | **非推奨**: シークレットそのものを設定に書く。起動時にログに出力される |
 
-`password_from`、`password_file`、`password` のうち指定できるのはちょうど一つで、
-`totp_secret` と `totp_secret_from` の併用は拒否されます。シークレットは 4096 バイト以下の
+シークレットの書き方として指定できるのはちょうど一つです (`password_from`、`password_file`、
+`password` のうち一つ。`dsn_from` と `dsn_file` のうち一つ。以下同様)。シークレットは 4096 バイト以下の
 空でない 1 行です (末尾の改行は取り除かれます)。スキームのない参照、不正な参照、または
-大きすぎる、空の、複数行のシークレットがあると、サーバーは起動時に停止します。`user` と
-`users` ブロックは、今のところ独自の `*_file` の書き方のままです。
+大きすぎる、空の、複数行のシークレットがあると、サーバーは起動時に停止します。非推奨の書き方も
+引き続き動作し、起動時にログに出力されますが、シークレット自体は出力されません。`*_file` は
+今後 `file:` を経由するため、シンボリックリンクと、他のユーザーが所有するファイルを拒否します。
 
 `file:` はシンボリックリンクと、authnd の実行ユーザー以外が所有するファイルを
 拒否します。systemd から渡された認証情報は `systemd-creds:NAME` で読み、

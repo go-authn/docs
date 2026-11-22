@@ -177,23 +177,30 @@ Sie Pfade absolut.
 
 ### Geheimnisse als Referenzen {#secrets-as-references}
 
-Ein `reader`-Block benennt seine Geheimnisse mit
+Die Blöcke `reader`, `user` und `users` benennen ihre Geheimnisse mit
 [secretsource](https://github.com/go-authn/secretsource)-Referenzen, statt sie
-selbst zu enthalten:
+selbst zu enthalten (die Felder von `user` und `users` setzen authnd mit
+go-authn/directory v0.27.0 voraus):
 
 | Feld | Bedeutung |
 |---|---|
-| `password_from` | das Passwort des Readers: `systemd-creds:NAME`, `file:PATH` (eine reguläre Datei, die nur ihr Eigentümer lesen darf), `keychain:SERVICE/ACCOUNT`, ... |
-| `totp_secret_from` | das base32-TOTP-Geheimnis des Readers (mit `mfa { readers = true }`) |
-| `password_file` | **veraltet**: wird als `password_from = "file:PATH"` gelesen |
-| `password`, `totp_secret` | **veraltet**: das Geheimnis selbst, in der Konfiguration geschrieben; beim Start protokolliert |
+| `password_from` | das Passwort eines `reader` oder `user`: `systemd-creds:NAME`, `file:PATH` (eine reguläre Datei, die nur ihr Eigentümer lesen darf), `keychain:SERVICE/ACCOUNT`, ... |
+| `totp_secret_from` | das base32-TOTP-Geheimnis eines `reader` (mit `mfa { readers = true }`) oder eines `user` |
+| `nt_hash_from` | der NT-Hash eines `user`, aus einer Referenz gelesen: keine neue Fähigkeit, und neben einem Passwort abgelehnt |
+| `dsn_from` | der Datenbank-DSN eines `users`-Blocks (er kann ein Passwort enthalten) |
+| `bind_password_from` | das Passwort des `bind_dn` eines `users`-Blocks |
+| `password_file`, `dsn_file`, `bind_password_file` | **veraltet**: werden als dieselbe Referenz mit `file:PATH` gelesen |
+| `password`, `totp_secret`, `nt_hash` | **veraltet**: das Geheimnis selbst, in der Konfiguration geschrieben; beim Start protokolliert |
 
-Genau eines von `password_from`, `password_file` und `password` ist erlaubt, und
-`totp_secret` zusammen mit `totp_secret_from` wird abgelehnt. Ein Geheimnis ist
+Genau eine Schreibweise eines Geheimnisses ist erlaubt (`password_from`,
+`password_file` oder `password`; `dsn_from` oder `dsn_file`; und so weiter). Ein
+Geheimnis ist
 eine nicht leere Zeile von höchstens 4096 Byte (ein abschließender Zeilenumbruch
 entfällt); eine Referenz ohne Schema, eine ungültige oder ein zu großes, leeres
-oder mehrzeiliges Geheimnis hält den Server beim Start an. Die Blöcke `user` und
-`users` behalten vorerst ihre eigenen `*_file`-Schreibweisen.
+oder mehrzeiliges Geheimnis hält den Server beim Start an. Die veralteten
+Schreibweisen funktionieren weiterhin und werden beim Start protokolliert, nie
+mit dem Geheimnis; die `*_file`-Schreibweisen laufen jetzt über `file:`, lehnen
+also einen Symlink und eine Datei eines anderen Benutzers ab.
 
 `file:` verweigert einen Symlink und eine Datei, die einem anderen Benutzer
 gehört als dem, unter dem authnd läuft. Ein von systemd übergebenes Credential

@@ -37,14 +37,20 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | 自 v0.11.0 起，描述人员但不证明任何事的内容——`sn`、`uidNumber`、`gidNumber`、`homeDirectory`、`mail`……——以字符串或字符串列表的映射表示；`group` 块也接受它。它们决定条目发布为什么：参见[条目]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 | `object_classes` | 自 v0.12.0 起，该人员（在 `group` 块中则是该组）发布时所带的辅助类，例如 `["siteMember"]`：声明出来，从不推断，并在[站点模式]({{< relref "/authnd/schemas.md#object-classes" >}})中定义 |
 
-这些密钥字段在 `user` 或 `users` 块中保留各自的写法；目前只有
-`reader` 块接受[密钥引用]({{< relref "/authnd/install.md#secrets-as-references" >}})
-（`password_from`、`totp_secret_from`）。
+每个密钥字段也有一种[密钥引用]({{< relref "/authnd/install.md#secrets-as-references" >}})
+写法，应当使用这一种：`user` 上是 `password_from`、`totp_secret_from` 和
+`nt_hash_from`，`users` 块上是 `dsn_from` 和 `bind_password_from`
+（`systemd-creds:NAME`、`file:PATH`，……）。`password`、`password_file`、
+`nt_hash`、`totp_secret`、`dsn_file` 和 `bind_password_file` 是已弃用的
+别名，启动时会记录日志。密码是引用的人员无法通过 `authnd` 的密码修改
+来更改密码：请编辑该引用的来源。
 
 启动时被拒绝，并指名相关人员：
 
-- 同时有 `password` 和 `password_file`——请指明用哪一个；
-- 同时有 `password` 和 `nt_hash`——哈希由密码派生，
+- `password_from`、`password_file` 和 `password` 中同时有多个——请指明用哪一个
+  （同样适用于 `nt_hash` 与 `nt_hash_from`、`totp_secret` 与
+  `totp_secret_from`、`dsn_file` 与 `dsn_from`）；
+- 任何写法的密码与 `nt_hash` 或 `nt_hash_from` 同时出现——哈希由密码派生，
   因此两者可能不一致；
 - 同时有 `authorized_keys` 和 `authorized_keys_file`；
 - 不是 32 个十六进制字符的 `nt_hash`、无法解析的 `authorized_keys` 行、

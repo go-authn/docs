@@ -41,7 +41,9 @@ user "tess" {
 
 The secret can equally come from a database column (the fifth) or an LDAP
 attribute (`totp_attribute`); see [people]({{< relref "/authnd/people.md" >}}).
-A `totp_secret` in a `user` or `reader` block under 128 bits (RFC 4226 R6)
+A `user` takes its secret as `totp_secret_from` too (a
+[secret reference]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+`systemd-creds:NAME` for a sealed one). A TOTP secret in a `user` or `reader` block under 128 bits (RFC 4226 R6)
 stops the server, naming the person, rather than failing every one of their
 logins later:
 
