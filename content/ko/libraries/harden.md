@@ -87,7 +87,7 @@ v0.3.0부터 (theca에서 옮겨 옴): 키 자료를 스왑, 코어 파일, 디�
 import "github.com/go-authn/harden/memlock"
 
 region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
-if err != nil { ... } // 거부됨: 알리거나 중단
+if err != nil { ... } // refused: say so, or stop
 defer region.Release()
 ```
 

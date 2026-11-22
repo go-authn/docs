@@ -93,7 +93,7 @@ fichiers core et des débogueurs.
 import "github.com/go-authn/harden/memlock"
 
 region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
-if err != nil { ... } // refusé : le dire, ou s'arrêter
+if err != nil { ... } // refused: say so, or stop
 defer region.Release()
 ```
 

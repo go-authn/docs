@@ -96,7 +96,7 @@ Core-Dateien und aus Debuggern heraushalten.
 import "github.com/go-authn/harden/memlock"
 
 region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
-if err != nil { ... } // abgelehnt: melden oder abbrechen
+if err != nil { ... } // refused: say so, or stop
 defer region.Release()
 ```
 

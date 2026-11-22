@@ -206,7 +206,7 @@ mail {
   username      = "authn-bridge"
   password_file = "/etc/authn-bridge/smtp.password"  # the one source of the SMTP password
   from          = "authn-bridge@example.org"
-  # window      = "10m"                              # tiempo mínimo entre dos correos a una cuenta (1m a 24h)
+  # window      = "10m"                              # least time between two mails to one account (1m to 24h)
 }
 ```
 

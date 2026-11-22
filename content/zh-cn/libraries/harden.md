@@ -80,7 +80,7 @@ wireguard 在自己的一个小文件中只保存裸的版本号和签发时间�
 import "github.com/go-authn/harden/memlock"
 
 region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
-if err != nil { ... } // 被拒绝：报告出来，或者停下
+if err != nil { ... } // refused: say so, or stop
 defer region.Release()
 ```
 

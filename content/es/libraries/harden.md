@@ -93,7 +93,7 @@ swap, de los archivos core y de los depuradores.
 import "github.com/go-authn/harden/memlock"
 
 region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
-if err != nil { ... } // rechazado: decirlo, o detenerse
+if err != nil { ... } // refused: say so, or stop
 defer region.Release()
 ```
 

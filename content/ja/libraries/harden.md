@@ -88,7 +88,7 @@ v0.3.0 から (theca から移設): 鍵素材をスワップ、コアファイ�
 import "github.com/go-authn/harden/memlock"
 
 region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
-if err != nil { ... } // 拒否された: 報告するか、中止する
+if err != nil { ... } // refused: say so, or stop
 defer region.Release()
 ```
 
