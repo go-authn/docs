@@ -1,0 +1,265 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – 키</title><link>https://go-authn.github.io/docs/0.11/ko/tags/%ED%82%A4/</link><description>Recent content in 키 on go-authn</description><generator>Hugo -- gohugo.io</generator><language>ko</language><atom:link href="https://go-authn.github.io/docs/0.11/ko/tags/%ED%82%A4/index.xml" rel="self" type="application/rss+xml"/><item><title>pkcs12 — 업로드된 .p12 안의 키와 인증서</title><link>https://go-authn.github.io/docs/0.11/ko/libraries/pkcs12/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/ko/libraries/pkcs12/</guid><description>
+&lt;p&gt;&lt;strong&gt;누군가 보낸 이 파일 안에는 어떤 개인 키와 어떤 인증서가 들어 있는가?&lt;/strong&gt;
+PKCS#12(&lt;a href="https://www.rfc-editor.org/rfc/rfc7292" target="_blank" rel="noopener"&gt;RFC 7292&lt;/a&gt;)는 내보내기 도구가 키,그 인증서, 나머지 체인을 써 넣는 &lt;code&gt;.p12&lt;/code&gt; / &lt;code&gt;.pfx&lt;/code&gt; 컨테이너입니다.&lt;code&gt;golang.org/x/crypto/pkcs12&lt;/code&gt;는 더 이상 쓰이지 않으며 SHA-1과 3DES/RC2에 멈춰
+있어서, OpenSSL 3과 4 및 최신 Windows가 기본으로 쓰는 것(PBES2, AES, SHA-2 MAC)을
+거부합니다. 이 모듈은 표준 라이브러리 외에 의존성 없이 그것들을 읽으며,&lt;strong&gt;신뢰할 수 없는 업로드&lt;/strong&gt;를 위해 만들어졌습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/pkcs12@v0.1.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;strong&gt;디코딩만&lt;/strong&gt; 합니다. 인코더는 없습니다. 체인을 신뢰할지는 &lt;code&gt;crypto/x509&lt;/code&gt;의&lt;code&gt;Verify&lt;/code&gt;가 맡는 별개의 결정입니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="example"&gt;예제&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
+&lt;a href="#example" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;package&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;errors&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;os&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;github.com/go-authn/pkcs12&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;os&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;ReadFile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;upload.p12&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;panic&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;pkcs12&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Decode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;the password&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;switch&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;case&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;errors&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Is&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;pkcs12&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ErrIncorrectPassword&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;ask again:&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;case&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// hostile, unsupported, too costly...&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;refused:&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// b.PrivateKey *rsa.PrivateKey, *ecdsa.PrivateKey, ed25519.PrivateKey or *ecdh.PrivateKey&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// b.Certificate the certificate holding the key&amp;#39;s public half&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// b.CACerts every other certificate, in file order&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;certificate for&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Certificate&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Subject&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;and&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;CACerts&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;more&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;Decode(data, password, *Options) (*Bundle, error)&lt;/code&gt;는 기본값을 쓰려면 &lt;code&gt;nil&lt;/code&gt;을
+받습니다. &lt;code&gt;Bundle&lt;/code&gt;에는 키, 그 공개 쪽을 가진 인증서, 나머지 인증서가 파일 순서대로
+들어 있습니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="options-and-their-defaults"&gt;옵션과 기본값&lt;span class="hx:absolute hx:-mt-20" id="options-and-their-defaults"&gt;&lt;/span&gt;
+&lt;a href="#options-and-their-defaults" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;0인 필드는 기본값을 뜻하며, &lt;strong&gt;어떤 필드도 한도를 끌 수 없습니다&lt;/strong&gt;.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;필드&lt;/th&gt;
+&lt;th&gt;기본값&lt;/th&gt;
+&lt;th&gt;의미&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxInputSize&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;8 MiB&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;len(data)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxIterations&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;1 000 000&lt;/td&gt;
+&lt;td&gt;키 유도 1회의 반복 횟수&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxWork&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;5 000 000&lt;/td&gt;
+&lt;td&gt;파일 전체의 반복 횟수 x 출력 블록 수&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxDepth&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;16&lt;/td&gt;
+&lt;td&gt;BER 중첩과 구성된 문자열 조각의 중첩&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxBags&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;1024&lt;/td&gt;
+&lt;td&gt;파일 안의 SafeBag&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxAuthSafes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;32&lt;/td&gt;
+&lt;td&gt;AuthenticatedSafe의 ContentInfo&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxCertSize&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;32 KiB&lt;/td&gt;
+&lt;td&gt;인증서 하나의 DER&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxCertBytes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;512 KiB&lt;/td&gt;
+&lt;td&gt;모든 인증서를 합친 DER&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxRSABits&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;8192&lt;/td&gt;
+&lt;td&gt;RSA 모듈러스&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;AllowNoMAC&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;무결성 MAC이 없는 파일(&lt;code&gt;openssl pkcs12 -nomac&lt;/code&gt;)을 읽음. 아니면 &lt;code&gt;ErrNoMAC&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;NoPassword&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;파일이 비밀번호 없이 내보내졌음. 빈 비밀번호 &lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt;와는 다름&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;두 불리언은 이 형식의 두 가지 모호함입니다. &lt;code&gt;AllowNoMAC&lt;/code&gt;을 쓰면 내용을 인증하는
+것이 없어지고, 틀린 비밀번호는 복호화 실패로만 알 수 있습니다. &lt;strong&gt;빈&lt;/strong&gt; 비밀번호(&lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt;)와 &lt;strong&gt;없는&lt;/strong&gt; 비밀번호(&lt;code&gt;NoPassword&lt;/code&gt;)는 서로 다른 키를 유도하며 둘 다 동작합니다.&lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt;이고 &lt;code&gt;NoPassword&lt;/code&gt;가 false이면 &lt;code&gt;Decode&lt;/code&gt;는 빈 것을 먼저, 없는 것을 그다음에
+시도합니다. 내보내기 도구마다 무엇을 썼는지가 다르기 때문입니다. &lt;code&gt;NoPassword&lt;/code&gt;가
+true이면 없는 것만 시도하며, 비밀번호 인자는 &lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt;여야 합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-reads"&gt;읽을 수 있는 것&lt;span class="hx:absolute hx:-mt-20" id="what-it-reads"&gt;&lt;/span&gt;
+&lt;a href="#what-it-reads" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;계층&lt;/th&gt;
+&lt;th&gt;지원&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;암호화&lt;/td&gt;
+&lt;td&gt;PBES2(&lt;a href="https://www.rfc-editor.org/rfc/rfc8018" target="_blank" rel="noopener"&gt;RFC 8018&lt;/a&gt;), HMAC-SHA-1/224/256/384/512 위의 PBKDF2와 AES-128/192/256-CBC&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;구형 암호화&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;pbeWithSHAAnd3-KeyTripleDES-CBC&lt;/code&gt;, &lt;code&gt;pbeWithSHAAnd2-KeyTripleDES-CBC&lt;/code&gt;, &lt;code&gt;pbeWithSHAAnd40BitRC2-CBC&lt;/code&gt;와 128비트 변형. RC2는 모듈 안에서 구현&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;무결성&lt;/td&gt;
+&lt;td&gt;SHA-1/224/256/384/512 HMAC MAC(RFC 7292 부록 B의 KDF)과 &lt;strong&gt;PBMAC1&lt;/strong&gt;(&lt;a href="https://www.rfc-editor.org/rfc/rfc9579" target="_blank" rel="noopener"&gt;RFC 9579&lt;/a&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;비밀번호&lt;/td&gt;
+&lt;td&gt;부록 B.1에 따른 BMPString, BMP 밖의 문자는 서로게이트 쌍&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;인코딩&lt;/td&gt;
+&lt;td&gt;BER. Windows와 Java가 쓰는 부정 길이와 구성된 OCTET STRING 포함&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;백&lt;/td&gt;
+&lt;td&gt;암호화된 키 백과 평문 키 백, 인증서 백. CRL, 시크릿, 세이프 콘텐츠 백은 건너뜀&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;ErrUnsupported&lt;/code&gt;로 거부되는 것:&lt;/strong&gt; 공개 키 기반 무결성 및 프라이버시 모드(&lt;code&gt;signedData&lt;/code&gt;, &lt;code&gt;envelopedData&lt;/code&gt;), RC4, scrypt, PKCS#12 고유의 것 외의 PBES1,PBMAC1 안의 SHA-1, 인증서나 PKCS#8 키 안의 BER(DER이 아닌 것).&lt;/p&gt;
+&lt;h2 data-hextra-search-id="errors"&gt;오류&lt;span class="hx:absolute hx:-mt-20" id="errors"&gt;&lt;/span&gt;
+&lt;a href="#errors" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;오류&lt;/th&gt;
+&lt;th&gt;의미&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrMalformed&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;이 패키지가 읽을 수 있는 PKCS#12 파일이 아님&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrUnsupported&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;읽을 수 있지만 여기서 구현하지 않은 것을 사용함&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrLimit&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;Options&lt;/code&gt;의 한도를 넘게 됨. 작업 전에 거부됨&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrIncorrectPassword&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;틀린 비밀번호와 변조된 파일. 설계상 같은 답&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrNoMAC&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;MAC이 없고 &lt;code&gt;AllowNoMAC&lt;/code&gt;이 설정되지 않음&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrNoPrivateKey&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;파일에 개인 키가 없음&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrMultipleKeys&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;파일에 개인 키가 둘 이상 있음&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrNoCertificate&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;개인 키에 맞는 인증서가 없음&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrPassword&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;사용할 수 없는 비밀번호&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;모든 거부는 이 중 정확히 하나를 감싸며, 퍼즈 대상은 이를 불변 조건으로 유지합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-security-bounds"&gt;보안 한도&lt;span class="hx:absolute hx:-mt-20" id="the-security-bounds"&gt;&lt;/span&gt;
+&lt;a href="#the-security-bounds" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;위의 모든 한도는 &lt;strong&gt;작업 전에&lt;/strong&gt; 검사되고, 모든 길이 필드는 무언가를 할당하기 전에
+실제로 존재하는 바이트와 대조됩니다. 512바이트를 넘는 솔트와 1024자를 넘는
+비밀번호는 거부됩니다.&lt;/p&gt;
+&lt;p&gt;MAC은 &lt;strong&gt;무엇이든 복호화하기 전에, 상수 시간으로&lt;/strong&gt; 검증됩니다.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;crypto/x509&lt;/code&gt;는 수천 개의 작은 이름으로 이루어진 인증서에서는 그 크기의 43배에서
+52배까지 할당하고, &lt;code&gt;crypto/rsa&lt;/code&gt;는 키가 선언한 수에 대한 산술로 키를 검증하므로
+모듈러스보다 훨씬 긴 인수는 초선형 CPU를 소모합니다. 둘 다 밖에서는 고칠 수 없으므로
+그곳에 닿는 것을 먼저 제한합니다. 인증서는 &lt;code&gt;MaxCertSize&lt;/code&gt;와 &lt;code&gt;MaxCertBytes&lt;/code&gt;로,모든 PKCS#8 키(최대 32 KiB)는 &lt;code&gt;encoding/asn1&lt;/code&gt;로 읽고, 모듈러스가 &lt;code&gt;MaxRSABits&lt;/code&gt;를
+넘거나, 인수나 지수가 모듈러스가 허용하는 것보다 길거나, 수가 양수가 아니거나,다중 소수인 경우 유형이 있는 오류로 거부합니다(&lt;code&gt;ErrUnsupported&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;요청당 메모리.&lt;/strong&gt; 기본 옵션에서 악의적인 파일은 &lt;code&gt;Decode&lt;/code&gt; 한 번에 약 25 MB를
+할당하게 합니다(함께 측정: 최악의 인증서와 받아들이는 가장 큰 키, 8192비트에서
+25.1 MB, 그중 약 20 MB는 반환될 때까지 살아 있음). 파일은 530 KB입니다. 업로드를
+디코딩하는 서비스는 예를 들어 세마포어로 진행 중인 디코딩 수를 제한하고, 짧은
+체인만 기대한다면 &lt;code&gt;MaxCertBytes&lt;/code&gt;를 낮춰야 합니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="limitations"&gt;제한 사항&lt;span class="hx:absolute hx:-mt-20" id="limitations"&gt;&lt;/span&gt;
+&lt;a href="#limitations" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;CRT 값이 없는 RSA 키는 거부됩니다&lt;/strong&gt;(&lt;code&gt;ErrUnsupported&lt;/code&gt;). &lt;code&gt;Dp&lt;/code&gt;, &lt;code&gt;Dq&lt;/code&gt;, &lt;code&gt;Qinv&lt;/code&gt;가
+없는 키는 &lt;code&gt;crypto/x509&lt;/code&gt;가 보기 전에 거부됩니다. RFC 8017은 이를 요구하고 모든
+내보내기 도구(OpenSSL, Windows, Java의 keytool)가 쓰지만, &lt;code&gt;crypto/x509&lt;/code&gt;는 빠진
+값을 큰 수 연산으로 유도합니다. 8192비트에서 16.4 MB와 21 744번의 할당, 값이
+있으면 0.36 MB와 618번입니다.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/go-authn/pkcs12/issues/2" target="_blank" rel="noopener"&gt;go-authn/pkcs12#2&lt;/a&gt;, 열림, LOW.&lt;/strong&gt;
+&lt;code&gt;GODEBUG=x509rsacrt=0&lt;/code&gt;에서는 &lt;code&gt;crypto/x509&lt;/code&gt;가 잘못된 CRT 값을 버리고 다시 계산하며,사전 검사는 그 값이 &lt;em&gt;존재하는지&lt;/em&gt;만 확인합니다. CRT 값이 틀린 8192비트 키는 이를
+통과하고, 최악의 인증서와 함께라면 디코딩이 39.4 MB(비율 74.7)에 이르러 테스트가
+단언하는 한도를 벗어납니다. 운영자가 켜야 하며, 모듈의 &lt;code&gt;go.mod&lt;/code&gt;는 그 설정이
+기본값이 아닌 Go 버전을 선언합니다. 기본 설정에서는 같은 입력이 &lt;code&gt;ErrMalformed&lt;/code&gt;로
+거부됩니다.&lt;/li&gt;
+&lt;li&gt;디코딩만 하며 체인을 판단하지 않습니다.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;무엇과 대조되는가&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
+&lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;OpenSSL이 판정합니다.&lt;/strong&gt; OpenSSL 4.1이 쓴 23개 파일(AES/PBES2, &lt;code&gt;-legacy&lt;/code&gt;의 3DES와
+RC2, &lt;code&gt;-nomac&lt;/code&gt;, 여러 인증서, RSA, EC와 Ed25519, PBMAC1)이 테스트에 있으며, 각 파일에
+무엇이 들었는지 OpenSSL 자신이 말하는 것을 기록한 매니페스트가 있습니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;증폭.&lt;/strong&gt; &lt;code&gt;TestAmplification&lt;/code&gt;은 많은 작은 백, 많은 인증서, 깊은 부정 길이 중첩, 긴
+OCTET STRING 연쇄, 4 GiB 길이 주장에 대해 할당된 바이트를 입력 바이트에 대해
+제한하고, 거부가 &lt;code&gt;crypto/x509&lt;/code&gt; 호출 전에 일어남을 단언합니다. 모듈은 퍼징도
+하고(코퍼스 커밋됨), 블록 커버리지 100 %이며, &lt;code&gt;-race&lt;/code&gt;와 &lt;code&gt;govulncheck&lt;/code&gt;로 실행됩니다.&lt;/p&gt;
+&lt;p&gt;**&lt;code&gt;software.sslmate.com/src/go-pkcs12&lt;/code&gt;**는 별도의 &lt;code&gt;oracle/&lt;/code&gt; 모듈에 있습니다. 둘 다
+시도할 수 있는 23개 파일 중 둘 다 18개를 읽고, 리프, 체인 순서, 키가 바이트 단위로
+같습니다. 나머지 5개(RC2-128, SHA-384 MAC, MAC 없음, BMP 밖의 문자를 가진 두
+비밀번호)는 이 패키지만 읽습니다. 상대는 읽는데 이쪽이 거부하는 것은 없습니다.&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.11/ko/libraries/cms/"&gt;cms&lt;/a&gt;와 함께 씁니다. 여기서 &lt;code&gt;.p12&lt;/code&gt;를 디코딩하고,거기서 서명합니다.&lt;/p&gt;</description></item></channel></rss>

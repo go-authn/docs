@@ -1654,6 +1654,12 @@ modules that are published, versioned and tested on their own. Each answers&lt;s
 &lt;td&gt;&lt;code&gt;github.com/go-authn/cms&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.11/libraries/pkcs12/"&gt;pkcs12&lt;/a&gt;&lt;/td&gt;
+&lt;td&gt;what private key and certificates are inside this &lt;code&gt;.p12&lt;/code&gt; upload?&lt;/td&gt;
+&lt;td&gt;v0.1.0&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;github.com/go-authn/pkcs12&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.11/libraries/servercert/"&gt;servercert&lt;/a&gt;&lt;/td&gt;
 &lt;td&gt;where does a daemon&amp;rsquo;s TLS server certificate come from?&lt;/td&gt;
 &lt;td&gt;v0.6.0&lt;/td&gt;
@@ -4257,7 +4263,278 @@ purpose.&lt;/p&gt;
 signer-identifier forms. &lt;code&gt;openssl cms -verify&lt;/code&gt; and this package give the same
 verdict on every one and on its tampered variants: 34 of 34.&lt;/p&gt;
 &lt;p&gt;On two points the package is &lt;strong&gt;stricter&lt;/strong&gt; than OpenSSL 4.1.0, which accepts a
-primitive signed-attributes tag and Ed25519 over SHA-256.&lt;/p&gt;</description></item><item><title>servercert — where a daemon's TLS certificate comes from</title><link>https://go-authn.github.io/docs/0.11/libraries/servercert/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/libraries/servercert/</guid><description>
+primitive signed-attributes tag and Ed25519 over SHA-256.&lt;/p&gt;</description></item><item><title>pkcs12 — the key and certificates inside a .p12 upload</title><link>https://go-authn.github.io/docs/0.11/libraries/pkcs12/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/libraries/pkcs12/</guid><description>
+&lt;p&gt;&lt;strong&gt;What private key and certificates are inside this file somebody sent us?&lt;/strong&gt;
+PKCS#12 (&lt;a href="https://www.rfc-editor.org/rfc/rfc7292" target="_blank" rel="noopener"&gt;RFC 7292&lt;/a&gt;) is the &lt;code&gt;.p12&lt;/code&gt; /&lt;code&gt;.pfx&lt;/code&gt; container an exporter writes a key, its certificate and the rest of the
+chain into. &lt;code&gt;golang.org/x/crypto/pkcs12&lt;/code&gt; is deprecated and frozen on SHA-1 and
+3DES/RC2, so it rejects what OpenSSL 3 and 4 and current Windows write by
+default (PBES2, AES, SHA-2 MACs). This module reads those, with no dependency
+beyond the standard library, and is built for &lt;strong&gt;untrusted uploads&lt;/strong&gt;.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/pkcs12@v0.1.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;It &lt;strong&gt;decodes only&lt;/strong&gt;: there is no encoder. Whether to trust the chain is&lt;code&gt;crypto/x509&lt;/code&gt;&amp;rsquo;s &lt;code&gt;Verify&lt;/code&gt;, a separate decision.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="example"&gt;Example&lt;span class="hx:absolute hx:-mt-20" id="example"&gt;&lt;/span&gt;
+&lt;a href="#example" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;package&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;main&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kn"&gt;import&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;errors&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;fmt&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;os&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;github.com/go-authn/pkcs12&amp;#34;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="kd"&gt;func&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;os&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;ReadFile&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;upload.p12&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;panic&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;pkcs12&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Decode&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;data&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;the password&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;switch&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;case&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;errors&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Is&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;pkcs12&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ErrIncorrectPassword&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;ask again:&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;case&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// hostile, unsupported, too costly...&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;refused:&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;return&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// b.PrivateKey *rsa.PrivateKey, *ecdsa.PrivateKey, ed25519.PrivateKey or *ecdh.PrivateKey&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// b.Certificate the certificate holding the key&amp;#39;s public half&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// b.CACerts every other certificate, in file order&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;fmt&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Println&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;certificate for&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Certificate&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Subject&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;and&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;b&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;CACerts&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;more&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;Decode(data, password, *Options) (*Bundle, error)&lt;/code&gt; takes &lt;code&gt;nil&lt;/code&gt; for the
+defaults. The &lt;code&gt;Bundle&lt;/code&gt; holds the key, the certificate whose public half it is,and the others in file order.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="options-and-their-defaults"&gt;Options and their defaults&lt;span class="hx:absolute hx:-mt-20" id="options-and-their-defaults"&gt;&lt;/span&gt;
+&lt;a href="#options-and-their-defaults" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A zero field means the default, and &lt;strong&gt;no field can switch a bound off&lt;/strong&gt;.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;field&lt;/th&gt;
+&lt;th&gt;default&lt;/th&gt;
+&lt;th&gt;meaning&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxInputSize&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;8 MiB&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;len(data)&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxIterations&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;1 000 000&lt;/td&gt;
+&lt;td&gt;iterations of any one key derivation&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxWork&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;5 000 000&lt;/td&gt;
+&lt;td&gt;iterations x output blocks over the whole file&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxDepth&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;16&lt;/td&gt;
+&lt;td&gt;BER nesting and constructed-string chunk nesting&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxBags&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;1024&lt;/td&gt;
+&lt;td&gt;SafeBags in the file&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxAuthSafes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;32&lt;/td&gt;
+&lt;td&gt;ContentInfos in the AuthenticatedSafe&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxCertSize&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;32 KiB&lt;/td&gt;
+&lt;td&gt;DER of one certificate&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxCertBytes&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;512 KiB&lt;/td&gt;
+&lt;td&gt;DER of all certificates together&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;MaxRSABits&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;8192&lt;/td&gt;
+&lt;td&gt;RSA modulus&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;AllowNoMAC&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;read a file with no integrity MAC (&lt;code&gt;openssl pkcs12 -nomac&lt;/code&gt;); otherwise it is &lt;code&gt;ErrNoMAC&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;NoPassword&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;false&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;the file was exported with no password at all, as opposed to the empty password &lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;The two booleans are the format&amp;rsquo;s two ambiguities. With &lt;code&gt;AllowNoMAC&lt;/code&gt;, nothing
+authenticates the content, and a wrong password is only noticed by a failed
+decryption. The &lt;strong&gt;empty&lt;/strong&gt; password (&lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt;) and the &lt;strong&gt;absent&lt;/strong&gt; password(&lt;code&gt;NoPassword&lt;/code&gt;) derive different keys and both work: with &lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt; and &lt;code&gt;NoPassword&lt;/code&gt;
+false, &lt;code&gt;Decode&lt;/code&gt; tries the empty one first and then the absent one, because
+exporters disagree about which they wrote; with &lt;code&gt;NoPassword&lt;/code&gt; true only the
+absent one is tried, and the password argument must be &lt;code&gt;&amp;quot;&amp;quot;&lt;/code&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="what-it-reads"&gt;What it reads&lt;span class="hx:absolute hx:-mt-20" id="what-it-reads"&gt;&lt;/span&gt;
+&lt;a href="#what-it-reads" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;layer&lt;/th&gt;
+&lt;th&gt;supported&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;encryption&lt;/td&gt;
+&lt;td&gt;PBES2 (&lt;a href="https://www.rfc-editor.org/rfc/rfc8018" target="_blank" rel="noopener"&gt;RFC 8018&lt;/a&gt;) with PBKDF2 over HMAC-SHA-1/224/256/384/512 and AES-128/192/256-CBC&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;legacy encryption&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;pbeWithSHAAnd3-KeyTripleDES-CBC&lt;/code&gt;, &lt;code&gt;pbeWithSHAAnd2-KeyTripleDES-CBC&lt;/code&gt;, &lt;code&gt;pbeWithSHAAnd40BitRC2-CBC&lt;/code&gt; and the 128-bit variant; RC2 is implemented in the module&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;integrity&lt;/td&gt;
+&lt;td&gt;HMAC MAC with SHA-1/224/256/384/512 (RFC 7292 Appendix B KDF), and &lt;strong&gt;PBMAC1&lt;/strong&gt; (&lt;a href="https://www.rfc-editor.org/rfc/rfc9579" target="_blank" rel="noopener"&gt;RFC 9579&lt;/a&gt;)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;passwords&lt;/td&gt;
+&lt;td&gt;BMPString per Appendix B.1, non-BMP characters as surrogate pairs&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;encoding&lt;/td&gt;
+&lt;td&gt;BER, including indefinite lengths and constructed OCTET STRINGs, which Windows and Java write&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;bags&lt;/td&gt;
+&lt;td&gt;shrouded and plain key bags, certificate bags; CRL, secret and safe-contents bags are skipped&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;strong&gt;Refused as &lt;code&gt;ErrUnsupported&lt;/code&gt;:&lt;/strong&gt; public-key integrity and privacy modes(&lt;code&gt;signedData&lt;/code&gt;, &lt;code&gt;envelopedData&lt;/code&gt;), RC4, scrypt, PBES1 other than the PKCS#12
+ones, SHA-1 inside PBMAC1, and BER (rather than DER) inside a certificate or a
+PKCS#8 key.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="errors"&gt;Errors&lt;span class="hx:absolute hx:-mt-20" id="errors"&gt;&lt;/span&gt;
+&lt;a href="#errors" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;error&lt;/th&gt;
+&lt;th&gt;means&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrMalformed&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;not a PKCS#12 file this package can read&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrUnsupported&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;readable, using something not implemented here&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrLimit&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;a bound of &lt;code&gt;Options&lt;/code&gt; would be exceeded; refused before the work&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrIncorrectPassword&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;a wrong password and a tampered file, the same answer by design&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrNoMAC&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;no MAC, and &lt;code&gt;AllowNoMAC&lt;/code&gt; is not set&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrNoPrivateKey&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;no private key in the file&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrMultipleKeys&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;more than one private key in the file&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrNoCertificate&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;no certificate matches the private key&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;ErrPassword&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;a password that cannot be used&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;Every refusal wraps exactly one of them, and the fuzz target holds that as an
+invariant.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-security-bounds"&gt;The security bounds&lt;span class="hx:absolute hx:-mt-20" id="the-security-bounds"&gt;&lt;/span&gt;
+&lt;a href="#the-security-bounds" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Every bound above is checked &lt;strong&gt;before the work&lt;/strong&gt;, and every length field is
+checked against the bytes actually present before anything is allocated. Salts
+over 512 bytes and passwords over 1024 characters are refused.&lt;/p&gt;
+&lt;p&gt;The MAC is verified, &lt;strong&gt;in constant time, before anything is decrypted&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;crypto/x509&lt;/code&gt; allocates up to 43 to 52 times a certificate&amp;rsquo;s size when it is
+made of thousands of tiny names, and &lt;code&gt;crypto/rsa&lt;/code&gt; validates a key by arithmetic
+on the numbers it declares, so factors far longer than the modulus cost
+superlinear CPU. Neither can be fixed from outside, so what reaches them is
+bounded first: certificates by &lt;code&gt;MaxCertSize&lt;/code&gt; and &lt;code&gt;MaxCertBytes&lt;/code&gt;, and every
+PKCS#8 key (32 KiB at most) is read with &lt;code&gt;encoding/asn1&lt;/code&gt; and refused, typed,when its modulus exceeds &lt;code&gt;MaxRSABits&lt;/code&gt;, a factor or exponent is longer than the
+modulus allows, a number is not positive, or it is multi-prime(&lt;code&gt;ErrUnsupported&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Memory per request.&lt;/strong&gt; With the default options, a hostile file makes one&lt;code&gt;Decode&lt;/code&gt; allocate about 25 MB (measured jointly: worst certificates and the
+largest accepted key, 8192 bits, 25.1 MB, of which about 20 MB stay live until
+it returns) for a file of 530 KB. A service decoding uploads should cap the
+decodes in flight, for instance with a semaphore, and lower &lt;code&gt;MaxCertBytes&lt;/code&gt; if
+it expects only short chains.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="limitations"&gt;Limitations&lt;span class="hx:absolute hx:-mt-20" id="limitations"&gt;&lt;/span&gt;
+&lt;a href="#limitations" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;RSA keys without CRT values are refused&lt;/strong&gt; (&lt;code&gt;ErrUnsupported&lt;/code&gt;). A key lacking&lt;code&gt;Dp&lt;/code&gt;, &lt;code&gt;Dq&lt;/code&gt; and &lt;code&gt;Qinv&lt;/code&gt; is refused before &lt;code&gt;crypto/x509&lt;/code&gt; sees it. RFC 8017
+requires them and every exporter writes them (OpenSSL, Windows, Java
+keytool), but &lt;code&gt;crypto/x509&lt;/code&gt; derives missing ones with big-number arithmetic:16.4 MB and 21 744 allocations at 8192 bits, against 0.36 MB and 618 with
+them.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/go-authn/pkcs12/issues/2" target="_blank" rel="noopener"&gt;go-authn/pkcs12#2&lt;/a&gt;, open,LOW.&lt;/strong&gt; Under &lt;code&gt;GODEBUG=x509rsacrt=0&lt;/code&gt;, &lt;code&gt;crypto/x509&lt;/code&gt; drops invalid CRT values
+and computes them again, and the preflight checks only that they are&lt;em&gt;present&lt;/em&gt;: an 8192-bit key with wrong CRT values then passes it, and with the
+worst certificates the decode reaches 39.4 MB (ratio 74.7), outside the bound
+the tests assert. It needs the operator to opt in, and the module&amp;rsquo;s &lt;code&gt;go.mod&lt;/code&gt;
+declares a Go version for which that setting is not the default; with
+default settings the same input is refused as &lt;code&gt;ErrMalformed&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;It decodes only, and does not judge the chain.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;What it is checked against&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
+&lt;a href="#what-it-is-checked-against" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;OpenSSL is the judge.&lt;/strong&gt; 23 files written by OpenSSL 4.1 (AES/PBES2,&lt;code&gt;-legacy&lt;/code&gt; 3DES and RC2, &lt;code&gt;-nomac&lt;/code&gt;, several certificates, RSA, EC and Ed25519,PBMAC1) are in the tests, with a manifest of what OpenSSL itself says each
+holds.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Amplification.&lt;/strong&gt; &lt;code&gt;TestAmplification&lt;/code&gt; bounds allocated bytes over input bytes
+on many tiny bags, many certificates, deep indefinite nesting, long OCTET
+STRING chains and 4 GiB length claims, and asserts that the refusals happen
+before &lt;code&gt;crypto/x509&lt;/code&gt; is called. The module is also fuzzed (corpus committed),holds 100 % block coverage and is run with &lt;code&gt;-race&lt;/code&gt; and &lt;code&gt;govulncheck&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;software.sslmate.com/src/go-pkcs12&lt;/code&gt;&lt;/strong&gt;, in a separate &lt;code&gt;oracle/&lt;/code&gt; module: on
+the 23 files both can attempt, both read 18 with byte-identical leaf, chain
+order and key. Only this package reads the other 5 (RC2-128, a SHA-384 MAC, no
+MAC, and two passwords with characters outside the BMP); there is none the
+other reads and this one refuses.&lt;/p&gt;
+&lt;p&gt;It pairs with &lt;a href="https://go-authn.github.io/docs/0.11/libraries/cms/"&gt;cms&lt;/a&gt;: decode a &lt;code&gt;.p12&lt;/code&gt; here,sign there.&lt;/p&gt;</description></item><item><title>servercert — where a daemon's TLS certificate comes from</title><link>https://go-authn.github.io/docs/0.11/libraries/servercert/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/libraries/servercert/</guid><description>
 &lt;p&gt;&lt;strong&gt;Where does a daemon&amp;rsquo;s TLS server certificate come from?&lt;/strong&gt; A certificate and
 key on disk, re-read when they change, or an ACME CA through&lt;a href="https://pkg.go.dev/golang.org/x/crypto/acme/autocert" target="_blank" rel="noopener"&gt;&lt;code&gt;autocert&lt;/code&gt;&lt;/a&gt;, External
 Account Binding included.&lt;/p&gt;
