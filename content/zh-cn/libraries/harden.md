@@ -2,14 +2,14 @@
 title: "harden：两个共用的安全原语"
 linkTitle: "harden"
 weight: 36
-description: "go-authn/harden 收录了 go-authn 各个仓库曾各自复制的两个安全原语：仅限 https 或环回的重定向规则，以及原子写入的私有文件。"
+description: "go-authn/harden 收录了 go-authn 各个仓库曾各自复制的安全原语：仅限 https 或环回的重定向规则、原子写入的私有文件，以及带有 core dump 防护的内存锁定。"
 tags: [库, harden, 安全]
 ---
 
 **go-authn 的每个仓库都复制了什么？** 两条小规则，现在合并在一个除标准库外没有任何依赖的模块中。
 
 ```sh
-go get github.com/go-authn/harden@v0.2.0
+go get github.com/go-authn/harden@v0.3.0
 ```
 
 ## `redirect` {#redirect}
@@ -71,6 +71,34 @@ err := privfile.Write(path, ticket)
 go-authn/wireguard 和 go-authn/revocation 都会跨重启保留一个排序下限，但它们并不共用下限：
 wireguard 在自己的一个小文件中只保存裸的版本号和签发时间，revocation 保存整份已签名的列表，
 并通过验证它来重新计算下限。只有文件写入是共同的，那就是 `privfile`。
+
+## `memlock` {#memlock}
+
+自 v0.3.0 起（自 theca 迁入）：让密钥材料远离交换区、core 文件和调试器。
+
+```go
+import "github.com/go-authn/harden/memlock"
+
+region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
+if err != nil { ... } // 被拒绝：报告出来，或者停下
+defer region.Release()
+```
+
+| 函数 | |
+|---|---|
+| `Lock(p, n) (*Region, error)` | 用 `mlock`（Linux、macOS、各 BSD）或 `VirtualLock`（Windows）锁定该范围的页。**拒绝就是错误**：不会有任何东西保持锁定，由调用方决定。两个区域共享的页，在两者都释放之前一直保持锁定 |
+| `(*Locker).LockBestEffort(p, n, report)` | 相同，但每次拒绝都交给 `report`，其余仍照样锁定。名字已经说明：只用于不加锁运行也可接受的场合 |
+| `(*Region).Release()` | 解锁；对 nil 和重复调用都是安全的 |
+| `DisableDumps() error` | 把 `RLIMIT_CORE` 设为 0，在 Linux 上还把 `PR_SET_DUMPABLE` 设为 0；仅在 macOS 上还调用 `PT_DENY_ATTACH` |
+
+其他任何平台都会得到 `*UnsupportedError`（与 `errors.ErrUnsupported` 匹配），
+绝不会悄悄成功。
+
+**它保证**：该范围的页从 `Lock` 到 `Release` 一直锁定在内存中，否则你会得到错误。
+**它不保证**：不存在副本。Go 的垃圾回收器可能在堆对象被锁定之前复制它；
+因此应锁定不会移动的内存，并把秘密只放在一处。系统限制依然适用
+（`RLIMIT_MEMLOCK`；在 Windows 上是工作集大小）。Windows 没有
+`PR_SET_DUMPABLE` 或 `PT_DENY_ATTACH` 的对应物：同一用户的调试器或管理员可以读取该进程。
 
 ## 参考 {#reference}
 

@@ -2,7 +2,7 @@
 title: "harden — two security primitives, shared"
 linkTitle: "harden"
 weight: 36
-description: "go-authn/harden holds the two security primitives that go-authn repositories had each copied: the https-or-loopback redirect rule, and a private file written atomically."
+description: "go-authn/harden holds the security primitives that go-authn repositories had each copied: the https-or-loopback redirect rule, a private file written atomically, and memory locking with core-dump hardening."
 tags: [libraries, harden, security]
 ---
 
@@ -10,7 +10,7 @@ tags: [libraries, harden, security]
 module with no dependency but the standard library.
 
 ```sh
-go get github.com/go-authn/harden@v0.2.0
+go get github.com/go-authn/harden@v0.3.0
 ```
 
 ## `redirect` {#redirect}
@@ -82,6 +82,37 @@ restart, but they do not share a floor: wireguard keeps a bare version and issue
 time in a small file of its own, revocation keeps the whole signed list and
 recomputes the floor by verifying it. Only the file write is common, and that
 is `privfile`.
+
+## `memlock` {#memlock}
+
+Since v0.3.0 (moved from theca): keep key material out of swap, and out of core
+files and debuggers.
+
+```go
+import "github.com/go-authn/harden/memlock"
+
+region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
+if err != nil { ... } // refused: say so, or stop
+defer region.Release()
+```
+
+| Function | |
+|---|---|
+| `Lock(p, n) (*Region, error)` | locks the pages of the range with `mlock` (Linux, macOS, the BSDs) or `VirtualLock` (Windows). **A refusal is an error**: nothing stays locked and the caller decides. Pages shared by two regions stay locked until both are released |
+| `(*Locker).LockBestEffort(p, n, report)` | the same, but each refusal goes to `report` and the rest still locks. The name says it: use it only where running unlocked is acceptable |
+| `(*Region).Release()` | unlocks; safe on nil and when called twice |
+| `DisableDumps() error` | `RLIMIT_CORE` to 0 and, on Linux, `PR_SET_DUMPABLE` to 0; on macOS only, `PT_DENY_ATTACH` |
+
+Any other platform gets an `*UnsupportedError` (it matches
+`errors.ErrUnsupported`), never a silent success.
+
+**It guarantees** that the pages of the range are locked in memory from `Lock`
+to `Release`, or that you got an error. **It does not guarantee** that no copy
+exists: the Go garbage collector can copy a heap object before it is locked, so
+lock memory that does not move, and keep the secret in one place. The system
+limits still apply (`RLIMIT_MEMLOCK`; on Windows, the working-set size).
+Windows has no equivalent of `PR_SET_DUMPABLE` or `PT_DENY_ATTACH`: a debugger
+of the same user or an administrator can read the process.
 
 ## Reference {#reference}
 

@@ -2,7 +2,7 @@
 title: "harden — deux primitives de sécurité, partagées"
 linkTitle: "harden"
 weight: 36
-description: "go-authn/harden réunit les deux primitives de sécurité que les dépôts go-authn avaient chacun copiées : la règle de redirection https-ou-loopback, et un fichier privé écrit de façon atomique."
+description: "go-authn/harden réunit les primitives de sécurité que les dépôts go-authn avaient chacun copiées : la règle de redirection https-ou-loopback, un fichier privé écrit de façon atomique, et le verrouillage mémoire avec durcissement des core dumps."
 tags: [libraries, harden, security]
 ---
 
@@ -10,7 +10,7 @@ tags: [libraries, harden, security]
 dans un seul module sans autre dépendance que la bibliothèque standard.
 
 ```sh
-go get github.com/go-authn/harden@v0.2.0
+go get github.com/go-authn/harden@v0.3.0
 ```
 
 ## `redirect` {#redirect}
@@ -83,6 +83,38 @@ redémarrage à l'autre, mais ils ne partagent pas de plancher : wireguard garde
 simple version et l'heure d'émission dans un petit fichier à lui, revocation garde
 toute la liste signée et recalcule le plancher en la vérifiant. Seule l'écriture du
 fichier est commune, et c'est `privfile`.
+
+## `memlock` {#memlock}
+
+Depuis la v0.3.0 (venu de theca) : garder le matériel de clé hors du swap, des
+fichiers core et des débogueurs.
+
+```go
+import "github.com/go-authn/harden/memlock"
+
+region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
+if err != nil { ... } // refusé : le dire, ou s'arrêter
+defer region.Release()
+```
+
+| Fonction | |
+|---|---|
+| `Lock(p, n) (*Region, error)` | verrouille les pages de la plage avec `mlock` (Linux, macOS, les BSD) ou `VirtualLock` (Windows). **Un refus est une erreur** : rien ne reste verrouillé et l'appelant décide. Les pages partagées par deux régions restent verrouillées jusqu'à la libération des deux |
+| `(*Locker).LockBestEffort(p, n, report)` | pareil, mais chaque refus est transmis à `report` et le reste se verrouille quand même. Le nom le dit : à n'utiliser que là où tourner sans verrou est acceptable |
+| `(*Region).Release()` | déverrouille ; sans danger sur nil et appelée deux fois |
+| `DisableDumps() error` | `RLIMIT_CORE` à 0 et, sous Linux, `PR_SET_DUMPABLE` à 0 ; sous macOS seulement, `PT_DENY_ATTACH` |
+
+Toute autre plateforme reçoit une `*UnsupportedError` (elle correspond à
+`errors.ErrUnsupported`), jamais un succès silencieux.
+
+**Elle garantit** que les pages de la plage sont verrouillées en mémoire de
+`Lock` à `Release`, ou que vous recevez une erreur. **Elle ne garantit pas**
+qu'aucune copie n'existe : le ramasse-miettes de Go peut copier un objet du tas
+avant son verrouillage ; verrouillez donc une mémoire qui ne bouge pas et
+gardez le secret en un seul endroit. Les limites du système s'appliquent
+toujours (`RLIMIT_MEMLOCK` ; sous Windows, la taille du working set). Windows n'a
+pas d'équivalent de `PR_SET_DUMPABLE` ni de `PT_DENY_ATTACH` : un débogueur du
+même utilisateur ou un administrateur peut lire le processus.
 
 ## Référence {#reference}
 

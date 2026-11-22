@@ -30,7 +30,7 @@ tags: [ライブラリ]
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | この WireGuard 鍵は接続してよいか。誰のものか | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | ID プロバイダーが作成、変更、削除したのは誰か | v0.2.1 | `github.com/go-authn/scim` |
 | [secretsource]({{< relref "/libraries/secretsource.md" >}}) | ファイルに置きたくない PIN やパスワードは、どこから取得するのか | v0.5.0 | `github.com/go-authn/secretsource` |
-| [harden]({{< relref "/libraries/harden.md" >}}) | この URL は https か、このマシンを指しているか。非公開ファイルはどうすれば安全に書けるか | v0.2.0 | `github.com/go-authn/harden` |
+| [harden]({{< relref "/libraries/harden.md" >}}) | この URL は https か、このマシンを指しているか。非公開ファイルはどうすれば安全に書けるか。鍵をスワップに出さないにはどうするか | v0.3.0 | `github.com/go-authn/harden` |
 
 ## グループ分け {#how-they-group}
 

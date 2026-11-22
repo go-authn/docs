@@ -2,7 +2,7 @@
 title: "harden — 共有される二つのセキュリティプリミティブ"
 linkTitle: "harden"
 weight: 36
-description: "go-authn/harden は、go-authn の各リポジトリがそれぞれコピーしていた二つのセキュリティプリミティブ、https かループバックかのリダイレクト規則と、原子的に書かれる非公開ファイルをまとめたものです。"
+description: "go-authn/harden は、go-authn の各リポジトリがそれぞれコピーしていたセキュリティプリミティブ、https かループバックかのリダイレクト規則、原子的に書かれる非公開ファイル、そしてコアダンプ対策付きのメモリロックをまとめたものです。"
 tags: [ライブラリ, harden, セキュリティ]
 ---
 
@@ -10,7 +10,7 @@ tags: [ライブラリ, harden, セキュリティ]
 以外に依存しない一つのモジュールにあります。
 
 ```sh
-go get github.com/go-authn/harden@v0.2.0
+go get github.com/go-authn/harden@v0.3.0
 ```
 
 ## `redirect` {#redirect}
@@ -79,6 +79,36 @@ go-authn/wireguard と go-authn/revocation はどちらも再起動をまたい�
 フロアは共有していません。wireguard はバージョンと発行時刻だけを自前の小さなファイルに保ち、
 revocation は署名済みの一覧全体を保ち、それを検証してフロアを再計算します。共通なのはファイルの
 書き込みだけで、それが `privfile` です。
+
+## `memlock` {#memlock}
+
+v0.3.0 から (theca から移設): 鍵素材をスワップ、コアファイル、デバッガから遠ざけます。
+
+```go
+import "github.com/go-authn/harden/memlock"
+
+region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
+if err != nil { ... } // 拒否された: 報告するか、中止する
+defer region.Release()
+```
+
+| 関数 | |
+|---|---|
+| `Lock(p, n) (*Region, error)` | 範囲のページを `mlock` (Linux、macOS、BSD 系) または `VirtualLock` (Windows) でロックします。**拒否はエラーです**。何もロックされたままにならず、判断は呼び出し側に委ねられます。二つの領域が共有するページは、両方が解放されるまでロックされたままです |
+| `(*Locker).LockBestEffort(p, n, report)` | 同じですが、拒否のたびに `report` へ渡し、残りは構わずロックします。名前のとおり、ロックなしで動いても許される場所でだけ使ってください |
+| `(*Region).Release()` | ロックを解除します。nil でも、二度呼んでも安全です |
+| `DisableDumps() error` | `RLIMIT_CORE` を 0 に、Linux では `PR_SET_DUMPABLE` も 0 にします。macOS に限り `PT_DENY_ATTACH` も呼びます |
+
+それ以外のプラットフォームは `*UnsupportedError` (`errors.ErrUnsupported`
+に一致) を受け取り、黙って成功することはありません。
+
+**保証すること**: 範囲のページが `Lock` から `Release` までメモリ上でロックされるか、
+さもなければエラーが返ること。**保証しないこと**: コピーが存在しないこと。Go の
+ガベージコレクタは、ヒープオブジェクトをロックされる前にコピーすることがあります。
+そのため、動かないメモリをロックし、秘密は一か所にだけ置いてください。システムの
+上限は引き続き適用されます (`RLIMIT_MEMLOCK`、Windows ではワーキングセットの大きさ)。
+Windows には `PR_SET_DUMPABLE` や `PT_DENY_ATTACH` に相当するものがなく、同じユーザーの
+デバッガや管理者はプロセスを読めます。
 
 ## リファレンス {#reference}
 

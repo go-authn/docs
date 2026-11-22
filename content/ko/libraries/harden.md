@@ -2,7 +2,7 @@
 title: "harden — 공유하는 보안 기본 요소 두 가지"
 linkTitle: "harden"
 weight: 36
-description: "go-authn/harden은 go-authn 저장소들이 각자 복사해 두었던 보안 기본 요소 두 가지, 즉 https나 루프백 리디렉션 규칙과 원자적으로 쓰는 개인 파일을 담고 있습니다."
+description: "go-authn/harden은 go-authn 저장소들이 각자 복사해 두었던 보안 기본 요소, 즉 https나 루프백 리디렉션 규칙, 원자적으로 쓰는 개인 파일, 코어 덤프 방어를 갖춘 메모리 잠금을 담고 있습니다."
 tags: [라이브러리, harden, 보안]
 ---
 
@@ -10,7 +10,7 @@ tags: [라이브러리, harden, 보안]
 표준 라이브러리 외에는 의존성이 없는 하나의 모듈에 있습니다.
 
 ```sh
-go get github.com/go-authn/harden@v0.2.0
+go get github.com/go-authn/harden@v0.3.0
 ```
 
 ## `redirect` {#redirect}
@@ -78,6 +78,35 @@ go-authn/wireguard와 go-authn/revocation은 둘 다 재시작해도 순서 하�
 하한을 공유하지는 않습니다. wireguard는 버전과 발행 시각만 자기 작은 파일에 두고,
 revocation은 서명된 목록 전체를 두었다가 그것을 검증해 하한을 다시 계산합니다. 공통인
 것은 파일 쓰기뿐이며, 그것이 `privfile`입니다.
+
+## `memlock` {#memlock}
+
+v0.3.0부터 (theca에서 옮겨 옴): 키 자료를 스왑, 코어 파일, 디버거로부터 지킵니다.
+
+```go
+import "github.com/go-authn/harden/memlock"
+
+region, err := memlock.Lock(unsafe.Pointer(&key[0]), uintptr(len(key)))
+if err != nil { ... } // 거부됨: 알리거나 중단
+defer region.Release()
+```
+
+| 함수 | |
+|---|---|
+| `Lock(p, n) (*Region, error)` | 범위의 페이지를 `mlock`(Linux, macOS, BSD 계열) 또는 `VirtualLock`(Windows)으로 잠급니다. **거부는 오류입니다**. 잠긴 채로 남는 것은 없고, 결정은 호출자가 합니다. 두 영역이 공유하는 페이지는 둘 다 해제될 때까지 잠겨 있습니다 |
+| `(*Locker).LockBestEffort(p, n, report)` | 같지만, 거부될 때마다 `report`에 넘기고 나머지는 어쨌든 잠급니다. 이름 그대로, 잠금 없이 실행해도 괜찮은 곳에서만 쓰십시오 |
+| `(*Region).Release()` | 잠금을 풉니다. nil이어도, 두 번 호출해도 안전합니다 |
+| `DisableDumps() error` | `RLIMIT_CORE`를 0으로, Linux에서는 `PR_SET_DUMPABLE`도 0으로 합니다. macOS에서만 `PT_DENY_ATTACH`도 호출합니다 |
+
+그 밖의 플랫폼은 `*UnsupportedError`(`errors.ErrUnsupported`와 일치)를 받으며,
+조용히 성공하는 일은 없습니다.
+
+**보장하는 것**: 범위의 페이지가 `Lock`부터 `Release`까지 메모리에 잠겨 있거나,
+그렇지 않으면 오류를 받는다는 것. **보장하지 않는 것**: 복사본이 없다는 것. Go의
+가비지 컬렉터는 힙 객체를 잠그기 전에 복사할 수 있으므로, 움직이지 않는 메모리를
+잠그고 비밀은 한 곳에만 두십시오. 시스템 한도는 여전히 적용됩니다(`RLIMIT_MEMLOCK`,
+Windows에서는 워킹 셋 크기). Windows에는 `PR_SET_DUMPABLE`이나 `PT_DENY_ATTACH`에
+해당하는 것이 없어, 같은 사용자의 디버거나 관리자는 프로세스를 읽을 수 있습니다.
 
 ## 참고 {#reference}
 
