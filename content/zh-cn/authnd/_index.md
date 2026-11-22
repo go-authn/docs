@@ -103,7 +103,7 @@ authnd check /etc/authnd         # say what would be served, without listening
 listen  = "127.0.0.1:3893"            # the default
 base_dn = "dc=example,dc=org"         # required
 
-reader "cn=reader,dc=example,dc=org" { password_file = "/etc/authnd/reader.pw" }
+reader "cn=reader,dc=example,dc=org" { password_from = "systemd-creds:reader" }
 
 user "alice" { password_file = "/etc/authnd/passwords/alice.pw" }
 
@@ -158,8 +158,9 @@ Additional information: only a reader may search
 | 由 `reader` 之外的任何人发起的搜索 | `insufficientAccessRights` | 绑定证明你是谁；读取所有人则是另一件需要获得许可的事 |
 | `add`、`delete`、`modifyDN` | `unwillingToPerform` | 没有为它们接入处理程序；唯一的写操作是[用户自己的密码]({{< relref "/authnd/passwords.md" >}}) |
 
-`reader` 是带有绑定 DN 以及 `password` 或
-`password_file` 的服务账户；两者都没有的 reader 在启动时被拒绝（*证明不了任何事的
+`reader` 是带有绑定 DN 和密码的服务账户，密码由
+`password_from`（一个[密钥引用]({{< relref "/authnd/install.md#secrets-as-references" >}})）指定；
+`password_file` 和 `password` 是已弃用的写法。没有密码的 reader 在启动时被拒绝（*证明不了任何事的
 reader 不过是多了几步的匿名搜索*）。没有任何 reader 时，
 任何人都不能搜索，`check` 会如此提示。
 

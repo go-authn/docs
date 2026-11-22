@@ -38,7 +38,7 @@ user "tess" {
 | `digits` | 6 | de 6 a 10 (RFC 4226) |
 | `period` | 30 | segundos que dura un código |
 | `window` | 1 | pasos a cada lado del momento actual que se aceptan, para relojes que difieren. Cada paso es un paso más de tiempo para que otro adivine: fíjelo a propósito |
-| `readers` | `false` | si los [readers]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) también llevan un código. Una cuenta de servicio no tiene teléfono; la que lo tenga recibe un `totp_secret` en su bloque `reader` |
+| `readers` | `false` | si los [readers]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) también llevan un código. Una cuenta de servicio no tiene teléfono; la que lo tenga recibe un `totp_secret_from` en su bloque `reader` (una [referencia a un secreto]({{< relref "/authnd/install.md#secrets-as-references" >}}); el `totp_secret` en línea está obsoleto) |
 
 El secreto también puede proceder de una columna de base de datos (la quinta) o de
 un atributo LDAP (`totp_attribute`); consulte [las personas]({{< relref "/authnd/people.md" >}}).

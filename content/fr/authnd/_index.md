@@ -119,7 +119,7 @@ authnd check /etc/authnd         # say what would be served, without listening
 listen  = "127.0.0.1:3893"            # the default
 base_dn = "dc=example,dc=org"         # required
 
-reader "cn=reader,dc=example,dc=org" { password_file = "/etc/authnd/reader.pw" }
+reader "cn=reader,dc=example,dc=org" { password_from = "systemd-creds:reader" }
 
 user "alice" { password_file = "/etc/authnd/passwords/alice.pw" }
 
@@ -176,9 +176,10 @@ Additional information: only a reader may search
 | une recherche par quiconque n'est pas un `reader` | `insufficientAccessRights` | se lier prouve qui vous êtes ; lire tout le monde est une autre chose, à autoriser à part |
 | `add`, `delete`, `modifyDN` | `unwillingToPerform` | aucun gestionnaire n'y est branché ; la seule écriture est [le mot de passe d'une personne, par elle-même]({{< relref "/authnd/passwords.md" >}}) |
 
-Un `reader` est un compte de service avec un DN de liaison et `password` ou
-`password_file` ; un reader qui n'a ni l'un ni l'autre est refusé au démarrage (*un reader qui
-ne prouve rien, c'est une recherche anonyme avec des étapes en plus*). Sans aucun reader,
+Un `reader` est un compte de service avec un DN de liaison et un mot de passe,
+nommé par `password_from` (une [référence de secret]({{< relref "/authnd/install.md#secrets-as-references" >}})) ;
+`password_file` et `password` sont des graphies obsolètes. Un reader qui n'en a aucun est refusé
+au démarrage (*un reader qui ne prouve rien, c'est une recherche anonyme avec des étapes en plus*). Sans aucun reader,
 rien ne peut chercher, et `check` le dit.
 
 Le DSE racine est servi à un client anonyme, comme la découverte l'exige :

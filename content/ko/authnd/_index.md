@@ -111,7 +111,7 @@ authnd check /etc/authnd         # say what would be served, without listening
 listen  = "127.0.0.1:3893"            # the default
 base_dn = "dc=example,dc=org"         # required
 
-reader "cn=reader,dc=example,dc=org" { password_file = "/etc/authnd/reader.pw" }
+reader "cn=reader,dc=example,dc=org" { password_from = "systemd-creds:reader" }
 
 user "alice" { password_file = "/etc/authnd/passwords/alice.pw" }
 
@@ -164,8 +164,10 @@ Additional information: only a reader may search
 | `reader`가 아닌 누군가의 검색 | `insufficientAccessRights` | 바인드는 당신이 누구인지를 증명할 뿐이며, 모든 사람을 읽도록 허용되는 것은 별개의 문제입니다 |
 | `add`, `delete`, `modifyDN` | `unwillingToPerform` | 연결된 핸들러가 없습니다. 유일한 쓰기는 [사람 자신의 비밀번호]({{< relref "/authnd/passwords.md" >}})입니다 |
 
-`reader`는 바인드 DN과 `password` 또는 `password_file`을 가진 서비스 계정입니다.
-둘 다 없는 reader는 시작 시 거부됩니다(*아무것도 증명하지 않는 reader는 단계만
+`reader`는 바인드 DN과 비밀번호를 가진 서비스 계정이며, 비밀번호는
+`password_from`([비밀 값 참조]({{< relref "/authnd/install.md#secrets-as-references" >}}))으로
+지정합니다. `password_file`과 `password`는 사용 중단된 표기입니다. 아무것도 없는
+reader는 시작 시 거부됩니다(*아무것도 증명하지 않는 reader는 단계만
 늘어난 익명 검색입니다*). reader가 하나도 없으면 아무도 검색할 수 없으며,
 `check`가 이를 알려 줍니다.
 

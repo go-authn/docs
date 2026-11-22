@@ -177,6 +177,57 @@ acme {
 証明書は発行者のホスト用です。`cache_dir` は秘密鍵を保持し、他のユーザーが到達できる、または
 付け替えられるディレクトリでは、プロバイダーは起動を拒否します。
 
+## `mail`: SMTP パスワードは参照です {#mail-the-smtp-password-is-a-reference}
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                      # "tls" (port 465, the default) or "starttls" (587)
+  username      = "authn-bridge"
+  password_from = "systemd-creds:smtp"       # a secretsource reference, never the password
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                      # least time between two mails to one account
+}
+```
+
+`password_from` は [secretsource](https://github.com/go-authn/secretsource) の参照です。
+`systemd-creds:NAME`、`file:PATH` (所有者だけが読める通常ファイル、`0600`)、
+`keychain:SERVICE/ACCOUNT`、そして secretsource のその他のスキームが使えます。
+パスワードは 4096 バイト以下の空でない 1 行で、他のどこからも読まれません。環境変数からも、
+コマンドラインからも、設定ファイル自体からも読まれません。スキームのない参照、大きすぎる
+または複数行のシークレット、パーミッションの緩いファイル、`username` と `password_from` の
+ない `mail` ブロックは、起動時に拒否されます。
+
+`password_file = "PATH"` は今も動きますが、**非推奨**です。`password_from = "file:PATH"` として
+読まれます。両方を指定すると設定エラーです。
+
+`file:` はシンボリックリンクと、ブリッジの実行ユーザー以外が所有するファイルを
+拒否します。systemd から渡された認証情報は `systemd-creds:NAME` で読み、
+`file:$CREDENTIALS_DIRECTORY/NAME` では決して読みません。
+
+systemd のホストでは、パスワードをマシンに封印し、クレデンシャルとしてサービスに渡します。
+
+```sh
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
+```
+
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+`--tpm2-pcrs` を付けずに `--with-key=host+tpm2` を使ってください。鍵は TPM2 チップとホストの
+鍵ファイルから導出され、ファームウェアや Secure Boot の更新後も有効です。`--tpm2-pcrs=7` だけを
+使ってはいけません。ファームウェアや shim の更新でクレデンシャルが読めなくなり、bridge は
+起動を拒否します。
+
+**復旧。** クレデンシャルは TPM2 チップまたは `/var/lib/systemd/credential.secret` とともに
+失われ、復号の失敗は bridge を起動時に停止させます。パスワードは、このマシンに依存しない場所
+(オフラインのコピー) に保管し、そのコピーから上のコマンドで再び封印してから、
+`systemctl restart authn-bridge` を実行してください。
+
 ## 起動時に拒否されるもの {#what-is-refused-at-startup}
 
 以下はいずれも、それを求めた設定に対する `authn-bridge check` の出力です。サーバーも同じ設定を

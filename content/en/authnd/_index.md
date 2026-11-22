@@ -115,7 +115,7 @@ authnd check /etc/authnd         # say what would be served, without listening
 listen  = "127.0.0.1:3893"            # the default
 base_dn = "dc=example,dc=org"         # required
 
-reader "cn=reader,dc=example,dc=org" { password_file = "/etc/authnd/reader.pw" }
+reader "cn=reader,dc=example,dc=org" { password_from = "systemd-creds:reader" }
 
 user "alice" { password_file = "/etc/authnd/passwords/alice.pw" }
 
@@ -171,9 +171,11 @@ Additional information: only a reader may search
 | a search by anybody but a `reader` | `insufficientAccessRights` | binding proves who you are; reading everybody is a separate thing to be allowed |
 | `add`, `delete`, `modifyDN` | `unwillingToPerform` | no handler is wired for them; the one write is [a person's own password]({{< relref "/authnd/passwords.md" >}}) |
 
-A `reader` is a service account with a bind DN and `password` or
-`password_file`; a reader with neither is refused at startup (*a reader that
-proves nothing is anonymous search with extra steps*). Without any reader,
+A `reader` is a service account with a bind DN and a password, named by
+`password_from` (a [secret reference]({{< relref "/authnd/install.md#secrets-as-references" >}}));
+`password_file` and `password` are deprecated spellings. A reader with none is
+refused at startup (*a reader that proves nothing is anonymous search with
+extra steps*). Without any reader,
 nothing may search, and `check` says so.
 
 The root DSE is answered to an anonymous client, as discovery needs:

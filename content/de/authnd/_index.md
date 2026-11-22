@@ -121,7 +121,7 @@ authnd check /etc/authnd         # say what would be served, without listening
 listen  = "127.0.0.1:3893"            # the default
 base_dn = "dc=example,dc=org"         # required
 
-reader "cn=reader,dc=example,dc=org" { password_file = "/etc/authnd/reader.pw" }
+reader "cn=reader,dc=example,dc=org" { password_from = "systemd-creds:reader" }
 
 user "alice" { password_file = "/etc/authnd/passwords/alice.pw" }
 
@@ -177,8 +177,10 @@ Additional information: only a reader may search
 | eine Suche durch jemand anderen als einen `reader` | `insufficientAccessRights` | ein Bind beweist, wer Sie sind; alle lesen zu dürfen, ist eine eigene Erlaubnis |
 | `add`, `delete`, `modifyDN` | `unwillingToPerform` | dafür ist kein Handler angebunden; der eine Schreibvorgang ist [das eigene Passwort einer Person]({{< relref "/authnd/passwords.md" >}}) |
 
-Ein `reader` ist ein Dienstkonto mit einem Bind-DN und `password` oder `password_file`; ein
-Reader ohne beides wird beim Start abgelehnt (*ein Reader, der nichts beweist, ist eine anonyme
+Ein `reader` ist ein Dienstkonto mit einem Bind-DN und einem Passwort, benannt durch
+`password_from` (eine [Geheimnis-Referenz]({{< relref "/authnd/install.md#secrets-as-references" >}}));
+`password_file` und `password` sind veraltete Schreibweisen. Ein Reader ohne eines davon wird beim
+Start abgelehnt (*ein Reader, der nichts beweist, ist eine anonyme
 Suche mit zusätzlichen Schritten*). Ohne jeden Reader darf nichts suchen, und `check` sagt das.
 
 Das Root-DSE wird einem anonymen Client beantwortet, wie es die Erkennung braucht:

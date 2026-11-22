@@ -38,6 +38,10 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | from v0.11.0, what describes the person and proves nothing — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — as a map of strings or lists of strings; a `group` block takes it too. They decide what the entry is published as: see [the entries]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 | `object_classes` | from v0.12.0, the auxiliary classes this person (or, in a `group` block, this group) is published with, such as `["siteMember"]`: declared, never inferred, and defined in a [site schema]({{< relref "/authnd/schemas.md#object-classes" >}}) |
 
+These secret fields keep their own spellings in a `user` or `users` block; only
+the `reader` block takes [secret references]({{< relref "/authnd/install.md#secrets-as-references" >}})
+(`password_from`, `totp_secret_from`) for now.
+
 Refused at startup, naming the person:
 
 - `password` and `password_file` together — say which one;

@@ -37,6 +37,10 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | 自 v0.11.0 起，描述人员但不证明任何事的内容——`sn`、`uidNumber`、`gidNumber`、`homeDirectory`、`mail`……——以字符串或字符串列表的映射表示；`group` 块也接受它。它们决定条目发布为什么：参见[条目]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 | `object_classes` | 自 v0.12.0 起，该人员（在 `group` 块中则是该组）发布时所带的辅助类，例如 `["siteMember"]`：声明出来，从不推断，并在[站点模式]({{< relref "/authnd/schemas.md#object-classes" >}})中定义 |
 
+这些密钥字段在 `user` 或 `users` 块中保留各自的写法；目前只有
+`reader` 块接受[密钥引用]({{< relref "/authnd/install.md#secrets-as-references" >}})
+（`password_from`、`totp_secret_from`）。
+
 启动时被拒绝，并指名相关人员：
 
 - 同时有 `password` 和 `password_file`——请指明用哪一个；

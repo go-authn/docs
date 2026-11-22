@@ -188,6 +188,62 @@ El certificado es para el host del emisor. `cache_dir` contiene claves privadas,
 el proveedor se niega a arrancar sobre uno que otro usuario pudiera alcanzar o
 redirigir.
 
+## `mail`: la contraseña SMTP es una referencia {#mail-the-smtp-password-is-a-reference}
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                      # "tls" (port 465, the default) or "starttls" (587)
+  username      = "authn-bridge"
+  password_from = "systemd-creds:smtp"       # a secretsource reference, never the password
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                      # least time between two mails to one account
+}
+```
+
+`password_from` es una referencia de [secretsource](https://github.com/go-authn/secretsource):
+`systemd-creds:NAME`, `file:PATH` (un archivo regular que solo su propietario
+puede leer, `0600`), `keychain:SERVICE/ACCOUNT` y los demás esquemas de
+secretsource. La contraseña es una línea no vacía de como máximo 4096 bytes, y
+no se lee de ningún otro sitio: ni del entorno, ni de una línea de comandos, ni
+del propio archivo de configuración. Se rechazan al arrancar una referencia sin
+esquema, un secreto demasiado grande o de varias líneas, un archivo con permisos
+demasiado abiertos y un bloque `mail` sin `username` ni `password_from`.
+
+`password_file = "PATH"` sigue funcionando, pero está **obsoleto**: se lee como
+`password_from = "file:PATH"`. Indicar ambos es un error de configuración.
+
+`file:` rechaza un enlace simbólico y un archivo que pertenezca a un usuario
+distinto de aquel con el que se ejecuta el bridge. Una credencial entregada por
+systemd se lee con `systemd-creds:NAME`, nunca con
+`file:$CREDENTIALS_DIRECTORY/NAME`.
+
+En un host con systemd, selle la contraseña a la máquina y entréguesela al
+servicio como una credencial:
+
+```sh
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
+```
+
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+Use `--with-key=host+tpm2` sin `--tpm2-pcrs`: la clave se deriva del chip TPM2 y
+del archivo de clave del host, y sobrevive a las actualizaciones del firmware y
+de Secure Boot. No use un `--tpm2-pcrs=7` a secas: una actualización del
+firmware o de shim dejaría la credencial ilegible y el bridge se negaría a
+arrancar.
+
+**Recuperación.** La credencial se pierde con el chip TPM2 o con
+`/var/lib/systemd/credential.secret`, y un fallo de descifrado detiene el bridge
+al arrancar. Guarde la contraseña en un lugar que no dependa de esta máquina
+(una copia sin conexión), vuelva a sellarla desde esa copia con el comando de
+arriba y luego `systemctl restart authn-bridge`.
+
 ## Lo que se rechaza al arrancar {#what-is-refused-at-startup}
 
 Cada uno de estos es la salida de `authn-bridge check` sobre una configuración que

@@ -38,6 +38,10 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | ab v0.11.0 das, was die Person beschreibt und nichts beweist – `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… –, als Map aus Zeichenketten oder Listen von Zeichenketten; ein `group`-Block nimmt es ebenfalls. Sie entscheiden, als was der Eintrag veröffentlicht wird: siehe [die Einträge]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 | `object_classes` | ab v0.12.0 die Hilfsklassen (AUXILIARY), mit denen diese Person (oder, in einem `group`-Block, diese Gruppe) veröffentlicht wird, etwa `["siteMember"]`: deklariert, nie abgeleitet, und in einem [Standort-Schema]({{< relref "/authnd/schemas.md#object-classes" >}}) definiert |
 
+Diese Geheimnis-Felder behalten in einem `user`- oder `users`-Block ihre eigenen Schreibweisen;
+vorerst nimmt nur der `reader`-Block [Geheimnis-Referenzen]({{< relref "/authnd/install.md#secrets-as-references" >}})
+(`password_from`, `totp_secret_from`).
+
 Beim Start abgelehnt, unter Nennung der Person:
 
 - `password` und `password_file` zusammen – sagen Sie, welches von beiden;

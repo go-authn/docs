@@ -38,6 +38,10 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | depuis la v0.11.0, ce qui décrit la personne sans rien prouver — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — sous forme d'une table de chaînes ou de listes de chaînes ; un bloc `group` le prend aussi. Ils décident de ce sous quoi l'entrée est publiée : voir [les entrées]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 | `object_classes` | depuis la v0.12.0, les classes auxiliaires sous lesquelles cette personne (ou, dans un bloc `group`, ce groupe) est publiée, comme `["siteMember"]` : déclarées, jamais déduites, et définies dans un [schéma de site]({{< relref "/authnd/schemas.md#object-classes" >}}) |
 
+Ces champs secrets gardent leurs propres graphies dans un bloc `user` ou `users` ;
+seul le bloc `reader` accepte pour l'instant des [références de secret]({{< relref "/authnd/install.md#secrets-as-references" >}})
+(`password_from`, `totp_secret_from`).
+
 Refusés au démarrage, en nommant la personne :
 
 - `password` et `password_file` ensemble — dites lequel ;

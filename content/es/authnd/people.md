@@ -38,6 +38,10 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | desde la v0.11.0, lo que describe a la persona y no prueba nada —`sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`…—, como un mapa de cadenas o de listas de cadenas; un bloque `group` también lo admite. Deciden como qué se publica la entrada: consulte [las entradas]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 | `object_classes` | desde la v0.12.0, las clases auxiliares con las que se publica a esta persona (o, en un bloque `group`, a este grupo), como `["siteMember"]`: declaradas, nunca deducidas, y definidas en un [esquema de un sitio]({{< relref "/authnd/schemas.md#object-classes" >}}) |
 
+Estos campos de secretos conservan sus propias grafías en un bloque `user` o `users`; por ahora solo el
+bloque `reader` admite [referencias a secretos]({{< relref "/authnd/install.md#secrets-as-references" >}})
+(`password_from`, `totp_secret_from`).
+
 Se rechaza al arrancar, nombrando a la persona:
 
 - `password` y `password_file` juntos: indique cuál;

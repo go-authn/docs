@@ -37,7 +37,7 @@ user "tess" {
 | `digits` | 6 | 6 から 10 (RFC 4226) |
 | `period` | 30 | 一つのコードが有効な秒数 |
 | `window` | 1 | 時計のずれに備えて、現在の前後それぞれ何ステップまで受け入れるか。各ステップは他人が推測できる時間のステップでもあるので、意図して設定してください |
-| `readers` | `false` | [reader]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})もコードを持つかどうか。サービスアカウントには電話がありません。持つものには `reader` ブロックに `totp_secret` を与えます |
+| `readers` | `false` | [reader]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})もコードを持つかどうか。サービスアカウントには電話がありません。持つものには `reader` ブロックに `totp_secret_from` を与えます ([シークレット参照]({{< relref "/authnd/install.md#secrets-as-references" >}})。インラインの `totp_secret` は非推奨) |
 
 シークレットは、データベースの列 (五番目) や LDAP 属性 (`totp_attribute`) から渡すこともできます。
 [人々]({{< relref "/authnd/people.md" >}})を参照してください。`user` または `reader` ブロックの

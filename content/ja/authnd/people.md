@@ -37,6 +37,10 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | v0.11.0 から。人を説明するだけで何も証明しないもの — `sn`、`uidNumber`、`gidNumber`、`homeDirectory`、`mail`… — を、文字列または文字列のリストのマップとして指定する。`group` ブロックも受け付ける。エントリが何として公開されるかを決める。[エントリ]({{< relref "/authnd/entries.md#adding-attributes" >}})を参照 |
 | `object_classes` | v0.12.0 から。この人 (`group` ブロックでは、このグループ) が公開される際の補助クラス。たとえば `["siteMember"]`。宣言されるもので推論されず、[サイトスキーマ]({{< relref "/authnd/schemas.md#object-classes" >}})で定義される |
 
+これらのシークレットのフィールドは、`user` または `users` ブロックでは独自の書き方のままです。
+今のところ、[シークレット参照]({{< relref "/authnd/install.md#secrets-as-references" >}})
+(`password_from`、`totp_secret_from`) を受け付けるのは `reader` ブロックだけです。
+
 起動時に、その人の名前を挙げて拒否されるもの:
 
 - `password` と `password_file` の併用 — どちらかを指定してください

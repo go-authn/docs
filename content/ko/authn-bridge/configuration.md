@@ -179,6 +179,58 @@ acme {
 인증서는 발급자의 호스트용입니다. `cache_dir`은 개인 키를 담으며, 공급자는 다른
 사용자가 접근하거나 가리키는 곳을 바꿀 수 있는 디렉터리에서는 시작하기를 거부합니다.
 
+## `mail`: SMTP 비밀번호는 참조입니다 {#mail-the-smtp-password-is-a-reference}
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                      # "tls" (port 465, the default) or "starttls" (587)
+  username      = "authn-bridge"
+  password_from = "systemd-creds:smtp"       # a secretsource reference, never the password
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                      # least time between two mails to one account
+}
+```
+
+`password_from`은 [secretsource](https://github.com/go-authn/secretsource)
+참조입니다. `systemd-creds:NAME`, `file:PATH`(소유자만 읽을 수 있는 일반 파일,
+`0600`), `keychain:SERVICE/ACCOUNT`, 그리고 secretsource의 다른 스킴들이 있습니다.
+비밀번호는 4096바이트 이하의 비어 있지 않은 한 줄이며, 다른 어디에서도 읽지
+않습니다. 환경 변수도, 명령줄도, 구성 파일 자체도 아닙니다. 스킴이 없는 참조,
+너무 크거나 여러 줄인 비밀 값, 권한이 느슨한 파일, 그리고 `username`과
+`password_from`이 없는 `mail` 블록은 시작 시 거부됩니다.
+
+`password_file = "PATH"`도 여전히 동작하지만 **사용 중단**되었습니다.
+`password_from = "file:PATH"`로 읽힙니다. 둘 다 지정하면 구성 오류입니다.
+
+`file:`은 심볼릭 링크와, 브리지를 실행하는 사용자가 아닌 다른 사용자가 소유한
+파일을 거부합니다. systemd가 넘겨준 자격 증명은 `systemd-creds:NAME`으로 읽으며,
+`file:$CREDENTIALS_DIRECTORY/NAME`으로는 절대 읽지 않습니다.
+
+systemd 호스트에서는 비밀번호를 머신에 봉인하고 서비스에 자격 증명으로
+전달하십시오.
+
+```sh
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
+```
+
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+`--tpm2-pcrs` 없이 `--with-key=host+tpm2`를 사용하십시오. 키는 TPM2 칩과 호스트 키
+파일에서 유도되며 펌웨어와 Secure Boot 업데이트를 견딥니다. `--tpm2-pcrs=7`만
+단독으로 쓰지 마십시오. 펌웨어나 shim 업데이트로 자격 증명을 읽을 수 없게 되어
+브리지가 시작을 거부하게 됩니다.
+
+**복구.** 자격 증명은 TPM2 칩이나 `/var/lib/systemd/credential.secret`을 잃으면
+함께 사라지며, 복호화 실패는 시작 시 브리지를 멈춥니다. 비밀번호를 이 머신에
+의존하지 않는 곳(오프라인 사본)에 보관하고, 그 사본으로 위 명령으로 다시 봉인한
+다음 `systemctl restart authn-bridge`를 실행하십시오.
+
 ## 시작할 때 거부되는 것 {#what-is-refused-at-startup}
 
 다음은 각각 그것을 요청한 구성에 대해 `authn-bridge check`가 출력한 것입니다.
