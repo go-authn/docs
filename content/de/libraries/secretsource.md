@@ -12,7 +12,7 @@ Referenz enthält kein Geheimnis und darf daher in einer Option, einem Skript
 oder der Shell-Historie stehen.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.9.0
+go get github.com/go-authn/secretsource@v0.12.0
 ```
 
 ```go
@@ -145,6 +145,14 @@ if err := secretflag.Resolve(ctx, b); err != nil { return err }
 `flag.FlagSet` der Standardbibliothek (mit Aliasen wie `-t`); `Resolve` liest
 die Referenzen. Verfügbar seit v0.10.0.
 
+`AddFrom` registriert nur `--<name>-from`, ohne veralteten einfachen Zwilling,
+für ein Geheimnis, das eingeführt wurde, nachdem das einfache Flag als veraltet
+galt. `AddFromList` registriert ein wiederholbares `--<name>-from`; `Resolve`
+hängt jedes aufgelöste Geheimnis der Reihe nach an ein `*[]string` an
+(Schlüsselrotation). Beide entfernen Leerraum an den Rändern, lehnen ein leeres
+Geheimnis ab und halten den Wert aus Fehlern heraus, wie `Add`. Verfügbar seit
+v0.12.0.
+
 ## Ein Geheimnis speichern: `secretsource store` {#store}
 
 Kein Eintrag muss von Hand angelegt werden. `secretsource store REF [--group G]
@@ -170,6 +178,28 @@ die URL gesucht. Der Login ist standardmäßig der Host der URL (`--login`), die
 Gruppe ist `KeePassXC-Browser Passwords`, sofern `--group` nicht eine unterhalb
 der Wurzel nennt, und `--title` wird abgelehnt, weil KeePassXC 2.8.0 es
 ignoriert. KeePassXC zeigt seine eigenen Dialoge.
+
+## Ein Geheimnis löschen: `Delete` {#delete}
+
+`Delete(ctx, ref)` ist das Gegenstück zu `Store`: Wer ein Token im Schlüsselbund
+hält, kann es beim Abmelden entfernen. Verfügbar seit v0.11.0.
+
+- `keychain:` und `secretservice:SERVICE/ACCOUNT` entfernen den Eintrag. Passt
+  eine Secret-Service-Suche auf mehrere Einträge, ist das Ergebnis
+  `ErrAmbiguous` und nichts wird gelöscht.
+- `keepassxc:URL` nutzt das `delete-entry` des Browser-Protokolls: KeePassXC
+  fragt nach Bestätigung und verschiebt den Eintrag in seinen Papierkorb, das
+  Passwort bleibt also in der Datenbank, bis der Papierkorb geleert wird.
+- Ein fehlender Eintrag ist ein Fehler, der zugleich `ErrNotFound` und
+  `fs.ErrNotExist` ist, sodass „schon weg“ bewusst als Erfolg behandelt werden
+  kann.
+- `file:`, `systemd-creds:` und `secretservice:KEY=VALUE` werden mit
+  `ErrNoDelete` abgelehnt: Dieses Paket verwaltet nie eine Datei oder ein
+  Credential, das es nicht selbst gespeichert hat, und eine Attributsuche
+  benennt keinen einzelnen Eintrag.
+
+Der Eintrag wird vor dem Löschen nachgeschlagen. Nichts Geheimes wird
+zurückgegeben oder protokolliert.
 
 ## Referenz {#reference}
 

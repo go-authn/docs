@@ -11,7 +11,7 @@ tags: [库, secretsource, 密钥]
 shell 历史记录里。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.9.0
+go get github.com/go-authn/secretsource@v0.12.0
 ```
 
 ```go
@@ -112,6 +112,11 @@ if err := secretflag.Resolve(ctx, b); err != nil { return err }
 `Add` 在 cobra 命令上注册这一对，`AddStd` 在标准库的 `flag.FlagSet` 上注册
 （支持 `-t` 之类的别名）；`Resolve` 读取引用。自 v0.10.0 起可用。
 
+`AddFrom` 只注册 `--<name>-from`，没有已弃用的普通标志与之配对，适用于在普通标志
+被弃用之后才引入的密钥。`AddFromList` 注册可重复使用的 `--<name>-from`；`Resolve`
+按顺序把每个解析出的密钥追加到一个 `*[]string`（用于密钥轮换）。两者都与 `Add`
+一样：去除首尾空白，拒绝空密钥，错误信息中不含该值。自 v0.12.0 起可用。
+
 ## 保存密钥：`secretsource store` {#store}
 
 不必手工创建条目。`secretsource store REF [--group G] [--login L] [--replace]
@@ -133,6 +138,22 @@ printf '%s' "$PIN" | secretsource store keychain:fido/yubikey-5c
 URL，重复项按 URL 查找。登录名默认为 URL 的主机（`--login`），分组为
 `KeePassXC-Browser Passwords`，除非 `--group` 指定了根下的某个分组；`--title`
 会被拒绝，因为 KeePassXC 2.8.0 会忽略它。KeePassXC 会显示它自己的对话框。
+
+## 删除密钥：`Delete` {#delete}
+
+`Delete(ctx, ref)` 是 `Store` 的对应操作，使把令牌保存在钥匙串中的调用方可以在
+登出时将其删除。自 v0.11.0 起可用。
+
+- `keychain:` 和 `secretservice:SERVICE/ACCOUNT` 删除该条目。当 Secret Service 的
+  查找匹配到多个条目时，结果为 `ErrAmbiguous`，且不会删除任何内容。
+- `keepassxc:URL` 使用浏览器协议的 `delete-entry`：KeePassXC 会请求确认，并把条目
+  移入回收站，因此在清空回收站之前，密码仍保留在数据库中。
+- 条目不存在时返回的错误同时满足 `ErrNotFound` 和 `fs.ErrNotExist`，因此可以有意
+  把“已经不存在”当作成功处理。
+- `file:`、`systemd-creds:` 和 `secretservice:KEY=VALUE` 会以 `ErrNoDelete` 被拒绝：
+  本包从不管理自己没有保存的文件或凭据，而按属性查找也不指向单一条目。
+
+条目在删除之前会先被查找。不会返回或记录任何机密内容。
 
 ## 参考 {#reference}
 
