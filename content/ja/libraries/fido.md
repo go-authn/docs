@@ -26,6 +26,7 @@ Linux の hidraw、ブラウザーの WebHID は、他の誰かのパッケー�
 | `Key.GetInfo` | バージョン、拡張、AAGUID、オプション、PIN プロトコル |
 | `Key.MakeCredential`、`Key.GetAssertion` | 登録と署名。`ParseAuthData` が認証器データを読み、`AuthData.PublicKey` が P-256 の COSE 鍵を `*ecdsa.PublicKey` に変える |
 | `Key.PINRetries`、`Key.KeyAgreement`、`Key.PINToken` | `authenticatorClientPIN`、両方の PIN/UV 認証プロトコル |
+| `Key.PINTokenBytes`、`Key.SetPINBytes`、`Key.ChangePINBytes` | 消去できる `[]byte` で持つ PIN のための同じやり取り。PIN はその場でハッシュされ、どこにも保持されず、途中で作られたコピーはすべて消去されます。リクエストは同一です。`string` 形式 (`PINToken`、`SetPIN`、`ChangePIN`) は、`string` を消去できないため非推奨です |
 | `Split`、`NewReassembler`、`ParseInit`、`Key.CBOR` | フレーミング。別の方法で鍵を駆動する人のためにエクスポートされている |
 
 `AuthData.PublicKey` は変換であり検証ではありません。どのアルゴリズムを認めるか、そして逆戻りした

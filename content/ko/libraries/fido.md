@@ -26,6 +26,7 @@ Linux의 hidraw, 브라우저의 WebHID — 는 다른 패키지의 몫입니다
 | `Key.GetInfo` | 버전, 확장, AAGUID, 옵션, PIN 프로토콜 |
 | `Key.MakeCredential`, `Key.GetAssertion` | 등록, 그리고 서명. `ParseAuthData`가 인증기 데이터를 읽고, `AuthData.PublicKey`가 P-256 COSE 키를 `*ecdsa.PublicKey`로 바꿈 |
 | `Key.PINRetries`, `Key.KeyAgreement`, `Key.PINToken` | `authenticatorClientPIN`, 두 PIN/UV 인증 프로토콜 모두 |
+| `Key.PINTokenBytes`, `Key.SetPINBytes`, `Key.ChangePINBytes` | 지울 수 있는 `[]byte`로 가진 PIN을 위한 같은 교환입니다. PIN은 제자리에서 해시되고 어디에도 보관되지 않으며, 도중에 만든 모든 복사본은 지워집니다. 요청은 동일합니다. `string` 형식(`PINToken`, `SetPIN`, `ChangePIN`)은 `string`을 지울 수 없으므로 더 이상 권장되지 않습니다 |
 | `Split`, `NewReassembler`, `ParseInit`, `Key.CBOR` | 프레이밍. 다른 방식으로 키를 구동하는 사람을 위해 공개됨 |
 
 `AuthData.PublicKey`는 검증이 아니라 변환입니다. 어떤 알고리즘을 인정할지, 거꾸로 간

@@ -27,6 +27,7 @@ quelqu'un d'autre. Tout ce qui est au-dessus est ici :
 | `Key.GetInfo` | versions, extensions, AAGUID, options, protocoles de PIN |
 | `Key.MakeCredential`, `Key.GetAssertion` | enregistrer, et signer ; `ParseAuthData` lit les données d'authentificateur, et `AuthData.PublicKey` transforme une clé COSE P-256 en `*ecdsa.PublicKey` |
 | `Key.PINRetries`, `Key.KeyAgreement`, `Key.PINToken` | `authenticatorClientPIN`, les deux protocoles d'authentification PIN/UV |
+| `Key.PINTokenBytes`, `Key.SetPINBytes`, `Key.ChangePINBytes` | les mêmes échanges pour un PIN tenu en `[]byte`, que vous pouvez effacer : le PIN est haché sur place, conservé nulle part, et chaque copie faite en chemin est effacée ; les requêtes sont identiques. Les formes à `string` (`PINToken`, `SetPIN`, `ChangePIN`) sont obsolètes, car une `string` ne peut pas être effacée |
 | `Split`, `NewReassembler`, `ParseInit`, `Key.CBOR` | le découpage, exporté pour quiconque pilote une clé autrement |
 
 `AuthData.PublicKey` est une conversion, pas une vérification : quels algorithmes
