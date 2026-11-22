@@ -108,20 +108,33 @@ jamais dans le même téléchargement que le certificat. Voir
 ## Le mot de passe SMTP {#the-smtp-password}
 
 Nécessaire seulement avec un [bloc `mail`]({{< relref "/authn-bridge/configuration.md#mail" >}})
-(depuis la v0.32.0). Le mot de passe vient de `password_file`, et de nulle part ailleurs :
-ni l'environnement, ni une ligne de commande, ni le fichier de configuration. Le fichier
-doit être un fichier ordinaire **appartenant à l'utilisateur du service, sans bit de
-permission de groupe ni d'autres** (`0600`), et contenir une seule ligne non vide ; il
-est lu en une seule ouverture. Tout autre cas est refusé au démarrage : donnez donc le
-fichier à l'utilisateur du service et restreignez son mode :
+(depuis la v0.32.0). Depuis la v0.33.0, le mot de passe est une référence
+[secretsource](https://github.com/go-authn/secretsource), `password_from`, jamais
+le mot de passe lui-même. Sur un hôte systemd, scellez-le à la machine et remettez-le
+au service comme identifiant :
 
 ```sh
-chown authn-bridge /etc/authn-bridge/smtp.password
-chmod 0600 /etc/authn-bridge/smtp.password
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
 ```
 
-Le pont lit ce seul fichier pour le mot de passe SMTP dans la v0.32.0 ; le README du
-pont ne nomme aucune autre source, identifiant systemd compris.
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+Mettez ensuite `password_from = "systemd-creds:smtp"` dans le bloc `mail`. Utilisez
+`--with-key=host+tpm2` sans `--tpm2-pcrs`, pour que l'identifiant survive aux mises
+à jour du micrologiciel et de Secure Boot. `password_file` fonctionne encore mais est
+**obsolète** (lu comme `password_from = "file:PATH"`) ; définir les deux est refusé
+au démarrage.
+
+**Reprise.** L'identifiant est perdu avec la puce TPM2 ou
+`/var/lib/systemd/credential.secret`, ou après un changement de micrologiciel ou de
+PCR s'il était scellé aux PCR ; un échec de déchiffrement arrête le pont au démarrage.
+Gardez le mot de passe dans une copie hors ligne, rescellez-le depuis elle avec la
+commande ci-dessus, puis lancez `systemctl restart authn-bridge`.
 
 ## L'unité {#the-unit}
 

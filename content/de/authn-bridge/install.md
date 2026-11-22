@@ -108,21 +108,34 @@ nie aus demselben Download wie das Zertifikat. Siehe
 ## Das SMTP-Passwort {#the-smtp-password}
 
 Nur nötig mit einem [`mail`-Block]({{< relref "/authn-bridge/configuration.md#mail" >}})
-(seit v0.32.0). Das Passwort kommt aus `password_file` und von nirgendwo sonst:
-nicht aus der Umgebung, nicht aus einer Kommandozeile, nicht aus der
-Konfigurationsdatei. Die Datei muss eine reguläre Datei sein, **im Besitz des
-Dienstbenutzers, ohne Gruppen- und ohne Others-Berechtigungsbits** (`0600`), und
-eine nicht leere Zeile enthalten; sie wird mit einem einzigen Öffnen gelesen.
-Alles andere wird beim Start abgelehnt, also geben Sie die Datei dem
-Dienstbenutzer und verengen Sie ihren Modus:
+(seit v0.32.0). Seit v0.33.0 ist das Passwort eine
+[secretsource](https://github.com/go-authn/secretsource)-Referenz,
+`password_from`, nie das Passwort selbst. Auf einem systemd-Host versiegeln Sie
+es an die Maschine und übergeben es dem Dienst als Credential:
 
 ```sh
-chown authn-bridge /etc/authn-bridge/smtp.password
-chmod 0600 /etc/authn-bridge/smtp.password
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
 ```
 
-Die Bridge liest in v0.32.0 diese eine Datei für das SMTP-Passwort; das README
-der Bridge nennt keine andere Quelle, auch kein systemd-Credential.
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+Setzen Sie dann `password_from = "systemd-creds:smtp"` im `mail`-Block.
+Verwenden Sie `--with-key=host+tpm2` ohne `--tpm2-pcrs`, damit das Credential
+Firmware- und Secure-Boot-Updates übersteht. `password_file` funktioniert noch,
+ist aber **veraltet** (gelesen als `password_from = "file:PATH"`); beides
+zugleich zu setzen wird beim Start abgelehnt.
+
+**Wiederherstellung.** Das Credential geht mit dem TPM2-Chip oder
+`/var/lib/systemd/credential.secret` verloren, oder nach einer Firmware- oder
+PCR-Änderung, wenn es an PCRs versiegelt war; ein Entschlüsselungsfehler stoppt
+die Bridge beim Start. Bewahren Sie das Passwort in einer Offline-Kopie auf,
+versiegeln Sie es damit mit dem obigen Befehl neu und führen Sie dann
+`systemctl restart authn-bridge` aus.
 
 ## Die Unit {#the-unit}
 

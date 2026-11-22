@@ -106,17 +106,27 @@ runuser -u authn-bridge -- sh -c 'umask 077; openssl req -x509 -newkey rsa:3072 
 ## SMTP 密码 {#the-smtp-password}
 
 只有使用 [`mail` 块]({{< relref "/authn-bridge/configuration.md#mail" >}})（自
-v0.32.0 起）时才需要。密码来自 `password_file`，且只来自它：不来自环境变量、命令行或配置文件。
-该文件必须是普通文件，**归服务的用户所有，不带任何组和其他用户权限位**（`0600`），
-并且是一行非空内容；只打开一次读取。其他任何情况都会在启动时被拒绝，
-所以请把文件交给服务的用户并收紧其权限：
+v0.32.0 起）时才需要。自 v0.33.0 起，密码是一个 [secretsource](https://github.com/go-authn/secretsource)
+引用 `password_from`，而不是密码本身。在 systemd 主机上，把它封存到本机，并作为凭据交给服务：
 
 ```sh
-chown authn-bridge /etc/authn-bridge/smtp.password
-chmod 0600 /etc/authn-bridge/smtp.password
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
 ```
 
-在 v0.32.0 中，网桥只从这一个文件读取 SMTP 密码；网桥的 README 没有提到其他来源，systemd 凭据也不在内。
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+然后在 `mail` 块中设置 `password_from = "systemd-creds:smtp"`。使用
+`--with-key=host+tpm2`，不要加 `--tpm2-pcrs`，这样凭据在固件和 Secure Boot 更新后仍可读取。
+`password_file` 仍然可用，但已**弃用**（按 `password_from = "file:PATH"` 读取）；两者同时设置会在启动时被拒绝。
+
+**恢复。** 凭据会随 TPM2 芯片或 `/var/lib/systemd/credential.secret` 丢失，
+若曾封存到 PCR，固件或 PCR 变化后也会失效；解密失败会使网桥在启动时停止。
+请把密码保存在离线副本中，用上面的命令从该副本重新封存，然后执行 `systemctl restart authn-bridge`。
 
 ## 单元 {#the-unit}
 
