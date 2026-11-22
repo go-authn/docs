@@ -2,7 +2,7 @@
 title: "ライブラリ、一つにつき一つの問い"
 linkTitle: "ライブラリ"
 weight: 50
-description: "十六の go-authn Go モジュール: それぞれが答える問い、これらのページが説明するバージョン、そして別々のモジュールである理由。"
+description: "十七の go-authn Go モジュール: それぞれが答える問い、これらのページが説明するバージョン、そして別々のモジュールである理由。"
 tags: [ライブラリ]
 ---
 
@@ -26,6 +26,7 @@ tags: [ライブラリ]
 | [saml]({{< relref "/libraries/saml.md" >}}) | フェデレーションの ID プロバイダーは、この人について何と述べたか | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | この SSH 証明書または鍵は、sshd が答えるとおりに失効しているか | v0.6.1 | `github.com/go-authn/krl` |
 | [cms]({{< relref "/libraries/cms.md" >}}) | この署名はこのバイト列に対して成り立つか、そしてどの証明書が作ったか | v0.2.0 | `github.com/go-authn/cms` |
+| [pkcs12]({{< relref "/libraries/pkcs12.md" >}}) | アップロードされたこの `.p12` には、どの秘密鍵とどの証明書が入っているか | v0.1.0 | `github.com/go-authn/pkcs12` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | デーモンの TLS サーバー証明書はどこから来るか | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | この WireGuard 鍵は接続してよいか。誰のものか | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | ID プロバイダーが作成、変更、削除したのは誰か | v0.2.1 | `github.com/go-authn/scim` |

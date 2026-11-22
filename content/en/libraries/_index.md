@@ -2,7 +2,7 @@
 title: "The libraries, one question each"
 linkTitle: "Libraries"
 weight: 50
-description: "The sixteen go-authn Go modules: the question each one answers, the version these pages describe, and why they are separate modules."
+description: "The seventeen go-authn Go modules: the question each one answers, the version these pages describe, and why they are separate modules."
 tags: [libraries]
 ---
 
@@ -27,6 +27,7 @@ All of them are pure Go and build with `CGO_ENABLED=0`.
 | [saml]({{< relref "/libraries/saml.md" >}}) | what did a federation's identity provider say about this person? | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | is this SSH certificate or key revoked, as sshd would answer? | v0.6.1 | `github.com/go-authn/krl` |
 | [cms]({{< relref "/libraries/cms.md" >}}) | does this signature hold over these bytes, and which certificate made it? | v0.2.0 | `github.com/go-authn/cms` |
+| [pkcs12]({{< relref "/libraries/pkcs12.md" >}}) | what private key and certificates are inside this `.p12` upload? | v0.1.0 | `github.com/go-authn/pkcs12` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | where does a daemon's TLS server certificate come from? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | may this WireGuard key connect, and whose is it? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | who has the identity provider just created, changed or deleted? | v0.2.1 | `github.com/go-authn/scim` |
