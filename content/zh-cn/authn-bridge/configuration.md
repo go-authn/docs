@@ -178,6 +178,54 @@ acme {
 证书是为签发方的主机而设。`cache_dir` 保存私钥，
 当其他用户可以访问或重新指向该目录时，提供方会拒绝启动。
 
+## `mail`：SMTP 密码是一个引用 {#mail-the-smtp-password-is-a-reference}
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                      # "tls" (port 465, the default) or "starttls" (587)
+  username      = "authn-bridge"
+  password_from = "systemd-creds:smtp"       # a secretsource reference, never the password
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                      # least time between two mails to one account
+}
+```
+
+`password_from` 是一个 [secretsource](https://github.com/go-authn/secretsource)
+引用：`systemd-creds:NAME`、`file:PATH`（仅所有者可读的普通文件，
+`0600`）、`keychain:SERVICE/ACCOUNT`，以及 secretsource 的其他方案。
+密码是一行非空内容，至多 4096 字节，并且不会从其他任何地方读取：
+不是环境变量，不是命令行，也不是配置文件本身。没有方案的引用、过大或
+多行的密钥、权限过宽的文件，以及缺少 `username` 和
+`password_from` 的 `mail` 块，在启动时都会被拒绝。
+
+`password_file = "PATH"` 仍然可用，但已**弃用**：它被当作
+`password_from = "file:PATH"` 读取。同时设置两者是配置错误。
+
+在 systemd 主机上，把密码封存到本机，并作为凭据交给服务：
+
+```sh
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
+```
+
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+请使用 `--with-key=host+tpm2`，不要带 `--tpm2-pcrs`：密钥由 TPM2
+芯片和主机密钥文件派生，在固件和 Secure Boot 更新后依然有效。
+不要单独使用 `--tpm2-pcrs=7`：固件或 shim 更新会使
+凭据无法读取，网桥将拒绝启动。
+
+**恢复。** 一旦丢失 TPM2 芯片或
+`/var/lib/systemd/credential.secret`，凭据也随之丢失，解密失败会使网桥在
+启动时停止。请把密码保存在不依赖这台机器的地方
+（离线副本），用上面的命令从该副本重新封存，然后
+`systemctl restart authn-bridge`。
+
 ## 启动时拒绝什么 {#what-is-refused-at-startup}
 
 以下每一项都是 `authn-bridge check` 对提出该请求的配置所输出的内容。

@@ -184,6 +184,60 @@ acme {
 Das Zertifikat gilt für den Host des Ausstellers. `cache_dir` enthält private Schlüssel, und
 der Anbieter verweigert den Start auf einem Verzeichnis, das ein anderer Benutzer erreichen oder umlenken könnte.
 
+## `mail`: das SMTP-Passwort ist eine Referenz {#mail-the-smtp-password-is-a-reference}
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                      # "tls" (port 465, the default) or "starttls" (587)
+  username      = "authn-bridge"
+  password_from = "systemd-creds:smtp"       # a secretsource reference, never the password
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                      # least time between two mails to one account
+}
+```
+
+`password_from` ist eine [secretsource](https://github.com/go-authn/secretsource)-Referenz:
+`systemd-creds:NAME`, `file:PATH` (eine reguläre Datei, die nur ihr Eigentümer
+lesen darf, `0600`), `keychain:SERVICE/ACCOUNT` und die übrigen Schemata von
+secretsource. Das Passwort ist eine nicht leere Zeile von höchstens 4096 Byte und
+wird von nirgendwo sonst gelesen: nicht aus der Umgebung, nicht von einer
+Befehlszeile und nicht aus der Konfigurationsdatei selbst. Eine Referenz ohne
+Schema, ein zu großes oder mehrzeiliges Geheimnis, eine Datei mit zu offenen
+Rechten und ein `mail`-Block ohne `username` und `password_from` werden beim
+Start abgelehnt.
+
+`password_file = "PATH"` funktioniert weiterhin, ist aber **veraltet**: Es wird
+als `password_from = "file:PATH"` gelesen. Beides zu setzen ist ein
+Konfigurationsfehler.
+
+Auf einem systemd-Host versiegeln Sie das Passwort an die Maschine und übergeben
+es dem Dienst als Credential:
+
+```sh
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
+```
+
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+Verwenden Sie `--with-key=host+tpm2` ohne `--tpm2-pcrs`: Der Schlüssel wird aus dem
+TPM2-Chip und der Schlüsseldatei des Hosts abgeleitet und überlebt Firmware- und
+Secure-Boot-Updates. Verwenden Sie nicht ein nacktes `--tpm2-pcrs=7`: Ein
+Firmware- oder Shim-Update machte das Credential unlesbar, und die Bridge
+verweigerte den Start.
+
+**Wiederherstellung.** Das Credential geht mit dem TPM2-Chip oder
+`/var/lib/systemd/credential.secret` verloren, und ein Entschlüsselungsfehler
+hält die Bridge beim Start an. Bewahren Sie das Passwort an einem Ort auf, der
+nicht von dieser Maschine abhängt (eine Offline-Kopie), versiegeln Sie es aus
+dieser Kopie mit dem obigen Befehl neu und führen Sie dann
+`systemctl restart authn-bridge` aus.
+
 ## Was beim Start abgelehnt wird {#what-is-refused-at-startup}
 
 Jedes davon ist die Ausgabe von `authn-bridge check` für eine Konfiguration, die

@@ -119,7 +119,7 @@ authnd check /etc/authnd         # say what would be served, without listening
 listen  = "127.0.0.1:3893"            # the default
 base_dn = "dc=example,dc=org"         # required
 
-reader "cn=reader,dc=example,dc=org" { password_file = "/etc/authnd/reader.pw" }
+reader "cn=reader,dc=example,dc=org" { password_from = "systemd-creds:reader" }
 
 user "alice" { password_file = "/etc/authnd/passwords/alice.pw" }
 
@@ -176,8 +176,9 @@ Additional information: only a reader may search
 | una búsqueda por cualquiera que no sea un `reader` | `insufficientAccessRights` | el bind prueba quién es usted; leer a todo el mundo es algo distinto que hay que permitir |
 | `add`, `delete`, `modifyDN` | `unwillingToPerform` | no hay ningún manejador conectado para ellas; la única escritura es [la contraseña de la propia persona]({{< relref "/authnd/passwords.md" >}}) |
 
-Un `reader` es una cuenta de servicio con un DN de bind y `password` o
-`password_file`; un reader sin ninguno de los dos se rechaza al arrancar (*a reader that
+Un `reader` es una cuenta de servicio con un DN de bind y una contraseña, indicada por
+`password_from` (una [referencia a un secreto]({{< relref "/authnd/install.md#secrets-as-references" >}}));
+`password_file` y `password` son grafías obsoletas. Un reader sin ninguna se rechaza al arrancar (*a reader that
 proves nothing is anonymous search with extra steps*). Sin ningún
 reader, nada puede buscar, y `check` lo dice.
 

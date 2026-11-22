@@ -160,7 +160,7 @@ Why that directory and not the file is explained in
 |---|---|---|
 | `base_dn` | — (required) | the root of the tree, e.g. `dc=example,dc=org`; a value with no `=` is refused |
 | `listen` | `127.0.0.1:3893` | one address. Loopback by default: a directory that appears on every interface the moment it starts is a decision somebody should make on purpose. A site that needs LDAP and LDAPS runs two instances |
-| `reader "<dn>"` | none | a service account that may search; see [who may read]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
+| `reader "<dn>"` | none | a service account that may search, with `password_from` (and `totp_secret_from`), [secret references](#secrets-as-references); see [who may read]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | how often every source is read again; `0` turns it off; see [running it]({{< relref "/authnd/operations.md" >}}) |
 | `max_age` | `10m` (v0.17.0; `"0"` = no limit) | refuse stale data (`unavailable`) once the served data is older; see [running it]({{< relref "/authnd/operations.md" >}}) |
 | `max_connections` | `4096` | the most connections open at once, `0` for no limit; over it, a connection is sent `busy` and closed; see [limits]({{< relref "/authnd/operations.md#limits" >}}) |
@@ -176,6 +176,45 @@ Why that directory and not the file is explained in
 A relative path in the configuration is resolved against the directory the
 process runs in, not the configuration file's; the unit runs from `/`, so
 write paths absolute.
+
+### Secrets as references
+
+A `reader` block names its secrets with
+[secretsource](https://github.com/go-authn/secretsource) references instead of
+holding them:
+
+| field | meaning |
+|---|---|
+| `password_from` | the reader's password: `systemd-creds:NAME`, `file:PATH` (a regular file readable by its owner alone), `keychain:SERVICE/ACCOUNT`, ... |
+| `totp_secret_from` | the reader's base32 TOTP secret (with `mfa { readers = true }`) |
+| `password_file` | **deprecated**: read as `password_from = "file:PATH"` |
+| `password`, `totp_secret` | **deprecated**: the secret itself, written in the configuration; logged at startup |
+
+Exactly one of `password_from`, `password_file` and `password` is allowed, and
+`totp_secret` with `totp_secret_from` is refused. A secret is one non-empty line
+of at most 4096 bytes (a trailing newline is dropped); a reference with no
+scheme, a bad one, or an oversized, empty or multi-line secret stops the server
+at startup. The `user` and `users` blocks keep their own `*_file` spellings for
+now.
+
+With systemd, seal the secret to the machine and pass it as a credential:
+
+```sh
+printf %s 'the-reader-password' | sudo systemd-creds encrypt --name=reader \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/reader.cred
+```
+
+```ini
+# systemctl edit authnd
+[Service]
+LoadCredentialEncrypted=reader:/etc/credstore.encrypted/reader.cred
+```
+
+Use `--with-key=host+tpm2` and no `--tpm2-pcrs`: a bare `--tpm2-pcrs=7` makes the
+credential unreadable after a firmware or Secure Boot update, and authnd then
+refuses to start. **Recovery:** keep the secret in an offline copy, re-seal it
+with the command above after a TPM, host-key or firmware change, then
+`systemctl restart authnd`.
 
 Before every start:
 

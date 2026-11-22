@@ -37,6 +37,10 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | v0.11.0부터, 사람을 설명하되 아무것도 증명하지 않는 것 — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — 을 문자열 또는 문자열 목록의 맵으로. `group` 블록도 받습니다. 이것들이 엔트리가 무엇으로 게시되는지를 결정합니다. [엔트리]({{< relref "/authnd/entries.md#adding-attributes" >}})를 참조 |
 | `object_classes` | v0.12.0부터, 이 사람(`group` 블록에서는 이 그룹)이 함께 게시되는 보조 클래스, 예: `["siteMember"]`. 선언되는 것이지 추론되지 않으며, [사이트 스키마]({{< relref "/authnd/schemas.md#object-classes" >}})에서 정의됩니다 |
 
+이 비밀 값 필드들은 `user` 또는 `users` 블록에서 자체 표기를 유지합니다. 당분간
+`reader` 블록만 [비밀 값 참조]({{< relref "/authnd/install.md#secrets-as-references" >}})
+(`password_from`, `totp_secret_from`)를 받습니다.
+
 시작 시 거부되며 해당 사람의 이름을 지정합니다.
 
 - `password`와 `password_file`이 함께 있는 경우 — 어느 쪽인지 지정하십시오

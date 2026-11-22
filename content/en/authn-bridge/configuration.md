@@ -183,6 +183,56 @@ acme {
 The certificate is for the issuer's host. `cache_dir` holds private keys, and
 the provider refuses to start on one another user could reach or re-point.
 
+## `mail`: the SMTP password is a reference
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                      # "tls" (port 465, the default) or "starttls" (587)
+  username      = "authn-bridge"
+  password_from = "systemd-creds:smtp"       # a secretsource reference, never the password
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                      # least time between two mails to one account
+}
+```
+
+`password_from` is a [secretsource](https://github.com/go-authn/secretsource)
+reference: `systemd-creds:NAME`, `file:PATH` (a regular file readable by its
+owner alone, `0600`), `keychain:SERVICE/ACCOUNT`, and the other schemes of
+secretsource. The password is one non-empty line of at most 4096 bytes, and it
+is read from nowhere else: not the environment, not a command line, and not the
+configuration file itself. A reference with no scheme, an oversized or
+multi-line secret, a loose-mode file, and a `mail` block without `username` and
+`password_from` are refused at startup.
+
+`password_file = "PATH"` still works but is **deprecated**: it is read as
+`password_from = "file:PATH"`. Setting both is a configuration error.
+
+On a systemd host, seal the password to the machine and hand it to the service
+as a credential:
+
+```sh
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
+```
+
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+Use `--with-key=host+tpm2` with no `--tpm2-pcrs`: the key derives from the TPM2
+chip and the host key file, and survives firmware and Secure Boot updates. Do
+not use a bare `--tpm2-pcrs=7`: a firmware or shim update would make the
+credential unreadable and the bridge would refuse to start.
+
+**Recovery.** The credential is lost with the TPM2 chip or
+`/var/lib/systemd/credential.secret`, and a decryption failure stops the bridge
+at startup. Keep the password in a place that does not depend on this machine
+(an offline copy), re-seal from that copy with the command above, then
+`systemctl restart authn-bridge`.
+
 ## What is refused at startup
 
 Each of these is the output of `authn-bridge check` on a configuration that

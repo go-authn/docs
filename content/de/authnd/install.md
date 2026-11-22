@@ -158,7 +158,7 @@ Warum dieses Verzeichnis und nicht die Datei, erklärt
 |---|---|---|
 | `base_dn` | – (erforderlich) | die Wurzel des Baums, z. B. `dc=example,dc=org`; ein Wert ohne `=` wird abgelehnt |
 | `listen` | `127.0.0.1:3893` | eine Adresse. Standardmäßig Loopback: Ein Verzeichnis, das auf jeder Schnittstelle erscheint, sobald es startet, ist eine Entscheidung, die jemand bewusst treffen sollte. Ein Standort, der LDAP und LDAPS braucht, betreibt zwei Instanzen |
-| `reader "<dn>"` | keiner | ein Dienstkonto, das suchen darf; siehe [wer lesen darf]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
+| `reader "<dn>"` | keiner | ein Dienstkonto, das suchen darf, mit `password_from` (und `totp_secret_from`), [Geheimnis-Referenzen](#secrets-as-references); siehe [wer lesen darf]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}}) |
 | `refresh` | `60s` | wie oft jede Quelle erneut gelesen wird; `0` schaltet es ab; siehe [Betrieb]({{< relref "/authnd/operations.md" >}}) |
 | `max_age` | `10m` (v0.17.0; `"0"` = keine Grenze) | veraltete Daten verweigern (`unavailable`), sobald die ausgelieferten Daten älter sind; siehe [Betrieb]({{< relref "/authnd/operations.md" >}}) |
 | `max_connections` | `4096` | die meisten gleichzeitig offenen Verbindungen, `0` für keine Grenze; darüber erhält eine Verbindung `busy` und wird geschlossen; siehe [Grenzen]({{< relref "/authnd/operations.md#limits" >}}) |
@@ -174,6 +174,47 @@ Warum dieses Verzeichnis und nicht die Datei, erklärt
 Ein relativer Pfad in der Konfiguration wird gegen das Verzeichnis aufgelöst, in dem der
 Prozess läuft, nicht gegen das der Konfigurationsdatei; die Unit läuft in `/`, also schreiben
 Sie Pfade absolut.
+
+### Geheimnisse als Referenzen {#secrets-as-references}
+
+Ein `reader`-Block benennt seine Geheimnisse mit
+[secretsource](https://github.com/go-authn/secretsource)-Referenzen, statt sie
+selbst zu enthalten:
+
+| Feld | Bedeutung |
+|---|---|
+| `password_from` | das Passwort des Readers: `systemd-creds:NAME`, `file:PATH` (eine reguläre Datei, die nur ihr Eigentümer lesen darf), `keychain:SERVICE/ACCOUNT`, ... |
+| `totp_secret_from` | das base32-TOTP-Geheimnis des Readers (mit `mfa { readers = true }`) |
+| `password_file` | **veraltet**: wird als `password_from = "file:PATH"` gelesen |
+| `password`, `totp_secret` | **veraltet**: das Geheimnis selbst, in der Konfiguration geschrieben; beim Start protokolliert |
+
+Genau eines von `password_from`, `password_file` und `password` ist erlaubt, und
+`totp_secret` zusammen mit `totp_secret_from` wird abgelehnt. Ein Geheimnis ist
+eine nicht leere Zeile von höchstens 4096 Byte (ein abschließender Zeilenumbruch
+entfällt); eine Referenz ohne Schema, eine ungültige oder ein zu großes, leeres
+oder mehrzeiliges Geheimnis hält den Server beim Start an. Die Blöcke `user` und
+`users` behalten vorerst ihre eigenen `*_file`-Schreibweisen.
+
+Mit systemd versiegeln Sie das Geheimnis an die Maschine und übergeben es als
+Credential:
+
+```sh
+printf %s 'the-reader-password' | sudo systemd-creds encrypt --name=reader \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/reader.cred
+```
+
+```ini
+# systemctl edit authnd
+[Service]
+LoadCredentialEncrypted=reader:/etc/credstore.encrypted/reader.cred
+```
+
+Verwenden Sie `--with-key=host+tpm2` und kein `--tpm2-pcrs`: Ein nacktes
+`--tpm2-pcrs=7` macht das Credential nach einem Firmware- oder Secure-Boot-Update
+unlesbar, und authnd verweigert dann den Start. **Wiederherstellung:** Bewahren
+Sie das Geheimnis in einer Offline-Kopie auf, versiegeln Sie es nach einem Wechsel
+von TPM, Host-Schlüssel oder Firmware mit dem obigen Befehl neu und führen Sie dann
+`systemctl restart authnd` aus.
 
 Vor jedem Start:
 
