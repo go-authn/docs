@@ -164,14 +164,12 @@ data-copied-label="복사됨!"
 참조하십시오.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-smtp-password"&gt;SMTP 비밀번호&lt;span class="hx:absolute hx:-mt-20" id="the-smtp-password"&gt;&lt;/span&gt;
 &lt;a href="#the-smtp-password" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;a href="https://go-authn.github.io/docs/0.11/ko/authn-bridge/configuration/#mail"&gt;&lt;code&gt;mail&lt;/code&gt; 블록&lt;/a&gt;이 있을 때만
-필요합니다(v0.32.0부터). 비밀번호는 &lt;code&gt;password_file&lt;/code&gt;에서만 오며 다른 곳에서는 오지
-않습니다. 환경 변수도, 명령줄도, 설정 파일도 아닙니다. 파일은 일반 파일이고 &lt;strong&gt;서비스 사용자
-소유이며 그룹과 다른 사용자의 권한 비트가 없어야&lt;/strong&gt; 하고(&lt;code&gt;0600&lt;/code&gt;), 비어 있지 않은 한
-줄이어야 하며, 한 번 열어서 읽습니다. 그 밖의 것은 시작할 때 거부되므로, 파일을 서비스
-사용자에게 주고 모드를 좁히십시오.&lt;/p&gt;
+필요합니다(v0.32.0부터). v0.33.0부터 비밀번호는 &lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt;
+참조인 &lt;code&gt;password_from&lt;/code&gt;으로 지정하며, 비밀번호 자체를 적지 않습니다. systemd 호스트에서는
+컴퓨터에 봉인하여 자격 증명으로 서비스에 전달하십시오.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chown authn-bridge /etc/authn-bridge/smtp.password
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chmod &lt;span class="m"&gt;0600&lt;/span&gt; /etc/authn-bridge/smtp.password&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s1"&gt;&amp;#39;the-smtp-password&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; sudo systemd-creds encrypt --name&lt;span class="o"&gt;=&lt;/span&gt;smtp &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; --with-key&lt;span class="o"&gt;=&lt;/span&gt;host+tpm2 - /etc/credstore.encrypted/smtp.cred&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="코드 복사"
@@ -183,8 +181,27 @@ data-copied-label="복사됨!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;v0.32.0에서 bridge는 SMTP 비밀번호로 이 파일 하나만 읽으며, bridge의 README는 systemd
-자격 증명을 포함해 다른 출처를 말하지 않습니다.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# systemctl edit authn-bridge&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;LoadCredentialEncrypted&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;smtp:/etc/credstore.encrypted/smtp.cred&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="코드 복사"
+aria-label="코드 복사"
+data-copied-label="복사됨!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;그런 다음 &lt;code&gt;mail&lt;/code&gt; 블록에 &lt;code&gt;password_from = &amp;quot;systemd-creds:smtp&amp;quot;&lt;/code&gt;를 설정하십시오.&lt;code&gt;--with-key=host+tpm2&lt;/code&gt;를 쓰고 &lt;code&gt;--tpm2-pcrs&lt;/code&gt;는 붙이지 마십시오. 펌웨어와 Secure Boot
+업데이트 후에도 자격 증명을 읽을 수 있습니다. &lt;code&gt;password_file&lt;/code&gt;은 아직 동작하지만&lt;strong&gt;더 이상 권장되지 않으며&lt;/strong&gt;(&lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt;로 읽힘), 둘 다 설정하면
+시작할 때 거부됩니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;복구.&lt;/strong&gt; 자격 증명은 TPM2 칩이나 &lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt;을 잃으면,또 PCR에 봉인했다면 펌웨어나 PCR이 바뀐 뒤에 사라지며, 복호화에 실패하면 bridge는
+시작할 때 멈춥니다. 비밀번호는 오프라인 사본에 보관하고, 그 사본으로 위 명령을 다시 실행해
+봉인한 뒤 &lt;code&gt;systemctl restart authn-bridge&lt;/code&gt;를 실행하십시오.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-unit"&gt;유닛&lt;span class="hx:absolute hx:-mt-20" id="the-unit"&gt;&lt;/span&gt;
 &lt;a href="#the-unit" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;부여하는 것을 요약하면:&lt;/p&gt;
 &lt;ul&gt;

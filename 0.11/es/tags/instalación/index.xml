@@ -171,13 +171,12 @@ federación, y también su huella SHA-256: tome la huella de la página web de l
 federación, nunca de la misma descarga que el certificado. Consulte&lt;a href="https://go-authn.github.io/docs/0.11/es/authn-bridge/federation/"&gt;el lado de la federación&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-smtp-password"&gt;La contraseña SMTP&lt;span class="hx:absolute hx:-mt-20" id="the-smtp-password"&gt;&lt;/span&gt;
 &lt;a href="#the-smtp-password" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Solo hace falta con un &lt;a href="https://go-authn.github.io/docs/0.11/es/authn-bridge/configuration/#mail"&gt;bloque &lt;code&gt;mail&lt;/code&gt;&lt;/a&gt;
-(desde la v0.32.0). La contraseña viene de &lt;code&gt;password_file&lt;/code&gt;, y de ningún otro sitio:ni el entorno, ni una línea de comandos, ni el archivo de configuración. El archivo
-debe ser un archivo regular &lt;strong&gt;propiedad del usuario del servicio, sin bits de permiso
-de grupo ni de otros&lt;/strong&gt; (&lt;code&gt;0600&lt;/code&gt;), y una línea no vacía; se lee con una sola apertura.Cualquier otra cosa se rechaza al arrancar, así que dé el archivo al usuario del
-servicio y restrinja su modo:&lt;/p&gt;
+(desde la v0.32.0). Desde la v0.33.0 la contraseña es una referencia de&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt;, &lt;code&gt;password_from&lt;/code&gt;, nunca
+la contraseña misma. En un equipo con systemd, séllela a la máquina y entréguela
+al servicio como credencial:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chown authn-bridge /etc/authn-bridge/smtp.password
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chmod &lt;span class="m"&gt;0600&lt;/span&gt; /etc/authn-bridge/smtp.password&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s1"&gt;&amp;#39;the-smtp-password&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; sudo systemd-creds encrypt --name&lt;span class="o"&gt;=&lt;/span&gt;smtp &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; --with-key&lt;span class="o"&gt;=&lt;/span&gt;host+tpm2 - /etc/credstore.encrypted/smtp.cred&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copiar código"
@@ -189,8 +188,28 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;El bridge lee este único archivo para la contraseña SMTP en la v0.32.0; el README del
-bridge no nombra ninguna otra fuente, tampoco una credencial de systemd.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# systemctl edit authn-bridge&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;LoadCredentialEncrypted&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;smtp:/etc/credstore.encrypted/smtp.cred&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Luego ponga &lt;code&gt;password_from = &amp;quot;systemd-creds:smtp&amp;quot;&lt;/code&gt; en el bloque &lt;code&gt;mail&lt;/code&gt;. Use&lt;code&gt;--with-key=host+tpm2&lt;/code&gt; sin &lt;code&gt;--tpm2-pcrs&lt;/code&gt;, para que la credencial sobreviva a las
+actualizaciones de firmware y de Secure Boot. &lt;code&gt;password_file&lt;/code&gt; aún funciona pero
+está &lt;strong&gt;obsoleto&lt;/strong&gt; (se lee como &lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt;); definir ambos se
+rechaza al arrancar.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Recuperación.&lt;/strong&gt; La credencial se pierde con el chip TPM2 o con&lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt;, o tras un cambio de firmware o de PCR si
+estaba sellada a PCR; un fallo de descifrado detiene el bridge al arrancar.Guarde la contraseña en una copia fuera de línea, vuelva a sellarla desde ella
+con el comando anterior y luego ejecute &lt;code&gt;systemctl restart authn-bridge&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-unit"&gt;La unidad&lt;span class="hx:absolute hx:-mt-20" id="the-unit"&gt;&lt;/span&gt;
 &lt;a href="#the-unit" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Lo que concede, en resumen:&lt;/p&gt;
 &lt;ul&gt;

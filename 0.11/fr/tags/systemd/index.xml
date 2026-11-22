@@ -168,14 +168,12 @@ data-copied-label="Copié !"
 son empreinte SHA-256 : prenez l&amp;rsquo;empreinte sur la page web de la fédération,jamais dans le même téléchargement que le certificat. Voir&lt;a href="https://go-authn.github.io/docs/0.11/fr/authn-bridge/federation/"&gt;le côté fédération&lt;/a&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-smtp-password"&gt;Le mot de passe SMTP&lt;span class="hx:absolute hx:-mt-20" id="the-smtp-password"&gt;&lt;/span&gt;
 &lt;a href="#the-smtp-password" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Nécessaire seulement avec un &lt;a href="https://go-authn.github.io/docs/0.11/fr/authn-bridge/configuration/#mail"&gt;bloc &lt;code&gt;mail&lt;/code&gt;&lt;/a&gt;
-(depuis la v0.32.0). Le mot de passe vient de &lt;code&gt;password_file&lt;/code&gt;, et de nulle part ailleurs :ni l&amp;rsquo;environnement, ni une ligne de commande, ni le fichier de configuration. Le fichier
-doit être un fichier ordinaire &lt;strong&gt;appartenant à l&amp;rsquo;utilisateur du service, sans bit de
-permission de groupe ni d&amp;rsquo;autres&lt;/strong&gt; (&lt;code&gt;0600&lt;/code&gt;), et contenir une seule ligne non vide ; il
-est lu en une seule ouverture. Tout autre cas est refusé au démarrage : donnez donc le
-fichier à l&amp;rsquo;utilisateur du service et restreignez son mode :&lt;/p&gt;
+(depuis la v0.32.0). Depuis la v0.33.0, le mot de passe est une référence&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt;, &lt;code&gt;password_from&lt;/code&gt;, jamais
+le mot de passe lui-même. Sur un hôte systemd, scellez-le à la machine et remettez-le
+au service comme identifiant :&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chown authn-bridge /etc/authn-bridge/smtp.password
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chmod &lt;span class="m"&gt;0600&lt;/span&gt; /etc/authn-bridge/smtp.password&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s1"&gt;&amp;#39;the-smtp-password&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; sudo systemd-creds encrypt --name&lt;span class="o"&gt;=&lt;/span&gt;smtp &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; --with-key&lt;span class="o"&gt;=&lt;/span&gt;host+tpm2 - /etc/credstore.encrypted/smtp.cred&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copier le code"
@@ -187,8 +185,27 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Le pont lit ce seul fichier pour le mot de passe SMTP dans la v0.32.0 ; le README du
-pont ne nomme aucune autre source, identifiant systemd compris.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# systemctl edit authn-bridge&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;LoadCredentialEncrypted&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;smtp:/etc/credstore.encrypted/smtp.cred&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Mettez ensuite &lt;code&gt;password_from = &amp;quot;systemd-creds:smtp&amp;quot;&lt;/code&gt; dans le bloc &lt;code&gt;mail&lt;/code&gt;. Utilisez&lt;code&gt;--with-key=host+tpm2&lt;/code&gt; sans &lt;code&gt;--tpm2-pcrs&lt;/code&gt;, pour que l&amp;rsquo;identifiant survive aux mises
+à jour du micrologiciel et de Secure Boot. &lt;code&gt;password_file&lt;/code&gt; fonctionne encore mais est&lt;strong&gt;obsolète&lt;/strong&gt; (lu comme &lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt;) ; définir les deux est refusé
+au démarrage.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Reprise.&lt;/strong&gt; L&amp;rsquo;identifiant est perdu avec la puce TPM2 ou&lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt;, ou après un changement de micrologiciel ou de
+PCR s&amp;rsquo;il était scellé aux PCR ; un échec de déchiffrement arrête le pont au démarrage.Gardez le mot de passe dans une copie hors ligne, rescellez-le depuis elle avec la
+commande ci-dessus, puis lancez &lt;code&gt;systemctl restart authn-bridge&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-unit"&gt;L&amp;rsquo;unité&lt;span class="hx:absolute hx:-mt-20" id="the-unit"&gt;&lt;/span&gt;
 &lt;a href="#the-unit" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Ce qu&amp;rsquo;elle accorde, en bref :&lt;/p&gt;
 &lt;ul&gt;

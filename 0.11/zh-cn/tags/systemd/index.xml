@@ -156,10 +156,11 @@ data-copied-label="已复制！"
 &lt;/div&gt;
 &lt;p&gt;联邦的元数据签名证书来自联邦，其 SHA-256指纹也是如此：请从联邦的网页获取指纹，绝不要从与证书相同的下载中获取。参见&lt;a href="https://go-authn.github.io/docs/0.11/zh-cn/authn-bridge/federation/"&gt;联邦一侧&lt;/a&gt;。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-smtp-password"&gt;SMTP 密码&lt;span class="hx:absolute hx:-mt-20" id="the-smtp-password"&gt;&lt;/span&gt;
-&lt;a href="#the-smtp-password" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;只有使用 &lt;a href="https://go-authn.github.io/docs/0.11/zh-cn/authn-bridge/configuration/#mail"&gt;&lt;code&gt;mail&lt;/code&gt; 块&lt;/a&gt;（自v0.32.0 起）时才需要。密码来自 &lt;code&gt;password_file&lt;/code&gt;，且只来自它：不来自环境变量、命令行或配置文件。该文件必须是普通文件，&lt;strong&gt;归服务的用户所有，不带任何组和其他用户权限位&lt;/strong&gt;（&lt;code&gt;0600&lt;/code&gt;），并且是一行非空内容；只打开一次读取。其他任何情况都会在启动时被拒绝，所以请把文件交给服务的用户并收紧其权限：&lt;/p&gt;
+&lt;a href="#the-smtp-password" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;只有使用 &lt;a href="https://go-authn.github.io/docs/0.11/zh-cn/authn-bridge/configuration/#mail"&gt;&lt;code&gt;mail&lt;/code&gt; 块&lt;/a&gt;（自v0.32.0 起）时才需要。自 v0.33.0 起，密码是一个 &lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt;
+引用 &lt;code&gt;password_from&lt;/code&gt;，而不是密码本身。在 systemd 主机上，把它封存到本机，并作为凭据交给服务：&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chown authn-bridge /etc/authn-bridge/smtp.password
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chmod &lt;span class="m"&gt;0600&lt;/span&gt; /etc/authn-bridge/smtp.password&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; %s &lt;span class="s1"&gt;&amp;#39;the-smtp-password&amp;#39;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; sudo systemd-creds encrypt --name&lt;span class="o"&gt;=&lt;/span&gt;smtp &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; --with-key&lt;span class="o"&gt;=&lt;/span&gt;host+tpm2 - /etc/credstore.encrypted/smtp.cred&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="复制代码"
@@ -171,7 +172,23 @@ data-copied-label="已复制！"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;在 v0.32.0 中，网桥只从这一个文件读取 SMTP 密码；网桥的 README 没有提到其他来源，systemd 凭据也不在内。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-ini" data-lang="ini"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# systemctl edit authn-bridge&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="na"&gt;LoadCredentialEncrypted&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;smtp:/etc/credstore.encrypted/smtp.cred&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;然后在 &lt;code&gt;mail&lt;/code&gt; 块中设置 &lt;code&gt;password_from = &amp;quot;systemd-creds:smtp&amp;quot;&lt;/code&gt;。使用&lt;code&gt;--with-key=host+tpm2&lt;/code&gt;，不要加 &lt;code&gt;--tpm2-pcrs&lt;/code&gt;，这样凭据在固件和 Secure Boot 更新后仍可读取。&lt;code&gt;password_file&lt;/code&gt; 仍然可用，但已&lt;strong&gt;弃用&lt;/strong&gt;（按 &lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt; 读取）；两者同时设置会在启动时被拒绝。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;恢复。&lt;/strong&gt; 凭据会随 TPM2 芯片或 &lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt; 丢失，若曾封存到 PCR，固件或 PCR 变化后也会失效；解密失败会使网桥在启动时停止。请把密码保存在离线副本中，用上面的命令从该副本重新封存，然后执行 &lt;code&gt;systemctl restart authn-bridge&lt;/code&gt;。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-unit"&gt;单元&lt;span class="hx:absolute hx:-mt-20" id="the-unit"&gt;&lt;/span&gt;
 &lt;a href="#the-unit" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;简而言之，它授予的权限：&lt;/p&gt;
 &lt;ul&gt;
