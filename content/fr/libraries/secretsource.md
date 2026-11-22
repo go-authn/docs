@@ -12,7 +12,7 @@ référence ne contient aucun secret : elle peut figurer dans une option, un
 script ou l'historique du shell.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.0
+go get github.com/go-authn/secretsource@v0.6.1
 ```
 
 ```go
@@ -49,6 +49,14 @@ utilisateur ou est inscriptible par le groupe ou les autres, et l'uid du pair co
 est vérifié après la connexion ; le lien symbolique historique
 `$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer` n'est plus suivi (le vrai
 socket sous `app/org.keepassxc.KeePassXC/` l'est).
+
+Depuis la v0.6.1, le fichier d'association (le magasin de repli, utilisé quand ni le
+trousseau macOS ni un Secret Service n'est là) est écrit dans un nouveau fichier
+temporaire du même répertoire puis renommé sur le nom final, de sorte qu'un lien
+symbolique laissé à ce nom est remplacé, pas suivi, et qu'un fichier de mode plus large
+ressort en 0600. Sous Unix, le répertoire est vérifié d'abord, comme celui du socket :
+appartenant à cet utilisateur, non inscriptible par le groupe ou les autres, pas un lien
+symbolique ; sinon rien n'est écrit.
 
 1. Dans KeePassXC, activez *Settings > Browser Integration*.
 2. Associez cette machine une fois par base, et approuvez dans KeePassXC :

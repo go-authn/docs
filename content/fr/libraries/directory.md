@@ -11,8 +11,22 @@ tenue en mémoire, une base de données SQL, un serveur LDAP, ou des blocs `user
 fichier de configuration — et ce qui compte, c'est la seconde moitié de la question.
 
 ```sh
-go get github.com/go-authn/directory@v0.24.0
+go get github.com/go-authn/directory@v0.26.0
 ```
+
+Depuis la v0.26.0, **un `Set` compare les noms par une seule relation d'équivalence,
+partout** : la règle d'égalité LDAP de uid (`caseIgnoreMatch`, préparation de la RFC 4518),
+dans la vérification des doublons au sein d'une source (`ErrAmbiguous`, comme ci-dessous),
+entre sources, dans `Members` et dans `Expand`. Deux noms qui ne diffèrent que par la casse
+ou une espace non significative sont la même personne : la première source qui connaît le nom
+le possède, une graphie ultérieure est masquée et écartée (ce n'est pas une erreur), et
+l'identité garde la graphie de la source propriétaire. `Set.Shadowed()` liste, après
+`Identities`, chaque graphie ultérieure qu'une personne d'une source antérieure a masquée
+(`Shadow{Name, Source, Owner, By}`) ; la même graphie dans deux sources est le remplacement
+documenté et n'est pas listée. Un nom sans clé (pas en UTF-8, vide ou fait d'espaces) est
+refusé avec `ErrBadName`. **Mise à jour :** un serveur dont les sources contiennent deux
+personnes aux noms qui ne diffèrent que par la casse ou une espace non significative perd
+désormais la seconde ; lisez `Shadowed`.
 
 Depuis la v0.24.0, qui demande go-authn/ldap v0.14.0, `ldapdir` tient pour un seul nom
 deux uid que `caseIgnoreMatch` assimile : « alice » et « alice » suivi d'une espace,
@@ -22,8 +36,8 @@ personnes. La clé est la clé d'égalité de l'attribut selon le schéma standa
 (`schema.Schema.EqualityKey`, préparation de la RFC 4518) ; un `UserAttribute` que le
 schéma standard ne connaît pas garde la mise en minuscules. **Mise à jour :** un
 annuaire contenant de telles paires ne se charge plus tant qu'une entrée n'est pas
-corrigée. `Set.Identities` compare toujours les noms octet par octet, et entre sources
-la première qui connaît un nom le possède. `ldapdir` vérifie aussi le certificat contre
+corrigée. (Entre la v0.24.0 et la v0.26.0, `Set.Identities` comparait encore les noms
+octet par octet entre sources ; la v0.26.0 change cela, ci-dessus.) `ldapdir` vérifie aussi le certificat contre
 l'hôte de l'URL (`tls.Config.ServerName`, copié et non modifié ; un ServerName explicite
 l'emporte toujours), ce qui, avec go-authn/ldap v0.14.0, corrige aussi StartTLS.
 
@@ -73,7 +87,9 @@ méthode :
 | `directory/hcldir` | un bloc `users` nommant une base de données ou un serveur LDAP, et des blocs `user`/`group` contenant des personnes | `x/crypto/ssh`, `hashicorp/hcl/v2`, `zclconf/go-cty` |
 | `directory/ldaptest` | un serveur LDAP contre lequel tester | `glauth/ldap` |
 
-Dans un `Set`, la **première** source qui connaît un nom en est propriétaire, si bien qu'un compte
+Dans un `Set`, la **première** source qui connaît un nom en est propriétaire (les noms qui ne
+diffèrent que par la casse ou une espace non significative comptent pour un seul nom, et une
+graphie ultérieure est listée par `Set.Shadowed()`), si bien qu'un compte
 de service écrit localement n'a pas besoin d'être mis dans LDAP. L'appartenance aux groupes est
 l'**union** de toutes les sources. Les sources sont lues au démarrage d'un serveur ; une vérification
 de mot de passe peut atteindre la source à chaque fois, parce qu'une liaison ne peut pas être mise en cache
@@ -476,8 +492,10 @@ C'est ainsi qu'authnd v0.15.0 répond à une liaison, comme le dit
   DN, et `Set.Identities` refuse un nom qu'UNE source liste deux fois.
   Auparavant, `Identities` renvoyait les deux et `Set.Identities` gardait la
   première venue, si bien qu'une personne recevait les groupes, les clés et la
-  vérification du mot de passe de l'autre. Entre sources, rien ne change : la
-  première source qui connaît un nom le possède. Un annuaire qui a de tels
+  vérification du mot de passe de l'autre. Entre sources, la première source
+  qui connaît un nom le possède (depuis la v0.26.0, une graphie ultérieure qui ne
+  diffère que par la casse ou une espace non significative est masquée, voir
+  `Set.Shadowed()` ci-dessus). Un annuaire qui a de tels
   doublons ne se charge plus tant qu'une entrée n'est pas supprimée ou son uid
   corrigé (`ldapsearch -b <base> '(uid=*)' uid dn` trouve les valeurs
   répétées). `ldaptest.Person.UID` est l'uid publié quand ce n'est pas la clé

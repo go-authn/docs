@@ -283,17 +283,18 @@ SMB에는 결코 충분하지 않습니다.
 가집니다.
 
 {{< callout type="warning" >}}
-**대소문자만 다른 두 이름은 거부됩니다**
+**대소문자만 다른 두 이름은 한 사람이며, 나중 것은 제외됩니다**
 
 uid는 대소문자를 무시하고 비교하며(RFC 4519 §2.39) 모든 DN도 마찬가지이므로,
-파일의 `Dora`와 데이터베이스의 `dora`는 LDAP에게는 하나의 이름이고 바이트를
-비교하는 모든 것에게는 두 사람입니다. 한쪽의 비밀번호 변경이 다른 쪽에 적용될 수
-있습니다. 이런 구성은 시작하지 않습니다.
-
-```
-$ authnd check cases/case.hcl
-authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them
-```
+파일의 `Dora`와 데이터베이스의 `dora`는 LDAP에게는 하나의 이름입니다. authnd
+v0.19.0부터, go-authn/directory v0.26.0과 함께, 여기서도 한 사람입니다. 이름은
+uid의 LDAP 동등 규칙(`caseIgnoreMatch`)으로 비교되므로, 대소문자나 중요하지 않은
+공백만 다른 이름은 같은 이름입니다. 그 사람을 아는 첫 소스가 소유하고, 나중의
+표기는 제외되며, 그 사람은 소유한 소스의 표기를 유지합니다. authnd는 이런 구성으로
+**시작하며**(v0.19.0 이전에는 거부했습니다) **기록합니다.** 시작할 때와, 목록이
+바뀐 새로 고침 때 `directory: names shadowed by a spelling an earlier source owns`가
+가려진 각 표기와 그 소스, 소유자를 알려 줍니다. 동등 키가 없는 이름(UTF-8이
+아니거나, 비었거나, 공백뿐인 이름)은 시작과 새로 고침을 실패시킵니다.
 {{< /callout >}}
 
 ## 시작할 때 읽고, 이후 새로 고칠 때마다 읽음 {#read-once}

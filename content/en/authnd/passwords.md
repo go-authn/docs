@@ -118,8 +118,8 @@ Additional info: dora is served from a sqlite database, which this server reads 
 The person is matched **by identity, not by DN**: the session's own name must
 be exactly the target's, byte for byte, so a session bound as `uid=Backup`
 cannot change `backup`'s password even though the two DNs compare equal. That
-and the [refusal of names that differ only by case]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
-are two controls that do not depend on each other.
+and the [treatment of names that differ only by case]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
+(one person, the first source owns it) are two controls that do not depend on each other.
 
 ## Where the new password is written
 

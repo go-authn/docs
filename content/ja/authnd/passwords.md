@@ -111,8 +111,8 @@ Additional info: dora is served from a sqlite database, which this server reads 
 人は**DN ではなく ID で**照合されます。セッション自身の名前が対象の名前とバイト単位で
 完全に一致しなければならないので、`uid=Backup` としてバインドしたセッションは、二つの DN が
 等しいと比較されても `backup` のパスワードを変更できません。これと、
-[大文字小文字だけが異なる名前の拒否]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})は、
-互いに依存しない二つの統制です。
+[大文字小文字だけが異なる名前の扱い]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
+(一人の人で、最初のソースがそれを所有する) は、互いに依存しない二つの統制です。
 
 ## 新しいパスワードの書き込み先 {#where-the-new-password-is-written}
 

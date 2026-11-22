@@ -11,8 +11,21 @@ memory, a SQL database, an LDAP server, or `user` and `group` blocks in a
 configuration file — and the point of it is the second half of the question.
 
 ```sh
-go get github.com/go-authn/directory@v0.24.0
+go get github.com/go-authn/directory@v0.26.0
 ```
+
+Since v0.26.0, **a `Set` compares names by one equivalence relation, everywhere**: the
+LDAP equality rule of uid (`caseIgnoreMatch`, RFC 4518 preparation), in the duplicate
+check within a source (`ErrAmbiguous`, as below), across sources, in `Members` and in
+`Expand`. Two names that differ only by case or insignificant space are the same
+person: the first source that knows the name owns it, a later spelling is shadowed and
+left out (not an error), and the identity keeps the owning source's spelling.
+`Set.Shadowed()` lists, after `Identities`, each later spelling that an earlier source's
+person shadowed (`Shadow{Name, Source, Owner, By}`); the same spelling in two sources
+is the documented override and is not listed. A name with no key (not UTF-8, empty or
+all spaces) is refused with `ErrBadName`. **Upgrade:** a server whose sources hold two
+people with names that differ only by case or insignificant space now loses the later
+one; read `Shadowed`.
 
 Since v0.24.0, which needs go-authn/ldap v0.14.0, `ldapdir` holds two uids that
 `caseIgnoreMatch` equates to be one name: "alice" and "alice " (trailing space),
@@ -21,8 +34,8 @@ hyphen are `ErrAmbiguous`, where they were two people. The key is the attribute'
 equality key from the standard schema (`schema.Schema.EqualityKey`, RFC 4518
 preparation); a `UserAttribute` the standard schema does not know keeps the
 lower-casing. **Upgrade:** a directory with such pairs now fails to load until one
-entry is corrected. `Set.Identities` still compares names byte for byte, and across
-sources the first one that knows a name owns it. `ldapdir` also verifies the
+entry is corrected. (Between v0.24.0 and v0.26.0 `Set.Identities` still compared
+names byte for byte across sources; v0.26.0 changes that, above.) `ldapdir` also verifies the
 certificate against the host of the URL (`tls.Config.ServerName`, copied and not
 changed; an explicit ServerName still wins), which with go-authn/ldap v0.14.0 fixes
 StartTLS too.
@@ -72,7 +85,9 @@ method:
 | `directory/hcldir` | a `users` block naming a database or an LDAP server, and `user`/`group` blocks holding people | `x/crypto/ssh`, `hashicorp/hcl/v2`, `zclconf/go-cty` |
 | `directory/ldaptest` | an LDAP server to test against | `glauth/ldap` |
 
-In a `Set`, the **first** source that knows a name owns it, so a service
+In a `Set`, the **first** source that knows a name owns it (names that differ only
+by case or insignificant space count as one name, and a later spelling is listed by
+`Set.Shadowed()`), so a service
 account written down locally need not be put in LDAP. Group membership is the
 **union** of every source. Sources are read when a server starts; a password
 check may reach the source every time, because a bind cannot be cached
@@ -463,7 +478,9 @@ That is how authnd v0.15.0 answers a bind, as
   `Set.Identities` refuses a name that ONE source lists twice. Before,
   `Identities` returned both and `Set.Identities` kept whichever came first, so
   one person got the other's groups, keys and password check. Across sources
-  nothing changes: the first source that knows a name owns it. A directory with
+  the first source that knows a name owns it (from v0.26.0 a later spelling that
+  differs only by case or insignificant space is shadowed, see `Set.Shadowed()`
+  above). A directory with
   such duplicates fails to load until one entry is removed or its uid corrected
   (`ldapsearch -b <base> '(uid=*)' uid dn` finds repeated values).
   `ldaptest.Person.UID` is the uid published when it is not the map key, so a

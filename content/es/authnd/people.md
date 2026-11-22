@@ -295,17 +295,20 @@ un grupo que nombran a la vez un bloque `group` y la consulta `groups` de una ba
 datos tiene los miembros de ambos.
 
 {{< callout type="warning" >}}
-**Dos nombres que solo difieren en mayúsculas y minúsculas se rechazan**
+**Dos nombres que solo difieren en mayúsculas y minúsculas son una misma persona; el posterior queda fuera**
 
 Un uid se compara sin distinguir mayúsculas de minúsculas (RFC 4519 §2.39), y lo
 mismo ocurre con cada DN, así que `Dora` en el archivo y `dora` en una base de datos
-son un solo nombre para LDAP y dos personas para todo lo que compara bytes: un cambio
-de contraseña de una acabaría en la otra. Una configuración así no arranca:
-
-```
-$ authnd check cases/case.hcl
-authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them
-```
+son un solo nombre para LDAP. Desde authnd v0.19.0, con go-authn/directory v0.26.0,
+también son aquí una misma persona: los nombres se comparan con la regla de igualdad
+LDAP de uid (`caseIgnoreMatch`), de modo que los nombres que solo difieren en
+mayúsculas o en espacio no significativo son el mismo nombre. La primera fuente que
+conoce a la persona se la queda, la grafía posterior queda fuera, y la persona
+conserva la grafía de la fuente propietaria. authnd **arranca** con una configuración
+así (antes de la v0.19.0 se negaba) y **lo registra**: al arrancar, y en un refresco
+cuando la lista cambia, `directory: names shadowed by a spelling an earlier source owns`
+nombra cada grafía oculta, su fuente y la propietaria. Un nombre sin clave de
+equivalencia (no UTF-8, vacío o solo espacios) hace fallar el arranque y el refresco.
 {{< /callout >}}
 
 ## Se leen al arrancar y en cada refresco {#read-once}

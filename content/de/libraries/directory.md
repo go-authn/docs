@@ -11,8 +11,24 @@ Speicher, einer SQL-Datenbank, einem LDAP-Server oder `user`- und `group`-Blöck
 Konfigurationsdatei – und worauf es ankommt, ist die zweite Hälfte der Frage.
 
 ```sh
-go get github.com/go-authn/directory@v0.24.0
+go get github.com/go-authn/directory@v0.26.0
 ```
+
+Seit v0.26.0 **vergleicht ein `Set` Namen überall mit einer Äquivalenzrelation**: der
+LDAP-Gleichheitsregel der uid (`caseIgnoreMatch`, Aufbereitung nach RFC 4518), bei der
+Duplikatprüfung innerhalb einer Quelle (`ErrAmbiguous`, siehe unten), über Quellen
+hinweg, in `Members` und in `Expand`. Zwei Namen, die sich nur durch
+Groß-/Kleinschreibung oder unwesentliche Leerzeichen unterscheiden, sind dieselbe
+Person: Die erste Quelle, die den Namen kennt, besitzt ihn, eine spätere Schreibweise
+wird überdeckt und ausgelassen (kein Fehler), und die Identität behält die Schreibweise
+der besitzenden Quelle. `Set.Shadowed()` listet nach `Identities` jede spätere
+Schreibweise auf, die die Person einer früheren Quelle überdeckt hat
+(`Shadow{Name, Source, Owner, By}`); dieselbe Schreibweise in zwei Quellen ist die
+dokumentierte Überschreibung und wird nicht aufgeführt. Ein Name ohne Schlüssel (kein
+UTF-8, leer oder nur Leerzeichen) wird mit `ErrBadName` abgelehnt. **Upgrade:** Ein
+Server, dessen Quellen zwei Personen mit Namen halten, die sich nur durch
+Groß-/Kleinschreibung oder unwesentliche Leerzeichen unterscheiden, verliert jetzt die
+spätere; lesen Sie `Shadowed`.
 
 Seit v0.24.0, das go-authn/ldap v0.14.0 braucht, hält `ldapdir` zwei uids, die
 `caseIgnoreMatch` gleichsetzt, für einen Namen: "alice" und "alice " (Leerzeichen am
@@ -22,8 +38,8 @@ Schlüssel ist der Gleichheitsschlüssel des Attributs aus dem Standardschema
 (`schema.Schema.EqualityKey`, Aufbereitung nach RFC 4518); ein `UserAttribute`, das
 das Standardschema nicht kennt, behält die Kleinschreibung. **Upgrade:** Ein
 Verzeichnis mit solchen Paaren lässt sich jetzt nicht mehr laden, bis ein Eintrag
-korrigiert ist. `Set.Identities` vergleicht Namen weiterhin byteweise, und über
-Quellen hinweg gehört ein Name der ersten Quelle, die ihn kennt. `ldapdir` prüft
+korrigiert ist. (Zwischen v0.24.0 und v0.26.0 verglich `Set.Identities` Namen über
+Quellen hinweg noch byteweise; v0.26.0 ändert das, siehe oben.) `ldapdir` prüft
 außerdem das Zertifikat gegen den Host der URL (`tls.Config.ServerName`, kopiert und
 nicht verändert; ein ausdrücklich gesetzter ServerName gewinnt weiterhin), was mit
 go-authn/ldap v0.14.0 auch StartTLS behebt.
@@ -74,7 +90,9 @@ Methode:
 | `directory/hcldir` | einen `users`-Block, der eine Datenbank oder einen LDAP-Server benennt, und `user`-/`group`-Blöcke, die Personen enthalten | `x/crypto/ssh`, `hashicorp/hcl/v2`, `zclconf/go-cty` |
 | `directory/ldaptest` | einen LDAP-Server, gegen den getestet wird | `glauth/ldap` |
 
-In einem `Set` gehört ein Name der **ersten** Quelle, die ihn kennt; ein lokal
+In einem `Set` gehört ein Name der **ersten** Quelle, die ihn kennt (Namen, die sich
+nur durch Groß-/Kleinschreibung oder unwesentliche Leerzeichen unterscheiden, gelten
+als ein Name, und eine spätere Schreibweise führt `Set.Shadowed()` auf); ein lokal
 eingetragenes Dienstkonto muss also nicht ins LDAP. Die Gruppenmitgliedschaft ist die
 **Vereinigung** aller Quellen. Quellen werden gelesen, wenn ein Server startet; eine Passwortprüfung
 kann jedes Mal die Quelle erreichen, denn ein Bind lässt sich nicht zwischenspeichern,
@@ -470,8 +488,10 @@ So beantwortet authnd v0.15.0 einen Bind, wie
   nennt beide DNs, und `Set.Identities` lehnt einen Namen ab, den EINE Quelle
   zweimal liefert. Zuvor gab `Identities` beide zurück und `Set.Identities`
   behielt den zuerst genannten, sodass eine Person die Gruppen, Schlüssel und
-  Passwortprüfung der anderen bekam. Über Quellen hinweg ändert sich nichts: Die
-  erste Quelle, die einen Namen kennt, besitzt ihn. Ein Verzeichnis mit solchen
+  Passwortprüfung der anderen bekam. Über Quellen hinweg besitzt die erste Quelle,
+  die einen Namen kennt, ihn (ab v0.26.0 wird eine spätere Schreibweise, die sich nur
+  durch Groß-/Kleinschreibung oder unwesentliche Leerzeichen unterscheidet, überdeckt,
+  siehe `Set.Shadowed()` oben). Ein Verzeichnis mit solchen
   Dubletten lädt nicht, bis ein Eintrag entfernt oder seine uid korrigiert ist
   (`ldapsearch -b <base> '(uid=*)' uid dn` findet wiederholte Werte).
   `ldaptest.Person.UID` ist die veröffentlichte uid, wenn sie nicht der

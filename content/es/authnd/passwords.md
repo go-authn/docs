@@ -120,8 +120,8 @@ La persona se identifica **por identidad, no por DN**: el nombre propio de la se
 debe ser exactamente el del destino, byte a byte, así que una sesión con un bind
 como `uid=Backup` no puede cambiar la contraseña de `backup` aunque los dos DN se
 consideren iguales al compararlos. Eso y el
-[rechazo de nombres que solo difieren en mayúsculas y minúsculas]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
-son dos controles que no dependen el uno del otro.
+[tratamiento de nombres que solo difieren en mayúsculas y minúsculas]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
+(una misma persona, la primera fuente se la queda) son dos controles que no dependen el uno del otro.
 
 ## Dónde se escribe la contraseña nueva {#where-the-new-password-is-written}
 

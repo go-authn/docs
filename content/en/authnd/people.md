@@ -291,17 +291,19 @@ that a `group` block and a database's `groups` query both name has the
 members of both.
 
 {{< callout type="warning" >}}
-**Two names that differ only by case are refused**
+**Two names that differ only by case are one person; the later one is left out**
 
 A uid is compared ignoring case (RFC 4519 §2.39), and so is every DN, so
-`Dora` in the file and `dora` in a database are one name to LDAP and two
-people to anything that compares bytes — a password change by one would land
-on the other. Such a configuration does not start:
-
-```
-$ authnd check cases/case.hcl
-authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them
-```
+`Dora` in the file and `dora` in a database are one name to LDAP. Since authnd
+v0.19.0, with go-authn/directory v0.26.0, they are one person here too: names
+are compared by the LDAP equality rule of uid (`caseIgnoreMatch`), so names that
+differ only by case or insignificant space are the same name. The first source
+that knows the person owns it, the later spelling is left out, and the person
+keeps the owning source's spelling. authnd **starts** with such a configuration
+(before v0.19.0 it refused to) and **logs it**: at startup, and on a refresh when the
+list changes, `directory: names shadowed by a spelling an earlier source owns`
+names each shadowed spelling, its source and the owner. A name with no equivalence
+key (not UTF-8, empty or all spaces) makes startup and refresh fail.
 {{< /callout >}}
 
 ## Read at start, then every refresh {#read-once}

@@ -11,7 +11,7 @@ names where a secret lives; `secretsource.Open` fetches it. The reference holds
 no secret, so it may sit in a flag, a script or a shell history.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.0
+go get github.com/go-authn/secretsource@v0.6.1
 ```
 
 ```go
@@ -47,6 +47,13 @@ or writable by group or others, and the uid of the connected peer is checked aft
 the dial; the legacy `$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer`
 symlink is no longer followed (the real socket under `app/org.keepassxc.KeePassXC/`
 is).
+
+Since v0.6.1, the association file (the fallback store, used when neither the
+macOS Keychain nor a Secret Service is there) is written to a new temporary file in
+the same directory and renamed onto the final name, so a symbolic link left at that
+name is replaced, not followed, and a file of looser mode comes out 0600. On Unix the
+directory is checked first, as the socket's is: owned by this user, not writable by
+group or others, not a symbolic link; otherwise nothing is written.
 
 1. In KeePassXC, enable *Settings > Browser Integration*.
 2. Associate this machine once per database, and approve it in KeePassXC:

@@ -115,8 +115,8 @@ Additional info: dora is served from a sqlite database, which this server reads 
 사람은 DN이 아니라 **신원으로** 일치시킵니다. 세션 자신의 이름이 대상의 이름과
 바이트 단위로 정확히 같아야 하므로, `uid=Backup`으로 바인드된 세션은 두 DN이
 같다고 비교되더라도 `backup`의 비밀번호를 바꿀 수 없습니다. 이것과
-[대소문자만 다른 이름의 거부]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})는
-서로 의존하지 않는 두 가지 통제입니다.
+[대소문자만 다른 이름의 처리]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
+(한 사람이며 첫 소스가 소유함)는 서로 의존하지 않는 두 가지 통제입니다.
 
 ## 새 비밀번호가 기록되는 곳 {#where-the-new-password-is-written}
 

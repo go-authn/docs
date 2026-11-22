@@ -280,17 +280,17 @@ this configuration can be served
 両方のメンバーを持ちます。
 
 {{< callout type="warning" >}}
-**大文字小文字だけが異なる二つの名前は拒否される**
+**大文字小文字だけが異なる二つの名前は一人の人で、後のものは除外される**
 
 uid は大文字小文字を無視して比較され (RFC 4519 §2.39)、すべての DN も同様です。そのため
-ファイルの `Dora` とデータベースの `dora` は、LDAP にとっては一つの名前で、バイトを比較する
-ものにとっては二人の人です。一方によるパスワード変更が他方に及んでしまいます。そのような
-設定は起動しません。
-
-```
-$ authnd check cases/case.hcl
-authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them
-```
+ファイルの `Dora` とデータベースの `dora` は、LDAP にとっては一つの名前です。authnd v0.19.0
+以降、go-authn/directory v0.26.0 とともに、ここでも一人の人です。名前は uid の LDAP 等価規則
+(`caseIgnoreMatch`) で比較されるので、大文字小文字、または意味のない空白だけが異なる名前は同じ
+名前です。その人を最初に知るソースがそれを所有し、後の綴りは除外され、人は所有するソースの綴りを
+保ちます。authnd はそのような設定でも**起動し** (v0.19.0 より前は拒否していました)、それを**ログに
+記録します**: 起動時と、リストが変わったときの更新時に、
+`directory: names shadowed by a spelling an earlier source owns` が、覆い隠された各綴り、そのソース、
+所有者を示します。等価キーのない名前 (UTF-8 でない、空、または空白のみ) は、起動と更新を失敗させます。
 {{< /callout >}}
 
 ## 起動時に読み込み、以後は更新のたびに読み直す {#read-once}

@@ -287,17 +287,18 @@ this configuration can be served
 都指名的组，拥有两者的成员。
 
 {{< callout type="warning" >}}
-**仅大小写不同的两个名称会被拒绝**
+**仅大小写不同的两个名称是同一个人；后一个被略去**
 
 uid 的比较忽略大小写（RFC 4519 §2.39），每个 DN 也是如此，因此
-文件中的 `Dora` 和数据库中的 `dora` 对 LDAP 来说是同一个名称，对任何
-按字节比较的程序来说却是两个人——其中一人更改密码会落到
-另一人身上。这样的配置无法启动：
-
-```
-$ authnd check cases/case.hcl
-authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them
-```
+文件中的 `Dora` 和数据库中的 `dora` 对 LDAP 来说是同一个名称。自 authnd
+v0.19.0 起，配合 go-authn/directory v0.26.0，它们在这里也是同一个人：名称
+按 uid 的 LDAP 相等规则（`caseIgnoreMatch`）比较，因此仅大小写或无意义空白
+不同的名称就是同一个名称。最先认识该人员的来源拥有它，后面的写法被略去，
+该人员沿用拥有者来源的写法。authnd 对这样的配置**会启动**（v0.19.0 之前
+会拒绝启动），并**记录日志**：在启动时，以及列表变化的刷新时，
+`directory: names shadowed by a spelling an earlier source owns`
+会列出每个被遮蔽的写法、其来源和拥有者。没有等价键的名称
+（不是 UTF-8、为空或全是空格）会使启动和刷新失败。
 {{< /callout >}}
 
 ## 启动时读取，之后每次刷新再读 {#read-once}

@@ -12,7 +12,7 @@ Referenz enthält kein Geheimnis und darf daher in einer Option, einem Skript
 oder der Shell-Historie stehen.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.0
+go get github.com/go-authn/secretsource@v0.6.1
 ```
 
 ```go
@@ -49,6 +49,14 @@ Benutzer gehört oder für Gruppe oder andere beschreibbar ist, und die uid des
 verbundenen Peers wird nach dem Dial geprüft; dem alten Symlink
 `$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer` wird nicht mehr gefolgt
 (dem echten Socket unter `app/org.keepassxc.KeePassXC/` schon).
+
+Seit v0.6.1 wird die Zuordnungsdatei (der Ersatzspeicher, wenn weder die macOS-Keychain
+noch ein Secret Service vorhanden ist) in eine neue temporäre Datei im selben Verzeichnis
+geschrieben und auf den endgültigen Namen umbenannt; ein dort liegender symbolischer
+Link wird also ersetzt, nicht verfolgt, und eine Datei mit lockererem Modus kommt als
+0600 heraus. Unter Unix wird zuvor das Verzeichnis geprüft, wie das des Sockets: im
+Besitz dieses Benutzers, nicht für Gruppe oder andere beschreibbar, kein symbolischer
+Link; andernfalls wird nichts geschrieben.
 
 1. Aktivieren Sie in KeePassXC *Settings > Browser Integration*.
 2. Verknüpfen Sie diesen Rechner einmal je Datenbank und bestätigen Sie es in
