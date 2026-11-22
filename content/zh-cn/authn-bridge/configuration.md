@@ -71,6 +71,32 @@ authn-bridge: idps names "https://idp.nowhere.example/idp", which the federation
 `authn-bridge metadata` 输出要向联邦注册的 SAML 元数据。参见
 [联邦一侧]({{< relref "/authn-bridge/federation.md" >}})。
 
+### `kerberos` 块 {#the-kerberos-block}
+
+有了 `kerberos` 块,`kerberos_tickets = true` 的客户端就能为没有密码的人获取
+Kerberos TGT(`POST /kerberos/tgt`):网桥通过双向认证的 TLS 向领域的 KDC 发出请求。
+
+```hcl
+kerberos {
+  kdc_url   = "https://kdc.internal.example.org:8443/mint"  # https only
+  ca_file   = "/etc/authn-bridge/kdc-ca.pem"                # signed the KDC's certificate
+  cert_file = "/etc/authn-bridge/bridge-client.pem"         # URI name = what the KDC lists
+  key_file  = "/etc/authn-bridge/bridge-client.key"
+  validity  = "10h"                                         # at most ten hours
+}
+```
+
+`check` 用一行报告该块:客户端证书的名称、到期的 UTC 日期和票据的有效期。
+
+```
+kerberos      https://kdc.internal.example.org:8443/mint, client certificate https://login.example.org until 2029-02-12, validity 10h
+```
+
+加载配置(因此 `check` 和服务器都一样)时,会指出字段名并拒绝首次登录时无法工作的内容:
+已过期(与 `kdcd check` 对其签发证书的检查相同)或尚未生效的客户端证书、
+不属于 `cert_file` 的 `key_file`、缺失或不含证书的 `ca_file`、
+不是 `https` 的 `kdc_url`、超出范围的 `validity`。没有该块的配置不输出任何内容。
+
 ## 顶层 {#the-top-level}
 
 | 键 | 默认值 | |

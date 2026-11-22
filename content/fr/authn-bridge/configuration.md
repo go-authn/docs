@@ -71,6 +71,37 @@ authn-bridge: idps names "https://idp.nowhere.example/idp", which the federation
 `authn-bridge metadata` affiche les métadonnées SAML à enregistrer auprès de la
 fédération. Voir [le côté fédération]({{< relref "/authn-bridge/federation.md" >}}).
 
+### Le bloc `kerberos` {#the-kerberos-block}
+
+Un bloc `kerberos` permet à un client avec `kerberos_tickets = true` d'obtenir
+un TGT Kerberos pour une personne sans mot de passe (`POST /kerberos/tgt`) : le
+pont interroge le KDC du domaine par TLS mutuellement authentifié.
+
+```hcl
+kerberos {
+  kdc_url   = "https://kdc.internal.example.org:8443/mint"  # https only
+  ca_file   = "/etc/authn-bridge/kdc-ca.pem"                # signed the KDC's certificate
+  cert_file = "/etc/authn-bridge/bridge-client.pem"         # URI name = what the KDC lists
+  key_file  = "/etc/authn-bridge/bridge-client.key"
+  validity  = "10h"                                         # at most ten hours
+}
+```
+
+`check` décrit le bloc sur une ligne, avec le nom du certificat client, la date
+UTC de son expiration et la validité du ticket :
+
+```
+kerberos      https://kdc.internal.example.org:8443/mint, client certificate https://login.example.org until 2029-02-12, validity 10h
+```
+
+Le chargement de la configuration, donc `check` comme le serveur, refuse en
+nommant le champ tout ce qui ne pourrait pas fonctionner à la première
+connexion : un certificat client expiré (comme `kdcd check` le fait pour son
+certificat d'émission) ou pas encore valide, une `key_file` qui n'appartient pas
+à `cert_file`, un `ca_file` absent ou sans certificat, une `kdc_url` qui n'est
+pas en `https`, une `validity` hors limites. Une configuration sans le bloc
+n'affiche rien.
+
 ## Le niveau supérieur {#the-top-level}
 
 | clé | défaut | |

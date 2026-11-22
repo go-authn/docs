@@ -69,6 +69,33 @@ authn-bridge: idps names "https://idp.nowhere.example/idp", which the federation
 `authn-bridge metadata` は、フェデレーションに登録する SAML メタデータを出力します。
 [フェデレーション側]({{< relref "/authn-bridge/federation.md" >}})を参照してください。
 
+### `kerberos` ブロック {#the-kerberos-block}
+
+`kerberos` ブロックを置くと、`kerberos_tickets = true` のクライアントは、パスワードを持たない人のために
+Kerberos の TGT を取得できます(`POST /kerberos/tgt`)。ブリッジは、相互認証した TLS で
+レルムの KDC に問い合わせます。
+
+```hcl
+kerberos {
+  kdc_url   = "https://kdc.internal.example.org:8443/mint"  # https only
+  ca_file   = "/etc/authn-bridge/kdc-ca.pem"                # signed the KDC's certificate
+  cert_file = "/etc/authn-bridge/bridge-client.pem"         # URI name = what the KDC lists
+  key_file  = "/etc/authn-bridge/bridge-client.key"
+  validity  = "10h"                                         # at most ten hours
+}
+```
+
+`check` はこのブロックを 1 行で報告します。クライアント証明書の名前、有効期限の UTC 日付、チケットの有効期間です。
+
+```
+kerberos      https://kdc.internal.example.org:8443/mint, client certificate https://login.example.org until 2029-02-12, validity 10h
+```
+
+設定の読み込み(つまり `check` もサーバーも)は、最初のログインで動作しえないものを、フィールド名を示して拒否します。
+期限切れ(`kdcd check` が発行用証明書に対して行うのと同じ)またはまだ有効でないクライアント証明書、
+`cert_file` に対応しない `key_file`、存在しない、または証明書を含まない `ca_file`、
+`https` でない `kdc_url`、範囲外の `validity` です。ブロックのない設定では何も表示されません。
+
 ## トップレベル {#the-top-level}
 
 | キー | 既定値 | |
