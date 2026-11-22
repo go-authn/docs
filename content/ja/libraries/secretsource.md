@@ -11,7 +11,7 @@ tags: [ライブラリ, secretsource, シークレット]
 含まないので、フラグ、スクリプト、シェルの履歴に書いても構いません。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.0
+go get github.com/go-authn/secretsource@v0.9.0
 ```
 
 ```go
@@ -29,6 +29,8 @@ use(s.Bytes())
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | それらすべての属性を持つ唯一の Secret Service 項目。複数一致は拒否されます |
 | `keepassxc:URL` | **URL フィールド**がその URL である KeePassXC のエントリ (`https://NAME.invalid/...` は、名前解決されることのない良い選択です)。同じ URL のエントリが 2 つあると曖昧として拒否されます |
 | `systemd-creds:NAME` | (Linux、v0.8.0 以降) systemd のクレデンシャルをバイト単位でそのまま返します。`file:` と違い、末尾の改行は取り除きません。まず `$CREDENTIALS_DIRECTORY` 内のファイル `NAME` (`LoadCredential=`、`LoadCredentialEncrypted=`、`SetCredentialEncrypted=` が配置)、なければ `/etc`、`/run`、`/usr/lib` の `credstore.encrypted` にある `NAME` または `NAME.cred` を `systemd-creds decrypt` で復号します。他のシステムでは `ErrUnavailable` で拒否されます |
+
+**`file:` はシンボリックリンクをたどりません**（v0.9.0 以降）。パスの最後の要素がリンクであれば、リンク切れかどうかに関わらず拒否されます。Unix ではファイルを `O_NOFOLLOW` で開き、Windows では `FILE_FLAG_OPEN_REPARSE_POINT` で開いて、あらゆるリパースポイントを拒否します（クラウドファイルのプレースホルダーも拒否されるので、通常のローカルコピーを指してください）。Unix ではさらに、ファイルが呼び出したユーザーの所有でなければなりません。root も例外ではありません。**移行:** 実体のファイルを指してください（`readlink -f PATH`）。パスの途中のディレクトリにあるシンボリックリンクは、これまでどおり使えます。
 
 `keepassxc:by-uuid/...` と `keepassxc:by-path/...` は**拒否されます**:
 KeePassXC 2.8.0 は、検索が URL のないエントリを見つけるとクラッシュします。

@@ -11,7 +11,7 @@ tags: [라이브러리, secretsource, 비밀]
 있지 않으므로 플래그, 스크립트, 셸 기록에 있어도 됩니다.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.0
+go get github.com/go-authn/secretsource@v0.9.0
 ```
 
 ```go
@@ -29,6 +29,8 @@ use(s.Bytes())
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | 그 속성을 모두 가진 단 하나의 Secret Service 항목; 여러 개가 일치하면 거부됩니다 |
 | `keepassxc:URL` | **URL 필드**가 그 URL인 KeePassXC 항목(`https://NAME.invalid/...`는 결코 해석되지 않는 좋은 선택); 같은 URL의 항목이 둘이면 모호하다고 거부됩니다 |
 | `systemd-creds:NAME` | (Linux, v0.8.0부터) systemd 자격 증명을 바이트 그대로 반환합니다. `file:`과 달리 끝의 줄바꿈을 제거하지 않습니다. 먼저 `$CREDENTIALS_DIRECTORY`의 `NAME` 파일(`LoadCredential=`, `LoadCredentialEncrypted=`, `SetCredentialEncrypted=`가 배치), 없으면 `/etc`, `/run`, `/usr/lib`의 `credstore.encrypted`에 있는 `NAME` 또는 `NAME.cred`를 `systemd-creds decrypt`로 복호화합니다. 다른 시스템에서는 `ErrUnavailable`로 거부됩니다 |
+
+**`file:`은 심볼릭 링크를 따라가지 않습니다** (v0.9.0부터). 경로의 마지막 구성 요소가 링크이면 끊어진 링크이든 아니든 거부됩니다. Unix에서는 파일을 `O_NOFOLLOW`로 열고, Windows에서는 `FILE_FLAG_OPEN_REPARSE_POINT`로 열어 모든 재분석 지점(reparse point)을 거부합니다(클라우드 파일 자리 표시자도 거부되므로 일반 로컬 사본을 가리키십시오). Unix에서는 파일이 호출한 사용자의 소유여야 하기도 합니다. root도 예외가 아닙니다. **마이그레이션:** 실제 파일을 가리키십시오(`readlink -f PATH`). 경로 앞쪽 디렉터리에 있는 심볼릭 링크는 그대로 동작합니다.
 
 `keepassxc:by-uuid/...`와 `keepassxc:by-path/...`는 **거부됩니다**: KeePassXC
 2.8.0은 조회가 URL이 없는 항목을 찾으면 비정상 종료합니다.
