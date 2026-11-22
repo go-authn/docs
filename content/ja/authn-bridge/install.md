@@ -102,6 +102,23 @@ runuser -u authn-bridge -- sh -c 'umask 077; openssl req -x509 -newkey rsa:3072 
 証明書と同じダウンロードからは決して取らないでください。
 [フェデレーション側]({{< relref "/authn-bridge/federation.md" >}})を参照してください。
 
+## SMTP パスワード {#the-smtp-password}
+
+[`mail` ブロック]({{< relref "/authn-bridge/configuration.md#mail" >}}) (v0.32.0 以降) があるときだけ
+必要です。パスワードは `password_file` から、それ以外のどこからも取りません。環境変数、コマンド
+ライン、設定ファイルからは取りません。ファイルは通常ファイルで、**サービスのユーザーが所有し、
+グループにもその他にも権限ビットがなく** (`0600`)、空でない 1 行でなければなりません。読み込みは
+一度の open で行われます。それ以外は起動時に拒否されるので、ファイルをサービスのユーザーのものに
+してモードを絞ってください:
+
+```sh
+chown authn-bridge /etc/authn-bridge/smtp.password
+chmod 0600 /etc/authn-bridge/smtp.password
+```
+
+v0.32.0 のブリッジが SMTP パスワードのために読むのはこの 1 ファイルだけです。ブリッジの README は、
+systemd のクレデンシャルを含め、ほかの取得元を挙げていません。
+
 ## ユニット {#the-unit}
 
 許可するものを簡潔に:

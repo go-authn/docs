@@ -184,7 +184,16 @@ acme {
 Le certificat est pour l'hôte de l'émetteur. `cache_dir` contient des clés privées, et
 le fournisseur refuse de démarrer sur un répertoire qu'un autre utilisateur pourrait atteindre ou faire pointer ailleurs.
 
-## `mail` : le mot de passe SMTP est une référence {#mail-the-smtp-password-is-a-reference}
+## `mail`
+
+Depuis la v0.32.0. Une clé d'accès peut toujours annuler un retrait en attente : un
+voleur qui détient une clé pourrait donc annuler, avec elle, le retrait que le
+propriétaire a demandé avec une autre. Seul un avis par un canal qui ne détient aucune
+des clés d'accès de la personne permet au propriétaire de le voir. Avec un bloc `mail`,
+le pont envoie **un e-mail en texte brut à l'adresse propre du compte** quand le retrait
+d'une clé d'accès est demandé ou annulé
+([ce que voit l'opérateur]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})).
+Sans bloc `mail`, rien ne change.
 
 ```hcl
 mail {
@@ -241,6 +250,22 @@ de démarrer.
 au démarrage. Gardez le mot de passe dans un endroit qui ne dépend pas de cette
 machine (une copie hors ligne), re-scellez depuis cette copie avec la commande
 ci-dessus, puis `systemctl restart authn-bridge`.
+
+- **Qui est prévenu.** Le `mail` du compte dans le fichier des comptes locaux, tel que
+  le pont le connaît, jamais une adresse tirée de la requête. Le bloc exige un bloc
+  `local` : l'avis concerne les clés d'accès des comptes locaux.
+- **TLS, toujours.** TLS implicite, ou STARTTLS que le serveur propose et mène à
+  terme (sinon l'avis n'est pas envoyé : jamais de conversation en clair). Le
+  certificat du serveur est vérifié contre les racines du système et le nom d'hôte. Le
+  pont ne s'authentifie (PLAIN, sinon LOGIN) qu'une fois TLS établi, jamais en clair,
+  pas même vers 127.0.0.1 ; un serveur qui n'annonce aucun mécanisme utilisable après
+  TLS est refusé.
+- **Aucun lien.** Le texte ne contient aucune URL à suivre, le dit, et invite le
+  lecteur à ouvrir la page de son compte depuis son propre signet. Les valeurs
+  d'en-tête contenant CR, LF ou d'autres séparateurs de ligne sont refusées.
+- **Limite de débit.** Un message par compte et par `window` (`10m` par défaut) ; les
+  événements qui arrivent entre-temps sont regroupés en un seul résumé, envoyé à la fin
+  de la fenêtre.
 
 ## Ce qui est refusé au démarrage {#what-is-refused-at-startup}
 

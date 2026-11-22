@@ -85,6 +85,10 @@ v0.6.1부터 연결 파일(macOS 키체인도 Secret Service도 없을 때 쓰�
 사용자가 쓸 수 없어야 하며, 심볼릭 링크가 아니어야 합니다. 그렇지 않으면 아무것도 쓰지
 않습니다.
 
+v0.8.1부터 그 쓰기는 [`harden/privfile`]({{< relref "/libraries/harden.md#privfile" >}})
+v0.2.0이 합니다. Windows에서는 이제 파일이 go-authn/kinit v0.3.2처럼 소유자 전용
+보호된 접근 목록을 받으며, 디렉터리는 쓰기 전은 물론 쓰는 순간에도 다시 검사됩니다.
+
 1. KeePassXC에서 *Settings > Browser Integration*을 켭니다.
 2. 데이터베이스마다 한 번 이 컴퓨터를 연결하고 KeePassXC에서 승인합니다:
    ```sh

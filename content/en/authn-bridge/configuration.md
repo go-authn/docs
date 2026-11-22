@@ -183,7 +183,16 @@ acme {
 The certificate is for the issuer's host. `cache_dir` holds private keys, and
 the provider refuses to start on one another user could reach or re-point.
 
-## `mail`: the SMTP password is a reference
+## `mail`
+
+Since v0.32.0. A passkey can always cancel a pending removal, so a thief
+holding one key could cancel, with it, the removal the owner asked for with
+another. Only a notice through a channel that holds none of the person's
+passkeys lets the owner see it. With a `mail` block the bridge sends **a
+plain-text e-mail to the account's own address** when a passkey removal is
+requested or cancelled
+([what the operator sees]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})).
+Without a `mail` block nothing changes.
 
 ```hcl
 mail {
@@ -236,6 +245,22 @@ credential unreadable and the bridge would refuse to start.
 at startup. Keep the password in a place that does not depend on this machine
 (an offline copy), re-seal from that copy with the command above, then
 `systemctl restart authn-bridge`.
+
+- **Who is told.** The `mail` of the account in the local accounts file, as the
+  bridge knows it, never an address taken from the request. The block needs a
+  `local` block: the notice is about local accounts' passkeys.
+- **TLS, always.** Implicit TLS, or STARTTLS that the server offers and
+  completes (otherwise the notice is not sent: never a conversation in clear).
+  The server certificate is verified against the system roots and the host
+  name. The bridge authenticates (PLAIN, else LOGIN) only once TLS is up, never
+  over cleartext, not even to 127.0.0.1; a server that advertises no usable
+  mechanism after TLS is refused.
+- **No link.** The text carries no URL to follow, says so, and tells the reader
+  to open their account page from their own bookmark. Header values with CR, LF
+  or other line separators are refused.
+- **Rate limit.** One mail per account per `window` (default `10m`); the events
+  that arrive meanwhile are collapsed into one digest, sent when the window
+  ends.
 
 ## What is refused at startup
 

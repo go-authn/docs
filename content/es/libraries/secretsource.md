@@ -97,6 +97,12 @@ en ese nombre se sustituye, no se sigue, y un archivo de modo más permisivo que
 usuario, no escribible por el grupo ni por otros, no un enlace simbólico; si no, no se
 escribe nada.
 
+Desde la v0.8.1, esa escritura la hace
+[`harden/privfile`]({{< relref "/libraries/harden.md#privfile" >}}) v0.2.0. En
+Windows el archivo recibe ahora una lista de acceso protegida de solo propietario,
+como en go-authn/kinit v0.3.2, y el directorio se vuelve a comprobar en la
+escritura, además de antes de ella.
+
 1. En KeePassXC, active *Settings > Browser Integration*.
 2. Asocie esta máquina una vez por base de datos y apruébelo en KeePassXC:
    ```sh

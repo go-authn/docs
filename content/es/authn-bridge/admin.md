@@ -164,6 +164,30 @@ defecto). Un certificado SSH ya emitido dura lo que su validez salvo que el
 servidor lea la KRL, y por eso ambos son cortos.
 {{< /callout >}}
 
+## Avisos de eliminación de passkeys {#passkey-removal-notices}
+
+Con un [bloque `mail`]({{< relref "/authn-bridge/configuration.md#mail" >}}) (desde
+la v0.32.0), una cuenta local recibe un aviso, en su propia dirección, cuando se
+pide o se cancela la eliminación de una passkey, de modo que quien robe una clave no
+pueda cancelar en silencio la eliminación del propietario. Afecta **solo a las
+cuentas locales**, y el aviso es un correo por cuenta y por `window` (10 minutos por
+defecto): los eventos que llegan entretanto se reúnen en un solo resumen. Lo que ve
+un operador depende del evento:
+
+- **Una petición de eliminación cuyo aviso no puede enviarse queda pendiente.** No se
+  ejecuta al terminar su plazo. El bridge reintenta (5 intentos, con una pausa
+  creciente), luego registra `GAVE UP` bien visible; un reinicio la reanuda, y
+  también el siguiente evento. Entretanto la clave sigue funcionando, como antes. El
+  registro lleva `notice_pending` hasta que un aviso se ha entregado.
+- **Una cancelación se aplica aunque su correo falle.** El fallo se registra
+  (`mailing <login> failed`) y se muestra en la página de la cuenta, que dice que el
+  aviso no pudo enviarse.
+- **Una cuenta sin dirección utilizable** no se bloquea: su eliminación sigue como
+  sin bloque `mail`, el registro dice `<login> has no usable mail address ...
+  nobody is told`, y la página de la cuenta lo dice.
+
+Sin bloque `mail`, nada cambia.
+
 ## Salud y métricas {#health-and-metrics}
 
 Los de go-net-health/endpoint, como en go-fileshare, en la escucha `metrics`, que no

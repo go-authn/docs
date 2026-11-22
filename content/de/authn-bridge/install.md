@@ -105,6 +105,25 @@ sein SHA-256-Fingerabdruck: Nehmen Sie den Fingerabdruck von der Webseite der F�
 nie aus demselben Download wie das Zertifikat. Siehe
 [die Föderationsseite]({{< relref "/authn-bridge/federation.md" >}}).
 
+## Das SMTP-Passwort {#the-smtp-password}
+
+Nur nötig mit einem [`mail`-Block]({{< relref "/authn-bridge/configuration.md#mail" >}})
+(seit v0.32.0). Das Passwort kommt aus `password_file` und von nirgendwo sonst:
+nicht aus der Umgebung, nicht aus einer Kommandozeile, nicht aus der
+Konfigurationsdatei. Die Datei muss eine reguläre Datei sein, **im Besitz des
+Dienstbenutzers, ohne Gruppen- und ohne Others-Berechtigungsbits** (`0600`), und
+eine nicht leere Zeile enthalten; sie wird mit einem einzigen Öffnen gelesen.
+Alles andere wird beim Start abgelehnt, also geben Sie die Datei dem
+Dienstbenutzer und verengen Sie ihren Modus:
+
+```sh
+chown authn-bridge /etc/authn-bridge/smtp.password
+chmod 0600 /etc/authn-bridge/smtp.password
+```
+
+Die Bridge liest in v0.32.0 diese eine Datei für das SMTP-Passwort; das README
+der Bridge nennt keine andere Quelle, auch kein systemd-Credential.
+
 ## Die Unit {#the-unit}
 
 Was sie gewährt, in Kürze:

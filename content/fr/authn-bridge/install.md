@@ -105,6 +105,24 @@ son empreinte SHA-256 : prenez l'empreinte sur la page web de la fédération,
 jamais dans le même téléchargement que le certificat. Voir
 [le côté fédération]({{< relref "/authn-bridge/federation.md" >}}).
 
+## Le mot de passe SMTP {#the-smtp-password}
+
+Nécessaire seulement avec un [bloc `mail`]({{< relref "/authn-bridge/configuration.md#mail" >}})
+(depuis la v0.32.0). Le mot de passe vient de `password_file`, et de nulle part ailleurs :
+ni l'environnement, ni une ligne de commande, ni le fichier de configuration. Le fichier
+doit être un fichier ordinaire **appartenant à l'utilisateur du service, sans bit de
+permission de groupe ni d'autres** (`0600`), et contenir une seule ligne non vide ; il
+est lu en une seule ouverture. Tout autre cas est refusé au démarrage : donnez donc le
+fichier à l'utilisateur du service et restreignez son mode :
+
+```sh
+chown authn-bridge /etc/authn-bridge/smtp.password
+chmod 0600 /etc/authn-bridge/smtp.password
+```
+
+Le pont lit ce seul fichier pour le mot de passe SMTP dans la v0.32.0 ; le README du
+pont ne nomme aucune autre source, identifiant systemd compris.
+
 ## L'unité {#the-unit}
 
 Ce qu'elle accorde, en bref :

@@ -100,6 +100,12 @@ Link wird also ersetzt, nicht verfolgt, und eine Datei mit lockererem Modus komm
 Besitz dieses Benutzers, nicht für Gruppe oder andere beschreibbar, kein symbolischer
 Link; andernfalls wird nichts geschrieben.
 
+Seit v0.8.1 schreibt
+[`harden/privfile`]({{< relref "/libraries/harden.md#privfile" >}}) v0.2.0 diese
+Datei. Unter Windows erhält sie jetzt eine geschützte Zugriffsliste nur für den
+Eigentümer, wie in go-authn/kinit v0.3.2, und das Verzeichnis wird beim Schreiben
+erneut geprüft, nicht nur davor.
+
 1. Aktivieren Sie in KeePassXC *Settings > Browser Integration*.
 2. Verknüpfen Sie diesen Rechner einmal je Datenbank und bestätigen Sie es in
    KeePassXC:

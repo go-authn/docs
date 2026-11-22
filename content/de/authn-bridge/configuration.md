@@ -184,7 +184,17 @@ acme {
 Das Zertifikat gilt für den Host des Ausstellers. `cache_dir` enthält private Schlüssel, und
 der Anbieter verweigert den Start auf einem Verzeichnis, das ein anderer Benutzer erreichen oder umlenken könnte.
 
-## `mail`: das SMTP-Passwort ist eine Referenz {#mail-the-smtp-password-is-a-reference}
+## `mail`
+
+Seit v0.32.0. Ein Passkey kann ein anstehendes Entfernen immer abbrechen, also
+könnte ein Dieb mit einem Schlüssel damit das Entfernen abbrechen, das der
+Eigentümer mit einem anderen beantragt hat. Nur eine Benachrichtigung über einen
+Kanal, der keinen der Passkeys der Person hält, lässt den Eigentümer es sehen.
+Mit einem `mail`-Block sendet die Bridge **eine Klartext-E-Mail an die eigene
+Adresse des Kontos**, wenn das Entfernen eines Passkeys beantragt oder
+abgebrochen wird
+([was der Betreiber sieht]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})).
+Ohne `mail`-Block ändert sich nichts.
 
 ```hcl
 mail {
@@ -242,6 +252,22 @@ hält die Bridge beim Start an. Bewahren Sie das Passwort an einem Ort auf, der
 nicht von dieser Maschine abhängt (eine Offline-Kopie), versiegeln Sie es aus
 dieser Kopie mit dem obigen Befehl neu und führen Sie dann
 `systemctl restart authn-bridge` aus.
+
+- **Wer benachrichtigt wird.** Die `mail` des Kontos in der lokalen Kontendatei,
+  wie die Bridge sie kennt, nie eine Adresse aus der Anfrage. Der Block braucht
+  einen `local`-Block: Die Benachrichtigung betrifft die Passkeys lokaler Konten.
+- **Immer TLS.** Implizites TLS, oder STARTTLS, das der Server anbietet und
+  abschließt (sonst wird die Benachrichtigung nicht gesendet: nie ein Gespräch im
+  Klartext). Das Serverzertifikat wird gegen die System-Roots und den Hostnamen
+  geprüft. Die Bridge authentifiziert sich (PLAIN, sonst LOGIN) erst, wenn TLS
+  steht, nie über Klartext, nicht einmal zu 127.0.0.1; ein Server, der nach TLS
+  keinen brauchbaren Mechanismus anbietet, wird abgelehnt.
+- **Kein Link.** Der Text enthält keine URL zum Anklicken, sagt das und fordert
+  den Leser auf, seine Kontoseite über das eigene Lesezeichen zu öffnen.
+  Header-Werte mit CR, LF oder anderen Zeilentrennern werden abgelehnt.
+- **Ratenbegrenzung.** Eine Mail je Konto und `window` (Standard `10m`); die in
+  der Zwischenzeit eintreffenden Ereignisse werden zu einer Zusammenfassung
+  vereint, die am Ende des Fensters gesendet wird.
 
 ## Was beim Start abgelehnt wird {#what-is-refused-at-startup}
 

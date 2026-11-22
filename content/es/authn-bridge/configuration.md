@@ -188,7 +188,16 @@ El certificado es para el host del emisor. `cache_dir` contiene claves privadas,
 el proveedor se niega a arrancar sobre uno que otro usuario pudiera alcanzar o
 redirigir.
 
-## `mail`: la contraseña SMTP es una referencia {#mail-the-smtp-password-is-a-reference}
+## `mail`
+
+Desde la v0.32.0. Una passkey siempre puede cancelar una eliminación pendiente, así
+que quien robe una clave podría cancelar con ella la eliminación que el propietario
+pidió con otra. Solo un aviso por un canal que no tenga ninguna de las passkeys de la
+persona permite al propietario verlo. Con un bloque `mail`, el bridge envía **un
+correo de texto plano a la dirección propia de la cuenta** cuando se pide o se cancela
+la eliminación de una passkey
+([lo que ve el operador]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})).
+Sin bloque `mail`, nada cambia.
 
 ```hcl
 mail {
@@ -243,6 +252,23 @@ arrancar.
 al arrancar. Guarde la contraseña en un lugar que no dependa de esta máquina
 (una copia sin conexión), vuelva a sellarla desde esa copia con el comando de
 arriba y luego `systemctl restart authn-bridge`.
+
+- **A quién se avisa.** El `mail` de la cuenta en el archivo de cuentas locales,
+  tal como el bridge lo conoce, nunca una dirección tomada de la petición. El
+  bloque necesita un bloque `local`: el aviso trata de las passkeys de las cuentas
+  locales.
+- **TLS, siempre.** TLS implícito, o STARTTLS que el servidor ofrezca y complete
+  (si no, el aviso no se envía: nunca una conversación en claro). El certificado
+  del servidor se verifica contra las raíces del sistema y el nombre de host. El
+  bridge se autentica (PLAIN, si no LOGIN) solo cuando TLS está establecido, nunca
+  en claro, ni siquiera hacia 127.0.0.1; se rechaza un servidor que no anuncie
+  ningún mecanismo utilizable tras TLS.
+- **Sin enlace.** El texto no lleva ninguna URL que seguir, lo dice, e indica al
+  lector que abra la página de su cuenta desde su propio marcador. Se rechazan los
+  valores de cabecera con CR, LF u otros separadores de línea.
+- **Límite de frecuencia.** Un correo por cuenta y por `window` (`10m` por
+  defecto); los eventos que llegan entretanto se reúnen en un resumen, enviado
+  cuando acaba la ventana.
 
 ## Lo que se rechaza al arrancar {#what-is-refused-at-startup}
 
