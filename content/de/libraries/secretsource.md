@@ -12,7 +12,7 @@ Referenz enthält kein Geheimnis und darf daher in einer Option, einem Skript
 oder der Shell-Historie stehen.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.7.0
+go get github.com/go-authn/secretsource@v0.8.0
 ```
 
 ```go
@@ -29,6 +29,7 @@ use(s.Bytes())
 | `secretservice:SERVICE/ACCOUNT` | ein freedesktop-Secret-Service-Objekt mit den Attributen `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, Secret-Service-Integration von KeePassXC) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | das eine Secret-Service-Objekt mit all diesen Attributen; mehrere Treffer werden abgelehnt |
 | `keepassxc:URL` | der KeePassXC-Eintrag, dessen **URL-Feld** diese URL ist (`https://NAME.invalid/...` ist eine gute Wahl, die sich nie auflöst); zwei Einträge mit derselben URL werden als mehrdeutig abgelehnt |
+| `systemd-creds:NAME` | (Linux, seit v0.8.0) ein systemd-Credential, Byte für Byte zurückgegeben: kein Entfernen des abschließenden Zeilenumbruchs, anders als bei `file:`. Zuerst die Datei `NAME` in `$CREDENTIALS_DIRECTORY` (angelegt durch `LoadCredential=`, `LoadCredentialEncrypted=`, `SetCredentialEncrypted=`); sonst `NAME` oder `NAME.cred` in `credstore.encrypted` unter `/etc`, `/run`, `/usr/lib`, entschlüsselt mit `systemd-creds decrypt`. Auf anderen Systemen mit `ErrUnavailable` abgelehnt |
 
 `keepassxc:by-uuid/...` und `keepassxc:by-path/...` werden **abgelehnt**:
 KeePassXC 2.8.0 stürzt ab, wenn eine Suche einen Eintrag ohne URL findet.
@@ -39,6 +40,37 @@ starten können. Eine Referenz ohne Schema wird abgelehnt, nicht als Pfad errate
 ein leeres von einem Manager oder einer `file:`-Referenz wird abgelehnt (`ErrEmpty`), und ein Aufruf endet mit seinem
 Kontext (2 Minuten ohne Frist), auch wenn der Manager darauf wartet, dass Sie
 ihn entsperren.
+
+## systemd-Credentials {#systemd-creds}
+
+Grammatik, genau: `systemd-creds:NAME`, das Schema in Kleinbuchstaben, ein
+Doppelpunkt, dann der Credential-Name, wie er `LoadCredential=`,
+`LoadCredentialEncrypted=` oder `systemd-creds encrypt --name=` übergeben wurde,
+zum Beispiel `systemd-creds:smtp`. `NAME` ist ein einfacher Dateiname von 1 bis
+255 Bytes: kein `/` (also kein Pfad), nicht `.` oder `..`, kein Steuerzeichen und
+kein Suffix `.cred` (das Suffix gehört zur Datei; `smtp` findet `smtp` oder
+`smtp.cred`).
+
+- Die Datei in `$CREDENTIALS_DIRECTORY` wird mit `O_NOFOLLOW` geöffnet, muss eine
+  reguläre Datei sein, die root oder dem Aufrufer gehört und für "andere" keinen
+  Zugriff hat (Gruppenbits sind erlaubt: systemd gibt einem Dienst mit `User=`
+  eine root gehörende Datei 0440 mit ACL); das Verzeichnis ebenso. Ein Symlink
+  oder ein zu offener Modus wird abgelehnt.
+- Sonst wird `systemd-creds decrypt --name=NAME PATH -` direkt ausgeführt: keine
+  Shell, eine leere Umgebung, das Geheimnis nur von der Standardausgabe gelesen,
+  höchstens 4096 Bytes, begrenzt durch den Kontext. Ein Aufrufer ohne root
+  versucht zuerst `--user` (systemd 256 oder neuer).
+- Kein Trimmen: ein abschließender Zeilenumbruch, NUL-Bytes und Nicht-UTF-8-Bytes
+  bleiben erhalten; versiegeln Sie ein Passwort daher mit `printf %s`.
+- Gemessen mit systemd 257 (Debian 13) und `--with-key=host`; nicht mit einem
+  TPM2-Schlüssel gemessen. Eine fehlgeschlagene Entschlüsselung liefert
+  `ErrUnavailable` und weist darauf hin, dass das Credential neu versiegelt
+  werden muss.
+- PCR-Bindung: `--tpm2-pcrs=` ist standardmäßig leer. Ein nacktes
+  `--tpm2-pcrs=7` kann nach einem Firmware- oder Shim-Update oder einer
+  vTPM-Migration jedes Credential sperren. Besser `--with-key=host+tpm2`, eine
+  signierte PCR-Richtlinie (`--tpm2-public-key`, PCR 11) oder `systemd-pcrlock`,
+  und eine Kopie des Geheimnisses zum erneuten Versiegeln aufbewahren.
 
 ## KeePassXC {#keepassxc}
 

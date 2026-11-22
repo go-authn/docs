@@ -12,7 +12,7 @@ referencia no contiene ningún secreto, así que puede estar en una opción, un
 script o el historial del shell.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.7.0
+go get github.com/go-authn/secretsource@v0.8.0
 ```
 
 ```go
@@ -29,6 +29,7 @@ use(s.Bytes())
 | `secretservice:SERVICE/ACCOUNT` | un elemento de Secret Service de freedesktop con atributos `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, integración Secret Service de KeePassXC) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | el único elemento de Secret Service con todos esos atributos; varias coincidencias se rechazan |
 | `keepassxc:URL` | la entrada de KeePassXC cuyo **campo URL** es esa URL (`https://NOMBRE.invalid/...` es una buena elección, que nunca se resuelve); dos entradas con la misma URL se rechazan por ambiguas |
+| `systemd-creds:NAME` | (Linux, desde v0.8.0) una credencial de systemd, devuelta byte a byte: no se elimina el salto de línea final, a diferencia de `file:`. Primero el archivo `NAME` en `$CREDENTIALS_DIRECTORY` (colocado por `LoadCredential=`, `LoadCredentialEncrypted=`, `SetCredentialEncrypted=`); si no, `NAME` o `NAME.cred` en `credstore.encrypted` de `/etc`, `/run`, `/usr/lib`, descifrado con `systemd-creds decrypt`. Se rechaza con `ErrUnavailable` en otros sistemas |
 
 `keepassxc:by-uuid/...` y `keepassxc:by-path/...` se **rechazan**: KeePassXC
 2.8.0 se cierra con un fallo cuando una búsqueda encuentra una entrada sin URL.
@@ -38,6 +39,36 @@ proceso. Una referencia sin esquema se rechaza, no se adivina como ruta (`file:`
 es la forma de escribir una ruta). Un secreto de más de 4096 bytes, o vacío
 desde un gestor o un `file:`, se rechaza (`ErrEmpty`), y una llamada termina con su contexto (2 minutos
 sin plazo) aunque el gestor esté esperando que lo desbloquee.
+
+## Credenciales de systemd {#systemd-creds}
+
+Gramática, exactamente: `systemd-creds:NAME`, el esquema en minúsculas, dos
+puntos y el nombre de la credencial tal como se dio a `LoadCredential=`,
+`LoadCredentialEncrypted=` o `systemd-creds encrypt --name=`, por ejemplo
+`systemd-creds:smtp`. `NAME` es un nombre de archivo simple de 1 a 255 bytes: sin
+`/` (por tanto, no es una ruta), ni `.` ni `..`, sin caracteres de control y sin
+sufijo `.cred` (el sufijo pertenece al archivo; `smtp` encuentra `smtp` o
+`smtp.cred`).
+
+- El archivo de `$CREDENTIALS_DIRECTORY` se abre con `O_NOFOLLOW`, debe ser un
+  archivo regular propiedad de root o del llamador, sin acceso para "otros" (los
+  bits de grupo se aceptan: systemd da a un servicio con `User=` un archivo 0440
+  de root con una ACL); el directorio igual. Se rechaza un enlace simbólico o un
+  modo demasiado abierto.
+- Si no, se ejecuta directamente `systemd-creds decrypt --name=NAME PATH -`: sin
+  shell, con entorno vacío, el secreto leído solo de la salida estándar, como
+  máximo 4096 bytes, acotado por el contexto. Un llamador que no es root prueba
+  primero `--user` (systemd 256 o posterior).
+- Sin recorte: se conservan el salto de línea final, los bytes NUL y los bytes que
+  no son UTF-8; selle una contraseña con `printf %s`.
+- Medido en systemd 257 (Debian 13) con `--with-key=host`; no medido con una clave
+  TPM2. Un descifrado fallido devuelve `ErrUnavailable` e indica que quizá haya
+  que volver a sellar la credencial.
+- Vinculación a PCR: `--tpm2-pcrs=` es vacío por defecto. Un `--tpm2-pcrs=7`
+  desnudo puede bloquear todas las credenciales tras una actualización de
+  firmware o de shim o una migración de vTPM. Prefiera `--with-key=host+tpm2`, una
+  política de PCR firmada (`--tpm2-public-key`, PCR 11) o `systemd-pcrlock`, y
+  conserve una copia del secreto para volver a sellarlo.
 
 ## KeePassXC {#keepassxc}
 

@@ -11,7 +11,7 @@ tags: [ライブラリ, secretsource, シークレット]
 含まないので、フラグ、スクリプト、シェルの履歴に書いても構いません。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.7.0
+go get github.com/go-authn/secretsource@v0.8.0
 ```
 
 ```go
@@ -28,6 +28,7 @@ use(s.Bytes())
 | `secretservice:SERVICE/ACCOUNT` | 属性 `service=SERVICE`、`account=ACCOUNT` を持つ freedesktop Secret Service の項目 (GNOME Keyring、KWallet、KeePassXC の Secret Service 連携) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | それらすべての属性を持つ唯一の Secret Service 項目。複数一致は拒否されます |
 | `keepassxc:URL` | **URL フィールド**がその URL である KeePassXC のエントリ (`https://NAME.invalid/...` は、名前解決されることのない良い選択です)。同じ URL のエントリが 2 つあると曖昧として拒否されます |
+| `systemd-creds:NAME` | (Linux、v0.8.0 以降) systemd のクレデンシャルをバイト単位でそのまま返します。`file:` と違い、末尾の改行は取り除きません。まず `$CREDENTIALS_DIRECTORY` 内のファイル `NAME` (`LoadCredential=`、`LoadCredentialEncrypted=`、`SetCredentialEncrypted=` が配置)、なければ `/etc`、`/run`、`/usr/lib` の `credstore.encrypted` にある `NAME` または `NAME.cred` を `systemd-creds decrypt` で復号します。他のシステムでは `ErrUnavailable` で拒否されます |
 
 `keepassxc:by-uuid/...` と `keepassxc:by-path/...` は**拒否されます**:
 KeePassXC 2.8.0 は、検索が URL のないエントリを見つけるとクラッシュします。
@@ -37,6 +38,35 @@ KeePassXC 2.8.0 は、検索が URL のないエントリを見つけるとク�
 (パスは `file:` で書きます)。4096 バイトを超えるシークレットや、マネージャーから
 または `file:` からの空のシークレットは拒否され (`ErrEmpty`)、呼び出しはそのコンテキスト (期限がなければ
 2 分) で終わり、マネージャーがロック解除を待っていても同じです。
+
+## systemd クレデンシャル {#systemd-creds}
+
+文法は厳密に `systemd-creds:NAME` です。スキームは小文字、続けてコロン、そして
+`LoadCredential=`、`LoadCredentialEncrypted=`、`systemd-creds encrypt --name=`
+に渡したクレデンシャル名です。例: `systemd-creds:smtp`。`NAME` は 1 から 255
+バイトの単純なファイル名で、`/` を含まず (パスではない)、`.` や `..` ではなく、
+制御文字を含まず、`.cred` サフィックスも付けません (サフィックスはファイル側の
+ものです。`smtp` は `smtp` または `smtp.cred` を見つけます)。
+
+- `$CREDENTIALS_DIRECTORY` 内のファイルは `O_NOFOLLOW` で開かれ、root または
+  呼び出し元が所有し、「その他」にアクセス権のない通常ファイルでなければ
+  なりません (グループビットは許容されます。systemd は `User=` のサービスに、
+  ACL 付きで root 所有の 0440 ファイルを渡します)。ディレクトリも同様です。
+  シンボリックリンクや緩すぎるモードは拒否されます。
+- そうでなければ `systemd-creds decrypt --name=NAME PATH -` を直接実行します。
+  シェルなし、空の環境、秘密は標準出力のみから読み、最大 4096 バイト、
+  コンテキストで終了します。root でない呼び出し元はまず `--user` (systemd 256
+  以降) を試します。
+- トリミングなし: 末尾の改行、NUL バイト、UTF-8 でないバイトはそのまま
+  保持されるので、パスワードは `printf %s` で封印してください。
+- systemd 257 (Debian 13) の `--with-key=host` で測定しました。TPM2 鍵では
+  測定していません。復号に失敗すると `ErrUnavailable` を返し、クレデンシャルの
+  再封印が必要かもしれないと伝えます。
+- PCR バインド: `--tpm2-pcrs=` の既定は空です。`--tpm2-pcrs=7` だけを指定すると、
+  ファームウェアや shim の更新、vTPM の移行の後にすべてのクレデンシャルが
+  開けなくなることがあります。`--with-key=host+tpm2`、署名付き PCR ポリシー
+  (`--tpm2-public-key`、PCR 11)、または `systemd-pcrlock` を使い、再封印用に
+  秘密のコピーを保管してください。
 
 ## KeePassXC {#keepassxc}
 
