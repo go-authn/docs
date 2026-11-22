@@ -12,7 +12,7 @@ referencia no contiene ningún secreto, así que puede estar en una opción, un
 script o el historial del shell.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.1
+go get github.com/go-authn/secretsource@v0.7.0
 ```
 
 ```go
@@ -24,7 +24,7 @@ use(s.Bytes())
 
 | Referencia | Lee |
 |---|---|
-| `file:PATH` | un archivo regular legible solo por su propietario (modo 0600 o más estricto); se quita un salto de línea final; un archivo vacío, o que solo contiene un fin de línea, se rechaza con `ErrEmpty` (desde la v0.6.0), y una FIFO se rechaza por no ser un archivo regular |
+| `file:PATH` | un archivo regular legible solo por su propietario (Unix: modo 0600 o más estricto; Windows, desde la v0.7.0: una lista de acceso que no concede derecho de lectura ni de escritura a nadie salvo el propietario, SYSTEM y el grupo Administradores); se quita un salto de línea final; un archivo vacío, o que solo contiene un fin de línea, se rechaza con `ErrEmpty` (desde la v0.6.0), y una FIFO se rechaza por no ser un archivo regular |
 | `keychain:SERVICE/ACCOUNT` | un elemento de contraseña genérica del Llavero de macOS |
 | `secretservice:SERVICE/ACCOUNT` | un elemento de Secret Service de freedesktop con atributos `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, integración Secret Service de KeePassXC) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | el único elemento de Secret Service con todos esos atributos; varias coincidencias se rechazan |

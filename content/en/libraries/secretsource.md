@@ -11,7 +11,7 @@ names where a secret lives; `secretsource.Open` fetches it. The reference holds
 no secret, so it may sit in a flag, a script or a shell history.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.1
+go get github.com/go-authn/secretsource@v0.7.0
 ```
 
 ```go
@@ -23,7 +23,7 @@ use(s.Bytes())
 
 | Reference | Reads |
 |---|---|
-| `file:PATH` | a regular file readable by its owner alone (mode 0600 or stricter); one trailing newline is stripped; a file that is empty, or holds only a line ending, is refused with `ErrEmpty` (since v0.6.0), and a FIFO is refused as not a regular file |
+| `file:PATH` | a regular file readable by its owner alone (Unix: mode 0600 or stricter; Windows, since v0.7.0: an access list that grants no read or write right to anyone but the owner, SYSTEM and the Administrators group); one trailing newline is stripped; a file that is empty, or holds only a line ending, is refused with `ErrEmpty` (since v0.6.0), and a FIFO is refused as not a regular file |
 | `keychain:SERVICE/ACCOUNT` | a macOS Keychain generic-password item |
 | `secretservice:SERVICE/ACCOUNT` | a freedesktop Secret Service item with attributes `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, KeePassXC's Secret Service integration) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | the one Secret Service item carrying all those attributes; several matches are refused |
