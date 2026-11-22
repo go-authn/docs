@@ -585,7 +585,7 @@ verified against the public key it handed out; that run is not part of CI.&lt;/p
 names where a secret lives; &lt;code&gt;secretsource.Open&lt;/code&gt; fetches it. The reference holds
 no secret, so it may sit in a flag, a script or a shell history.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/secretsource@v0.9.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/secretsource@v0.12.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -760,6 +760,10 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;&lt;code&gt;Add&lt;/code&gt; registers the pair on a cobra command, &lt;code&gt;AddStd&lt;/code&gt; on a standard-library&lt;code&gt;flag.FlagSet&lt;/code&gt; (with aliases such as &lt;code&gt;-t&lt;/code&gt;); &lt;code&gt;Resolve&lt;/code&gt; reads the references.Available since v0.10.0.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;AddFrom&lt;/code&gt; registers only &lt;code&gt;--&amp;lt;name&amp;gt;-from&lt;/code&gt;, with no deprecated plain twin, for a
+secret introduced after the plain flag was deprecated. &lt;code&gt;AddFromList&lt;/code&gt; registers
+a repeatable &lt;code&gt;--&amp;lt;name&amp;gt;-from&lt;/code&gt;; &lt;code&gt;Resolve&lt;/code&gt; appends every resolved secret to a&lt;code&gt;*[]string&lt;/code&gt;, in order (key rotation). Both trim, refuse an empty secret and
+keep the value out of errors, like &lt;code&gt;Add&lt;/code&gt;. Available since v0.12.0.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="store"&gt;Storing a secret: &lt;code&gt;secretsource store&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="store"&gt;&lt;/span&gt;
 &lt;a href="#store" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;No entry has to be made by hand. &lt;code&gt;secretsource store REF [--group G] [--login L] [--replace] [--generate N]&lt;/code&gt; writes the secret for &lt;code&gt;keychain:&lt;/code&gt;,&lt;code&gt;secretservice:SERVICE/ACCOUNT&lt;/code&gt;, &lt;code&gt;secretservice:KEY=VALUE&lt;/code&gt; and &lt;code&gt;keepassxc:URL&lt;/code&gt;:&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
@@ -785,6 +789,22 @@ entry, found by its URL). &lt;code&gt;file:&lt;/code&gt; is refused.&lt;/p&gt;
 carries the URL that finds it again, and a duplicate is looked up by URL. The
 login defaults to the URL&amp;rsquo;s host (&lt;code&gt;--login&lt;/code&gt;), the group is &lt;code&gt;KeePassXC-Browser Passwords&lt;/code&gt; unless &lt;code&gt;--group&lt;/code&gt; names one below the root, and &lt;code&gt;--title&lt;/code&gt; is refused
 because KeePassXC 2.8.0 ignores it. KeePassXC shows its own dialogs.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="delete"&gt;Deleting a secret: &lt;code&gt;Delete&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="delete"&gt;&lt;/span&gt;
+&lt;a href="#delete" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;Delete(ctx, ref)&lt;/code&gt; is the counterpart of &lt;code&gt;Store&lt;/code&gt;, so a caller that keeps a token
+in the keychain can remove it on logout. Available since v0.11.0.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;keychain:&lt;/code&gt; and &lt;code&gt;secretservice:SERVICE/ACCOUNT&lt;/code&gt; remove the item. When a Secret
+Service lookup matches several items the result is &lt;code&gt;ErrAmbiguous&lt;/code&gt; and nothing
+is deleted.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;keepassxc:URL&lt;/code&gt; uses the browser protocol&amp;rsquo;s &lt;code&gt;delete-entry&lt;/code&gt;: KeePassXC asks for
+confirmation and moves the entry to its Recycle Bin, so the password stays in
+the database until the bin is emptied.&lt;/li&gt;
+&lt;li&gt;An absent entry is an error that is both &lt;code&gt;ErrNotFound&lt;/code&gt; and &lt;code&gt;fs.ErrNotExist&lt;/code&gt;,so &amp;ldquo;already gone&amp;rdquo; can be treated as success on purpose.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;file:&lt;/code&gt;, &lt;code&gt;systemd-creds:&lt;/code&gt; and &lt;code&gt;secretservice:KEY=VALUE&lt;/code&gt; are refused with&lt;code&gt;ErrNoDelete&lt;/code&gt;: this package never manages a file or credential it did not
+store, and an attribute lookup names no single item.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The entry is looked up before it is deleted. Nothing secret is returned or
+logged.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="reference"&gt;Reference&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
 &lt;a href="#reference" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The README at&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;github.com/go-authn/secretsource&lt;/a&gt; is
 the source of truth for this page.&lt;/p&gt;</description></item><item><title>harden — two security primitives, shared</title><link>https://go-authn.github.io/docs/0.11/libraries/harden/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/libraries/harden/</guid><description>
@@ -1843,7 +1863,7 @@ modules that are published, versioned and tested on their own. Each answers&lt;s
 &lt;tr&gt;
 &lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.11/libraries/secretsource/"&gt;secretsource&lt;/a&gt;&lt;/td&gt;
 &lt;td&gt;where does a PIN or a password come from, when it must not sit in a file?&lt;/td&gt;
-&lt;td&gt;v0.10.0&lt;/td&gt;
+&lt;td&gt;v0.12.0&lt;/td&gt;
 &lt;td&gt;&lt;code&gt;github.com/go-authn/secretsource&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
