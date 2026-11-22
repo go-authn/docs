@@ -12,7 +12,7 @@ referencia no contiene ningún secreto, así que puede estar en una opción, un
 script o el historial del shell.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.9.0
+go get github.com/go-authn/secretsource@v0.12.0
 ```
 
 ```go
@@ -141,6 +141,13 @@ if err := secretflag.Resolve(ctx, b); err != nil { return err }
 la biblioteca estándar (con alias como `-t`); `Resolve` lee las referencias.
 Disponible desde v0.10.0.
 
+`AddFrom` registra solo `--<nombre>-from`, sin la gemela simple obsoleta, para
+un secreto introducido después de que la opción simple quedara obsoleta.
+`AddFromList` registra un `--<nombre>-from` repetible; `Resolve` añade cada
+secreto resuelto a un `*[]string`, en orden (rotación de claves). Ambas recortan
+los espacios de los extremos, rechazan un secreto vacío y mantienen el valor
+fuera de los errores, como `Add`. Disponible desde v0.12.0.
+
 ## Guardar un secreto: `secretsource store` {#store}
 
 No hace falta crear ninguna entrada a mano. `secretsource store REF [--group G]
@@ -165,6 +172,27 @@ por URL. El usuario por defecto es el host de la URL (`--login`), el grupo es
 `KeePassXC-Browser Passwords` salvo que `--group` nombre uno bajo la raíz, y
 `--title` se rechaza porque KeePassXC 2.8.0 lo ignora. KeePassXC muestra sus
 propios diálogos.
+
+## Eliminar un secreto: `Delete` {#delete}
+
+`Delete(ctx, ref)` es la contrapartida de `Store`: quien guarda un token en el
+llavero puede quitarlo al cerrar sesión. Disponible desde v0.11.0.
+
+- `keychain:` y `secretservice:SERVICE/ACCOUNT` eliminan el elemento. Cuando una
+  búsqueda en Secret Service coincide con varios elementos, el resultado es
+  `ErrAmbiguous` y no se elimina nada.
+- `keepassxc:URL` usa el `delete-entry` del protocolo del navegador: KeePassXC
+  pide confirmación y mueve la entrada a su Papelera de reciclaje, por lo que la
+  contraseña permanece en la base de datos hasta que se vacíe la papelera.
+- Una entrada ausente es un error que es a la vez `ErrNotFound` y
+  `fs.ErrNotExist`, de modo que «ya no existe» puede tratarse como un éxito a
+  propósito.
+- `file:`, `systemd-creds:` y `secretservice:KEY=VALUE` se rechazan con
+  `ErrNoDelete`: este paquete nunca gestiona un archivo ni una credencial que no
+  haya guardado, y una búsqueda por atributo no designa un único elemento.
+
+La entrada se busca antes de eliminarse. No se devuelve ni se registra nada
+secreto.
 
 ## Referencia {#reference}
 

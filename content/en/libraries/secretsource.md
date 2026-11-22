@@ -11,7 +11,7 @@ names where a secret lives; `secretsource.Open` fetches it. The reference holds
 no secret, so it may sit in a flag, a script or a shell history.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.9.0
+go get github.com/go-authn/secretsource@v0.12.0
 ```
 
 ```go
@@ -134,6 +134,12 @@ if err := secretflag.Resolve(ctx, b); err != nil { return err }
 `flag.FlagSet` (with aliases such as `-t`); `Resolve` reads the references.
 Available since v0.10.0.
 
+`AddFrom` registers only `--<name>-from`, with no deprecated plain twin, for a
+secret introduced after the plain flag was deprecated. `AddFromList` registers
+a repeatable `--<name>-from`; `Resolve` appends every resolved secret to a
+`*[]string`, in order (key rotation). Both trim, refuse an empty secret and
+keep the value out of errors, like `Add`. Available since v0.12.0.
+
 ## Storing a secret: `secretsource store` {#store}
 
 No entry has to be made by hand. `secretsource store REF [--group G]
@@ -157,6 +163,26 @@ carries the URL that finds it again, and a duplicate is looked up by URL. The
 login defaults to the URL's host (`--login`), the group is `KeePassXC-Browser
 Passwords` unless `--group` names one below the root, and `--title` is refused
 because KeePassXC 2.8.0 ignores it. KeePassXC shows its own dialogs.
+
+## Deleting a secret: `Delete` {#delete}
+
+`Delete(ctx, ref)` is the counterpart of `Store`, so a caller that keeps a token
+in the keychain can remove it on logout. Available since v0.11.0.
+
+- `keychain:` and `secretservice:SERVICE/ACCOUNT` remove the item. When a Secret
+  Service lookup matches several items the result is `ErrAmbiguous` and nothing
+  is deleted.
+- `keepassxc:URL` uses the browser protocol's `delete-entry`: KeePassXC asks for
+  confirmation and moves the entry to its Recycle Bin, so the password stays in
+  the database until the bin is emptied.
+- An absent entry is an error that is both `ErrNotFound` and `fs.ErrNotExist`,
+  so "already gone" can be treated as success on purpose.
+- `file:`, `systemd-creds:` and `secretservice:KEY=VALUE` are refused with
+  `ErrNoDelete`: this package never manages a file or credential it did not
+  store, and an attribute lookup names no single item.
+
+The entry is looked up before it is deleted. Nothing secret is returned or
+logged.
 
 ## Reference {#reference}
 

@@ -31,7 +31,7 @@ tags: [库]
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | 守护进程的 TLS 服务器证书从哪里来？ | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 这把 WireGuard 密钥是否可以连接，它是谁的？ | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | 身份提供方刚刚创建、更改或删除了谁？ | v0.2.1 | `github.com/go-authn/scim` |
-| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | 不应留在文件里的 PIN 或密码，从哪里取得？ | v0.10.0 | `github.com/go-authn/secretsource` |
+| [secretsource]({{< relref "/libraries/secretsource.md" >}}) | 不应留在文件里的 PIN 或密码，从哪里取得？ | v0.12.0 | `github.com/go-authn/secretsource` |
 | [harden]({{< relref "/libraries/harden.md" >}}) | 这个 URL 是 https 还是指向本机，私有文件又该如何安全地写入，密钥又如何不落入交换区？ | v0.3.0 | `github.com/go-authn/harden` |
 
 ## 它们如何分组 {#how-they-group}

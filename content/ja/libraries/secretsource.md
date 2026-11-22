@@ -11,7 +11,7 @@ tags: [ライブラリ, secretsource, シークレット]
 含まないので、フラグ、スクリプト、シェルの履歴に書いても構いません。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.9.0
+go get github.com/go-authn/secretsource@v0.12.0
 ```
 
 ```go
@@ -127,6 +127,13 @@ if err := secretflag.Resolve(ctx, b); err != nil { return err }
 （`-t` のような別名付きで）この組を登録し、`Resolve` が参照を読み取ります。
 v0.10.0 から利用できます。
 
+`AddFrom` は、非推奨の素のフラグを持たず `--<name>-from` だけを登録します。素の
+フラグが非推奨になった後に導入されるシークレット向けです。`AddFromList` は
+繰り返し指定できる `--<name>-from` を登録し、`Resolve` は解決したすべての
+シークレットを順番に `*[]string` へ追加します（鍵のローテーション用）。どちらも
+`Add` と同様に前後の空白を取り除き、空のシークレットを拒否し、エラーに値を含めません。
+v0.12.0 から利用できます。
+
 ## シークレットを保存する: `secretsource store` {#store}
 
 エントリを手で作る必要はありません。`secretsource store REF [--group G]
@@ -151,6 +158,25 @@ printf '%s' "$PIN" | secretsource store keychain:fido/yubikey-5c
 URL のホスト (`--login`)、グループは、ルート直下の名前を `--group` で指定しない限り
 `KeePassXC-Browser Passwords` で、`--title` は KeePassXC 2.8.0 が無視するため
 拒否されます。KeePassXC は独自のダイアログを表示します。
+
+## シークレットを削除する: `Delete` {#delete}
+
+`Delete(ctx, ref)` は `Store` の対になるもので、キーチェーンにトークンを保存している
+呼び出し側が、ログアウト時にそれを削除できます。v0.11.0 から利用できます。
+
+- `keychain:` と `secretservice:SERVICE/ACCOUNT` はアイテムを削除します。Secret
+  Service の検索が複数のアイテムに一致した場合、結果は `ErrAmbiguous` で、何も
+  削除されません。
+- `keepassxc:URL` はブラウザープロトコルの `delete-entry` を使います。KeePassXC は
+  確認を求め、エントリをごみ箱に移動するため、ごみ箱を空にするまでパスワードは
+  データベースに残ります。
+- 存在しないエントリは、`ErrNotFound` であり同時に `fs.ErrNotExist` でもあるエラーに
+  なるので、「すでに存在しない」ことを意図的に成功として扱えます。
+- `file:`、`systemd-creds:`、`secretservice:KEY=VALUE` は `ErrNoDelete` で拒否されます。
+  このパッケージは自分が保存していないファイルやクレデンシャルを管理せず、
+  属性による検索は単一のアイテムを指さないためです。
+
+エントリは削除の前に検索されます。秘密の内容は返されず、ログにも出ません。
 
 ## リファレンス {#reference}
 

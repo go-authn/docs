@@ -11,7 +11,7 @@ tags: [라이브러리, secretsource, 비밀]
 있지 않으므로 플래그, 스크립트, 셸 기록에 있어도 됩니다.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.9.0
+go get github.com/go-authn/secretsource@v0.12.0
 ```
 
 ```go
@@ -125,6 +125,13 @@ if err := secretflag.Resolve(ctx, b); err != nil { return err }
 별칭 포함) 이 쌍을 등록하고, `Resolve`가 참조를 읽습니다. v0.10.0부터
 제공됩니다.
 
+`AddFrom`은 더 이상 권장되지 않는 일반 플래그 짝 없이 `--<name>-from`만
+등록합니다. 일반 플래그가 더 이상 권장되지 않게 된 뒤에 도입된 비밀에
+쓰입니다. `AddFromList`는 반복해서 지정할 수 있는 `--<name>-from`을 등록하며,
+`Resolve`는 해석한 모든 비밀을 순서대로 `*[]string`에 덧붙입니다(키 교체용).
+둘 다 `Add`와 마찬가지로 앞뒤 공백을 제거하고, 빈 비밀을 거부하며, 오류에 값을
+담지 않습니다. v0.12.0부터 제공됩니다.
+
 ## 비밀 저장하기: `secretsource store` {#store}
 
 항목을 손으로 만들 필요가 없습니다. `secretsource store REF [--group G]
@@ -149,6 +156,25 @@ printf '%s' "$PIN" | secretsource store keychain:fido/yubikey-5c
 (`--login`)이고, 그룹은 `--group`이 루트 아래 이름을 지정하지 않는 한
 `KeePassXC-Browser Passwords`이며, `--title`은 KeePassXC 2.8.0이 무시하므로
 거부됩니다. KeePassXC는 자체 대화 상자를 표시합니다.
+
+## 비밀 삭제하기: `Delete` {#delete}
+
+`Delete(ctx, ref)`는 `Store`의 짝으로, 키체인에 토큰을 보관하는 호출자가
+로그아웃할 때 그것을 지울 수 있게 합니다. v0.11.0부터 제공됩니다.
+
+- `keychain:`과 `secretservice:SERVICE/ACCOUNT`는 항목을 삭제합니다. Secret
+  Service 조회가 여러 항목과 일치하면 결과는 `ErrAmbiguous`이고 아무것도
+  삭제되지 않습니다.
+- `keepassxc:URL`은 브라우저 프로토콜의 `delete-entry`를 사용합니다. KeePassXC가
+  확인을 요청하고 항목을 휴지통으로 옮기므로, 휴지통을 비울 때까지 비밀번호는
+  데이터베이스에 남아 있습니다.
+- 없는 항목은 `ErrNotFound`이면서 동시에 `fs.ErrNotExist`인 오류가 되므로,
+  "이미 없음"을 의도적으로 성공으로 처리할 수 있습니다.
+- `file:`, `systemd-creds:`, `secretservice:KEY=VALUE`는 `ErrNoDelete`로
+  거부됩니다. 이 패키지는 자신이 저장하지 않은 파일이나 자격 증명을 관리하지
+  않으며, 속성 조회는 단일 항목을 가리키지 않기 때문입니다.
+
+항목은 삭제하기 전에 먼저 조회됩니다. 비밀 내용은 반환되거나 기록되지 않습니다.
 
 ## 참조 문서 {#reference}
 
