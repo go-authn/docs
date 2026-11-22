@@ -211,6 +211,11 @@ démarrage.
 comme `password_from = "file:PATH"`. Fixer les deux est une erreur de
 configuration.
 
+`file:` refuse un lien symbolique et un fichier appartenant à un autre
+utilisateur que celui sous lequel le bridge s'exécute. Un identifiant transmis
+par systemd se lit avec `systemd-creds:NAME`, jamais avec
+`file:$CREDENTIALS_DIRECTORY/NAME`.
+
 Sur un hôte systemd, scellez le mot de passe à la machine et transmettez-le au
 service comme identifiant (credential) :
 

@@ -197,6 +197,11 @@ sans schéma, une référence invalide, ou un secret trop long, vide ou sur
 plusieurs lignes arrête le serveur au démarrage. Les blocs `user` et `users`
 gardent pour l'instant leurs propres graphies `*_file`.
 
+`file:` refuse un lien symbolique et un fichier appartenant à un autre
+utilisateur que celui sous lequel authnd s'exécute. Un identifiant transmis par
+systemd se lit avec `systemd-creds:NAME`, jamais avec
+`file:$CREDENTIALS_DIRECTORY/NAME`.
+
 Avec systemd, scellez le secret à la machine et passez-le comme identifiant
 (credential) :
 

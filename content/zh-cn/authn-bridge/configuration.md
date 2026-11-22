@@ -202,6 +202,10 @@ mail {
 `password_file = "PATH"` 仍然可用，但已**弃用**：它被当作
 `password_from = "file:PATH"` 读取。同时设置两者是配置错误。
 
+`file:` 会拒绝符号链接，也会拒绝属于运行 bridge 的用户之外其他用户的文件。
+由 systemd 传递的凭据应使用 `systemd-creds:NAME` 读取，绝不要使用
+`file:$CREDENTIALS_DIRECTORY/NAME`。
+
 在 systemd 主机上，把密码封存到本机，并作为凭据交给服务：
 
 ```sh

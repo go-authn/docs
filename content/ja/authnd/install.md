@@ -190,6 +190,10 @@ ReadWritePaths=/etc/authnd/passwords
 大きすぎる、空の、複数行のシークレットがあると、サーバーは起動時に停止します。`user` と
 `users` ブロックは、今のところ独自の `*_file` の書き方のままです。
 
+`file:` はシンボリックリンクと、authnd の実行ユーザー以外が所有するファイルを
+拒否します。systemd から渡された認証情報は `systemd-creds:NAME` で読み、
+`file:$CREDENTIALS_DIRECTORY/NAME` では決して読みません。
+
 systemd では、シークレットをマシンに封印し、クレデンシャルとして渡します。
 
 ```sh

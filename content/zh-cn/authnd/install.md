@@ -195,6 +195,10 @@ ReadWritePaths=/etc/authnd/passwords
 或者过大、为空或多行的密钥，都会使服务器在启动时停止。
 `user` 和 `users` 块目前仍保留各自的 `*_file` 写法。
 
+`file:` 会拒绝符号链接，也会拒绝属于运行 authnd 的用户之外其他用户的文件。
+由 systemd 传递的凭据应使用 `systemd-creds:NAME` 读取，绝不要使用
+`file:$CREDENTIALS_DIRECTORY/NAME`。
+
 使用 systemd 时，把密钥封存到本机，并作为凭据传入：
 
 ```sh

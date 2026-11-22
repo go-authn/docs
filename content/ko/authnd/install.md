@@ -193,6 +193,10 @@ ReadWritePaths=/etc/authnd/passwords
 참조, 또는 너무 크거나 비어 있거나 여러 줄인 비밀 값은 서버를 시작 시 멈춥니다.
 `user`와 `users` 블록은 당분간 자체 `*_file` 표기를 유지합니다.
 
+`file:`은 심볼릭 링크와, authnd를 실행하는 사용자가 아닌 다른 사용자가 소유한
+파일을 거부합니다. systemd가 넘겨준 자격 증명은 `systemd-creds:NAME`으로 읽으며,
+`file:$CREDENTIALS_DIRECTORY/NAME`으로는 절대 읽지 않습니다.
+
 systemd에서는 비밀 값을 머신에 봉인하고 자격 증명으로 전달하십시오.
 
 ```sh

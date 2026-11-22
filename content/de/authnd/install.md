@@ -195,6 +195,11 @@ entfällt); eine Referenz ohne Schema, eine ungültige oder ein zu großes, leer
 oder mehrzeiliges Geheimnis hält den Server beim Start an. Die Blöcke `user` und
 `users` behalten vorerst ihre eigenen `*_file`-Schreibweisen.
 
+`file:` verweigert einen Symlink und eine Datei, die einem anderen Benutzer
+gehört als dem, unter dem authnd läuft. Ein von systemd übergebenes Credential
+wird mit `systemd-creds:NAME` gelesen, nie mit
+`file:$CREDENTIALS_DIRECTORY/NAME`.
+
 Mit systemd versiegeln Sie das Geheimnis an die Maschine und übergeben es als
 Credential:
 

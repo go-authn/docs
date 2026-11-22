@@ -211,6 +211,11 @@ Start abgelehnt.
 als `password_from = "file:PATH"` gelesen. Beides zu setzen ist ein
 Konfigurationsfehler.
 
+`file:` verweigert einen Symlink und eine Datei, die einem anderen Benutzer
+gehört als dem, unter dem die Bridge läuft. Ein von systemd übergebenes
+Credential wird mit `systemd-creds:NAME` gelesen, nie mit
+`file:$CREDENTIALS_DIRECTORY/NAME`.
+
 Auf einem systemd-Host versiegeln Sie das Passwort an die Maschine und übergeben
 es dem Dienst als Credential:
 

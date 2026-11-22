@@ -203,6 +203,10 @@ mail {
 `password_file = "PATH"`도 여전히 동작하지만 **사용 중단**되었습니다.
 `password_from = "file:PATH"`로 읽힙니다. 둘 다 지정하면 구성 오류입니다.
 
+`file:`은 심볼릭 링크와, 브리지를 실행하는 사용자가 아닌 다른 사용자가 소유한
+파일을 거부합니다. systemd가 넘겨준 자격 증명은 `systemd-creds:NAME`으로 읽으며,
+`file:$CREDENTIALS_DIRECTORY/NAME`으로는 절대 읽지 않습니다.
+
 systemd 호스트에서는 비밀번호를 머신에 봉인하고 서비스에 자격 증명으로
 전달하십시오.
 

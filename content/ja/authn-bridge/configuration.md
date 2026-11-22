@@ -201,6 +201,10 @@ mail {
 `password_file = "PATH"` は今も動きますが、**非推奨**です。`password_from = "file:PATH"` として
 読まれます。両方を指定すると設定エラーです。
 
+`file:` はシンボリックリンクと、ブリッジの実行ユーザー以外が所有するファイルを
+拒否します。systemd から渡された認証情報は `systemd-creds:NAME` で読み、
+`file:$CREDENTIALS_DIRECTORY/NAME` では決して読みません。
+
 systemd のホストでは、パスワードをマシンに封印し、クレデンシャルとしてサービスに渡します。
 
 ```sh

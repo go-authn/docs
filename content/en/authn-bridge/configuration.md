@@ -208,6 +208,10 @@ multi-line secret, a loose-mode file, and a `mail` block without `username` and
 `password_file = "PATH"` still works but is **deprecated**: it is read as
 `password_from = "file:PATH"`. Setting both is a configuration error.
 
+`file:` refuses a symlink and a file owned by another user than the one the
+bridge runs as. A credential handed over by systemd is read with
+`systemd-creds:NAME`, never with `file:$CREDENTIALS_DIRECTORY/NAME`.
+
 On a systemd host, seal the password to the machine and hand it to the service
 as a credential:
 

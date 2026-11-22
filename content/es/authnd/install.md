@@ -200,6 +200,11 @@ referencia sin esquema, una incorrecta, o un secreto demasiado grande, vacío o 
 varias líneas detiene el servidor al arrancar. Los bloques `user` y `users`
 conservan por ahora sus propias grafías `*_file`.
 
+`file:` rechaza un enlace simbólico y un archivo que pertenezca a un usuario
+distinto de aquel con el que se ejecuta authnd. Una credencial entregada por
+systemd se lee con `systemd-creds:NAME`, nunca con
+`file:$CREDENTIALS_DIRECTORY/NAME`.
+
 Con systemd, selle el secreto a la máquina y páselo como una credencial:
 
 ```sh

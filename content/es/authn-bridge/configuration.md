@@ -213,6 +213,11 @@ demasiado abiertos y un bloque `mail` sin `username` ni `password_from`.
 `password_file = "PATH"` sigue funcionando, pero está **obsoleto**: se lee como
 `password_from = "file:PATH"`. Indicar ambos es un error de configuración.
 
+`file:` rechaza un enlace simbólico y un archivo que pertenezca a un usuario
+distinto de aquel con el que se ejecuta el bridge. Una credencial entregada por
+systemd se lee con `systemd-creds:NAME`, nunca con
+`file:$CREDENTIALS_DIRECTORY/NAME`.
+
 En un host con systemd, selle la contraseña a la máquina y entréguesela al
 servicio como una credencial:
 

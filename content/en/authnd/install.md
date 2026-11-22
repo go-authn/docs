@@ -197,6 +197,10 @@ scheme, a bad one, or an oversized, empty or multi-line secret stops the server
 at startup. The `user` and `users` blocks keep their own `*_file` spellings for
 now.
 
+`file:` refuses a symlink and a file owned by another user than the one authnd
+runs as. A credential handed over by systemd is read with `systemd-creds:NAME`,
+never with `file:$CREDENTIALS_DIRECTORY/NAME`.
+
 With systemd, seal the secret to the machine and pass it as a credential:
 
 ```sh
