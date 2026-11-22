@@ -202,7 +202,7 @@ Sin bloque `mail`, nada cambia.
 ```hcl
 mail {
   host          = "smtp.example.org"
-  security      = "tls"                              # "tls" (puerto 465, por defecto) o "starttls" (587)
+  security      = "tls"                              # "tls" (port 465, the default) or "starttls" (587)
   username      = "authn-bridge"
   password_file = "/etc/authn-bridge/smtp.password"  # la única fuente de la contraseña SMTP
   from          = "authn-bridge@example.org"

@@ -79,7 +79,7 @@ Zustandsdatei von `authn-revokd` (revocation v0.7.2) und die
 KeePassXC-Zuordnungsdatei von
 [secretsource]({{< relref "/libraries/secretsource.md" >}}) (v0.8.1).
 
-## Untergrenzen
+## Untergrenzen {#floors}
 
 go-authn/wireguard und go-authn/revocation halten beide über einen Neustart eine
 Ordnungsuntergrenze, teilen sie aber nicht: wireguard hält nur Version und

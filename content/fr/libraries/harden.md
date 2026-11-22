@@ -76,7 +76,7 @@ C'est elle qui écrit le `--cred-file` de kinit (v0.3.3), le `FloorFile` de wire
 d'association KeePassXC de
 [secretsource]({{< relref "/libraries/secretsource.md" >}}) (v0.8.1).
 
-## Planchers
+## Planchers {#floors}
 
 go-authn/wireguard et go-authn/revocation gardent tous deux un plancher d'ordre d'un
 redémarrage à l'autre, mais ils ne partagent pas de plancher : wireguard garde une

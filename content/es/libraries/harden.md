@@ -76,7 +76,7 @@ Es lo que escribe el `--cred-file` de kinit (v0.3.3), el `FloorFile` de wireguar
 de asociación de KeePassXC de
 [secretsource]({{< relref "/libraries/secretsource.md" >}}) (v0.8.1).
 
-## Suelos
+## Suelos {#floors}
 
 go-authn/wireguard y go-authn/revocation conservan ambos un suelo de orden a
 través de un reinicio, pero no comparten el suelo: wireguard guarda una versión

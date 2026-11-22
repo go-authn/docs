@@ -66,7 +66,7 @@ err := privfile.Write(path, ticket)
 [secretsource]({{< relref "/libraries/secretsource.md" >}}) 的 KeePassXC 关联文件（v0.8.1）的，
 就是它。
 
-## 下限
+## 下限 {#floors}
 
 go-authn/wireguard 和 go-authn/revocation 都会跨重启保留一个排序下限，但它们并不共用下限：
 wireguard 在自己的一个小文件中只保存裸的版本号和签发时间，revocation 保存整份已签名的列表，
