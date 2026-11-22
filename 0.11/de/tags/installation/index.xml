@@ -837,8 +837,9 @@ data-copied-label="Kopiert!"
 Prozess läuft, nicht gegen das der Konfigurationsdatei; die Unit läuft in &lt;code&gt;/&lt;/code&gt;, also schreiben
 Sie Pfade absolut.&lt;/p&gt;
 &lt;h3 data-hextra-search-id="secrets-as-references"&gt;Geheimnisse als Referenzen&lt;span class="hx:absolute hx:-mt-20" id="secrets-as-references"&gt;&lt;/span&gt;
-&lt;a href="#secrets-as-references" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Ein &lt;code&gt;reader&lt;/code&gt;-Block benennt seine Geheimnisse mit&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt;-Referenzen, statt sie
-selbst zu enthalten:&lt;/p&gt;
+&lt;a href="#secrets-as-references" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Die Blöcke &lt;code&gt;reader&lt;/code&gt;, &lt;code&gt;user&lt;/code&gt; und &lt;code&gt;users&lt;/code&gt; benennen ihre Geheimnisse mit&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt;-Referenzen, statt sie
+selbst zu enthalten (die Felder von &lt;code&gt;user&lt;/code&gt; und &lt;code&gt;users&lt;/code&gt; setzen authnd mit
+go-authn/directory v0.27.0 voraus):&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -849,26 +850,42 @@ selbst zu enthalten:&lt;/p&gt;
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;password_from&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;das Passwort des Readers: &lt;code&gt;systemd-creds:NAME&lt;/code&gt;, &lt;code&gt;file:PATH&lt;/code&gt; (eine reguläre Datei, die nur ihr Eigentümer lesen darf), &lt;code&gt;keychain:SERVICE/ACCOUNT&lt;/code&gt;, &amp;hellip;&lt;/td&gt;
+&lt;td&gt;das Passwort eines &lt;code&gt;reader&lt;/code&gt; oder &lt;code&gt;user&lt;/code&gt;: &lt;code&gt;systemd-creds:NAME&lt;/code&gt;, &lt;code&gt;file:PATH&lt;/code&gt; (eine reguläre Datei, die nur ihr Eigentümer lesen darf), &lt;code&gt;keychain:SERVICE/ACCOUNT&lt;/code&gt;, &amp;hellip;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;totp_secret_from&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;das base32-TOTP-Geheimnis des Readers (mit &lt;code&gt;mfa { readers = true }&lt;/code&gt;)&lt;/td&gt;
+&lt;td&gt;das base32-TOTP-Geheimnis eines &lt;code&gt;reader&lt;/code&gt; (mit &lt;code&gt;mfa { readers = true }&lt;/code&gt;) oder eines &lt;code&gt;user&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;&lt;code&gt;password_file&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;strong&gt;veraltet&lt;/strong&gt;: wird als &lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt; gelesen&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nt_hash_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;der NT-Hash eines &lt;code&gt;user&lt;/code&gt;, aus einer Referenz gelesen: keine neue Fähigkeit, und neben einem Passwort abgelehnt&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;&lt;code&gt;password&lt;/code&gt;, &lt;code&gt;totp_secret&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;dsn_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;der Datenbank-DSN eines &lt;code&gt;users&lt;/code&gt;-Blocks (er kann ein Passwort enthalten)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;bind_password_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;das Passwort des &lt;code&gt;bind_dn&lt;/code&gt; eines &lt;code&gt;users&lt;/code&gt;-Blocks&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password_file&lt;/code&gt;, &lt;code&gt;dsn_file&lt;/code&gt;, &lt;code&gt;bind_password_file&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;veraltet&lt;/strong&gt;: werden als dieselbe Referenz mit &lt;code&gt;file:PATH&lt;/code&gt; gelesen&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password&lt;/code&gt;, &lt;code&gt;totp_secret&lt;/code&gt;, &lt;code&gt;nt_hash&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;&lt;strong&gt;veraltet&lt;/strong&gt;: das Geheimnis selbst, in der Konfiguration geschrieben; beim Start protokolliert&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;Genau eines von &lt;code&gt;password_from&lt;/code&gt;, &lt;code&gt;password_file&lt;/code&gt; und &lt;code&gt;password&lt;/code&gt; ist erlaubt, und&lt;code&gt;totp_secret&lt;/code&gt; zusammen mit &lt;code&gt;totp_secret_from&lt;/code&gt; wird abgelehnt. Ein Geheimnis ist
+&lt;p&gt;Genau eine Schreibweise eines Geheimnisses ist erlaubt (&lt;code&gt;password_from&lt;/code&gt;,&lt;code&gt;password_file&lt;/code&gt; oder &lt;code&gt;password&lt;/code&gt;; &lt;code&gt;dsn_from&lt;/code&gt; oder &lt;code&gt;dsn_file&lt;/code&gt;; und so weiter). Ein
+Geheimnis ist
 eine nicht leere Zeile von höchstens 4096 Byte (ein abschließender Zeilenumbruch
 entfällt); eine Referenz ohne Schema, eine ungültige oder ein zu großes, leeres
-oder mehrzeiliges Geheimnis hält den Server beim Start an. Die Blöcke &lt;code&gt;user&lt;/code&gt; und&lt;code&gt;users&lt;/code&gt; behalten vorerst ihre eigenen &lt;code&gt;*_file&lt;/code&gt;-Schreibweisen.&lt;/p&gt;
+oder mehrzeiliges Geheimnis hält den Server beim Start an. Die veralteten
+Schreibweisen funktionieren weiterhin und werden beim Start protokolliert, nie
+mit dem Geheimnis; die &lt;code&gt;*_file&lt;/code&gt;-Schreibweisen laufen jetzt über &lt;code&gt;file:&lt;/code&gt;, lehnen
+also einen Symlink und eine Datei eines anderen Benutzers ab.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;file:&lt;/code&gt; verweigert einen Symlink und eine Datei, die einem anderen Benutzer
 gehört als dem, unter dem authnd läuft. Ein von systemd übergebenes Credential
 wird mit &lt;code&gt;systemd-creds:NAME&lt;/code&gt; gelesen, nie mit&lt;code&gt;file:$CREDENTIALS_DIRECTORY/NAME&lt;/code&gt;.&lt;/p&gt;

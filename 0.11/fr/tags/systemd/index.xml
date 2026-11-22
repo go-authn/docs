@@ -839,8 +839,9 @@ data-copied-label="Copié !"
 le processus s&amp;rsquo;exécute, pas à celui du fichier de configuration ; l&amp;rsquo;unité s&amp;rsquo;exécute depuis &lt;code&gt;/&lt;/code&gt;, donc
 écrivez des chemins absolus.&lt;/p&gt;
 &lt;h3 data-hextra-search-id="secrets-as-references"&gt;Les secrets comme références&lt;span class="hx:absolute hx:-mt-20" id="secrets-as-references"&gt;&lt;/span&gt;
-&lt;a href="#secrets-as-references" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Un bloc &lt;code&gt;reader&lt;/code&gt; nomme ses secrets par des références&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt; au lieu de les
-contenir :&lt;/p&gt;
+&lt;a href="#secrets-as-references" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Les blocs &lt;code&gt;reader&lt;/code&gt;, &lt;code&gt;user&lt;/code&gt; et &lt;code&gt;users&lt;/code&gt; nomment leurs secrets par des références&lt;a href="https://github.com/go-authn/secretsource" target="_blank" rel="noopener"&gt;secretsource&lt;/a&gt; au lieu de les
+contenir (les champs de &lt;code&gt;user&lt;/code&gt; et &lt;code&gt;users&lt;/code&gt; demandent authnd avec
+go-authn/directory v0.27.0) :&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
 &lt;tr&gt;
@@ -851,27 +852,40 @@ contenir :&lt;/p&gt;
 &lt;tbody&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;password_from&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;le mot de passe du reader : &lt;code&gt;systemd-creds:NAME&lt;/code&gt;, &lt;code&gt;file:PATH&lt;/code&gt; (un fichier ordinaire lisible par son seul propriétaire), &lt;code&gt;keychain:SERVICE/ACCOUNT&lt;/code&gt;, &amp;hellip;&lt;/td&gt;
+&lt;td&gt;le mot de passe d&amp;rsquo;un &lt;code&gt;reader&lt;/code&gt; ou d&amp;rsquo;un &lt;code&gt;user&lt;/code&gt; : &lt;code&gt;systemd-creds:NAME&lt;/code&gt;, &lt;code&gt;file:PATH&lt;/code&gt; (un fichier ordinaire lisible par son seul propriétaire), &lt;code&gt;keychain:SERVICE/ACCOUNT&lt;/code&gt;, &amp;hellip;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
 &lt;td&gt;&lt;code&gt;totp_secret_from&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;le secret TOTP en base32 du reader (avec &lt;code&gt;mfa { readers = true }&lt;/code&gt;)&lt;/td&gt;
+&lt;td&gt;le secret TOTP en base32 d&amp;rsquo;un &lt;code&gt;reader&lt;/code&gt; (avec &lt;code&gt;mfa { readers = true }&lt;/code&gt;) ou d&amp;rsquo;un &lt;code&gt;user&lt;/code&gt;&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;&lt;code&gt;password_file&lt;/code&gt;&lt;/td&gt;
-&lt;td&gt;&lt;strong&gt;obsolète&lt;/strong&gt; : lu comme &lt;code&gt;password_from = &amp;quot;file:PATH&amp;quot;&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;nt_hash_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;l&amp;rsquo;empreinte NT d&amp;rsquo;un &lt;code&gt;user&lt;/code&gt;, lue depuis une référence : aucune capacité nouvelle, et refusée à côté d&amp;rsquo;un mot de passe&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
-&lt;td&gt;&lt;code&gt;password&lt;/code&gt;, &lt;code&gt;totp_secret&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;code&gt;dsn_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;le DSN de base de données d&amp;rsquo;un bloc &lt;code&gt;users&lt;/code&gt; (il peut contenir un mot de passe)&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;bind_password_from&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;le mot de passe du &lt;code&gt;bind_dn&lt;/code&gt; d&amp;rsquo;un bloc &lt;code&gt;users&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password_file&lt;/code&gt;, &lt;code&gt;dsn_file&lt;/code&gt;, &lt;code&gt;bind_password_file&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;&lt;strong&gt;obsolètes&lt;/strong&gt; : lus comme la même référence avec &lt;code&gt;file:PATH&lt;/code&gt;&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;password&lt;/code&gt;, &lt;code&gt;totp_secret&lt;/code&gt;, &lt;code&gt;nt_hash&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;&lt;strong&gt;obsolètes&lt;/strong&gt; : le secret lui-même, écrit dans la configuration ; journalisé au démarrage&lt;/td&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;Un seul parmi &lt;code&gt;password_from&lt;/code&gt;, &lt;code&gt;password_file&lt;/code&gt; et &lt;code&gt;password&lt;/code&gt; est permis, et&lt;code&gt;totp_secret&lt;/code&gt; avec &lt;code&gt;totp_secret_from&lt;/code&gt; est refusé. Un secret est une ligne non
+&lt;p&gt;Une seule graphie d&amp;rsquo;un secret est permise (&lt;code&gt;password_from&lt;/code&gt;, &lt;code&gt;password_file&lt;/code&gt; ou&lt;code&gt;password&lt;/code&gt; ; &lt;code&gt;dsn_from&lt;/code&gt; ou &lt;code&gt;dsn_file&lt;/code&gt; ; et ainsi de suite). Un secret est une ligne non
 vide d&amp;rsquo;au plus 4096 octets (un saut de ligne final est retiré) ; une référence
 sans schéma, une référence invalide, ou un secret trop long, vide ou sur
-plusieurs lignes arrête le serveur au démarrage. Les blocs &lt;code&gt;user&lt;/code&gt; et &lt;code&gt;users&lt;/code&gt;
-gardent pour l&amp;rsquo;instant leurs propres graphies &lt;code&gt;*_file&lt;/code&gt;.&lt;/p&gt;
+plusieurs lignes arrête le serveur au démarrage. Les graphies obsolètes
+fonctionnent toujours et sont journalisées au démarrage, jamais avec le secret ;les &lt;code&gt;*_file&lt;/code&gt; passent désormais par &lt;code&gt;file:&lt;/code&gt;, donc refusent un lien symbolique et
+un fichier appartenant à un autre utilisateur.&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;file:&lt;/code&gt; refuse un lien symbolique et un fichier appartenant à un autre
 utilisateur que celui sous lequel authnd s&amp;rsquo;exécute. Un identifiant transmis par
 systemd se lit avec &lt;code&gt;systemd-creds:NAME&lt;/code&gt;, jamais avec&lt;code&gt;file:$CREDENTIALS_DIRECTORY/NAME&lt;/code&gt;.&lt;/p&gt;
