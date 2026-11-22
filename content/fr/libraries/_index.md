@@ -2,7 +2,7 @@
 title: "Les bibliothèques, une question chacune"
 linkTitle: "Bibliothèques"
 weight: 50
-description: "Les seize modules Go de go-authn : la question à laquelle chacun répond, la version que ces pages décrivent, et pourquoi ce sont des modules distincts."
+description: "Les dix-sept modules Go de go-authn : la question à laquelle chacun répond, la version que ces pages décrivent, et pourquoi ce sont des modules distincts."
 tags: [bibliothèques]
 ---
 
@@ -27,6 +27,7 @@ Tous sont en pur Go et se compilent avec `CGO_ENABLED=0`.
 | [saml]({{< relref "/libraries/saml.md" >}}) | qu'a dit le fournisseur d'identité d'une fédération à propos de cette personne ? | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | ce certificat ou cette clé SSH est-il révoqué, comme sshd répondrait ? | v0.6.1 | `github.com/go-authn/krl` |
 | [cms]({{< relref "/libraries/cms.md" >}}) | cette signature tient-elle sur ces octets, et quel certificat l'a faite ? | v0.2.0 | `github.com/go-authn/cms` |
+| [pkcs12]({{< relref "/libraries/pkcs12.md" >}}) | quelle clé privée et quels certificats contient ce fichier `.p12` téléversé ? | v0.1.0 | `github.com/go-authn/pkcs12` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | d'où vient le certificat de serveur TLS d'un démon ? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | cette clé WireGuard peut-elle se connecter, et à qui est-elle ? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | qui le fournisseur d'identité vient-il de créer, de modifier ou de supprimer ? | v0.2.1 | `github.com/go-authn/scim` |

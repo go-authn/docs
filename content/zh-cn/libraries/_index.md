@@ -2,7 +2,7 @@
 title: "各个库，每个只回答一个问题"
 linkTitle: "库"
 weight: 50
-description: "十六个 go-authn Go 模块：每个模块回答的问题、这些页面所描述的版本，以及它们为什么是独立的模块。"
+description: "十七个 go-authn Go 模块：每个模块回答的问题、这些页面所描述的版本，以及它们为什么是独立的模块。"
 tags: [库]
 ---
 
@@ -27,6 +27,7 @@ tags: [库]
 | [saml]({{< relref "/libraries/saml.md" >}}) | 联邦的身份提供方对此人说了什么？ | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | 按 sshd 的回答，这个 SSH 证书或密钥是否已被吊销？ | v0.6.1 | `github.com/go-authn/krl` |
 | [cms]({{< relref "/libraries/cms.md" >}}) | 这个签名对这些字节是否成立，又是哪个证书做出的？ | v0.2.0 | `github.com/go-authn/cms` |
+| [pkcs12]({{< relref "/libraries/pkcs12.md" >}}) | 上传的这个 `.p12` 里有哪个私钥和哪些证书？ | v0.1.0 | `github.com/go-authn/pkcs12` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | 守护进程的 TLS 服务器证书从哪里来？ | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 这把 WireGuard 密钥是否可以连接，它是谁的？ | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | 身份提供方刚刚创建、更改或删除了谁？ | v0.2.1 | `github.com/go-authn/scim` |

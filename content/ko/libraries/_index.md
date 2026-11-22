@@ -2,7 +2,7 @@
 title: "라이브러리, 질문 하나씩"
 linkTitle: "라이브러리"
 weight: 50
-description: "열여섯 개의 go-authn Go 모듈: 각각이 답하는 질문, 이 문서가 설명하는 버전, 그리고 별도의 모듈인 이유."
+description: "열일곱 개의 go-authn Go 모듈: 각각이 답하는 질문, 이 문서가 설명하는 버전, 그리고 별도의 모듈인 이유."
 tags: [라이브러리]
 ---
 
@@ -27,6 +27,7 @@ tags: [라이브러리]
 | [saml]({{< relref "/libraries/saml.md" >}}) | 페더레이션의 신원 공급자는 이 사람에 대해 무엇을 말했는가? | v0.6.1 | `github.com/go-authn/saml` |
 | [krl]({{< relref "/libraries/krl.md" >}}) | sshd가 답하는 대로, 이 SSH 인증서나 키는 폐기되었는가? | v0.6.1 | `github.com/go-authn/krl` |
 | [cms]({{< relref "/libraries/cms.md" >}}) | 이 서명이 이 바이트들에 대해 성립하는가, 그리고 어떤 인증서가 만들었는가? | v0.2.0 | `github.com/go-authn/cms` |
+| [pkcs12]({{< relref "/libraries/pkcs12.md" >}}) | 업로드된 이 `.p12` 안에는 어떤 개인 키와 어떤 인증서가 들어 있는가? | v0.1.0 | `github.com/go-authn/pkcs12` |
 | [servercert]({{< relref "/libraries/servercert.md" >}}) | 데몬의 TLS 서버 인증서는 어디서 오는가? | v0.6.0 | `github.com/go-authn/servercert` |
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 이 WireGuard 키가 연결해도 되는가, 그리고 누구의 것인가? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | 신원 공급자가 방금 누구를 생성, 변경, 삭제했는가? | v0.2.1 | `github.com/go-authn/scim` |
