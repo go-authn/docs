@@ -11,7 +11,7 @@ tags: [库, secretsource, 密钥]
 shell 历史记录里。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.0
+go get github.com/go-authn/secretsource@v0.9.0
 ```
 
 ```go
@@ -29,6 +29,8 @@ use(s.Bytes())
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | 带有所有这些属性的唯一一个 Secret Service 项；匹配到多个则拒绝 |
 | `keepassxc:URL` | **URL 字段**为该 URL 的 KeePassXC 条目（`https://NAME.invalid/...` 是个好选择，永远不会被解析）；两个条目 URL 相同会因有歧义而被拒绝 |
 | `systemd-creds:NAME` | (Linux，自 v0.8.0 起)一个 systemd 凭据，按字节原样返回：与 `file:` 不同，不去掉末尾换行。先找 `$CREDENTIALS_DIRECTORY` 中的文件 `NAME`(由 `LoadCredential=`、`LoadCredentialEncrypted=`、`SetCredentialEncrypted=` 放置)；否则在 `/etc`、`/run`、`/usr/lib` 的 `credstore.encrypted` 中找 `NAME` 或 `NAME.cred`，用 `systemd-creds decrypt` 解密。在其他系统上以 `ErrUnavailable` 拒绝 |
+
+**`file:` 不跟随符号链接**（自 v0.9.0 起）。路径最后一个组成部分若是链接，无论是否悬空，都会被拒绝：在 Unix 上以 `O_NOFOLLOW` 打开文件，在 Windows 上以 `FILE_FLAG_OPEN_REPARSE_POINT` 打开，并拒绝任何重解析点（云文件占位符同样被拒绝：请指向普通的本地副本）。在 Unix 上，文件还必须归调用用户所有；root 也不例外。**迁移：** 指向真实文件（`readlink -f PATH`）。路径前面的目录中若有符号链接，仍然可用。
 
 `keepassxc:by-uuid/...` 和 `keepassxc:by-path/...` 会被**拒绝**：当查找命中没有
 URL 的条目时，KeePassXC 2.8.0 会崩溃。
