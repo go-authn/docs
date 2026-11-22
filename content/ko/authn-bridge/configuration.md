@@ -71,6 +71,33 @@ authn-bridge: idps names "https://idp.nowhere.example/idp", which the federation
 `authn-bridge metadata`는 페더레이션에 등록할 SAML 메타데이터를 출력합니다.
 [페더레이션 측]({{< relref "/authn-bridge/federation.md" >}})을 참조하십시오.
 
+### `kerberos` 블록 {#the-kerberos-block}
+
+`kerberos` 블록이 있으면 `kerberos_tickets = true`인 클라이언트가 비밀번호가 없는 사람을 위해
+Kerberos TGT를 받을 수 있습니다(`POST /kerberos/tgt`). 브리지는 상호 인증된 TLS로
+렐름의 KDC에 요청합니다.
+
+```hcl
+kerberos {
+  kdc_url   = "https://kdc.internal.example.org:8443/mint"  # https only
+  ca_file   = "/etc/authn-bridge/kdc-ca.pem"                # signed the KDC's certificate
+  cert_file = "/etc/authn-bridge/bridge-client.pem"         # URI name = what the KDC lists
+  key_file  = "/etc/authn-bridge/bridge-client.key"
+  validity  = "10h"                                         # at most ten hours
+}
+```
+
+`check`는 이 블록을 한 줄로 보고합니다. 클라이언트 인증서의 이름, 만료되는 UTC 날짜, 티켓의 유효 기간입니다.
+
+```
+kerberos      https://kdc.internal.example.org:8443/mint, client certificate https://login.example.org until 2029-02-12, validity 10h
+```
+
+구성을 읽는 단계(즉 `check`와 서버 모두)는 첫 로그인에서 동작할 수 없는 것을 필드 이름과 함께 거부합니다.
+만료된(`kdcd check`가 발급용 인증서에 대해 하는 것과 같습니다) 또는 아직 유효하지 않은 클라이언트 인증서,
+`cert_file`에 속하지 않는 `key_file`, 없거나 인증서가 들어 있지 않은 `ca_file`,
+`https`가 아닌 `kdc_url`, 범위를 벗어난 `validity`입니다. 블록이 없는 구성은 아무것도 출력하지 않습니다.
+
 ## 최상위 {#the-top-level}
 
 | 키 | 기본값 | |

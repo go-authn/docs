@@ -71,6 +71,36 @@ authn-bridge: idps names "https://idp.nowhere.example/idp", which the federation
 `authn-bridge metadata` prints the SAML metadata to register with the
 federation. See [the federation side]({{< relref "/authn-bridge/federation.md" >}}).
 
+### The `kerberos` block {#the-kerberos-block}
+
+A `kerberos` block lets a client with `kerberos_tickets = true` buy a Kerberos
+TGT for a person who has no password (`POST /kerberos/tgt`): the bridge asks the
+realm's KDC over mutually authenticated TLS.
+
+```hcl
+kerberos {
+  kdc_url   = "https://kdc.internal.example.org:8443/mint"  # https only
+  ca_file   = "/etc/authn-bridge/kdc-ca.pem"                # signed the KDC's certificate
+  cert_file = "/etc/authn-bridge/bridge-client.pem"         # URI name = what the KDC lists
+  key_file  = "/etc/authn-bridge/bridge-client.key"
+  validity  = "10h"                                         # at most ten hours
+}
+```
+
+`check` reports the block on one line, with the client certificate's name, the
+UTC date it expires and the ticket validity:
+
+```
+kerberos      https://kdc.internal.example.org:8443/mint, client certificate https://login.example.org until 2029-02-12, validity 10h
+```
+
+Loading the configuration, so `check` and the server alike, refuses, naming the
+field, whatever could not work at the first login: a client certificate that has
+expired (as `kdcd check` does for its mint certificate) or is not valid yet, a
+`key_file` that does not belong to `cert_file`, a `ca_file` that is missing or
+holds no certificate, a `kdc_url` that is not `https`, a `validity` out of
+range. A configuration without the block prints nothing.
+
 ## The top level
 
 | key | default | |
