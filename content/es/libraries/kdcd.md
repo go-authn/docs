@@ -98,6 +98,18 @@ users "ldap" {                            # read anonymously
 Los bloques `users` son los de [go-authn/directory/hcldir](https://github.com/go-authn/directory);
 kdcd rechaza las partes de ellos que llevan una contraseña (véase arriba).
 
+**Secretos: un archivo o una referencia.** `keytab_file` y `key_file` (en `mint`) nombran
+un archivo, comprobado como se describe más abajo. `keytab_from` y `key_from` toman en su
+lugar una referencia de secretsource, por ejemplo `systemd-creds:kdc-keytab`: una
+credencial que systemd descifra para el servicio (`LoadCredentialEncrypted=`, sellada con
+`systemd-creds encrypt --with-key=host+tpm2`, nunca un `--tpm2-pcrs=7` a secas). Una de las
+dos, no ambas. `file:` se rechaza en una clave `_from`. `keytab_file` se mantiene y no está
+obsoleto: un keytab y una clave son binarios, `file:` quita un salto de línea final (lo que
+corrompería una clave que acabe en el byte 0x0a) y una referencia admite como mucho 4096
+bytes, así que un keytab mayor se queda en `keytab_file`. Desde secretsource v0.9.0,
+`file:` rechaza además un enlace simbólico y un archivo de otro uid. `dsn_file` no lleva
+contraseña, por lo que no tiene `_from`.
+
 `kdcd check --config FILE` lee y construye todo lo que construiría el demonio, abre el
 directorio, no escucha en ninguna parte e imprime lo que sirve: el reino, las
 direcciones, los principales de la keytab (nombre, kvno, etype; nunca una clave),

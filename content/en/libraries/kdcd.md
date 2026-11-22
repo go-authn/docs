@@ -97,6 +97,18 @@ users "ldap" {                            # read anonymously
 The `users` blocks are [go-authn/directory/hcldir](https://github.com/go-authn/directory)'s;
 kdcd refuses the parts of them that carry a password (see above).
 
+**Secrets: a file, or a reference.** `keytab_file` and `key_file` (in `mint`) name
+a file, checked as described below. `keytab_from` and `key_from` take a
+secretsource reference instead, for example `systemd-creds:kdc-keytab`: a
+credential that systemd decrypts for the service (`LoadCredentialEncrypted=`,
+sealed with `systemd-creds encrypt --with-key=host+tpm2`, never a bare
+`--tpm2-pcrs=7`). Set one of the two, not both. `file:` is refused in a `_from`
+key. `keytab_file` stays and is not deprecated: a keytab and a key are binary,
+`file:` strips one trailing newline (which would corrupt a key ending in byte
+0x0a), and a reference holds at most 4096 bytes, so a larger keytab stays in
+`keytab_file`. Since secretsource v0.9.0, `file:` also refuses a symlink and a
+file owned by another uid. `dsn_file` holds no password, so it has no `_from`.
+
 `kdcd check --config FILE` reads and builds everything the daemon would, opens
 the directory, listens on nothing, and prints what it serves: the realm,
 addresses, the keytab's principals (name, kvno, etype; never a key), how many

@@ -90,6 +90,8 @@ users "ldap" {                            # read anonymously
 `users` 블록은 [go-authn/directory/hcldir](https://github.com/go-authn/directory)의 것입니다.
 kdcd는 그중 비밀번호를 담은 부분을 거부합니다(위 참조).
 
+**비밀: 파일 또는 참조.** `keytab_file`과 `key_file`(`mint` 안)은 파일을 가리키며 아래 설명대로 검사됩니다. 대신 `keytab_from`과 `key_from`에는 secretsource 참조, 예를 들어 `systemd-creds:kdc-keytab`을 쓸 수 있습니다. systemd가 서비스를 위해 복호화하는 크리덴셜입니다(`LoadCredentialEncrypted=`, `systemd-creds encrypt --with-key=host+tpm2`로 봉인하며 `--tpm2-pcrs=7`만 쓰지 않습니다). 둘 중 하나만 지정합니다. `_from` 키에서는 `file:`이 거부됩니다. `keytab_file`은 남아 있으며 더 이상 쓰지 않는 것이 아닙니다. keytab과 키는 바이너리이고, `file:`은 끝의 줄바꿈 하나를 제거하며(바이트 0x0a로 끝나는 키가 손상됩니다), 참조는 최대 4096바이트이므로 더 큰 keytab은 `keytab_file`에 둡니다. secretsource v0.9.0부터 `file:`은 심볼릭 링크와 다른 uid 소유의 파일도 거부합니다. `dsn_file`에는 비밀번호가 없으므로 `_from`이 없습니다.
+
 `kdcd check --config FILE`은 데몬이 구성할 모든 것을 읽어 구성하고, 디렉터리를 열고,
 어디에서도 listen하지 않은 채, 제공할 내용을 출력합니다: 렐름, 주소, keytab의 프린시펄
 (이름, kvno, etype. 키는 절대 출력하지 않음), 디렉터리가 보유한 사람 수, mint 호출자.
