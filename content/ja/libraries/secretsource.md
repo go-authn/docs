@@ -11,7 +11,7 @@ tags: [ライブラリ, secretsource, シークレット]
 含まないので、フラグ、スクリプト、シェルの履歴に書いても構いません。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.0
+go get github.com/go-authn/secretsource@v0.6.1
 ```
 
 ```go
@@ -46,6 +46,12 @@ Windows は未実装です)。v0.6.0 以降、Unix では、ソケットがシ�
 接続したピアの uid がダイヤルの後に確認されます。従来の
 `$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer` シンボリックリンクはもう辿られません
 (`app/org.keepassxc.KeePassXC/` 配下の実際のソケットは辿られます)。
+
+v0.6.1 以降、関連付けファイル (macOS のキーチェーンも Secret Service もないときに使うフォールバックの
+保存先) は、同じディレクトリ内の新しい一時ファイルに書き込まれてから最終的な名前の上へ rename されます。
+そのため、その名前に残されたシンボリックリンクは、辿られるのではなく置き換えられ、モードが緩いファイルは
+0600 になります。Unix ではまずディレクトリが、ソケットのものと同様に検査されます: このユーザーの所有で、
+グループにもその他にも書き込み不可で、シンボリックリンクでないこと。そうでなければ何も書き込まれません。
 
 1. KeePassXC で *Settings > Browser Integration* を有効にします。
 2. データベースごとに 1 回、このマシンを関連付け、KeePassXC で承認します:

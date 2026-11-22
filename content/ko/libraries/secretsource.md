@@ -11,7 +11,7 @@ tags: [라이브러리, secretsource, 비밀]
 있지 않으므로 플래그, 스크립트, 셸 기록에 있어도 됩니다.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.0
+go get github.com/go-authn/secretsource@v0.6.1
 ```
 
 ```go
@@ -46,6 +46,13 @@ KeePassXC는 브라우저 통합 프로토콜로 연결합니다(macOS와 Linux;
 피어의 uid를 확인하며, 레거시 `$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer`
 심볼릭 링크는 더 이상 따라가지 않습니다(`app/org.keepassxc.KeePassXC/` 아래의 실제 소켓은
 따라갑니다).
+
+v0.6.1부터 연결 파일(macOS 키체인도 Secret Service도 없을 때 쓰는 대체 저장소)은 같은
+디렉터리의 새 임시 파일에 쓴 뒤 최종 이름으로 이름을 바꾸므로, 그 이름에 남아 있던
+심볼릭 링크는 따라가지 않고 교체되며, 더 느슨한 모드의 파일은 0600이 됩니다. Unix에서는
+소켓의 디렉터리처럼 디렉터리를 먼저 검사합니다. 이 사용자 소유여야 하고, 그룹이나 다른
+사용자가 쓸 수 없어야 하며, 심볼릭 링크가 아니어야 합니다. 그렇지 않으면 아무것도 쓰지
+않습니다.
 
 1. KeePassXC에서 *Settings > Browser Integration*을 켭니다.
 2. 데이터베이스마다 한 번 이 컴퓨터를 연결하고 KeePassXC에서 승인합니다:

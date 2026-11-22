@@ -295,17 +295,19 @@ que nomment à la fois un bloc `group` et la requête `groups` d'une base de don
 membres des deux.
 
 {{< callout type="warning" >}}
-**Deux noms qui ne diffèrent que par la casse sont refusés**
+**Deux noms qui ne diffèrent que par la casse sont une seule personne ; le second est écarté**
 
 Un uid est comparé sans tenir compte de la casse (RFC 4519 §2.39), et tout DN aussi, si bien que
-`Dora` dans le fichier et `dora` dans une base de données sont un seul nom pour LDAP et deux
-personnes pour tout ce qui compare des octets — un changement de mot de passe par l'une atterrirait
-sur l'autre. Une telle configuration ne démarre pas :
-
-```
-$ authnd check cases/case.hcl
-authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them
-```
+`Dora` dans le fichier et `dora` dans une base de données sont un seul nom pour LDAP. Depuis authnd
+v0.19.0, avec go-authn/directory v0.26.0, ils sont aussi une seule personne ici : les noms
+se comparent par la règle d'égalité LDAP de uid (`caseIgnoreMatch`), si bien que des noms qui
+ne diffèrent que par la casse ou une espace non significative sont le même nom. La première source
+qui connaît la personne la possède, la graphie ultérieure est écartée, et la personne
+garde la graphie de la source propriétaire. authnd **démarre** avec une telle configuration
+(avant la v0.19.0 il refusait) et **le journalise** : au démarrage, et à un rafraîchissement quand la
+liste change, `directory: names shadowed by a spelling an earlier source owns`
+nomme chaque graphie masquée, sa source et le propriétaire. Un nom sans clé d'équivalence
+(pas en UTF-8, vide ou fait d'espaces) fait échouer le démarrage et le rafraîchissement.
 {{< /callout >}}
 
 ## Lues au démarrage, puis à chaque rafraîchissement {#read-once}

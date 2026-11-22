@@ -11,8 +11,22 @@ en memoria, una base de datos SQL, un servidor LDAP, o bloques `user` y `group` 
 archivo de configuración; y lo que importa es la segunda mitad de la pregunta.
 
 ```sh
-go get github.com/go-authn/directory@v0.24.0
+go get github.com/go-authn/directory@v0.26.0
 ```
+
+Desde la v0.26.0, **un `Set` compara los nombres con una única relación de equivalencia,
+en todas partes**: la regla de igualdad LDAP de uid (`caseIgnoreMatch`, preparación de la
+RFC 4518), en la comprobación de duplicados dentro de una fuente (`ErrAmbiguous`, como se
+explica abajo), entre fuentes, en `Members` y en `Expand`. Dos nombres que solo difieren
+en mayúsculas o en espacio no significativo son la misma persona: la primera fuente que
+conoce el nombre se lo queda, una grafía posterior queda oculta y fuera (no es un error),
+y la identidad conserva la grafía de la fuente propietaria. `Set.Shadowed()` enumera, tras
+`Identities`, cada grafía posterior que la persona de una fuente anterior ocultó
+(`Shadow{Name, Source, Owner, By}`); la misma grafía en dos fuentes es la sustitución
+documentada y no se enumera. Un nombre sin clave (no UTF-8, vacío o solo espacios) se
+rechaza con `ErrBadName`. **Actualización:** un servidor cuyas fuentes contienen dos
+personas con nombres que solo difieren en mayúsculas o en espacio no significativo pierde
+ahora la posterior; lea `Shadowed`.
 
 Desde la v0.24.0, que necesita go-authn/ldap v0.14.0, `ldapdir` considera un mismo
 nombre dos uid que `caseIgnoreMatch` equipara: "alice" y "alice " (espacio final),
@@ -21,9 +35,9 @@ guion blando son `ErrAmbiguous`, donde antes eran dos personas. La clave es la c
 de igualdad del atributo según el esquema estándar (`schema.Schema.EqualityKey`,
 preparación de la RFC 4518); un `UserAttribute` que el esquema estándar no conoce
 conserva el paso a minúsculas. **Actualización:** un directorio con tales pares ya no
-se carga hasta que se corrija una de las entradas. `Set.Identities` sigue comparando
-los nombres byte a byte, y entre fuentes la primera que conoce un nombre se lo queda.
-`ldapdir` también verifica el certificado contra el host de la URL
+se carga hasta que se corrija una de las entradas. (Entre la v0.24.0 y la v0.26.0
+`Set.Identities` seguía comparando los nombres byte a byte entre fuentes; la v0.26.0 lo
+cambia, arriba.) `ldapdir` también verifica el certificado contra el host de la URL
 (`tls.Config.ServerName`, copiado y no modificado; un ServerName explícito sigue
 prevaleciendo), lo que con go-authn/ldap v0.14.0 corrige también StartTLS.
 
@@ -71,7 +85,9 @@ alguien se encuentre con un rechazo al montar. Cada protocolo tiene su propio m�
 | `directory/hcldir` | un bloque `users` que nombra una base de datos o un servidor LDAP, y bloques `user`/`group` que contienen personas | `x/crypto/ssh`, `hashicorp/hcl/v2`, `zclconf/go-cty` |
 | `directory/ldaptest` | un servidor LDAP contra el que probar | `glauth/ldap` |
 
-En un `Set`, el **primer** origen que conoce un nombre se lo queda, así que una cuenta
+En un `Set`, el **primer** origen que conoce un nombre se lo queda (los nombres que solo
+difieren en mayúsculas o en espacio no significativo cuentan como uno, y una grafía
+posterior la enumera `Set.Shadowed()`), así que una cuenta
 de servicio anotada localmente no tiene por qué ponerse en LDAP. La pertenencia a
 grupos es la **unión** de todos los orígenes. Los orígenes se leen cuando arranca un
 servidor; una comprobación de contraseña puede llegar al origen cada vez, porque un
@@ -470,8 +486,10 @@ Así responde authnd v0.15.0 a un bind, como dice
   DN, y `Set.Identities` rechaza un nombre que UNA fuente lista dos veces.
   Antes, `Identities` devolvía ambas y `Set.Identities` conservaba la primera
   que llegara, de modo que una persona recibía los grupos, las claves y la
-  comprobación de contraseña de la otra. Entre fuentes nada cambia: la primera
-  fuente que conoce un nombre es su dueña. Un directorio con tales duplicados
+  comprobación de contraseña de la otra. Entre fuentes, la primera
+  fuente que conoce un nombre es su dueña (desde la v0.26.0 una grafía posterior que
+  solo difiere en mayúsculas o en espacio no significativo queda oculta, véase
+  `Set.Shadowed()` arriba). Un directorio con tales duplicados
   no se carga hasta que se elimine una entrada o se corrija su uid
   (`ldapsearch -b <base> '(uid=*)' uid dn` encuentra los valores repetidos).
   `ldaptest.Person.UID` es el uid publicado cuando no es la clave del mapa, para

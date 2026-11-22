@@ -11,15 +11,24 @@ tags: [库, 目录, ldap, sql]
 块——其要点在于这个问题的后半部分。
 
 ```sh
-go get github.com/go-authn/directory@v0.24.0
+go get github.com/go-authn/directory@v0.26.0
 ```
+
+自 v0.26.0 起，**`Set` 在所有地方按同一种等价关系比较名称**：即 uid 的 LDAP 相等规则
+（`caseIgnoreMatch`，RFC 4518 预处理），适用于来源内部的重复检查（`ErrAmbiguous`，见下文）、
+跨来源、`Members` 和 `Expand`。仅大小写或无意义空白不同的两个名称是同一个人：
+最先认识该名称的来源拥有它，后面的写法被遮蔽并略去（不是错误），身份沿用拥有者来源的写法。
+`Set.Shadowed()` 列出，在 `Identities` 之后，被前面来源的人员遮蔽的每个后来写法
+（`Shadow{Name, Source, Owner, By}`）；同一写法出现在两个来源中属于文档所述的覆盖，不会被列出。
+没有键的名称（不是 UTF-8、为空或全是空格）会以 `ErrBadName` 被拒绝。**升级：**来源中有两个
+仅大小写或无意义空白不同的名称的服务器，现在会丢失后一个；请查看 `Shadowed`。
 
 自 v0.24.0 起（它需要 go-authn/ldap v0.14.0），`ldapdir` 把 `caseIgnoreMatch` 视为相等的两个 uid
 当作同一个名称："alice" 与 "alice "（尾部空格）、"al ice" 与 "al  ice"、全角的 "ａlice"、"ſam" 与 "sam"，
 或带有软连字符的名称都是 `ErrAmbiguous`，而此前它们是两个人。键是标准模式中该属性的相等键
 （`schema.Schema.EqualityKey`，RFC 4518 预处理）；标准模式不认识的 `UserAttribute` 保持小写化。
-**升级：**含有此类名称对的目录现在加载失败，直到其中一个条目被更正。`Set.Identities` 仍按字节比较名称，
-跨来源时第一个认识某个名称的来源拥有它。`ldapdir` 还针对 URL 的主机验证证书
+**升级：**含有此类名称对的目录现在加载失败，直到其中一个条目被更正。（在 v0.24.0 与 v0.26.0 之间，`Set.Identities` 跨来源时仍按字节比较名称；
+v0.26.0 改变了这一点，见上文。）`ldapdir` 还针对 URL 的主机验证证书
 （`tls.Config.ServerName`，复制而不修改；显式给出的 ServerName 仍然优先），配合 go-authn/ldap v0.14.0，
 这也修复了 StartTLS。
 
@@ -63,7 +72,8 @@ DN 查找不分配任何东西（0 次分配，0 B；过去是对人员的线性
 | `directory/hcldir` | 指名数据库或 LDAP 服务器的 `users` 块，以及保存人员的 `user`/`group` 块 | `x/crypto/ssh`、`hashicorp/hcl/v2`、`zclconf/go-cty` |
 | `directory/ldaptest` | 用于测试的 LDAP 服务器 | `glauth/ldap` |
 
-在 `Set` 中，**第一个**认识某个名称的来源拥有它，因此在本地
+在 `Set` 中，**第一个**认识某个名称的来源拥有它（仅大小写或无意义空白不同的名称算作一个名称，
+后面的写法由 `Set.Shadowed()` 列出），因此在本地
 写下的服务账户不必放进 LDAP。组成员关系是
 所有来源的**并集**。来源在服务器启动时读取；密码
 校验可以每次都访问来源，因为不持有秘密就无法缓存
@@ -438,7 +448,8 @@ authnd v0.15.0 就是这样回答绑定的，如[运维页面]({{< relref "/auth
 - **同一个来源中两个条目持有的同一个名称。** 自 v0.18.0 起它是 `directory.ErrAmbiguous`，
   而不是悄悄选一个：`ldapdir` 比较 uid 时不区分大小写（`caseIgnoreMatch`，RFC 4519），并指出两个 DN；
   `Set.Identities` 拒绝一个来源列出两次的名称。此前 `Identities` 会返回两者，`Set.Identities` 保留先到的那个，
-  于是一个人得到了另一个人的组、密钥和密码校验。跨来源则没有变化：最先知道某个名称的来源拥有它。
+  于是一个人得到了另一个人的组、密钥和密码校验。跨来源时，最先知道某个名称的来源拥有它（自 v0.26.0 起，仅大小写或无意义空白不同的后来写法会被遮蔽，
+见上文的 `Set.Shadowed()`）。
   含有这类重复的目录在删除其中一个条目或改正其 uid 之前无法加载
   （`ldapsearch -b <base> '(uid=*)' uid dn` 可以找出重复的值）。`ldaptest.Person.UID` 是在它不是 map 键时发布的 uid，
   这样测试就能构造两个 uid 相同的条目。

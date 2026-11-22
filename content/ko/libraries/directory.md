@@ -11,16 +11,29 @@ tags: [라이브러리, 디렉터리, ldap, sql]
 모델이며, 요점은 질문의 후반부에 있습니다.
 
 ```sh
-go get github.com/go-authn/directory@v0.24.0
+go get github.com/go-authn/directory@v0.26.0
 ```
+
+v0.26.0부터 **`Set`은 이름을 어디서나 하나의 동치 관계로 비교합니다.** uid의 LDAP 동등
+규칙(`caseIgnoreMatch`, RFC 4518 준비)이며, 소스 내부의 중복 검사(아래와 같이
+`ErrAmbiguous`), 소스 사이, `Members`, `Expand`에 모두 적용됩니다. 대소문자나 중요하지
+않은 공백만 다른 두 이름은 같은 사람입니다. 그 이름을 아는 첫 소스가 소유하고, 나중의
+표기는 가려져 제외되며(오류가 아닙니다), ID는 소유한 소스의 표기를 유지합니다.
+`Set.Shadowed()`는 `Identities` 뒤에, 앞선 소스의 사람에게 가려진 나중의 표기를 각각
+나열합니다(`Shadow{Name, Source, Owner, By}`). 두 소스에 같은 표기가 있는 것은
+문서화된 재정의이며 나열되지 않습니다. 키가 없는 이름(UTF-8이 아니거나, 비었거나,
+공백뿐인 이름)은 `ErrBadName`으로 거부됩니다. **업그레이드:** 대소문자나 중요하지 않은
+공백만 다른 이름의 두 사람이 소스에 있는 서버는 이제 나중 사람을 잃습니다. `Shadowed`를
+읽으세요.
 
 v0.24.0부터(go-authn/ldap v0.14.0 필요) `ldapdir`는 `caseIgnoreMatch`가 같다고 보는 두 uid를
 한 이름으로 취급합니다. "alice"와 "alice "(끝의 공백), "al ice"와 "al  ice", 전각 "ａlice",
 "ſam"과 "sam", 소프트 하이픈이 든 이름은 이전에는 두 사람이었지만 이제 `ErrAmbiguous`입니다.
 키는 표준 스키마가 정의한 속성의 동등 키이며(`schema.Schema.EqualityKey`, RFC 4518 준비),
 표준 스키마가 모르는 `UserAttribute`는 소문자 변환을 유지합니다. **업그레이드:** 이런 쌍이 있는
-디렉터리는 항목 하나를 고칠 때까지 로드되지 않습니다. `Set.Identities`는 여전히 이름을 바이트
-단위로 비교하며, 소스 사이에서는 그 이름을 아는 첫 소스가 가집니다. `ldapdir`는 또한 인증서를
+디렉터리는 항목 하나를 고칠 때까지 로드되지 않습니다. (v0.24.0과 v0.26.0 사이에는
+`Set.Identities`가 소스 사이에서 여전히 이름을 바이트 단위로 비교했고, v0.26.0이 이를
+바꿉니다. 위를 보세요.) `ldapdir`는 또한 인증서를
 URL의 호스트에 대해 검증하며(`tls.Config.ServerName`, 복사되며 바뀌지 않고 명시한 값이 여전히
 우선), go-authn/ldap v0.14.0과 함께 StartTLS도 고쳐집니다.
 
@@ -64,7 +77,9 @@ DN 50개씩의 2,000개 그룹과 10,000명에서 `ldapdir`의 `ReadGroups`는 2
 | `directory/hcldir` | 데이터베이스나 LDAP 서버를 지정하는 `users` 블록, 그리고 사람을 담은 `user`/`group` 블록 | `x/crypto/ssh`, `hashicorp/hcl/v2`, `zclconf/go-cty` |
 | `directory/ldaptest` | 대조해 테스트할 LDAP 서버 | `glauth/ldap` |
 
-`Set`에서는 이름을 아는 **첫 번째** 소스가 그 이름을 소유하므로, 로컬에 적어 둔 서비스
+`Set`에서는 이름을 아는 **첫 번째** 소스가 그 이름을 소유하므로(대소문자나 중요하지
+않은 공백만 다른 이름은 하나의 이름으로 치며, 나중의 표기는 `Set.Shadowed()`가 나열합니다),
+로컬에 적어 둔 서비스
 계정을 LDAP에 넣을 필요가 없습니다. 그룹 구성원은 모든 소스의 **합집합**입니다.
 소스는 서버가 시작할 때 읽습니다. 비밀번호 확인은 매번 소스에 도달할 수 있는데,
 바인드는 비밀 값을 보유하지 않고서는 캐시할 수 없기 때문입니다. `GroupReader`를 구현하는 소스(sqldir과 ldapdir가 구현합니다)는 모든 그룹을 한 번에 일괄로 읽고, 그러면 `Set.Frozen()`은 `Members`, `GroupAttributes`, `GroupObjectClasses`, `GroupNames`를 `Set` 자체의 병합 규칙으로 메모리에서 답합니다. 닫아야 하는 것은 고정된 `Set`이 아니라 원래의 `Set`입니다.
@@ -430,7 +445,8 @@ authnd v0.15.0은 [운영 페이지]({{< relref "/authnd/operations.md#limits" >
   `directory.ErrAmbiguous`입니다. `ldapdir`은 uid를 대소문자 구분 없이 비교하고(`caseIgnoreMatch`, RFC 4519)
   두 DN을 모두 밝히며, `Set.Identities`는 하나의 소스가 두 번 나열하는 이름을 거부합니다. 이전에는
   `Identities`가 둘 다 돌려주고 `Set.Identities`는 먼저 온 것을 남겨서, 한 사람이 다른 사람의 그룹, 키,
-  비밀번호 확인을 얻었습니다. 소스 사이에서는 달라지는 것이 없습니다. 이름을 처음 아는 소스가 그 이름을 가집니다.
+  비밀번호 확인을 얻었습니다. 소스 사이에서는 이름을 처음 아는 소스가 그 이름을 가집니다(v0.26.0부터 대소문자나
+  중요하지 않은 공백만 다른 나중의 표기는 가려지며, 위의 `Set.Shadowed()`를 보세요).
   이런 중복이 있는 디렉터리는 한 엔트리를 지우거나 uid를 고칠 때까지 로드되지 않습니다
   (`ldapsearch -b <base> '(uid=*)' uid dn`으로 반복된 값을 찾을 수 있습니다). `ldaptest.Person.UID`는
   맵의 키와 다를 때 게시되는 uid로, 테스트가 같은 uid를 가진 두 엔트리를 만들 수 있게 합니다.

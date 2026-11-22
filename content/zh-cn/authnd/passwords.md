@@ -116,8 +116,8 @@ Additional info: dora is served from a sqlite database, which this server reads 
 人员是**按身份匹配的，而不是按 DN**：会话自己的名称必须
 与目标逐字节完全一致，因此以 `uid=Backup` 绑定的会话
 不能更改 `backup` 的密码，即使这两个 DN 比较时相等。这一点与
-[拒绝仅大小写不同的名称]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
-是两项互不依赖的控制。
+[对仅大小写不同的名称的处理]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
+（同一个人，最先的来源拥有它）是两项互不依赖的控制。
 
 ## 新密码写在哪里 {#where-the-new-password-is-written}
 

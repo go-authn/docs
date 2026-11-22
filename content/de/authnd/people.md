@@ -293,17 +293,20 @@ Quellen: Eine Gruppe, die sowohl ein `group`-Block als auch die `groups`-Abfrage
 Datenbank nennt, hat die Mitglieder beider.
 
 {{< callout type="warning" >}}
-**Zwei Namen, die sich nur in der Groß-/Kleinschreibung unterscheiden, werden abgelehnt**
+**Zwei Namen, die sich nur in der Groß-/Kleinschreibung unterscheiden, sind eine Person; der spätere wird ausgelassen**
 
 Eine uid wird ohne Beachtung der Groß-/Kleinschreibung verglichen (RFC 4519 §2.39), ebenso jeder DN;
-`Dora` in der Datei und `dora` in einer Datenbank sind daher für LDAP ein Name und für alles,
-was Bytes vergleicht, zwei Personen – eine Passwortänderung der einen würde bei der
-anderen landen. Eine solche Konfiguration startet nicht:
-
-```
-$ authnd check cases/case.hcl
-authnd: "Dora" (from the configuration file) and "dora" (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them
-```
+`Dora` in der Datei und `dora` in einer Datenbank sind daher für LDAP ein Name. Seit authnd
+v0.19.0, mit go-authn/directory v0.26.0, sind sie auch hier eine Person: Namen werden
+mit der LDAP-Gleichheitsregel der uid (`caseIgnoreMatch`) verglichen, sodass Namen, die
+sich nur durch Groß-/Kleinschreibung oder unwesentliche Leerzeichen unterscheiden, derselbe
+Name sind. Die erste Quelle, die die Person kennt, besitzt sie, die spätere Schreibweise
+wird ausgelassen, und die Person behält die Schreibweise der besitzenden Quelle. authnd
+**startet** mit einer solchen Konfiguration (vor v0.19.0 lehnte es das ab) und
+**protokolliert es**: Beim Start und bei einem Refresh, wenn sich die Liste ändert, nennt
+`directory: names shadowed by a spelling an earlier source owns` jede überdeckte
+Schreibweise, ihre Quelle und den Besitzer. Ein Name ohne Äquivalenzschlüssel (kein UTF-8,
+leer oder nur Leerzeichen) lässt Start und Refresh fehlschlagen.
 {{< /callout >}}
 
 ## Beim Start gelesen, dann bei jedem Refresh {#read-once}

@@ -118,8 +118,8 @@ Additional info: dora is served from a sqlite database, which this server reads 
 Die Person wird **nach Identität, nicht nach DN** zugeordnet: Der eigene Name der Sitzung muss
 genau der des Ziels sein, Byte für Byte; eine als `uid=Backup` gebundene Sitzung
 kann daher das Passwort von `backup` nicht ändern, obwohl die beiden DNs als gleich gelten. Das
-und die [Ablehnung von Namen, die sich nur in der Groß-/Kleinschreibung unterscheiden]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
-sind zwei Kontrollen, die nicht voneinander abhängen.
+und die [Behandlung von Namen, die sich nur in der Groß-/Kleinschreibung unterscheiden]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
+(eine Person, die erste Quelle besitzt sie) sind zwei Kontrollen, die nicht voneinander abhängen.
 
 ## Wohin das neue Passwort geschrieben wird {#where-the-new-password-is-written}
 

@@ -11,7 +11,7 @@ tags: [库, secretsource, 密钥]
 shell 历史记录里。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.6.0
+go get github.com/go-authn/secretsource@v0.6.1
 ```
 
 ```go
@@ -43,6 +43,11 @@ KeePassXC 通过其浏览器集成协议访问，支持 macOS 和 Linux；Window
 或组或其他人可写时，套接字被拒绝，拨号之后会检查已连接对端的 uid；不再跟随旧的
 `$XDG_RUNTIME_DIR/org.keepassxc.KeePassXC.BrowserServer` 符号链接（而是跟随
 `app/org.keepassxc.KeePassXC/` 下的真实套接字）。
+
+自 v0.6.1 起，关联文件（后备存储，在既没有 macOS 钥匙串也没有 Secret Service 时使用）先写入同一目录中的新临时文件，
+再重命名为最终名称，因此留在该名称上的符号链接会被替换而不是被跟随，权限更宽松的文件会变成 0600。
+在 Unix 上，会先像检查套接字所在目录那样检查该目录：归当前用户所有、组或其他人不可写、不是符号链接；
+否则不写入任何内容。
 
 1. 在 KeePassXC 中启用 *Settings > Browser Integration*。
 2. 每个数据库关联这台机器一次，并在 KeePassXC 中批准：

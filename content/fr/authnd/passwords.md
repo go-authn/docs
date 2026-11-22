@@ -118,8 +118,8 @@ Additional info: dora is served from a sqlite database, which this server reads 
 La personne est reconnue **par identité, non par DN** : le nom propre de la session doit
 être exactement celui de la cible, octet pour octet, si bien qu'une session liée comme `uid=Backup`
 ne peut pas changer le mot de passe de `backup` même si les deux DN sont égaux à la comparaison. Cela
-et le [refus des noms qui ne diffèrent que par la casse]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
-sont deux contrôles qui ne dépendent pas l'un de l'autre.
+et le [traitement des noms qui ne diffèrent que par la casse]({{< relref "/authnd/people.md#order-and-the-one-exception" >}})
+(une seule personne, la première source la possède) sont deux contrôles qui ne dépendent pas l'un de l'autre.
 
 ## Où le nouveau mot de passe est écrit {#where-the-new-password-is-written}
 
