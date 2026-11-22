@@ -110,20 +110,33 @@ federación, nunca de la misma descarga que el certificado. Consulte
 ## La contraseña SMTP {#the-smtp-password}
 
 Solo hace falta con un [bloque `mail`]({{< relref "/authn-bridge/configuration.md#mail" >}})
-(desde la v0.32.0). La contraseña viene de `password_file`, y de ningún otro sitio:
-ni el entorno, ni una línea de comandos, ni el archivo de configuración. El archivo
-debe ser un archivo regular **propiedad del usuario del servicio, sin bits de permiso
-de grupo ni de otros** (`0600`), y una línea no vacía; se lee con una sola apertura.
-Cualquier otra cosa se rechaza al arrancar, así que dé el archivo al usuario del
-servicio y restrinja su modo:
+(desde la v0.32.0). Desde la v0.33.0 la contraseña es una referencia de
+[secretsource](https://github.com/go-authn/secretsource), `password_from`, nunca
+la contraseña misma. En un equipo con systemd, séllela a la máquina y entréguela
+al servicio como credencial:
 
 ```sh
-chown authn-bridge /etc/authn-bridge/smtp.password
-chmod 0600 /etc/authn-bridge/smtp.password
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
 ```
 
-El bridge lee este único archivo para la contraseña SMTP en la v0.32.0; el README del
-bridge no nombra ninguna otra fuente, tampoco una credencial de systemd.
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+Luego ponga `password_from = "systemd-creds:smtp"` en el bloque `mail`. Use
+`--with-key=host+tpm2` sin `--tpm2-pcrs`, para que la credencial sobreviva a las
+actualizaciones de firmware y de Secure Boot. `password_file` aún funciona pero
+está **obsoleto** (se lee como `password_from = "file:PATH"`); definir ambos se
+rechaza al arrancar.
+
+**Recuperación.** La credencial se pierde con el chip TPM2 o con
+`/var/lib/systemd/credential.secret`, o tras un cambio de firmware o de PCR si
+estaba sellada a PCR; un fallo de descifrado detiene el bridge al arrancar.
+Guarde la contraseña en una copia fuera de línea, vuelva a sellarla desde ella
+con el comando anterior y luego ejecute `systemctl restart authn-bridge`.
 
 ## La unidad {#the-unit}
 

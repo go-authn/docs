@@ -107,19 +107,31 @@ runuser -u authn-bridge -- sh -c 'umask 077; openssl req -x509 -newkey rsa:3072 
 ## SMTP 비밀번호 {#the-smtp-password}
 
 [`mail` 블록]({{< relref "/authn-bridge/configuration.md#mail" >}})이 있을 때만
-필요합니다(v0.32.0부터). 비밀번호는 `password_file`에서만 오며 다른 곳에서는 오지
-않습니다. 환경 변수도, 명령줄도, 설정 파일도 아닙니다. 파일은 일반 파일이고 **서비스 사용자
-소유이며 그룹과 다른 사용자의 권한 비트가 없어야** 하고(`0600`), 비어 있지 않은 한
-줄이어야 하며, 한 번 열어서 읽습니다. 그 밖의 것은 시작할 때 거부되므로, 파일을 서비스
-사용자에게 주고 모드를 좁히십시오.
+필요합니다(v0.32.0부터). v0.33.0부터 비밀번호는 [secretsource](https://github.com/go-authn/secretsource)
+참조인 `password_from`으로 지정하며, 비밀번호 자체를 적지 않습니다. systemd 호스트에서는
+컴퓨터에 봉인하여 자격 증명으로 서비스에 전달하십시오.
 
 ```sh
-chown authn-bridge /etc/authn-bridge/smtp.password
-chmod 0600 /etc/authn-bridge/smtp.password
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
 ```
 
-v0.32.0에서 bridge는 SMTP 비밀번호로 이 파일 하나만 읽으며, bridge의 README는 systemd
-자격 증명을 포함해 다른 출처를 말하지 않습니다.
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+그런 다음 `mail` 블록에 `password_from = "systemd-creds:smtp"`를 설정하십시오.
+`--with-key=host+tpm2`를 쓰고 `--tpm2-pcrs`는 붙이지 마십시오. 펌웨어와 Secure Boot
+업데이트 후에도 자격 증명을 읽을 수 있습니다. `password_file`은 아직 동작하지만
+**더 이상 권장되지 않으며**(`password_from = "file:PATH"`로 읽힘), 둘 다 설정하면
+시작할 때 거부됩니다.
+
+**복구.** 자격 증명은 TPM2 칩이나 `/var/lib/systemd/credential.secret`을 잃으면,
+또 PCR에 봉인했다면 펌웨어나 PCR이 바뀐 뒤에 사라지며, 복호화에 실패하면 bridge는
+시작할 때 멈춥니다. 비밀번호는 오프라인 사본에 보관하고, 그 사본으로 위 명령을 다시 실행해
+봉인한 뒤 `systemctl restart authn-bridge`를 실행하십시오.
 
 ## 유닛 {#the-unit}
 

@@ -105,19 +105,30 @@ runuser -u authn-bridge -- sh -c 'umask 077; openssl req -x509 -newkey rsa:3072 
 ## SMTP パスワード {#the-smtp-password}
 
 [`mail` ブロック]({{< relref "/authn-bridge/configuration.md#mail" >}}) (v0.32.0 以降) があるときだけ
-必要です。パスワードは `password_file` から、それ以外のどこからも取りません。環境変数、コマンド
-ライン、設定ファイルからは取りません。ファイルは通常ファイルで、**サービスのユーザーが所有し、
-グループにもその他にも権限ビットがなく** (`0600`)、空でない 1 行でなければなりません。読み込みは
-一度の open で行われます。それ以外は起動時に拒否されるので、ファイルをサービスのユーザーのものに
-してモードを絞ってください:
+必要です。v0.33.0 以降、パスワードは [secretsource](https://github.com/go-authn/secretsource) の
+参照である `password_from` で指定し、パスワードそのものは書きません。systemd のホストでは、
+マシンに封印してクレデンシャルとしてサービスに渡します:
 
 ```sh
-chown authn-bridge /etc/authn-bridge/smtp.password
-chmod 0600 /etc/authn-bridge/smtp.password
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
 ```
 
-v0.32.0 のブリッジが SMTP パスワードのために読むのはこの 1 ファイルだけです。ブリッジの README は、
-systemd のクレデンシャルを含め、ほかの取得元を挙げていません。
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+そのうえで `mail` ブロックに `password_from = "systemd-creds:smtp"` を設定します。
+`--with-key=host+tpm2` を使い、`--tpm2-pcrs` は付けないでください。ファームウェアや Secure Boot の
+更新後もクレデンシャルが読めます。`password_file` は今も動きますが**非推奨**です
+(`password_from = "file:PATH"` として読まれます)。両方を設定すると起動時に拒否されます。
+
+**復旧。** クレデンシャルは、TPM2 チップや `/var/lib/systemd/credential.secret` を失うと、
+また PCR に封印していた場合はファームウェアや PCR の変更後に、失われます。復号に失敗すると
+ブリッジは起動時に停止します。パスワードはオフラインのコピーに保管し、そこから上のコマンドで
+封印し直してから `systemctl restart authn-bridge` を実行してください。
 
 ## ユニット {#the-unit}
 

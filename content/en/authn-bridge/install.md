@@ -108,20 +108,33 @@ page, never from the same download as the certificate. See
 ## The SMTP password
 
 Only needed with a [`mail` block]({{< relref "/authn-bridge/configuration.md#mail" >}})
-(since v0.32.0). The password comes from `password_file`, and from nowhere else:
-not the environment, not a command line, not the configuration file. The file
-must be a regular file **owned by the service's user, with no group and no other
-permission bits** (`0600`), and one non-empty line; it is read with a single
-open. Anything else is refused at startup, so give the file to the service's
-user and narrow its mode:
+(since v0.32.0). Since v0.33.0 the password is a
+[secretsource](https://github.com/go-authn/secretsource) reference,
+`password_from`, never the password itself. On a systemd host, seal it to the
+machine and hand it to the service as a credential:
 
 ```sh
-chown authn-bridge /etc/authn-bridge/smtp.password
-chmod 0600 /etc/authn-bridge/smtp.password
+printf %s 'the-smtp-password' | sudo systemd-creds encrypt --name=smtp \
+  --with-key=host+tpm2 - /etc/credstore.encrypted/smtp.cred
 ```
 
-The bridge reads this one file for the SMTP password in v0.32.0; the bridge's
-README names no other source, a systemd credential included.
+```ini
+# systemctl edit authn-bridge
+[Service]
+LoadCredentialEncrypted=smtp:/etc/credstore.encrypted/smtp.cred
+```
+
+Then set `password_from = "systemd-creds:smtp"` in the `mail` block. Use
+`--with-key=host+tpm2` with no `--tpm2-pcrs`, so the credential survives
+firmware and Secure Boot updates. `password_file` still works but is
+**deprecated** (read as `password_from = "file:PATH"`); setting both is refused
+at startup.
+
+**Recovery.** The credential is lost with the TPM2 chip or
+`/var/lib/systemd/credential.secret`, or after a firmware or PCR change if it
+was sealed to PCRs, and a decryption failure stops the bridge at startup. Keep
+the password in an offline copy, re-seal from it with the command above, then
+`systemctl restart authn-bridge`.
 
 ## The unit
 
