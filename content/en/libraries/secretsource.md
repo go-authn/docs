@@ -2,7 +2,7 @@
 title: "secretsource — a secret from a reference"
 linkTitle: "secretsource"
 weight: 35
-description: "go-authn/secretsource resolves a PIN, a password or a recovery code from a reference (a file, the macOS Keychain, a Secret Service, KeePassXC) so that no plaintext file has to stay on disk."
+description: "go-authn/secretsource resolves a PIN, a password or a recovery code from a reference (a file, the macOS Keychain, a Secret Service, KeePassXC, a systemd credential) so that no plaintext file has to stay on disk."
 tags: [libraries, secretsource, secrets]
 ---
 
@@ -11,7 +11,7 @@ names where a secret lives; `secretsource.Open` fetches it. The reference holds
 no secret, so it may sit in a flag, a script or a shell history.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.7.0
+go get github.com/go-authn/secretsource@v0.8.0
 ```
 
 ```go
@@ -28,6 +28,7 @@ use(s.Bytes())
 | `secretservice:SERVICE/ACCOUNT` | a freedesktop Secret Service item with attributes `service=SERVICE`, `account=ACCOUNT` (GNOME Keyring, KWallet, KeePassXC's Secret Service integration) |
 | `secretservice:KEY=VALUE[,KEY=VALUE...]` | the one Secret Service item carrying all those attributes; several matches are refused |
 | `keepassxc:URL` | the KeePassXC entry whose **URL field** is that URL (`https://NAME.invalid/...` is a good, never-resolving choice); two entries with the same URL are refused as ambiguous |
+| `systemd-creds:NAME` | (Linux, since v0.8.0) a systemd credential, returned byte for byte: no trailing-newline stripping, unlike `file:`. First the file `NAME` in `$CREDENTIALS_DIRECTORY` (placed by `LoadCredential=`, `LoadCredentialEncrypted=`, `SetCredentialEncrypted=`); else `NAME` or `NAME.cred` in `/etc`, `/run`, `/usr/lib` `credstore.encrypted`, decrypted by `systemd-creds decrypt`. Refused with `ErrUnavailable` on other systems |
 
 `keepassxc:by-uuid/...` and `keepassxc:by-path/...` are **refused**: KeePassXC
 2.8.0 crashes when a lookup finds an entry with no URL.
@@ -37,6 +38,33 @@ reference with no scheme is refused, not guessed to be a path (`file:` is how a
 path is written). A secret longer than 4096 bytes, or an empty one from a
 manager or a `file:`, is refused (`ErrEmpty`), and a call ends with its context (2 minutes when it has no
 deadline) even while the manager waits for you to unlock it.
+
+## systemd credentials {#systemd-creds}
+
+Grammar, exactly: `systemd-creds:NAME`, the scheme in lower case, a colon, then
+the credential name as given to `LoadCredential=`, `LoadCredentialEncrypted=` or
+`systemd-creds encrypt --name=`, for example `systemd-creds:smtp`. `NAME` is a
+plain file name of 1 to 255 bytes: no `/` (so no path), not `.` or `..`, no
+control character, and no `.cred` suffix (the suffix belongs to the file; `smtp`
+finds `smtp` or `smtp.cred`).
+
+- The file in `$CREDENTIALS_DIRECTORY` is opened with `O_NOFOLLOW`, must be a
+  regular file owned by root or the caller, with no access for "other" (group
+  bits are accepted: systemd gives a `User=` service a root-owned 0440 file with
+  an ACL); the directory likewise. A symlink or a loose mode is refused.
+- Otherwise `systemd-creds decrypt --name=NAME PATH -` is run directly: no shell,
+  an empty environment, the secret read from standard output only, at most 4096
+  bytes, ended with the context. A non-root caller tries `--user` (systemd 256 or
+  later) first.
+- No trimming: a trailing newline, NUL bytes and non-UTF-8 bytes are kept, so
+  seal a password with `printf %s`.
+- Measured on systemd 257 (Debian 13) with `--with-key=host`; not measured with a
+  TPM2 key. A failed decryption returns `ErrUnavailable` and says the credential
+  may need re-sealing.
+- PCR binding: `--tpm2-pcrs=` defaults to none. A bare `--tpm2-pcrs=7` can lock
+  every credential after a firmware or shim update or a vTPM migration. Prefer
+  `--with-key=host+tpm2`, a signed PCR policy (`--tpm2-public-key`, PCR 11), or
+  `systemd-pcrlock`, and keep a copy of the secret to re-seal from.
 
 ## KeePassXC
 
