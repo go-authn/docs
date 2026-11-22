@@ -52,11 +52,14 @@ output "tls" {                               # nginx: ssl_crl /var/lib/authn-rev
 
 | キー | |
 |---|---|
+| `url_from` | 資格情報を含む URL のための、その URL への secretsource 参照。例: `systemd-creds:univ-a-url`。`url` と `url_from` のちょうど一方 |
 | `url` | `https://`、`http://`、`file://`。KRL の署名は、同じ URL に `.sig` を付けて取得する |
 | `ssh_ca` | SSH CA の公開鍵、`authorized_keys` の一行: KRL ソース。ここでの証明書は拒否される |
 | `x509_ca` | CA の PEM 証明書: CRL ソース |
 | `max_age` | 自身の有効期限に加えて、これより前に発行されたリストも拒否する。CRL 出力に供給するソースでは拒否される |
 | `revoke_keys` | 他のソースと共有する出力で、このソースのリストが**単なる鍵**を失効させることを許す。KRL ソースのみ |
+
+**URL 内の資格情報。** パスワード（`user:pass@`）や、資格情報のような名前のクエリパラメータ（`token`、`api_key`、`secret` など）を含む `url` は起動時に拒否され、メッセージは `url_from` を示します。設定ファイルは秘密ではありません。URL を `systemd-creds encrypt --with-key=host+tpm2` で封印したクレデンシャルに入れ（`--tpm2-pcrs=7` だけは使わない）、`LoadCredentialEncrypted=univ-a-url:/etc/credstore.encrypted/univ-a-url` で読み込み、`url_from = "systemd-creds:univ-a-url"` と書きます。ホスト鍵が変わったら、元の値からクレデンシャルを封印し直します。secretsource v0.9.0 以降、`file:` 参照はシンボリックリンクと他の uid が所有するファイルを拒否します。
 
 **`output "<name>"`**: サーバーが読む一つのファイル。
 

@@ -52,11 +52,14 @@ output "tls" {                               # nginx: ssl_crl /var/lib/authn-rev
 
 | 키 | |
 |---|---|
+| `url_from` | 자격 증명을 담은 URL을 위한, 그 URL에 대한 secretsource 참조. 예: `systemd-creds:univ-a-url`. `url`과 `url_from` 중 정확히 하나 |
 | `url` | `https://`, `http://` 또는 `file://`. KRL의 서명은 같은 URL에 `.sig`를 붙여 가져옴 |
 | `ssh_ca` | SSH CA의 공개 키, `authorized_keys` 한 줄: KRL 소스. 인증서는 여기서 거부됨 |
 | `x509_ca` | CA의 PEM 인증서: CRL 소스 |
 | `max_age` | 자체 만료에 더해, 이보다 오래 전에 발급된 목록도 거부. CRL 출력에 공급하는 소스에서는 거부됨 |
 | `revoke_keys` | 다른 소스와 공유하는 출력에서 이 소스의 목록이 **일반 키**를 폐기하도록 허용. KRL 소스에만 |
+
+**URL 안의 자격 증명.** 비밀번호(`user:pass@`)나 자격 증명처럼 이름 붙은 쿼리 매개변수(`token`, `api_key`, `secret` 등)를 담은 `url`은 시작할 때 거부되며, 메시지는 `url_from`을 알려 줍니다. 설정 파일은 비밀이 아닙니다. URL을 `systemd-creds encrypt --with-key=host+tpm2`로 봉인한 크리덴셜에 넣고(`--tpm2-pcrs=7`만 쓰지 않습니다), `LoadCredentialEncrypted=univ-a-url:/etc/credstore.encrypted/univ-a-url`로 불러온 뒤 `url_from = "systemd-creds:univ-a-url"`이라고 씁니다. 호스트 키가 바뀌면 원본에서 크리덴셜을 다시 봉인합니다. secretsource v0.9.0부터 `file:` 참조는 심볼릭 링크와 다른 uid 소유의 파일을 거부합니다.
 
 **`output "<name>"`**: 서버가 읽는 파일 하나.
 

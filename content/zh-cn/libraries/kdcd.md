@@ -87,6 +87,8 @@ users "ldap" {                            # read anonymously
 `users` 块就是 [go-authn/directory/hcldir](https://github.com/go-authn/directory) 的块；
 kdcd 拒绝其中携带密码的部分（见上文）。
 
+**密钥：文件或引用。** `keytab_file` 和 `key_file`（在 `mint` 中）指向一个文件，按下文所述检查。`keytab_from` 和 `key_from` 则接受 secretsource 引用，例如 `systemd-creds:kdc-keytab`：由 systemd 为服务解密的凭据（`LoadCredentialEncrypted=`，用 `systemd-creds encrypt --with-key=host+tpm2` 封存，切勿只用 `--tpm2-pcrs=7`）。二者择一，不可同时设置。`_from` 键中拒绝 `file:`。`keytab_file` 保留且不弃用：keytab 和密钥是二进制的，`file:` 会去掉末尾一个换行（以字节 0x0a 结尾的密钥会被破坏），而引用最多 4096 字节，所以更大的 keytab 仍放在 `keytab_file`。自 secretsource v0.9.0 起，`file:` 还会拒绝符号链接和属于其他 uid 的文件。`dsn_file` 不含密码，因此没有 `_from`。
+
 `kdcd check --config FILE` 读取并构建守护进程会构建的一切，打开目录，不监听任何地址，
 并打印它所提供的内容：域、地址、keytab 的主体（名称、kvno、etype；绝不打印密钥）、
 目录持有的人数、mint 调用方。退出状态 0 且最后一行为 `ok`，或者是第一个拒绝。

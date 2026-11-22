@@ -53,11 +53,22 @@ répertoire d'état et un chemin du miroir.
 
 | clé | |
 |---|---|
+| `url_from` | une référence secretsource vers l'URL, pour une URL qui porte un secret, par exemple `systemd-creds:univ-a-url` ; exactement un de `url` et `url_from` |
 | `url` | `https://`, `http://` ou `file://` ; la signature d'une KRL est récupérée à la même URL suivie de `.sig` |
 | `ssh_ca` | la clé publique de l'AC SSH, une ligne `authorized_keys` : une source KRL. Un certificat est refusé ici |
 | `x509_ca` | le certificat PEM de l'AC : une source CRL |
 | `max_age` | refuser aussi une liste émise depuis plus longtemps que cela, en plus de sa propre expiration ; refusé sur une source qui alimente une sortie CRL |
 | `revoke_keys` | permettre à la liste de cette source de révoquer des **clés simples** dans une sortie partagée avec d'autres sources ; sources KRL seulement |
+
+**Un secret dans une URL.** Une `url` qui porte un mot de passe (`user:pass@`) ou un
+paramètre de requête nommé comme un secret (`token`, `api_key`, `secret`...) est refusée
+au démarrage, et le message nomme `url_from` : la configuration n'est pas un secret.
+Mettez l'URL dans un credential, scellé avec `systemd-creds encrypt --with-key=host+tpm2`
+(jamais un `--tpm2-pcrs=7` seul), chargez-le avec
+`LoadCredentialEncrypted=univ-a-url:/etc/credstore.encrypted/univ-a-url`, et écrivez
+`url_from = "systemd-creds:univ-a-url"`. Si la clé de l'hôte change, scellez à nouveau le
+credential depuis sa source. Depuis secretsource v0.9.0, une référence `file:` refuse un
+lien symbolique et un fichier appartenant à un autre uid.
 
 **`output "<name>"`** : un fichier que lit un serveur.
 
