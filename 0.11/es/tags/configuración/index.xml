@@ -367,8 +367,14 @@ data-copied-label="¡Copiado!"
 &lt;p&gt;El certificado es para el host del emisor. &lt;code&gt;cache_dir&lt;/code&gt; contiene claves privadas, y
 el proveedor se niega a arrancar sobre uno que otro usuario pudiera alcanzar o
 redirigir.&lt;/p&gt;
-&lt;h2 data-hextra-search-id="mail-the-smtp-password-is-a-reference"&gt;&lt;code&gt;mail&lt;/code&gt;: la contraseña SMTP es una referencia&lt;span class="hx:absolute hx:-mt-20" id="mail-the-smtp-password-is-a-reference"&gt;&lt;/span&gt;
-&lt;a href="#mail-the-smtp-password-is-a-reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;h2 data-hextra-search-id="mail"&gt;&lt;code&gt;mail&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="mail"&gt;&lt;/span&gt;
+&lt;a href="#mail" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Desde la v0.32.0. Una passkey siempre puede cancelar una eliminación pendiente, así
+que quien robe una clave podría cancelar con ella la eliminación que el propietario
+pidió con otra. Solo un aviso por un canal que no tenga ninguna de las passkeys de la
+persona permite al propietario verlo. Con un bloque &lt;code&gt;mail&lt;/code&gt;, el bridge envía &lt;strong&gt;un
+correo de texto plano a la dirección propia de la cuenta&lt;/strong&gt; cuando se pide o se cancela
+la eliminación de una passkey(&lt;a href="https://go-authn.github.io/docs/0.11/es/authn-bridge/admin/#passkey-removal-notices"&gt;lo que ve el operador&lt;/a&gt;).Sin bloque &lt;code&gt;mail&lt;/code&gt;, nada cambia.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;mail&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;smtp.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; security&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34; # &amp;#34;tls&amp;#34; (port 465, the default) or &amp;#34;starttls&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="m"&gt;587&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -438,6 +444,22 @@ arrancar.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Recuperación.&lt;/strong&gt; La credencial se pierde con el chip TPM2 o con&lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt;, y un fallo de descifrado detiene el bridge
 al arrancar. Guarde la contraseña en un lugar que no dependa de esta máquina(una copia sin conexión), vuelva a sellarla desde esa copia con el comando de
 arriba y luego &lt;code&gt;systemctl restart authn-bridge&lt;/code&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;A quién se avisa.&lt;/strong&gt; El &lt;code&gt;mail&lt;/code&gt; de la cuenta en el archivo de cuentas locales,tal como el bridge lo conoce, nunca una dirección tomada de la petición. El
+bloque necesita un bloque &lt;code&gt;local&lt;/code&gt;: el aviso trata de las passkeys de las cuentas
+locales.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;TLS, siempre.&lt;/strong&gt; TLS implícito, o STARTTLS que el servidor ofrezca y complete(si no, el aviso no se envía: nunca una conversación en claro). El certificado
+del servidor se verifica contra las raíces del sistema y el nombre de host. El
+bridge se autentica (PLAIN, si no LOGIN) solo cuando TLS está establecido, nunca
+en claro, ni siquiera hacia 127.0.0.1; se rechaza un servidor que no anuncie
+ningún mecanismo utilizable tras TLS.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Sin enlace.&lt;/strong&gt; El texto no lleva ninguna URL que seguir, lo dice, e indica al
+lector que abra la página de su cuenta desde su propio marcador. Se rechazan los
+valores de cabecera con CR, LF u otros separadores de línea.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Límite de frecuencia.&lt;/strong&gt; Un correo por cuenta y por &lt;code&gt;window&lt;/code&gt; (&lt;code&gt;10m&lt;/code&gt; por
+defecto); los eventos que llegan entretanto se reúnen en un resumen, enviado
+cuando acaba la ventana.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;Lo que se rechaza al arrancar&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Cada uno de estos es la salida de &lt;code&gt;authn-bridge check&lt;/code&gt; sobre una configuración que
 lo pedía. El servidor rechaza las mismas configuraciones: cada una se lee de la

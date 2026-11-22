@@ -368,8 +368,13 @@ data-copied-label="Copié !"
 &lt;/div&gt;
 &lt;p&gt;Le certificat est pour l&amp;rsquo;hôte de l&amp;rsquo;émetteur. &lt;code&gt;cache_dir&lt;/code&gt; contient des clés privées, et
 le fournisseur refuse de démarrer sur un répertoire qu&amp;rsquo;un autre utilisateur pourrait atteindre ou faire pointer ailleurs.&lt;/p&gt;
-&lt;h2 data-hextra-search-id="mail-the-smtp-password-is-a-reference"&gt;&lt;code&gt;mail&lt;/code&gt; : le mot de passe SMTP est une référence&lt;span class="hx:absolute hx:-mt-20" id="mail-the-smtp-password-is-a-reference"&gt;&lt;/span&gt;
-&lt;a href="#mail-the-smtp-password-is-a-reference" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;h2 data-hextra-search-id="mail"&gt;&lt;code&gt;mail&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="mail"&gt;&lt;/span&gt;
+&lt;a href="#mail" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Depuis la v0.32.0. Une clé d&amp;rsquo;accès peut toujours annuler un retrait en attente : un
+voleur qui détient une clé pourrait donc annuler, avec elle, le retrait que le
+propriétaire a demandé avec une autre. Seul un avis par un canal qui ne détient aucune
+des clés d&amp;rsquo;accès de la personne permet au propriétaire de le voir. Avec un bloc &lt;code&gt;mail&lt;/code&gt;,le pont envoie &lt;strong&gt;un e-mail en texte brut à l&amp;rsquo;adresse propre du compte&lt;/strong&gt; quand le retrait
+d&amp;rsquo;une clé d&amp;rsquo;accès est demandé ou annulé(&lt;a href="https://go-authn.github.io/docs/0.11/fr/authn-bridge/admin/#passkey-removal-notices"&gt;ce que voit l&amp;rsquo;opérateur&lt;/a&gt;).Sans bloc &lt;code&gt;mail&lt;/code&gt;, rien ne change.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;mail&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;smtp.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; security&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34; # &amp;#34;tls&amp;#34; (port 465, the default) or &amp;#34;starttls&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="m"&gt;587&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -442,6 +447,21 @@ de démarrer.&lt;/p&gt;
 au démarrage. Gardez le mot de passe dans un endroit qui ne dépend pas de cette
 machine (une copie hors ligne), re-scellez depuis cette copie avec la commande
 ci-dessus, puis &lt;code&gt;systemctl restart authn-bridge&lt;/code&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Qui est prévenu.&lt;/strong&gt; Le &lt;code&gt;mail&lt;/code&gt; du compte dans le fichier des comptes locaux, tel que
+le pont le connaît, jamais une adresse tirée de la requête. Le bloc exige un bloc&lt;code&gt;local&lt;/code&gt; : l&amp;rsquo;avis concerne les clés d&amp;rsquo;accès des comptes locaux.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;TLS, toujours.&lt;/strong&gt; TLS implicite, ou STARTTLS que le serveur propose et mène à
+terme (sinon l&amp;rsquo;avis n&amp;rsquo;est pas envoyé : jamais de conversation en clair). Le
+certificat du serveur est vérifié contre les racines du système et le nom d&amp;rsquo;hôte. Le
+pont ne s&amp;rsquo;authentifie (PLAIN, sinon LOGIN) qu&amp;rsquo;une fois TLS établi, jamais en clair,pas même vers 127.0.0.1 ; un serveur qui n&amp;rsquo;annonce aucun mécanisme utilisable après
+TLS est refusé.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Aucun lien.&lt;/strong&gt; Le texte ne contient aucune URL à suivre, le dit, et invite le
+lecteur à ouvrir la page de son compte depuis son propre signet. Les valeurs
+d&amp;rsquo;en-tête contenant CR, LF ou d&amp;rsquo;autres séparateurs de ligne sont refusées.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Limite de débit.&lt;/strong&gt; Un message par compte et par &lt;code&gt;window&lt;/code&gt; (&lt;code&gt;10m&lt;/code&gt; par défaut) ; les
+événements qui arrivent entre-temps sont regroupés en un seul résumé, envoyé à la fin
+de la fenêtre.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;Ce qui est refusé au démarrage&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Chacun de ces messages est la sortie de &lt;code&gt;authn-bridge check&lt;/code&gt; sur une configuration qui
 l&amp;rsquo;a provoqué. Le serveur refuse les mêmes configurations : chacune se lit dans

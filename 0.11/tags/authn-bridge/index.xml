@@ -168,6 +168,29 @@ data-copied-label="Copied!"
 &lt;p&gt;The federation&amp;rsquo;s metadata signing certificate comes from the federation, and so
 does its SHA-256 fingerprint: take the fingerprint from the federation&amp;rsquo;s web
 page, never from the same download as the certificate. See&lt;a href="https://go-authn.github.io/docs/0.11/authn-bridge/federation/"&gt;the federation side&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-smtp-password"&gt;The SMTP password&lt;span class="hx:absolute hx:-mt-20" id="the-smtp-password"&gt;&lt;/span&gt;
+&lt;a href="#the-smtp-password" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Only needed with a &lt;a href="https://go-authn.github.io/docs/0.11/authn-bridge/configuration/#mail"&gt;&lt;code&gt;mail&lt;/code&gt; block&lt;/a&gt;
+(since v0.32.0). The password comes from &lt;code&gt;password_file&lt;/code&gt;, and from nowhere else:not the environment, not a command line, not the configuration file. The file
+must be a regular file &lt;strong&gt;owned by the service&amp;rsquo;s user, with no group and no other
+permission bits&lt;/strong&gt; (&lt;code&gt;0600&lt;/code&gt;), and one non-empty line; it is read with a single
+open. Anything else is refused at startup, so give the file to the service&amp;rsquo;s
+user and narrow its mode:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chown authn-bridge /etc/authn-bridge/smtp.password
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chmod &lt;span class="m"&gt;0600&lt;/span&gt; /etc/authn-bridge/smtp.password&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The bridge reads this one file for the SMTP password in v0.32.0; the bridge&amp;rsquo;s
+README names no other source, a systemd credential included.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-unit"&gt;The unit&lt;span class="hx:absolute hx:-mt-20" id="the-unit"&gt;&lt;/span&gt;
 &lt;a href="#the-unit" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;What it grants, in short:&lt;/p&gt;
 &lt;ul&gt;
@@ -742,8 +765,14 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;p&gt;The certificate is for the issuer&amp;rsquo;s host. &lt;code&gt;cache_dir&lt;/code&gt; holds private keys, and
 the provider refuses to start on one another user could reach or re-point.&lt;/p&gt;
-&lt;h2 data-hextra-search-id="mail-the-smtp-password-is-a-reference"&gt;&lt;code&gt;mail&lt;/code&gt;: the SMTP password is a reference&lt;span class="hx:absolute hx:-mt-20" id="mail-the-smtp-password-is-a-reference"&gt;&lt;/span&gt;
-&lt;a href="#mail-the-smtp-password-is-a-reference" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;h2 data-hextra-search-id="mail"&gt;&lt;code&gt;mail&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="mail"&gt;&lt;/span&gt;
+&lt;a href="#mail" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Since v0.32.0. A passkey can always cancel a pending removal, so a thief
+holding one key could cancel, with it, the removal the owner asked for with
+another. Only a notice through a channel that holds none of the person&amp;rsquo;s
+passkeys lets the owner see it. With a &lt;code&gt;mail&lt;/code&gt; block the bridge sends &lt;strong&gt;a
+plain-text e-mail to the account&amp;rsquo;s own address&lt;/strong&gt; when a passkey removal is
+requested or cancelled(&lt;a href="https://go-authn.github.io/docs/0.11/authn-bridge/admin/#passkey-removal-notices"&gt;what the operator sees&lt;/a&gt;).Without a &lt;code&gt;mail&lt;/code&gt; block nothing changes.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;mail&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;smtp.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; security&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34; # &amp;#34;tls&amp;#34; (port 465, the default) or &amp;#34;starttls&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="m"&gt;587&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -810,6 +839,21 @@ not use a bare &lt;code&gt;--tpm2-pcrs=7&lt;/code&gt;: a firmware or shim update
 credential unreadable and the bridge would refuse to start.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Recovery.&lt;/strong&gt; The credential is lost with the TPM2 chip or&lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt;, and a decryption failure stops the bridge
 at startup. Keep the password in a place that does not depend on this machine(an offline copy), re-seal from that copy with the command above, then&lt;code&gt;systemctl restart authn-bridge&lt;/code&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Who is told.&lt;/strong&gt; The &lt;code&gt;mail&lt;/code&gt; of the account in the local accounts file, as the
+bridge knows it, never an address taken from the request. The block needs a&lt;code&gt;local&lt;/code&gt; block: the notice is about local accounts&amp;rsquo; passkeys.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;TLS, always.&lt;/strong&gt; Implicit TLS, or STARTTLS that the server offers and
+completes (otherwise the notice is not sent: never a conversation in clear).The server certificate is verified against the system roots and the host
+name. The bridge authenticates (PLAIN, else LOGIN) only once TLS is up, never
+over cleartext, not even to 127.0.0.1; a server that advertises no usable
+mechanism after TLS is refused.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;No link.&lt;/strong&gt; The text carries no URL to follow, says so, and tells the reader
+to open their account page from their own bookmark. Header values with CR, LF
+or other line separators are refused.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Rate limit.&lt;/strong&gt; One mail per account per &lt;code&gt;window&lt;/code&gt; (default &lt;code&gt;10m&lt;/code&gt;); the events
+that arrive meanwhile are collapsed into one digest, sent when the window
+ends.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;What is refused at startup&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Each of these is the output of &lt;code&gt;authn-bridge check&lt;/code&gt; on a configuration that
 asked for it. The server refuses the same configurations: each is read from
@@ -3037,6 +3081,25 @@ the KRL, which is why both are short.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;h2 data-hextra-search-id="passkey-removal-notices"&gt;Passkey removal notices&lt;span class="hx:absolute hx:-mt-20" id="passkey-removal-notices"&gt;&lt;/span&gt;
+&lt;a href="#passkey-removal-notices" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;With a &lt;a href="https://go-authn.github.io/docs/0.11/authn-bridge/configuration/#mail"&gt;&lt;code&gt;mail&lt;/code&gt; block&lt;/a&gt; (since
+v0.32.0), a local account is told, at its own address, when a passkey removal
+is requested or cancelled, so that a thief holding one key cannot cancel the
+owner&amp;rsquo;s removal in silence. It concerns &lt;strong&gt;local accounts only&lt;/strong&gt;, and the notice
+is one mail per account per &lt;code&gt;window&lt;/code&gt; (default 10 minutes): the events that
+arrive meanwhile are collapsed into one digest. What an operator sees depends
+on the event:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;A removal request whose notice cannot be sent stays pending.&lt;/strong&gt; It is not
+carried out when its delay ends. The bridge retries (5 tries, with a growing
+pause), then logs &lt;code&gt;GAVE UP&lt;/code&gt; loudly; a restart resumes it, and so does the next
+event. The key keeps working meanwhile, as before. The record carries&lt;code&gt;notice_pending&lt;/code&gt; until a notice has been delivered.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A cancellation applies even if its mail fails.&lt;/strong&gt; The failure is logged(&lt;code&gt;mailing &amp;lt;login&amp;gt; failed&lt;/code&gt;) and shown on the account page, which says the
+notice could not be sent.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;An account with no usable address&lt;/strong&gt; is not blocked: its removal proceeds as
+without a &lt;code&gt;mail&lt;/code&gt; block, the log says &lt;code&gt;&amp;lt;login&amp;gt; has no usable mail address ... nobody is told&lt;/code&gt;, and the account page says so.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Without a &lt;code&gt;mail&lt;/code&gt; block nothing changes.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;Health and metrics&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;go-net-health/endpoint&amp;rsquo;s, as in go-fileshare, on the &lt;code&gt;metrics&lt;/code&gt; listener, which
 must not be the public one (a configuration that makes it so is refused):&lt;/p&gt;

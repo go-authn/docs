@@ -167,6 +167,29 @@ data-copied-label="Kopiert!"
 &lt;/div&gt;
 &lt;p&gt;Das Signaturzertifikat der Föderationsmetadaten stammt von der Föderation, und ebenso
 sein SHA-256-Fingerabdruck: Nehmen Sie den Fingerabdruck von der Webseite der Föderation,nie aus demselben Download wie das Zertifikat. Siehe&lt;a href="https://go-authn.github.io/docs/0.11/de/authn-bridge/federation/"&gt;die Föderationsseite&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="the-smtp-password"&gt;Das SMTP-Passwort&lt;span class="hx:absolute hx:-mt-20" id="the-smtp-password"&gt;&lt;/span&gt;
+&lt;a href="#the-smtp-password" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Nur nötig mit einem &lt;a href="https://go-authn.github.io/docs/0.11/de/authn-bridge/configuration/#mail"&gt;&lt;code&gt;mail&lt;/code&gt;-Block&lt;/a&gt;
+(seit v0.32.0). Das Passwort kommt aus &lt;code&gt;password_file&lt;/code&gt; und von nirgendwo sonst:nicht aus der Umgebung, nicht aus einer Kommandozeile, nicht aus der
+Konfigurationsdatei. Die Datei muss eine reguläre Datei sein, &lt;strong&gt;im Besitz des
+Dienstbenutzers, ohne Gruppen- und ohne Others-Berechtigungsbits&lt;/strong&gt; (&lt;code&gt;0600&lt;/code&gt;), und
+eine nicht leere Zeile enthalten; sie wird mit einem einzigen Öffnen gelesen.Alles andere wird beim Start abgelehnt, also geben Sie die Datei dem
+Dienstbenutzer und verengen Sie ihren Modus:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chown authn-bridge /etc/authn-bridge/smtp.password
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chmod &lt;span class="m"&gt;0600&lt;/span&gt; /etc/authn-bridge/smtp.password&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Die Bridge liest in v0.32.0 diese eine Datei für das SMTP-Passwort; das README
+der Bridge nennt keine andere Quelle, auch kein systemd-Credential.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="the-unit"&gt;Die Unit&lt;span class="hx:absolute hx:-mt-20" id="the-unit"&gt;&lt;/span&gt;
 &lt;a href="#the-unit" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Was sie gewährt, in Kürze:&lt;/p&gt;
 &lt;ul&gt;
@@ -738,8 +761,14 @@ data-copied-label="Kopiert!"
 &lt;/div&gt;
 &lt;p&gt;Das Zertifikat gilt für den Host des Ausstellers. &lt;code&gt;cache_dir&lt;/code&gt; enthält private Schlüssel, und
 der Anbieter verweigert den Start auf einem Verzeichnis, das ein anderer Benutzer erreichen oder umlenken könnte.&lt;/p&gt;
-&lt;h2 data-hextra-search-id="mail-the-smtp-password-is-a-reference"&gt;&lt;code&gt;mail&lt;/code&gt;: das SMTP-Passwort ist eine Referenz&lt;span class="hx:absolute hx:-mt-20" id="mail-the-smtp-password-is-a-reference"&gt;&lt;/span&gt;
-&lt;a href="#mail-the-smtp-password-is-a-reference" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;h2 data-hextra-search-id="mail"&gt;&lt;code&gt;mail&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="mail"&gt;&lt;/span&gt;
+&lt;a href="#mail" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Seit v0.32.0. Ein Passkey kann ein anstehendes Entfernen immer abbrechen, also
+könnte ein Dieb mit einem Schlüssel damit das Entfernen abbrechen, das der
+Eigentümer mit einem anderen beantragt hat. Nur eine Benachrichtigung über einen
+Kanal, der keinen der Passkeys der Person hält, lässt den Eigentümer es sehen.Mit einem &lt;code&gt;mail&lt;/code&gt;-Block sendet die Bridge &lt;strong&gt;eine Klartext-E-Mail an die eigene
+Adresse des Kontos&lt;/strong&gt;, wenn das Entfernen eines Passkeys beantragt oder
+abgebrochen wird(&lt;a href="https://go-authn.github.io/docs/0.11/de/authn-bridge/admin/#passkey-removal-notices"&gt;was der Betreiber sieht&lt;/a&gt;).Ohne &lt;code&gt;mail&lt;/code&gt;-Block ändert sich nichts.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;mail&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;smtp.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; security&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34; # &amp;#34;tls&amp;#34; (port 465, the default) or &amp;#34;starttls&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="m"&gt;587&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -813,6 +842,21 @@ verweigerte den Start.&lt;/p&gt;
 hält die Bridge beim Start an. Bewahren Sie das Passwort an einem Ort auf, der
 nicht von dieser Maschine abhängt (eine Offline-Kopie), versiegeln Sie es aus
 dieser Kopie mit dem obigen Befehl neu und führen Sie dann&lt;code&gt;systemctl restart authn-bridge&lt;/code&gt; aus.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Wer benachrichtigt wird.&lt;/strong&gt; Die &lt;code&gt;mail&lt;/code&gt; des Kontos in der lokalen Kontendatei,wie die Bridge sie kennt, nie eine Adresse aus der Anfrage. Der Block braucht
+einen &lt;code&gt;local&lt;/code&gt;-Block: Die Benachrichtigung betrifft die Passkeys lokaler Konten.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Immer TLS.&lt;/strong&gt; Implizites TLS, oder STARTTLS, das der Server anbietet und
+abschließt (sonst wird die Benachrichtigung nicht gesendet: nie ein Gespräch im
+Klartext). Das Serverzertifikat wird gegen die System-Roots und den Hostnamen
+geprüft. Die Bridge authentifiziert sich (PLAIN, sonst LOGIN) erst, wenn TLS
+steht, nie über Klartext, nicht einmal zu 127.0.0.1; ein Server, der nach TLS
+keinen brauchbaren Mechanismus anbietet, wird abgelehnt.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Kein Link.&lt;/strong&gt; Der Text enthält keine URL zum Anklicken, sagt das und fordert
+den Leser auf, seine Kontoseite über das eigene Lesezeichen zu öffnen.Header-Werte mit CR, LF oder anderen Zeilentrennern werden abgelehnt.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Ratenbegrenzung.&lt;/strong&gt; Eine Mail je Konto und &lt;code&gt;window&lt;/code&gt; (Standard &lt;code&gt;10m&lt;/code&gt;); die in
+der Zwischenzeit eintreffenden Ereignisse werden zu einer Zusammenfassung
+vereint, die am Ende des Fensters gesendet wird.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;Was beim Start abgelehnt wird&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Jedes davon ist die Ausgabe von &lt;code&gt;authn-bridge check&lt;/code&gt; für eine Konfiguration, die
 danach verlangt hat. Der Server lehnt dieselben Konfigurationen ab: Jede ergibt sich aus der
@@ -3028,6 +3072,25 @@ die KRL; deshalb sind beide kurzlebig.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;h2 data-hextra-search-id="passkey-removal-notices"&gt;Benachrichtigungen beim Entfernen von Passkeys&lt;span class="hx:absolute hx:-mt-20" id="passkey-removal-notices"&gt;&lt;/span&gt;
+&lt;a href="#passkey-removal-notices" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Mit einem &lt;a href="https://go-authn.github.io/docs/0.11/de/authn-bridge/configuration/#mail"&gt;&lt;code&gt;mail&lt;/code&gt;-Block&lt;/a&gt; (seit
+v0.32.0) wird ein lokales Konto an seiner eigenen Adresse benachrichtigt, wenn das
+Entfernen eines Passkeys beantragt oder abgebrochen wird, sodass ein Dieb mit einem
+Schlüssel das Entfernen des Eigentümers nicht unbemerkt abbrechen kann. Das betrifft&lt;strong&gt;nur lokale Konten&lt;/strong&gt;, und die Benachrichtigung ist eine Mail je Konto und &lt;code&gt;window&lt;/code&gt;
+(Standard 10 Minuten): Die in der Zwischenzeit eintreffenden Ereignisse werden zu
+einer Zusammenfassung vereint. Was ein Betreiber sieht, hängt vom Ereignis ab:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Ein Antrag auf Entfernen, dessen Benachrichtigung nicht gesendet werden kann,bleibt offen.&lt;/strong&gt; Er wird nicht ausgeführt, wenn seine Frist endet. Die Bridge
+versucht es erneut (5 Versuche, mit wachsender Pause) und protokolliert dann
+laut &lt;code&gt;GAVE UP&lt;/code&gt;; ein Neustart nimmt ihn wieder auf, ebenso das nächste Ereignis.Der Schlüssel funktioniert in der Zwischenzeit weiter, wie zuvor. Der
+Datensatz trägt &lt;code&gt;notice_pending&lt;/code&gt;, bis eine Benachrichtigung zugestellt wurde.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Ein Abbruch gilt auch, wenn seine Mail scheitert.&lt;/strong&gt; Der Fehler wird
+protokolliert (&lt;code&gt;mailing &amp;lt;login&amp;gt; failed&lt;/code&gt;) und auf der Kontoseite gezeigt, die
+sagt, die Benachrichtigung habe nicht gesendet werden können.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Ein Konto ohne brauchbare Adresse&lt;/strong&gt; wird nicht blockiert: Sein Entfernen läuft
+wie ohne &lt;code&gt;mail&lt;/code&gt;-Block, das Log sagt &lt;code&gt;&amp;lt;login&amp;gt; has no usable mail address ... nobody is told&lt;/code&gt;, und die Kontoseite sagt es ebenfalls.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Ohne &lt;code&gt;mail&lt;/code&gt;-Block ändert sich nichts.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;Health und Metriken&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Die von go-net-health/endpoint, wie in go-fileshare, auf dem &lt;code&gt;metrics&lt;/code&gt;-Listener, der
 nicht der öffentliche sein darf (eine Konfiguration, die ihn dazu macht, wird abgelehnt):&lt;/p&gt;

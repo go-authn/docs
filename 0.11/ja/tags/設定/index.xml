@@ -730,8 +730,9 @@ data-copied-label="コピーしました！"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;証明書は発行者のホスト用です。&lt;code&gt;cache_dir&lt;/code&gt; は秘密鍵を保持し、他のユーザーが到達できる、または付け替えられるディレクトリでは、プロバイダーは起動を拒否します。&lt;/p&gt;
-&lt;h2 data-hextra-search-id="mail-the-smtp-password-is-a-reference"&gt;&lt;code&gt;mail&lt;/code&gt;: SMTP パスワードは参照です&lt;span class="hx:absolute hx:-mt-20" id="mail-the-smtp-password-is-a-reference"&gt;&lt;/span&gt;
-&lt;a href="#mail-the-smtp-password-is-a-reference" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;h2 data-hextra-search-id="mail"&gt;&lt;code&gt;mail&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="mail"&gt;&lt;/span&gt;
+&lt;a href="#mail" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;v0.32.0 以降。パスキーはいつでも保留中の削除を取り消せるので、鍵を一つ手に入れた泥棒は、所有者が別の鍵で求めた削除を、その鍵で取り消せてしまいます。所有者がそれに気づけるのは、その人のどのパスキーも持たない経路を通した通知だけです。&lt;code&gt;mail&lt;/code&gt; ブロックがあると、ブリッジは、パスキーの削除が要求または取り消されたときに、&lt;strong&gt;アカウント自身のアドレスへプレーンテキストのメール&lt;/strong&gt;を送ります(&lt;a href="https://go-authn.github.io/docs/0.11/ja/authn-bridge/admin/#passkey-removal-notices"&gt;運用者に見えるもの&lt;/a&gt;)。&lt;code&gt;mail&lt;/code&gt; ブロックがなければ、何も変わりません。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;mail&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;smtp.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; security&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34; # &amp;#34;tls&amp;#34; (port 465, the default) or &amp;#34;starttls&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="m"&gt;587&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -786,6 +787,13 @@ data-copied-label="コピーしました！"
 &lt;/div&gt;
 &lt;p&gt;&lt;code&gt;--tpm2-pcrs&lt;/code&gt; を付けずに &lt;code&gt;--with-key=host+tpm2&lt;/code&gt; を使ってください。鍵は TPM2 チップとホストの鍵ファイルから導出され、ファームウェアや Secure Boot の更新後も有効です。&lt;code&gt;--tpm2-pcrs=7&lt;/code&gt; だけを使ってはいけません。ファームウェアや shim の更新でクレデンシャルが読めなくなり、bridge は起動を拒否します。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;復旧。&lt;/strong&gt; クレデンシャルは TPM2 チップまたは &lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt; とともに失われ、復号の失敗は bridge を起動時に停止させます。パスワードは、このマシンに依存しない場所(オフラインのコピー) に保管し、そのコピーから上のコマンドで再び封印してから、&lt;code&gt;systemctl restart authn-bridge&lt;/code&gt; を実行してください。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;通知される人。&lt;/strong&gt; ローカルアカウントファイルにあるアカウントの &lt;code&gt;mail&lt;/code&gt; で、ブリッジが知っているとおりのものです。リクエストから取ったアドレスは決して使いません。このブロックには &lt;code&gt;local&lt;/code&gt;
+ブロックが必要です。通知はローカルアカウントのパスキーについてのものだからです。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;常に TLS。&lt;/strong&gt; 暗黙の TLS、またはサーバーが提示して完了させる STARTTLS です (そうでなければ通知は送られません。平文のやり取りは決してしません)。サーバー証明書はシステムのルートとホスト名に対して検証されます。ブリッジが認証 (PLAIN、なければ LOGIN) するのは TLS が確立してからだけで、平文では、127.0.0.1 に対してでも決して行いません。TLS の後に使える方式を示さないサーバーは拒否されます。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;リンクなし。&lt;/strong&gt; 本文にはたどるべき URL がなく、そのことを述べ、読み手に自分のブックマークからアカウントのページを開くよう伝えます。CR、LF、そのほかの行区切りを含むヘッダーの値は拒否されます。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;レート制限。&lt;/strong&gt; アカウントごとに &lt;code&gt;window&lt;/code&gt; (既定 &lt;code&gt;10m&lt;/code&gt;) あたり 1 通です。その間に届いたイベントは一つのダイジェストにまとめられ、ウィンドウの終わりに送られます。&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;起動時に拒否されるもの&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;以下はいずれも、それを求めた設定に対する &lt;code&gt;authn-bridge check&lt;/code&gt; の出力です。サーバーも同じ設定を拒否します。それぞれ、設定とそれが指名するファイルから読み取られるものです。&lt;code&gt;check&lt;/code&gt; が追加する唯一の拒否は、フェデレーションが列挙していない &lt;code&gt;idps&lt;/code&gt; のエントリで、&lt;a href="#check-before-a-restart"&gt;前述のとおり&lt;/a&gt;です。サーバーは同じメタデータを待ち受けの前に取得しますが、&lt;code&gt;idps&lt;/code&gt; をそれに照らして検証しません。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;漏えいする発行者、リダイレクト、シークレット:&lt;/strong&gt;&lt;/p&gt;

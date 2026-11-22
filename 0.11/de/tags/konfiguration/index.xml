@@ -366,8 +366,14 @@ data-copied-label="Kopiert!"
 &lt;/div&gt;
 &lt;p&gt;Das Zertifikat gilt für den Host des Ausstellers. &lt;code&gt;cache_dir&lt;/code&gt; enthält private Schlüssel, und
 der Anbieter verweigert den Start auf einem Verzeichnis, das ein anderer Benutzer erreichen oder umlenken könnte.&lt;/p&gt;
-&lt;h2 data-hextra-search-id="mail-the-smtp-password-is-a-reference"&gt;&lt;code&gt;mail&lt;/code&gt;: das SMTP-Passwort ist eine Referenz&lt;span class="hx:absolute hx:-mt-20" id="mail-the-smtp-password-is-a-reference"&gt;&lt;/span&gt;
-&lt;a href="#mail-the-smtp-password-is-a-reference" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;h2 data-hextra-search-id="mail"&gt;&lt;code&gt;mail&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="mail"&gt;&lt;/span&gt;
+&lt;a href="#mail" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Seit v0.32.0. Ein Passkey kann ein anstehendes Entfernen immer abbrechen, also
+könnte ein Dieb mit einem Schlüssel damit das Entfernen abbrechen, das der
+Eigentümer mit einem anderen beantragt hat. Nur eine Benachrichtigung über einen
+Kanal, der keinen der Passkeys der Person hält, lässt den Eigentümer es sehen.Mit einem &lt;code&gt;mail&lt;/code&gt;-Block sendet die Bridge &lt;strong&gt;eine Klartext-E-Mail an die eigene
+Adresse des Kontos&lt;/strong&gt;, wenn das Entfernen eines Passkeys beantragt oder
+abgebrochen wird(&lt;a href="https://go-authn.github.io/docs/0.11/de/authn-bridge/admin/#passkey-removal-notices"&gt;was der Betreiber sieht&lt;/a&gt;).Ohne &lt;code&gt;mail&lt;/code&gt;-Block ändert sich nichts.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;mail&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;smtp.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; security&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34; # &amp;#34;tls&amp;#34; (port 465, the default) or &amp;#34;starttls&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="m"&gt;587&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -441,6 +447,21 @@ verweigerte den Start.&lt;/p&gt;
 hält die Bridge beim Start an. Bewahren Sie das Passwort an einem Ort auf, der
 nicht von dieser Maschine abhängt (eine Offline-Kopie), versiegeln Sie es aus
 dieser Kopie mit dem obigen Befehl neu und führen Sie dann&lt;code&gt;systemctl restart authn-bridge&lt;/code&gt; aus.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Wer benachrichtigt wird.&lt;/strong&gt; Die &lt;code&gt;mail&lt;/code&gt; des Kontos in der lokalen Kontendatei,wie die Bridge sie kennt, nie eine Adresse aus der Anfrage. Der Block braucht
+einen &lt;code&gt;local&lt;/code&gt;-Block: Die Benachrichtigung betrifft die Passkeys lokaler Konten.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Immer TLS.&lt;/strong&gt; Implizites TLS, oder STARTTLS, das der Server anbietet und
+abschließt (sonst wird die Benachrichtigung nicht gesendet: nie ein Gespräch im
+Klartext). Das Serverzertifikat wird gegen die System-Roots und den Hostnamen
+geprüft. Die Bridge authentifiziert sich (PLAIN, sonst LOGIN) erst, wenn TLS
+steht, nie über Klartext, nicht einmal zu 127.0.0.1; ein Server, der nach TLS
+keinen brauchbaren Mechanismus anbietet, wird abgelehnt.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Kein Link.&lt;/strong&gt; Der Text enthält keine URL zum Anklicken, sagt das und fordert
+den Leser auf, seine Kontoseite über das eigene Lesezeichen zu öffnen.Header-Werte mit CR, LF oder anderen Zeilentrennern werden abgelehnt.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Ratenbegrenzung.&lt;/strong&gt; Eine Mail je Konto und &lt;code&gt;window&lt;/code&gt; (Standard &lt;code&gt;10m&lt;/code&gt;); die in
+der Zwischenzeit eintreffenden Ereignisse werden zu einer Zusammenfassung
+vereint, die am Ende des Fensters gesendet wird.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;Was beim Start abgelehnt wird&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Jedes davon ist die Ausgabe von &lt;code&gt;authn-bridge check&lt;/code&gt; für eine Konfiguration, die
 danach verlangt hat. Der Server lehnt dieselben Konfigurationen ab: Jede ergibt sich aus der

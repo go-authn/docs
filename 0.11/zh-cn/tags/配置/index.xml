@@ -338,8 +338,10 @@ data-copied-label="已复制！"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;证书是为签发方的主机而设。&lt;code&gt;cache_dir&lt;/code&gt; 保存私钥，当其他用户可以访问或重新指向该目录时，提供方会拒绝启动。&lt;/p&gt;
-&lt;h2 data-hextra-search-id="mail-the-smtp-password-is-a-reference"&gt;&lt;code&gt;mail&lt;/code&gt;：SMTP 密码是一个引用&lt;span class="hx:absolute hx:-mt-20" id="mail-the-smtp-password-is-a-reference"&gt;&lt;/span&gt;
-&lt;a href="#mail-the-smtp-password-is-a-reference" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;h2 data-hextra-search-id="mail"&gt;&lt;code&gt;mail&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="mail"&gt;&lt;/span&gt;
+&lt;a href="#mail" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;自 v0.32.0 起。通行密钥总是可以取消待处理的删除请求，因此持有一把密钥的窃贼可以用它取消所有者用另一把密钥提出的删除请求。只有通过一个不持有此人任何通行密钥的渠道发出通知，所有者才能看到。有了 &lt;code&gt;mail&lt;/code&gt; 块，当通行密钥的删除被请求或被取消时，网桥会向&lt;strong&gt;账户自己的地址发送一封纯文本电子邮件&lt;/strong&gt;
+（&lt;a href="https://go-authn.github.io/docs/0.11/zh-cn/authn-bridge/admin/#passkey-removal-notices"&gt;运维人员看到什么&lt;/a&gt;）。没有 &lt;code&gt;mail&lt;/code&gt; 块时，一切照旧。&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;mail&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;smtp.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; security&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34; # &amp;#34;tls&amp;#34; (port 465, the default) or &amp;#34;starttls&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="m"&gt;587&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -395,6 +397,12 @@ data-copied-label="已复制！"
 &lt;/div&gt;
 &lt;p&gt;请使用 &lt;code&gt;--with-key=host+tpm2&lt;/code&gt;，不要带 &lt;code&gt;--tpm2-pcrs&lt;/code&gt;：密钥由 TPM2芯片和主机密钥文件派生，在固件和 Secure Boot 更新后依然有效。不要单独使用 &lt;code&gt;--tpm2-pcrs=7&lt;/code&gt;：固件或 shim 更新会使凭据无法读取，网桥将拒绝启动。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;恢复。&lt;/strong&gt; 一旦丢失 TPM2 芯片或&lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt;，凭据也随之丢失，解密失败会使网桥在启动时停止。请把密码保存在不依赖这台机器的地方（离线副本），用上面的命令从该副本重新封存，然后&lt;code&gt;systemctl restart authn-bridge&lt;/code&gt;。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;通知谁。&lt;/strong&gt; 本地账户文件中该账户的 &lt;code&gt;mail&lt;/code&gt;，以网桥所知为准，绝不使用取自请求的地址。该块需要 &lt;code&gt;local&lt;/code&gt; 块：通知针对的是本地账户的通行密钥。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;始终使用 TLS。&lt;/strong&gt; 隐式 TLS，或服务器提供并完成的 STARTTLS（否则不发送通知：绝不进行明文会话）。服务器证书按系统根证书和主机名验证。网桥只在 TLS 建立之后才进行认证（PLAIN，否则 LOGIN），绝不通过明文，即使对 127.0.0.1 也是如此；在 TLS 之后不宣告任何可用机制的服务器会被拒绝。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;没有链接。&lt;/strong&gt; 正文不含可点击的 URL，并说明这一点，同时告诉读者从自己的书签打开账户页面。含有 CR、LF 或其他行分隔符的标头值会被拒绝。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;频率限制。&lt;/strong&gt; 每个账户在每个 &lt;code&gt;window&lt;/code&gt;（默认 &lt;code&gt;10m&lt;/code&gt;）内最多一封邮件；其间到达的事件合并为一份摘要，在窗口结束时发送。&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;启动时拒绝什么&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;以下每一项都是 &lt;code&gt;authn-bridge check&lt;/code&gt; 对提出该请求的配置所输出的内容。服务器拒绝同样的配置：每一项都是从配置及其所指名的文件中读出的。&lt;code&gt;check&lt;/code&gt; 额外增加的唯一一项拒绝是联邦没有列出的 &lt;code&gt;idps&lt;/code&gt; 条目，见&lt;a href="#check-before-a-restart"&gt;上文&lt;/a&gt;：服务器在监听之前会获取同样的元数据，但不会用它来约束 &lt;code&gt;idps&lt;/code&gt;。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;会泄露的签发方、重定向和密钥：&lt;/strong&gt;&lt;/p&gt;

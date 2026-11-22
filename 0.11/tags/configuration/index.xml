@@ -363,8 +363,14 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;p&gt;The certificate is for the issuer&amp;rsquo;s host. &lt;code&gt;cache_dir&lt;/code&gt; holds private keys, and
 the provider refuses to start on one another user could reach or re-point.&lt;/p&gt;
-&lt;h2 data-hextra-search-id="mail-the-smtp-password-is-a-reference"&gt;&lt;code&gt;mail&lt;/code&gt;: the SMTP password is a reference&lt;span class="hx:absolute hx:-mt-20" id="mail-the-smtp-password-is-a-reference"&gt;&lt;/span&gt;
-&lt;a href="#mail-the-smtp-password-is-a-reference" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;h2 data-hextra-search-id="mail"&gt;&lt;code&gt;mail&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="mail"&gt;&lt;/span&gt;
+&lt;a href="#mail" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Since v0.32.0. A passkey can always cancel a pending removal, so a thief
+holding one key could cancel, with it, the removal the owner asked for with
+another. Only a notice through a channel that holds none of the person&amp;rsquo;s
+passkeys lets the owner see it. With a &lt;code&gt;mail&lt;/code&gt; block the bridge sends &lt;strong&gt;a
+plain-text e-mail to the account&amp;rsquo;s own address&lt;/strong&gt; when a passkey removal is
+requested or cancelled(&lt;a href="https://go-authn.github.io/docs/0.11/authn-bridge/admin/#passkey-removal-notices"&gt;what the operator sees&lt;/a&gt;).Without a &lt;code&gt;mail&lt;/code&gt; block nothing changes.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;mail&lt;/span&gt; {
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; host&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;smtp.example.org&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; security&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;tls&amp;#34; # &amp;#34;tls&amp;#34; (port 465, the default) or &amp;#34;starttls&amp;#34;&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="m"&gt;587&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -431,6 +437,21 @@ not use a bare &lt;code&gt;--tpm2-pcrs=7&lt;/code&gt;: a firmware or shim update
 credential unreadable and the bridge would refuse to start.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Recovery.&lt;/strong&gt; The credential is lost with the TPM2 chip or&lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt;, and a decryption failure stops the bridge
 at startup. Keep the password in a place that does not depend on this machine(an offline copy), re-seal from that copy with the command above, then&lt;code&gt;systemctl restart authn-bridge&lt;/code&gt;.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Who is told.&lt;/strong&gt; The &lt;code&gt;mail&lt;/code&gt; of the account in the local accounts file, as the
+bridge knows it, never an address taken from the request. The block needs a&lt;code&gt;local&lt;/code&gt; block: the notice is about local accounts&amp;rsquo; passkeys.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;TLS, always.&lt;/strong&gt; Implicit TLS, or STARTTLS that the server offers and
+completes (otherwise the notice is not sent: never a conversation in clear).The server certificate is verified against the system roots and the host
+name. The bridge authenticates (PLAIN, else LOGIN) only once TLS is up, never
+over cleartext, not even to 127.0.0.1; a server that advertises no usable
+mechanism after TLS is refused.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;No link.&lt;/strong&gt; The text carries no URL to follow, says so, and tells the reader
+to open their account page from their own bookmark. Header values with CR, LF
+or other line separators are refused.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Rate limit.&lt;/strong&gt; One mail per account per &lt;code&gt;window&lt;/code&gt; (default &lt;code&gt;10m&lt;/code&gt;); the events
+that arrive meanwhile are collapsed into one digest, sent when the window
+ends.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-is-refused-at-startup"&gt;What is refused at startup&lt;span class="hx:absolute hx:-mt-20" id="what-is-refused-at-startup"&gt;&lt;/span&gt;
 &lt;a href="#what-is-refused-at-startup" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Each of these is the output of &lt;code&gt;authn-bridge check&lt;/code&gt; on a configuration that
 asked for it. The server refuses the same configurations: each is read from
