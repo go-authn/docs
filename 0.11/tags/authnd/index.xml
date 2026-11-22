@@ -1107,24 +1107,16 @@ members of both.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
-&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Two names that differ only by case are refused&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;A uid is compared ignoring case (RFC 4519 §2.39), and so is every DN, so&lt;code&gt;Dora&lt;/code&gt; in the file and &lt;code&gt;dora&lt;/code&gt; in a database are one name to LDAP and two
-people to anything that compares bytes — a password change by one would land
-on the other. Such a configuration does not start:&lt;/p&gt;
-&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/case.hcl
-authnd: &amp;#34;Dora&amp;#34; (from the configuration file) and &amp;#34;dora&amp;#34; (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
-&lt;button
-class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
-title="Copy code"
-aria-label="Copy code"
-data-copied-label="Copied!"
-&gt;
-&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
-&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
-&lt;/button&gt;
-&lt;/div&gt;
-&lt;/div&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Two names that differ only by case are one person; the later one is left out&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;A uid is compared ignoring case (RFC 4519 §2.39), and so is every DN, so&lt;code&gt;Dora&lt;/code&gt; in the file and &lt;code&gt;dora&lt;/code&gt; in a database are one name to LDAP. Since authnd
+v0.19.0, with go-authn/directory v0.26.0, they are one person here too: names
+are compared by the LDAP equality rule of uid (&lt;code&gt;caseIgnoreMatch&lt;/code&gt;), so names that
+differ only by case or insignificant space are the same name. The first source
+that knows the person owns it, the later spelling is left out, and the person
+keeps the owning source&amp;rsquo;s spelling. authnd &lt;strong&gt;starts&lt;/strong&gt; with such a configuration(before v0.19.0 it refused to) and &lt;strong&gt;logs it&lt;/strong&gt;: at startup, and on a refresh when the
+list changes, &lt;code&gt;directory: names shadowed by a spelling an earlier source owns&lt;/code&gt;
+names each shadowed spelling, its source and the owner. A name with no equivalence
+key (not UTF-8, empty or all spaces) makes startup and refresh fail.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -3543,8 +3535,8 @@ data-copied-label="Copied!"
 &lt;p&gt;The person is matched &lt;strong&gt;by identity, not by DN&lt;/strong&gt;: the session&amp;rsquo;s own name must
 be exactly the target&amp;rsquo;s, byte for byte, so a session bound as &lt;code&gt;uid=Backup&lt;/code&gt;
 cannot change &lt;code&gt;backup&lt;/code&gt;&amp;rsquo;s password even though the two DNs compare equal. That
-and the &lt;a href="https://go-authn.github.io/docs/0.11/authnd/people/#order-and-the-one-exception"&gt;refusal of names that differ only by case&lt;/a&gt;
-are two controls that do not depend on each other.&lt;/p&gt;
+and the &lt;a href="https://go-authn.github.io/docs/0.11/authnd/people/#order-and-the-one-exception"&gt;treatment of names that differ only by case&lt;/a&gt;
+(one person, the first source owns it) are two controls that do not depend on each other.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="where-the-new-password-is-written"&gt;Where the new password is written&lt;span class="hx:absolute hx:-mt-20" id="where-the-new-password-is-written"&gt;&lt;/span&gt;
 &lt;a href="#where-the-new-password-is-written" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Back into &lt;strong&gt;the file that declares the person&lt;/strong&gt;, and nowhere else:&lt;/p&gt;
 &lt;ul&gt;

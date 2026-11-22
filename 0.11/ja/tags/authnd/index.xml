@@ -986,22 +986,8 @@ data-copied-label="コピーしました！"
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
-&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;大文字小文字だけが異なる二つの名前は拒否される&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;uid は大文字小文字を無視して比較され (RFC 4519 §2.39)、すべての DN も同様です。そのためファイルの &lt;code&gt;Dora&lt;/code&gt; とデータベースの &lt;code&gt;dora&lt;/code&gt; は、LDAP にとっては一つの名前で、バイトを比較するものにとっては二人の人です。一方によるパスワード変更が他方に及んでしまいます。そのような設定は起動しません。&lt;/p&gt;
-&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/case.hcl
-authnd: &amp;#34;Dora&amp;#34; (from the configuration file) and &amp;#34;dora&amp;#34; (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
-&lt;button
-class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
-title="コードをコピー"
-aria-label="コードをコピー"
-data-copied-label="コピーしました！"
-&gt;
-&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
-&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
-&lt;/button&gt;
-&lt;/div&gt;
-&lt;/div&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;大文字小文字だけが異なる二つの名前は一人の人で、後のものは除外される&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;uid は大文字小文字を無視して比較され (RFC 4519 §2.39)、すべての DN も同様です。そのためファイルの &lt;code&gt;Dora&lt;/code&gt; とデータベースの &lt;code&gt;dora&lt;/code&gt; は、LDAP にとっては一つの名前です。authnd v0.19.0以降、go-authn/directory v0.26.0 とともに、ここでも一人の人です。名前は uid の LDAP 等価規則(&lt;code&gt;caseIgnoreMatch&lt;/code&gt;) で比較されるので、大文字小文字、または意味のない空白だけが異なる名前は同じ名前です。その人を最初に知るソースがそれを所有し、後の綴りは除外され、人は所有するソースの綴りを保ちます。authnd はそのような設定でも&lt;strong&gt;起動し&lt;/strong&gt; (v0.19.0 より前は拒否していました)、それを&lt;strong&gt;ログに記録します&lt;/strong&gt;: 起動時と、リストが変わったときの更新時に、&lt;code&gt;directory: names shadowed by a spelling an earlier source owns&lt;/code&gt; が、覆い隠された各綴り、そのソース、所有者を示します。等価キーのない名前 (UTF-8 でない、空、または空白のみ) は、起動と更新を失敗させます。&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -3153,7 +3139,8 @@ data-copied-label="コピーしました！"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;人は&lt;strong&gt;DN ではなく ID で&lt;/strong&gt;照合されます。セッション自身の名前が対象の名前とバイト単位で完全に一致しなければならないので、&lt;code&gt;uid=Backup&lt;/code&gt; としてバインドしたセッションは、二つの DN が等しいと比較されても &lt;code&gt;backup&lt;/code&gt; のパスワードを変更できません。これと、&lt;a href="https://go-authn.github.io/docs/0.11/ja/authnd/people/#order-and-the-one-exception"&gt;大文字小文字だけが異なる名前の拒否&lt;/a&gt;は、互いに依存しない二つの統制です。&lt;/p&gt;
+&lt;p&gt;人は&lt;strong&gt;DN ではなく ID で&lt;/strong&gt;照合されます。セッション自身の名前が対象の名前とバイト単位で完全に一致しなければならないので、&lt;code&gt;uid=Backup&lt;/code&gt; としてバインドしたセッションは、二つの DN が等しいと比較されても &lt;code&gt;backup&lt;/code&gt; のパスワードを変更できません。これと、&lt;a href="https://go-authn.github.io/docs/0.11/ja/authnd/people/#order-and-the-one-exception"&gt;大文字小文字だけが異なる名前の扱い&lt;/a&gt;
+(一人の人で、最初のソースがそれを所有する) は、互いに依存しない二つの統制です。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="where-the-new-password-is-written"&gt;新しいパスワードの書き込み先&lt;span class="hx:absolute hx:-mt-20" id="where-the-new-password-is-written"&gt;&lt;/span&gt;
 &lt;a href="#where-the-new-password-is-written" class="subheading-anchor" aria-label="このセクションへのパーマリンク"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;その人を宣言しているファイル&lt;/strong&gt;に書き戻され、他のどこにも書かれません。&lt;/p&gt;
 &lt;ul&gt;

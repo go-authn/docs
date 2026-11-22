@@ -1119,24 +1119,15 @@ membres des deux.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
-&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Deux noms qui ne diffèrent que par la casse sont refusés&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Un uid est comparé sans tenir compte de la casse (RFC 4519 §2.39), et tout DN aussi, si bien que&lt;code&gt;Dora&lt;/code&gt; dans le fichier et &lt;code&gt;dora&lt;/code&gt; dans une base de données sont un seul nom pour LDAP et deux
-personnes pour tout ce qui compare des octets — un changement de mot de passe par l&amp;rsquo;une atterrirait
-sur l&amp;rsquo;autre. Une telle configuration ne démarre pas :&lt;/p&gt;
-&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/case.hcl
-authnd: &amp;#34;Dora&amp;#34; (from the configuration file) and &amp;#34;dora&amp;#34; (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
-&lt;button
-class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
-title="Copier le code"
-aria-label="Copier le code"
-data-copied-label="Copié !"
-&gt;
-&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
-&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
-&lt;/button&gt;
-&lt;/div&gt;
-&lt;/div&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Deux noms qui ne diffèrent que par la casse sont une seule personne ; le second est écarté&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Un uid est comparé sans tenir compte de la casse (RFC 4519 §2.39), et tout DN aussi, si bien que&lt;code&gt;Dora&lt;/code&gt; dans le fichier et &lt;code&gt;dora&lt;/code&gt; dans une base de données sont un seul nom pour LDAP. Depuis authnd
+v0.19.0, avec go-authn/directory v0.26.0, ils sont aussi une seule personne ici : les noms
+se comparent par la règle d&amp;rsquo;égalité LDAP de uid (&lt;code&gt;caseIgnoreMatch&lt;/code&gt;), si bien que des noms qui
+ne diffèrent que par la casse ou une espace non significative sont le même nom. La première source
+qui connaît la personne la possède, la graphie ultérieure est écartée, et la personne
+garde la graphie de la source propriétaire. authnd &lt;strong&gt;démarre&lt;/strong&gt; avec une telle configuration(avant la v0.19.0 il refusait) et &lt;strong&gt;le journalise&lt;/strong&gt; : au démarrage, et à un rafraîchissement quand la
+liste change, &lt;code&gt;directory: names shadowed by a spelling an earlier source owns&lt;/code&gt;
+nomme chaque graphie masquée, sa source et le propriétaire. Un nom sans clé d&amp;rsquo;équivalence(pas en UTF-8, vide ou fait d&amp;rsquo;espaces) fait échouer le démarrage et le rafraîchissement.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -3584,8 +3575,8 @@ data-copied-label="Copié !"
 &lt;p&gt;La personne est reconnue &lt;strong&gt;par identité, non par DN&lt;/strong&gt; : le nom propre de la session doit
 être exactement celui de la cible, octet pour octet, si bien qu&amp;rsquo;une session liée comme &lt;code&gt;uid=Backup&lt;/code&gt;
 ne peut pas changer le mot de passe de &lt;code&gt;backup&lt;/code&gt; même si les deux DN sont égaux à la comparaison. Cela
-et le &lt;a href="https://go-authn.github.io/docs/0.11/fr/authnd/people/#order-and-the-one-exception"&gt;refus des noms qui ne diffèrent que par la casse&lt;/a&gt;
-sont deux contrôles qui ne dépendent pas l&amp;rsquo;un de l&amp;rsquo;autre.&lt;/p&gt;
+et le &lt;a href="https://go-authn.github.io/docs/0.11/fr/authnd/people/#order-and-the-one-exception"&gt;traitement des noms qui ne diffèrent que par la casse&lt;/a&gt;
+(une seule personne, la première source la possède) sont deux contrôles qui ne dépendent pas l&amp;rsquo;un de l&amp;rsquo;autre.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="where-the-new-password-is-written"&gt;Où le nouveau mot de passe est écrit&lt;span class="hx:absolute hx:-mt-20" id="where-the-new-password-is-written"&gt;&lt;/span&gt;
 &lt;a href="#where-the-new-password-is-written" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Dans &lt;strong&gt;le fichier qui déclare la personne&lt;/strong&gt;, et nulle part ailleurs :&lt;/p&gt;
 &lt;ul&gt;

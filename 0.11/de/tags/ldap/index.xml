@@ -724,23 +724,14 @@ Datenbank nennt, hat die Mitglieder beider.&lt;/p&gt;
 &lt;div class="hx:overflow-x-auto hx:mt-6 hx:flex hx:rounded-lg hx:border hx:py-2 hx:ltr:pr-4 hx:rtl:pl-4 hx:contrast-more:border-current hx:contrast-more:dark:border-current hx:border-amber-200 hx:bg-amber-100 hx:text-amber-900 hx:dark:border-amber-200/30 hx:dark:bg-amber-900/30 hx:dark:text-amber-200"&gt;
 &lt;div class="hx:ltr:pl-3 hx:ltr:pr-2 hx:rtl:pr-3 hx:rtl:pl-2"&gt;&lt;svg height=1.2em class="hx:inline-block hx:align-middle" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"&gt;&lt;path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/&gt;&lt;/svg&gt;&lt;/div&gt;
 &lt;div class="hx:w-full hx:min-w-0 hx:leading-7"&gt;
-&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Zwei Namen, die sich nur in der Groß-/Kleinschreibung unterscheiden, werden abgelehnt&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Eine uid wird ohne Beachtung der Groß-/Kleinschreibung verglichen (RFC 4519 §2.39), ebenso jeder DN;&lt;code&gt;Dora&lt;/code&gt; in der Datei und &lt;code&gt;dora&lt;/code&gt; in einer Datenbank sind daher für LDAP ein Name und für alles,was Bytes vergleicht, zwei Personen – eine Passwortänderung der einen würde bei der
-anderen landen. Eine solche Konfiguration startet nicht:&lt;/p&gt;
-&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check cases/case.hcl
-authnd: &amp;#34;Dora&amp;#34; (from the configuration file) and &amp;#34;dora&amp;#34; (from a sqlite database) differ only by case, and an LDAP name does not tell them apart: a uid is compared ignoring case. Rename one of them&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
-&lt;button
-class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
-title="Code kopieren"
-aria-label="Code kopieren"
-data-copied-label="Kopiert!"
-&gt;
-&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
-&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
-&lt;/button&gt;
-&lt;/div&gt;
-&lt;/div&gt;
+&lt;div class="hx:mt-6 hx:leading-7 hx:first:mt-0"&gt;&lt;p&gt;&lt;strong&gt;Zwei Namen, die sich nur in der Groß-/Kleinschreibung unterscheiden, sind eine Person; der spätere wird ausgelassen&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Eine uid wird ohne Beachtung der Groß-/Kleinschreibung verglichen (RFC 4519 §2.39), ebenso jeder DN;&lt;code&gt;Dora&lt;/code&gt; in der Datei und &lt;code&gt;dora&lt;/code&gt; in einer Datenbank sind daher für LDAP ein Name. Seit authnd
+v0.19.0, mit go-authn/directory v0.26.0, sind sie auch hier eine Person: Namen werden
+mit der LDAP-Gleichheitsregel der uid (&lt;code&gt;caseIgnoreMatch&lt;/code&gt;) verglichen, sodass Namen, die
+sich nur durch Groß-/Kleinschreibung oder unwesentliche Leerzeichen unterscheiden, derselbe
+Name sind. Die erste Quelle, die die Person kennt, besitzt sie, die spätere Schreibweise
+wird ausgelassen, und die Person behält die Schreibweise der besitzenden Quelle. authnd&lt;strong&gt;startet&lt;/strong&gt; mit einer solchen Konfiguration (vor v0.19.0 lehnte es das ab) und&lt;strong&gt;protokolliert es&lt;/strong&gt;: Beim Start und bei einem Refresh, wenn sich die Liste ändert, nennt&lt;code&gt;directory: names shadowed by a spelling an earlier source owns&lt;/code&gt; jede überdeckte
+Schreibweise, ihre Quelle und den Besitzer. Ein Name ohne Äquivalenzschlüssel (kein UTF-8,leer oder nur Leerzeichen) lässt Start und Refresh fehlschlagen.&lt;/p&gt;
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;/div&gt;
@@ -2378,7 +2369,7 @@ MUST von &lt;code&gt;supannPerson&lt;/code&gt; oder &lt;code&gt;eduPerson&lt;/co
 Speicher, einer SQL-Datenbank, einem LDAP-Server oder &lt;code&gt;user&lt;/code&gt;- und &lt;code&gt;group&lt;/code&gt;-Blöcken in einer
 Konfigurationsdatei – und worauf es ankommt, ist die zweite Hälfte der Frage.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/directory@v0.24.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/directory@v0.26.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Code kopieren"
@@ -2390,14 +2381,28 @@ data-copied-label="Kopiert!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
+&lt;p&gt;Seit v0.26.0 &lt;strong&gt;vergleicht ein &lt;code&gt;Set&lt;/code&gt; Namen überall mit einer Äquivalenzrelation&lt;/strong&gt;: der
+LDAP-Gleichheitsregel der uid (&lt;code&gt;caseIgnoreMatch&lt;/code&gt;, Aufbereitung nach RFC 4518), bei der
+Duplikatprüfung innerhalb einer Quelle (&lt;code&gt;ErrAmbiguous&lt;/code&gt;, siehe unten), über Quellen
+hinweg, in &lt;code&gt;Members&lt;/code&gt; und in &lt;code&gt;Expand&lt;/code&gt;. Zwei Namen, die sich nur durch
+Groß-/Kleinschreibung oder unwesentliche Leerzeichen unterscheiden, sind dieselbe
+Person: Die erste Quelle, die den Namen kennt, besitzt ihn, eine spätere Schreibweise
+wird überdeckt und ausgelassen (kein Fehler), und die Identität behält die Schreibweise
+der besitzenden Quelle. &lt;code&gt;Set.Shadowed()&lt;/code&gt; listet nach &lt;code&gt;Identities&lt;/code&gt; jede spätere
+Schreibweise auf, die die Person einer früheren Quelle überdeckt hat(&lt;code&gt;Shadow{Name, Source, Owner, By}&lt;/code&gt;); dieselbe Schreibweise in zwei Quellen ist die
+dokumentierte Überschreibung und wird nicht aufgeführt. Ein Name ohne Schlüssel (kein
+UTF-8, leer oder nur Leerzeichen) wird mit &lt;code&gt;ErrBadName&lt;/code&gt; abgelehnt. &lt;strong&gt;Upgrade:&lt;/strong&gt; Ein
+Server, dessen Quellen zwei Personen mit Namen halten, die sich nur durch
+Groß-/Kleinschreibung oder unwesentliche Leerzeichen unterscheiden, verliert jetzt die
+spätere; lesen Sie &lt;code&gt;Shadowed&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Seit v0.24.0, das go-authn/ldap v0.14.0 braucht, hält &lt;code&gt;ldapdir&lt;/code&gt; zwei uids, die&lt;code&gt;caseIgnoreMatch&lt;/code&gt; gleichsetzt, für einen Namen: &amp;ldquo;alice&amp;rdquo; und &amp;ldquo;alice &amp;quot; (Leerzeichen am
 Ende), &amp;ldquo;al ice&amp;rdquo; und &amp;ldquo;al ice&amp;rdquo;, ein Vollbreiten-&amp;ldquo;ａlice&amp;rdquo;, &amp;ldquo;ſam&amp;rdquo; und &amp;ldquo;sam&amp;rdquo; oder ein Name
 mit einem weichen Trennstrich sind &lt;code&gt;ErrAmbiguous&lt;/code&gt;, wo sie zwei Personen waren. Der
 Schlüssel ist der Gleichheitsschlüssel des Attributs aus dem Standardschema(&lt;code&gt;schema.Schema.EqualityKey&lt;/code&gt;, Aufbereitung nach RFC 4518); ein &lt;code&gt;UserAttribute&lt;/code&gt;, das
 das Standardschema nicht kennt, behält die Kleinschreibung. &lt;strong&gt;Upgrade:&lt;/strong&gt; Ein
 Verzeichnis mit solchen Paaren lässt sich jetzt nicht mehr laden, bis ein Eintrag
-korrigiert ist. &lt;code&gt;Set.Identities&lt;/code&gt; vergleicht Namen weiterhin byteweise, und über
-Quellen hinweg gehört ein Name der ersten Quelle, die ihn kennt. &lt;code&gt;ldapdir&lt;/code&gt; prüft
+korrigiert ist. (Zwischen v0.24.0 und v0.26.0 verglich &lt;code&gt;Set.Identities&lt;/code&gt; Namen über
+Quellen hinweg noch byteweise; v0.26.0 ändert das, siehe oben.) &lt;code&gt;ldapdir&lt;/code&gt; prüft
 außerdem das Zertifikat gegen den Host der URL (&lt;code&gt;tls.Config.ServerName&lt;/code&gt;, kopiert und
 nicht verändert; ein ausdrücklich gesetzter ServerName gewinnt weiterhin), was mit
 go-authn/ldap v0.14.0 auch StartTLS behebt.&lt;/p&gt;
@@ -2492,7 +2497,9 @@ Methode:&lt;/p&gt;
 &lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
-&lt;p&gt;In einem &lt;code&gt;Set&lt;/code&gt; gehört ein Name der &lt;strong&gt;ersten&lt;/strong&gt; Quelle, die ihn kennt; ein lokal
+&lt;p&gt;In einem &lt;code&gt;Set&lt;/code&gt; gehört ein Name der &lt;strong&gt;ersten&lt;/strong&gt; Quelle, die ihn kennt (Namen, die sich
+nur durch Groß-/Kleinschreibung oder unwesentliche Leerzeichen unterscheiden, gelten
+als ein Name, und eine spätere Schreibweise führt &lt;code&gt;Set.Shadowed()&lt;/code&gt; auf); ein lokal
 eingetragenes Dienstkonto muss also nicht ins LDAP. Die Gruppenmitgliedschaft ist die&lt;strong&gt;Vereinigung&lt;/strong&gt; aller Quellen. Quellen werden gelesen, wenn ein Server startet; eine Passwortprüfung
 kann jedes Mal die Quelle erreichen, denn ein Bind lässt sich nicht zwischenspeichern,ohne das Geheimnis zu halten. Eine Quelle, die &lt;code&gt;GroupReader&lt;/code&gt; implementiert (sqldir und
 ldapdir tun das), liest alle Gruppen einmal im Block; &lt;code&gt;Set.Frozen()&lt;/code&gt; beantwortet dann&lt;code&gt;Members&lt;/code&gt;, &lt;code&gt;GroupAttributes&lt;/code&gt;, &lt;code&gt;GroupObjectClasses&lt;/code&gt; und &lt;code&gt;GroupNames&lt;/code&gt; aus dem Speicher,mit der eigenen Zusammenführung des Sets. Schließen Sie das ursprüngliche Set, nicht das eingefrorene.&lt;/p&gt;
@@ -2949,8 +2956,8 @@ ohne Beachtung der Groß-/Kleinschreibung (&lt;code&gt;caseIgnoreMatch&lt;/code&
 nennt beide DNs, und &lt;code&gt;Set.Identities&lt;/code&gt; lehnt einen Namen ab, den EINE Quelle
 zweimal liefert. Zuvor gab &lt;code&gt;Identities&lt;/code&gt; beide zurück und &lt;code&gt;Set.Identities&lt;/code&gt;
 behielt den zuerst genannten, sodass eine Person die Gruppen, Schlüssel und
-Passwortprüfung der anderen bekam. Über Quellen hinweg ändert sich nichts: Die
-erste Quelle, die einen Namen kennt, besitzt ihn. Ein Verzeichnis mit solchen
+Passwortprüfung der anderen bekam. Über Quellen hinweg besitzt die erste Quelle,die einen Namen kennt, ihn (ab v0.26.0 wird eine spätere Schreibweise, die sich nur
+durch Groß-/Kleinschreibung oder unwesentliche Leerzeichen unterscheidet, überdeckt,siehe &lt;code&gt;Set.Shadowed()&lt;/code&gt; oben). Ein Verzeichnis mit solchen
 Dubletten lädt nicht, bis ein Eintrag entfernt oder seine uid korrigiert ist(&lt;code&gt;ldapsearch -b &amp;lt;base&amp;gt; '(uid=*)' uid dn&lt;/code&gt; findet wiederholte Werte).&lt;code&gt;ldaptest.Person.UID&lt;/code&gt; ist die veröffentlichte uid, wenn sie nicht der
 Map-Schlüssel ist, damit ein Test zwei Einträge mit einer uid bauen kann.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Anmeldedaten in einer LDAP-URL&lt;/strong&gt; – eine URL wird ausgegeben; &lt;code&gt;BindDN&lt;/code&gt; und&lt;code&gt;BindPassword&lt;/code&gt; sind Felder.&lt;/li&gt;
