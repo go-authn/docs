@@ -103,6 +103,24 @@ v0.6.1부터 연결 파일(macOS 키체인도 Secret Service도 없을 때 쓰�
 `fido --pin-from`([fido]({{< relref "/libraries/fido.md" >}}) 참고)과
 `theca --pin-from`, `--password-from`, `--recovery-from`이 사용합니다.
 
+## 명령줄 플래그에서 비밀 받기: `secretsource/secretflag` {#secretflag}
+
+플래그 값으로 넘긴 비밀은 `ps`에 보입니다. `secretflag` 패키지는 명령에
+`--<name>`(더 이상 권장되지 않으며 stderr에 경고)과 `--<name>-from <ref>`
+한 쌍을 상호 배타적으로 제공하고, 참조는 `secretsource.Open`이 해석합니다:
+
+```go
+var password string
+b := secretflag.Add(cmd, "password", &password, "the admin password") // cobra
+// or: secretflag.AddStd(fs, os.Stderr, "password", &password, "the admin password", "p")
+// ... after parsing:
+if err := secretflag.Resolve(ctx, b); err != nil { return err }
+```
+
+`Add`는 cobra 명령에, `AddStd`는 표준 라이브러리의 `flag.FlagSet`에(`-t` 같은
+별칭 포함) 이 쌍을 등록하고, `Resolve`가 참조를 읽습니다. v0.10.0부터
+제공됩니다.
+
 ## 비밀 저장하기: `secretsource store` {#store}
 
 항목을 손으로 만들 필요가 없습니다. `secretsource store REF [--group G]
