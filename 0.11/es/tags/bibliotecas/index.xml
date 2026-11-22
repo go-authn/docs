@@ -579,7 +579,7 @@ verificada contra la clave pública que entregó; esa ejecución no forma parte 
 referencia no contiene ningún secreto, así que puede estar en una opción, un
 script o el historial del shell.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/secretsource@v0.7.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/secretsource@v0.8.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copiar código"
@@ -635,6 +635,10 @@ data-copied-label="¡Copiado!"
 &lt;td&gt;&lt;code&gt;keepassxc:URL&lt;/code&gt;&lt;/td&gt;
 &lt;td&gt;la entrada de KeePassXC cuyo &lt;strong&gt;campo URL&lt;/strong&gt; es esa URL (&lt;code&gt;https://NOMBRE.invalid/...&lt;/code&gt; es una buena elección, que nunca se resuelve); dos entradas con la misma URL se rechazan por ambiguas&lt;/td&gt;
 &lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;code&gt;systemd-creds:NAME&lt;/code&gt;&lt;/td&gt;
+&lt;td&gt;(Linux, desde v0.8.0) una credencial de systemd, devuelta byte a byte: no se elimina el salto de línea final, a diferencia de &lt;code&gt;file:&lt;/code&gt;. Primero el archivo &lt;code&gt;NAME&lt;/code&gt; en &lt;code&gt;$CREDENTIALS_DIRECTORY&lt;/code&gt; (colocado por &lt;code&gt;LoadCredential=&lt;/code&gt;, &lt;code&gt;LoadCredentialEncrypted=&lt;/code&gt;, &lt;code&gt;SetCredentialEncrypted=&lt;/code&gt;); si no, &lt;code&gt;NAME&lt;/code&gt; o &lt;code&gt;NAME.cred&lt;/code&gt; en &lt;code&gt;credstore.encrypted&lt;/code&gt; de &lt;code&gt;/etc&lt;/code&gt;, &lt;code&gt;/run&lt;/code&gt;, &lt;code&gt;/usr/lib&lt;/code&gt;, descifrado con &lt;code&gt;systemd-creds decrypt&lt;/code&gt;. Se rechaza con &lt;code&gt;ErrUnavailable&lt;/code&gt; en otros sistemas&lt;/td&gt;
+&lt;/tr&gt;
 &lt;/tbody&gt;
 &lt;/table&gt;
 &lt;p&gt;&lt;code&gt;keepassxc:by-uuid/...&lt;/code&gt; y &lt;code&gt;keepassxc:by-path/...&lt;/code&gt; se &lt;strong&gt;rechazan&lt;/strong&gt;: KeePassXC
@@ -644,6 +648,31 @@ proceso. Una referencia sin esquema se rechaza, no se adivina como ruta (&lt;cod
 es la forma de escribir una ruta). Un secreto de más de 4096 bytes, o vacío
 desde un gestor o un &lt;code&gt;file:&lt;/code&gt;, se rechaza (&lt;code&gt;ErrEmpty&lt;/code&gt;), y una llamada termina con su contexto (2 minutos
 sin plazo) aunque el gestor esté esperando que lo desbloquee.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="systemd-creds"&gt;Credenciales de systemd&lt;span class="hx:absolute hx:-mt-20" id="systemd-creds"&gt;&lt;/span&gt;
+&lt;a href="#systemd-creds" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Gramática, exactamente: &lt;code&gt;systemd-creds:NAME&lt;/code&gt;, el esquema en minúsculas, dos
+puntos y el nombre de la credencial tal como se dio a &lt;code&gt;LoadCredential=&lt;/code&gt;,&lt;code&gt;LoadCredentialEncrypted=&lt;/code&gt; o &lt;code&gt;systemd-creds encrypt --name=&lt;/code&gt;, por ejemplo&lt;code&gt;systemd-creds:smtp&lt;/code&gt;. &lt;code&gt;NAME&lt;/code&gt; es un nombre de archivo simple de 1 a 255 bytes: sin&lt;code&gt;/&lt;/code&gt; (por tanto, no es una ruta), ni &lt;code&gt;.&lt;/code&gt; ni &lt;code&gt;..&lt;/code&gt;, sin caracteres de control y sin
+sufijo &lt;code&gt;.cred&lt;/code&gt; (el sufijo pertenece al archivo; &lt;code&gt;smtp&lt;/code&gt; encuentra &lt;code&gt;smtp&lt;/code&gt; o&lt;code&gt;smtp.cred&lt;/code&gt;).&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;El archivo de &lt;code&gt;$CREDENTIALS_DIRECTORY&lt;/code&gt; se abre con &lt;code&gt;O_NOFOLLOW&lt;/code&gt;, debe ser un
+archivo regular propiedad de root o del llamador, sin acceso para &amp;ldquo;otros&amp;rdquo; (los
+bits de grupo se aceptan: systemd da a un servicio con &lt;code&gt;User=&lt;/code&gt; un archivo 0440
+de root con una ACL); el directorio igual. Se rechaza un enlace simbólico o un
+modo demasiado abierto.&lt;/li&gt;
+&lt;li&gt;Si no, se ejecuta directamente &lt;code&gt;systemd-creds decrypt --name=NAME PATH -&lt;/code&gt;: sin
+shell, con entorno vacío, el secreto leído solo de la salida estándar, como
+máximo 4096 bytes, acotado por el contexto. Un llamador que no es root prueba
+primero &lt;code&gt;--user&lt;/code&gt; (systemd 256 o posterior).&lt;/li&gt;
+&lt;li&gt;Sin recorte: se conservan el salto de línea final, los bytes NUL y los bytes que
+no son UTF-8; selle una contraseña con &lt;code&gt;printf %s&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Medido en systemd 257 (Debian 13) con &lt;code&gt;--with-key=host&lt;/code&gt;; no medido con una clave
+TPM2. Un descifrado fallido devuelve &lt;code&gt;ErrUnavailable&lt;/code&gt; e indica que quizá haya
+que volver a sellar la credencial.&lt;/li&gt;
+&lt;li&gt;Vinculación a PCR: &lt;code&gt;--tpm2-pcrs=&lt;/code&gt; es vacío por defecto. Un &lt;code&gt;--tpm2-pcrs=7&lt;/code&gt;
+desnudo puede bloquear todas las credenciales tras una actualización de
+firmware o de shim o una migración de vTPM. Prefiera &lt;code&gt;--with-key=host+tpm2&lt;/code&gt;, una
+política de PCR firmada (&lt;code&gt;--tpm2-public-key&lt;/code&gt;, PCR 11) o &lt;code&gt;systemd-pcrlock&lt;/code&gt;, y
+conserve una copia del secreto para volver a sellarlo.&lt;/li&gt;
+&lt;/ul&gt;
 &lt;h2 data-hextra-search-id="keepassxc"&gt;KeePassXC&lt;span class="hx:absolute hx:-mt-20" id="keepassxc"&gt;&lt;/span&gt;
 &lt;a href="#keepassxc" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;KeePassXC se alcanza por su protocolo de integración con el navegador, en macOS
 y Linux; Windows aún no está implementado. Desde la v0.6.0, en Unix, el socket se
