@@ -29,7 +29,7 @@ if err := redirect.HTTPSOrLoopback(issuer); err != nil { ... }
 | Función | |
 |---|---|
 | `CheckRedirect(req, via) error` | una política de `http.Client`: se detiene tras 10 redirecciones y rechaza un destino que no sea https ni loopback (de https a http en otro host es el caso para el que existe). Encadene su propia política después de ella |
-| `HTTPSOrLoopback(rawURL) error` | nil para `https://host/...`, o `http://` con un host loopback. Rechaza la ausencia de host, otros esquemas y el texto en claro. El error nombra el esquema y el host, nunca la URL entera |
+| `HTTPSOrLoopback(rawURL) error` | nil para `https://host.example/...`, o `http://` con un host loopback. Rechaza la ausencia de host, otros esquemas y el texto en claro. El error nombra el esquema y el host, nunca la URL entera |
 | `Loopback(host) bool` | `host` tal como lo devuelve `url.URL.Hostname()` |
 
 `Loopback` acepta un literal IP que sea loopback (127.0.0.0/8, `::1`,

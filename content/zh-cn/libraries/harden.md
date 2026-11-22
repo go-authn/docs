@@ -27,7 +27,7 @@ if err := redirect.HTTPSOrLoopback(issuer); err != nil { ... }
 | 函数 | |
 |---|---|
 | `CheckRedirect(req, via) error` | `http.Client` 的策略：10 次重定向后停止，并拒绝既非 https 也非环回的目标（它正是为另一主机上从 https 到 http 的情形而存在）。可在它之后串接你自己的策略 |
-| `HTTPSOrLoopback(rawURL) error` | 对 `https://host/...`，或主机为环回的 `http://` 返回 nil。拒绝没有主机、其他方案以及明文。错误信息给出方案和主机，绝不给出完整 URL |
+| `HTTPSOrLoopback(rawURL) error` | 对 `https://host.example/...`，或主机为环回的 `http://` 返回 nil。拒绝没有主机、其他方案以及明文。错误信息给出方案和主机，绝不给出完整 URL |
 | `Loopback(host) bool` | `host` 即 `url.URL.Hostname()` 返回的形式 |
 
 `Loopback` 接受环回的 IP 字面量（127.0.0.0/8、`::1`、IPv4 映射的 `::ffff:127.0.0.1`），

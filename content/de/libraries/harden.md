@@ -30,7 +30,7 @@ if err := redirect.HTTPSOrLoopback(issuer); err != nil { ... }
 | Funktion | |
 |---|---|
 | `CheckRedirect(req, via) error` | eine `http.Client`-Richtlinie: stoppt nach 10 Umleitungen und lehnt ein Ziel ab, das weder https noch Loopback ist (https zu http auf einem anderen Host ist der Fall, für den sie da ist). Hängen Sie Ihre eigene Richtlinie dahinter |
-| `HTTPSOrLoopback(rawURL) error` | nil für `https://host/...` oder `http://` mit einem Loopback-Host. Lehnt fehlenden Host, andere Schemata und Klartext ab. Der Fehler nennt Schema und Host, nie die ganze URL |
+| `HTTPSOrLoopback(rawURL) error` | nil für `https://host.example/...` oder `http://` mit einem Loopback-Host. Lehnt fehlenden Host, andere Schemata und Klartext ab. Der Fehler nennt Schema und Host, nie die ganze URL |
 | `Loopback(host) bool` | `host`, wie `url.URL.Hostname()` ihn liefert |
 
 `Loopback` akzeptiert ein IP-Literal, das Loopback ist (127.0.0.0/8, `::1`,

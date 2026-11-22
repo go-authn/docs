@@ -204,7 +204,7 @@ mail {
   host          = "smtp.example.org"
   security      = "tls"                              # "tls" (port 465, the default) or "starttls" (587)
   username      = "authn-bridge"
-  password_file = "/etc/authn-bridge/smtp.password"  # la única fuente de la contraseña SMTP
+  password_file = "/etc/authn-bridge/smtp.password"  # the one source of the SMTP password
   from          = "authn-bridge@example.org"
   # window      = "10m"                              # tiempo mínimo entre dos correos a una cuenta (1m a 24h)
 }

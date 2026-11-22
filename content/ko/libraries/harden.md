@@ -29,7 +29,7 @@ if err := redirect.HTTPSOrLoopback(issuer); err != nil { ... }
 | 함수 | |
 |---|---|
 | `CheckRedirect(req, via) error` | `http.Client` 정책입니다. 리디렉션 10회 뒤에 멈추고, https도 루프백도 아닌 대상은 거부합니다(다른 호스트로 https에서 http로 가는 경우가 이 함수가 존재하는 이유입니다). 자신의 정책은 이것 뒤에 이어 붙이세요 |
-| `HTTPSOrLoopback(rawURL) error` | `https://host/...`이거나 루프백 호스트의 `http://`이면 nil입니다. 호스트가 없는 URL, 다른 스킴, 평문은 거부합니다. 오류는 URL 전체가 아니라 스킴과 호스트를 알려 줍니다 |
+| `HTTPSOrLoopback(rawURL) error` | `https://host.example/...`이거나 루프백 호스트의 `http://`이면 nil입니다. 호스트가 없는 URL, 다른 스킴, 평문은 거부합니다. 오류는 URL 전체가 아니라 스킴과 호스트를 알려 줍니다 |
 | `Loopback(host) bool` | `host`는 `url.URL.Hostname()`이 돌려주는 그대로입니다 |
 
 `Loopback`은 루프백인 IP 리터럴(127.0.0.0/8, `::1`, IPv4 매핑된 `::ffff:127.0.0.1`)과

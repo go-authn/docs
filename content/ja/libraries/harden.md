@@ -29,7 +29,7 @@ if err := redirect.HTTPSOrLoopback(issuer); err != nil { ... }
 | 関数 | |
 |---|---|
 | `CheckRedirect(req, via) error` | `http.Client` のポリシー: 10 回のリダイレクトで止まり、https でもループバックでもない先を拒否します (別のホストへの https から http へのリダイレクトが、これが存在する理由のケースです)。独自のポリシーはこの後に連ねてください |
-| `HTTPSOrLoopback(rawURL) error` | `https://host/...`、またはループバックのホストへの `http://` なら nil。ホストなし、ほかのスキーム、平文は拒否します。エラーはスキームとホストを示し、URL 全体は決して示しません |
+| `HTTPSOrLoopback(rawURL) error` | `https://host.example/...`、またはループバックのホストへの `http://` なら nil。ホストなし、ほかのスキーム、平文は拒否します。エラーはスキームとホストを示し、URL 全体は決して示しません |
 | `Loopback(host) bool` | `host` は `url.URL.Hostname()` が返すとおりのもの |
 
 `Loopback` が受け入れるのは、ループバックである IP リテラル (127.0.0.0/8、`::1`、IPv4 マップの
