@@ -27,6 +27,7 @@ else's package. Everything above it is here:
 | `Key.GetInfo` | versions, extensions, AAGUID, options, PIN protocols |
 | `Key.MakeCredential`, `Key.GetAssertion` | register, and sign; `ParseAuthData` reads the authenticator data, and `AuthData.PublicKey` turns a P-256 COSE key into an `*ecdsa.PublicKey` |
 | `Key.PINRetries`, `Key.KeyAgreement`, `Key.PINToken` | `authenticatorClientPIN`, both PIN/UV auth protocols |
+| `Key.PINTokenBytes`, `Key.SetPINBytes`, `Key.ChangePINBytes` | the same exchanges for a PIN held as a `[]byte` so that you can wipe it: the PIN is hashed in place, kept nowhere, and every copy made on the way is wiped; the requests are identical. The `string` forms (`PINToken`, `SetPIN`, `ChangePIN`) are deprecated, because a `string` cannot be wiped |
 | `Split`, `NewReassembler`, `ParseInit`, `Key.CBOR` | the framing, exported for whoever drives a key some other way |
 
 `AuthData.PublicKey` is a conversion, not a verification: which algorithms

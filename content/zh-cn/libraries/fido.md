@@ -27,6 +27,7 @@ go get github.com/go-authn/fido@v0.6.4
 | `Key.GetInfo` | 版本、扩展、AAGUID、选项、PIN 协议 |
 | `Key.MakeCredential`、`Key.GetAssertion` | 注册和签名；`ParseAuthData` 读取认证器数据，而 `AuthData.PublicKey` 把 P-256 COSE 密钥转换为 `*ecdsa.PublicKey` |
 | `Key.PINRetries`、`Key.KeyAgreement`、`Key.PINToken` | `authenticatorClientPIN`，两种 PIN/UV 认证协议 |
+| `Key.PINTokenBytes`、`Key.SetPINBytes`、`Key.ChangePINBytes` | 为以可擦除的 `[]byte` 持有的 PIN 提供相同的交换：PIN 就地哈希，不在任何地方保留，途中产生的每个副本都会被擦除；请求完全相同。`string` 形式（`PINToken`、`SetPIN`、`ChangePIN`）已弃用，因为 `string` 无法擦除 |
 | `Split`、`NewReassembler`、`ParseInit`、`Key.CBOR` | 帧格式，导出供以其他方式驱动密钥的人使用 |
 
 `AuthData.PublicKey` 是转换而不是验证：哪些算法
