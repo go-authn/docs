@@ -184,6 +184,52 @@ acme {
 Das Zertifikat gilt für den Host des Ausstellers. `cache_dir` enthält private Schlüssel, und
 der Anbieter verweigert den Start auf einem Verzeichnis, das ein anderer Benutzer erreichen oder umlenken könnte.
 
+## `mail`
+
+Seit v0.32.0. Ein Passkey kann ein anstehendes Entfernen immer abbrechen, also
+könnte ein Dieb mit einem Schlüssel damit das Entfernen abbrechen, das der
+Eigentümer mit einem anderen beantragt hat. Nur eine Benachrichtigung über einen
+Kanal, der keinen der Passkeys der Person hält, lässt den Eigentümer es sehen.
+Mit einem `mail`-Block sendet die Bridge **eine Klartext-E-Mail an die eigene
+Adresse des Kontos**, wenn das Entfernen eines Passkeys beantragt oder
+abgebrochen wird
+([was der Betreiber sieht]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})).
+Ohne `mail`-Block ändert sich nichts.
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                              # "tls" (port 465, the default) or "starttls" (587)
+  username      = "authn-bridge"
+  password_file = "/etc/authn-bridge/smtp.password"  # the one source of the SMTP password
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                              # least time between two mails to one account (1m to 24h)
+}
+```
+
+- **Wer benachrichtigt wird.** Die `mail` des Kontos in der lokalen Kontendatei,
+  wie die Bridge sie kennt, nie eine Adresse aus der Anfrage. Der Block braucht
+  einen `local`-Block: Die Benachrichtigung betrifft die Passkeys lokaler Konten.
+- **Das Passwort** kommt aus `password_file` und von nirgendwo sonst (nicht aus
+  der Umgebung, nicht aus einer Kommandozeile, nicht aus dieser Datei). Die Datei
+  muss eine reguläre Datei sein, im Besitz des Dienstbenutzers, ohne Gruppen- oder
+  Others-Berechtigung (`0600`), mit einem einzigen Öffnen gelesen; eine nicht
+  leere Zeile. Alles andere, und ein Block ohne `username` und `password_file`,
+  wird beim Start abgelehnt. Siehe
+  [die Installationsseite]({{< relref "/authn-bridge/install.md#the-smtp-password" >}}).
+- **Immer TLS.** Implizites TLS, oder STARTTLS, das der Server anbietet und
+  abschließt (sonst wird die Benachrichtigung nicht gesendet: nie ein Gespräch im
+  Klartext). Das Serverzertifikat wird gegen die System-Roots und den Hostnamen
+  geprüft. Die Bridge authentifiziert sich (PLAIN, sonst LOGIN) erst, wenn TLS
+  steht, nie über Klartext, nicht einmal zu 127.0.0.1; ein Server, der nach TLS
+  keinen brauchbaren Mechanismus anbietet, wird abgelehnt.
+- **Kein Link.** Der Text enthält keine URL zum Anklicken, sagt das und fordert
+  den Leser auf, seine Kontoseite über das eigene Lesezeichen zu öffnen.
+  Header-Werte mit CR, LF oder anderen Zeilentrennern werden abgelehnt.
+- **Ratenbegrenzung.** Eine Mail je Konto und `window` (Standard `10m`); die in
+  der Zwischenzeit eintreffenden Ereignisse werden zu einer Zusammenfassung
+  vereint, die am Ende des Fensters gesendet wird.
+
 ## Was beim Start abgelehnt wird {#what-is-refused-at-startup}
 
 Jedes davon ist die Ausgabe von `authn-bridge check` für eine Konfiguration, die

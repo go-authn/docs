@@ -183,6 +183,50 @@ acme {
 The certificate is for the issuer's host. `cache_dir` holds private keys, and
 the provider refuses to start on one another user could reach or re-point.
 
+## `mail`
+
+Since v0.32.0. A passkey can always cancel a pending removal, so a thief
+holding one key could cancel, with it, the removal the owner asked for with
+another. Only a notice through a channel that holds none of the person's
+passkeys lets the owner see it. With a `mail` block the bridge sends **a
+plain-text e-mail to the account's own address** when a passkey removal is
+requested or cancelled
+([what the operator sees]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})).
+Without a `mail` block nothing changes.
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                              # "tls" (port 465, the default) or "starttls" (587)
+  username      = "authn-bridge"
+  password_file = "/etc/authn-bridge/smtp.password"  # the one source of the SMTP password
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                              # least time between two mails to one account (1m to 24h)
+}
+```
+
+- **Who is told.** The `mail` of the account in the local accounts file, as the
+  bridge knows it, never an address taken from the request. The block needs a
+  `local` block: the notice is about local accounts' passkeys.
+- **The password** comes from `password_file` and from nowhere else (not the
+  environment, not a command line, not this file). The file must be a regular
+  file, owned by the service's user, with no group or other permission
+  (`0600`), read with one open; one non-empty line. Anything else, and a block
+  without `username` and `password_file`, is refused at startup. See
+  [the install page]({{< relref "/authn-bridge/install.md#the-smtp-password" >}}).
+- **TLS, always.** Implicit TLS, or STARTTLS that the server offers and
+  completes (otherwise the notice is not sent: never a conversation in clear).
+  The server certificate is verified against the system roots and the host
+  name. The bridge authenticates (PLAIN, else LOGIN) only once TLS is up, never
+  over cleartext, not even to 127.0.0.1; a server that advertises no usable
+  mechanism after TLS is refused.
+- **No link.** The text carries no URL to follow, says so, and tells the reader
+  to open their account page from their own bookmark. Header values with CR, LF
+  or other line separators are refused.
+- **Rate limit.** One mail per account per `window` (default `10m`); the events
+  that arrive meanwhile are collapsed into one digest, sent when the window
+  ends.
+
 ## What is refused at startup
 
 Each of these is the output of `authn-bridge check` on a configuration that

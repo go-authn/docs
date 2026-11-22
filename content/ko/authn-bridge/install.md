@@ -104,6 +104,23 @@ runuser -u authn-bridge -- sh -c 'umask 077; openssl req -x509 -newkey rsa:3072 
 가져오십시오. [페더레이션 측]({{< relref "/authn-bridge/federation.md" >}})을
 참조하십시오.
 
+## SMTP 비밀번호 {#the-smtp-password}
+
+[`mail` 블록]({{< relref "/authn-bridge/configuration.md#mail" >}})이 있을 때만
+필요합니다(v0.32.0부터). 비밀번호는 `password_file`에서만 오며 다른 곳에서는 오지
+않습니다. 환경 변수도, 명령줄도, 설정 파일도 아닙니다. 파일은 일반 파일이고 **서비스 사용자
+소유이며 그룹과 다른 사용자의 권한 비트가 없어야** 하고(`0600`), 비어 있지 않은 한
+줄이어야 하며, 한 번 열어서 읽습니다. 그 밖의 것은 시작할 때 거부되므로, 파일을 서비스
+사용자에게 주고 모드를 좁히십시오.
+
+```sh
+chown authn-bridge /etc/authn-bridge/smtp.password
+chmod 0600 /etc/authn-bridge/smtp.password
+```
+
+v0.32.0에서 bridge는 SMTP 비밀번호로 이 파일 하나만 읽으며, bridge의 README는 systemd
+자격 증명을 포함해 다른 출처를 말하지 않습니다.
+
 ## 유닛 {#the-unit}
 
 부여하는 것을 요약하면:

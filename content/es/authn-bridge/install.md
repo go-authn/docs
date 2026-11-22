@@ -107,6 +107,24 @@ federación, y también su huella SHA-256: tome la huella de la página web de l
 federación, nunca de la misma descarga que el certificado. Consulte
 [el lado de la federación]({{< relref "/authn-bridge/federation.md" >}}).
 
+## La contraseña SMTP {#the-smtp-password}
+
+Solo hace falta con un [bloque `mail`]({{< relref "/authn-bridge/configuration.md#mail" >}})
+(desde la v0.32.0). La contraseña viene de `password_file`, y de ningún otro sitio:
+ni el entorno, ni una línea de comandos, ni el archivo de configuración. El archivo
+debe ser un archivo regular **propiedad del usuario del servicio, sin bits de permiso
+de grupo ni de otros** (`0600`), y una línea no vacía; se lee con una sola apertura.
+Cualquier otra cosa se rechaza al arrancar, así que dé el archivo al usuario del
+servicio y restrinja su modo:
+
+```sh
+chown authn-bridge /etc/authn-bridge/smtp.password
+chmod 0600 /etc/authn-bridge/smtp.password
+```
+
+El bridge lee este único archivo para la contraseña SMTP en la v0.32.0; el README del
+bridge no nombra ninguna otra fuente, tampoco una credencial de systemd.
+
 ## La unidad {#the-unit}
 
 Lo que concede, en resumen:

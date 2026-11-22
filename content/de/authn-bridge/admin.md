@@ -160,6 +160,31 @@ bereits ausgestelltes SSH-Zertifikat gilt für seine Gültigkeitsdauer, es sei d
 die KRL; deshalb sind beide kurzlebig.
 {{< /callout >}}
 
+## Benachrichtigungen beim Entfernen von Passkeys {#passkey-removal-notices}
+
+Mit einem [`mail`-Block]({{< relref "/authn-bridge/configuration.md#mail" >}}) (seit
+v0.32.0) wird ein lokales Konto an seiner eigenen Adresse benachrichtigt, wenn das
+Entfernen eines Passkeys beantragt oder abgebrochen wird, sodass ein Dieb mit einem
+Schlüssel das Entfernen des Eigentümers nicht unbemerkt abbrechen kann. Das betrifft
+**nur lokale Konten**, und die Benachrichtigung ist eine Mail je Konto und `window`
+(Standard 10 Minuten): Die in der Zwischenzeit eintreffenden Ereignisse werden zu
+einer Zusammenfassung vereint. Was ein Betreiber sieht, hängt vom Ereignis ab:
+
+- **Ein Antrag auf Entfernen, dessen Benachrichtigung nicht gesendet werden kann,
+  bleibt offen.** Er wird nicht ausgeführt, wenn seine Frist endet. Die Bridge
+  versucht es erneut (5 Versuche, mit wachsender Pause) und protokolliert dann
+  laut `GAVE UP`; ein Neustart nimmt ihn wieder auf, ebenso das nächste Ereignis.
+  Der Schlüssel funktioniert in der Zwischenzeit weiter, wie zuvor. Der
+  Datensatz trägt `notice_pending`, bis eine Benachrichtigung zugestellt wurde.
+- **Ein Abbruch gilt auch, wenn seine Mail scheitert.** Der Fehler wird
+  protokolliert (`mailing <login> failed`) und auf der Kontoseite gezeigt, die
+  sagt, die Benachrichtigung habe nicht gesendet werden können.
+- **Ein Konto ohne brauchbare Adresse** wird nicht blockiert: Sein Entfernen läuft
+  wie ohne `mail`-Block, das Log sagt `<login> has no usable mail address ...
+  nobody is told`, und die Kontoseite sagt es ebenfalls.
+
+Ohne `mail`-Block ändert sich nichts.
+
 ## Health und Metriken {#health-and-metrics}
 
 Die von go-net-health/endpoint, wie in go-fileshare, auf dem `metrics`-Listener, der

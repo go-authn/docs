@@ -103,6 +103,21 @@ runuser -u authn-bridge -- sh -c 'umask 077; openssl req -x509 -newkey rsa:3072 
 指纹也是如此：请从联邦的网页获取指纹，绝不要从与证书相同的下载中获取。参见
 [联邦一侧]({{< relref "/authn-bridge/federation.md" >}})。
 
+## SMTP 密码 {#the-smtp-password}
+
+只有使用 [`mail` 块]({{< relref "/authn-bridge/configuration.md#mail" >}})（自
+v0.32.0 起）时才需要。密码来自 `password_file`，且只来自它：不来自环境变量、命令行或配置文件。
+该文件必须是普通文件，**归服务的用户所有，不带任何组和其他用户权限位**（`0600`），
+并且是一行非空内容；只打开一次读取。其他任何情况都会在启动时被拒绝，
+所以请把文件交给服务的用户并收紧其权限：
+
+```sh
+chown authn-bridge /etc/authn-bridge/smtp.password
+chmod 0600 /etc/authn-bridge/smtp.password
+```
+
+在 v0.32.0 中，网桥只从这一个文件读取 SMTP 密码；网桥的 README 没有提到其他来源，systemd 凭据也不在内。
+
 ## 单元 {#the-unit}
 
 简而言之，它授予的权限：

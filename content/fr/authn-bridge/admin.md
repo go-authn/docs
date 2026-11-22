@@ -161,6 +161,30 @@ certificat SSH déjà émis dure toute sa validité sauf si le serveur lit
 la KRL, ce qui explique que les deux soient courts.
 {{< /callout >}}
 
+## Avis de retrait d'une clé d'accès {#passkey-removal-notices}
+
+Avec un [bloc `mail`]({{< relref "/authn-bridge/configuration.md#mail" >}}) (depuis la
+v0.32.0), un compte local est prévenu, à sa propre adresse, quand le retrait d'une clé
+d'accès est demandé ou annulé, pour qu'un voleur qui détient une clé ne puisse pas
+annuler en silence le retrait voulu par le propriétaire. Cela ne concerne que les
+**comptes locaux**, et l'avis est un message par compte et par `window` (10 minutes par
+défaut) : les événements qui arrivent entre-temps sont regroupés en un seul résumé. Ce
+que voit un opérateur dépend de l'événement :
+
+- **Une demande de retrait dont l'avis ne peut pas partir reste en attente.** Elle n'est
+  pas exécutée à la fin de son délai. Le pont réessaie (5 essais, avec une pause
+  croissante), puis journalise `GAVE UP` bien visiblement ; un redémarrage la reprend,
+  et l'événement suivant aussi. La clé continue de fonctionner entre-temps, comme
+  avant. L'enregistrement porte `notice_pending` jusqu'à la remise d'un avis.
+- **Une annulation s'applique même si son message échoue.** L'échec est journalisé
+  (`mailing <login> failed`) et affiché sur la page du compte, qui dit que l'avis n'a
+  pas pu être envoyé.
+- **Un compte sans adresse utilisable** n'est pas bloqué : son retrait se déroule comme
+  sans bloc `mail`, le journal dit `<login> has no usable mail address ... nobody is
+  told`, et la page du compte le dit.
+
+Sans bloc `mail`, rien ne change.
+
 ## Santé et métriques {#health-and-metrics}
 
 Ceux de go-net-health/endpoint, comme dans go-fileshare, sur l'écouteur `metrics`, qui

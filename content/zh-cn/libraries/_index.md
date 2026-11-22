@@ -31,6 +31,7 @@ tags: [库]
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 这把 WireGuard 密钥是否可以连接，它是谁的？ | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | 身份提供方刚刚创建、更改或删除了谁？ | v0.2.1 | `github.com/go-authn/scim` |
 | [secretsource]({{< relref "/libraries/secretsource.md" >}}) | 不应留在文件里的 PIN 或密码，从哪里取得？ | v0.5.0 | `github.com/go-authn/secretsource` |
+| [harden]({{< relref "/libraries/harden.md" >}}) | 这个 URL 是 https 还是指向本机，私有文件又该如何安全地写入？ | v0.2.0 | `github.com/go-authn/harden` |
 
 ## 它们如何分组 {#how-they-group}
 

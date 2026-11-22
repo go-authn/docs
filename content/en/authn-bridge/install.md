@@ -105,6 +105,24 @@ does its SHA-256 fingerprint: take the fingerprint from the federation's web
 page, never from the same download as the certificate. See
 [the federation side]({{< relref "/authn-bridge/federation.md" >}}).
 
+## The SMTP password
+
+Only needed with a [`mail` block]({{< relref "/authn-bridge/configuration.md#mail" >}})
+(since v0.32.0). The password comes from `password_file`, and from nowhere else:
+not the environment, not a command line, not the configuration file. The file
+must be a regular file **owned by the service's user, with no group and no other
+permission bits** (`0600`), and one non-empty line; it is read with a single
+open. Anything else is refused at startup, so give the file to the service's
+user and narrow its mode:
+
+```sh
+chown authn-bridge /etc/authn-bridge/smtp.password
+chmod 0600 /etc/authn-bridge/smtp.password
+```
+
+The bridge reads this one file for the SMTP password in v0.32.0; the bridge's
+README names no other source, a systemd credential included.
+
 ## The unit
 
 What it grants, in short:

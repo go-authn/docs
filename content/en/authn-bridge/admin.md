@@ -160,6 +160,30 @@ SSH certificate already issued lasts its validity unless the server reads
 the KRL, which is why both are short.
 {{< /callout >}}
 
+## Passkey removal notices {#passkey-removal-notices}
+
+With a [`mail` block]({{< relref "/authn-bridge/configuration.md#mail" >}}) (since
+v0.32.0), a local account is told, at its own address, when a passkey removal
+is requested or cancelled, so that a thief holding one key cannot cancel the
+owner's removal in silence. It concerns **local accounts only**, and the notice
+is one mail per account per `window` (default 10 minutes): the events that
+arrive meanwhile are collapsed into one digest. What an operator sees depends
+on the event:
+
+- **A removal request whose notice cannot be sent stays pending.** It is not
+  carried out when its delay ends. The bridge retries (5 tries, with a growing
+  pause), then logs `GAVE UP` loudly; a restart resumes it, and so does the next
+  event. The key keeps working meanwhile, as before. The record carries
+  `notice_pending` until a notice has been delivered.
+- **A cancellation applies even if its mail fails.** The failure is logged
+  (`mailing <login> failed`) and shown on the account page, which says the
+  notice could not be sent.
+- **An account with no usable address** is not blocked: its removal proceeds as
+  without a `mail` block, the log says `<login> has no usable mail address ...
+  nobody is told`, and the account page says so.
+
+Without a `mail` block nothing changes.
+
 ## Health and metrics
 
 go-net-health/endpoint's, as in go-fileshare, on the `metrics` listener, which

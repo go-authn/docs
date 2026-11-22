@@ -188,6 +188,51 @@ El certificado es para el host del emisor. `cache_dir` contiene claves privadas,
 el proveedor se niega a arrancar sobre uno que otro usuario pudiera alcanzar o
 redirigir.
 
+## `mail`
+
+Desde la v0.32.0. Una passkey siempre puede cancelar una eliminación pendiente, así
+que quien robe una clave podría cancelar con ella la eliminación que el propietario
+pidió con otra. Solo un aviso por un canal que no tenga ninguna de las passkeys de la
+persona permite al propietario verlo. Con un bloque `mail`, el bridge envía **un
+correo de texto plano a la dirección propia de la cuenta** cuando se pide o se cancela
+la eliminación de una passkey
+([lo que ve el operador]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})).
+Sin bloque `mail`, nada cambia.
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                              # "tls" (puerto 465, por defecto) o "starttls" (587)
+  username      = "authn-bridge"
+  password_file = "/etc/authn-bridge/smtp.password"  # la única fuente de la contraseña SMTP
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                              # tiempo mínimo entre dos correos a una cuenta (1m a 24h)
+}
+```
+
+- **A quién se avisa.** El `mail` de la cuenta en el archivo de cuentas locales,
+  tal como el bridge lo conoce, nunca una dirección tomada de la petición. El
+  bloque necesita un bloque `local`: el aviso trata de las passkeys de las cuentas
+  locales.
+- **La contraseña** viene de `password_file` y de ningún otro sitio (ni el
+  entorno, ni una línea de comandos, ni este archivo). El archivo debe ser un
+  archivo regular, propiedad del usuario del servicio, sin permiso de grupo ni de
+  otros (`0600`), leído con una sola apertura; una línea no vacía. Cualquier otra
+  cosa, y un bloque sin `username` y `password_file`, se rechaza al arrancar. Véase
+  [la página de instalación]({{< relref "/authn-bridge/install.md#the-smtp-password" >}}).
+- **TLS, siempre.** TLS implícito, o STARTTLS que el servidor ofrezca y complete
+  (si no, el aviso no se envía: nunca una conversación en claro). El certificado
+  del servidor se verifica contra las raíces del sistema y el nombre de host. El
+  bridge se autentica (PLAIN, si no LOGIN) solo cuando TLS está establecido, nunca
+  en claro, ni siquiera hacia 127.0.0.1; se rechaza un servidor que no anuncie
+  ningún mecanismo utilizable tras TLS.
+- **Sin enlace.** El texto no lleva ninguna URL que seguir, lo dice, e indica al
+  lector que abra la página de su cuenta desde su propio marcador. Se rechazan los
+  valores de cabecera con CR, LF u otros separadores de línea.
+- **Límite de frecuencia.** Un correo por cuenta y por `window` (`10m` por
+  defecto); los eventos que llegan entretanto se reúnen en un resumen, enviado
+  cuando acaba la ventana.
+
 ## Lo que se rechaza al arrancar {#what-is-refused-at-startup}
 
 Cada uno de estos es la salida de `authn-bridge check` sobre una configuración que

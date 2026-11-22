@@ -31,6 +31,7 @@ tags: [라이브러리]
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | 이 WireGuard 키가 연결해도 되는가, 그리고 누구의 것인가? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | 신원 공급자가 방금 누구를 생성, 변경, 삭제했는가? | v0.2.1 | `github.com/go-authn/scim` |
 | [secretsource]({{< relref "/libraries/secretsource.md" >}}) | 파일에 남겨 두면 안 되는 PIN이나 비밀번호는 어디에서 가져오는가? | v0.5.0 | `github.com/go-authn/secretsource` |
+| [harden]({{< relref "/libraries/harden.md" >}}) | 이 URL은 https이거나 이 컴퓨터인가, 그리고 개인 파일은 어떻게 안전하게 쓰는가? | v0.2.0 | `github.com/go-authn/harden` |
 
 ## 모듈의 묶음 {#how-they-group}
 

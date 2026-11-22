@@ -12,7 +12,7 @@ référence ne contient aucun secret : elle peut figurer dans une option, un
 script ou l'historique du shell.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.0
+go get github.com/go-authn/secretsource@v0.8.1
 ```
 
 ```go
@@ -88,6 +88,12 @@ symbolique laissé à ce nom est remplacé, pas suivi, et qu'un fichier de mode 
 ressort en 0600. Sous Unix, le répertoire est vérifié d'abord, comme celui du socket :
 appartenant à cet utilisateur, non inscriptible par le groupe ou les autres, pas un lien
 symbolique ; sinon rien n'est écrit.
+
+Depuis la v0.8.1, cette écriture est faite par
+[`harden/privfile`]({{< relref "/libraries/harden.md#privfile" >}}) v0.2.0. Sous
+Windows, le fichier reçoit désormais une liste d'accès protégée réservée au
+propriétaire, comme dans go-authn/kinit v0.3.2, et le répertoire est vérifié de nouveau
+à l'écriture, en plus d'avant.
 
 1. Dans KeePassXC, activez *Settings > Browser Integration*.
 2. Associez cette machine une fois par base, et approuvez dans KeePassXC :

@@ -178,6 +178,38 @@ acme {
 证书是为签发方的主机而设。`cache_dir` 保存私钥，
 当其他用户可以访问或重新指向该目录时，提供方会拒绝启动。
 
+## `mail`
+
+自 v0.32.0 起。通行密钥总是可以取消待处理的删除请求，因此持有一把密钥的窃贼可以用它取消所有者用另一把密钥提出的删除请求。
+只有通过一个不持有此人任何通行密钥的渠道发出通知，所有者才能看到。有了 `mail` 块，当通行密钥的删除被请求或被取消时，
+网桥会向**账户自己的地址发送一封纯文本电子邮件**
+（[运维人员看到什么]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})）。
+没有 `mail` 块时，一切照旧。
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                              # "tls" (port 465, the default) or "starttls" (587)
+  username      = "authn-bridge"
+  password_file = "/etc/authn-bridge/smtp.password"  # the one source of the SMTP password
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                              # least time between two mails to one account (1m to 24h)
+}
+```
+
+- **通知谁。** 本地账户文件中该账户的 `mail`，以网桥所知为准，绝不使用取自请求的地址。该块需要 `local` 块：
+  通知针对的是本地账户的通行密钥。
+- **密码**来自 `password_file`，且只来自它（不来自环境变量、命令行或本文件）。该文件必须是普通文件，
+  归服务的用户所有，不带任何组或其他用户权限（`0600`），只打开一次读取；一行非空内容。
+  其他任何情况，以及缺少 `username` 和 `password_file` 的块，都会在启动时被拒绝。参见
+  [安装页面]({{< relref "/authn-bridge/install.md#the-smtp-password" >}})。
+- **始终使用 TLS。** 隐式 TLS，或服务器提供并完成的 STARTTLS（否则不发送通知：绝不进行明文会话）。
+  服务器证书按系统根证书和主机名验证。网桥只在 TLS 建立之后才进行认证（PLAIN，否则 LOGIN），
+  绝不通过明文，即使对 127.0.0.1 也是如此；在 TLS 之后不宣告任何可用机制的服务器会被拒绝。
+- **没有链接。** 正文不含可点击的 URL，并说明这一点，同时告诉读者从自己的书签打开账户页面。
+  含有 CR、LF 或其他行分隔符的标头值会被拒绝。
+- **频率限制。** 每个账户在每个 `window`（默认 `10m`）内最多一封邮件；其间到达的事件合并为一份摘要，在窗口结束时发送。
+
 ## 启动时拒绝什么 {#what-is-refused-at-startup}
 
 以下每一项都是 `authn-bridge check` 对提出该请求的配置所输出的内容。

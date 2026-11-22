@@ -11,7 +11,7 @@ names where a secret lives; `secretsource.Open` fetches it. The reference holds
 no secret, so it may sit in a flag, a script or a shell history.
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.0
+go get github.com/go-authn/secretsource@v0.8.1
 ```
 
 ```go
@@ -82,6 +82,12 @@ the same directory and renamed onto the final name, so a symbolic link left at t
 name is replaced, not followed, and a file of looser mode comes out 0600. On Unix the
 directory is checked first, as the socket's is: owned by this user, not writable by
 group or others, not a symbolic link; otherwise nothing is written.
+
+Since v0.8.1, that write is done by
+[`harden/privfile`]({{< relref "/libraries/harden.md#privfile" >}}) v0.2.0. On
+Windows the file now gets an owner-only protected access list, as in
+go-authn/kinit v0.3.2, and the directory is checked again at the write, as well
+as before it.
 
 1. In KeePassXC, enable *Settings > Browser Integration*.
 2. Associate this machine once per database, and approve it in KeePassXC:

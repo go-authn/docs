@@ -11,7 +11,7 @@ tags: [ライブラリ, secretsource, シークレット]
 含まないので、フラグ、スクリプト、シェルの履歴に書いても構いません。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.0
+go get github.com/go-authn/secretsource@v0.8.1
 ```
 
 ```go
@@ -82,6 +82,11 @@ v0.6.1 以降、関連付けファイル (macOS のキーチェーンも Secret 
 そのため、その名前に残されたシンボリックリンクは、辿られるのではなく置き換えられ、モードが緩いファイルは
 0600 になります。Unix ではまずディレクトリが、ソケットのものと同様に検査されます: このユーザーの所有で、
 グループにもその他にも書き込み不可で、シンボリックリンクでないこと。そうでなければ何も書き込まれません。
+
+v0.8.1 以降、その書き込みは [`harden/privfile`]({{< relref "/libraries/harden.md#privfile" >}})
+v0.2.0 が行います。Windows では、ファイルは go-authn/kinit v0.3.2 と同様に所有者専用の保護された
+アクセスリストを持つようになり、ディレクトリは書き込みの前だけでなく書き込みの時点でも改めて
+確認されます。
 
 1. KeePassXC で *Settings > Browser Integration* を有効にします。
 2. データベースごとに 1 回、このマシンを関連付け、KeePassXC で承認します:

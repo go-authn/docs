@@ -11,7 +11,7 @@ tags: [库, secretsource, 密钥]
 shell 历史记录里。
 
 ```sh
-go get github.com/go-authn/secretsource@v0.8.0
+go get github.com/go-authn/secretsource@v0.8.1
 ```
 
 ```go
@@ -70,6 +70,11 @@ KeePassXC 通过其浏览器集成协议访问，支持 macOS 和 Linux；Window
 再重命名为最终名称，因此留在该名称上的符号链接会被替换而不是被跟随，权限更宽松的文件会变成 0600。
 在 Unix 上，会先像检查套接字所在目录那样检查该目录：归当前用户所有、组或其他人不可写、不是符号链接；
 否则不写入任何内容。
+
+自 v0.8.1 起，该写入由
+[`harden/privfile`]({{< relref "/libraries/harden.md#privfile" >}}) v0.2.0 完成。
+在 Windows 上，该文件现在获得仅限所有者的受保护访问列表，与 go-authn/kinit v0.3.2 相同，
+并且目录在写入时会再检查一次，写入之前也检查。
 
 1. 在 KeePassXC 中启用 *Settings > Browser Integration*。
 2. 每个数据库关联这台机器一次，并在 KeePassXC 中批准：

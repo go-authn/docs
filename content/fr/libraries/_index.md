@@ -31,6 +31,7 @@ Tous sont en pur Go et se compilent avec `CGO_ENABLED=0`.
 | [wireguard]({{< relref "/libraries/wireguard.md" >}}) | cette clé WireGuard peut-elle se connecter, et à qui est-elle ? | v0.1.4 | `github.com/go-authn/wireguard` |
 | [scim]({{< relref "/libraries/scim.md" >}}) | qui le fournisseur d'identité vient-il de créer, de modifier ou de supprimer ? | v0.2.1 | `github.com/go-authn/scim` |
 | [secretsource]({{< relref "/libraries/secretsource.md" >}}) | d'où vient un PIN ou un mot de passe, quand il ne doit pas rester dans un fichier ? | v0.5.0 | `github.com/go-authn/secretsource` |
+| [harden]({{< relref "/libraries/harden.md" >}}) | cette URL est-elle en https ou sur cette machine, et comment écrire un fichier privé sans risque ? | v0.2.0 | `github.com/go-authn/harden` |
 
 ## Comment ils se regroupent {#how-they-group}
 

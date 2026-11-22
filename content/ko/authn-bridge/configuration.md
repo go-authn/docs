@@ -179,6 +179,45 @@ acme {
 인증서는 발급자의 호스트용입니다. `cache_dir`은 개인 키를 담으며, 공급자는 다른
 사용자가 접근하거나 가리키는 곳을 바꿀 수 있는 디렉터리에서는 시작하기를 거부합니다.
 
+## `mail`
+
+v0.32.0부터. 패스키는 언제든 보류 중인 삭제를 취소할 수 있으므로, 키 하나를 가진 도둑이
+그 키로, 소유자가 다른 키로 요청한 삭제를 취소할 수 있습니다. 그 사람의 패스키를 하나도
+갖지 않는 채널을 통한 알림만이 소유자가 그것을 알아차리게 해 줍니다. `mail` 블록이 있으면
+bridge는 패스키 삭제가 요청되거나 취소될 때 **계정 자신의 주소로 평문 이메일**을 보냅니다
+([운영자에게 보이는 것]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})).
+`mail` 블록이 없으면 아무것도 바뀌지 않습니다.
+
+```hcl
+mail {
+  host          = "smtp.example.org"
+  security      = "tls"                              # "tls" (port 465, the default) or "starttls" (587)
+  username      = "authn-bridge"
+  password_file = "/etc/authn-bridge/smtp.password"  # the one source of the SMTP password
+  from          = "authn-bridge@example.org"
+  # window      = "10m"                              # least time between two mails to one account (1m to 24h)
+}
+```
+
+- **누가 알림을 받는가.** bridge가 아는 로컬 계정 파일 속 계정의 `mail`이며, 요청에서 가져온
+  주소는 결코 아닙니다. 이 블록에는 `local` 블록이 필요합니다. 알림은 로컬 계정의 패스키에
+  관한 것이기 때문입니다.
+- **비밀번호**는 `password_file`에서만 오며 다른 곳에서는 오지 않습니다(환경 변수도, 명령줄도,
+  이 파일도 아닙니다). 파일은 일반 파일이고, 서비스의 사용자 소유이며, 그룹이나 다른 사용자의
+  권한이 없어야 하고(`0600`), 한 번 열어서 읽으며, 비어 있지 않은 한 줄이어야 합니다. 그 밖의
+  것, 그리고 `username`과 `password_file`이 없는 블록은 시작할 때 거부됩니다.
+  [설치 페이지]({{< relref "/authn-bridge/install.md#the-smtp-password" >}})를 참조하십시오.
+- **항상 TLS.** 암시적 TLS, 또는 서버가 제공하고 완료하는 STARTTLS입니다(그렇지 않으면
+  알림은 보내지지 않으며, 평문 대화는 결코 하지 않습니다). 서버 인증서는 시스템 루트와
+  호스트 이름에 대해 검증됩니다. bridge는 TLS가 성립한 뒤에만(PLAIN, 없으면 LOGIN) 인증하며,
+  평문으로는 127.0.0.1에도 하지 않습니다. TLS 뒤에 쓸 수 있는 메커니즘을 알리지 않는 서버는
+  거부됩니다.
+- **링크 없음.** 본문에는 따라갈 URL이 없고, 그 사실을 알리며, 읽는 사람에게 자신의
+  북마크에서 계정 페이지를 열라고 안내합니다. CR, LF나 다른 줄 구분자가 든 헤더 값은
+  거부됩니다.
+- **속도 제한.** 계정당 `window`(기본 `10m`)마다 메일 하나이며, 그 사이에 도착한 이벤트는
+  요약 하나로 합쳐져 창이 끝날 때 보내집니다.
+
 ## 시작할 때 거부되는 것 {#what-is-refused-at-startup}
 
 다음은 각각 그것을 요청한 구성에 대해 `authn-bridge check`가 출력한 것입니다.
