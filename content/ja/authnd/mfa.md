@@ -40,8 +40,10 @@ user "tess" {
 | `readers` | `false` | [reader]({{< relref "/authnd/_index.md#who-may-bind-and-who-may-read" >}})もコードを持つかどうか。サービスアカウントには電話がありません。持つものには `reader` ブロックに `totp_secret_from` を与えます ([シークレット参照]({{< relref "/authnd/install.md#secrets-as-references" >}})。インラインの `totp_secret` は非推奨) |
 
 シークレットは、データベースの列 (五番目) や LDAP 属性 (`totp_attribute`) から渡すこともできます。
-[人々]({{< relref "/authnd/people.md" >}})を参照してください。`user` または `reader` ブロックの
-`totp_secret` が 128 ビット (RFC 4226 R6) に満たない場合は、後でその人のログインがすべて失敗する
+[人々]({{< relref "/authnd/people.md" >}})を参照してください。`user` もシークレットを `totp_secret_from` で渡せます
+([シークレット参照]({{< relref "/authnd/install.md#secrets-as-references" >}})。
+封印されたものには `systemd-creds:NAME`)。`user` または `reader` ブロックの
+TOTP シークレットが 128 ビット (RFC 4226 R6) に満たない場合は、後でその人のログインがすべて失敗する
 のではなく、その人の名前を挙げてサーバーが止まります。
 
 ```

@@ -37,15 +37,21 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | v0.11.0 から。人を説明するだけで何も証明しないもの — `sn`、`uidNumber`、`gidNumber`、`homeDirectory`、`mail`… — を、文字列または文字列のリストのマップとして指定する。`group` ブロックも受け付ける。エントリが何として公開されるかを決める。[エントリ]({{< relref "/authnd/entries.md#adding-attributes" >}})を参照 |
 | `object_classes` | v0.12.0 から。この人 (`group` ブロックでは、このグループ) が公開される際の補助クラス。たとえば `["siteMember"]`。宣言されるもので推論されず、[サイトスキーマ]({{< relref "/authnd/schemas.md#object-classes" >}})で定義される |
 
-これらのシークレットのフィールドは、`user` または `users` ブロックでは独自の書き方のままです。
-今のところ、[シークレット参照]({{< relref "/authnd/install.md#secrets-as-references" >}})
-(`password_from`、`totp_secret_from`) を受け付けるのは `reader` ブロックだけです。
+シークレットのフィールドにはそれぞれ[シークレット参照]({{< relref "/authnd/install.md#secrets-as-references" >}})
+の書き方もあり、使うべきなのはこちらです。`user` では `password_from`、`totp_secret_from`、
+`nt_hash_from`、`users` ブロックでは `dsn_from` と `bind_password_from`
+(`systemd-creds:NAME`、`file:PATH`、...) です。`password`、`password_file`、
+`nt_hash`、`totp_secret`、`dsn_file`、`bind_password_file` は非推奨の別名で、
+起動時にログに出力されます。パスワードが参照である人は、`authnd` のパスワード変更では
+変更できません。参照の元を編集してください。
 
 起動時に、その人の名前を挙げて拒否されるもの:
 
-- `password` と `password_file` の併用 — どちらかを指定してください
-- `password` と `nt_hash` の併用 — ハッシュはパスワードから導出されるので、二つあると
-  食い違いかねません
+- `password_from`、`password_file`、`password` のうち複数の併用 — どれかを指定してください
+  (同様に `nt_hash` と `nt_hash_from`、`totp_secret` と `totp_secret_from`、
+  `dsn_file` と `dsn_from`)
+- どの書き方であれパスワードと `nt_hash` または `nt_hash_from` の併用 — ハッシュはパスワードから
+  導出されるので、二つあると食い違いかねません
 - `authorized_keys` と `authorized_keys_file` の併用
 - 16 進 32 文字でない `nt_hash`、解析できない `authorized_keys` の行、128 ビット未満の `totp_secret`
 - 同じ `user` または `group` の重複、メンバーのいない `group`

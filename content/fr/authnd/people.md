@@ -38,15 +38,23 @@ group "staff" { members = ["alice", "carol"] }
 | `attributes` | depuis la v0.11.0, ce qui décrit la personne sans rien prouver — `sn`, `uidNumber`, `gidNumber`, `homeDirectory`, `mail`… — sous forme d'une table de chaînes ou de listes de chaînes ; un bloc `group` le prend aussi. Ils décident de ce sous quoi l'entrée est publiée : voir [les entrées]({{< relref "/authnd/entries.md#adding-attributes" >}}) |
 | `object_classes` | depuis la v0.12.0, les classes auxiliaires sous lesquelles cette personne (ou, dans un bloc `group`, ce groupe) est publiée, comme `["siteMember"]` : déclarées, jamais déduites, et définies dans un [schéma de site]({{< relref "/authnd/schemas.md#object-classes" >}}) |
 
-Ces champs secrets gardent leurs propres graphies dans un bloc `user` ou `users` ;
-seul le bloc `reader` accepte pour l'instant des [références de secret]({{< relref "/authnd/install.md#secrets-as-references" >}})
-(`password_from`, `totp_secret_from`).
+Chaque champ secret a aussi une graphie en [référence de secret]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+qui est celle à utiliser : `password_from`, `totp_secret_from` et
+`nt_hash_from` sur un `user`, `dsn_from` et `bind_password_from` sur un bloc
+`users` (`systemd-creds:NAME`, `file:PATH`, ...). `password`, `password_file`,
+`nt_hash`, `totp_secret`, `dsn_file` et `bind_password_file` sont des alias
+obsolètes et sont journalisés au démarrage. Une personne dont le mot de passe
+est une référence ne peut pas le changer par le changement de mot de passe
+d'`authnd` : modifiez la source de la référence.
 
 Refusés au démarrage, en nommant la personne :
 
-- `password` et `password_file` ensemble — dites lequel ;
-- `password` et `nt_hash` ensemble — l'empreinte est dérivée du mot de passe,
-  donc les deux peuvent être en désaccord ;
+- plus d'un parmi `password_from`, `password_file` et `password` — dites lequel
+  (de même `nt_hash` avec `nt_hash_from`, `totp_secret` avec
+  `totp_secret_from`, `dsn_file` avec `dsn_from`) ;
+- un mot de passe, quelle que soit sa graphie, avec `nt_hash` ou `nt_hash_from` —
+  l'empreinte est dérivée du mot de passe, donc les deux peuvent être en
+  désaccord ;
 - `authorized_keys` et `authorized_keys_file` ensemble ;
 - un `nt_hash` qui ne fait pas 32 caractères hexadécimaux, une ligne `authorized_keys` qui
   ne s'analyse pas, un `totp_secret` de moins de 128 bits ;

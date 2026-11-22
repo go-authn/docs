@@ -42,7 +42,9 @@ user "tess" {
 
 El secreto también puede proceder de una columna de base de datos (la quinta) o de
 un atributo LDAP (`totp_attribute`); consulte [las personas]({{< relref "/authnd/people.md" >}}).
-Un `totp_secret` de menos de 128 bits (RFC 4226 R6) en un bloque `user` o `reader`
+Un `user` también toma su secreto como `totp_secret_from` (una
+[referencia a un secreto]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+`systemd-creds:NAME` para uno sellado). Un secreto TOTP de menos de 128 bits (RFC 4226 R6) en un bloque `user` o `reader`
 detiene el servidor, nombrando a la persona, en lugar de hacer fallar después cada
 uno de sus inicios de sesión:
 

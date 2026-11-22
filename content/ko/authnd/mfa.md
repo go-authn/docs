@@ -41,7 +41,9 @@ user "tess" {
 
 비밀 값은 데이터베이스 열(다섯 번째)이나 LDAP 속성(`totp_attribute`)에서도 가져올
 수 있습니다. [사람들]({{< relref "/authnd/people.md" >}})을 참조하십시오.
-`user` 또는 `reader` 블록의 `totp_secret`이 128비트 미만이면(RFC 4226 R6),
+`user`도 비밀 값을 `totp_secret_from`으로 받습니다
+([비밀 값 참조]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+봉인된 것에는 `systemd-creds:NAME`). `user` 또는 `reader` 블록의 TOTP 비밀 값이 128비트 미만이면(RFC 4226 R6),
 나중에 그 사람의 모든 로그인이 실패하게 두는 대신 서버가 그 사람의 이름을 지정하며
 멈춥니다.
 

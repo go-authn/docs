@@ -179,23 +179,29 @@ le processus s'exécute, pas à celui du fichier de configuration ; l'unité s'e
 
 ### Les secrets comme références {#secrets-as-references}
 
-Un bloc `reader` nomme ses secrets par des références
+Les blocs `reader`, `user` et `users` nomment leurs secrets par des références
 [secretsource](https://github.com/go-authn/secretsource) au lieu de les
-contenir :
+contenir (les champs de `user` et `users` demandent authnd avec
+go-authn/directory v0.27.0) :
 
 | champ | signification |
 |---|---|
-| `password_from` | le mot de passe du reader : `systemd-creds:NAME`, `file:PATH` (un fichier ordinaire lisible par son seul propriétaire), `keychain:SERVICE/ACCOUNT`, ... |
-| `totp_secret_from` | le secret TOTP en base32 du reader (avec `mfa { readers = true }`) |
-| `password_file` | **obsolète** : lu comme `password_from = "file:PATH"` |
-| `password`, `totp_secret` | **obsolètes** : le secret lui-même, écrit dans la configuration ; journalisé au démarrage |
+| `password_from` | le mot de passe d'un `reader` ou d'un `user` : `systemd-creds:NAME`, `file:PATH` (un fichier ordinaire lisible par son seul propriétaire), `keychain:SERVICE/ACCOUNT`, ... |
+| `totp_secret_from` | le secret TOTP en base32 d'un `reader` (avec `mfa { readers = true }`) ou d'un `user` |
+| `nt_hash_from` | l'empreinte NT d'un `user`, lue depuis une référence : aucune capacité nouvelle, et refusée à côté d'un mot de passe |
+| `dsn_from` | le DSN de base de données d'un bloc `users` (il peut contenir un mot de passe) |
+| `bind_password_from` | le mot de passe du `bind_dn` d'un bloc `users` |
+| `password_file`, `dsn_file`, `bind_password_file` | **obsolètes** : lus comme la même référence avec `file:PATH` |
+| `password`, `totp_secret`, `nt_hash` | **obsolètes** : le secret lui-même, écrit dans la configuration ; journalisé au démarrage |
 
-Un seul parmi `password_from`, `password_file` et `password` est permis, et
-`totp_secret` avec `totp_secret_from` est refusé. Un secret est une ligne non
+Une seule graphie d'un secret est permise (`password_from`, `password_file` ou
+`password` ; `dsn_from` ou `dsn_file` ; et ainsi de suite). Un secret est une ligne non
 vide d'au plus 4096 octets (un saut de ligne final est retiré) ; une référence
 sans schéma, une référence invalide, ou un secret trop long, vide ou sur
-plusieurs lignes arrête le serveur au démarrage. Les blocs `user` et `users`
-gardent pour l'instant leurs propres graphies `*_file`.
+plusieurs lignes arrête le serveur au démarrage. Les graphies obsolètes
+fonctionnent toujours et sont journalisées au démarrage, jamais avec le secret ;
+les `*_file` passent désormais par `file:`, donc refusent un lien symbolique et
+un fichier appartenant à un autre utilisateur.
 
 `file:` refuse un lien symbolique et un fichier appartenant à un autre
 utilisateur que celui sous lequel authnd s'exécute. Un identifiant transmis par

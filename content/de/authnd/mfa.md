@@ -41,7 +41,9 @@ user "tess" {
 
 Das Geheimnis kann ebenso aus einer Datenbankspalte (der fünften) oder einem LDAP-Attribut
 (`totp_attribute`) kommen; siehe [Personen]({{< relref "/authnd/people.md" >}}).
-Ein `totp_secret` in einem `user`- oder `reader`-Block unter 128 Bit (RFC 4226 R6) hält den
+Ein `user` nimmt sein Geheimnis auch als `totp_secret_from` (eine
+[Geheimnis-Referenz]({{< relref "/authnd/install.md#secrets-as-references" >}}),
+`systemd-creds:NAME` für ein versiegeltes). Ein TOTP-Geheimnis in einem `user`- oder `reader`-Block unter 128 Bit (RFC 4226 R6) hält den
 Server an und nennt die Person, statt später jede ihrer Anmeldungen scheitern zu lassen:
 
 ```
