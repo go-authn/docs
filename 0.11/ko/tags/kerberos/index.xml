@@ -82,7 +82,10 @@ data-copied-label="복사됨!"
 &lt;p&gt;&lt;code&gt;krbtgt/REALM&lt;/code&gt;이 없는 keytab은 &lt;code&gt;check&lt;/code&gt;와 시작 시에 거부됩니다.&lt;a href="https://go-authn.github.io/docs/0.11/ko/authnd/check/#the-certificate-the-keytab-and-the-one-thing-it-cannot-see"&gt;&lt;code&gt;check&lt;/code&gt;&lt;/a&gt;를
 참조하십시오. keytab은 시작할 때 한 번만 읽으므로, 교체하려면 다시 시작해야 합니다.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="who-can-be-issued-a-ticket"&gt;누가 티켓을 발급받을 수 있는가&lt;span class="hx:absolute hx:-mt-20" id="who-can-be-issued-a-ticket"&gt;&lt;/span&gt;
-&lt;a href="#who-can-be-issued-a-ticket" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;KDC는 클라이언트의 사전 인증을 그 사람의 장기 키로 &lt;strong&gt;복호화&lt;/strong&gt;해야 하므로,비밀번호를 확인할 방법뿐 아니라 그 사람의 &lt;strong&gt;비밀번호&lt;/strong&gt;가 필요합니다. &lt;code&gt;check&lt;/code&gt;는
+&lt;a href="#who-can-be-issued-a-ticket" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;kerberos&lt;/code&gt; 블록은 비밀번호에서 키를 유도하는 것에 대한 authnd의 명시적 옵트인이며
+설계에 따른 것입니다. authnd는 kdc 라이브러리의 &lt;code&gt;AllowPasswordDerivedAS&lt;/code&gt;를
+설정하고, 라이브러리는 kdc v0.11.0부터 이를 기본적으로 꺼 둡니다.&lt;/p&gt;
+&lt;p&gt;KDC는 클라이언트의 사전 인증을 그 사람의 장기 키로 &lt;strong&gt;복호화&lt;/strong&gt;해야 하므로,비밀번호를 확인할 방법뿐 아니라 그 사람의 &lt;strong&gt;비밀번호&lt;/strong&gt;가 필요합니다. &lt;code&gt;check&lt;/code&gt;는
 누가 가능하고 누가 불가능한지를 이유와 함께 알려 줍니다.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;pre&gt;&lt;code&gt;$ authnd check realm
@@ -446,6 +449,9 @@ authnd v0.16.2처럼 v0.18.0으로 빌드됩니다. 받아들이는 쪽 절반�
 &lt;h2 data-hextra-search-id="only-a-source-holding-the-password-can-back-a-realm"&gt;비밀번호를 보유한 소스만이 렐름을 뒷받침할 수 있습니다&lt;span class="hx:absolute hx:-mt-20" id="only-a-source-holding-the-password-can-back-a-realm"&gt;&lt;/span&gt;
 &lt;a href="#only-a-source-holding-the-password-can-back-a-realm" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;KDC는 클라이언트의 사전 인증을 그 사람의 장기 키로 &lt;strong&gt;복호화&lt;/strong&gt;해야 하므로,&lt;code&gt;directory.Verifier&lt;/code&gt; — 다른 사람의 LDAP에 대한 바인드, 해시 비교 — 는 &lt;em&gt;이것이 올바른
 비밀번호인가&lt;/em&gt;에 아무리 잘 답하더라도 소용이 없습니다. 소스에 비밀번호가 없는 사람에게는&lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt;(&lt;em&gt;null key&lt;/em&gt;)로 응답하며, 잘못된 비밀번호에 주는 코드는 절대 아니므로,다시 입력할 비밀번호가 아니라 고쳐야 할 구성으로 읽힙니다.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="allow-password-derived-as"&gt;비밀번호 기반 인증 켜기&lt;span class="hx:absolute hx:-mt-20" id="allow-password-derived-as"&gt;&lt;/span&gt;
+&lt;a href="#allow-password-derived-as" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;v0.11.0부터 디렉터리가 보관한 비밀번호에서 사람의 키를 유도하는 것(string-to-key, RFC 3962)은 &lt;strong&gt;기본적으로 꺼져 있습니다&lt;/strong&gt;. 켜려면&lt;code&gt;Config.AllowPasswordDerivedAS&lt;/code&gt;를 설정하세요. 꺼져 있으면 항목에 비밀번호가 있는
+사람에 대한 AS-REQ에 &lt;code&gt;KDC_ERR_POLICY&lt;/code&gt;(&lt;em&gt;KDC 정책이 요청을 거부함&lt;/em&gt;, RFC 4120§7.5.9)가 응답되며, 오류 문구와 &lt;code&gt;Logf&lt;/code&gt; 줄이 이 옵션을 명시합니다. keytab 키(&lt;code&gt;krbtgt&lt;/code&gt;, 서비스)와 TGS는 영향을 받지 않습니다.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="finder"&gt;색인 건네기: &lt;code&gt;Finder&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="finder"&gt;&lt;/span&gt;
 &lt;a href="#finder" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;모든 AS-REQ와 TGS-REQ는 한 사람을 조회합니다. 일반 &lt;code&gt;directory.Source&lt;/code&gt;에서는 이것이&lt;code&gt;Identities()&lt;/code&gt;와 순회입니다. 10,000명일 때 순회가 AS-REQ CPU의 절반이었고,&lt;code&gt;Identities()&lt;/code&gt;에서 데이터베이스나 LDAP 서버를 읽는 소스는 인증되지 않은 요청을 포함한
 모든 요청마다 통째로 읽혔습니다. &lt;strong&gt;v0.6.0부터&lt;/strong&gt; 색인을 가진 소스는&lt;/p&gt;
@@ -506,6 +512,7 @@ data-copied-label="복사됨!"
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Realm&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;EXAMPLE.ORG&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;People&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;people&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Services&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;kt&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;AllowPasswordDerivedAS&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// off by default since v0.11.0&lt;/span&gt;&lt;span class="w"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Logf&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;log&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;Printf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// why each request was refused; never a key&lt;/span&gt;&lt;span class="w"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;&lt;span class="w"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;nil&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
@@ -697,7 +704,9 @@ data-copied-label="복사됨!"
 &lt;p&gt;순수 Go, &lt;code&gt;CGO_ENABLED=0&lt;/code&gt;; 릴리스에는 바이너리마다 &lt;code&gt;SHA256SUMS&lt;/code&gt; 매니페스트와 빌드 출처
 증명이 붙습니다. 서비스로: &lt;code&gt;packaging/systemd/&lt;/code&gt;(유닛과 sysusers 파일. &lt;a href="#running-it"&gt;실행하기&lt;/a&gt; 참조).&lt;/p&gt;
 &lt;h2 data-hextra-search-id="no-passwords"&gt;비밀번호 없음&lt;span class="hx:absolute hx:-mt-20" id="no-passwords"&gt;&lt;/span&gt;
-&lt;a href="#no-passwords" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;&lt;code&gt;kdcd&lt;/code&gt;에는 비밀번호 경로가 없으며, 켤 수도 없습니다&lt;/strong&gt;(v0.2.0에서 제거됨. v0.1.0에는&lt;code&gt;password_file&lt;/code&gt;이 있었습니다). 여기서 사람은 장기 키가 없으므로, 사람에 대한 &lt;strong&gt;AS-REQ&lt;/strong&gt;는
+&lt;a href="#no-passwords" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;code&gt;kdcd&lt;/code&gt;는 라이브러리의 &lt;code&gt;AllowPasswordDerivedAS&lt;/code&gt;(kdc v0.11.0부터 기본적으로 꺼짐)를
+결코 켜지 않으며, 켤 수 있는 옵션도 없습니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;kdcd&lt;/code&gt;에는 비밀번호 경로가 없으며, 켤 수도 없습니다&lt;/strong&gt;(v0.2.0에서 제거됨. v0.1.0에는&lt;code&gt;password_file&lt;/code&gt;이 있었습니다). 여기서 사람은 장기 키가 없으므로, 사람에 대한 &lt;strong&gt;AS-REQ&lt;/strong&gt;는
 클라이언트가 무엇을 보내든 설계상 &lt;code&gt;KDC_ERR_NULL_KEY&lt;/code&gt;로 응답됩니다. 사람은 패스키로 그를
 인증한 호출자(go-authn/bridge)로부터 &lt;strong&gt;mint 리스너&lt;/strong&gt;를 통해서만 TGT를 얻습니다.&lt;/p&gt;
 &lt;ul&gt;
