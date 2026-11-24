@@ -219,6 +219,41 @@ permission denied`. Conserva el propietario y el modo del archivo. Por SSH,
 capa más de comillas (`--name '"Dos palabras"'`), porque ssh une sus argumentos
 en una sola cadena que el shell remoto vuelve a dividir.
 
+## Qué cuentas acepta un cliente {#client-accounts}
+
+Desde la v0.38.0, un bloque `client` puede aceptar un solo tipo de persona:
+
+```hcl
+client "forgejo" {
+  secret_file   = "/etc/authn-bridge/forgejo.secret"
+  redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
+  accounts      = ["local"]   # "local", "federated" o ambos (por defecto)
+}
+```
+
+`accounts = ["local"]` es para un servicio que quiere una llave de hardware: se
+rechaza a una persona de una institución SAML. La regla se aplica en todo lugar
+donde se concede o se usa un permiso, no solo donde se ofrece el inicio de
+sesión. El punto de autorización envía a la persona al único camino que el
+cliente acepta (`prompt=none` para un cliente solo de cuentas locales responde
+`login_required`); el paso de la federación, el paso de la passkey y el final
+del inicio de sesión rechazan cada uno un inicio de sesión del otro tipo; el
+canje del código, una renovación y una consulta de dispositivo rechazan a una
+persona del otro tipo, de modo que un permiso obtenido antes de escribir la
+restricción termina con ella. La respuesta es `access_denied`, en el URI de
+redirección del cliente durante un inicio de sesión y en el punto de tokens
+después. `authn-bridge check` muestra la restricción en la línea del cliente,
+`local` exige un bloque `local`, y `bridge_logins_total{result="wrong_account_kind"}`
+cuenta los rechazos. El diario dice por qué:
+
+```text
+login: <username> via <idp entityID> refused for <client_id>: this client takes local accounts only
+token: account kind not accepted by this client: <why> (<username> via <idp> for <client_id>)
+```
+
+Límite conocido: los puntos de certificados (SSH, X.509, Kerberos, WireGuard) no
+están ligados a ningún cliente, por lo que `accounts` no se aplica a ellos.
+
 ## Salud y métricas {#health-and-metrics}
 
 Los de go-net-health/endpoint, como en go-fileshare, en la escucha `metrics`, que no

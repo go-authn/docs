@@ -214,6 +214,39 @@ local-account … --name "Two words"` needs an inner layer of quotes
 (`--name '"Two words"'`), because ssh joins its arguments into one string that
 the remote shell splits again.
 
+## Which accounts a client takes {#client-accounts}
+
+Since v0.38.0 a `client` block may take one kind of person only:
+
+```hcl
+client "forgejo" {
+  secret_file   = "/etc/authn-bridge/forgejo.secret"
+  redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
+  accounts      = ["local"]   # "local", "federated", or both (the default)
+}
+```
+
+`accounts = ["local"]` is for a service that wants a hardware key: a person of
+a SAML institution is refused. The rule is held everywhere a grant is made or
+used, not only where a login is offered. The authorization endpoint sends the
+person to the one path the client takes (`prompt=none` for a local-only client
+answers `login_required`); the federation step, the passkey step and the end of
+a login each refuse a login of the other kind; the code exchange, a refresh and
+a device poll refuse a person of the other kind, so a grant bought before the
+restriction was written stops with it. The answer is `access_denied`, at the
+client's redirect URI during a login and at the token endpoint afterwards.
+`authn-bridge check` prints the restriction on the client's line, `local` needs
+a `local` block, and `bridge_logins_total{result="wrong_account_kind"}` counts
+the refusals. The journal says why:
+
+```text
+login: <username> via <idp entityID> refused for <client_id>: this client takes local accounts only
+token: account kind not accepted by this client: <why> (<username> via <idp> for <client_id>)
+```
+
+Known limit: the certificate endpoints (SSH, X.509, Kerberos, WireGuard) are not
+tied to a client, so `accounts` does not apply to them.
+
 ## Health and metrics
 
 go-net-health/endpoint's, as in go-fileshare, on the `metrics` listener, which
