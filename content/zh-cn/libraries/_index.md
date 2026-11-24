@@ -2,7 +2,7 @@
 title: "各个库，每个只回答一个问题"
 linkTitle: "库"
 weight: 50
-description: "十七个 go-authn Go 模块：每个模块回答的问题、这些页面所描述的版本，以及它们为什么是独立的模块。"
+description: "十九个 go-authn Go 模块：每个模块回答的问题、这些页面所描述的版本，以及它们为什么是独立的模块。"
 tags: [库]
 ---
 

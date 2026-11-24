@@ -2,7 +2,7 @@
 title: "라이브러리, 질문 하나씩"
 linkTitle: "라이브러리"
 weight: 50
-description: "열일곱 개의 go-authn Go 모듈: 각각이 답하는 질문, 이 문서가 설명하는 버전, 그리고 별도의 모듈인 이유."
+description: "열아홉 개의 go-authn Go 모듈: 각각이 답하는 질문, 이 문서가 설명하는 버전, 그리고 별도의 모듈인 이유."
 tags: [라이브러리]
 ---
 
