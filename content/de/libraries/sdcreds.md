@@ -23,7 +23,7 @@ erkannt und mit `*UnsupportedModeError` abgelehnt; nichts wird geraten.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-Die Version, die diese Seiten beschreiben, ist v0.1.0.
+Die Version, die diese Seiten beschreiben, ist v0.2.0.
 
 ## Kommandozeile {#cli}
 
@@ -81,6 +81,34 @@ Verzeichnis darüber bis `/`. Die Schlüsseldatei wird einmal geöffnet, ohne ei
 abschließenden Link zu folgen, und der Schlüssel wird aus dem Speicher von
 `s6-run` gelöscht, sobald es mit den Credentials fertig ist. Nur das Kind nimmt
 die Identität des Dienstes an; `s6-run` und alle seine Threads bleiben root.
+
+### Eine Capability behalten: `--keep-cap` {#keep-cap}
+
+```sh
+sdcreds s6-run --service=vpn --user=svc --source=/etc/creds --keep-cap=CAP_NET_ADMIN -- /usr/bin/vpn
+```
+
+Die Option ist wiederholbar und kommagetrennt (`--keep-cap=CAP_NET_ADMIN,CAP_NET_RAW`
+oder je eine Option) und hat **keinen Standardwert**: ohne sie läuft der Dienst
+mit leeren Capability-Mengen.
+
+Es ist eine **Allowlist** von sieben Capabilities, von denen keine root-äquivalent
+ist oder das Credential-tmpfs lesen oder schreiben oder `s6-run` signalisieren
+kann: `CAP_NET_ADMIN`, `CAP_NET_BIND_SERVICE`, `CAP_NET_RAW`, `CAP_NET_BROADCAST`,
+`CAP_IPC_LOCK`, `CAP_WAKE_ALARM` und `CAP_BLOCK_SUSPEND`. Jede andere Capability
+oder ein Name, der keine Capability ist, ist ein Fehler, der die Allowlist nennt und
+gemeldet wird, bevor der Schlüssel gelesen oder etwas eingehängt wird.
+
+Der Dienst hat in seinen Mengen bounding, permitted, inheritable, effective und
+ambient genau die behaltenen Capabilities und sonst nichts. `no_new_privs` bleibt
+aktiv, und die Securebits sind 0x3 (`SECBIT_NOROOT` gesetzt und gesperrt). Die
+Rechte von `s6-run` selbst bleiben unverändert.
+
+`CAP_NET_ADMIN` wirkt auf den Netzwerk-Namensraum, in dem der Dienst läuft; das ist
+der des Hosts, sofern der Dienst nicht in einem eigenen Netzwerk-Namensraum
+gestartet wird (`--unshare` gibt ihm nur einen privaten Mount-Namensraum): dort
+kann er Schnittstellen, Routen und die Firewall ändern. Starten Sie einen solchen
+Dienst in einem eigenen Netzwerk-Namensraum, wenn das wichtig ist.
 
 ## Interoperabilität {#interop}
 

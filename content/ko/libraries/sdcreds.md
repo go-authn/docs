@@ -22,7 +22,7 @@ systemd가 없다면?** `sdcreds`는
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-이 페이지가 설명하는 버전은 v0.1.0입니다.
+이 페이지가 설명하는 버전은 v0.2.0입니다.
 
 ## 명령줄 {#cli}
 
@@ -76,6 +76,32 @@ sdcreds s6-run --service=web --user=svc --source=/etc/creds -- /usr/bin/web
 키 파일은 마지막 링크를 따라가지 않고 한 번만 열리며, 키는 자격 증명 처리를
 마치는 즉시 `s6-run`의 메모리에서 지워집니다. 서비스의 신원을 취하는 것은 자식
 프로세스뿐이며, `s6-run`과 그 모든 스레드는 root로 남습니다.
+
+### 케이퍼빌리티 유지: `--keep-cap` {#keep-cap}
+
+```sh
+sdcreds s6-run --service=vpn --user=svc --source=/etc/creds --keep-cap=CAP_NET_ADMIN -- /usr/bin/vpn
+```
+
+이 플래그는 반복할 수 있고 쉼표로 구분할 수 있으며(`--keep-cap=CAP_NET_ADMIN,CAP_NET_RAW`
+또는 하나씩 각각), **기본값이 없습니다**. 지정하지 않으면 서비스는 모든 케이퍼빌리티
+집합이 비어 있는 상태로 실행됩니다.
+
+이것은 케이퍼빌리티 7개로 이루어진 **허용 목록**이며, 어느 것도 root와 동등하지 않고
+자격 증명 tmpfs를 읽거나 쓰거나 `s6-run`에 시그널을 보낼 수 없습니다:
+`CAP_NET_ADMIN`, `CAP_NET_BIND_SERVICE`, `CAP_NET_RAW`, `CAP_NET_BROADCAST`,
+`CAP_IPC_LOCK`, `CAP_WAKE_ALARM`, `CAP_BLOCK_SUSPEND`. 그 밖의 케이퍼빌리티나
+케이퍼빌리티가 아닌 이름은 허용 목록을 알려 주는 오류가 되며, 키를 읽거나 무엇이든
+마운트하기 전에 보고됩니다.
+
+서비스는 bounding, permitted, inheritable, effective, ambient 집합에 유지한
+케이퍼빌리티만 정확히 가집니다. `no_new_privs`는 계속 켜져 있고, securebits는 0x3
+(`SECBIT_NOROOT` 설정 및 잠금)입니다. `s6-run` 자체의 권한은 바뀌지 않습니다.
+
+`CAP_NET_ADMIN`은 서비스가 실행되는 네트워크 네임스페이스에 작용합니다. 서비스를 자체
+네트워크 네임스페이스에서 시작하지 않으면 그것은 호스트의 것입니다(`--unshare`는
+비공개 마운트 네임스페이스만 제공합니다). 거기서는 인터페이스, 라우트, 방화벽을 바꿀 수
+있습니다. 중요하다면 그런 서비스를 자체 네트워크 네임스페이스에서 실행하십시오.
 
 ## 상호 운용성 {#interop}
 

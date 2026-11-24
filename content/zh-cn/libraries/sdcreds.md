@@ -21,7 +21,7 @@ tags: [libraries, sdcreds, secrets, s6]
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-这些页面所描述的版本是 v0.1.0。
+这些页面所描述的版本是 v0.2.0。
 
 ## 命令行 {#cli}
 
@@ -67,6 +67,28 @@ sdcreds s6-run --service=web --user=svc --source=/etc/creds -- /usr/bin/web
 从它们向上直到 `/` 的每一级目录同样如此。密钥文件只打开一次，不跟随末尾的链接，
 并且密钥会在 `s6-run` 处理完凭据后从其内存中擦除。只有子进程会采用服务的身份；
 `s6-run` 及其所有线程仍然保持 root。
+
+### 保留一项能力:`--keep-cap` {#keep-cap}
+
+```sh
+sdcreds s6-run --service=vpn --user=svc --source=/etc/creds --keep-cap=CAP_NET_ADMIN -- /usr/bin/vpn
+```
+
+该标志可重复使用,也可用逗号分隔(`--keep-cap=CAP_NET_ADMIN,CAP_NET_RAW`,或每个一个标志),
+并且**没有默认值**:不使用它时,服务以所有能力集合均为空的状态运行。
+
+它是由七项能力组成的**允许列表**,其中没有一项等同于 root,也无法读写凭据 tmpfs 或向
+`s6-run` 发送信号:`CAP_NET_ADMIN`、`CAP_NET_BIND_SERVICE`、`CAP_NET_RAW`、
+`CAP_NET_BROADCAST`、`CAP_IPC_LOCK`、`CAP_WAKE_ALARM` 和 `CAP_BLOCK_SUSPEND`。
+任何其他能力,或不是能力的名称,都是会指出允许列表的错误,并在读取密钥或挂载任何内容之前报告。
+
+服务在其 bounding、permitted、inheritable、effective 和 ambient 集合中,恰好只有所保留的能力。
+`no_new_privs` 保持开启,securebits 为 0x3(`SECBIT_NOROOT` 已设置并锁定)。`s6-run`
+自身的权限不变。
+
+`CAP_NET_ADMIN` 作用于服务所在的网络命名空间;除非服务在自己的网络命名空间中启动,否则那就是
+主机的网络命名空间(`--unshare` 只给它一个私有的挂载命名空间):在那里它可以更改接口、路由和防火墙。
+需要时,请在其自己的网络命名空间中运行这样的服务。
 
 ## 互操作性 {#interop}
 

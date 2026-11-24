@@ -21,7 +21,7 @@ s6 が監視するサービスに同じ `$CREDENTIALS_DIRECTORY` を与えるヘ
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-これらのページが説明するバージョンは v0.1.0 です。
+これらのページが説明するバージョンは v0.2.0 です。
 
 ## コマンドライン {#cli}
 
@@ -75,6 +75,32 @@ sdcreds s6-run --service=web --user=svc --source=/etc/creds -- /usr/bin/web
 末尾のリンクをたどらずに一度だけ開かれ、鍵はクレデンシャルの処理が終わった時点で
 `s6-run` のメモリから消去されます。サービスの ID を引き受けるのは子プロセスだけで、
 `s6-run` とそのすべてのスレッドは root のままです。
+
+### ケイパビリティを保持する: `--keep-cap` {#keep-cap}
+
+```sh
+sdcreds s6-run --service=vpn --user=svc --source=/etc/creds --keep-cap=CAP_NET_ADMIN -- /usr/bin/vpn
+```
+
+このフラグは繰り返し指定でき、カンマ区切りも可能です(`--keep-cap=CAP_NET_ADMIN,CAP_NET_RAW`、
+またはフラグを一つずつ)。**デフォルトはありません**。指定しなければ、サービスはすべての
+ケイパビリティ集合が空の状態で実行されます。
+
+これは 7 つのケイパビリティからなる**許可リスト**で、いずれも root 相当ではなく、
+資格情報の tmpfs の読み書きや `s6-run` へのシグナル送信はできません:
+`CAP_NET_ADMIN`、`CAP_NET_BIND_SERVICE`、`CAP_NET_RAW`、`CAP_NET_BROADCAST`、
+`CAP_IPC_LOCK`、`CAP_WAKE_ALARM`、`CAP_BLOCK_SUSPEND`。それ以外のケイパビリティや、
+ケイパビリティではない名前はエラーとなり、許可リストが示されます。このエラーは鍵が
+読まれる前、何かがマウントされる前に報告されます。
+
+サービスは、bounding、permitted、inheritable、effective、ambient の各集合に、保持した
+ケイパビリティだけを持ちます。`no_new_privs` は有効のままで、securebits は 0x3
+(`SECBIT_NOROOT` を設定してロック)です。`s6-run` 自身の権限は変わりません。
+
+`CAP_NET_ADMIN` はサービスが動作するネットワーク名前空間に作用します。サービスが独自の
+ネットワーク名前空間で起動されない限り、それはホストのものです(`--unshare` が与えるのは
+プライベートなマウント名前空間だけです)。そこではインターフェース、ルート、ファイアウォールを
+変更できます。重要な場合は、そのようなサービスを独自のネットワーク名前空間で実行してください。
 
 ## 相互運用性 {#interop}
 
