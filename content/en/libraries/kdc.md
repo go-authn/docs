@@ -45,6 +45,15 @@ right password*. A person whose source holds no password is answered
 `KDC_ERR_NULL_KEY` (*null key*), never the code a wrong password gets, so it
 reads as a configuration to fix rather than a password to retype.
 
+## Opting in to password-derived authentication {#allow-password-derived-as}
+
+Since v0.11.0, deriving a person's key from the password the directory holds
+(string-to-key, RFC 3962) is **off by default**. Set
+`Config.AllowPasswordDerivedAS` to turn it on. Off, an AS-REQ for a person whose
+entry holds a password is answered `KDC_ERR_POLICY` (*KDC policy rejects
+request*, RFC 4120 §7.5.9), and both the error text and the `Logf` line name the
+option. Keytab keys (`krbtgt`, services) and the TGS are unaffected.
+
 ## Give it an index: `Finder` {#finder}
 
 Every AS-REQ and TGS-REQ looks one person up. With a plain `directory.Source`
@@ -107,6 +116,7 @@ func main() {
 		Realm:    "EXAMPLE.ORG",
 		People:   people,
 		Services: kt,
+		AllowPasswordDerivedAS: true, // off by default since v0.11.0
 		Logf:     log.Printf, // why each request was refused; never a key
 	})
 	if err != nil {

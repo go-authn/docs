@@ -32,6 +32,9 @@ sysusers-Datei; siehe [Betrieb](#running-it)).
 
 ## Keine Passwörter {#no-passwords}
 
+`kdcd` setzt `AllowPasswordDerivedAS` der Bibliothek nie (seit kdc v0.11.0
+standardmäßig aus) und hat keine Option dafür.
+
 **In `kdcd` gibt es keinen Passwortpfad, und keiner lässt sich einschalten** (in v0.2.0
 entfernt; v0.1.0 hatte `password_file`). Eine Person hat hier keinen Langzeitschlüssel,
 daher wird ein **AS-REQ** für eine Person absichtlich mit `KDC_ERR_NULL_KEY`

@@ -45,6 +45,16 @@ correcta?*. A una persona cuyo origen no guarda ninguna contraseña se le respon
 de modo que se lee como una configuración que corregir y no como una contraseña que
 volver a escribir.
 
+## Activar la autenticación derivada de contraseña {#allow-password-derived-as}
+
+Desde la v0.11.0, derivar la clave de una persona de la contraseña que guarda el
+directorio (string-to-key, RFC 3962) está **desactivado por defecto**. Active
+`Config.AllowPasswordDerivedAS` para habilitarlo. Desactivado, una AS-REQ para
+una persona cuya entrada contiene una contraseña se responde con
+`KDC_ERR_POLICY` (*la política del KDC rechaza la solicitud*, RFC 4120 §7.5.9),
+y tanto el texto del error como la línea de `Logf` nombran la opción. Las claves
+del keytab (`krbtgt`, servicios) y el TGS no se ven afectados.
+
 ## Darle un índice: `Finder` {#finder}
 
 Cada AS-REQ y TGS-REQ busca a una persona. Con una `directory.Source` simple eso es
@@ -107,6 +117,7 @@ func main() {
 		Realm:    "EXAMPLE.ORG",
 		People:   people,
 		Services: kt,
+		AllowPasswordDerivedAS: true, // off by default since v0.11.0
 		Logf:     log.Printf, // why each request was refused; never a key
 	})
 	if err != nil {

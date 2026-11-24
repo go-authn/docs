@@ -71,6 +71,10 @@ La keytab se lee una sola vez, al arrancar: sustituirla requiere un reinicio.
 
 ## A quién se le puede emitir un ticket {#who-can-be-issued-a-ticket}
 
+Un bloque `kerberos` es la activación explícita, por diseño, de la derivación de
+claves a partir de contraseñas: authnd activa `AllowPasswordDerivedAS` de la
+biblioteca kdc, que la deja desactivada por defecto desde kdc v0.11.0.
+
 Un KDC debe **descifrar** la preautenticación del cliente con la clave de larga
 duración de esa persona, así que necesita la **contraseña** de la persona, no solo
 una forma de comprobarla. `check` dice a quién se le puede y a quién no, con el

@@ -72,6 +72,10 @@ The keytab is read once, at start: replacing it takes a restart.
 
 ## Who can be issued a ticket
 
+A `kerberos` block is authnd's explicit opt-in to deriving keys from passwords,
+by design: it sets the kdc library's `AllowPasswordDerivedAS`, which the library
+leaves off by default since kdc v0.11.0.
+
 A KDC must **decrypt** the client's pre-authentication with that person's
 long-term key, so it needs the person's **password**, not only a way to
 check one. `check` says who can and who cannot, with the reason:

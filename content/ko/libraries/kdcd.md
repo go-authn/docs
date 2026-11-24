@@ -29,6 +29,9 @@ go install github.com/go-authn/kdcd/cmd/kdcd@latest
 
 ## 비밀번호 없음 {#no-passwords}
 
+`kdcd`는 라이브러리의 `AllowPasswordDerivedAS`(kdc v0.11.0부터 기본적으로 꺼짐)를
+결코 켜지 않으며, 켤 수 있는 옵션도 없습니다.
+
 **`kdcd`에는 비밀번호 경로가 없으며, 켤 수도 없습니다**(v0.2.0에서 제거됨. v0.1.0에는
 `password_file`이 있었습니다). 여기서 사람은 장기 키가 없으므로, 사람에 대한 **AS-REQ**는
 클라이언트가 무엇을 보내든 설계상 `KDC_ERR_NULL_KEY`로 응답됩니다. 사람은 패스키로 그를

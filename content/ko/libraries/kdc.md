@@ -39,6 +39,15 @@ KDC는 클라이언트의 사전 인증을 그 사람의 장기 키로 **복호�
 `KDC_ERR_NULL_KEY`(*null key*)로 응답하며, 잘못된 비밀번호에 주는 코드는 절대 아니므로,
 다시 입력할 비밀번호가 아니라 고쳐야 할 구성으로 읽힙니다.
 
+## 비밀번호 기반 인증 켜기 {#allow-password-derived-as}
+
+v0.11.0부터 디렉터리가 보관한 비밀번호에서 사람의 키를 유도하는 것
+(string-to-key, RFC 3962)은 **기본적으로 꺼져 있습니다**. 켜려면
+`Config.AllowPasswordDerivedAS`를 설정하세요. 꺼져 있으면 항목에 비밀번호가 있는
+사람에 대한 AS-REQ에 `KDC_ERR_POLICY`(*KDC 정책이 요청을 거부함*, RFC 4120
+§7.5.9)가 응답되며, 오류 문구와 `Logf` 줄이 이 옵션을 명시합니다. keytab 키
+(`krbtgt`, 서비스)와 TGS는 영향을 받지 않습니다.
+
 ## 색인 건네기: `Finder` {#finder}
 
 모든 AS-REQ와 TGS-REQ는 한 사람을 조회합니다. 일반 `directory.Source`에서는 이것이
@@ -99,6 +108,7 @@ func main() {
 		Realm:    "EXAMPLE.ORG",
 		People:   people,
 		Services: kt,
+		AllowPasswordDerivedAS: true, // off by default since v0.11.0
 		Logf:     log.Printf, // why each request was refused; never a key
 	})
 	if err != nil {

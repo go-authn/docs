@@ -32,6 +32,9 @@ atestación de procedencia de compilación por binario. Como servicio: `packagin
 
 ## Sin contraseñas {#no-passwords}
 
+`kdcd` nunca activa `AllowPasswordDerivedAS` de la biblioteca (desactivado por
+defecto desde kdc v0.11.0) y no tiene ninguna opción para hacerlo.
+
 **No hay ninguna vía de contraseña en `kdcd`, y no se puede activar ninguna** (eliminada
 en la v0.2.0; la v0.1.0 tenía `password_file`). Aquí una persona no tiene clave de larga
 duración, así que una **AS-REQ** para una persona se responde `KDC_ERR_NULL_KEY` por
