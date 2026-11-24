@@ -175,7 +175,7 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;La version décrite par ces pages est la v0.1.0.&lt;/p&gt;
+&lt;p&gt;La version décrite par ces pages est la v0.2.0.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="cli"&gt;Ligne de commande&lt;span class="hx:absolute hx:-mt-20" id="cli"&gt;&lt;/span&gt;
 &lt;a href="#cli" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds setup &lt;span class="c1"&gt;# create the host secret if missing&lt;/span&gt;
@@ -251,6 +251,35 @@ appartenir à root et ne pas être modifiables par le groupe ni les autres, de m
 que chaque répertoire au-dessus jusqu&amp;rsquo;à &lt;code&gt;/&lt;/code&gt;. Le fichier de clé est ouvert une
 seule fois, sans suivre un lien final, et la clé est effacée de la mémoire de&lt;code&gt;s6-run&lt;/code&gt; dès qu&amp;rsquo;il a fini avec les credentials. Seul le processus fils prend
 l&amp;rsquo;identité du service ; &lt;code&gt;s6-run&lt;/code&gt; et tous ses threads restent root.&lt;/p&gt;
+&lt;h3 data-hextra-search-id="keep-cap"&gt;Conserver une capacité : &lt;code&gt;--keep-cap&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="keep-cap"&gt;&lt;/span&gt;
+&lt;a href="#keep-cap" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h3&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds s6-run --service&lt;span class="o"&gt;=&lt;/span&gt;vpn --user&lt;span class="o"&gt;=&lt;/span&gt;svc --source&lt;span class="o"&gt;=&lt;/span&gt;/etc/creds --keep-cap&lt;span class="o"&gt;=&lt;/span&gt;CAP_NET_ADMIN -- /usr/bin/vpn&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;L&amp;rsquo;option est répétable et séparée par des virgules (&lt;code&gt;--keep-cap=CAP_NET_ADMIN,CAP_NET_RAW&lt;/code&gt;
+ou une option chacune) et n&amp;rsquo;a &lt;strong&gt;aucune valeur par défaut&lt;/strong&gt; : sans elle, le service
+s&amp;rsquo;exécute avec tous les ensembles de capacités vides.&lt;/p&gt;
+&lt;p&gt;C&amp;rsquo;est une &lt;strong&gt;liste d&amp;rsquo;autorisation&lt;/strong&gt; de sept capacités, dont aucune n&amp;rsquo;équivaut à root
+ni ne permet de lire ou d&amp;rsquo;écrire le tmpfs des credentials ni de signaler &lt;code&gt;s6-run&lt;/code&gt; :&lt;code&gt;CAP_NET_ADMIN&lt;/code&gt;, &lt;code&gt;CAP_NET_BIND_SERVICE&lt;/code&gt;, &lt;code&gt;CAP_NET_RAW&lt;/code&gt;, &lt;code&gt;CAP_NET_BROADCAST&lt;/code&gt;,&lt;code&gt;CAP_IPC_LOCK&lt;/code&gt;, &lt;code&gt;CAP_WAKE_ALARM&lt;/code&gt; et &lt;code&gt;CAP_BLOCK_SUSPEND&lt;/code&gt;. Toute autre capacité, ou un
+nom qui n&amp;rsquo;est pas une capacité, est une erreur qui nomme la liste, signalée avant
+que la clé soit lue ou que quoi que ce soit soit monté.&lt;/p&gt;
+&lt;p&gt;Le service a, dans ses ensembles borné (bounding), permis, héritable, effectif et
+ambiant, exactement les capacités conservées et rien d&amp;rsquo;autre. &lt;code&gt;no_new_privs&lt;/code&gt; reste
+actif, et les securebits valent 0x3 (&lt;code&gt;SECBIT_NOROOT&lt;/code&gt; posé et verrouillé). Les
+privilèges de &lt;code&gt;s6-run&lt;/code&gt; lui-même ne changent pas.&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;CAP_NET_ADMIN&lt;/code&gt; agit sur l&amp;rsquo;espace de noms réseau où s&amp;rsquo;exécute le service, qui est
+celui de l&amp;rsquo;hôte sauf si le service est lancé dans un espace de noms réseau propre(&lt;code&gt;--unshare&lt;/code&gt; ne lui donne qu&amp;rsquo;un espace de noms de montage privé) : il peut alors
+modifier les interfaces, les routes et le pare-feu. Lancez un tel service dans son
+propre espace de noms réseau quand cela compte.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="interop"&gt;Interopérabilité&lt;span class="hx:absolute hx:-mt-20" id="interop"&gt;&lt;/span&gt;
 &lt;a href="#interop" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Les deux sens sont testés contre le vrai &lt;code&gt;systemd-creds&lt;/code&gt; &lt;strong&gt;262.2&lt;/strong&gt;, compilé à
 partir du tag &lt;code&gt;v262.2&lt;/code&gt; (aucun paquet de distribution).&lt;/p&gt;
