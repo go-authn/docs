@@ -2,7 +2,7 @@
 title: "Die Bibliotheken, je eine Frage"
 linkTitle: "Bibliotheken"
 weight: 50
-description: "Die siebzehn Go-Module von go-authn: die Frage, die jedes beantwortet, die Version, die diese Seiten beschreiben, und warum sie getrennte Module sind."
+description: "Die neunzehn Go-Module von go-authn: die Frage, die jedes beantwortet, die Version, die diese Seiten beschreiben, und warum sie getrennte Module sind."
 tags: [bibliotheken]
 ---
 

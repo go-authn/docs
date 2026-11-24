@@ -2,7 +2,7 @@
 title: "The libraries, one question each"
 linkTitle: "Libraries"
 weight: 50
-description: "The seventeen go-authn Go modules: the question each one answers, the version these pages describe, and why they are separate modules."
+description: "The nineteen go-authn Go modules: the question each one answers, the version these pages describe, and why they are separate modules."
 tags: [libraries]
 ---
 

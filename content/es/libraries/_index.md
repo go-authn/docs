@@ -2,7 +2,7 @@
 title: "Las bibliotecas, una pregunta cada una"
 linkTitle: "Bibliotecas"
 weight: 50
-description: "Los diecisiete módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
+description: "Los diecinueve módulos Go de go-authn: la pregunta que responde cada uno, la versión que describen estas páginas, y por qué son módulos separados."
 tags: [bibliotecas]
 ---
 
