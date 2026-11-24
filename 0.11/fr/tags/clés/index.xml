@@ -7,7 +7,7 @@ aujourd&amp;rsquo;hui par défaut (PBES2, AES, MAC SHA-2). Ce module les lit, sa
 dépendance que la bibliothèque standard, et il est conçu pour les &lt;strong&gt;fichiers
 téléversés non fiables&lt;/strong&gt;.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/pkcs12@v0.1.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/pkcs12@v0.1.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copier le code"
@@ -257,14 +257,13 @@ sans &lt;code&gt;Dp&lt;/code&gt;, &lt;code&gt;Dq&lt;/code&gt; et &lt;code&gt;Qin
 RFC 8017 les exige et tous les exporteurs les écrivent (OpenSSL, Windows,keytool de Java), mais &lt;code&gt;crypto/x509&lt;/code&gt; dérive les manquantes par de
 l&amp;rsquo;arithmétique sur grands entiers : 16,4 Mo et 21 744 allocations à 8192
 bits, contre 0,36 Mo et 618 avec elles.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/go-authn/pkcs12/issues/2" target="_blank" rel="noopener"&gt;go-authn/pkcs12#2&lt;/a&gt;, ouverte,LOW.&lt;/strong&gt; Sous &lt;code&gt;GODEBUG=x509rsacrt=0&lt;/code&gt;, &lt;code&gt;crypto/x509&lt;/code&gt; écarte les valeurs CRT
-invalides et les recalcule, et le contrôle préalable vérifie seulement
-qu&amp;rsquo;elles sont &lt;em&gt;présentes&lt;/em&gt; : une clé de 8192 bits aux valeurs CRT fausses le
-franchit, et avec les pires certificats le décodage atteint 39,4 Mo (rapport
-74,7), hors de la borne que les tests affirment. Cela suppose que
-l&amp;rsquo;opérateur l&amp;rsquo;active, et le &lt;code&gt;go.mod&lt;/code&gt; du module déclare une version de Go pour
-laquelle ce réglage n&amp;rsquo;est pas le défaut ; avec les réglages par défaut, la
-même entrée est refusée en &lt;code&gt;ErrMalformed&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Les valeurs CRT RSA sont vérifiées, quel que soit &lt;code&gt;GODEBUG&lt;/code&gt;&lt;/strong&gt;
+(&lt;a href="https://github.com/go-authn/pkcs12/issues/2" target="_blank" rel="noopener"&gt;go-authn/pkcs12#2&lt;/a&gt;, corrigé
+dans v0.1.1). Avant que &lt;code&gt;crypto/x509&lt;/code&gt; voie la clé, &lt;code&gt;Dp = D mod (P-1)&lt;/code&gt;,&lt;code&gt;Dq = D mod (Q-1)&lt;/code&gt; et &lt;code&gt;Qinv × Q = 1 mod P&lt;/code&gt; sont contrôlés, après les bornes
+de taille ; un écart est refusé en &lt;code&gt;ErrMalformed&lt;/code&gt;. Sous&lt;code&gt;GODEBUG=x509rsacrt=0&lt;/code&gt;, la bibliothèque standard écarte les valeurs CRT
+fausses et les recalcule, ce qui portait le décodage avec les pires
+certificats à 39,4 Mo (rapport 74,7), hors de la borne que les tests
+affirment. Le contrôle ne dépend pas du réglage.&lt;/li&gt;
 &lt;li&gt;Il décode seulement, et ne juge pas la chaîne.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;Contre quoi il est vérifié&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;

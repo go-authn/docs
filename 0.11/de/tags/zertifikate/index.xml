@@ -257,7 +257,7 @@ auf SHA-1 und 3DES/RC2 eingefroren, es weist also zurück, was OpenSSL 3 und 4
 und aktuelles Windows standardmäßig schreiben (PBES2, AES, SHA-2-MACs). Dieses
 Modul liest sie, ohne Abhängigkeit außer der Standardbibliothek, und ist für&lt;strong&gt;nicht vertrauenswürdige Uploads&lt;/strong&gt; gebaut.&lt;/p&gt;
 &lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
-&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/pkcs12@v0.1.0&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/go-authn/pkcs12@v0.1.1&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Code kopieren"
@@ -503,11 +503,13 @@ Schlüssel ohne &lt;code&gt;Dp&lt;/code&gt;, &lt;code&gt;Dq&lt;/code&gt; und &lt
 sieht. RFC 8017 verlangt sie, und jeder Exporteur schreibt sie (OpenSSL,Windows, Javas keytool), aber &lt;code&gt;crypto/x509&lt;/code&gt; leitet fehlende mit
 Großzahlarithmetik ab: 16,4 MB und 21 744 Allokationen bei 8192 Bit, gegen
 0,36 MB und 618 mit ihnen.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;&lt;a href="https://github.com/go-authn/pkcs12/issues/2" target="_blank" rel="noopener"&gt;go-authn/pkcs12#2&lt;/a&gt;, offen,LOW.&lt;/strong&gt; Unter &lt;code&gt;GODEBUG=x509rsacrt=0&lt;/code&gt; verwirft &lt;code&gt;crypto/x509&lt;/code&gt; ungültige
-CRT-Werte und berechnet sie neu, und die Vorprüfung prüft nur, dass sie&lt;em&gt;vorhanden&lt;/em&gt; sind: Ein 8192-Bit-Schlüssel mit falschen CRT-Werten passiert sie,und mit den schlimmsten Zertifikaten erreicht die Dekodierung 39,4 MB(Verhältnis 74,7), außerhalb der Grenze, die die Tests behaupten. Das
-verlangt, dass der Betreiber es einschaltet, und die &lt;code&gt;go.mod&lt;/code&gt; des Moduls
-nennt eine Go-Version, für die diese Einstellung nicht der Standard ist; mit
-Standardeinstellungen wird dieselbe Eingabe als &lt;code&gt;ErrMalformed&lt;/code&gt; abgelehnt.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;RSA-CRT-Werte werden geprüft, unabhängig von &lt;code&gt;GODEBUG&lt;/code&gt;&lt;/strong&gt;
+(&lt;a href="https://github.com/go-authn/pkcs12/issues/2" target="_blank" rel="noopener"&gt;go-authn/pkcs12#2&lt;/a&gt;, behoben in
+v0.1.1). Bevor &lt;code&gt;crypto/x509&lt;/code&gt; den Schlüssel sieht, werden &lt;code&gt;Dp = D mod (P-1)&lt;/code&gt;,&lt;code&gt;Dq = D mod (Q-1)&lt;/code&gt; und &lt;code&gt;Qinv × Q = 1 mod P&lt;/code&gt; geprüft, nach den
+Größengrenzen; eine Abweichung wird als &lt;code&gt;ErrMalformed&lt;/code&gt; abgelehnt. Unter&lt;code&gt;GODEBUG=x509rsacrt=0&lt;/code&gt; verwirft die Standardbibliothek falsche CRT-Werte und
+berechnet sie neu, was die Dekodierung mit den schlimmsten Zertifikaten auf
+39,4 MB (Verhältnis 74,7) brachte, außerhalb der Grenze, die die Tests
+behaupten. Die Prüfung hängt nicht von der Einstellung ab.&lt;/li&gt;
 &lt;li&gt;Es dekodiert nur und beurteilt die Kette nicht.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h2 data-hextra-search-id="what-it-is-checked-against"&gt;Wogegen es geprüft wird&lt;span class="hx:absolute hx:-mt-20" id="what-it-is-checked-against"&gt;&lt;/span&gt;
