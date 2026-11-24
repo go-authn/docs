@@ -224,6 +224,57 @@ $ authn-bridge metadata --config etc/bridge.hcl
 어서션은 서명되어야 하며(`WantAssertionsSigned="true"`), HTTP-POST로 `/saml/acs`에
 전달됩니다. 같은 문서가 `/saml/metadata`에서 제공됩니다.
 
+### 조직, 연락처, 로고
+
+RENATER나 eduGAIN 같은 등록기관은 이름과 기술 연락처 이상을 요구합니다.
+`saml { }` 안의 선택 블록 세 개가 메타데이터에 `md:Organization`, 추가
+`md:ContactPerson`, `mdui:Logo`를 더합니다. 설정하지 않으면 메타데이터는 이전과
+바이트 단위로 같습니다.
+
+```hcl
+saml {
+  # ... 위와 같음 ...
+  technical_contact = "admin@example.org"      # 가장 먼저 기록됨
+
+  organization {
+    names         = { en = "Example Org" }     # 각 맵은 언어별이며 항목이 하나 이상
+    display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
+    urls          = { en = "https://www.example.org/" }
+  }
+
+  contact {
+    type       = "support"                     # technical, support, administrative, billing, other
+    given_name = "Help desk"
+    email      = "help@example.org"
+  }
+  contact {
+    type     = "other"
+    security = true                            # REFEDS 보안 연락처; type "other"만 가능
+    email    = "security@example.org"
+  }
+
+  ui {
+    logo {
+      url    = "https://login.example.org/logo.png"   # lang 없음: 기본 로고
+      width  = 200
+      height = 80
+    }
+    information_urls       = { en = "https://login.example.org/info/en", fr = "https://login.example.org/info/fr" }
+    privacy_statement_urls = { en = "https://login.example.org/privacy/en", fr = "https://login.example.org/privacy/fr" }
+  }
+}
+```
+
+값은 시작할 때 검사하며, 잘못된 값은 연합에 게시되는 대신 공급자의 시작을
+막습니다. 모든 URL은 `https`이고(로고도 마찬가지이며 `data:` URI는 거부됨), 로고의
+`width`와 `height`는 양수이고, 언어는 맵마다 한 번만 쓰고, 연락처 `type`은 다섯
+가지 중 하나이며, `security = true`에는 type `other`가 필요하고, 이메일은 표시
+이름과 꺾쇠 괄호가 없는 순수 주소입니다. 문서에서 `md:Organization`과
+`md:ContactPerson`은 스키마가 요구하는 대로 `md:SPSSODescriptor` 뒤에 오며
+(`technical_contact`가 먼저, 이어서 `contact` 블록이 순서대로), `information_url`과
+`privacy_statement_url`은 그대로 남아 `en` 항목을 뜻합니다. 둘 중 하나와 해당 맵의
+`en` 항목을 함께 주면 거부됩니다.
+
 ## 거부되는 것 {#what-is-refused}
 
 ACS에서는 go-authn/saml이 거부하는 모든 것: 서명되지 않았거나 SHA-1인 어서션, 여러

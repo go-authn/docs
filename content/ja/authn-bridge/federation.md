@@ -223,6 +223,56 @@ $ authn-bridge metadata --config etc/bridge.hcl
 アサーションは署名されていなければならず (`WantAssertionsSigned="true"`)、HTTP-POST で
 `/saml/acs` に届けられます。同じ文書が `/saml/metadata` でも提供されます。
 
+### 組織、連絡先、ロゴ
+
+RENATER や eduGAIN のような登録機関は、名前と技術連絡先以上のものを求めます。
+`saml { }` 内の任意のブロック 3 つで、メタデータに `md:Organization`、追加の
+`md:ContactPerson`、`mdui:Logo` を加えられます。設定しなければ、メタデータは以前と
+バイト単位で同一です。
+
+```hcl
+saml {
+  # ... 上記のとおり ...
+  technical_contact = "admin@example.org"      # 最初に書かれる
+
+  organization {
+    names         = { en = "Example Org" }     # 各マップは言語別で、少なくとも 1 件
+    display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
+    urls          = { en = "https://www.example.org/" }
+  }
+
+  contact {
+    type       = "support"                     # technical, support, administrative, billing, other
+    given_name = "Help desk"
+    email      = "help@example.org"
+  }
+  contact {
+    type     = "other"
+    security = true                            # REFEDS のセキュリティ連絡先。type "other" のみ
+    email    = "security@example.org"
+  }
+
+  ui {
+    logo {
+      url    = "https://login.example.org/logo.png"   # lang なし: 既定のロゴ
+      width  = 200
+      height = 80
+    }
+    information_urls       = { en = "https://login.example.org/info/en", fr = "https://login.example.org/info/fr" }
+    privacy_statement_urls = { en = "https://login.example.org/privacy/en", fr = "https://login.example.org/privacy/fr" }
+  }
+}
+```
+
+値は起動時に検査され、誤った値はフェデレーションに公開される代わりにプロバイダーの
+起動を止めます。すべての URL は `https` で(ロゴも同様で、`data:` URI は拒否されます)、
+ロゴの `width` と `height` は正の値で、言語はマップごとに一度だけ書き、連絡先の `type` は
+5 つのいずれかで、`security = true` には type `other` が必要で、メールアドレスは表示名や
+山括弧のない素のアドレスです。文書内では、スキーマの要求どおり `md:Organization` と
+`md:ContactPerson` が `md:SPSSODescriptor` の後に続きます(最初に `technical_contact`、
+次に `contact` ブロックが順番に)。`information_url` と `privacy_statement_url` は残り、
+`en` の項目を表します。どちらかとそのマップの `en` 項目を両方与えると拒否されます。
+
 ## 拒否されるもの {#what-is-refused}
 
 ACS では、go-authn/saml が拒否するすべてです。署名のない、または SHA-1 のアサーション、複数の
