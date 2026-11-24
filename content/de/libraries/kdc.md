@@ -45,6 +45,16 @@ richtige Passwort ist*. Eine Person, deren Quelle kein Passwort hält, erhält d
 `KDC_ERR_NULL_KEY` („null key“), nie den Code, den ein falsches Passwort bekommt, sodass es
 sich als zu behebende Konfiguration liest und nicht als neu einzugebendes Passwort.
 
+## Passwortbasierte Authentifizierung aktivieren {#allow-password-derived-as}
+
+Seit v0.11.0 ist es **standardmäßig ausgeschaltet**, den Schlüssel einer Person
+aus dem Passwort abzuleiten, das das Verzeichnis hält (string-to-key,
+RFC 3962). `Config.AllowPasswordDerivedAS` schaltet es ein. Ausgeschaltet wird
+eine AS-REQ für eine Person, deren Eintrag ein Passwort enthält, mit
+`KDC_ERR_POLICY` (*KDC-Richtlinie lehnt die Anfrage ab*, RFC 4120 §7.5.9)
+beantwortet; Fehlertext und `Logf`-Zeile nennen die Option. Keytab-Schlüssel
+(`krbtgt`, Dienste) und der TGS sind nicht betroffen.
+
 ## Ihm einen Index geben: `Finder` {#finder}
 
 Jede AS-REQ und TGS-REQ sucht eine Person. Mit einer einfachen `directory.Source`
@@ -108,6 +118,7 @@ func main() {
 		Realm:    "EXAMPLE.ORG",
 		People:   people,
 		Services: kt,
+		AllowPasswordDerivedAS: true, // off by default since v0.11.0
 		Logf:     log.Printf, // why each request was refused; never a key
 	})
 	if err != nil {

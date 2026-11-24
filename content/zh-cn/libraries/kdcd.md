@@ -29,6 +29,9 @@ go install github.com/go-authn/kdcd/cmd/kdcd@latest
 
 ## 没有密码 {#no-passwords}
 
+`kdcd` 从不启用库的 `AllowPasswordDerivedAS`（自 kdc v0.11.0 起默认关闭），
+也没有可以启用它的选项。
+
 **`kdcd` 中没有密码路径，也无法开启**（v0.2.0 中移除；v0.1.0 有 `password_file`）。
 这里的人没有长期密钥，所以针对某人的 **AS-REQ** 无论客户端发送什么，按设计都以
 `KDC_ERR_NULL_KEY` 应答。人只能通过 **mint 监听器**获得 TGT，由用 passkey 对其完成认证的

@@ -40,6 +40,15 @@ KDC は、クライアントの事前認証を、その人の長期鍵で**復�
 コードではなく `KDC_ERR_NULL_KEY` (*null key*) が返るので、入力し直すべきパスワードではなく、直す
 べき設定として読めます。
 
+## パスワード由来の認証を有効にする {#allow-password-derived-as}
+
+v0.11.0 以降、ディレクトリが保持するパスワードから人の鍵を導出すること
+（string-to-key、RFC 3962）は**既定で無効**です。有効にするには
+`Config.AllowPasswordDerivedAS` を設定します。無効のとき、エントリにパスワードを
+持つ人への AS-REQ には `KDC_ERR_POLICY`（*KDC のポリシーが要求を拒否*、
+RFC 4120 §7.5.9）が返り、エラー文と `Logf` の行がこのオプションを名指しします。
+keytab の鍵（`krbtgt`、サービス）と TGS は影響を受けません。
+
 ## 索引を渡す: `Finder` {#finder}
 
 AS-REQ と TGS-REQ はどれも一人を検索します。通常の `directory.Source` では、それは
@@ -101,6 +110,7 @@ func main() {
 		Realm:    "EXAMPLE.ORG",
 		People:   people,
 		Services: kt,
+		AllowPasswordDerivedAS: true, // off by default since v0.11.0
 		Logf:     log.Printf, // why each request was refused; never a key
 	})
 	if err != nil {

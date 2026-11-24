@@ -70,6 +70,10 @@ Vno  Type                     Principal                       Aliases
 
 ## 누가 티켓을 발급받을 수 있는가 {#who-can-be-issued-a-ticket}
 
+`kerberos` 블록은 비밀번호에서 키를 유도하는 것에 대한 authnd의 명시적 옵트인이며
+설계에 따른 것입니다. authnd는 kdc 라이브러리의 `AllowPasswordDerivedAS`를
+설정하고, 라이브러리는 kdc v0.11.0부터 이를 기본적으로 꺼 둡니다.
+
 KDC는 클라이언트의 사전 인증을 그 사람의 장기 키로 **복호화**해야 하므로,
 비밀번호를 확인할 방법뿐 아니라 그 사람의 **비밀번호**가 필요합니다. `check`는
 누가 가능하고 누가 불가능한지를 이유와 함께 알려 줍니다.

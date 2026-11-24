@@ -41,6 +41,14 @@ KDC 必须用该人员的长期密钥**解密**客户端的预认证，
 `KDC_ERR_NULL_KEY`（*null key*）的答复，而不是密码错误时得到的代码，因此
 这读起来是需要修正的配置，而不是需要重新键入的密码。
 
+## 启用基于密码派生的认证 {#allow-password-derived-as}
+
+自 v0.11.0 起，从目录所持有的密码派生个人密钥（string-to-key，RFC 3962）
+**默认关闭**。设置 `Config.AllowPasswordDerivedAS` 即可开启。关闭时，对条目中
+含有密码的人发出的 AS-REQ 会得到 `KDC_ERR_POLICY`（*KDC 策略拒绝该请求*，
+RFC 4120 §7.5.9），错误文本和 `Logf` 行都会点明该选项。keytab 中的密钥
+（`krbtgt`、服务）和 TGS 不受影响。
+
 ## 给它一个索引：`Finder` {#finder}
 
 每个 AS-REQ 和 TGS-REQ 都要查找一个人。使用普通的 `directory.Source` 时，这就是
@@ -100,6 +108,7 @@ func main() {
 		Realm:    "EXAMPLE.ORG",
 		People:   people,
 		Services: kt,
+		AllowPasswordDerivedAS: true, // off by default since v0.11.0
 		Logf:     log.Printf, // why each request was refused; never a key
 	})
 	if err != nil {

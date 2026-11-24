@@ -31,6 +31,9 @@ go install github.com/go-authn/kdcd/cmd/kdcd@latest
 
 ## パスワードなし {#no-passwords}
 
+`kdcd` はライブラリの `AllowPasswordDerivedAS`（kdc v0.11.0 以降は既定で無効）を
+決して有効にせず、有効にするオプションもありません。
+
 **`kdcd` にはパスワード経路がなく、有効にすることもできません**(v0.2.0 で削除。
 v0.1.0 には `password_file` がありました)。ここでは人は長期鍵を持たないので、人に対する
 **AS-REQ** は、クライアントが何を送っても、設計上 `KDC_ERR_NULL_KEY` で応答されます。

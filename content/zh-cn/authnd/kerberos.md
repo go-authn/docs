@@ -71,6 +71,10 @@ keytab 只在启动时读取一次：更换它需要重启。
 
 ## 谁可以获得票据 {#who-can-be-issued-a-ticket}
 
+`kerberos` 块是 authnd 对“由密码派生密钥”的显式选择加入，这是有意为之的设计：
+authnd 会设置 kdc 库的 `AllowPasswordDerivedAS`，而该库自 kdc v0.11.0 起默认
+将其关闭。
+
 KDC 必须用该用户的长期密钥**解密**客户端的预认证，
 因此它需要此人的**密码**，而不只是
 校验密码的手段。`check` 会说明谁可以、谁不可以，并给出原因：

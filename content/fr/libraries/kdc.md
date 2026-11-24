@@ -45,6 +45,16 @@ bon mot de passe*. Une personne dont la source ne détient aucun mot de passe re
 `KDC_ERR_NULL_KEY` (*null key*), jamais le code qu'obtient un mauvais mot de passe, si bien que cela
 se lit comme une configuration à corriger plutôt que comme un mot de passe à retaper.
 
+## Activer l'authentification dérivée d'un mot de passe {#allow-password-derived-as}
+
+Depuis la v0.11.0, dériver la clé d'une personne du mot de passe que l'annuaire
+détient (string-to-key, RFC 3962) est **désactivé par défaut**. Positionnez
+`Config.AllowPasswordDerivedAS` pour l'activer. Désactivé, une AS-REQ pour une
+personne dont l'entrée contient un mot de passe reçoit `KDC_ERR_POLICY` (*la
+politique du KDC rejette la requête*, RFC 4120 §7.5.9), et le texte de l'erreur
+comme la ligne `Logf` nomment l'option. Les clés du keytab (`krbtgt`, services)
+et le TGS ne sont pas touchés.
+
 ## Lui donner un index : `Finder` {#finder}
 
 Chaque AS-REQ et TGS-REQ cherche une personne. Avec une simple `directory.Source`,
@@ -107,6 +117,7 @@ func main() {
 		Realm:    "EXAMPLE.ORG",
 		People:   people,
 		Services: kt,
+		AllowPasswordDerivedAS: true, // off by default since v0.11.0
 		Logf:     log.Printf, // why each request was refused; never a key
 	})
 	if err != nil {

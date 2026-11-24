@@ -32,6 +32,9 @@ attestation de provenance de construction par binaire. Comme service : `packagin
 
 ## Pas de mots de passe {#no-passwords}
 
+`kdcd` n'active jamais `AllowPasswordDerivedAS` de la bibliothèque (désactivé
+par défaut depuis kdc v0.11.0) et n'a aucune option pour le faire.
+
 **Il n'y a aucun chemin de mot de passe dans `kdcd`, et aucun ne peut être activé**
 (supprimé en v0.2.0 ; la v0.1.0 avait `password_file`). Une personne n'a ici aucune clé à
 long terme, donc une **AS-REQ** pour une personne reçoit `KDC_ERR_NULL_KEY` par

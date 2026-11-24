@@ -71,6 +71,10 @@ Der Keytab wird einmal gelesen, beim Start: Ihn zu ersetzen erfordert einen Neus
 
 ## Wem ein Ticket ausgestellt werden kann {#who-can-be-issued-a-ticket}
 
+Ein `kerberos`-Block ist authnds ausdrückliches, gewolltes Einschalten der
+Schlüsselableitung aus Passwörtern: authnd setzt `AllowPasswordDerivedAS` der
+kdc-Bibliothek, die es seit kdc v0.11.0 standardmäßig ausgeschaltet lässt.
+
 Ein KDC muss die Pre-Authentication des Clients mit dem langfristigen Schlüssel der Person
 **entschlüsseln**, braucht also das **Passwort** der Person, nicht nur eine Möglichkeit, eines
 zu prüfen. `check` sagt, wer ein Ticket bekommen kann und wer nicht, mit dem Grund:
