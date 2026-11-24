@@ -22,7 +22,7 @@ sont reconnus et refusés avec `*UnsupportedModeError` ; rien n'est deviné.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-La version décrite par ces pages est la v0.1.0.
+La version décrite par ces pages est la v0.2.0.
 
 ## Ligne de commande {#cli}
 
@@ -79,6 +79,34 @@ que chaque répertoire au-dessus jusqu'à `/`. Le fichier de clé est ouvert une
 seule fois, sans suivre un lien final, et la clé est effacée de la mémoire de
 `s6-run` dès qu'il a fini avec les credentials. Seul le processus fils prend
 l'identité du service ; `s6-run` et tous ses threads restent root.
+
+### Conserver une capacité : `--keep-cap` {#keep-cap}
+
+```sh
+sdcreds s6-run --service=vpn --user=svc --source=/etc/creds --keep-cap=CAP_NET_ADMIN -- /usr/bin/vpn
+```
+
+L'option est répétable et séparée par des virgules (`--keep-cap=CAP_NET_ADMIN,CAP_NET_RAW`
+ou une option chacune) et n'a **aucune valeur par défaut** : sans elle, le service
+s'exécute avec tous les ensembles de capacités vides.
+
+C'est une **liste d'autorisation** de sept capacités, dont aucune n'équivaut à root
+ni ne permet de lire ou d'écrire le tmpfs des credentials ni de signaler `s6-run` :
+`CAP_NET_ADMIN`, `CAP_NET_BIND_SERVICE`, `CAP_NET_RAW`, `CAP_NET_BROADCAST`,
+`CAP_IPC_LOCK`, `CAP_WAKE_ALARM` et `CAP_BLOCK_SUSPEND`. Toute autre capacité, ou un
+nom qui n'est pas une capacité, est une erreur qui nomme la liste, signalée avant
+que la clé soit lue ou que quoi que ce soit soit monté.
+
+Le service a, dans ses ensembles borné (bounding), permis, héritable, effectif et
+ambiant, exactement les capacités conservées et rien d'autre. `no_new_privs` reste
+actif, et les securebits valent 0x3 (`SECBIT_NOROOT` posé et verrouillé). Les
+privilèges de `s6-run` lui-même ne changent pas.
+
+`CAP_NET_ADMIN` agit sur l'espace de noms réseau où s'exécute le service, qui est
+celui de l'hôte sauf si le service est lancé dans un espace de noms réseau propre
+(`--unshare` ne lui donne qu'un espace de noms de montage privé) : il peut alors
+modifier les interfaces, les routes et le pare-feu. Lancez un tel service dans son
+propre espace de noms réseau quand cela compte.
 
 ## Interopérabilité {#interop}
 

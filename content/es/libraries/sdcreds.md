@@ -23,7 +23,7 @@ reconocen y se rechazan con `*UnsupportedModeError`; no se adivina nada.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-La versión que describen estas páginas es la v0.1.0.
+La versión que describen estas páginas es la v0.2.0.
 
 ## Línea de comandos {#cli}
 
@@ -80,6 +80,34 @@ cada directorio por encima hasta `/`. El archivo de clave se abre una sola vez,
 sin seguir un enlace final, y la clave se borra de la memoria de `s6-run`
 cuando termina con las credenciales. Solo el hijo adopta la identidad del
 servicio; `s6-run` y todos sus hilos siguen siendo root.
+
+### Conservar una capacidad: `--keep-cap` {#keep-cap}
+
+```sh
+sdcreds s6-run --service=vpn --user=svc --source=/etc/creds --keep-cap=CAP_NET_ADMIN -- /usr/bin/vpn
+```
+
+La opción es repetible y separada por comas (`--keep-cap=CAP_NET_ADMIN,CAP_NET_RAW`
+o una opción cada una) y **no tiene valor por defecto**: sin ella, el servicio se
+ejecuta con todos los conjuntos de capacidades vacíos.
+
+Es una **lista de permitidas** de siete capacidades, ninguna equivalente a root ni
+capaz de leer o escribir el tmpfs de credenciales ni de enviar señales a `s6-run`:
+`CAP_NET_ADMIN`, `CAP_NET_BIND_SERVICE`, `CAP_NET_RAW`, `CAP_NET_BROADCAST`,
+`CAP_IPC_LOCK`, `CAP_WAKE_ALARM` y `CAP_BLOCK_SUSPEND`. Cualquier otra capacidad, o
+un nombre que no sea una capacidad, es un error que nombra la lista, notificado
+antes de leer la clave o de montar nada.
+
+El servicio tiene, en sus conjuntos bounding, permitted, inheritable, effective y
+ambient, exactamente las capacidades conservadas y nada más. `no_new_privs`
+permanece activo, y los securebits valen 0x3 (`SECBIT_NOROOT` activado y
+bloqueado). Los privilegios del propio `s6-run` no cambian.
+
+`CAP_NET_ADMIN` actúa sobre el espacio de nombres de red en el que se ejecuta el
+servicio, que es el del host salvo que el servicio se inicie en un espacio de
+nombres de red propio (`--unshare` solo le da un espacio de nombres de montaje
+privado): allí puede cambiar interfaces, rutas y el cortafuegos. Ejecute ese
+servicio en su propio espacio de nombres de red cuando importe.
 
 ## Interoperabilidad {#interop}
 

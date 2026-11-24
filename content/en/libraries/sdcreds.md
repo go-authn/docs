@@ -22,7 +22,7 @@ recognised and refused with `*UnsupportedModeError`; nothing is guessed.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-The version these pages describe is v0.1.0.
+The version these pages describe is v0.2.0.
 
 ## Command line {#cli}
 
@@ -78,6 +78,34 @@ not writable by group or others, and so must every directory above them up to
 is wiped from the memory of `s6-run` when it is done with the credentials. Only
 the child takes the identity of the service; `s6-run` and all its threads stay
 root.
+
+### Keeping a capability: `--keep-cap` {#keep-cap}
+
+```sh
+sdcreds s6-run --service=vpn --user=svc --source=/etc/creds --keep-cap=CAP_NET_ADMIN -- /usr/bin/vpn
+```
+
+The flag is repeatable and comma-separated (`--keep-cap=CAP_NET_ADMIN,CAP_NET_RAW`
+or one flag each) and has **no default**: without it the service runs with every
+capability set empty.
+
+It is an **allowlist** of seven capabilities, none of them root-equivalent or
+able to read or write the credential tmpfs or to signal `s6-run`:
+`CAP_NET_ADMIN`, `CAP_NET_BIND_SERVICE`, `CAP_NET_RAW`, `CAP_NET_BROADCAST`,
+`CAP_IPC_LOCK`, `CAP_WAKE_ALARM` and `CAP_BLOCK_SUSPEND`. Any other capability,
+or a name that is not a capability, is an error that names the allowlist,
+reported before the key is read or anything is mounted.
+
+The service has, in its bounding, permitted, inheritable, effective and ambient
+sets, exactly the kept capabilities and nothing else. `no_new_privs` stays on,
+and the securebits are 0x3 (`SECBIT_NOROOT` set and locked). `s6-run`'s own
+privileges are unchanged.
+
+`CAP_NET_ADMIN` acts on the network namespace the service runs in, which is the
+host's unless the service is started in a network namespace of its own
+(`--unshare` only gives it a private mount namespace): there it can change
+interfaces, routes and the firewall. Run such a service in its own network
+namespace when that matters.
 
 ## Interoperability {#interop}
 
