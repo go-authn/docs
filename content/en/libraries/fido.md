@@ -117,6 +117,31 @@ current PIN is put back if the key refuses the change.
 No reference runs a command. The `-file` flags are unchanged and exclusive with
 the `-from` flags.
 
+## The command line: which key is this? {#which-key}
+
+Since cmd/fido v0.8.0 three commands answer that question without changing
+anything on the key:
+
+```sh
+fido mds lookup 9dd8d593-2213-438a-97f8-d6b813d51c27
+fido mds search yubikey
+fido identify
+fido yubikey info
+```
+
+`fido mds lookup` and `fido mds search` read the FIDO Alliance Metadata
+Service (MDS3) from the library's `mds` package (v0.16.0): the blob is
+downloaded, its signature is checked against the pinned GlobalSign root, and
+nothing is shown from a blob that failed that check. There is no flag to turn
+the verification off. `fido identify` asks the key for its `GetInfo` AAGUID and
+looks it up; **that AAGUID is declared by the key itself**, so the output says
+so: it is not an attestation.
+
+`fido yubikey info` is read-only and refuses a key whose USB vendor is not
+Yubico before sending it anything. It prints the firmware, serial number, form
+factor, USB capabilities and, as two explicit lines, whether the key has a PIV
+application (`PIV:`) and whether its smart-card interface is enabled (`CCID:`).
+
 ## What it refuses, and why
 
 **A key is not trusted to answer what it was asked.** A reply that carries a

@@ -113,6 +113,27 @@ PIN을 파일에 쓰지 않고 저장하려면, `fido pin set --save-to REF`와
 어떤 참조도 명령을 실행하지 않습니다. `-file` 플래그는 그대로이며 `-from`
 플래그와 함께 쓸 수 없습니다.
 
+## 명령줄: 이 키는 무엇인가 {#which-key}
+
+cmd/fido v0.8.0부터 키에 아무것도 바꾸지 않고 이 질문에 답하는 명령이 세 가지 있습니다.
+
+```sh
+fido mds lookup 9dd8d593-2213-438a-97f8-d6b813d51c27
+fido mds search yubikey
+fido identify
+fido yubikey info
+```
+
+`fido mds lookup`과 `fido mds search`는 라이브러리의 `mds` 패키지(v0.16.0)로 FIDO Alliance의
+Metadata Service(MDS3)를 읽습니다. blob을 내려받아 서명을 고정된 GlobalSign 루트로 검증하며,
+검증에 실패한 blob은 아무것도 표시하지 않습니다. 검증을 끄는 옵션은 없습니다.
+`fido identify`는 키에 `GetInfo`의 AAGUID를 물어 조회합니다. **이 AAGUID는 키가 스스로
+선언한 것**이며, 출력에도 그렇게 적힙니다. 증명(attestation)이 아닙니다.
+
+`fido yubikey info`는 읽기 전용이며, USB 제조사가 Yubico가 아닌 키에는 아무것도 보내기 전에
+거부합니다. 펌웨어, 일련번호, 폼 팩터, USB 기능과 함께, PIV 애플리케이션이 있는지(`PIV:`)와
+스마트카드 인터페이스가 켜져 있는지(`CCID:`)를 두 개의 명시적인 줄로 출력합니다.
+
 ## 거부하는 것과 그 이유 {#what-it-refuses-and-why}
 
 **키는 질문받은 것에 대해 답한다고 신뢰되지 않습니다.** 보낸 것과 다른 명령을 담은

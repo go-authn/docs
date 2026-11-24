@@ -117,6 +117,32 @@ le tire au hasard et `--replace` écrase une entrée existante ; avec
 Aucune référence n'exécute de commande. Les options `-file` sont inchangées et
 exclusives avec les options `-from`.
 
+## La ligne de commande : quelle clé est-ce ? {#which-key}
+
+Depuis cmd/fido v0.8.0, trois commandes répondent à cette question sans rien
+modifier sur la clé :
+
+```sh
+fido mds lookup 9dd8d593-2213-438a-97f8-d6b813d51c27
+fido mds search yubikey
+fido identify
+fido yubikey info
+```
+
+`fido mds lookup` et `fido mds search` lisent le service de métadonnées de la
+FIDO Alliance (MDS3) grâce au paquet `mds` de la bibliothèque (v0.16.0) : le blob
+est téléchargé, sa signature est vérifiée contre la racine GlobalSign épinglée, et
+rien n'est affiché d'un blob qui a échoué à cette vérification. Aucune option ne
+la désactive. `fido identify` demande à la clé son AAGUID de `GetInfo` et le
+recherche ; **cet AAGUID est déclaré par la clé elle-même**, et la sortie le
+dit : ce n'est pas une attestation.
+
+`fido yubikey info` est en lecture seule et refuse une clé dont le fabricant USB
+n'est pas Yubico avant de lui envoyer quoi que ce soit. Elle affiche le
+micrologiciel, le numéro de série, le format, les capacités USB et, sur deux
+lignes explicites, si la clé a une application PIV (`PIV:`) et si son interface
+de carte à puce est activée (`CCID:`).
+
 ## Ce qu'il refuse, et pourquoi {#what-it-refuses-and-why}
 
 **On ne fait pas confiance à une clé pour répondre à ce qu'on lui a demandé.** Une réponse qui porte

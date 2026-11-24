@@ -113,6 +113,26 @@ fido fingerprint list --pin-from keychain:fido/yubikey-5c
 
 没有任何引用会执行命令。`-file` 选项不变，并且与 `-from` 选项互斥。
 
+## 命令行：这是哪把密钥？ {#which-key}
+
+自 cmd/fido v0.8.0 起，有三个命令可以在不改动密钥的前提下回答这个问题：
+
+```sh
+fido mds lookup 9dd8d593-2213-438a-97f8-d6b813d51c27
+fido mds search yubikey
+fido identify
+fido yubikey info
+```
+
+`fido mds lookup` 和 `fido mds search` 通过库的 `mds` 包（v0.16.0）读取 FIDO Alliance 的元数据服务（MDS3）：
+下载 blob，用固定的 GlobalSign 根证书验证其签名，验证失败的 blob 不会显示任何内容。
+没有任何选项可以关闭验证。`fido identify` 向密钥询问其 `GetInfo` 的 AAGUID 并查询；
+**这个 AAGUID 是密钥自己声明的**，输出中也会这样说明：它不是证明（attestation）。
+
+`fido yubikey info` 是只读的，对 USB 厂商不是 Yubico 的密钥，会在发送任何内容之前拒绝。
+它会显示固件、序列号、外形、USB 能力，并用两行明确的输出说明密钥是否有 PIV 应用（`PIV:`）
+以及智能卡接口是否启用（`CCID:`）。
+
 ## 它拒绝什么，以及原因 {#what-it-refuses-and-why}
 
 **不信任密钥会如实回答所问的问题。** 携带的命令与所发送命令

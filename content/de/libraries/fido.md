@@ -117,6 +117,32 @@ zurückgelegt, wenn der Schlüssel die Änderung ablehnt.
 Keine Referenz führt einen Befehl aus. Die `-file`-Optionen sind unverändert und
 schließen sich mit den `-from`-Optionen gegenseitig aus.
 
+## Die Kommandozeile: welcher Schlüssel ist das? {#which-key}
+
+Seit cmd/fido v0.8.0 beantworten drei Befehle diese Frage, ohne am Schlüssel
+etwas zu ändern:
+
+```sh
+fido mds lookup 9dd8d593-2213-438a-97f8-d6b813d51c27
+fido mds search yubikey
+fido identify
+fido yubikey info
+```
+
+`fido mds lookup` und `fido mds search` lesen den Metadata Service (MDS3) der
+FIDO Alliance über das Paket `mds` der Bibliothek (v0.16.0): Der Blob wird
+heruntergeladen, seine Signatur gegen das fest hinterlegte GlobalSign-Wurzelzertifikat
+geprüft, und von einem Blob, der diese Prüfung nicht bestanden hat, wird nichts
+angezeigt. Keine Option schaltet die Prüfung ab. `fido identify` fragt den
+Schlüssel nach seiner `GetInfo`-AAGUID und schlägt sie nach; **diese AAGUID
+meldet der Schlüssel selbst**, und die Ausgabe sagt das: Sie ist keine Attestierung.
+
+`fido yubikey info` liest nur und weist einen Schlüssel, dessen USB-Hersteller
+nicht Yubico ist, ab, bevor es ihm etwas sendet. Es zeigt Firmware,
+Seriennummer, Bauform, USB-Fähigkeiten und in zwei ausdrücklichen Zeilen, ob der
+Schlüssel eine PIV-Anwendung hat (`PIV:`) und ob seine Smartcard-Schnittstelle
+aktiv ist (`CCID:`).
+
 ## Was es ablehnt und warum {#what-it-refuses-and-why}
 
 **Einem Schlüssel wird nicht vertraut, dass er auf das antwortet, was gefragt wurde.** Eine Antwort, die einen
