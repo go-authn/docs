@@ -261,9 +261,10 @@ saml {
     email      = "help@example.org"
   }
   contact {
-    type     = "other"
-    security = true                            # the REFEDS security contact; type "other" only
-    email    = "security@example.org"
+    type       = "other"
+    security   = true                          # the REFEDS security contact; type "other" only
+    given_name = "Example CSIRT"               # required for a security contact (REFEDS)
+    email      = "security@example.org"
   }
 
   ui {
@@ -282,7 +283,7 @@ Die Werte werden beim Start geprüft; ein falscher hält den Provider an, statt
 einer Föderation veröffentlicht zu werden: jede URL ist `https` (auch ein Logo:
 eine `data:`-URI wird abgelehnt), ein Logo hat positive `width` und `height`,
 eine Sprache steht je Map nur einmal, ein Kontakt-`type` ist einer der fünf,
-`security = true` verlangt den Typ `other`, und eine E-Mail-Adresse ist eine
+`security = true` verlangt den Typ `other` und einen `given_name` (die REFEDS-Erweiterung für Sicherheitskontakte macht GivenName und EmailAddress zur Pflicht), und eine E-Mail-Adresse ist eine
 nackte Adresse (kein Anzeigename, keine spitzen Klammern). Im Dokument folgen
 `md:Organization` und die `md:ContactPerson` dem `md:SPSSODescriptor`
 (zuerst `technical_contact`, dann die `contact`-Blöcke der Reihe nach), wie das

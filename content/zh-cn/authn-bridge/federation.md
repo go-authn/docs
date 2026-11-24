@@ -251,9 +251,10 @@ saml {
     email      = "help@example.org"
   }
   contact {
-    type     = "other"
-    security = true                            # the REFEDS security contact; type "other" only
-    email    = "security@example.org"
+    type       = "other"
+    security   = true                          # the REFEDS security contact; type "other" only
+    given_name = "Example CSIRT"               # required for a security contact (REFEDS)
+    email      = "security@example.org"
   }
 
   ui {
@@ -270,7 +271,7 @@ saml {
 
 这些值在启动时检查，错误的值会使提供方无法启动，而不是被发布到联盟：所有 URL 必须是
 `https`（徽标也一样，`data:` URI 会被拒绝），徽标的 `width` 和 `height` 必须为正数，同一映射中
-每种语言只能写一次，联系人的 `type` 是五种之一，`security = true` 要求 type 为 `other`，
+每种语言只能写一次，联系人的 `type` 是五种之一，`security = true` 要求 type 为 `other` 且提供 `given_name`（REFEDS 安全联系人扩展规定 GivenName 和 EmailAddress 为必填），
 电子邮件必须是不含显示名和尖括号的纯地址。在文档中，按元数据模式的要求，`md:Organization`
 和 `md:ContactPerson` 跟在 `md:SPSSODescriptor` 之后（先是 `technical_contact`，然后按顺序是各个
 `contact` 块）。`information_url` 和 `privacy_statement_url` 仍然保留，代表 `en` 项：同时给出其中一个

@@ -259,9 +259,10 @@ saml {
     email      = "help@example.org"
   }
   contact {
-    type     = "other"
-    security = true                            # the REFEDS security contact; type "other" only
-    email    = "security@example.org"
+    type       = "other"
+    security   = true                          # the REFEDS security contact; type "other" only
+    given_name = "Example CSIRT"               # required for a security contact (REFEDS)
+    email      = "security@example.org"
   }
 
   ui {
@@ -281,7 +282,7 @@ fournisseur au lieu d'être publiée à une fédération : toute URL est en `htt
 (un logo aussi : une URI `data:` est refusée), un logo a une `width` et une
 `height` strictement positives, une langue n'est écrite qu'une fois par table,
 un `type` de contact est l'un des cinq, `security = true` exige le type
-`other`, et une adresse e-mail est une adresse nue (ni nom, ni chevrons). Dans
+`other` et un `given_name` (l'extension REFEDS du contact de sécurité rend GivenName et EmailAddress obligatoires), et une adresse e-mail est une adresse nue (ni nom, ni chevrons). Dans
 le document, `md:Organization` et les `md:ContactPerson` suivent le
 `md:SPSSODescriptor` (`technical_contact` d'abord, puis les blocs `contact`
 dans l'ordre), comme l'exige le schéma. `information_url` et
