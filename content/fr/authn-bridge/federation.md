@@ -234,6 +234,60 @@ $ authn-bridge metadata --config etc/bridge.hcl
 Les assertions doivent être signées (`WantAssertionsSigned="true"`), et sont remises
 à `/saml/acs` par HTTP-POST. Le même document est servi à `/saml/metadata`.
 
+### Organisation, contacts et logos {#organization-contacts-and-logos}
+
+Un registre comme RENATER ou eduGAIN demande davantage que des noms et un
+contact technique. Trois blocs facultatifs dans `saml { }` ajoutent à la
+métadonnée une `md:Organization`, d'autres `md:ContactPerson` et des
+`mdui:Logo` ; absents, la métadonnée est identique, octet pour octet, à celle
+d'avant.
+
+```hcl
+saml {
+  # ... as above ...
+  technical_contact = "admin@example.org"      # written first
+
+  organization {
+    names         = { en = "Example Org" }     # each map is by language, with at least one entry
+    display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
+    urls          = { en = "https://www.example.org/" }
+  }
+
+  contact {
+    type       = "support"                     # technical, support, administrative, billing or other
+    given_name = "Help desk"
+    email      = "help@example.org"
+  }
+  contact {
+    type     = "other"
+    security = true                            # the REFEDS security contact; type "other" only
+    email    = "security@example.org"
+  }
+
+  ui {
+    logo {
+      url    = "https://login.example.org/logo.png"   # without lang: the default logo
+      width  = 200
+      height = 80
+    }
+    information_urls       = { en = "https://login.example.org/info/en", fr = "https://login.example.org/info/fr" }
+    privacy_statement_urls = { en = "https://login.example.org/privacy/en", fr = "https://login.example.org/privacy/fr" }
+  }
+}
+```
+
+Les valeurs sont vérifiées au démarrage, et une valeur fausse arrête le
+fournisseur au lieu d'être publiée à une fédération : toute URL est en `https`
+(un logo aussi : une URI `data:` est refusée), un logo a une `width` et une
+`height` strictement positives, une langue n'est écrite qu'une fois par table,
+un `type` de contact est l'un des cinq, `security = true` exige le type
+`other`, et une adresse e-mail est une adresse nue (ni nom, ni chevrons). Dans
+le document, `md:Organization` et les `md:ContactPerson` suivent le
+`md:SPSSODescriptor` (`technical_contact` d'abord, puis les blocs `contact`
+dans l'ordre), comme l'exige le schéma. `information_url` et
+`privacy_statement_url` subsistent et valent l'entrée `en` : en donner un et une
+entrée `en` de sa table est refusé.
+
 ## Ce qui est refusé {#what-is-refused}
 
 À l'ACS, tout ce que go-authn/saml refuse : une assertion non signée ou en SHA-1,

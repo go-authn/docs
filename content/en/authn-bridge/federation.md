@@ -235,6 +235,58 @@ $ authn-bridge metadata --config etc/bridge.hcl
 Assertions must be signed (`WantAssertionsSigned="true"`), and are delivered
 to `/saml/acs` by HTTP-POST. The same document is served at `/saml/metadata`.
 
+### Organization, contacts and logos
+
+A registry such as RENATER or eduGAIN asks for more than names and a technical
+contact. Three optional blocks inside `saml { }` add `md:Organization`, more
+`md:ContactPerson`s and `mdui:Logo`s to the metadata; left out, the metadata is
+byte-for-byte what it was before.
+
+```hcl
+saml {
+  # ... as above ...
+  technical_contact = "admin@example.org"      # written first
+
+  organization {
+    names         = { en = "Example Org" }     # each map is by language, with at least one entry
+    display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
+    urls          = { en = "https://www.example.org/" }
+  }
+
+  contact {
+    type       = "support"                     # technical, support, administrative, billing or other
+    given_name = "Help desk"
+    email      = "help@example.org"
+  }
+  contact {
+    type     = "other"
+    security = true                            # the REFEDS security contact; type "other" only
+    email    = "security@example.org"
+  }
+
+  ui {
+    logo {
+      url    = "https://login.example.org/logo.png"   # without lang: the default logo
+      width  = 200
+      height = 80
+    }
+    information_urls       = { en = "https://login.example.org/info/en", fr = "https://login.example.org/info/fr" }
+    privacy_statement_urls = { en = "https://login.example.org/privacy/en", fr = "https://login.example.org/privacy/fr" }
+  }
+}
+```
+
+The values are checked at start, and a wrong one stops the provider rather than
+being published to a federation: every URL is `https` (a logo too: a data URI is
+refused), a logo has a positive `width` and `height`, a language is written once
+per map, a contact `type` is one of the five, `security = true` needs type
+`other`, and an e-mail is a bare address (no display name, no brackets). In the
+document, `md:Organization` and the `md:ContactPerson`s follow the
+`md:SPSSODescriptor` (`technical_contact` first, then the `contact` blocks in
+order), as the metadata schema requires. `information_url` and
+`privacy_statement_url` remain and stand for the `en` entry: giving one and an
+`en` entry of its map is refused.
+
 ## What is refused
 
 At the ACS, everything go-authn/saml refuses: an unsigned or SHA-1 assertion,

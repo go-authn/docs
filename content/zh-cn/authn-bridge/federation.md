@@ -228,6 +228,54 @@ $ authn-bridge metadata --config etc/bridge.hcl
 断言必须经过签名（`WantAssertionsSigned="true"`），并通过 HTTP-POST
 投递到 `/saml/acs`。同一份文档也在 `/saml/metadata` 提供。
 
+### 组织、联系人和徽标 {#organization-contacts-and-logos}
+
+RENATER、eduGAIN 之类的注册机构要求的不止名称和技术联系人。`saml { }` 内的三个可选块
+会向元数据添加 `md:Organization`、更多的 `md:ContactPerson` 和 `mdui:Logo`；不配置时，
+元数据与此前逐字节相同。
+
+```hcl
+saml {
+  # ... as above ...
+  technical_contact = "admin@example.org"      # written first
+
+  organization {
+    names         = { en = "Example Org" }     # each map is by language, with at least one entry
+    display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
+    urls          = { en = "https://www.example.org/" }
+  }
+
+  contact {
+    type       = "support"                     # technical, support, administrative, billing or other
+    given_name = "Help desk"
+    email      = "help@example.org"
+  }
+  contact {
+    type     = "other"
+    security = true                            # the REFEDS security contact; type "other" only
+    email    = "security@example.org"
+  }
+
+  ui {
+    logo {
+      url    = "https://login.example.org/logo.png"   # without lang: the default logo
+      width  = 200
+      height = 80
+    }
+    information_urls       = { en = "https://login.example.org/info/en", fr = "https://login.example.org/info/fr" }
+    privacy_statement_urls = { en = "https://login.example.org/privacy/en", fr = "https://login.example.org/privacy/fr" }
+  }
+}
+```
+
+这些值在启动时检查，错误的值会使提供方无法启动，而不是被发布到联盟：所有 URL 必须是
+`https`（徽标也一样，`data:` URI 会被拒绝），徽标的 `width` 和 `height` 必须为正数，同一映射中
+每种语言只能写一次，联系人的 `type` 是五种之一，`security = true` 要求 type 为 `other`，
+电子邮件必须是不含显示名和尖括号的纯地址。在文档中，按元数据模式的要求，`md:Organization`
+和 `md:ContactPerson` 跟在 `md:SPSSODescriptor` 之后（先是 `technical_contact`，然后按顺序是各个
+`contact` 块）。`information_url` 和 `privacy_statement_url` 仍然保留，代表 `en` 项：同时给出其中一个
+和对应映射的 `en` 项会被拒绝。
+
 ## 什么会被拒绝 {#what-is-refused}
 
 在 ACS 处，go-authn/saml 拒绝的一切：未签名或使用 SHA-1 的断言、

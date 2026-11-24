@@ -242,6 +242,58 @@ Las aserciones deben estar firmadas (`WantAssertionsSigned="true"`), y se
 entregan a `/saml/acs` por HTTP-POST. El mismo documento se sirve en
 `/saml/metadata`.
 
+### Organización, contactos y logotipos {#organization-contacts-and-logos}
+
+Un registro como RENATER o eduGAIN pide más que nombres y un contacto técnico.
+Tres bloques opcionales dentro de `saml { }` añaden a los metadatos una
+`md:Organization`, más `md:ContactPerson` y `mdui:Logo`; si faltan, los
+metadatos son idénticos, byte a byte, a los de antes.
+
+```hcl
+saml {
+  # ... as above ...
+  technical_contact = "admin@example.org"      # written first
+
+  organization {
+    names         = { en = "Example Org" }     # each map is by language, with at least one entry
+    display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
+    urls          = { en = "https://www.example.org/" }
+  }
+
+  contact {
+    type       = "support"                     # technical, support, administrative, billing or other
+    given_name = "Help desk"
+    email      = "help@example.org"
+  }
+  contact {
+    type     = "other"
+    security = true                            # the REFEDS security contact; type "other" only
+    email    = "security@example.org"
+  }
+
+  ui {
+    logo {
+      url    = "https://login.example.org/logo.png"   # without lang: the default logo
+      width  = 200
+      height = 80
+    }
+    information_urls       = { en = "https://login.example.org/info/en", fr = "https://login.example.org/info/fr" }
+    privacy_statement_urls = { en = "https://login.example.org/privacy/en", fr = "https://login.example.org/privacy/fr" }
+  }
+}
+```
+
+Los valores se comprueban al arrancar, y uno erróneo detiene el proveedor en
+lugar de publicarse en una federación: toda URL es `https` (también la de un
+logotipo: un URI `data:` se rechaza), un logotipo tiene `width` y `height`
+positivos, un idioma se escribe una sola vez por mapa, el `type` de un contacto
+es uno de los cinco, `security = true` exige el tipo `other`, y un correo es una
+dirección simple (sin nombre ni corchetes angulares). En el documento,
+`md:Organization` y los `md:ContactPerson` siguen a `md:SPSSODescriptor`
+(primero `technical_contact`, luego los bloques `contact` en orden), como exige
+el esquema. `information_url` y `privacy_statement_url` siguen existiendo y
+valen como la entrada `en`: dar uno y una entrada `en` de su mapa se rechaza.
+
 ## Lo que se rechaza {#what-is-refused}
 
 En el ACS, todo lo que rechaza go-authn/saml: una aserción sin firmar o con SHA-1,
