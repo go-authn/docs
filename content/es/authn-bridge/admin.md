@@ -188,6 +188,37 @@ un operador depende del evento:
 
 Sin bloque `mail`, nada cambia.
 
+## El registro y las cuentas locales {#journal-and-local-accounts}
+
+Desde la v0.37.0, cada inicio de sesión correcto deja una línea en el
+registro, y ninguna contiene un secreto: ni código, ni token, ni aserción, ni
+dirección de correo, ni nombre, ni grupo.
+
+```text
+login: <username> via <idp entityID> for <client_id> from <address>
+login: <login> via <issuer>/local with passkey <8 hex> for <client_id> from <address>
+account: <username> confirmed through <idp entityID> from <address>
+account: audit: <login> stepup <16 hex> from <address>
+token: authorization_code issued to <client_id> for <username>
+token: refresh_token issued to <client_id> for <username>
+```
+
+Las dos primeras son un inicio de sesión en el punto de autorización, a través
+de una institución y con una passkey local (`<8 hex>` es el ID de la passkey,
+tal como lo imprime `local: <login> enrolled a passkey (<8 hex>)`). Las dos
+siguientes son el inicio de sesión en la página de la cuenta, a través de una
+institución y con una passkey. Las dos últimas son los tokens entregados a un
+cliente.
+
+Ejecute `authn-bridge local-account …` como **root** cuando el directorio de
+cuentas es `root:authn-bridge` 0750 y el archivo 0640, la disposición
+documentada: el comando reemplaza el archivo mediante uno temporal contiguo, y
+como `authn-bridge` falla con `open /etc/authn-bridge-local/.accounts-NNN:
+permission denied`. Conserva el propietario y el modo del archivo. Por SSH,
+`ssh host sudo authn-bridge local-account … --name "Dos palabras"` necesita una
+capa más de comillas (`--name '"Dos palabras"'`), porque ssh une sus argumentos
+en una sola cadena que el shell remoto vuelve a dividir.
+
 ## Salud y métricas {#health-and-metrics}
 
 Los de go-net-health/endpoint, como en go-fileshare, en la escucha `metrics`, que no

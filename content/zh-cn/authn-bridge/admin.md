@@ -175,6 +175,32 @@ v0.32.0 起），当通行密钥的删除被请求或被取消时，本地账户
 
 没有 `mail` 块时，一切照旧。
 
+## 日志与本地账户 {#journal-and-local-accounts}
+
+自 v0.37.0 起，每次成功登录都会在日志中留下一行，且任何一行都不含机密：不会输出
+代码、令牌、断言、邮箱地址、姓名或组。
+
+```text
+login: <username> via <idp entityID> for <client_id> from <address>
+login: <login> via <issuer>/local with passkey <8 hex> for <client_id> from <address>
+account: <username> confirmed through <idp entityID> from <address>
+account: audit: <login> stepup <16 hex> from <address>
+token: authorization_code issued to <client_id> for <username>
+token: refresh_token issued to <client_id> for <username>
+```
+
+前两行是授权端点上的登录，分别经由机构和使用本地通行密钥（`<8 hex>` 是通行密钥的
+ID，与 `local: <login> enrolled a passkey (<8 hex>)` 所打印的相同）。接下来两行是
+账户页面的登录，分别经由机构和使用通行密钥。最后两行是发给客户端的令牌。
+
+当账户目录为 `root:authn-bridge` 0750、文件为 0640（文档中的布局）时，请以 **root**
+身份运行 `authn-bridge local-account …`：该命令通过旁边的临时文件来替换账户文件，
+以 `authn-bridge` 身份运行会失败，报
+`open /etc/authn-bridge-local/.accounts-NNN: permission denied`。它会保留文件的所有者
+和权限。经由 SSH 运行时，`ssh host sudo authn-bridge local-account … --name "Two words"`
+需要再加一层引号（`--name '"Two words"'`），因为 ssh 会把参数拼成一个字符串，由远端
+shell 再次拆分。
+
 ## 健康检查和指标 {#health-and-metrics}
 
 来自 go-net-health/endpoint，与 go-fileshare 相同，位于 `metrics` 监听器上，该监听器

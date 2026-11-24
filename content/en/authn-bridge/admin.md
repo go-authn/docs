@@ -184,6 +184,36 @@ on the event:
 
 Without a `mail` block nothing changes.
 
+## The journal, and local accounts {#journal-and-local-accounts}
+
+Since v0.37.0 every successful sign-in leaves one line in the journal, and
+none of them holds a secret: no code, token, assertion, mail address, name or
+group.
+
+```text
+login: <username> via <idp entityID> for <client_id> from <address>
+login: <login> via <issuer>/local with passkey <8 hex> for <client_id> from <address>
+account: <username> confirmed through <idp entityID> from <address>
+account: audit: <login> stepup <16 hex> from <address>
+token: authorization_code issued to <client_id> for <username>
+token: refresh_token issued to <client_id> for <username>
+```
+
+The first two are a login at the authorization endpoint, through an
+institution and with a local passkey (`<8 hex>` is the passkey's ID as
+`local: <login> enrolled a passkey (<8 hex>)` prints it). The next two are the
+account page's sign-in, through an institution and with a passkey. The last two
+are the tokens handed to a client.
+
+Run `authn-bridge local-account …` as **root** when the accounts directory is
+`root:authn-bridge` 0750 and the file 0640, the documented layout: the command
+replaces the file through a temporary one next to it, and as `authn-bridge` it
+fails with `open /etc/authn-bridge-local/.accounts-NNN: permission denied`. It
+keeps the file's owner and mode. Over SSH, `ssh host sudo authn-bridge
+local-account … --name "Two words"` needs an inner layer of quotes
+(`--name '"Two words"'`), because ssh joins its arguments into one string that
+the remote shell splits again.
+
 ## Health and metrics
 
 go-net-health/endpoint's, as in go-fileshare, on the `metrics` listener, which

@@ -185,6 +185,37 @@ einer Zusammenfassung vereint. Was ein Betreiber sieht, hängt vom Ereignis ab:
 
 Ohne `mail`-Block ändert sich nichts.
 
+## Das Journal und lokale Konten {#journal-and-local-accounts}
+
+Seit v0.37.0 hinterlässt jede erfolgreiche Anmeldung eine Zeile im Journal,
+und keine enthält ein Geheimnis: keinen Code, kein Token, keine Assertion,
+keine Mailadresse, keinen Namen, keine Gruppe.
+
+```text
+login: <username> via <idp entityID> for <client_id> from <address>
+login: <login> via <issuer>/local with passkey <8 hex> for <client_id> from <address>
+account: <username> confirmed through <idp entityID> from <address>
+account: audit: <login> stepup <16 hex> from <address>
+token: authorization_code issued to <client_id> for <username>
+token: refresh_token issued to <client_id> for <username>
+```
+
+Die ersten beiden sind eine Anmeldung am Autorisierungsendpunkt, über eine
+Einrichtung und mit einem lokalen Passkey (`<8 hex>` ist die ID des Passkeys,
+wie `local: <login> enrolled a passkey (<8 hex>)` sie ausgibt). Die nächsten
+beiden sind die Anmeldung an der Kontoseite, über eine Einrichtung und mit
+einem Passkey. Die letzten beiden sind die an einen Client ausgegebenen Tokens.
+
+Führen Sie `authn-bridge local-account …` als **root** aus, wenn das
+Kontenverzeichnis `root:authn-bridge` 0750 und die Datei 0640 hat (das
+dokumentierte Layout): Der Befehl ersetzt die Datei über eine temporäre Datei
+daneben und scheitert als `authn-bridge` mit `open
+/etc/authn-bridge-local/.accounts-NNN: permission denied`. Er behält Besitzer
+und Modus der Datei bei. Über SSH braucht `ssh host sudo authn-bridge
+local-account … --name "Zwei Wörter"` eine weitere Anführungszeichen-Ebene
+(`--name '"Zwei Wörter"'`), weil ssh seine Argumente zu einer Zeichenkette
+zusammenfügt, die die Shell auf der Gegenseite erneut zerlegt.
+
 ## Health und Metriken {#health-and-metrics}
 
 Die von go-net-health/endpoint, wie in go-fileshare, auf dem `metrics`-Listener, der

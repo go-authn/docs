@@ -174,6 +174,35 @@ KRL を読まない限り、その有効期間いっぱい有効です。両方�
 
 `mail` ブロックがなければ、何も変わりません。
 
+## ジャーナルとローカルアカウント {#journal-and-local-accounts}
+
+v0.37.0 以降、サインインに成功するたびにジャーナルへ 1 行が残ります。どの行にも
+秘密は含まれません。コード、トークン、アサーション、メールアドレス、氏名、
+グループは出力されません。
+
+```text
+login: <username> via <idp entityID> for <client_id> from <address>
+login: <login> via <issuer>/local with passkey <8 hex> for <client_id> from <address>
+account: <username> confirmed through <idp entityID> from <address>
+account: audit: <login> stepup <16 hex> from <address>
+token: authorization_code issued to <client_id> for <username>
+token: refresh_token issued to <client_id> for <username>
+```
+
+最初の 2 行は認可エンドポイントでのログインで、機関経由とローカルのパスキーによる
+ものです(`<8 hex>` は `local: <login> enrolled a passkey (<8 hex>)` が出力する
+パスキーの ID です)。次の 2 行はアカウントページへのサインインで、機関経由と
+パスキーによるものです。最後の 2 行はクライアントに渡されたトークンです。
+
+アカウントのディレクトリが `root:authn-bridge` 0750、ファイルが 0640(文書化された
+構成)の場合、`authn-bridge local-account …` は **root** で実行してください。
+このコマンドは隣に一時ファイルを作ってファイルを置き換えるため、`authn-bridge`
+として実行すると `open /etc/authn-bridge-local/.accounts-NNN: permission denied`
+で失敗します。ファイルの所有者とモードは保たれます。SSH 経由では、
+`ssh host sudo authn-bridge local-account … --name "Two words"` にもう一段の
+引用符が必要です(`--name '"Two words"'`)。ssh は引数を 1 つの文字列に連結し、
+リモート側のシェルがそれを再び分割するためです。
+
 ## ヘルスとメトリクス {#health-and-metrics}
 
 go-net-health/endpoint のもので、go-fileshare と同様に `metrics` リスナーにあります。これは

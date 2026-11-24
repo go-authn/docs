@@ -177,6 +177,34 @@ go-fileshare가 다음에 디렉터리를 읽을 때 동작하지 않게 되며,
 
 `mail` 블록이 없으면 아무것도 바뀌지 않습니다.
 
+## 저널과 로컬 계정 {#journal-and-local-accounts}
+
+v0.37.0부터 로그인에 성공할 때마다 저널에 한 줄이 남으며, 어느 줄에도 비밀이
+들어 있지 않습니다. 코드, 토큰, 어서션, 메일 주소, 이름, 그룹은 출력되지 않습니다.
+
+```text
+login: <username> via <idp entityID> for <client_id> from <address>
+login: <login> via <issuer>/local with passkey <8 hex> for <client_id> from <address>
+account: <username> confirmed through <idp entityID> from <address>
+account: audit: <login> stepup <16 hex> from <address>
+token: authorization_code issued to <client_id> for <username>
+token: refresh_token issued to <client_id> for <username>
+```
+
+처음 두 줄은 인가 엔드포인트에서의 로그인으로, 기관을 통한 것과 로컬 패스키를 쓴
+것입니다(`<8 hex>`는 `local: <login> enrolled a passkey (<8 hex>)`가 출력하는
+패스키 ID입니다). 다음 두 줄은 계정 페이지 로그인으로, 기관을 통한 것과 패스키를 쓴
+것입니다. 마지막 두 줄은 클라이언트에 발급된 토큰입니다.
+
+계정 디렉터리가 `root:authn-bridge` 0750이고 파일이 0640일 때(문서화된 구성)
+`authn-bridge local-account …`는 **root**로 실행하십시오. 이 명령은 옆에 임시 파일을
+만들어 파일을 교체하므로, `authn-bridge` 사용자로 실행하면
+`open /etc/authn-bridge-local/.accounts-NNN: permission denied`로 실패합니다.
+파일의 소유자와 모드는 유지됩니다. SSH로 실행할 때는
+`ssh host sudo authn-bridge local-account … --name "Two words"`에 따옴표를 한 겹 더
+둘러야 합니다(`--name '"Two words"'`). ssh가 인자를 하나의 문자열로 이어 붙이고
+원격 셸이 이를 다시 나누기 때문입니다.
+
 ## 상태 점검과 메트릭 {#health-and-metrics}
 
 go-net-health/endpoint의 것으로 go-fileshare와 같으며, `metrics` 리스너에 있습니다.
