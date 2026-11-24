@@ -223,7 +223,7 @@ $ authn-bridge metadata --config etc/bridge.hcl
 アサーションは署名されていなければならず (`WantAssertionsSigned="true"`)、HTTP-POST で
 `/saml/acs` に届けられます。同じ文書が `/saml/metadata` でも提供されます。
 
-### 組織、連絡先、ロゴ
+### 組織、連絡先、ロゴ {#organization-contacts-and-logos}
 
 RENATER や eduGAIN のような登録機関は、名前と技術連絡先以上のものを求めます。
 `saml { }` 内の任意のブロック 3 つで、メタデータに `md:Organization`、追加の
@@ -232,29 +232,29 @@ RENATER や eduGAIN のような登録機関は、名前と技術連絡先以上
 
 ```hcl
 saml {
-  # ... 上記のとおり ...
-  technical_contact = "admin@example.org"      # 最初に書かれる
+  # ... as above ...
+  technical_contact = "admin@example.org"      # written first
 
   organization {
-    names         = { en = "Example Org" }     # 各マップは言語別で、少なくとも 1 件
+    names         = { en = "Example Org" }     # each map is by language, with at least one entry
     display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
     urls          = { en = "https://www.example.org/" }
   }
 
   contact {
-    type       = "support"                     # technical, support, administrative, billing, other
+    type       = "support"                     # technical, support, administrative, billing or other
     given_name = "Help desk"
     email      = "help@example.org"
   }
   contact {
     type     = "other"
-    security = true                            # REFEDS のセキュリティ連絡先。type "other" のみ
+    security = true                            # the REFEDS security contact; type "other" only
     email    = "security@example.org"
   }
 
   ui {
     logo {
-      url    = "https://login.example.org/logo.png"   # lang なし: 既定のロゴ
+      url    = "https://login.example.org/logo.png"   # without lang: the default logo
       width  = 200
       height = 80
     }

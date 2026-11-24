@@ -234,7 +234,7 @@ $ authn-bridge metadata --config etc/bridge.hcl
 Les assertions doivent être signées (`WantAssertionsSigned="true"`), et sont remises
 à `/saml/acs` par HTTP-POST. Le même document est servi à `/saml/metadata`.
 
-### Organisation, contacts et logos
+### Organisation, contacts et logos {#organization-contacts-and-logos}
 
 Un registre comme RENATER ou eduGAIN demande davantage que des noms et un
 contact technique. Trois blocs facultatifs dans `saml { }` ajoutent à la
@@ -244,29 +244,29 @@ d'avant.
 
 ```hcl
 saml {
-  # ... comme ci-dessus ...
-  technical_contact = "admin@example.org"      # écrit en premier
+  # ... as above ...
+  technical_contact = "admin@example.org"      # written first
 
   organization {
-    names         = { en = "Example Org" }     # chaque table est par langue, avec au moins une entrée
+    names         = { en = "Example Org" }     # each map is by language, with at least one entry
     display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
     urls          = { en = "https://www.example.org/" }
   }
 
   contact {
-    type       = "support"                     # technical, support, administrative, billing ou other
+    type       = "support"                     # technical, support, administrative, billing or other
     given_name = "Help desk"
     email      = "help@example.org"
   }
   contact {
     type     = "other"
-    security = true                            # le contact sécurité REFEDS ; type "other" seulement
+    security = true                            # the REFEDS security contact; type "other" only
     email    = "security@example.org"
   }
 
   ui {
     logo {
-      url    = "https://login.example.org/logo.png"   # sans lang : le logo par défaut
+      url    = "https://login.example.org/logo.png"   # without lang: the default logo
       width  = 200
       height = 80
     }

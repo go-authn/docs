@@ -242,7 +242,7 @@ Las aserciones deben estar firmadas (`WantAssertionsSigned="true"`), y se
 entregan a `/saml/acs` por HTTP-POST. El mismo documento se sirve en
 `/saml/metadata`.
 
-### Organización, contactos y logotipos
+### Organización, contactos y logotipos {#organization-contacts-and-logos}
 
 Un registro como RENATER o eduGAIN pide más que nombres y un contacto técnico.
 Tres bloques opcionales dentro de `saml { }` añaden a los metadatos una
@@ -251,29 +251,29 @@ metadatos son idénticos, byte a byte, a los de antes.
 
 ```hcl
 saml {
-  # ... como arriba ...
-  technical_contact = "admin@example.org"      # se escribe primero
+  # ... as above ...
+  technical_contact = "admin@example.org"      # written first
 
   organization {
-    names         = { en = "Example Org" }     # cada mapa es por idioma, con al menos una entrada
+    names         = { en = "Example Org" }     # each map is by language, with at least one entry
     display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
     urls          = { en = "https://www.example.org/" }
   }
 
   contact {
-    type       = "support"                     # technical, support, administrative, billing u other
+    type       = "support"                     # technical, support, administrative, billing or other
     given_name = "Help desk"
     email      = "help@example.org"
   }
   contact {
     type     = "other"
-    security = true                            # el contacto de seguridad REFEDS; solo con type "other"
+    security = true                            # the REFEDS security contact; type "other" only
     email    = "security@example.org"
   }
 
   ui {
     logo {
-      url    = "https://login.example.org/logo.png"   # sin lang: el logotipo por defecto
+      url    = "https://login.example.org/logo.png"   # without lang: the default logo
       width  = 200
       height = 80
     }

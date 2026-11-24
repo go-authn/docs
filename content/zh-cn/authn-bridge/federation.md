@@ -228,7 +228,7 @@ $ authn-bridge metadata --config etc/bridge.hcl
 断言必须经过签名（`WantAssertionsSigned="true"`），并通过 HTTP-POST
 投递到 `/saml/acs`。同一份文档也在 `/saml/metadata` 提供。
 
-### 组织、联系人和徽标
+### 组织、联系人和徽标 {#organization-contacts-and-logos}
 
 RENATER、eduGAIN 之类的注册机构要求的不止名称和技术联系人。`saml { }` 内的三个可选块
 会向元数据添加 `md:Organization`、更多的 `md:ContactPerson` 和 `mdui:Logo`；不配置时，
@@ -236,29 +236,29 @@ RENATER、eduGAIN 之类的注册机构要求的不止名称和技术联系人�
 
 ```hcl
 saml {
-  # ... 同上 ...
-  technical_contact = "admin@example.org"      # 最先写出
+  # ... as above ...
+  technical_contact = "admin@example.org"      # written first
 
   organization {
-    names         = { en = "Example Org" }     # 每个映射按语言，至少一项
+    names         = { en = "Example Org" }     # each map is by language, with at least one entry
     display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
     urls          = { en = "https://www.example.org/" }
   }
 
   contact {
-    type       = "support"                     # technical、support、administrative、billing 或 other
+    type       = "support"                     # technical, support, administrative, billing or other
     given_name = "Help desk"
     email      = "help@example.org"
   }
   contact {
     type     = "other"
-    security = true                            # REFEDS 安全联系人；仅限 type "other"
+    security = true                            # the REFEDS security contact; type "other" only
     email    = "security@example.org"
   }
 
   ui {
     logo {
-      url    = "https://login.example.org/logo.png"   # 无 lang：默认徽标
+      url    = "https://login.example.org/logo.png"   # without lang: the default logo
       width  = 200
       height = 80
     }

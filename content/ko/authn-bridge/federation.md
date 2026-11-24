@@ -224,7 +224,7 @@ $ authn-bridge metadata --config etc/bridge.hcl
 어서션은 서명되어야 하며(`WantAssertionsSigned="true"`), HTTP-POST로 `/saml/acs`에
 전달됩니다. 같은 문서가 `/saml/metadata`에서 제공됩니다.
 
-### 조직, 연락처, 로고
+### 조직, 연락처, 로고 {#organization-contacts-and-logos}
 
 RENATER나 eduGAIN 같은 등록기관은 이름과 기술 연락처 이상을 요구합니다.
 `saml { }` 안의 선택 블록 세 개가 메타데이터에 `md:Organization`, 추가
@@ -233,29 +233,29 @@ RENATER나 eduGAIN 같은 등록기관은 이름과 기술 연락처 이상을 �
 
 ```hcl
 saml {
-  # ... 위와 같음 ...
-  technical_contact = "admin@example.org"      # 가장 먼저 기록됨
+  # ... as above ...
+  technical_contact = "admin@example.org"      # written first
 
   organization {
-    names         = { en = "Example Org" }     # 각 맵은 언어별이며 항목이 하나 이상
+    names         = { en = "Example Org" }     # each map is by language, with at least one entry
     display_names = { en = "Example Organisation", fr = "Organisation Exemple" }
     urls          = { en = "https://www.example.org/" }
   }
 
   contact {
-    type       = "support"                     # technical, support, administrative, billing, other
+    type       = "support"                     # technical, support, administrative, billing or other
     given_name = "Help desk"
     email      = "help@example.org"
   }
   contact {
     type     = "other"
-    security = true                            # REFEDS 보안 연락처; type "other"만 가능
+    security = true                            # the REFEDS security contact; type "other" only
     email    = "security@example.org"
   }
 
   ui {
     logo {
-      url    = "https://login.example.org/logo.png"   # lang 없음: 기본 로고
+      url    = "https://login.example.org/logo.png"   # without lang: the default logo
       width  = 200
       height = 80
     }
