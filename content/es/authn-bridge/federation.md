@@ -266,9 +266,10 @@ saml {
     email      = "help@example.org"
   }
   contact {
-    type     = "other"
-    security = true                            # the REFEDS security contact; type "other" only
-    email    = "security@example.org"
+    type       = "other"
+    security   = true                          # the REFEDS security contact; type "other" only
+    given_name = "Example CSIRT"               # required for a security contact (REFEDS)
+    email      = "security@example.org"
   }
 
   ui {
@@ -287,7 +288,7 @@ Los valores se comprueban al arrancar, y uno erróneo detiene el proveedor en
 lugar de publicarse en una federación: toda URL es `https` (también la de un
 logotipo: un URI `data:` se rechaza), un logotipo tiene `width` y `height`
 positivos, un idioma se escribe una sola vez por mapa, el `type` de un contacto
-es uno de los cinco, `security = true` exige el tipo `other`, y un correo es una
+es uno de los cinco, `security = true` exige el tipo `other` y un `given_name` (la extensión REFEDS de contacto de seguridad hace obligatorios GivenName y EmailAddress), y un correo es una
 dirección simple (sin nombre ni corchetes angulares). En el documento,
 `md:Organization` y los `md:ContactPerson` siguen a `md:SPSSODescriptor`
 (primero `technical_contact`, luego los bloques `contact` en orden), como exige

@@ -248,9 +248,10 @@ saml {
     email      = "help@example.org"
   }
   contact {
-    type     = "other"
-    security = true                            # the REFEDS security contact; type "other" only
-    email    = "security@example.org"
+    type       = "other"
+    security   = true                          # the REFEDS security contact; type "other" only
+    given_name = "Example CSIRT"               # required for a security contact (REFEDS)
+    email      = "security@example.org"
   }
 
   ui {
@@ -268,7 +269,7 @@ saml {
 값은 시작할 때 검사하며, 잘못된 값은 연합에 게시되는 대신 공급자의 시작을
 막습니다. 모든 URL은 `https`이고(로고도 마찬가지이며 `data:` URI는 거부됨), 로고의
 `width`와 `height`는 양수이고, 언어는 맵마다 한 번만 쓰고, 연락처 `type`은 다섯
-가지 중 하나이며, `security = true`에는 type `other`가 필요하고, 이메일은 표시
+가지 중 하나이며, `security = true`에는 type `other`와 `given_name`이 필요하고(REFEDS 보안 연락처 확장은 GivenName과 EmailAddress를 필수로 정합니다), 이메일은 표시
 이름과 꺾쇠 괄호가 없는 순수 주소입니다. 문서에서 `md:Organization`과
 `md:ContactPerson`은 스키마가 요구하는 대로 `md:SPSSODescriptor` 뒤에 오며
 (`technical_contact`가 먼저, 이어서 `contact` 블록이 순서대로), `information_url`과

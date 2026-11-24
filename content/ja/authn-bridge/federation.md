@@ -247,9 +247,10 @@ saml {
     email      = "help@example.org"
   }
   contact {
-    type     = "other"
-    security = true                            # the REFEDS security contact; type "other" only
-    email    = "security@example.org"
+    type       = "other"
+    security   = true                          # the REFEDS security contact; type "other" only
+    given_name = "Example CSIRT"               # required for a security contact (REFEDS)
+    email      = "security@example.org"
   }
 
   ui {
@@ -267,7 +268,7 @@ saml {
 値は起動時に検査され、誤った値はフェデレーションに公開される代わりにプロバイダーの
 起動を止めます。すべての URL は `https` で(ロゴも同様で、`data:` URI は拒否されます)、
 ロゴの `width` と `height` は正の値で、言語はマップごとに一度だけ書き、連絡先の `type` は
-5 つのいずれかで、`security = true` には type `other` が必要で、メールアドレスは表示名や
+5 つのいずれかで、`security = true` には type `other` と `given_name` が必要で (REFEDS のセキュリティ連絡先拡張は GivenName と EmailAddress を必須とします)、メールアドレスは表示名や
 山括弧のない素のアドレスです。文書内では、スキーマの要求どおり `md:Organization` と
 `md:ContactPerson` が `md:SPSSODescriptor` の後に続きます(最初に `technical_contact`、
 次に `contact` ブロックが順番に)。`information_url` と `privacy_statement_url` は残り、

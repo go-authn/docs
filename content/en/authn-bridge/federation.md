@@ -259,9 +259,10 @@ saml {
     email      = "help@example.org"
   }
   contact {
-    type     = "other"
-    security = true                            # the REFEDS security contact; type "other" only
-    email    = "security@example.org"
+    type       = "other"
+    security   = true                          # the REFEDS security contact; type "other" only
+    given_name = "Example CSIRT"               # required for a security contact (REFEDS)
+    email      = "security@example.org"
   }
 
   ui {
@@ -280,7 +281,8 @@ The values are checked at start, and a wrong one stops the provider rather than
 being published to a federation: every URL is `https` (a logo too: a data URI is
 refused), a logo has a positive `width` and `height`, a language is written once
 per map, a contact `type` is one of the five, `security = true` needs type
-`other`, and an e-mail is a bare address (no display name, no brackets). In the
+`other` and a `given_name` (the REFEDS Security Contact Metadata Extension makes
+GivenName and EmailAddress mandatory), and an e-mail is a bare address (no display name, no brackets). In the
 document, `md:Organization` and the `md:ContactPerson`s follow the
 `md:SPSSODescriptor` (`technical_contact` first, then the `contact` blocks in
 order), as the metadata schema requires. `information_url` and
