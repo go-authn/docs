@@ -209,7 +209,7 @@ shell 再次拆分。
 client "forgejo" {
   secret_file   = "/etc/authn-bridge/forgejo.secret"
   redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
-  accounts      = ["local"]   # "local"、"federated"，或两者（默认）
+  accounts      = ["local"]   # "local", "federated", or both (the default)
 }
 ```
 

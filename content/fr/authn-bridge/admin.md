@@ -224,7 +224,7 @@ Depuis la v0.38.0, un bloc `client` peut n'accepter qu'une sorte de personne :
 client "forgejo" {
   secret_file   = "/etc/authn-bridge/forgejo.secret"
   redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
-  accounts      = ["local"]   # "local", "federated", ou les deux (par défaut)
+  accounts      = ["local"]   # "local", "federated", or both (the default)
 }
 ```
 

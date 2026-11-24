@@ -224,7 +224,7 @@ Seit v0.38.0 kann ein `client`-Block nur eine Art von Personen annehmen:
 client "forgejo" {
   secret_file   = "/etc/authn-bridge/forgejo.secret"
   redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
-  accounts      = ["local"]   # "local", "federated" oder beides (Standard)
+  accounts      = ["local"]   # "local", "federated", or both (the default)
 }
 ```
 

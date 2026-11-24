@@ -211,7 +211,7 @@ v0.38.0 から、`client` ブロックは 1 種類の人だけを受け付ける
 client "forgejo" {
   secret_file   = "/etc/authn-bridge/forgejo.secret"
   redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
-  accounts      = ["local"]   # "local"、"federated"、または両方(既定)
+  accounts      = ["local"]   # "local", "federated", or both (the default)
 }
 ```
 

@@ -213,7 +213,7 @@ v0.38.0부터 `client` 블록은 한 종류의 사람만 받아들이도록 설�
 client "forgejo" {
   secret_file   = "/etc/authn-bridge/forgejo.secret"
   redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
-  accounts      = ["local"]   # "local", "federated", 또는 둘 다(기본값)
+  accounts      = ["local"]   # "local", "federated", or both (the default)
 }
 ```
 
