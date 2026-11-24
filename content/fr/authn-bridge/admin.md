@@ -185,6 +185,37 @@ que voit un opérateur dépend de l'événement :
 
 Sans bloc `mail`, rien ne change.
 
+## Le journal, et les comptes locaux {#journal-and-local-accounts}
+
+Depuis la v0.37.0, chaque connexion réussie laisse une ligne dans le journal,
+et aucune ne contient de secret : ni code, ni jeton, ni assertion, ni adresse
+mail, ni nom, ni groupe.
+
+```text
+login: <username> via <idp entityID> for <client_id> from <address>
+login: <login> via <issuer>/local with passkey <8 hex> for <client_id> from <address>
+account: <username> confirmed through <idp entityID> from <address>
+account: audit: <login> stepup <16 hex> from <address>
+token: authorization_code issued to <client_id> for <username>
+token: refresh_token issued to <client_id> for <username>
+```
+
+Les deux premières sont une connexion au point d'autorisation, par un
+établissement et par une clé d'accès locale (`<8 hex>` est l'identifiant de la
+clé, tel que l'affiche `local: <login> enrolled a passkey (<8 hex>)`). Les deux
+suivantes sont la connexion à la page du compte, par un établissement et par
+une clé d'accès. Les deux dernières sont les jetons remis à un client.
+
+Lancez `authn-bridge local-account …` en **root** quand le répertoire des
+comptes est `root:authn-bridge` 0750 et le fichier 0640, la disposition
+documentée : la commande remplace le fichier par un fichier temporaire voisin,
+et sous `authn-bridge` elle échoue avec `open
+/etc/authn-bridge-local/.accounts-NNN: permission denied`. Elle conserve le
+propriétaire et le mode du fichier. Par SSH, `ssh hôte sudo authn-bridge
+local-account … --name "Deux mots"` demande une couche de guillemets de plus
+(`--name '"Deux mots"'`), car ssh recolle ses arguments en une seule chaîne que
+l'interpréteur distant découpe à nouveau.
+
 ## Santé et métriques {#health-and-metrics}
 
 Ceux de go-net-health/endpoint, comme dans go-fileshare, sur l'écouteur `metrics`, qui
