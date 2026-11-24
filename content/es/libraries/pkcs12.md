@@ -15,7 +15,7 @@ por defecto (PBES2, AES, MAC SHA-2). Este módulo los lee, sin más dependencia
 que la biblioteca estándar, y está pensado para **cargas no confiables**.
 
 ```sh
-go get github.com/go-authn/pkcs12@v0.1.0
+go get github.com/go-authn/pkcs12@v0.1.1
 ```
 
 **Solo decodifica**: no hay codificador. Decidir si se confía en la cadena es el
@@ -155,15 +155,15 @@ debe limitar las decodificaciones en curso, por ejemplo con un semáforo, y baja
   keytool de Java), pero `crypto/x509` deriva los que faltan con aritmética de
   enteros grandes: 16,4 MB y 21 744 reservas a 8192 bits, frente a 0,36 MB y 618
   con ellos.
-- **[go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2), abierta,
-  LOW.** Bajo `GODEBUG=x509rsacrt=0`, `crypto/x509` descarta los valores CRT
-  inválidos y los recalcula, y la comprobación previa solo verifica que estén
-  *presentes*: una clave de 8192 bits con valores CRT erróneos la supera, y con
-  los peores certificados la decodificación llega a 39,4 MB (razón 74,7), fuera
-  del límite que afirman las pruebas. Requiere que el operador lo active, y el
-  `go.mod` del módulo declara una versión de Go para la que ese ajuste no es el
-  predeterminado; con los ajustes por defecto, la misma entrada se rechaza como
-  `ErrMalformed`.
+- **Los valores CRT de RSA se verifican, diga lo que diga `GODEBUG`**
+  ([go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2), corregido
+  en v0.1.1). Antes de que `crypto/x509` vea la clave se comprueban
+  `Dp = D mod (P-1)`, `Dq = D mod (Q-1)` y `Qinv × Q = 1 mod P`, después de los
+  límites de tamaño; una discrepancia se rechaza como `ErrMalformed`. Bajo
+  `GODEBUG=x509rsacrt=0` la biblioteca estándar descarta los valores CRT
+  erróneos y los recalcula, lo que llevó la decodificación con los peores
+  certificados a 39,4 MB (razón 74,7), fuera del límite que afirman las
+  pruebas. La comprobación no depende del ajuste.
 - Solo decodifica, y no juzga la cadena.
 
 ## Contra qué se comprueba {#what-it-is-checked-against}

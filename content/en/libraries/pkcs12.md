@@ -15,7 +15,7 @@ default (PBES2, AES, SHA-2 MACs). This module reads those, with no dependency
 beyond the standard library, and is built for **untrusted uploads**.
 
 ```sh
-go get github.com/go-authn/pkcs12@v0.1.0
+go get github.com/go-authn/pkcs12@v0.1.1
 ```
 
 It **decodes only**: there is no encoder. Whether to trust the chain is
@@ -153,14 +153,15 @@ it expects only short chains.
   keytool), but `crypto/x509` derives missing ones with big-number arithmetic:
   16.4 MB and 21 744 allocations at 8192 bits, against 0.36 MB and 618 with
   them.
-- **[go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2), open,
-  LOW.** Under `GODEBUG=x509rsacrt=0`, `crypto/x509` drops invalid CRT values
-  and computes them again, and the preflight checks only that they are
-  *present*: an 8192-bit key with wrong CRT values then passes it, and with the
-  worst certificates the decode reaches 39.4 MB (ratio 74.7), outside the bound
-  the tests assert. It needs the operator to opt in, and the module's `go.mod`
-  declares a Go version for which that setting is not the default; with
-  default settings the same input is refused as `ErrMalformed`.
+- **RSA CRT values are verified, whatever `GODEBUG` says**
+  ([go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2), fixed in
+  v0.1.1). Before `crypto/x509` sees the key, `Dp = D mod (P-1)`,
+  `Dq = D mod (Q-1)` and `Qinv × Q = 1 mod P` are checked, after the size
+  bounds; a mismatch is refused as `ErrMalformed`. Under
+  `GODEBUG=x509rsacrt=0` the standard library drops wrong CRT values and
+  computes them again, which took a decode with the worst certificates to
+  39.4 MB (ratio 74.7), outside the bound the tests assert. The check does not
+  depend on the setting.
 - It decodes only, and does not judge the chain.
 
 ## What it is checked against {#what-it-is-checked-against}
