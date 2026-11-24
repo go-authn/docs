@@ -1,0 +1,151 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>go-authn – Sdcreds</title><link>https://go-authn.github.io/docs/0.11/es/tags/sdcreds/</link><description>Recent content in Sdcreds on go-authn</description><generator>Hugo -- gohugo.io</generator><language>es</language><atom:link href="https://go-authn.github.io/docs/0.11/es/tags/sdcreds/index.xml" rel="self" type="application/rss+xml"/><item><title>sdcreds — credenciales de systemd, sin systemd</title><link>https://go-authn.github.io/docs/0.11/es/libraries/sdcreds/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://go-authn.github.io/docs/0.11/es/libraries/sdcreds/</guid><description>
+&lt;p&gt;&lt;strong&gt;¿Y si un servicio necesita las credenciales que una unidad de systemd recibe
+con &lt;code&gt;LoadCredentialEncrypted=&lt;/code&gt;, y no hay systemd?&lt;/strong&gt; &lt;code&gt;sdcreds&lt;/code&gt; lee y escribe el
+formato de &lt;a href="https://systemd.io/CREDENTIALS/" target="_blank" rel="noopener"&gt;credencial de systemd&lt;/a&gt;
+(&lt;code&gt;systemd-creds encrypt&lt;/code&gt; / &lt;code&gt;decrypt&lt;/code&gt;) desde Go, con una línea de comandos y un
+ayudante que da a un servicio supervisado por s6 el mismo&lt;code&gt;$CREDENTIALS_DIRECTORY&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Claves admitidas: &lt;strong&gt;null&lt;/strong&gt;, &lt;strong&gt;host&lt;/strong&gt; (&lt;code&gt;/var/lib/systemd/credential.secret&lt;/code&gt;) y&lt;strong&gt;host-scoped&lt;/strong&gt; (&lt;code&gt;--uid&lt;/code&gt; / &lt;code&gt;--user&lt;/code&gt;). Las credenciales TPM2 y de clave pública se
+reconocen y se rechazan con &lt;code&gt;*UnsupportedModeError&lt;/code&gt;; no se adivina nada.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="install"&gt;Instalación&lt;span class="hx:absolute hx:-mt-20" id="install"&gt;&lt;/span&gt;
+&lt;a href="#install" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go install github.com/go-authn/sdcreds/cmd/sdcreds@latest&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La versión que describen estas páginas es la v0.1.0.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="cli"&gt;Línea de comandos&lt;span class="hx:absolute hx:-mt-20" id="cli"&gt;&lt;/span&gt;
+&lt;a href="#cli" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds setup &lt;span class="c1"&gt;# create the host secret if missing&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds encrypt --name&lt;span class="o"&gt;=&lt;/span&gt;db-password plain.txt db-password.cred
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds decrypt db-password.cred - &lt;span class="c1"&gt;# the name must match the file name&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Lo mismo desde Go:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nx"&gt;host&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;sdcreds&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;HostKeyFile&lt;/span&gt;&lt;span class="p"&gt;{}&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// $SYSTEMD_CREDENTIAL_SECRET or the default path&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nx"&gt;blob&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;sdcreds&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Encrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;secret&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;sdcreds&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;EncryptOptions&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;Key&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;sdcreds&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;IDHost&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;HostKey&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;host&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;db-password&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nx"&gt;text&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;sdcreds&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Armor&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;blob&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;sdcreds&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;ArmorWidth&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// what systemd-creds prints&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nx"&gt;raw&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;_&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;sdcreds&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Unarmor&lt;/span&gt;&lt;span class="p"&gt;([]&lt;/span&gt;&lt;span class="nb"&gt;byte&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;text&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nx"&gt;plain&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;md&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;err&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;:=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;sdcreds&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nf"&gt;Decrypt&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nx"&gt;raw&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;sdcreds&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;DecryptOptions&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="nx"&gt;HostKey&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;host&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;name&lt;/span&gt;&lt;span class="p"&gt;})&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;h2 data-hextra-search-id="s6"&gt;s6&lt;span class="hx:absolute hx:-mt-20" id="s6"&gt;&lt;/span&gt;
+&lt;a href="#s6" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds s6-run --service&lt;span class="o"&gt;=&lt;/span&gt;web --user&lt;span class="o"&gt;=&lt;/span&gt;svc --source&lt;span class="o"&gt;=&lt;/span&gt;/etc/creds -- /usr/bin/web&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;s6-run&lt;/code&gt; descifra cada archivo de &lt;code&gt;--source&lt;/code&gt; &lt;strong&gt;antes&lt;/strong&gt; de montar nada, monta un&lt;code&gt;tmpfs&lt;/code&gt; propio del servicio (&lt;code&gt;nodev,noexec,nosuid,nosymfollow,noswap&lt;/code&gt;, modo 0700,tamaño y número de inodos acotados; &lt;code&gt;ramfs&lt;/code&gt; si el kernel no tiene esas
+opciones), escribe el texto en claro con modo 0400 y como propietario el usuario
+del servicio, lo vuelve a montar en solo lectura, define &lt;code&gt;CREDENTIALS_DIRECTORY&lt;/code&gt;
+y luego inicia el servicio en un proceso hijo que abandona los privilegios(&lt;code&gt;no_new_privs&lt;/code&gt;, un conjunto de capacidades vacío) y lo espera.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;s6-run&lt;/code&gt; sigue siendo el proceso que s6 supervisa: reenvía &lt;code&gt;TERM&lt;/code&gt;, &lt;code&gt;INT&lt;/code&gt;,&lt;code&gt;HUP&lt;/code&gt;, &lt;code&gt;QUIT&lt;/code&gt;, &lt;code&gt;USR1&lt;/code&gt;, &lt;code&gt;USR2&lt;/code&gt;, &lt;code&gt;ALRM&lt;/code&gt; y &lt;code&gt;CONT&lt;/code&gt; al servicio, termina con su
+estado (128 más el número de señal si una señal lo mató), transmite los
+descriptores recibidos, y el servicio se mata si &lt;code&gt;s6-run&lt;/code&gt; muere.&lt;/li&gt;
+&lt;li&gt;Las credenciales se retiran cuando el servicio termina, y antes de que&lt;code&gt;s6-run&lt;/code&gt; falle si el programa no se puede ejecutar.&lt;/li&gt;
+&lt;li&gt;El montaje vive por defecto en un espacio de nombres privado(&lt;code&gt;--unshare=false&lt;/code&gt; lo desactiva), así que desaparece con el servicio.&lt;/li&gt;
+&lt;li&gt;Una credencial sellada con la clave null se rechaza salvo que se indique&lt;code&gt;--allow-null&lt;/code&gt;, y una que no lleva nombre se rechaza siempre.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sdcreds s6-finish --service=web&lt;/code&gt; desmonta de forma diferida y elimina el
+directorio; es idempotente. Con &lt;code&gt;--unshare=false&lt;/code&gt;, un &lt;code&gt;SIGKILL&lt;/code&gt; de &lt;code&gt;s6-run&lt;/code&gt; deja
+el montaje en su sitio hasta que se ejecuta &lt;code&gt;s6-finish&lt;/code&gt;: póngalo en el script
+finish del servicio.&lt;/li&gt;
+&lt;li&gt;Como máximo 1024 credenciales y 16 MiB por servicio. Solo Linux; en otros
+sistemas los comandos informan &lt;code&gt;ErrUnsupported&lt;/code&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Los archivos de clave indicados por &lt;code&gt;--secret&lt;/code&gt; y &lt;code&gt;--machine-id-file&lt;/code&gt; deben
+pertenecer a root y no ser escribibles por el grupo ni por otros, y lo mismo
+cada directorio por encima hasta &lt;code&gt;/&lt;/code&gt;. El archivo de clave se abre una sola vez,sin seguir un enlace final, y la clave se borra de la memoria de &lt;code&gt;s6-run&lt;/code&gt;
+cuando termina con las credenciales. Solo el hijo adopta la identidad del
+servicio; &lt;code&gt;s6-run&lt;/code&gt; y todos sus hilos siguen siendo root.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="interop"&gt;Interoperabilidad&lt;span class="hx:absolute hx:-mt-20" id="interop"&gt;&lt;/span&gt;
+&lt;a href="#interop" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Ambas direcciones se prueban contra el &lt;code&gt;systemd-creds&lt;/code&gt; real &lt;strong&gt;262.2&lt;/strong&gt;, compilado
+a partir de la etiqueta &lt;code&gt;v262.2&lt;/code&gt; (sin paquete de distribución).&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;testdata/systemd-v262.2&lt;/code&gt; contiene 44 credenciales escritas por systemd-creds(null, host y host-scoped; con y sin nombre; not-after ausente, pasado y
+futuro; cargas de 0 B, 1 B y 64 KiB; cinco variantes manipuladas), y&lt;code&gt;manifest.json&lt;/code&gt; registra lo que el propio systemd-creds respondió en cada uno
+de los 272 intentos de descifrado (nombre correcto e incorrecto, antes y
+después de not-after, con y sin &lt;code&gt;--uid&lt;/code&gt;). La biblioteca da la misma
+respuesta, con la misma clase de error, en todos.&lt;/li&gt;
+&lt;li&gt;Con un IV fijo, &lt;code&gt;Encrypt&lt;/code&gt; reproduce exactamente los bytes de systemd.&lt;/li&gt;
+&lt;li&gt;En el contenedor, &lt;code&gt;systemd-creds decrypt&lt;/code&gt; abre lo que escribió &lt;code&gt;Encrypt&lt;/code&gt;, y la
+línea de comandos pasa el mismo viaje de ida y vuelta en ambas direcciones.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;docker build -t sdcreds-interop docker
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;docker run --rm --privileged -e &lt;span class="nv"&gt;SDCREDS_REQUIRE_SYSTEMD&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt; -e &lt;span class="nv"&gt;SDCREDS_S6_INTEGRATION&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt; &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; -v &lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;&lt;span class="nv"&gt;$PWD&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;&lt;/span&gt;:/src/sdcreds -w /src/sdcreds sdcreds-interop &lt;span class="se"&gt;\
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; sh -c &lt;span class="s1"&gt;&amp;#39;echo 0123456789abcdef0123456789abcdef &amp;gt; /etc/machine-id &amp;amp;&amp;amp; go test -count=1 ./...&amp;#39;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Sin &lt;code&gt;SDCREDS_REQUIRE_SYSTEMD=1&lt;/code&gt;, las pruebas que necesitan el binario se omiten;la CI lo define, de modo que allí un binario ausente es un fallo. El límite de
+1 MiB solo lo cubren las pruebas de la biblioteca, no vectores de
+interoperabilidad.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="deviations"&gt;Diferencias respecto a systemd&lt;span class="hx:absolute hx:-mt-20" id="deviations"&gt;&lt;/span&gt;
+&lt;a href="#deviations" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;Un secreto de host cuyo identificador de máquina no coincide se &lt;strong&gt;rechaza&lt;/strong&gt;
+(&lt;code&gt;ErrHostKeyMachine&lt;/code&gt;); systemd lo elimina.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--with-key=auto&lt;/code&gt; significa &lt;code&gt;host&lt;/code&gt;: aquí no hay TPM2.&lt;/li&gt;
+&lt;li&gt;Una credencial sellada con la clave null no tiene secreto: &lt;code&gt;sdcreds decrypt&lt;/code&gt; la
+rechaza en cualquier máquina salvo que se indique &lt;code&gt;--allow-null&lt;/code&gt; (systemd, en
+cambio, consulta el estado de TPM2 y SecureBoot; esa política de la
+biblioteca, &lt;code&gt;SystemNullPolicy&lt;/code&gt;, no la usa la CLI).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;SDCREDS_MACHINE_ID_FILE&lt;/code&gt; (&lt;code&gt;encrypt&lt;/code&gt;, &lt;code&gt;decrypt&lt;/code&gt;, &lt;code&gt;setup&lt;/code&gt;) apunta a otro
+archivo de identificador de máquina. &lt;code&gt;s6-run&lt;/code&gt; lo ignora, y también&lt;code&gt;SYSTEMD_CREDENTIAL_SECRET&lt;/code&gt;: su clave viene de los archivos por defecto, o de&lt;code&gt;--secret&lt;/code&gt; y &lt;code&gt;--machine-id-file&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Un tamaño de IV variable se acepta al leer, como en systemd; esta biblioteca
+siempre escribe 12 bytes.&lt;/li&gt;
+&lt;li&gt;El secreto se abre sin seguir un enlace simbólico final, y debe ser un archivo
+regular con un solo enlace y modo &lt;code&gt;0400&lt;/code&gt;, como exige systemd.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 data-hextra-search-id="safety"&gt;Seguridad&lt;span class="hx:absolute hx:-mt-20" id="safety"&gt;&lt;/span&gt;
+&lt;a href="#safety" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Cada longitud se comprueba antes de usarla, antes de asignar nada, y a ambos
+lados de su límite; las credenciales se limitan a 1 MiB (como systemd) y el
+secreto de host a 16 MiB. Los analizadores se fuzzean en la CI con el corpus
+versionado, y &lt;code&gt;govulncheck&lt;/code&gt; se ejecuta en la CI. El README aún no tiene tabla de
+rendimiento: la medición está aplazada, un punto abierto y no un resultado.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="reference"&gt;Referencia&lt;span class="hx:absolute hx:-mt-20" id="reference"&gt;&lt;/span&gt;
+&lt;a href="#reference" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;El README de&lt;a href="https://github.com/go-authn/sdcreds" target="_blank" rel="noopener"&gt;github.com/go-authn/sdcreds&lt;/a&gt; es la fuente
+de verdad de esta página. Consulte el &lt;code&gt;LICENSE&lt;/code&gt; del módulo.&lt;/p&gt;</description></item></channel></rss>
