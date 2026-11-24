@@ -14,7 +14,7 @@ PKCS#12（[RFC 7292](https://www.rfc-editor.org/rfc/rfc7292)）是导出工具�
 **不可信的上传**而建。
 
 ```sh
-go get github.com/go-authn/pkcs12@v0.1.0
+go get github.com/go-authn/pkcs12@v0.1.1
 ```
 
 它**只解码**：没有编码器。是否信任这条链，是 `crypto/x509` 的 `Verify` 负责的另一个
@@ -139,12 +139,13 @@ MAC 在**解密任何内容之前、以恒定时间**验证。
   `Qinv` 的密钥在 `crypto/x509` 看到之前就被拒绝。RFC 8017 要求这些值，所有导出
   工具（OpenSSL、Windows、Java 的 keytool）也都会写入，但 `crypto/x509` 用大数运算
   派生缺失的值：8192 位时为 16.4 MB 和 21 744 次分配，有这些值时为 0.36 MB 和 618 次。
-- **[go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2)，未关闭，
-  LOW。** 在 `GODEBUG=x509rsacrt=0` 下，`crypto/x509` 会丢弃无效的 CRT 值并重新计算，
-  而预检只检查它们是否*存在*：CRT 值错误的 8192 位密钥会通过预检，配合最坏的证书，
-  解码达到 39.4 MB（比率 74.7），超出测试所断言的上限。这需要运营者主动开启，且
-  模块的 `go.mod` 声明的 Go 版本中该设置并非默认；在默认设置下，同样的输入会以
-  `ErrMalformed` 被拒绝。
+- **RSA 的 CRT 值无论 `GODEBUG` 如何都会被校验**
+  （[go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2)，已在 v0.1.1
+  修复）。在 `crypto/x509` 看到密钥之前，于大小上限检查之后校验
+  `Dp = D mod (P-1)`、`Dq = D mod (Q-1)` 和 `Qinv × Q = 1 mod P`，不一致则以
+  `ErrMalformed` 拒绝。在 `GODEBUG=x509rsacrt=0` 下，标准库会丢弃错误的 CRT 值并
+  重新计算，配合最坏的证书，解码曾达到 39.4 MB（比率 74.7），超出测试所断言的
+  上限。该校验不依赖此设置。
 - 它只解码，不判断这条链。
 
 ## 它与什么对照检验 {#what-it-is-checked-against}

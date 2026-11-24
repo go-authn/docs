@@ -15,7 +15,7 @@ PKCS#12([RFC 7292](https://www.rfc-editor.org/rfc/rfc7292))는 내보내기 도�
 **신뢰할 수 없는 업로드**를 위해 만들어졌습니다.
 
 ```sh
-go get github.com/go-authn/pkcs12@v0.1.0
+go get github.com/go-authn/pkcs12@v0.1.1
 ```
 
 **디코딩만** 합니다. 인코더는 없습니다. 체인을 신뢰할지는 `crypto/x509`의
@@ -146,13 +146,13 @@ MAC은 **무엇이든 복호화하기 전에, 상수 시간으로** 검증됩니
   내보내기 도구(OpenSSL, Windows, Java의 keytool)가 쓰지만, `crypto/x509`는 빠진
   값을 큰 수 연산으로 유도합니다. 8192비트에서 16.4 MB와 21 744번의 할당, 값이
   있으면 0.36 MB와 618번입니다.
-- **[go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2), 열림, LOW.**
-  `GODEBUG=x509rsacrt=0`에서는 `crypto/x509`가 잘못된 CRT 값을 버리고 다시 계산하며,
-  사전 검사는 그 값이 *존재하는지*만 확인합니다. CRT 값이 틀린 8192비트 키는 이를
-  통과하고, 최악의 인증서와 함께라면 디코딩이 39.4 MB(비율 74.7)에 이르러 테스트가
-  단언하는 한도를 벗어납니다. 운영자가 켜야 하며, 모듈의 `go.mod`는 그 설정이
-  기본값이 아닌 Go 버전을 선언합니다. 기본 설정에서는 같은 입력이 `ErrMalformed`로
-  거부됩니다.
+- **RSA CRT 값은 `GODEBUG`와 상관없이 검증됩니다**
+  ([go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2), v0.1.1에서
+  수정). `crypto/x509`가 키를 보기 전에, 크기 한도 검사 뒤에 `Dp = D mod (P-1)`,
+  `Dq = D mod (Q-1)`, `Qinv × Q = 1 mod P`를 확인하며, 맞지 않으면 `ErrMalformed`로
+  거부합니다. `GODEBUG=x509rsacrt=0`에서는 표준 라이브러리가 잘못된 CRT 값을 버리고
+  다시 계산하여, 최악의 인증서와 함께라면 디코딩이 39.4 MB(비율 74.7)에 이르러
+  테스트가 단언하는 한도를 벗어났습니다. 이 검사는 설정에 의존하지 않습니다.
 - 디코딩만 하며 체인을 판단하지 않습니다.
 
 ## 무엇과 대조되는가 {#what-it-is-checked-against}

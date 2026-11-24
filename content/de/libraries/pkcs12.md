@@ -16,7 +16,7 @@ Modul liest sie, ohne Abhängigkeit außer der Standardbibliothek, und ist für
 **nicht vertrauenswürdige Uploads** gebaut.
 
 ```sh
-go get github.com/go-authn/pkcs12@v0.1.0
+go get github.com/go-authn/pkcs12@v0.1.1
 ```
 
 Es **dekodiert nur**: einen Encoder gibt es nicht. Ob der Kette zu trauen ist,
@@ -158,15 +158,15 @@ Semaphor, und `MaxCertBytes` senken, wenn er nur kurze Ketten erwartet.
   Windows, Javas keytool), aber `crypto/x509` leitet fehlende mit
   Großzahlarithmetik ab: 16,4 MB und 21 744 Allokationen bei 8192 Bit, gegen
   0,36 MB und 618 mit ihnen.
-- **[go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2), offen,
-  LOW.** Unter `GODEBUG=x509rsacrt=0` verwirft `crypto/x509` ungültige
-  CRT-Werte und berechnet sie neu, und die Vorprüfung prüft nur, dass sie
-  *vorhanden* sind: Ein 8192-Bit-Schlüssel mit falschen CRT-Werten passiert sie,
-  und mit den schlimmsten Zertifikaten erreicht die Dekodierung 39,4 MB
-  (Verhältnis 74,7), außerhalb der Grenze, die die Tests behaupten. Das
-  verlangt, dass der Betreiber es einschaltet, und die `go.mod` des Moduls
-  nennt eine Go-Version, für die diese Einstellung nicht der Standard ist; mit
-  Standardeinstellungen wird dieselbe Eingabe als `ErrMalformed` abgelehnt.
+- **RSA-CRT-Werte werden geprüft, unabhängig von `GODEBUG`**
+  ([go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2), behoben in
+  v0.1.1). Bevor `crypto/x509` den Schlüssel sieht, werden `Dp = D mod (P-1)`,
+  `Dq = D mod (Q-1)` und `Qinv × Q = 1 mod P` geprüft, nach den
+  Größengrenzen; eine Abweichung wird als `ErrMalformed` abgelehnt. Unter
+  `GODEBUG=x509rsacrt=0` verwirft die Standardbibliothek falsche CRT-Werte und
+  berechnet sie neu, was die Dekodierung mit den schlimmsten Zertifikaten auf
+  39,4 MB (Verhältnis 74,7) brachte, außerhalb der Grenze, die die Tests
+  behaupten. Die Prüfung hängt nicht von der Einstellung ab.
 - Es dekodiert nur und beurteilt die Kette nicht.
 
 ## Wogegen es geprüft wird {#what-it-is-checked-against}

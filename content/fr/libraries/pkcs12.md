@@ -16,7 +16,7 @@ dépendance que la bibliothèque standard, et il est conçu pour les **fichiers
 téléversés non fiables**.
 
 ```sh
-go get github.com/go-authn/pkcs12@v0.1.0
+go get github.com/go-authn/pkcs12@v0.1.1
 ```
 
 Il **décode seulement** : il n'y a pas d'encodeur. Décider s'il faut faire
@@ -158,15 +158,15 @@ sémaphore, et abaisser `MaxCertBytes` s'il n'attend que de courtes chaînes.
   keytool de Java), mais `crypto/x509` dérive les manquantes par de
   l'arithmétique sur grands entiers : 16,4 Mo et 21 744 allocations à 8192
   bits, contre 0,36 Mo et 618 avec elles.
-- **[go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2), ouverte,
-  LOW.** Sous `GODEBUG=x509rsacrt=0`, `crypto/x509` écarte les valeurs CRT
-  invalides et les recalcule, et le contrôle préalable vérifie seulement
-  qu'elles sont *présentes* : une clé de 8192 bits aux valeurs CRT fausses le
-  franchit, et avec les pires certificats le décodage atteint 39,4 Mo (rapport
-  74,7), hors de la borne que les tests affirment. Cela suppose que
-  l'opérateur l'active, et le `go.mod` du module déclare une version de Go pour
-  laquelle ce réglage n'est pas le défaut ; avec les réglages par défaut, la
-  même entrée est refusée en `ErrMalformed`.
+- **Les valeurs CRT RSA sont vérifiées, quel que soit `GODEBUG`**
+  ([go-authn/pkcs12#2](https://github.com/go-authn/pkcs12/issues/2), corrigé
+  dans v0.1.1). Avant que `crypto/x509` voie la clé, `Dp = D mod (P-1)`,
+  `Dq = D mod (Q-1)` et `Qinv × Q = 1 mod P` sont contrôlés, après les bornes
+  de taille ; un écart est refusé en `ErrMalformed`. Sous
+  `GODEBUG=x509rsacrt=0`, la bibliothèque standard écarte les valeurs CRT
+  fausses et les recalcule, ce qui portait le décodage avec les pires
+  certificats à 39,4 Mo (rapport 74,7), hors de la borne que les tests
+  affirment. Le contrôle ne dépend pas du réglage.
 - Il décode seulement, et ne juge pas la chaîne.
 
 ## Contre quoi il est vérifié {#what-it-is-checked-against}
