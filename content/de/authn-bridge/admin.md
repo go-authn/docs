@@ -251,6 +251,58 @@ token: account kind not accepted by this client: <why> (<username> via <idp> for
 Bekannte Grenze: Die Zertifikats-Endpunkte (SSH, X.509, Kerberos, WireGuard)
 sind an keinen Client gebunden; `accounts` gilt dort daher nicht.
 
+## Administratoren, die über das Web einladen {#web-invitations}
+
+Seit v0.39.0 kann ein Administrator unter `/account/invite` ein lokales Konto
+einladen (Login, E-Mail-Adresse, optionaler Name), ohne Shell auf dem Host. Es
+ist dieselbe Einladung wie die der Kommandozeile, und der Link geht nur per
+E-Mail an die eingeladene Person. Die Administratoren stehen im
+`local`-Block, zusammen mit den Authenticator-Modellen, die sie verwenden
+dürfen:
+
+```hcl
+local {
+  admins        = ["alice"]
+  admin_aaguids = ["9dd8d593-2213-438a-97f8-d6b813d51c27"]
+  mds_dir       = "/var/lib/authn-bridge/mds"
+}
+```
+
+Die Seite braucht einen `mail`-Block, eine Assertion mit Benutzerverifikation,
+die höchstens drei Minuten alt ist, und ein CSRF-Token; jeder Administrator darf
+zehn Konten pro Stunde einladen. Das Modell des Passkeys eines Administrators
+muss **bewiesen**, nicht gemeldet sein: Die Registrierung verlangt vom Browser
+eine direkte Attestation, go-authn/webauthn v0.3.0 prüft sie (ein
+`packed`-Statement mit `x5c`-Kette; `self` und `none` werden geprüft, beweisen
+aber kein Modell), und das Modell wird gegen die FIDO-MDS3-Metadaten geprüft,
+über `mds` aus go-authn/fido v0.16.0. Erst dann speichert die Bridge das Modell,
+und die Seite liest nichts anderes. Ein Modell, das die Metadaten später als
+widerrufen oder kompromittiert melden, öffnet die Seite nicht mehr. Ein Schlüssel
+ohne bewiesenes Modell dient weiterhin zur Anmeldung; er öffnet nichts.
+
+Die Metadaten liegen in `mds_dir`; der Schlüssel ist optional, hat den
+Standardwert `/var/lib/authn-bridge/mds`, muss ein absoluter Pfad sein und wird
+ohne `admins` abgelehnt. Eine Goroutine im Hintergrund lädt sie, nie eine
+Anfrage. Der Host braucht:
+
+- ein Verzeichnis, das der Dienst beschreiben darf (`mds_dir`; ein anderer Pfad
+  als der Standard muss in den `ReadWritePaths=` der Unit stehen);
+- ausgehendes HTTPS zu `mds3.fidoalliance.org` und ausgehendes einfaches HTTP zu
+  den CRL-Verteilungspunkten seiner Zertifikate;
+- eine richtige Uhr.
+
+Der Dienst startet ohne die Metadaten und versucht es erneut; bis sie da sind,
+wird kein Administratorschlüssel bewiesen und die Seite verweigert.
+
+**Den Schlüssel eines Administrators neu registrieren.** Ein vor v0.39.0
+registrierter Schlüssel hat keine verifizierte Attestation. Für jeden
+Administrator: mit dem vorhandenen Schlüssel anmelden, `/account` öffnen, mit
+dem Schlüssel bestätigen und einen Passkey mit dem erlaubten Authenticator
+hinzufügen (zum Beispiel dem YubiKey Bio), wobei die Frage des Browsers, Marke
+und Modell mitzuteilen, zu akzeptieren ist. Die Antwort muss `attested: true`
+lauten; dann funktioniert `/account/invite`. Den alten Schlüssel danach
+entfernen.
+
 ## Health und Metriken {#health-and-metrics}
 
 Die von go-net-health/endpoint, wie in go-fileshare, auf dem `metrics`-Listener, der

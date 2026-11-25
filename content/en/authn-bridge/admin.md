@@ -247,6 +247,53 @@ token: account kind not accepted by this client: <why> (<username> via <idp> for
 Known limit: the certificate endpoints (SSH, X.509, Kerberos, WireGuard) are not
 tied to a client, so `accounts` does not apply to them.
 
+## Administrators who invite from the web {#web-invitations}
+
+Since v0.39.0 an administrator can invite a local account at `/account/invite`
+(login, e-mail address, optional name), without a shell on the host. It is the
+same invitation as the command line's, and the link goes only by e-mail, to the
+invitee. The administrators are named in the `local` block, with the
+authenticator models they may use:
+
+```hcl
+local {
+  admins        = ["alice"]
+  admin_aaguids = ["9dd8d593-2213-438a-97f8-d6b813d51c27"]
+  mds_dir       = "/var/lib/authn-bridge/mds"
+}
+```
+
+The page needs a `mail` block, a user-verifying assertion at most three minutes
+old, and a CSRF token; each administrator may invite ten accounts an hour. An
+administrator's passkey model must be **proved**, not reported: registration
+asks the browser for a direct attestation, go-authn/webauthn v0.3.0 verifies it
+(a `packed` statement with an `x5c` chain; `self` and `none` verify but prove no
+model), and the model is checked against the FIDO MDS3 metadata, in
+go-authn/fido v0.16.0's `mds`. Only then does the bridge record the model, and
+the page reads nothing else. A model the metadata later reports revoked or
+compromised stops opening the page. A key registered without a proven model
+still signs in; it opens nothing.
+
+The metadata is kept in `mds_dir`, which is optional, defaults to
+`/var/lib/authn-bridge/mds`, must be an absolute path, and is refused without
+`admins`. A background goroutine fetches it, never a request. The host needs:
+
+- a directory the service may write (`mds_dir`; another path than the default
+  must be in the unit's `ReadWritePaths=`);
+- outbound HTTPS to `mds3.fidoalliance.org`, and outbound plain HTTP to the CRL
+  distribution points of its certificates;
+- a correct clock.
+
+The service starts without the metadata and retries; until it is in, no
+administrator key is proved and the page refuses.
+
+**Registering an administrator's key again.** A key registered before v0.39.0
+has no verified attestation. For each administrator: sign in with the existing
+key, open `/account`, confirm with the key, and add a passkey with the allowed
+authenticator (the YubiKey Bio, for example), accepting the browser's prompt to
+share its make and model. The answer must say `attested: true`; then
+`/account/invite` works. Remove the old key afterwards.
+
 ## Health and metrics
 
 go-net-health/endpoint's, as in go-fileshare, on the `metrics` listener, which
