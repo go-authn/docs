@@ -2845,6 +2845,41 @@ data-copied-label="已复制！"
 &lt;p&gt;当账户目录为 &lt;code&gt;root:authn-bridge&lt;/code&gt; 0750、文件为 0640（文档中的布局）时，请以 &lt;strong&gt;root&lt;/strong&gt;
 身份运行 &lt;code&gt;authn-bridge local-account …&lt;/code&gt;：该命令通过旁边的临时文件来替换账户文件，以 &lt;code&gt;authn-bridge&lt;/code&gt; 身份运行会失败，报&lt;code&gt;open /etc/authn-bridge-local/.accounts-NNN: permission denied&lt;/code&gt;。它会保留文件的所有者和权限。经由 SSH 运行时，&lt;code&gt;ssh host sudo authn-bridge local-account … --name &amp;quot;Two words&amp;quot;&lt;/code&gt;
 需要再加一层引号（&lt;code&gt;--name '&amp;quot;Two words&amp;quot;'&lt;/code&gt;），因为 ssh 会把参数拼成一个字符串，由远端shell 再次拆分。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="client-accounts"&gt;客户端接受哪些账户&lt;span class="hx:absolute hx:-mt-20" id="client-accounts"&gt;&lt;/span&gt;
+&lt;a href="#client-accounts" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;自 v0.38.0 起，&lt;code&gt;client&lt;/code&gt; 块可以只接受一种人：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;forgejo&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/forgejo.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; redirect_uris&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://git.example.org/user/oauth2/bridge/callback&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; accounts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;local&amp;#34;] # &amp;#34;local&amp;#34;, &amp;#34;federated&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;or&lt;/span&gt; &lt;span class="k"&gt;both&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;the&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;accounts = [&amp;quot;local&amp;quot;]&lt;/code&gt; 适用于要求硬件密钥的服务：SAML 机构的人会被拒绝。这条规则不只在提供登录的地方成立，而是在每一个授予或使用授权的地方都成立。授权端点只把人送往客户端接受的那一条路径（对仅限本地账户的客户端使用 &lt;code&gt;prompt=none&lt;/code&gt; 会返回&lt;code&gt;login_required&lt;/code&gt;）；联盟步骤、通行密钥步骤和登录结束处各自拒绝另一种登录；授权码兑换、刷新和设备轮询也拒绝另一种人，因此在写入限制之前取得的授权会随限制一并失效。响应为 &lt;code&gt;access_denied&lt;/code&gt;：登录期间发往客户端的重定向 URI，之后由令牌端点返回。&lt;code&gt;authn-bridge check&lt;/code&gt; 在客户端那一行打印该限制，&lt;code&gt;local&lt;/code&gt; 需要 &lt;code&gt;local&lt;/code&gt; 块，&lt;code&gt;bridge_logins_total{result=&amp;quot;wrong_account_kind&amp;quot;}&lt;/code&gt; 统计被拒绝的次数。日志会说明原因：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-text" data-lang="text"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;login: &amp;lt;username&amp;gt; via &amp;lt;idp entityID&amp;gt; refused for &amp;lt;client_id&amp;gt;: this client takes local accounts only
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;token: account kind not accepted by this client: &amp;lt;why&amp;gt; (&amp;lt;username&amp;gt; via &amp;lt;idp&amp;gt; for &amp;lt;client_id&amp;gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;已知限制：证书端点（SSH、X.509、Kerberos、WireGuard）不与任何客户端绑定，因此 &lt;code&gt;accounts&lt;/code&gt; 不适用于它们。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;健康检查和指标&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;来自 go-net-health/endpoint，与 go-fileshare 相同，位于 &lt;code&gt;metrics&lt;/code&gt; 监听器上，该监听器不得是公共监听器（使其成为公共监听器的配置会被拒绝）：&lt;/p&gt;
 &lt;table&gt;

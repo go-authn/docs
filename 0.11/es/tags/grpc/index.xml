@@ -273,6 +273,53 @@ documentada: el comando reemplaza el archivo mediante uno temporal contiguo, y
 como &lt;code&gt;authn-bridge&lt;/code&gt; falla con &lt;code&gt;open /etc/authn-bridge-local/.accounts-NNN: permission denied&lt;/code&gt;. Conserva el propietario y el modo del archivo. Por SSH,&lt;code&gt;ssh host sudo authn-bridge local-account … --name &amp;quot;Dos palabras&amp;quot;&lt;/code&gt; necesita una
 capa más de comillas (&lt;code&gt;--name '&amp;quot;Dos palabras&amp;quot;'&lt;/code&gt;), porque ssh une sus argumentos
 en una sola cadena que el shell remoto vuelve a dividir.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="client-accounts"&gt;Qué cuentas acepta un cliente&lt;span class="hx:absolute hx:-mt-20" id="client-accounts"&gt;&lt;/span&gt;
+&lt;a href="#client-accounts" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Desde la v0.38.0, un bloque &lt;code&gt;client&lt;/code&gt; puede aceptar un solo tipo de persona:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;client&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;forgejo&amp;#34;&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; secret_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/etc/authn-bridge/forgejo.secret&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; redirect_uris&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;https://git.example.org/user/oauth2/bridge/callback&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; accounts&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;local&amp;#34;] # &amp;#34;local&amp;#34;, &amp;#34;federated&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;or&lt;/span&gt; &lt;span class="k"&gt;both&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;the&lt;/span&gt; &lt;span class="k"&gt;default&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;accounts = [&amp;quot;local&amp;quot;]&lt;/code&gt; es para un servicio que quiere una llave de hardware: se
+rechaza a una persona de una institución SAML. La regla se aplica en todo lugar
+donde se concede o se usa un permiso, no solo donde se ofrece el inicio de
+sesión. El punto de autorización envía a la persona al único camino que el
+cliente acepta (&lt;code&gt;prompt=none&lt;/code&gt; para un cliente solo de cuentas locales responde&lt;code&gt;login_required&lt;/code&gt;); el paso de la federación, el paso de la passkey y el final
+del inicio de sesión rechazan cada uno un inicio de sesión del otro tipo; el
+canje del código, una renovación y una consulta de dispositivo rechazan a una
+persona del otro tipo, de modo que un permiso obtenido antes de escribir la
+restricción termina con ella. La respuesta es &lt;code&gt;access_denied&lt;/code&gt;, en el URI de
+redirección del cliente durante un inicio de sesión y en el punto de tokens
+después. &lt;code&gt;authn-bridge check&lt;/code&gt; muestra la restricción en la línea del cliente,&lt;code&gt;local&lt;/code&gt; exige un bloque &lt;code&gt;local&lt;/code&gt;, y &lt;code&gt;bridge_logins_total{result=&amp;quot;wrong_account_kind&amp;quot;}&lt;/code&gt;
+cuenta los rechazos. El diario dice por qué:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-text" data-lang="text"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;login: &amp;lt;username&amp;gt; via &amp;lt;idp entityID&amp;gt; refused for &amp;lt;client_id&amp;gt;: this client takes local accounts only
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;token: account kind not accepted by this client: &amp;lt;why&amp;gt; (&amp;lt;username&amp;gt; via &amp;lt;idp&amp;gt; for &amp;lt;client_id&amp;gt;)&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Límite conocido: los puntos de certificados (SSH, X.509, Kerberos, WireGuard) no
+están ligados a ningún cliente, por lo que &lt;code&gt;accounts&lt;/code&gt; no se aplica a ellos.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;Salud y métricas&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Los de go-net-health/endpoint, como en go-fileshare, en la escucha &lt;code&gt;metrics&lt;/code&gt;, que no
 debe ser la pública (una configuración que la hace pública se rechaza):&lt;/p&gt;
