@@ -466,6 +466,26 @@ data-copied-label="已复制！"
 &lt;/div&gt;
 &lt;p&gt;要保存 PIN 而不是把它输入到文件里，&lt;code&gt;fido pin set --save-to REF&lt;/code&gt; 和&lt;code&gt;fido pin change --save-to REF&lt;/code&gt;（cmd/fido v0.7.0）会像 &lt;code&gt;secretsource store&lt;/code&gt; 一样，在接触密钥&lt;strong&gt;之前&lt;/strong&gt;保存新 PIN。&lt;code&gt;--generate N&lt;/code&gt; 生成 PIN，&lt;code&gt;--replace&lt;/code&gt; 覆盖已有条目；使用 &lt;code&gt;pin change --replace&lt;/code&gt; 时，若密钥拒绝更改，会把当前 PIN 放回去。&lt;/p&gt;
 &lt;p&gt;没有任何引用会执行命令。&lt;code&gt;-file&lt;/code&gt; 选项不变，并且与 &lt;code&gt;-from&lt;/code&gt; 选项互斥。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="which-key"&gt;命令行：这是哪把密钥？&lt;span class="hx:absolute hx:-mt-20" id="which-key"&gt;&lt;/span&gt;
+&lt;a href="#which-key" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;自 cmd/fido v0.8.0 起，有三个命令可以在不改动密钥的前提下回答这个问题：&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;fido mds lookup 9dd8d593-2213-438a-97f8-d6b813d51c27
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;fido mds search yubikey
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;fido identify
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;fido yubikey info&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;fido mds lookup&lt;/code&gt; 和 &lt;code&gt;fido mds search&lt;/code&gt; 通过库的 &lt;code&gt;mds&lt;/code&gt; 包（v0.16.0）读取 FIDO Alliance 的元数据服务（MDS3）：下载 blob，用固定的 GlobalSign 根证书验证其签名，验证失败的 blob 不会显示任何内容。没有任何选项可以关闭验证。&lt;code&gt;fido identify&lt;/code&gt; 向密钥询问其 &lt;code&gt;GetInfo&lt;/code&gt; 的 AAGUID 并查询；&lt;strong&gt;这个 AAGUID 是密钥自己声明的&lt;/strong&gt;，输出中也会这样说明：它不是证明（attestation）。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;fido yubikey info&lt;/code&gt; 是只读的，对 USB 厂商不是 Yubico 的密钥，会在发送任何内容之前拒绝。它会显示固件、序列号、外形、USB 能力，并用两行明确的输出说明密钥是否有 PIV 应用（&lt;code&gt;PIV:&lt;/code&gt;）以及智能卡接口是否启用（&lt;code&gt;CCID:&lt;/code&gt;）。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="what-it-refuses-and-why"&gt;它拒绝什么，以及原因&lt;span class="hx:absolute hx:-mt-20" id="what-it-refuses-and-why"&gt;&lt;/span&gt;
 &lt;a href="#what-it-refuses-and-why" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;&lt;strong&gt;不信任密钥会如实回答所问的问题。&lt;/strong&gt; 携带的命令与所发送命令不同的应答会被拒绝（CTAP 2.1 §11.2.9 为每个响应指定了自己的命令，libfido2 也会检查）。nonce 不是所发送 nonce 的&lt;code&gt;INIT&lt;/code&gt; 应答会被拒绝：那是同一把密钥上另一个程序的握手。长度不符合其协议的PIN 令牌——协议一下为 16 或 32 字节，协议二下恰好为 32——会被拒绝。&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;保活不是应答。&lt;/strong&gt; 等待手指触摸的密钥大约每一百毫秒发送一次&lt;code&gt;CTAPHID_KEEPALIVE&lt;/code&gt;；它会被跳过，而触摸可以花多长时间，唯一的限制是上下文。&lt;/p&gt;
