@@ -114,6 +114,31 @@ actual se restituye si la llave rechaza el cambio.
 Ninguna referencia ejecuta un comando. Las opciones `-file` no cambian y son
 excluyentes con las opciones `-from`.
 
+## La línea de comandos: ¿qué llave es esta? {#which-key}
+
+Desde cmd/fido v0.8.0, tres comandos responden a esa pregunta sin cambiar nada
+en la llave:
+
+```sh
+fido mds lookup 9dd8d593-2213-438a-97f8-d6b813d51c27
+fido mds search yubikey
+fido identify
+fido yubikey info
+```
+
+`fido mds lookup` y `fido mds search` leen el servicio de metadatos de la FIDO
+Alliance (MDS3) mediante el paquete `mds` de la biblioteca (v0.16.0): se descarga
+el blob, se comprueba su firma contra la raíz GlobalSign fijada y no se muestra
+nada de un blob que no pasó esa comprobación. Ninguna opción la desactiva.
+`fido identify` pide a la llave su AAGUID de `GetInfo` y lo busca; **ese AAGUID
+lo declara la propia llave**, y la salida lo dice: no es una atestación.
+
+`fido yubikey info` es de solo lectura y rechaza una llave cuyo fabricante USB
+no es Yubico antes de enviarle nada. Muestra el firmware, el número de serie, el
+formato, las capacidades USB y, en dos líneas explícitas, si la llave tiene una
+aplicación PIV (`PIV:`) y si su interfaz de tarjeta inteligente está activada
+(`CCID:`).
+
 ## Lo que rechaza, y por qué {#what-it-refuses-and-why}
 
 **No se confía en que una llave responda a lo que se le preguntó.** Una respuesta que

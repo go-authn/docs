@@ -113,6 +113,29 @@ PIN をファイルに書かずに保存するには、`fido pin set --save-to R
 どの参照もコマンドを実行しません。`-file` フラグは変わらず、`-from` フラグとは
 同時に指定できません。
 
+## コマンドライン：これはどのキーか {#which-key}
+
+cmd/fido v0.8.0 以降、キーには何も変更を加えずにこの問いに答えるコマンドが三つあります。
+
+```sh
+fido mds lookup 9dd8d593-2213-438a-97f8-d6b813d51c27
+fido mds search yubikey
+fido identify
+fido yubikey info
+```
+
+`fido mds lookup` と `fido mds search` は、ライブラリの `mds` パッケージ（v0.16.0）を通じて
+FIDO Alliance の Metadata Service（MDS3）を読みます。blob をダウンロードし、その署名を
+固定された GlobalSign のルートに対して検証し、検証に失敗した blob からは何も表示しません。
+検証を無効にするオプションはありません。`fido identify` はキーに `GetInfo` の AAGUID を尋ねて
+それを引きます。**この AAGUID はキー自身が申告するもの**であり、出力にもそう書かれます。
+アテステーションではありません。
+
+`fido yubikey info` は読み取り専用で、USB ベンダーが Yubico でないキーには何も送る前に
+拒否します。ファームウェア、シリアル番号、フォームファクタ、USB の機能に加え、
+PIV アプリケーションの有無（`PIV:`）とスマートカードインターフェースが有効か（`CCID:`）を
+二つの明示的な行で表示します。
+
 ## 拒否するものと、その理由 {#what-it-refuses-and-why}
 
 **鍵は、尋ねられたことに答えると信頼されません。** 送ったものとは別のコマンドを運ぶ応答は拒否
