@@ -304,6 +304,8 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | totp v0.4.4 | `Verifier`가 매 시도 전에 유휴 이름을 정리합니다. go-authn/mfa v0.5.1, `go` 지시문은 1.27.4입니다(GO-2026-6859) |
 | webauthn v0.1.1 | `VerifyAssertion`은 두 카운터 중 하나라도 0이 아니면 signCount 0을 거부합니다 |
 | webauthn v0.2.0 | **호환성 깨짐, 보안:** 등록은 위수가 작은 점인 Ed25519 공개 키(위수가 8을 나누는 여덟 점)를 거부합니다. 그런 ID는 어떤 메시지에 대해서도 R = identity, S = 0을 검증하므로 그런 키 뒤에는 비밀이 없습니다. `coseKey.verify`는 검증기가 없는 키 유형에서 닫힌 채로 실패합니다(`ErrKey`). 그런 키를 등록했던 자격 증명은 영향을 받습니다 |
+| webauthn v0.3.0 | `VerifyRegistrationAttested`가 x5c 체인을 가진 `packed` 증명을 검증합니다(서명, 증명 인증서 요구 사항, authData와 대조하는 id-fido-gen-ce-aaguid). `Attestation.VerifyTrustPath`는 호출자의 루트에 대해 체인을 검사합니다 |
+| webauthn v0.4.0 | `Policy.RequireAAGUIDExtension`(기본값은 꺼짐, 동작은 바뀌지 않음)을 켜면 `VerifyRegistrationAttested`가 id-fido-gen-ce-aaguid가 없는 인증서를 거부합니다. 새로 추가: `ErrAAGUIDExtensionMissing`, `ErrAAGUIDExtensionMalformed`, `ErrAAGUIDExtensionMismatch` |
 | wireguard v0.1.1 | Go 1.27.2로 테스트함, 코드도 `go.mod`도 바뀌지 않음 |
 | wireguard v0.1.4 | 소스의 토큰 요청과 목록 요청은 Basic 시크릿이나 Bearer 토큰을 싣고 있으므로 더 이상 리디렉션을 따르지 않습니다. 리디렉션은 오류입니다([거부하는 것]({{< relref "/libraries/wireguard.md" >}})) |
 | wireguard v0.2.0 | 보안: [`SourceConfig.FloorFile`]({{< relref "/libraries/wireguard.md" >}})은 가장 최신 목록의 위치(버전과 발급 시각)를 재시작 사이에도 유지합니다. 이전에는 하한이 메모리에만 있어서, 재시작한 게이트웨이가 여전히 서명되었고 만료되지 않은 재생된 이전 목록을 첫 목록으로 받아들였습니다. 하한과 버전이 같지만 더 일찍 발급된 목록도 거부됩니다. 새로 추가: `Floor`, `ParseFloor`, `(*Source).Floor`, `ErrFloorNotKept`(파일을 쓸 수 없을 때 올바른 목록과 함께 반환). `FloorFile`이 없으면 같은 버전 검사 외에는 아무것도 바뀌지 않습니다 |

@@ -303,6 +303,8 @@ Go 1.27.2 では、`govulncheck` が両方のプログラムで GO-2026-6809 を
 | totp v0.4.4 | `Verifier` は、試行のたびに先立って、使われていない名前を掃除します。go-authn/mfa v0.5.1。`go` ディレクティブは 1.27.4 (GO-2026-6859) |
 | webauthn v0.1.1 | `VerifyAssertion` は、どちらかのカウンターがゼロでないときの signCount のゼロを拒否します |
 | webauthn v0.2.0 | **破壊的変更、セキュリティ:** 登録は、位数の小さい点 (位数が 8 を割る 8 つの点) である Ed25519 公開鍵を拒否します。単位元は、任意のメッセージに対して R = 単位元、S = 0 を検証するので、そのような鍵の裏には秘密がありません。`coseKey.verify` は、検証器を持たない鍵の種類では、安全側に失敗します (`ErrKey`)。そのような鍵を登録していたクレデンシャルは影響を受けます |
+| webauthn v0.3.0 | `VerifyRegistrationAttested` は x5c チェーンを持つ `packed` アテステーションを検証します (署名、アテステーション証明書の要件、authData と照合する id-fido-gen-ce-aaguid)。`Attestation.VerifyTrustPath` は呼び出し側のルートに対してチェーンを検証します |
+| webauthn v0.4.0 | `Policy.RequireAAGUIDExtension` (既定ではオフ、動作は変わりません) を設定すると、`VerifyRegistrationAttested` は id-fido-gen-ce-aaguid のない証明書を拒否します。新規: `ErrAAGUIDExtensionMissing`、`ErrAAGUIDExtensionMalformed`、`ErrAAGUIDExtensionMismatch` |
 | wireguard v0.1.1 | Go 1.27.2 でテスト。コードも `go.mod` も変更なし |
 | wireguard v0.1.4 | ソースのトークン要求とリスト要求は Basic のシークレットまたは Bearer トークンを運ぶため、リダイレクトに従わなくなりました。リダイレクトはエラーです（[拒否するもの]({{< relref "/libraries/wireguard.md" >}})） |
 | wireguard v0.2.0 | セキュリティ: [`SourceConfig.FloorFile`]({{< relref "/libraries/wireguard.md" >}}) は、最新のリストの位置 (バージョンと発行時刻) を再起動をまたいで保ちます。以前は、下限はメモリ上だけで、再起動したゲートウェイは、署名済みで期限内の古いリストを再生されると、それを最初のリストとして受け入れていました。下限と同じバージョンで、より早く発行されたリストも拒否されます。新規: `Floor`、`ParseFloor`、`(*Source).Floor`、`ErrFloorNotKept` (ファイルを書き込めないとき、正常なリストとともに返されます)。`FloorFile` がなければ、同じバージョンのチェックを除いて何も変わりません |
