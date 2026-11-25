@@ -203,6 +203,39 @@ token: refresh_token issued to <client_id> for <username>
 引用符が必要です(`--name '"Two words"'`)。ssh は引数を 1 つの文字列に連結し、
 リモート側のシェルがそれを再び分割するためです。
 
+## クライアントが受け付けるアカウント {#client-accounts}
+
+v0.38.0 から、`client` ブロックは 1 種類の人だけを受け付けるように設定できます。
+
+```hcl
+client "forgejo" {
+  secret_file   = "/etc/authn-bridge/forgejo.secret"
+  redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
+  accounts      = ["local"]   # "local", "federated", or both (the default)
+}
+```
+
+`accounts = ["local"]` は、ハードウェアキーを求めるサービス向けです。SAML の
+機関に属する人は拒否されます。この規則は、ログインが提示される場所だけでなく、
+権限が付与または使用されるすべての場所で守られます。認可エンドポイントは、
+クライアントが受け付ける唯一の経路へ人を案内します(ローカル専用クライアントへの
+`prompt=none` は `login_required` を返します)。フェデレーションの段階、パスキーの段階、
+ログインの終了は、それぞれ他方の種類のログインを拒否します。コードの交換、更新、
+デバイスのポーリングも他方の種類の人を拒否するため、制限が書かれる前に得られた
+権限は制限とともに止まります。応答は `access_denied` で、ログイン中はクライアントの
+リダイレクト URI に、その後はトークンエンドポイントで返されます。
+`authn-bridge check` はクライアントの行に制限を表示し、`local` には `local` ブロックが
+必要で、`bridge_logins_total{result="wrong_account_kind"}` が拒否を数えます。
+ジャーナルには理由が残ります。
+
+```text
+login: <username> via <idp entityID> refused for <client_id>: this client takes local accounts only
+token: account kind not accepted by this client: <why> (<username> via <idp> for <client_id>)
+```
+
+既知の制限: 証明書エンドポイント(SSH、X.509、Kerberos、WireGuard)は特定の
+クライアントに結び付いていないため、`accounts` は適用されません。
+
 ## ヘルスとメトリクス {#health-and-metrics}
 
 go-net-health/endpoint のもので、go-fileshare と同様に `metrics` リスナーにあります。これは

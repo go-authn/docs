@@ -201,6 +201,35 @@ ID，与 `local: <login> enrolled a passkey (<8 hex>)` 所打印的相同）。�
 需要再加一层引号（`--name '"Two words"'`），因为 ssh 会把参数拼成一个字符串，由远端
 shell 再次拆分。
 
+## 客户端接受哪些账户 {#client-accounts}
+
+自 v0.38.0 起，`client` 块可以只接受一种人：
+
+```hcl
+client "forgejo" {
+  secret_file   = "/etc/authn-bridge/forgejo.secret"
+  redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
+  accounts      = ["local"]   # "local", "federated", or both (the default)
+}
+```
+
+`accounts = ["local"]` 适用于要求硬件密钥的服务：SAML 机构的人会被拒绝。这条规则
+不只在提供登录的地方成立，而是在每一个授予或使用授权的地方都成立。授权端点只把人
+送往客户端接受的那一条路径（对仅限本地账户的客户端使用 `prompt=none` 会返回
+`login_required`）；联盟步骤、通行密钥步骤和登录结束处各自拒绝另一种登录；
+授权码兑换、刷新和设备轮询也拒绝另一种人，因此在写入限制之前取得的授权会随限制
+一并失效。响应为 `access_denied`：登录期间发往客户端的重定向 URI，之后由令牌端点
+返回。`authn-bridge check` 在客户端那一行打印该限制，`local` 需要 `local` 块，
+`bridge_logins_total{result="wrong_account_kind"}` 统计被拒绝的次数。日志会说明原因：
+
+```text
+login: <username> via <idp entityID> refused for <client_id>: this client takes local accounts only
+token: account kind not accepted by this client: <why> (<username> via <idp> for <client_id>)
+```
+
+已知限制：证书端点（SSH、X.509、Kerberos、WireGuard）不与任何客户端绑定，
+因此 `accounts` 不适用于它们。
+
 ## 健康检查和指标 {#health-and-metrics}
 
 来自 go-net-health/endpoint，与 go-fileshare 相同，位于 `metrics` 监听器上，该监听器

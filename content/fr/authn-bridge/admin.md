@@ -216,6 +216,41 @@ local-account … --name "Deux mots"` demande une couche de guillemets de plus
 (`--name '"Deux mots"'`), car ssh recolle ses arguments en une seule chaîne que
 l'interpréteur distant découpe à nouveau.
 
+## Quels comptes un client accepte {#client-accounts}
+
+Depuis la v0.38.0, un bloc `client` peut n'accepter qu'une sorte de personne :
+
+```hcl
+client "forgejo" {
+  secret_file   = "/etc/authn-bridge/forgejo.secret"
+  redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
+  accounts      = ["local"]   # "local", "federated", or both (the default)
+}
+```
+
+`accounts = ["local"]` convient à un service qui veut une clé matérielle : une
+personne d'un établissement SAML est refusée. La règle est tenue partout où un
+droit est accordé ou utilisé, pas seulement là où la connexion est proposée.
+Le point d'autorisation envoie la personne vers l'unique chemin que le client
+accepte (`prompt=none` pour un client réservé aux comptes locaux répond
+`login_required`) ; l'étape de la fédération, l'étape de la clé d'accès et la fin
+de la connexion refusent chacune une connexion de l'autre sorte ; l'échange du
+code, un renouvellement et une interrogation d'appareil refusent une personne de
+l'autre sorte, si bien qu'un droit obtenu avant l'écriture de la restriction
+s'arrête avec elle. La réponse est `access_denied`, à l'URI de redirection du
+client pendant une connexion et au point de jeton ensuite. `authn-bridge check`
+affiche la restriction sur la ligne du client, `local` exige un bloc `local`, et
+`bridge_logins_total{result="wrong_account_kind"}` compte les refus. Le journal
+dit pourquoi :
+
+```text
+login: <username> via <idp entityID> refused for <client_id>: this client takes local accounts only
+token: account kind not accepted by this client: <why> (<username> via <idp> for <client_id>)
+```
+
+Limite connue : les points de certificats (SSH, X.509, Kerberos, WireGuard) ne
+sont liés à aucun client ; `accounts` ne s'y applique donc pas.
+
 ## Santé et métriques {#health-and-metrics}
 
 Ceux de go-net-health/endpoint, comme dans go-fileshare, sur l'écouteur `metrics`, qui

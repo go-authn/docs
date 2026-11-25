@@ -205,6 +205,39 @@ token: refresh_token issued to <client_id> for <username>
 둘러야 합니다(`--name '"Two words"'`). ssh가 인자를 하나의 문자열로 이어 붙이고
 원격 셸이 이를 다시 나누기 때문입니다.
 
+## 클라이언트가 받아들이는 계정 {#client-accounts}
+
+v0.38.0부터 `client` 블록은 한 종류의 사람만 받아들이도록 설정할 수 있습니다.
+
+```hcl
+client "forgejo" {
+  secret_file   = "/etc/authn-bridge/forgejo.secret"
+  redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
+  accounts      = ["local"]   # "local", "federated", or both (the default)
+}
+```
+
+`accounts = ["local"]`은 하드웨어 키를 요구하는 서비스를 위한 것으로, SAML
+기관 소속 사람은 거부됩니다. 이 규칙은 로그인이 제시되는 곳뿐 아니라 권한이
+부여되거나 사용되는 모든 곳에서 지켜집니다. 인가 엔드포인트는 클라이언트가
+받아들이는 하나의 경로로만 사람을 보내며(로컬 전용 클라이언트에 대한
+`prompt=none`은 `login_required`로 답합니다), 페더레이션 단계, 패스키 단계,
+로그인의 끝은 각각 다른 종류의 로그인을 거부합니다. 코드 교환, 갱신, 기기 폴링도
+다른 종류의 사람을 거부하므로 제한이 쓰이기 전에 얻은 권한은 제한과 함께
+멈춥니다. 응답은 `access_denied`이며, 로그인 중에는 클라이언트의 리디렉션 URI로,
+그 뒤에는 토큰 엔드포인트에서 돌려줍니다. `authn-bridge check`는 클라이언트 줄에
+제한을 표시하고, `local`에는 `local` 블록이 필요하며,
+`bridge_logins_total{result="wrong_account_kind"}`가 거부를 셉니다. 저널에는
+이유가 남습니다.
+
+```text
+login: <username> via <idp entityID> refused for <client_id>: this client takes local accounts only
+token: account kind not accepted by this client: <why> (<username> via <idp> for <client_id>)
+```
+
+알려진 한계: 인증서 엔드포인트(SSH, X.509, Kerberos, WireGuard)는 특정
+클라이언트에 묶여 있지 않으므로 `accounts`가 적용되지 않습니다.
+
 ## 상태 점검과 메트릭 {#health-and-metrics}
 
 go-net-health/endpoint의 것으로 go-fileshare와 같으며, `metrics` 리스너에 있습니다.

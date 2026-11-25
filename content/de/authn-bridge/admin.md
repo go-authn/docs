@@ -216,6 +216,41 @@ local-account … --name "Zwei Wörter"` eine weitere Anführungszeichen-Ebene
 (`--name '"Zwei Wörter"'`), weil ssh seine Argumente zu einer Zeichenkette
 zusammenfügt, die die Shell auf der Gegenseite erneut zerlegt.
 
+## Welche Konten ein Client annimmt {#client-accounts}
+
+Seit v0.38.0 kann ein `client`-Block nur eine Art von Personen annehmen:
+
+```hcl
+client "forgejo" {
+  secret_file   = "/etc/authn-bridge/forgejo.secret"
+  redirect_uris = ["https://git.example.org/user/oauth2/bridge/callback"]
+  accounts      = ["local"]   # "local", "federated", or both (the default)
+}
+```
+
+`accounts = ["local"]` ist für einen Dienst gedacht, der einen Hardware-Schlüssel
+verlangt: eine Person einer SAML-Einrichtung wird abgewiesen. Die Regel gilt
+überall, wo eine Berechtigung erteilt oder verwendet wird, nicht nur dort, wo
+die Anmeldung angeboten wird. Der Autorisierungsendpunkt schickt die Person auf
+den einen Weg, den der Client annimmt (`prompt=none` für einen Client nur für
+lokale Konten antwortet `login_required`); der Föderationsschritt, der
+Passkey-Schritt und das Ende der Anmeldung weisen jeweils eine Anmeldung der
+anderen Art ab; der Code-Austausch, eine Erneuerung und eine Geräteabfrage
+weisen eine Person der anderen Art ab, sodass eine vor der Einschränkung
+erworbene Berechtigung mit ihr endet. Die Antwort ist `access_denied`, während
+einer Anmeldung an der Weiterleitungs-URI des Clients, danach am Token-Endpunkt.
+`authn-bridge check` zeigt die Einschränkung in der Zeile des Clients, `local`
+verlangt einen `local`-Block, und `bridge_logins_total{result="wrong_account_kind"}`
+zählt die Abweisungen. Das Journal nennt den Grund:
+
+```text
+login: <username> via <idp entityID> refused for <client_id>: this client takes local accounts only
+token: account kind not accepted by this client: <why> (<username> via <idp> for <client_id>)
+```
+
+Bekannte Grenze: Die Zertifikats-Endpunkte (SSH, X.509, Kerberos, WireGuard)
+sind an keinen Client gebunden; `accounts` gilt dort daher nicht.
+
 ## Health und Metriken {#health-and-metrics}
 
 Die von go-net-health/endpoint, wie in go-fileshare, auf dem `metrics`-Listener, der
