@@ -230,6 +230,45 @@ token: account kind not accepted by this client: <why> (<username> via <idp> for
 已知限制：证书端点（SSH、X.509、Kerberos、WireGuard）不与任何客户端绑定，
 因此 `accounts` 不适用于它们。
 
+## 从网页发出邀请的管理员 {#web-invitations}
+
+自 v0.39.0 起，管理员无需主机上的 shell，即可在 `/account/invite` 邀请本地账户
+（登录名、电子邮件地址、可选的姓名）。这与命令行的邀请相同，链接只通过电子邮件
+发给被邀请的人。管理员在 `local` 块中指定，并附上他们可使用的认证器型号：
+
+```hcl
+local {
+  admins        = ["alice"]
+  admin_aaguids = ["9dd8d593-2213-438a-97f8-d6b813d51c27"]
+  mds_dir       = "/var/lib/authn-bridge/mds"
+}
+```
+
+该页面需要 `mail` 块、不超过三分钟的用户验证断言和 CSRF 令牌；每位管理员每小时
+最多邀请十个账户。管理员通行密钥的型号必须是**被证明**的，而不是自报的：注册时
+向浏览器请求 direct 证明，由 go-authn/webauthn v0.3.0 验证（带 `x5c` 证书链的
+`packed` 声明；`self` 和 `none` 能通过验证，但不证明任何型号），再通过
+go-authn/fido v0.16.0 的 `mds` 与 FIDO MDS3 元数据核对该型号。到这一步，bridge
+才记录型号，页面也只读取这一项。此后被元数据报告为已撤销或已泄露的型号，不再能
+打开该页面。未能证明型号而注册的密钥仍可登录，但打不开任何东西。
+
+元数据保存在 `mds_dir` 中。该项可选，默认值为 `/var/lib/authn-bridge/mds`，必须
+是绝对路径，没有 `admins` 时会被拒绝。下载由后台 goroutine 完成，从不在请求中
+进行。主机需要：
+
+- 服务可写的目录（`mds_dir`；默认以外的路径必须列入单元的 `ReadWritePaths=`）；
+- 到 `mds3.fidoalliance.org` 的出站 HTTPS，以及到其证书的 CRL 分发点的出站明文
+  HTTP；
+- 正确的时钟。
+
+服务在没有元数据时也能启动并重试；在元数据到位之前，没有管理员密钥被证明，
+页面会拒绝。
+
+**重新注册管理员的密钥。** v0.39.0 之前注册的密钥没有经过验证的证明。对每位
+管理员：用现有密钥登录，打开 `/account`，用密钥确认，然后用允许的认证器（例如
+YubiKey Bio）添加通行密钥，并接受浏览器关于分享其品牌和型号的提示。回应必须
+显示 `attested: true`；此后 `/account/invite` 即可使用。之后删除旧密钥。
+
 ## 健康检查和指标 {#health-and-metrics}
 
 来自 go-net-health/endpoint，与 go-fileshare 相同，位于 `metrics` 监听器上，该监听器

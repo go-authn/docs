@@ -238,6 +238,51 @@ token: account kind not accepted by this client: <why> (<username> via <idp> for
 알려진 한계: 인증서 엔드포인트(SSH, X.509, Kerberos, WireGuard)는 특정
 클라이언트에 묶여 있지 않으므로 `accounts`가 적용되지 않습니다.
 
+## 웹에서 초대하는 관리자 {#web-invitations}
+
+v0.39.0부터 관리자는 호스트의 셸 없이 `/account/invite`에서 로컬 계정을 초대할
+수 있습니다(로그인 이름, 이메일 주소, 선택 사항인 이름). 초대는 명령줄의 것과
+같으며, 링크는 초대받은 사람에게 이메일로만 전달됩니다. 관리자는 `local` 블록에
+사용할 수 있는 인증기 모델과 함께 지정합니다.
+
+```hcl
+local {
+  admins        = ["alice"]
+  admin_aaguids = ["9dd8d593-2213-438a-97f8-d6b813d51c27"]
+  mds_dir       = "/var/lib/authn-bridge/mds"
+}
+```
+
+이 페이지에는 `mail` 블록, 3분 이내의 사용자 검증 어서션, CSRF 토큰이 필요하며,
+관리자 한 명당 시간당 10개 계정까지 초대할 수 있습니다. 관리자 패스키의 모델은
+보고된 것이 아니라 **증명**되어야 합니다. 등록 시 브라우저에 direct attestation을
+요청하고, go-authn/webauthn v0.3.0이 이를 검증하며(`x5c` 체인을 가진 `packed`
+구문. `self`와 `none`은 검증되지만 모델을 증명하지 않음), 모델은 go-authn/fido
+v0.16.0의 `mds`를 통해 FIDO MDS3 메타데이터와 대조됩니다. 그런 다음에야 bridge가
+모델을 기록하며, 페이지는 그 외에는 아무것도 읽지 않습니다. 이후 메타데이터가
+폐기 또는 침해로 보고한 모델은 더 이상 페이지를 열지 못합니다. 모델이 증명되지
+않은 채 등록된 키로도 로그인은 되지만, 아무것도 열지 못합니다.
+
+메타데이터는 `mds_dir`에 보관됩니다. 선택 사항이며 기본값은
+`/var/lib/authn-bridge/mds`이고 절대 경로여야 하며 `admins`가 없으면 거부됩니다.
+내려받는 것은 백그라운드 고루틴이며 요청이 아닙니다. 호스트에는 다음이
+필요합니다.
+
+- 서비스가 쓸 수 있는 디렉터리(`mds_dir`. 기본값이 아닌 경로는 유닛의
+  `ReadWritePaths=`에 있어야 함)
+- `mds3.fidoalliance.org`로의 아웃바운드 HTTPS, 그리고 해당 인증서의 CRL 배포
+  지점으로의 아웃바운드 일반 HTTP
+- 정확한 시계
+
+서비스는 메타데이터 없이 시작해 다시 시도하며, 메타데이터가 들어올 때까지
+관리자 키는 증명되지 않고 페이지는 거부합니다.
+
+**관리자의 키를 다시 등록하기.** v0.39.0 이전에 등록된 키에는 검증된 증명이
+없습니다. 각 관리자는 기존 키로 로그인하고 `/account`를 열어 키로 확인한 뒤,
+허용된 인증기(예: YubiKey Bio)로 패스키를 추가하고 브라우저가 묻는 제조사와
+모델 공유를 수락합니다. 응답에 `attested: true`가 표시되어야 하며, 그러면
+`/account/invite`가 동작합니다. 그 후 이전 키를 삭제합니다.
+
 ## 상태 점검과 메트릭 {#health-and-metrics}
 
 go-net-health/endpoint의 것으로 go-fileshare와 같으며, `metrics` 리스너에 있습니다.
