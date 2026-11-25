@@ -3291,6 +3291,53 @@ data-copied-label="Copied!"
 &lt;/div&gt;
 &lt;p&gt;Known limit: the certificate endpoints (SSH, X.509, Kerberos, WireGuard) are not
 tied to a client, so &lt;code&gt;accounts&lt;/code&gt; does not apply to them.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="web-invitations"&gt;Administrators who invite from the web&lt;span class="hx:absolute hx:-mt-20" id="web-invitations"&gt;&lt;/span&gt;
+&lt;a href="#web-invitations" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Since v0.39.0 an administrator can invite a local account at &lt;code&gt;/account/invite&lt;/code&gt;
+(login, e-mail address, optional name), without a shell on the host. It is the
+same invitation as the command line&amp;rsquo;s, and the link goes only by e-mail, to the
+invitee. The administrators are named in the &lt;code&gt;local&lt;/code&gt; block, with the
+authenticator models they may use:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;local&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admins&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admin_aaguids&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;9dd8d593-2213-438a-97f8-d6b813d51c27&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; mds_dir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/mds&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The page needs a &lt;code&gt;mail&lt;/code&gt; block, a user-verifying assertion at most three minutes
+old, and a CSRF token; each administrator may invite ten accounts an hour. An
+administrator&amp;rsquo;s passkey model must be &lt;strong&gt;proved&lt;/strong&gt;, not reported: registration
+asks the browser for a direct attestation, go-authn/webauthn v0.3.0 verifies it(a &lt;code&gt;packed&lt;/code&gt; statement with an &lt;code&gt;x5c&lt;/code&gt; chain; &lt;code&gt;self&lt;/code&gt; and &lt;code&gt;none&lt;/code&gt; verify but prove no
+model), and the model is checked against the FIDO MDS3 metadata, in
+go-authn/fido v0.16.0&amp;rsquo;s &lt;code&gt;mds&lt;/code&gt;. Only then does the bridge record the model, and
+the page reads nothing else. A model the metadata later reports revoked or
+compromised stops opening the page. A key registered without a proven model
+still signs in; it opens nothing.&lt;/p&gt;
+&lt;p&gt;The metadata is kept in &lt;code&gt;mds_dir&lt;/code&gt;, which is optional, defaults to&lt;code&gt;/var/lib/authn-bridge/mds&lt;/code&gt;, must be an absolute path, and is refused without&lt;code&gt;admins&lt;/code&gt;. A background goroutine fetches it, never a request. The host needs:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;a directory the service may write (&lt;code&gt;mds_dir&lt;/code&gt;; another path than the default
+must be in the unit&amp;rsquo;s &lt;code&gt;ReadWritePaths=&lt;/code&gt;);&lt;/li&gt;
+&lt;li&gt;outbound HTTPS to &lt;code&gt;mds3.fidoalliance.org&lt;/code&gt;, and outbound plain HTTP to the CRL
+distribution points of its certificates;&lt;/li&gt;
+&lt;li&gt;a correct clock.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;The service starts without the metadata and retries; until it is in, no
+administrator key is proved and the page refuses.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Registering an administrator&amp;rsquo;s key again.&lt;/strong&gt; A key registered before v0.39.0
+has no verified attestation. For each administrator: sign in with the existing
+key, open &lt;code&gt;/account&lt;/code&gt;, confirm with the key, and add a passkey with the allowed
+authenticator (the YubiKey Bio, for example), accepting the browser&amp;rsquo;s prompt to
+share its make and model. The answer must say &lt;code&gt;attested: true&lt;/code&gt;; then&lt;code&gt;/account/invite&lt;/code&gt; works. Remove the old key afterwards.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;Health and metrics&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;go-net-health/endpoint&amp;rsquo;s, as in go-fileshare, on the &lt;code&gt;metrics&lt;/code&gt; listener, which
 must not be the public one (a configuration that makes it so is refused):&lt;/p&gt;

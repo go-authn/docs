@@ -309,6 +309,56 @@ data-copied-label="Kopiert!"
 &lt;/div&gt;
 &lt;/div&gt;
 &lt;p&gt;Bekannte Grenze: Die Zertifikats-Endpunkte (SSH, X.509, Kerberos, WireGuard)sind an keinen Client gebunden; &lt;code&gt;accounts&lt;/code&gt; gilt dort daher nicht.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="web-invitations"&gt;Administratoren, die über das Web einladen&lt;span class="hx:absolute hx:-mt-20" id="web-invitations"&gt;&lt;/span&gt;
+&lt;a href="#web-invitations" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Seit v0.39.0 kann ein Administrator unter &lt;code&gt;/account/invite&lt;/code&gt; ein lokales Konto
+einladen (Login, E-Mail-Adresse, optionaler Name), ohne Shell auf dem Host. Es
+ist dieselbe Einladung wie die der Kommandozeile, und der Link geht nur per
+E-Mail an die eingeladene Person. Die Administratoren stehen im&lt;code&gt;local&lt;/code&gt;-Block, zusammen mit den Authenticator-Modellen, die sie verwenden
+dürfen:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;local&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admins&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admin_aaguids&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;9dd8d593-2213-438a-97f8-d6b813d51c27&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; mds_dir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/mds&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Code kopieren"
+aria-label="Code kopieren"
+data-copied-label="Kopiert!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;Die Seite braucht einen &lt;code&gt;mail&lt;/code&gt;-Block, eine Assertion mit Benutzerverifikation,die höchstens drei Minuten alt ist, und ein CSRF-Token; jeder Administrator darf
+zehn Konten pro Stunde einladen. Das Modell des Passkeys eines Administrators
+muss &lt;strong&gt;bewiesen&lt;/strong&gt;, nicht gemeldet sein: Die Registrierung verlangt vom Browser
+eine direkte Attestation, go-authn/webauthn v0.3.0 prüft sie (ein&lt;code&gt;packed&lt;/code&gt;-Statement mit &lt;code&gt;x5c&lt;/code&gt;-Kette; &lt;code&gt;self&lt;/code&gt; und &lt;code&gt;none&lt;/code&gt; werden geprüft, beweisen
+aber kein Modell), und das Modell wird gegen die FIDO-MDS3-Metadaten geprüft,über &lt;code&gt;mds&lt;/code&gt; aus go-authn/fido v0.16.0. Erst dann speichert die Bridge das Modell,und die Seite liest nichts anderes. Ein Modell, das die Metadaten später als
+widerrufen oder kompromittiert melden, öffnet die Seite nicht mehr. Ein Schlüssel
+ohne bewiesenes Modell dient weiterhin zur Anmeldung; er öffnet nichts.&lt;/p&gt;
+&lt;p&gt;Die Metadaten liegen in &lt;code&gt;mds_dir&lt;/code&gt;; der Schlüssel ist optional, hat den
+Standardwert &lt;code&gt;/var/lib/authn-bridge/mds&lt;/code&gt;, muss ein absoluter Pfad sein und wird
+ohne &lt;code&gt;admins&lt;/code&gt; abgelehnt. Eine Goroutine im Hintergrund lädt sie, nie eine
+Anfrage. Der Host braucht:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;ein Verzeichnis, das der Dienst beschreiben darf (&lt;code&gt;mds_dir&lt;/code&gt;; ein anderer Pfad
+als der Standard muss in den &lt;code&gt;ReadWritePaths=&lt;/code&gt; der Unit stehen);&lt;/li&gt;
+&lt;li&gt;ausgehendes HTTPS zu &lt;code&gt;mds3.fidoalliance.org&lt;/code&gt; und ausgehendes einfaches HTTP zu
+den CRL-Verteilungspunkten seiner Zertifikate;&lt;/li&gt;
+&lt;li&gt;eine richtige Uhr.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Der Dienst startet ohne die Metadaten und versucht es erneut; bis sie da sind,wird kein Administratorschlüssel bewiesen und die Seite verweigert.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Den Schlüssel eines Administrators neu registrieren.&lt;/strong&gt; Ein vor v0.39.0
+registrierter Schlüssel hat keine verifizierte Attestation. Für jeden
+Administrator: mit dem vorhandenen Schlüssel anmelden, &lt;code&gt;/account&lt;/code&gt; öffnen, mit
+dem Schlüssel bestätigen und einen Passkey mit dem erlaubten Authenticator
+hinzufügen (zum Beispiel dem YubiKey Bio), wobei die Frage des Browsers, Marke
+und Modell mitzuteilen, zu akzeptieren ist. Die Antwort muss &lt;code&gt;attested: true&lt;/code&gt;
+lauten; dann funktioniert &lt;code&gt;/account/invite&lt;/code&gt;. Den alten Schlüssel danach
+entfernen.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;Health und Metriken&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Die von go-net-health/endpoint, wie in go-fileshare, auf dem &lt;code&gt;metrics&lt;/code&gt;-Listener, der
 nicht der öffentliche sein darf (eine Konfiguration, die ihn dazu macht, wird abgelehnt):&lt;/p&gt;

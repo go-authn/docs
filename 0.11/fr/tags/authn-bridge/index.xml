@@ -3305,6 +3305,55 @@ data-copied-label="Copié !"
 &lt;/div&gt;
 &lt;p&gt;Limite connue : les points de certificats (SSH, X.509, Kerberos, WireGuard) ne
 sont liés à aucun client ; &lt;code&gt;accounts&lt;/code&gt; ne s&amp;rsquo;y applique donc pas.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="web-invitations"&gt;Les administrateurs qui invitent depuis le web&lt;span class="hx:absolute hx:-mt-20" id="web-invitations"&gt;&lt;/span&gt;
+&lt;a href="#web-invitations" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Depuis la v0.39.0, un administrateur peut inviter un compte local à&lt;code&gt;/account/invite&lt;/code&gt; (identifiant, adresse e-mail, nom facultatif), sans accès
+shell à l&amp;rsquo;hôte. C&amp;rsquo;est la même invitation que celle de la ligne de commande, et
+le lien part uniquement par e-mail, à l&amp;rsquo;invité. Les administrateurs sont nommés
+dans le bloc &lt;code&gt;local&lt;/code&gt;, avec les modèles d&amp;rsquo;authentificateur qu&amp;rsquo;ils peuvent
+utiliser :&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;local&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admins&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admin_aaguids&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;9dd8d593-2213-438a-97f8-d6b813d51c27&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; mds_dir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/mds&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La page exige un bloc &lt;code&gt;mail&lt;/code&gt;, une assertion avec vérification de l&amp;rsquo;utilisateur
+vieille de trois minutes au plus, et un jeton CSRF ; chaque administrateur peut
+inviter dix comptes par heure. Le modèle de la clé d&amp;rsquo;un administrateur doit être&lt;strong&gt;prouvé&lt;/strong&gt;, non déclaré : à l&amp;rsquo;enregistrement, le navigateur est invité à fournir
+une attestation directe, go-authn/webauthn v0.3.0 la vérifie (une déclaration&lt;code&gt;packed&lt;/code&gt; avec une chaîne &lt;code&gt;x5c&lt;/code&gt; ; &lt;code&gt;self&lt;/code&gt; et &lt;code&gt;none&lt;/code&gt; se vérifient mais ne prouvent
+aucun modèle), et le modèle est confronté aux métadonnées FIDO MDS3, par &lt;code&gt;mds&lt;/code&gt;
+de go-authn/fido v0.16.0. Alors seulement le bridge enregistre le modèle, et la
+page ne lit rien d&amp;rsquo;autre. Un modèle que les métadonnées déclarent plus tard
+révoqué ou compromis cesse d&amp;rsquo;ouvrir la page. Une clé enregistrée sans modèle
+prouvé permet toujours de se connecter ; elle n&amp;rsquo;ouvre rien.&lt;/p&gt;
+&lt;p&gt;Les métadonnées sont conservées dans &lt;code&gt;mds_dir&lt;/code&gt;, facultatif, qui vaut par défaut&lt;code&gt;/var/lib/authn-bridge/mds&lt;/code&gt;, doit être un chemin absolu, et est refusé sans&lt;code&gt;admins&lt;/code&gt;. Une goroutine d&amp;rsquo;arrière-plan les télécharge, jamais une requête.L&amp;rsquo;hôte doit fournir :&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;un répertoire que le service peut écrire (&lt;code&gt;mds_dir&lt;/code&gt; ; un autre chemin que
+celui par défaut doit figurer dans les &lt;code&gt;ReadWritePaths=&lt;/code&gt; de l&amp;rsquo;unité) ;&lt;/li&gt;
+&lt;li&gt;un accès sortant en HTTPS à &lt;code&gt;mds3.fidoalliance.org&lt;/code&gt;, et en HTTP simple aux
+points de distribution des CRL de ses certificats ;&lt;/li&gt;
+&lt;li&gt;une horloge exacte.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Le service démarre sans les métadonnées et réessaie ; tant qu&amp;rsquo;elles ne sont pas
+là, aucune clé d&amp;rsquo;administrateur n&amp;rsquo;est prouvée et la page refuse.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Réenregistrer la clé d&amp;rsquo;un administrateur.&lt;/strong&gt; Une clé enregistrée avant la
+v0.39.0 n&amp;rsquo;a pas d&amp;rsquo;attestation vérifiée. Pour chaque administrateur : se
+connecter avec la clé existante, ouvrir &lt;code&gt;/account&lt;/code&gt;, confirmer avec la clé, puis
+ajouter une clé d&amp;rsquo;accès avec l&amp;rsquo;authentificateur autorisé (la YubiKey Bio, par
+exemple), en acceptant l&amp;rsquo;invite du navigateur à partager sa marque et son
+modèle. La réponse doit indiquer &lt;code&gt;attested: true&lt;/code&gt; ; &lt;code&gt;/account/invite&lt;/code&gt; fonctionne
+alors. Retirer ensuite l&amp;rsquo;ancienne clé.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;Santé et métriques&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Ceux de go-net-health/endpoint, comme dans go-fileshare, sur l&amp;rsquo;écouteur &lt;code&gt;metrics&lt;/code&gt;, qui
 ne doit pas être l&amp;rsquo;écouteur public (une configuration qui le fait est refusée) :&lt;/p&gt;

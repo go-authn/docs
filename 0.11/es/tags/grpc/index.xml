@@ -320,6 +320,51 @@ data-copied-label="¡Copiado!"
 &lt;/div&gt;
 &lt;p&gt;Límite conocido: los puntos de certificados (SSH, X.509, Kerberos, WireGuard) no
 están ligados a ningún cliente, por lo que &lt;code&gt;accounts&lt;/code&gt; no se aplica a ellos.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="web-invitations"&gt;Administradores que invitan desde la web&lt;span class="hx:absolute hx:-mt-20" id="web-invitations"&gt;&lt;/span&gt;
+&lt;a href="#web-invitations" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Desde la v0.39.0, un administrador puede invitar una cuenta local en&lt;code&gt;/account/invite&lt;/code&gt; (login, dirección de correo, nombre opcional), sin shell en el
+host. Es la misma invitación que la de la línea de comandos, y el enlace se
+envía solo por correo, a la persona invitada. Los administradores se nombran en
+el bloque &lt;code&gt;local&lt;/code&gt;, con los modelos de autenticador que pueden usar:&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-hcl" data-lang="hcl"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="k"&gt;local&lt;/span&gt; {
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admins&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admin_aaguids&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;9dd8d593-2213-438a-97f8-d6b813d51c27&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; mds_dir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/mds&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copiar código"
+aria-label="Copiar código"
+data-copied-label="¡Copiado!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;La página exige un bloque &lt;code&gt;mail&lt;/code&gt;, una aserción con verificación del usuario de
+tres minutos como máximo y un token CSRF; cada administrador puede invitar diez
+cuentas por hora. El modelo de la passkey de un administrador debe estar&lt;strong&gt;probado&lt;/strong&gt;, no declarado: el registro pide al navegador una atestación directa,go-authn/webauthn v0.3.0 la verifica (una declaración &lt;code&gt;packed&lt;/code&gt; con cadena &lt;code&gt;x5c&lt;/code&gt;;&lt;code&gt;self&lt;/code&gt; y &lt;code&gt;none&lt;/code&gt; se verifican pero no prueban ningún modelo), y el modelo se
+contrasta con los metadatos FIDO MDS3, mediante &lt;code&gt;mds&lt;/code&gt; de go-authn/fido v0.16.0.Solo entonces el bridge registra el modelo, y la página no lee nada más. Un
+modelo que los metadatos declaren después revocado o comprometido deja de abrir
+la página. Una clave registrada sin modelo probado sigue permitiendo iniciar
+sesión; no abre nada.&lt;/p&gt;
+&lt;p&gt;Los metadatos se guardan en &lt;code&gt;mds_dir&lt;/code&gt;, opcional, que por defecto es&lt;code&gt;/var/lib/authn-bridge/mds&lt;/code&gt;, debe ser una ruta absoluta y se rechaza sin&lt;code&gt;admins&lt;/code&gt;. Una goroutine en segundo plano los descarga, nunca una petición. El
+host necesita:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;un directorio donde el servicio pueda escribir (&lt;code&gt;mds_dir&lt;/code&gt;; una ruta distinta
+de la predeterminada debe figurar en los &lt;code&gt;ReadWritePaths=&lt;/code&gt; de la unidad);&lt;/li&gt;
+&lt;li&gt;HTTPS saliente hacia &lt;code&gt;mds3.fidoalliance.org&lt;/code&gt; y HTTP simple saliente hacia los
+puntos de distribución de CRL de sus certificados;&lt;/li&gt;
+&lt;li&gt;un reloj correcto.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;El servicio arranca sin los metadatos y reintenta; hasta que lleguen, ninguna
+clave de administrador queda probada y la página rechaza.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Volver a registrar la clave de un administrador.&lt;/strong&gt; Una clave registrada antes
+de la v0.39.0 no tiene atestación verificada. Para cada administrador: iniciar
+sesión con la clave existente, abrir &lt;code&gt;/account&lt;/code&gt;, confirmar con la clave y
+añadir una passkey con el autenticador permitido (por ejemplo la YubiKey Bio),aceptando la petición del navegador de compartir su marca y modelo. La
+respuesta debe decir &lt;code&gt;attested: true&lt;/code&gt;; entonces &lt;code&gt;/account/invite&lt;/code&gt; funciona.Después, eliminar la clave antigua.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="health-and-metrics"&gt;Salud y métricas&lt;span class="hx:absolute hx:-mt-20" id="health-and-metrics"&gt;&lt;/span&gt;
 &lt;a href="#health-and-metrics" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Los de go-net-health/endpoint, como en go-fileshare, en la escucha &lt;code&gt;metrics&lt;/code&gt;, que no
 debe ser la pública (una configuración que la hace pública se rechaza):&lt;/p&gt;
