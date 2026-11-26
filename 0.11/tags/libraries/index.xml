@@ -3236,6 +3236,36 @@ reads as a configuration to fix rather than a password to retype.&lt;/p&gt;
 entry holds a password is answered &lt;code&gt;KDC_ERR_POLICY&lt;/code&gt; (&lt;em&gt;KDC policy rejects
 request&lt;/em&gt;, RFC 4120 §7.5.9), and both the error text and the &lt;code&gt;Logf&lt;/code&gt; line name the
 option. Keytab keys (&lt;code&gt;krbtgt&lt;/code&gt;, services) and the TGS are unaffected.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="pac"&gt;A PAC for the services that want one&lt;span class="hx:absolute hx:-mt-20" id="pac"&gt;&lt;/span&gt;
+&lt;a href="#pac" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Since v0.12.0, service tickets for the services named in &lt;code&gt;Config.PAC&lt;/code&gt; carry a
+Privilege Attribute Certificate ([MS-PAC]: LOGON_INFO, CLIENT_INFO,UPN_DNS_INFO, PAC_REQUESTOR, and the server, KDC, ticket and full signatures).It is &lt;strong&gt;off by default&lt;/strong&gt;: with &lt;code&gt;Config.PAC&lt;/code&gt; nil, no ticket carries one.&lt;/p&gt;
+&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-go" data-lang="go"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nx"&gt;PAC&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="nx"&gt;kdc&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;PAC&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;DomainSID&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#34;S-1-5-21-1111111111-2222222222-3333333333&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="c1"&gt;// NewDomainSID makes one&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;Services&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt;&lt;span class="kt"&gt;string&lt;/span&gt;&lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="s"&gt;&amp;#34;nfs/files.example.org&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;},&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;The RIDs are the directory&amp;rsquo;s own numbers: a person&amp;rsquo;s &lt;code&gt;uidNumber&lt;/code&gt; is the user
+RID and a group&amp;rsquo;s &lt;code&gt;gidNumber&lt;/code&gt; its RID, so a group without a &lt;code&gt;gidNumber&lt;/code&gt; is left
+out. A person with &lt;strong&gt;no&lt;/strong&gt; &lt;code&gt;uidNumber&lt;/code&gt;, or two accounts sharing one, is refused
+with &lt;code&gt;KDC_ERR_POLICY&lt;/code&gt; rather than given a PAC that names somebody else. At most
+256 groups are carried. A Samba 4.22 &lt;code&gt;member server&lt;/code&gt; with &lt;code&gt;winbindd&lt;/code&gt;, given
+the KDC&amp;rsquo;s domain SID, accepted these tickets (its log shows the PAC decoded and&lt;code&gt;WORKGROUP\alice&lt;/code&gt; mapped); &lt;code&gt;PAC.NetBIOSDomain&lt;/code&gt; must equal Samba&amp;rsquo;s &lt;code&gt;workgroup&lt;/code&gt;,otherwise Samba answers &lt;code&gt;NT_STATUS_NO_SUCH_USER&lt;/code&gt;. The design and what was
+measured are in the repository&amp;rsquo;s &lt;code&gt;docs/design/pac.md&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;A big PAC and UDP.&lt;/strong&gt; Since v0.12.1 (RFC 4120 §7.2.1), a reply over 1465 bytes
+is not sent as a datagram: the client gets &lt;code&gt;KRB_ERR_RESPONSE_TOO_BIG&lt;/code&gt; and
+repeats the request over TCP, where it is answered with the full reply. 1465 is
+this KDC&amp;rsquo;s choice, not a standard. A PAC of 256 groups is well over it.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="finder"&gt;Give it an index: &lt;code&gt;Finder&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="finder"&gt;&lt;/span&gt;
 &lt;a href="#finder" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Every AS-REQ and TGS-REQ looks one person up. With a plain &lt;code&gt;directory.Source&lt;/code&gt;
 that is &lt;code&gt;Identities()&lt;/code&gt; and a walk: with 10,000 people the walk was half of an
