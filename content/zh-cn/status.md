@@ -302,6 +302,8 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | totp v0.4.4 | `Verifier` 在每次尝试之前清扫空闲的名称；go-authn/mfa v0.5.1；`go` 指令为 1.27.4（GO-2026-6859） |
 | webauthn v0.1.1 | 当任一计数器非零时，`VerifyAssertion` 拒绝为零的 signCount |
 | webauthn v0.2.0 | **不兼容变更，安全：**注册拒绝小阶点的 Ed25519 公钥（阶整除 8 的八个点）：单位元对任意消息都验证 R = 单位元、S = 0，因此这样的密钥背后没有任何私钥。`coseKey.verify` 对没有验证器的密钥类型以关闭方式失败（`ErrKey`）。曾注册过此类密钥的凭据会受影响 |
+| webauthn v0.3.0 | `VerifyRegistrationAttested` 验证带 x5c 证书链的 `packed` 证明（签名、证明证书要求、id-fido-gen-ce-aaguid 与 authData 比对）；`Attestation.VerifyTrustPath` 按调用方的根证书检查证书链 |
+| webauthn v0.4.0 | `Policy.RequireAAGUIDExtension`（默认关闭，行为不变）使 `VerifyRegistrationAttested` 拒绝没有 id-fido-gen-ce-aaguid 的证书；新增 `ErrAAGUIDExtensionMissing`、`ErrAAGUIDExtensionMalformed`、`ErrAAGUIDExtensionMismatch` |
 | wireguard v0.1.1 | 已用 Go 1.27.2 测试；代码和 `go.mod` 均未改变 |
 | wireguard v0.1.4 | 来源的令牌请求和列表请求不再跟随重定向，因为它们携带 Basic 密钥或 Bearer 令牌；重定向是一个错误（[它拒绝什么]({{< relref "/libraries/wireguard.md" >}})） |
 | wireguard v0.2.0 | 安全：[`SourceConfig.FloorFile`]({{< relref "/libraries/wireguard.md" >}}) 在重启后保留最新列表的位置（版本和签发时间）；此前下限只存在于内存中，重启后的网关会把被重放的较旧列表（仍有签名且未过期）当作它的第一个列表。版本与下限相同但签发更早的列表也会被拒绝。新增：`Floor`、`ParseFloor`、`(*Source).Floor`、`ErrFloorNotKept`（文件无法写入时，随一个有效列表返回）。没有 `FloorFile` 时，除了同版本检查之外，一切不变 |
