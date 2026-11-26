@@ -272,9 +272,11 @@ La page exige un bloc `mail`, une assertion avec vérification de l'utilisateur
 vieille de trois minutes au plus, et un jeton CSRF ; chaque administrateur peut
 inviter dix comptes par heure. Le modèle de la clé d'un administrateur doit être
 **prouvé**, non déclaré : à l'enregistrement, le navigateur est invité à fournir
-une attestation directe, go-authn/webauthn v0.3.0 la vérifie (une déclaration
-`packed` avec une chaîne `x5c` ; `self` et `none` se vérifient mais ne prouvent
-aucun modèle), et le modèle est confronté aux métadonnées FIDO MDS3, par `mds`
+une attestation directe, go-authn/webauthn v0.5.0 la vérifie (une déclaration
+`packed` avec une chaîne `x5c` dont le certificat porte l'extension
+`id-fido-gen-ce-aaguid`, égale à l'AAGUID de l'authentificateur ; `self` et
+`none` se vérifient mais ne prouvent aucun modèle, pas plus qu'un certificat sans
+cette extension), et le modèle est confronté aux métadonnées FIDO MDS3, par `mds`
 de go-authn/fido v0.16.0. Alors seulement le bridge enregistre le modèle, et la
 page ne lit rien d'autre. Un modèle que les métadonnées déclarent plus tard
 révoqué ou compromis cesse d'ouvrir la page. Une clé enregistrée sans modèle

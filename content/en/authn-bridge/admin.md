@@ -266,9 +266,11 @@ local {
 The page needs a `mail` block, a user-verifying assertion at most three minutes
 old, and a CSRF token; each administrator may invite ten accounts an hour. An
 administrator's passkey model must be **proved**, not reported: registration
-asks the browser for a direct attestation, go-authn/webauthn v0.3.0 verifies it
-(a `packed` statement with an `x5c` chain; `self` and `none` verify but prove no
-model), and the model is checked against the FIDO MDS3 metadata, in
+asks the browser for a direct attestation, go-authn/webauthn v0.5.0 verifies it
+(a `packed` statement with an `x5c` chain whose certificate carries the
+`id-fido-gen-ce-aaguid` extension, equal to the authenticator's AAGUID; `self`
+and `none` verify but prove no model, and neither does a certificate without
+that extension), and the model is checked against the FIDO MDS3 metadata, in
 go-authn/fido v0.16.0's `mds`. Only then does the bridge record the model, and
 the page reads nothing else. A model the metadata later reports revoked or
 compromised stops opening the page. A key registered without a proven model
