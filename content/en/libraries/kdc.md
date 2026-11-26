@@ -54,6 +54,35 @@ entry holds a password is answered `KDC_ERR_POLICY` (*KDC policy rejects
 request*, RFC 4120 §7.5.9), and both the error text and the `Logf` line name the
 option. Keytab keys (`krbtgt`, services) and the TGS are unaffected.
 
+## A PAC for the services that want one {#pac}
+
+Since v0.12.0, service tickets for the services named in `Config.PAC` carry a
+Privilege Attribute Certificate ([MS-PAC]: LOGON_INFO, CLIENT_INFO,
+UPN_DNS_INFO, PAC_REQUESTOR, and the server, KDC, ticket and full signatures).
+It is **off by default**: with `Config.PAC` nil, no ticket carries one.
+
+```go
+PAC: &kdc.PAC{
+	DomainSID: "S-1-5-21-1111111111-2222222222-3333333333", // NewDomainSID makes one
+	Services:  []string{"nfs/files.example.org"},
+},
+```
+
+The RIDs are the directory's own numbers: a person's `uidNumber` is the user
+RID and a group's `gidNumber` its RID, so a group without a `gidNumber` is left
+out. A person with **no** `uidNumber`, or two accounts sharing one, is refused
+with `KDC_ERR_POLICY` rather than given a PAC that names somebody else. At most
+256 groups are carried. A Samba 4.22 `member server` with `winbindd`, given
+the KDC's domain SID, accepted these tickets (its log shows the PAC decoded and
+`WORKGROUP\alice` mapped); `PAC.NetBIOSDomain` must equal Samba's `workgroup`,
+otherwise Samba answers `NT_STATUS_NO_SUCH_USER`. The design and what was
+measured are in the repository's `docs/design/pac.md`.
+
+**A big PAC and UDP.** Since v0.12.1 (RFC 4120 §7.2.1), a reply over 1465 bytes
+is not sent as a datagram: the client gets `KRB_ERR_RESPONSE_TOO_BIG` and
+repeats the request over TCP, where it is answered with the full reply. 1465 is
+this KDC's choice, not a standard. A PAC of 256 groups is well over it.
+
 ## Give it an index: `Finder` {#finder}
 
 Every AS-REQ and TGS-REQ looks one person up. With a plain `directory.Source`

@@ -49,6 +49,32 @@ v0.11.0 以降、ディレクトリが保持するパスワードから人の鍵
 RFC 4120 §7.5.9）が返り、エラー文と `Logf` の行がこのオプションを名指しします。
 keytab の鍵（`krbtgt`、サービス）と TGS は影響を受けません。
 
+## PAC を求めるサービスのために {#pac}
+
+v0.12.0 以降、`Config.PAC` に挙げたサービスのサービスチケットは Privilege
+Attribute Certificate（[MS-PAC]: LOGON_INFO、CLIENT_INFO、UPN_DNS_INFO、
+PAC_REQUESTOR と各署名）を運びます。**既定では無効**で、`Config.PAC` が nil
+ならどのチケットにも付きません。
+
+```go
+PAC: &kdc.PAC{
+	DomainSID: "S-1-5-21-1111111111-2222222222-3333333333", // NewDomainSID makes one
+	Services:  []string{"nfs/files.example.org"},
+},
+```
+
+RID はディレクトリの番号です。`uidNumber` がユーザーの RID、`gidNumber` が
+グループの RID で、`gidNumber` のないグループは省かれます。`uidNumber` の
+**ない**人、または同じ番号を持つ二つのアカウントは `KDC_ERR_POLICY` で拒否
+されます。運ぶグループは最大 256 です。KDC のドメイン SID を持つ `member
+server` の Samba 4.22（`winbindd` あり）はこれらのチケットを受け入れました。
+`PAC.NetBIOSDomain` は Samba の `workgroup` と等しくなければなりません。
+
+**大きな PAC と UDP。** v0.12.1 以降（RFC 4120 §7.2.1）、1465 バイトを超える
+応答はデータグラムでは送られません。クライアントは
+`KRB_ERR_RESPONSE_TOO_BIG` を受け取り、TCP で要求を繰り返します。1465 は
+この KDC の選択であり、標準ではありません。
+
 ## 索引を渡す: `Finder` {#finder}
 
 AS-REQ と TGS-REQ はどれも一人を検索します。通常の `directory.Source` では、それは

@@ -49,6 +49,29 @@ KDC 必须用该人员的长期密钥**解密**客户端的预认证，
 RFC 4120 §7.5.9），错误文本和 `Logf` 行都会点明该选项。keytab 中的密钥
 （`krbtgt`、服务）和 TGS 不受影响。
 
+## 为需要 PAC 的服务 {#pac}
+
+自 v0.12.0 起，`Config.PAC` 中列出的服务的服务票据携带 Privilege Attribute
+Certificate（[MS-PAC]：LOGON_INFO、CLIENT_INFO、UPN_DNS_INFO、PAC_REQUESTOR
+以及各签名）。它**默认关闭**：`Config.PAC` 为 nil 时，任何票据都不带 PAC。
+
+```go
+PAC: &kdc.PAC{
+	DomainSID: "S-1-5-21-1111111111-2222222222-3333333333", // NewDomainSID makes one
+	Services:  []string{"nfs/files.example.org"},
+},
+```
+
+RID 取自目录的编号：`uidNumber` 是用户 RID，`gidNumber` 是组 RID，没有
+`gidNumber` 的组被省略。**没有** `uidNumber` 的人，或两个编号相同的账户，会以
+`KDC_ERR_POLICY` 被拒绝。最多携带 256 个组。使用 KDC 域 SID 的 `member server`
+角色 Samba 4.22（带 `winbindd`）接受了这些票据；`PAC.NetBIOSDomain` 必须等于
+Samba 的 `workgroup`。
+
+**大 PAC 与 UDP。** 自 v0.12.1 起（RFC 4120 §7.2.1），超过 1465 字节的应答不再
+作为数据报发送：客户端收到 `KRB_ERR_RESPONSE_TOO_BIG`，改用 TCP 重复请求。
+1465 是此 KDC 的选择，不是标准。
+
 ## 给它一个索引：`Finder` {#finder}
 
 每个 AS-REQ 和 TGS-REQ 都要查找一个人。使用普通的 `directory.Source` 时，这就是
