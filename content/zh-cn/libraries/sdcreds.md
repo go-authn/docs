@@ -21,7 +21,7 @@ tags: [libraries, sdcreds, secrets, s6]
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-这些页面所描述的版本是 v0.2.0。
+这些页面所描述的版本是 v0.3.0。
 
 ## 命令行 {#cli}
 
@@ -89,6 +89,51 @@ sdcreds s6-run --service=vpn --user=svc --source=/etc/creds --keep-cap=CAP_NET_A
 `CAP_NET_ADMIN` 作用于服务所在的网络命名空间;除非服务在自己的网络命名空间中启动,否则那就是
 主机的网络命名空间(`--unshare` 只给它一个私有的挂载命名空间):在那里它可以更改接口、路由和防火墙。
 需要时,请在其自己的网络命名空间中运行这样的服务。
+
+## `sdcreds run`:OpenBSD 与 Linux {#run}
+
+```sh
+sdcreds run --service=web --user=svc --source=/etc/creds [--class=daemon] -- /usr/local/bin/web
+```
+
+`run` 解密 `--source` 中已封存的文件,把它们作为归 `--user` 所有的只读文件放在
+`$CREDENTIALS_DIRECTORY` 下供程序看到,以该用户身份运行程序,并在程序结束时删除它们。在 Linux 上,
+它就是参数相同的 `s6-run`。`--check` 会执行每一项拒绝检查,但不解密任何内容(可用于 rc.d 的
+`rc_pre`)。拒绝以状态 2 退出,并发生在读取主机密钥之前。在 OpenBSD 上,文件位于为该服务挂载的内存
+文件系统(MFS)中,结束时清零:
+
+- **没有挂载命名空间。** 程序运行期间,任何能访问该目录的进程都能看到这些凭据,root 始终可以读取。
+- **主机密钥**是 `/etc/sdcreds/host.key`,属主为 root,权限 0600;其他权限或属主一律拒绝。用
+  `sdcreds setup --path /etc/sdcreds/host.key` 创建,再执行 `chmod 600`。机器 ID 取自
+  `sysctl hw.uuid`。`--secret` 与 `--machine-id-file` 可分别覆盖这两者,并经过同样的属主与权限检查。
+- **`--user` 绝不能是 root**:uid 0、gid 0 以及任何属于组 0 的附加组都会被拒绝,`run` 与库
+  (`s6.Run`、`delivery`)都是如此,没有任何参数可以允许。程序必须是用户可执行的、已规范化的绝对路径。
+- **杀死 sdcreds 会杀死程序**并卸载,即使用 `SIGKILL` 也一样。一个辅助进程持有服务锁并监视 sdcreds;
+  无论以何种方式结束,它都会杀死服务用户运行的所有进程(按真实 uid,所以调用过 `setsid` 的程序也逃不掉),
+  然后卸载。是否杀死由 root 决定:辅助进程停住它找到的每个进程,反复读取进程表直到不再变化,然后发送
+  `SIGKILL`,并重复直到该用户没有进程。只有有效 uid 是服务用户的进程会被计为“忙”,因此启动被拒绝,但它
+  不会被杀死。若有进程在 20 秒的预算后仍然存活,辅助进程依然会卸载(机密随之消失),报告失败并以非零状态
+  退出。一个用户同一时间只属于一次交付(`/var/run/sdcreds` 中的 `.uid-<N>.lock`),`run` 会拒绝已有其他
+  进程的用户:请给服务一个专用用户。若 sdcreds 与辅助进程都死亡,`sdcreds sweep [--base DIR]
+  [--service S]`(或服务的下一次启动)会清除残留。程序结束后若释放失败,sdcreds 以状态 70 退出(若程序
+  本身已失败则用程序的状态),并在 stderr 说明原因。
+- **交换区必须加密。** 当 `sysctl vm.swapencrypt.enable` 为 0、无法读取或不存在时,`run` 拒绝启动,
+  没有任何参数可以绕过。在库中,`s6.Config` 需要一个 `ReadSource`(命令会提供沿信任链检查的读取器),
+  否则 `s6.Run` 拒绝。
+- **内嵌的文件系统镜像是固定的**:每个 `delivery/images/ffs-<N>MiB.gz` 的 sha256 在辅助进程解压之前
+  被检查。
+- **`--class`** 先在 `/etc/login.conf.d/<class>` 中查找,再查 `/etc/login.conf`;不会查询
+  `login.conf.db`。该类别的资源限制应用于程序,只会降低其本来拥有的值;无法读取或解析的类别会被拒绝。
+  优先级与 umask 不会应用,程序的 umask 为 077。
+- **程序的环境是白名单**:`PATH`(固定默认值)、`CREDENTIALS_DIRECTORY`、`LANG`、`TZ`、`TERM` 与
+  `LC_*`。大于 2 的描述符在运行前关闭。
+- **内存。** 明文会短时间存在于 sdcreds 进程的内存中。在 OpenBSD 上 Go 进程无法使用 `mlockall`
+  (在 8.0 上实测),因此保护手段是 `vm.swapencrypt.enable`(启动时检查)、关闭核心转储以及
+  `kern.nosuidcoredump`。管理员生成的崩溃转储仍可能包含明文。
+- `--keep-cap` 仅适用于 Linux。
+
+仓库中的 `docs/openbsd/authn_bridge` 是以这种方式运行 go-authn/bridge 的 rc.d 脚本。该交付机制也是
+一个库,即 `delivery` 包。
 
 ## 互操作性 {#interop}
 
