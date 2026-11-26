@@ -272,9 +272,11 @@ Die Seite braucht einen `mail`-Block, eine Assertion mit Benutzerverifikation,
 die höchstens drei Minuten alt ist, und ein CSRF-Token; jeder Administrator darf
 zehn Konten pro Stunde einladen. Das Modell des Passkeys eines Administrators
 muss **bewiesen**, nicht gemeldet sein: Die Registrierung verlangt vom Browser
-eine direkte Attestation, go-authn/webauthn v0.3.0 prüft sie (ein
-`packed`-Statement mit `x5c`-Kette; `self` und `none` werden geprüft, beweisen
-aber kein Modell), und das Modell wird gegen die FIDO-MDS3-Metadaten geprüft,
+eine direkte Attestation, go-authn/webauthn v0.5.0 prüft sie (ein
+`packed`-Statement mit `x5c`-Kette, deren Zertifikat die Erweiterung
+`id-fido-gen-ce-aaguid` mit der AAGUID des Authenticators trägt; `self` und
+`none` werden geprüft, beweisen aber kein Modell, ebenso wenig ein Zertifikat
+ohne diese Erweiterung), und das Modell wird gegen die FIDO-MDS3-Metadaten geprüft,
 über `mds` aus go-authn/fido v0.16.0. Erst dann speichert die Bridge das Modell,
 und die Seite liest nichts anderes. Ein Modell, das die Metadaten später als
 widerrufen oder kompromittiert melden, öffnet die Seite nicht mehr. Ein Schlüssel

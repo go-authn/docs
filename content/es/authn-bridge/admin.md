@@ -274,8 +274,10 @@ La página exige un bloque `mail`, una aserción con verificación del usuario d
 tres minutos como máximo y un token CSRF; cada administrador puede invitar diez
 cuentas por hora. El modelo de la passkey de un administrador debe estar
 **probado**, no declarado: el registro pide al navegador una atestación directa,
-go-authn/webauthn v0.3.0 la verifica (una declaración `packed` con cadena `x5c`;
-`self` y `none` se verifican pero no prueban ningún modelo), y el modelo se
+go-authn/webauthn v0.5.0 la verifica (una declaración `packed` con cadena `x5c`
+cuyo certificado lleva la extensión `id-fido-gen-ce-aaguid`, igual al AAGUID del
+autenticador; `self` y `none` se verifican pero no prueban ningún modelo, y un
+certificado sin esa extensión tampoco), y el modelo se
 contrasta con los metadatos FIDO MDS3, mediante `mds` de go-authn/fido v0.16.0.
 Solo entonces el bridge registra el modelo, y la página no lee nada más. Un
 modelo que los metadatos declaren después revocado o comprometido deja de abrir
