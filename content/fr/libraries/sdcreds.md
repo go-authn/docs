@@ -22,7 +22,7 @@ sont reconnus et refusés avec `*UnsupportedModeError` ; rien n'est deviné.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-La version décrite par ces pages est la v0.2.0.
+La version décrite par ces pages est la v0.3.0.
 
 ## Ligne de commande {#cli}
 
@@ -107,6 +107,79 @@ celui de l'hôte sauf si le service est lancé dans un espace de noms réseau pr
 (`--unshare` ne lui donne qu'un espace de noms de montage privé) : il peut alors
 modifier les interfaces, les routes et le pare-feu. Lancez un tel service dans son
 propre espace de noms réseau quand cela compte.
+
+## `sdcreds run` : OpenBSD et Linux {#run}
+
+```sh
+sdcreds run --service=web --user=svc --source=/etc/creds [--class=daemon] -- /usr/local/bin/web
+```
+
+`run` déchiffre les fichiers scellés de `--source`, les rend visibles au
+programme comme des fichiers en lecture seule appartenant à `--user` sous
+`$CREDENTIALS_DIRECTORY`, le lance sous cet utilisateur et les supprime quand il
+se termine. Sous Linux, c'est `s6-run` avec les mêmes options. `--check` exécute
+tous les refus et ne déchiffre rien (à utiliser dans un `rc_pre` de rc.d). Un
+refus sort avec le statut 2 et intervient avant la lecture de la clé d'hôte.
+Sous OpenBSD, les fichiers vivent dans un système de fichiers en mémoire (MFS)
+monté pour le service et mis à zéro à la fin :
+
+- **Il n'y a pas d'espace de noms de montage.** Tant que le programme tourne, les
+  credentials sont visibles de tout processus qui peut atteindre le répertoire,
+  et root peut toujours les lire.
+- **La clé d'hôte** est `/etc/sdcreds/host.key`, appartenant à root, mode 0600 ;
+  tout autre mode ou propriétaire est refusé. Créez-la avec
+  `sdcreds setup --path /etc/sdcreds/host.key`, puis `chmod 600`. L'identifiant
+  de machine est `sysctl hw.uuid`. `--secret` et `--machine-id-file` remplacent
+  l'un et l'autre et passent par les mêmes contrôles de propriétaire et de mode.
+- **`--user` n'est jamais root** : l'uid 0, le gid 0 et tout groupe supplémentaire
+  0 sont refusés, dans `run` comme dans la bibliothèque (`s6.Run`, `delivery`) ;
+  aucune option ne l'autorise. Le programme doit être un chemin absolu normalisé
+  que l'utilisateur peut exécuter.
+- **Tuer sdcreds tue le programme** et démonte, même avec `SIGKILL`. Un processus
+  auxiliaire tient le verrou du service et surveille sdcreds ; quelle que soit la
+  fin, il tue tout ce que l'utilisateur du service exécute (par uid réel, donc un
+  programme qui a appelé `setsid` n'y échappe pas), puis démonte. La décision de
+  tuer revient à root : l'auxiliaire arrête chaque processus trouvé, relit la
+  table des processus jusqu'à ce qu'elle ne change plus, envoie `SIGKILL`, et
+  recommence jusqu'à ce que l'utilisateur n'ait plus de processus. Un processus
+  dont seul l'uid effectif est celui de l'utilisateur du service est compté comme
+  occupé, donc le démarrage est refusé, mais il n'est pas tué. Si un processus
+  survit au budget de 20 s, l'auxiliaire démonte quand même (les secrets
+  disparaissent), signale l'échec et sort avec un statut non nul. Un utilisateur
+  n'appartient qu'à une livraison à la fois (le `.uid-<N>.lock` de
+  `/var/run/sdcreds`), et `run` refuse un utilisateur qui a déjà d'autres
+  processus : donnez au service son propre utilisateur. Si sdcreds et l'auxiliaire
+  meurent tous deux, `sdcreds sweep [--base DIR] [--service S]` (ou le prochain
+  démarrage du service) supprime ce qui reste. Si la libération échoue après la
+  fin du programme, sdcreds sort avec le statut 70 (ou celui du programme s'il
+  était déjà un échec) et en donne la raison sur stderr.
+- **Le swap doit être chiffré.** `run` refuse de démarrer quand
+  `sysctl vm.swapencrypt.enable` vaut 0, est illisible ou n'existe pas. Aucune
+  option ne le contourne. Dans la bibliothèque, `s6.Config` exige un `ReadSource`
+  (la commande fournit le lecteur qui parcourt la confiance), sinon `s6.Run`
+  refuse.
+- **Les images de système de fichiers embarquées sont épinglées** : le sha256 de
+  chaque `delivery/images/ffs-<N>MiB.gz` est vérifié avant que l'auxiliaire ne la
+  décompresse.
+- **`--class`** est cherchée d'abord dans `/etc/login.conf.d/<class>`, puis dans
+  `/etc/login.conf` ; `login.conf.db` n'est pas consulté. Les limites de
+  ressources de la classe s'appliquent au programme, en ne faisant jamais que
+  réduire ce qu'il aurait, et une classe illisible ou inanalysable est un refus.
+  La priorité et l'umask ne sont pas appliqués ; le programme a l'umask 077.
+- **L'environnement du programme est une liste d'autorisation** : `PATH` (valeur
+  fixe par défaut), `CREDENTIALS_DIRECTORY`, `LANG`, `TZ`, `TERM` et `LC_*`. Les
+  descripteurs au-delà de 2 sont fermés avant l'exécution.
+- **Mémoire.** Le texte en clair est dans la mémoire du processus sdcreds pendant
+  un court moment. `mlockall` est inutilisable depuis un processus Go sous
+  OpenBSD (mesuré sur 8.0) ; la protection est donc `vm.swapencrypt.enable`
+  (vérifié au démarrage), les vidages mémoire désactivés et
+  `kern.nosuidcoredump`. Un vidage pris par un administrateur peut encore
+  contenir le texte en clair.
+- `--keep-cap` n'existe que sous Linux.
+
+`docs/openbsd/authn_bridge`, dans le dépôt, est un script rc.d qui lance
+go-authn/bridge de cette façon. La livraison est aussi une bibliothèque, le
+paquet `delivery`.
 
 ## Interopérabilité {#interop}
 
