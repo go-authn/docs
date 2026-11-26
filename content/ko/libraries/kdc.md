@@ -48,6 +48,31 @@ v0.11.0부터 디렉터리가 보관한 비밀번호에서 사람의 키를 유�
 §7.5.9)가 응답되며, 오류 문구와 `Logf` 줄이 이 옵션을 명시합니다. keytab 키
 (`krbtgt`, 서비스)와 TGS는 영향을 받지 않습니다.
 
+## PAC가 필요한 서비스를 위해 {#pac}
+
+v0.12.0부터 `Config.PAC`에 지정한 서비스의 서비스 티켓은 Privilege Attribute
+Certificate([MS-PAC]: LOGON_INFO, CLIENT_INFO, UPN_DNS_INFO, PAC_REQUESTOR와
+각 서명)를 담습니다. **기본값은 꺼짐**이며, `Config.PAC`가 nil이면 어떤
+티켓도 PAC를 담지 않습니다.
+
+```go
+PAC: &kdc.PAC{
+	DomainSID: "S-1-5-21-1111111111-2222222222-3333333333", // NewDomainSID makes one
+	Services:  []string{"nfs/files.example.org"},
+},
+```
+
+RID는 디렉터리의 번호입니다. `uidNumber`가 사용자 RID, `gidNumber`가 그룹
+RID이며, `gidNumber`가 없는 그룹은 빠집니다. `uidNumber`가 **없는** 사람이나
+같은 번호를 가진 두 계정은 `KDC_ERR_POLICY`로 거부됩니다. 최대 256개 그룹을
+담습니다. KDC의 도메인 SID를 가진 `member server`의 Samba 4.22(`winbindd`
+사용)가 이 티켓을 받아들였습니다. `PAC.NetBIOSDomain`은 Samba의 `workgroup`과
+같아야 합니다.
+
+**큰 PAC와 UDP.** v0.12.1부터(RFC 4120 §7.2.1) 1465바이트를 넘는 응답은
+데이터그램으로 보내지 않습니다. 클라이언트는 `KRB_ERR_RESPONSE_TOO_BIG`을
+받고 TCP로 요청을 반복합니다. 1465는 이 KDC의 선택이며 표준이 아닙니다.
+
 ## 색인 건네기: `Finder` {#finder}
 
 모든 AS-REQ와 TGS-REQ는 한 사람을 조회합니다. 일반 `directory.Source`에서는 이것이

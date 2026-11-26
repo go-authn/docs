@@ -55,6 +55,32 @@ una persona cuya entrada contiene una contraseña se responde con
 y tanto el texto del error como la línea de `Logf` nombran la opción. Las claves
 del keytab (`krbtgt`, servicios) y el TGS no se ven afectados.
 
+## Un PAC para los servicios que lo quieren {#pac}
+
+Desde v0.12.0, los tickets de servicio de los servicios nombrados en
+`Config.PAC` llevan un Privilege Attribute Certificate ([MS-PAC]: LOGON_INFO,
+CLIENT_INFO, UPN_DNS_INFO, PAC_REQUESTOR y las firmas). Está **desactivado por
+defecto**: con `Config.PAC` nil, ningún ticket lo lleva.
+
+```go
+PAC: &kdc.PAC{
+	DomainSID: "S-1-5-21-1111111111-2222222222-3333333333", // NewDomainSID makes one
+	Services:  []string{"nfs/files.example.org"},
+},
+```
+
+Los RID son los números del directorio: `uidNumber` es el RID del usuario y
+`gidNumber` el de un grupo; un grupo sin `gidNumber` se omite. Una persona
+**sin** `uidNumber`, o dos cuentas con el mismo número, se rechazan con
+`KDC_ERR_POLICY`. Se llevan como máximo 256 grupos. Un Samba 4.22 como `member
+server` con `winbindd` y el SID de dominio del KDC aceptó estos tickets;
+`PAC.NetBIOSDomain` debe ser igual al `workgroup` de Samba.
+
+**PAC grande y UDP.** Desde v0.12.1 (RFC 4120 §7.2.1), una respuesta de más de
+1465 bytes no se envía como datagrama: el cliente recibe
+`KRB_ERR_RESPONSE_TOO_BIG` y repite la petición por TCP. 1465 es una elección
+de este KDC, no un estándar.
+
 ## Darle un índice: `Finder` {#finder}
 
 Cada AS-REQ y TGS-REQ busca a una persona. Con una `directory.Source` simple eso es

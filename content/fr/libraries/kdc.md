@@ -55,6 +55,32 @@ politique du KDC rejette la requête*, RFC 4120 §7.5.9), et le texte de l'erreu
 comme la ligne `Logf` nomment l'option. Les clés du keytab (`krbtgt`, services)
 et le TGS ne sont pas touchés.
 
+## Un PAC pour les services qui en veulent un {#pac}
+
+Depuis v0.12.0, les tickets de service des services nommés dans `Config.PAC`
+portent un Privilege Attribute Certificate ([MS-PAC] : LOGON_INFO, CLIENT_INFO,
+UPN_DNS_INFO, PAC_REQUESTOR et les signatures). Il est **désactivé par défaut** :
+avec `Config.PAC` nil, aucun ticket n'en porte.
+
+```go
+PAC: &kdc.PAC{
+	DomainSID: "S-1-5-21-1111111111-2222222222-3333333333", // NewDomainSID makes one
+	Services:  []string{"nfs/files.example.org"},
+},
+```
+
+Les RID sont les numéros de l'annuaire : `uidNumber` est le RID de
+l'utilisateur et `gidNumber` celui d'un groupe ; un groupe sans `gidNumber` est
+omis. Une personne **sans** `uidNumber`, ou deux comptes de même numéro, est
+refusée avec `KDC_ERR_POLICY`. Au plus 256 groupes sont portés. Un Samba 4.22 en
+`member server` avec `winbindd` et le SID de domaine du KDC a accepté ces
+tickets ; `PAC.NetBIOSDomain` doit être égal au `workgroup` de Samba.
+
+**Un gros PAC et UDP.** Depuis v0.12.1 (RFC 4120 §7.2.1), une réponse de plus
+de 1465 octets n'est pas envoyée en datagramme : le client reçoit
+`KRB_ERR_RESPONSE_TOO_BIG` et répète sa requête en TCP. 1465 est un choix de ce
+KDC, pas un standard.
+
 ## Lui donner un index : `Finder` {#finder}
 
 Chaque AS-REQ et TGS-REQ cherche une personne. Avec une simple `directory.Source`,
