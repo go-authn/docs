@@ -15,7 +15,7 @@ data-copied-label="已复制！"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;这些页面所描述的版本是 v0.2.0。&lt;/p&gt;
+&lt;p&gt;这些页面所描述的版本是 v0.3.0。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="cli"&gt;命令行&lt;span class="hx:absolute hx:-mt-20" id="cli"&gt;&lt;/span&gt;
 &lt;a href="#cli" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds setup &lt;span class="c1"&gt;# create the host secret if missing&lt;/span&gt;
@@ -94,6 +94,35 @@ data-copied-label="已复制！"
 &lt;p&gt;服务在其 bounding、permitted、inheritable、effective 和 ambient 集合中,恰好只有所保留的能力。&lt;code&gt;no_new_privs&lt;/code&gt; 保持开启,securebits 为 0x3(&lt;code&gt;SECBIT_NOROOT&lt;/code&gt; 已设置并锁定)。&lt;code&gt;s6-run&lt;/code&gt;
 自身的权限不变。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;CAP_NET_ADMIN&lt;/code&gt; 作用于服务所在的网络命名空间;除非服务在自己的网络命名空间中启动,否则那就是主机的网络命名空间(&lt;code&gt;--unshare&lt;/code&gt; 只给它一个私有的挂载命名空间):在那里它可以更改接口、路由和防火墙。需要时,请在其自己的网络命名空间中运行这样的服务。&lt;/p&gt;
+&lt;h2 data-hextra-search-id="run"&gt;&lt;code&gt;sdcreds run&lt;/code&gt;:OpenBSD 与 Linux&lt;span class="hx:absolute hx:-mt-20" id="run"&gt;&lt;/span&gt;
+&lt;a href="#run" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds run --service&lt;span class="o"&gt;=&lt;/span&gt;web --user&lt;span class="o"&gt;=&lt;/span&gt;svc --source&lt;span class="o"&gt;=&lt;/span&gt;/etc/creds &lt;span class="o"&gt;[&lt;/span&gt;--class&lt;span class="o"&gt;=&lt;/span&gt;daemon&lt;span class="o"&gt;]&lt;/span&gt; -- /usr/local/bin/web&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="复制代码"
+aria-label="复制代码"
+data-copied-label="已复制！"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;run&lt;/code&gt; 解密 &lt;code&gt;--source&lt;/code&gt; 中已封存的文件,把它们作为归 &lt;code&gt;--user&lt;/code&gt; 所有的只读文件放在&lt;code&gt;$CREDENTIALS_DIRECTORY&lt;/code&gt; 下供程序看到,以该用户身份运行程序,并在程序结束时删除它们。在 Linux 上,它就是参数相同的 &lt;code&gt;s6-run&lt;/code&gt;。&lt;code&gt;--check&lt;/code&gt; 会执行每一项拒绝检查,但不解密任何内容(可用于 rc.d 的&lt;code&gt;rc_pre&lt;/code&gt;)。拒绝以状态 2 退出,并发生在读取主机密钥之前。在 OpenBSD 上,文件位于为该服务挂载的内存文件系统(MFS)中,结束时清零:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;没有挂载命名空间。&lt;/strong&gt; 程序运行期间,任何能访问该目录的进程都能看到这些凭据,root 始终可以读取。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;主机密钥&lt;/strong&gt;是 &lt;code&gt;/etc/sdcreds/host.key&lt;/code&gt;,属主为 root,权限 0600;其他权限或属主一律拒绝。用&lt;code&gt;sdcreds setup --path /etc/sdcreds/host.key&lt;/code&gt; 创建,再执行 &lt;code&gt;chmod 600&lt;/code&gt;。机器 ID 取自&lt;code&gt;sysctl hw.uuid&lt;/code&gt;。&lt;code&gt;--secret&lt;/code&gt; 与 &lt;code&gt;--machine-id-file&lt;/code&gt; 可分别覆盖这两者,并经过同样的属主与权限检查。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;--user&lt;/code&gt; 绝不能是 root&lt;/strong&gt;:uid 0、gid 0 以及任何属于组 0 的附加组都会被拒绝,&lt;code&gt;run&lt;/code&gt; 与库(&lt;code&gt;s6.Run&lt;/code&gt;、&lt;code&gt;delivery&lt;/code&gt;)都是如此,没有任何参数可以允许。程序必须是用户可执行的、已规范化的绝对路径。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;杀死 sdcreds 会杀死程序&lt;/strong&gt;并卸载,即使用 &lt;code&gt;SIGKILL&lt;/code&gt; 也一样。一个辅助进程持有服务锁并监视 sdcreds;无论以何种方式结束,它都会杀死服务用户运行的所有进程(按真实 uid,所以调用过 &lt;code&gt;setsid&lt;/code&gt; 的程序也逃不掉),然后卸载。是否杀死由 root 决定:辅助进程停住它找到的每个进程,反复读取进程表直到不再变化,然后发送&lt;code&gt;SIGKILL&lt;/code&gt;,并重复直到该用户没有进程。只有有效 uid 是服务用户的进程会被计为“忙”,因此启动被拒绝,但它不会被杀死。若有进程在 20 秒的预算后仍然存活,辅助进程依然会卸载(机密随之消失),报告失败并以非零状态退出。一个用户同一时间只属于一次交付(&lt;code&gt;/var/run/sdcreds&lt;/code&gt; 中的 &lt;code&gt;.uid-&amp;lt;N&amp;gt;.lock&lt;/code&gt;),&lt;code&gt;run&lt;/code&gt; 会拒绝已有其他进程的用户:请给服务一个专用用户。若 sdcreds 与辅助进程都死亡,&lt;code&gt;sdcreds sweep [--base DIR] [--service S]&lt;/code&gt;(或服务的下一次启动)会清除残留。程序结束后若释放失败,sdcreds 以状态 70 退出(若程序本身已失败则用程序的状态),并在 stderr 说明原因。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;交换区必须加密。&lt;/strong&gt; 当 &lt;code&gt;sysctl vm.swapencrypt.enable&lt;/code&gt; 为 0、无法读取或不存在时,&lt;code&gt;run&lt;/code&gt; 拒绝启动,没有任何参数可以绕过。在库中,&lt;code&gt;s6.Config&lt;/code&gt; 需要一个 &lt;code&gt;ReadSource&lt;/code&gt;(命令会提供沿信任链检查的读取器),否则 &lt;code&gt;s6.Run&lt;/code&gt; 拒绝。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;内嵌的文件系统镜像是固定的&lt;/strong&gt;:每个 &lt;code&gt;delivery/images/ffs-&amp;lt;N&amp;gt;MiB.gz&lt;/code&gt; 的 sha256 在辅助进程解压之前被检查。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;--class&lt;/code&gt;&lt;/strong&gt; 先在 &lt;code&gt;/etc/login.conf.d/&amp;lt;class&amp;gt;&lt;/code&gt; 中查找,再查 &lt;code&gt;/etc/login.conf&lt;/code&gt;;不会查询&lt;code&gt;login.conf.db&lt;/code&gt;。该类别的资源限制应用于程序,只会降低其本来拥有的值;无法读取或解析的类别会被拒绝。优先级与 umask 不会应用,程序的 umask 为 077。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;程序的环境是白名单&lt;/strong&gt;:&lt;code&gt;PATH&lt;/code&gt;(固定默认值)、&lt;code&gt;CREDENTIALS_DIRECTORY&lt;/code&gt;、&lt;code&gt;LANG&lt;/code&gt;、&lt;code&gt;TZ&lt;/code&gt;、&lt;code&gt;TERM&lt;/code&gt; 与&lt;code&gt;LC_*&lt;/code&gt;。大于 2 的描述符在运行前关闭。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;内存。&lt;/strong&gt; 明文会短时间存在于 sdcreds 进程的内存中。在 OpenBSD 上 Go 进程无法使用 &lt;code&gt;mlockall&lt;/code&gt;
+(在 8.0 上实测),因此保护手段是 &lt;code&gt;vm.swapencrypt.enable&lt;/code&gt;(启动时检查)、关闭核心转储以及&lt;code&gt;kern.nosuidcoredump&lt;/code&gt;。管理员生成的崩溃转储仍可能包含明文。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--keep-cap&lt;/code&gt; 仅适用于 Linux。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;仓库中的 &lt;code&gt;docs/openbsd/authn_bridge&lt;/code&gt; 是以这种方式运行 go-authn/bridge 的 rc.d 脚本。该交付机制也是一个库,即 &lt;code&gt;delivery&lt;/code&gt; 包。&lt;/p&gt;
 &lt;h2 data-hextra-search-id="interop"&gt;互操作性&lt;span class="hx:absolute hx:-mt-20" id="interop"&gt;&lt;/span&gt;
 &lt;a href="#interop" class="subheading-anchor" aria-label="此章节的永久链接"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;两个方向都针对真实的 &lt;code&gt;systemd-creds&lt;/code&gt; &lt;strong&gt;262.2&lt;/strong&gt; 进行了测试，它由 &lt;code&gt;v262.2&lt;/code&gt; 标签构建（不使用发行版软件包）。&lt;/p&gt;
 &lt;ul&gt;

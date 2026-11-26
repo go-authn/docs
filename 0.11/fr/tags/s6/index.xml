@@ -17,7 +17,7 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;La version décrite par ces pages est la v0.2.0.&lt;/p&gt;
+&lt;p&gt;La version décrite par ces pages est la v0.3.0.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="cli"&gt;Ligne de commande&lt;span class="hx:absolute hx:-mt-20" id="cli"&gt;&lt;/span&gt;
 &lt;a href="#cli" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds setup &lt;span class="c1"&gt;# create the host secret if missing&lt;/span&gt;
@@ -122,6 +122,74 @@ privilèges de &lt;code&gt;s6-run&lt;/code&gt; lui-même ne changent pas.&lt;/p&
 celui de l&amp;rsquo;hôte sauf si le service est lancé dans un espace de noms réseau propre(&lt;code&gt;--unshare&lt;/code&gt; ne lui donne qu&amp;rsquo;un espace de noms de montage privé) : il peut alors
 modifier les interfaces, les routes et le pare-feu. Lancez un tel service dans son
 propre espace de noms réseau quand cela compte.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="run"&gt;&lt;code&gt;sdcreds run&lt;/code&gt; : OpenBSD et Linux&lt;span class="hx:absolute hx:-mt-20" id="run"&gt;&lt;/span&gt;
+&lt;a href="#run" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds run --service&lt;span class="o"&gt;=&lt;/span&gt;web --user&lt;span class="o"&gt;=&lt;/span&gt;svc --source&lt;span class="o"&gt;=&lt;/span&gt;/etc/creds &lt;span class="o"&gt;[&lt;/span&gt;--class&lt;span class="o"&gt;=&lt;/span&gt;daemon&lt;span class="o"&gt;]&lt;/span&gt; -- /usr/local/bin/web&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copier le code"
+aria-label="Copier le code"
+data-copied-label="Copié !"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;run&lt;/code&gt; déchiffre les fichiers scellés de &lt;code&gt;--source&lt;/code&gt;, les rend visibles au
+programme comme des fichiers en lecture seule appartenant à &lt;code&gt;--user&lt;/code&gt; sous&lt;code&gt;$CREDENTIALS_DIRECTORY&lt;/code&gt;, le lance sous cet utilisateur et les supprime quand il
+se termine. Sous Linux, c&amp;rsquo;est &lt;code&gt;s6-run&lt;/code&gt; avec les mêmes options. &lt;code&gt;--check&lt;/code&gt; exécute
+tous les refus et ne déchiffre rien (à utiliser dans un &lt;code&gt;rc_pre&lt;/code&gt; de rc.d). Un
+refus sort avec le statut 2 et intervient avant la lecture de la clé d&amp;rsquo;hôte.Sous OpenBSD, les fichiers vivent dans un système de fichiers en mémoire (MFS)monté pour le service et mis à zéro à la fin :&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Il n&amp;rsquo;y a pas d&amp;rsquo;espace de noms de montage.&lt;/strong&gt; Tant que le programme tourne, les
+credentials sont visibles de tout processus qui peut atteindre le répertoire,et root peut toujours les lire.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;La clé d&amp;rsquo;hôte&lt;/strong&gt; est &lt;code&gt;/etc/sdcreds/host.key&lt;/code&gt;, appartenant à root, mode 0600 ;tout autre mode ou propriétaire est refusé. Créez-la avec&lt;code&gt;sdcreds setup --path /etc/sdcreds/host.key&lt;/code&gt;, puis &lt;code&gt;chmod 600&lt;/code&gt;. L&amp;rsquo;identifiant
+de machine est &lt;code&gt;sysctl hw.uuid&lt;/code&gt;. &lt;code&gt;--secret&lt;/code&gt; et &lt;code&gt;--machine-id-file&lt;/code&gt; remplacent
+l&amp;rsquo;un et l&amp;rsquo;autre et passent par les mêmes contrôles de propriétaire et de mode.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;--user&lt;/code&gt; n&amp;rsquo;est jamais root&lt;/strong&gt; : l&amp;rsquo;uid 0, le gid 0 et tout groupe supplémentaire
+0 sont refusés, dans &lt;code&gt;run&lt;/code&gt; comme dans la bibliothèque (&lt;code&gt;s6.Run&lt;/code&gt;, &lt;code&gt;delivery&lt;/code&gt;) ;aucune option ne l&amp;rsquo;autorise. Le programme doit être un chemin absolu normalisé
+que l&amp;rsquo;utilisateur peut exécuter.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Tuer sdcreds tue le programme&lt;/strong&gt; et démonte, même avec &lt;code&gt;SIGKILL&lt;/code&gt;. Un processus
+auxiliaire tient le verrou du service et surveille sdcreds ; quelle que soit la
+fin, il tue tout ce que l&amp;rsquo;utilisateur du service exécute (par uid réel, donc un
+programme qui a appelé &lt;code&gt;setsid&lt;/code&gt; n&amp;rsquo;y échappe pas), puis démonte. La décision de
+tuer revient à root : l&amp;rsquo;auxiliaire arrête chaque processus trouvé, relit la
+table des processus jusqu&amp;rsquo;à ce qu&amp;rsquo;elle ne change plus, envoie &lt;code&gt;SIGKILL&lt;/code&gt;, et
+recommence jusqu&amp;rsquo;à ce que l&amp;rsquo;utilisateur n&amp;rsquo;ait plus de processus. Un processus
+dont seul l&amp;rsquo;uid effectif est celui de l&amp;rsquo;utilisateur du service est compté comme
+occupé, donc le démarrage est refusé, mais il n&amp;rsquo;est pas tué. Si un processus
+survit au budget de 20 s, l&amp;rsquo;auxiliaire démonte quand même (les secrets
+disparaissent), signale l&amp;rsquo;échec et sort avec un statut non nul. Un utilisateur
+n&amp;rsquo;appartient qu&amp;rsquo;à une livraison à la fois (le &lt;code&gt;.uid-&amp;lt;N&amp;gt;.lock&lt;/code&gt; de&lt;code&gt;/var/run/sdcreds&lt;/code&gt;), et &lt;code&gt;run&lt;/code&gt; refuse un utilisateur qui a déjà d&amp;rsquo;autres
+processus : donnez au service son propre utilisateur. Si sdcreds et l&amp;rsquo;auxiliaire
+meurent tous deux, &lt;code&gt;sdcreds sweep [--base DIR] [--service S]&lt;/code&gt; (ou le prochain
+démarrage du service) supprime ce qui reste. Si la libération échoue après la
+fin du programme, sdcreds sort avec le statut 70 (ou celui du programme s&amp;rsquo;il
+était déjà un échec) et en donne la raison sur stderr.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Le swap doit être chiffré.&lt;/strong&gt; &lt;code&gt;run&lt;/code&gt; refuse de démarrer quand&lt;code&gt;sysctl vm.swapencrypt.enable&lt;/code&gt; vaut 0, est illisible ou n&amp;rsquo;existe pas. Aucune
+option ne le contourne. Dans la bibliothèque, &lt;code&gt;s6.Config&lt;/code&gt; exige un &lt;code&gt;ReadSource&lt;/code&gt;
+(la commande fournit le lecteur qui parcourt la confiance), sinon &lt;code&gt;s6.Run&lt;/code&gt;
+refuse.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Les images de système de fichiers embarquées sont épinglées&lt;/strong&gt; : le sha256 de
+chaque &lt;code&gt;delivery/images/ffs-&amp;lt;N&amp;gt;MiB.gz&lt;/code&gt; est vérifié avant que l&amp;rsquo;auxiliaire ne la
+décompresse.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;--class&lt;/code&gt;&lt;/strong&gt; est cherchée d&amp;rsquo;abord dans &lt;code&gt;/etc/login.conf.d/&amp;lt;class&amp;gt;&lt;/code&gt;, puis dans&lt;code&gt;/etc/login.conf&lt;/code&gt; ; &lt;code&gt;login.conf.db&lt;/code&gt; n&amp;rsquo;est pas consulté. Les limites de
+ressources de la classe s&amp;rsquo;appliquent au programme, en ne faisant jamais que
+réduire ce qu&amp;rsquo;il aurait, et une classe illisible ou inanalysable est un refus.La priorité et l&amp;rsquo;umask ne sont pas appliqués ; le programme a l&amp;rsquo;umask 077.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;L&amp;rsquo;environnement du programme est une liste d&amp;rsquo;autorisation&lt;/strong&gt; : &lt;code&gt;PATH&lt;/code&gt; (valeur
+fixe par défaut), &lt;code&gt;CREDENTIALS_DIRECTORY&lt;/code&gt;, &lt;code&gt;LANG&lt;/code&gt;, &lt;code&gt;TZ&lt;/code&gt;, &lt;code&gt;TERM&lt;/code&gt; et &lt;code&gt;LC_*&lt;/code&gt;. Les
+descripteurs au-delà de 2 sont fermés avant l&amp;rsquo;exécution.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Mémoire.&lt;/strong&gt; Le texte en clair est dans la mémoire du processus sdcreds pendant
+un court moment. &lt;code&gt;mlockall&lt;/code&gt; est inutilisable depuis un processus Go sous
+OpenBSD (mesuré sur 8.0) ; la protection est donc &lt;code&gt;vm.swapencrypt.enable&lt;/code&gt;
+(vérifié au démarrage), les vidages mémoire désactivés et&lt;code&gt;kern.nosuidcoredump&lt;/code&gt;. Un vidage pris par un administrateur peut encore
+contenir le texte en clair.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--keep-cap&lt;/code&gt; n&amp;rsquo;existe que sous Linux.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;docs/openbsd/authn_bridge&lt;/code&gt;, dans le dépôt, est un script rc.d qui lance
+go-authn/bridge de cette façon. La livraison est aussi une bibliothèque, le
+paquet &lt;code&gt;delivery&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="interop"&gt;Interopérabilité&lt;span class="hx:absolute hx:-mt-20" id="interop"&gt;&lt;/span&gt;
 &lt;a href="#interop" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Les deux sens sont testés contre le vrai &lt;code&gt;systemd-creds&lt;/code&gt; &lt;strong&gt;262.2&lt;/strong&gt;, compilé à
 partir du tag &lt;code&gt;v262.2&lt;/code&gt; (aucun paquet de distribution).&lt;/p&gt;

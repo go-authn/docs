@@ -18,7 +18,7 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;The version these pages describe is v0.2.0.&lt;/p&gt;
+&lt;p&gt;The version these pages describe is v0.3.0.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="cli"&gt;Command line&lt;span class="hx:absolute hx:-mt-20" id="cli"&gt;&lt;/span&gt;
 &lt;a href="#cli" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds setup &lt;span class="c1"&gt;# create the host secret if missing&lt;/span&gt;
@@ -119,6 +119,70 @@ privileges are unchanged.&lt;/p&gt;
 host&amp;rsquo;s unless the service is started in a network namespace of its own(&lt;code&gt;--unshare&lt;/code&gt; only gives it a private mount namespace): there it can change
 interfaces, routes and the firewall. Run such a service in its own network
 namespace when that matters.&lt;/p&gt;
+&lt;h2 data-hextra-search-id="run"&gt;&lt;code&gt;sdcreds run&lt;/code&gt;: OpenBSD and Linux&lt;span class="hx:absolute hx:-mt-20" id="run"&gt;&lt;/span&gt;
+&lt;a href="#run" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
+&lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds run --service&lt;span class="o"&gt;=&lt;/span&gt;web --user&lt;span class="o"&gt;=&lt;/span&gt;svc --source&lt;span class="o"&gt;=&lt;/span&gt;/etc/creds &lt;span class="o"&gt;[&lt;/span&gt;--class&lt;span class="o"&gt;=&lt;/span&gt;daemon&lt;span class="o"&gt;]&lt;/span&gt; -- /usr/local/bin/web&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;button
+class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
+title="Copy code"
+aria-label="Copy code"
+data-copied-label="Copied!"
+&gt;
+&lt;div class="hextra-copy-icon hx:group-[.copied]/copybtn:hidden hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;div class="hextra-success-icon hx:hidden hx:group-[.copied]/copybtn:block hx:pointer-events-none hx:h-4 hx:w-4"&gt;&lt;/div&gt;
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;p&gt;&lt;code&gt;run&lt;/code&gt; decrypts the sealed files of &lt;code&gt;--source&lt;/code&gt;, makes them visible to the program
+as read-only files owned by &lt;code&gt;--user&lt;/code&gt; under &lt;code&gt;$CREDENTIALS_DIRECTORY&lt;/code&gt;, runs it as
+that user and removes them when it ends. On Linux it is &lt;code&gt;s6-run&lt;/code&gt; with the same
+flags. &lt;code&gt;--check&lt;/code&gt; runs every refusal and decrypts nothing (use it in an rc.d&lt;code&gt;rc_pre&lt;/code&gt;). A refusal exits with status 2 and happens before the host key is
+read. On OpenBSD the files live in a memory file system (MFS) mounted for the
+service and zeroed at the end:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;There is no mount namespace.&lt;/strong&gt; While the program runs, the credentials are
+visible to every process that can reach the directory, and root can always
+read them.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The host key&lt;/strong&gt; is &lt;code&gt;/etc/sdcreds/host.key&lt;/code&gt;, owned by root, mode 0600; any
+other mode or owner is refused. Create it with&lt;code&gt;sdcreds setup --path /etc/sdcreds/host.key&lt;/code&gt;, then &lt;code&gt;chmod 600&lt;/code&gt; it. The machine
+id is &lt;code&gt;sysctl hw.uuid&lt;/code&gt;. &lt;code&gt;--secret&lt;/code&gt; and &lt;code&gt;--machine-id-file&lt;/code&gt; override both and go
+through the same ownership and mode checks.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;--user&lt;/code&gt; is never root&lt;/strong&gt;: uid 0, gid 0 and any supplementary group 0 are
+refused, in &lt;code&gt;run&lt;/code&gt; and in the library (&lt;code&gt;s6.Run&lt;/code&gt;, &lt;code&gt;delivery&lt;/code&gt;); there is no flag
+to allow it. The program must be an absolute, normalised path that the user can
+execute.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Killing sdcreds kills the program&lt;/strong&gt; and unmounts, even with &lt;code&gt;SIGKILL&lt;/code&gt;. A
+helper process holds the service lock and watches sdcreds; on any end it kills
+everything the service user runs (by real uid, so a program that called&lt;code&gt;setsid&lt;/code&gt; does not escape) and then unmounts. The kill is decided by root: the
+helper stops every process it finds, reads the process table again until it no
+longer changes, then sends &lt;code&gt;SIGKILL&lt;/code&gt;, and repeats until the user has no
+process. A process whose effective uid only is the service user&amp;rsquo;s is counted
+as busy, so the start is refused, but it is not killed. When a process survives
+the 20 s budget, the helper still unmounts (the secrets go), reports the
+failure and exits non-zero. A user is owned by one delivery at a time (the&lt;code&gt;.uid-&amp;lt;N&amp;gt;.lock&lt;/code&gt; in &lt;code&gt;/var/run/sdcreds&lt;/code&gt;), and &lt;code&gt;run&lt;/code&gt; refuses a user that already
+has other processes: give the service its own user. If sdcreds and the helper
+both die, &lt;code&gt;sdcreds sweep [--base DIR] [--service S]&lt;/code&gt; (or the next start of the
+service) removes the leftover. When the release fails after the program ends,sdcreds exits with status 70 (or the program&amp;rsquo;s own status when that was
+already a failure) and says why on stderr.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Swap must be encrypted.&lt;/strong&gt; &lt;code&gt;run&lt;/code&gt; refuses to start when&lt;code&gt;sysctl vm.swapencrypt.enable&lt;/code&gt; is 0, cannot be read, or does not exist. There
+is no flag to override it. In the library, &lt;code&gt;s6.Config&lt;/code&gt; needs a &lt;code&gt;ReadSource&lt;/code&gt;
+(the command gives the trust-walked reader), or &lt;code&gt;s6.Run&lt;/code&gt; refuses.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The embedded file-system images are pinned&lt;/strong&gt;: the sha256 of each&lt;code&gt;delivery/images/ffs-&amp;lt;N&amp;gt;MiB.gz&lt;/code&gt; is checked before the helper decompresses it.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;&lt;code&gt;--class&lt;/code&gt;&lt;/strong&gt; is looked up in &lt;code&gt;/etc/login.conf.d/&amp;lt;class&amp;gt;&lt;/code&gt; first, then&lt;code&gt;/etc/login.conf&lt;/code&gt;; &lt;code&gt;login.conf.db&lt;/code&gt; is not consulted. The resource limits of the
+class are applied to the program, only ever lowering what it would have, and a
+class that cannot be read or parsed is a refusal. Priority and umask are not
+applied; the program gets umask 077.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;The program&amp;rsquo;s environment is an allow-list&lt;/strong&gt;: &lt;code&gt;PATH&lt;/code&gt; (a fixed default),&lt;code&gt;CREDENTIALS_DIRECTORY&lt;/code&gt;, &lt;code&gt;LANG&lt;/code&gt;, &lt;code&gt;TZ&lt;/code&gt;, &lt;code&gt;TERM&lt;/code&gt; and &lt;code&gt;LC_*&lt;/code&gt;. Descriptors above 2
+are closed before it runs.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Memory.&lt;/strong&gt; The plaintext is in the memory of the sdcreds process for a short
+time. &lt;code&gt;mlockall&lt;/code&gt; cannot be used from a Go process on OpenBSD (measured on
+8.0), so protection is &lt;code&gt;vm.swapencrypt.enable&lt;/code&gt; (checked at start), core dumps
+off and &lt;code&gt;kern.nosuidcoredump&lt;/code&gt;. A crash dump taken by an administrator can still
+contain the plaintext.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--keep-cap&lt;/code&gt; is Linux only.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;code&gt;docs/openbsd/authn_bridge&lt;/code&gt; in the repository is an rc.d script that runs
+go-authn/bridge this way. The delivery is also a library, package &lt;code&gt;delivery&lt;/code&gt;.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="interop"&gt;Interoperability&lt;span class="hx:absolute hx:-mt-20" id="interop"&gt;&lt;/span&gt;
 &lt;a href="#interop" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Both directions are tested against the real &lt;code&gt;systemd-creds&lt;/code&gt; &lt;strong&gt;262.2&lt;/strong&gt;, built
 from the &lt;code&gt;v262.2&lt;/code&gt; tag (no distribution package).&lt;/p&gt;
