@@ -23,7 +23,7 @@ reconocen y se rechazan con `*UnsupportedModeError`; no se adivina nada.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-La versión que describen estas páginas es la v0.4.2. OpenBSD de 32 bits (i386, armv7) se
+La versión que describen estas páginas es la v0.4.3. OpenBSD de 32 bits (i386, armv7) se
 rechaza: la compilación falla a propósito, porque la disposición del montaje (`mfsArgsSize` 144 y
 las estructuras de montaje) es la LP64 de amd64 y arm64 y no se ha comprobado con las cabeceras
 de 32 bits.

@@ -33,7 +33,7 @@ All of them are pure Go and build with `CGO_ENABLED=0`.
 | [scim]({{< relref "/libraries/scim.md" >}}) | who has the identity provider just created, changed or deleted? | v0.2.1 | `github.com/go-authn/scim` |
 | [secretsource]({{< relref "/libraries/secretsource.md" >}}) | where does a PIN or a password come from, when it must not sit in a file? | v0.12.0 | `github.com/go-authn/secretsource` |
 | [harden]({{< relref "/libraries/harden.md" >}}) | is this URL https or this machine, and how is a private file written safely, and how is a key kept out of swap? | v0.3.0 | `github.com/go-authn/harden` |
-| [sdcreds]({{< relref "/libraries/sdcreds.md" >}}) | how is a systemd credential read and written without systemd, and how does an s6 service get its `$CREDENTIALS_DIRECTORY`? | v0.4.2 | `github.com/go-authn/sdcreds` |
+| [sdcreds]({{< relref "/libraries/sdcreds.md" >}}) | how is a systemd credential read and written without systemd, and how does an s6 service get its `$CREDENTIALS_DIRECTORY`? | v0.4.3 | `github.com/go-authn/sdcreds` |
 
 ## How they group
 
