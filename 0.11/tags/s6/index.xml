@@ -18,7 +18,7 @@ data-copied-label="Copied!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;The version these pages describe is v0.3.0.&lt;/p&gt;
+&lt;p&gt;The version these pages describe is v0.4.0.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="cli"&gt;Command line&lt;span class="hx:absolute hx:-mt-20" id="cli"&gt;&lt;/span&gt;
 &lt;a href="#cli" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds setup &lt;span class="c1"&gt;# create the host secret if missing&lt;/span&gt;
@@ -153,17 +153,35 @@ to allow it. The program must be an absolute, normalised path that the user can
 execute.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Killing sdcreds kills the program&lt;/strong&gt; and unmounts, even with &lt;code&gt;SIGKILL&lt;/code&gt;. A
 helper process holds the service lock and watches sdcreds; on any end it kills
-everything the service user runs (by real uid, so a program that called&lt;code&gt;setsid&lt;/code&gt; does not escape) and then unmounts. The kill is decided by root: the
-helper stops every process it finds, reads the process table again until it no
-longer changes, then sends &lt;code&gt;SIGKILL&lt;/code&gt;, and repeats until the user has no
-process. A process whose effective uid only is the service user&amp;rsquo;s is counted
-as busy, so the start is refused, but it is not killed. When a process survives
-the 20 s budget, the helper still unmounts (the secrets go), reports the
-failure and exits non-zero. A user is owned by one delivery at a time (the&lt;code&gt;.uid-&amp;lt;N&amp;gt;.lock&lt;/code&gt; in &lt;code&gt;/var/run/sdcreds&lt;/code&gt;), and &lt;code&gt;run&lt;/code&gt; refuses a user that already
+everything the service user runs (by uid, so a program that called &lt;code&gt;setsid&lt;/code&gt;
+does not escape) and then unmounts. Root never signals a pid it read from a
+list. Since v0.4.0 the kill is made by a short-lived killer process that root
+starts and that drops to split credentials (real and saved uid of a reserved
+killer user, effective uid of the service user) before it signals anything:the kernel then lets it signal every process of the service user, while no
+process of that user can signal it. The killer sends &lt;code&gt;kill(-1, SIGKILL)&lt;/code&gt; until
+the kernel reports nothing left; killers are serialised by a lock(&lt;code&gt;/var/run/sdcreds-killer.lock&lt;/code&gt;). &lt;strong&gt;Install requirement:&lt;/strong&gt; create the killer
+user, which must own no process and must not be root or a service user:&lt;code&gt;useradd -s /sbin/nologin -d /var/empty -c &amp;quot;sdcreds killer&amp;quot; _sdkill&lt;/code&gt;. A
+delivery is refused to start without it. A process that holds the user only
+through a set-uid file run by another user is counted by the start check but
+is not reached by the killer: the release then reports that a process
+survived and the next start is refused until it is gone (fail-closed). When a
+process survives the 20 s budget, the helper still unmounts (the secrets go),reports the failure and exits non-zero. A user is owned by one delivery at a time (the&lt;code&gt;.uid-&amp;lt;N&amp;gt;.lock&lt;/code&gt; in &lt;code&gt;/var/run/sdcreds&lt;/code&gt;), and &lt;code&gt;run&lt;/code&gt; refuses a user that already
 has other processes: give the service its own user. If sdcreds and the helper
 both die, &lt;code&gt;sdcreds sweep [--base DIR] [--service S]&lt;/code&gt; (or the next start of the
 service) removes the leftover. When the release fails after the program ends,sdcreds exits with status 70 (or the program&amp;rsquo;s own status when that was
 already a failure) and says why on stderr.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Exit status of &lt;code&gt;run&lt;/code&gt;&lt;/strong&gt; (since v0.4.0). The program&amp;rsquo;s own status is passed
+through (a program killed by signal &lt;code&gt;n&lt;/code&gt; gives &lt;code&gt;128+n&lt;/code&gt;). sdcreds&amp;rsquo; own endings
+have reserved statuses, outside the 0-2 and 64-78 ranges that daemons commonly
+use: &lt;strong&gt;125&lt;/strong&gt; sdcreds refused, nothing was started (bad flag, unknown or root
+user, unencrypted swap, a run that is alive; permanent until something
+changes); &lt;strong&gt;126&lt;/strong&gt; sdcreds failed after it began (delivery, helper lost, the
+program could not be executed; may be transient); &lt;strong&gt;70&lt;/strong&gt; the program ended but
+the release failed. A program that itself exits 125 or 126 cannot be told
+apart. Before v0.4.0 a refusal exited 2 and a failure 1.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Restart.&lt;/strong&gt; A start waits up to 30 s for the previous run of the same service
+to finish tearing down instead of being refused; a run still alive after that
+is refused (125). A second service for the same user is still refused at once.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Swap must be encrypted.&lt;/strong&gt; &lt;code&gt;run&lt;/code&gt; refuses to start when&lt;code&gt;sysctl vm.swapencrypt.enable&lt;/code&gt; is 0, cannot be read, or does not exist. There
 is no flag to override it. In the library, &lt;code&gt;s6.Config&lt;/code&gt; needs a &lt;code&gt;ReadSource&lt;/code&gt;
 (the command gives the trust-walked reader), or &lt;code&gt;s6.Run&lt;/code&gt; refuses.&lt;/li&gt;
@@ -174,6 +192,11 @@ class that cannot be read or parsed is a refusal. Priority and umask are not
 applied; the program gets umask 077.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;The program&amp;rsquo;s environment is an allow-list&lt;/strong&gt;: &lt;code&gt;PATH&lt;/code&gt; (a fixed default),&lt;code&gt;CREDENTIALS_DIRECTORY&lt;/code&gt;, &lt;code&gt;LANG&lt;/code&gt;, &lt;code&gt;TZ&lt;/code&gt;, &lt;code&gt;TERM&lt;/code&gt; and &lt;code&gt;LC_*&lt;/code&gt;. Descriptors above 2
 are closed before it runs.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Passing the environment and descriptors&lt;/strong&gt; (OpenBSD, since v0.4.0).&lt;code&gt;--pass-env NAME&lt;/code&gt; (repeatable) hands the variable &lt;code&gt;NAME&lt;/code&gt; of sdcreds&amp;rsquo; own
+environment to the program as it is (not passed when unset); &lt;code&gt;--pass-fd N&lt;/code&gt;
+(repeatable) keeps descriptor &lt;code&gt;N&lt;/code&gt; open in the program at the same number.Both are refused for what sdcreds owns: &lt;code&gt;PATH&lt;/code&gt;, &lt;code&gt;CREDENTIALS_DIRECTORY&lt;/code&gt;,&lt;code&gt;__SDCREDS_*&lt;/code&gt;; descriptors 0 to 3; a descriptor that is not open or is
+close-on-exec. A supervisor of a notify-type service passes, for example,&lt;code&gt;--pass-env NOTIFY_SOCKET --pass-env LISTEN_FDS --pass-env LISTEN_PID --pass-fd 4&lt;/code&gt;.&lt;code&gt;LISTEN_PID&lt;/code&gt; is passed as it is: it names the pid the caller expected, not the
+program&amp;rsquo;s.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Memory.&lt;/strong&gt; The plaintext is in the memory of the sdcreds process for a short
 time. &lt;code&gt;mlockall&lt;/code&gt; cannot be used from a Go process on OpenBSD (measured on
 8.0), so protection is &lt;code&gt;vm.swapencrypt.enable&lt;/code&gt; (checked at start), core dumps

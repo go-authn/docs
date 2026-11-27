@@ -19,7 +19,7 @@ data-copied-label="Kopiert!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;Die Version, die diese Seiten beschreiben, ist v0.3.0.&lt;/p&gt;
+&lt;p&gt;Die Version, die diese Seiten beschreiben, ist v0.4.0.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="cli"&gt;Kommandozeile&lt;span class="hx:absolute hx:-mt-20" id="cli"&gt;&lt;/span&gt;
 &lt;a href="#cli" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds setup &lt;span class="c1"&gt;# create the host secret if missing&lt;/span&gt;
@@ -156,20 +156,37 @@ Modus.&lt;/li&gt;
 verweigert, in &lt;code&gt;run&lt;/code&gt; wie in der Bibliothek (&lt;code&gt;s6.Run&lt;/code&gt;, &lt;code&gt;delivery&lt;/code&gt;); keine
 Option erlaubt es. Das Programm muss ein absoluter, normalisierter Pfad sein,den der Benutzer ausführen darf.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Wer sdcreds beendet, beendet das Programm&lt;/strong&gt; und hängt aus, auch mit&lt;code&gt;SIGKILL&lt;/code&gt;. Ein Hilfsprozess hält die Dienstsperre und überwacht sdcreds; bei
-jedem Ende beendet er alles, was der Dienstbenutzer ausführt (nach realer uid,ein Programm, das &lt;code&gt;setsid&lt;/code&gt; aufgerufen hat, entkommt also nicht), und hängt dann
-aus. Die Entscheidung zu töten trifft root: Der Hilfsprozess hält jeden
-gefundenen Prozess an, liest die Prozesstabelle erneut, bis sie sich nicht mehr
-ändert, sendet dann &lt;code&gt;SIGKILL&lt;/code&gt; und wiederholt das, bis der Benutzer keinen
-Prozess mehr hat. Ein Prozess, bei dem nur die effektive uid die des
-Dienstbenutzers ist, gilt als beschäftigt, der Start wird also verweigert, er
-wird aber nicht getötet. Überlebt ein Prozess das Budget von 20 s, hängt der
-Hilfsprozess trotzdem aus (die Geheimnisse verschwinden), meldet den Fehler und
-endet mit einem Status ungleich null. Ein Benutzer gehört jeweils einer
+jedem Ende beendet er alles, was der Dienstbenutzer ausführt (nach uid, ein
+Programm, das &lt;code&gt;setsid&lt;/code&gt; aufgerufen hat, entkommt also nicht), und hängt dann
+aus. root signalisiert nie eine pid, die es aus einer Liste gelesen hat. Seit
+v0.4.0 übernimmt das Töten ein kurzlebiger Killer-Prozess, den root startet und
+der vor jedem Signal auf geteilte Berechtigungen umschaltet (reale und
+gespeicherte uid eines reservierten Killer-Benutzers, effektive uid des
+Dienstbenutzers): Der Kernel lässt ihn dann jeden Prozess des Dienstbenutzers
+signalisieren, während kein Prozess dieses Benutzers ihn signalisieren kann.Der Killer sendet &lt;code&gt;kill(-1, SIGKILL)&lt;/code&gt;, bis der Kernel nichts mehr findet;Killer werden durch eine Sperre serialisiert (&lt;code&gt;/var/run/sdcreds-killer.lock&lt;/code&gt;).&lt;strong&gt;Installationsvoraussetzung:&lt;/strong&gt; Legen Sie den Killer-Benutzer an, der keinen
+Prozess besitzen und weder root noch ein Dienstbenutzer sein darf:&lt;code&gt;useradd -s /sbin/nologin -d /var/empty -c &amp;quot;sdcreds killer&amp;quot; _sdkill&lt;/code&gt;. Ohne ihn
+wird der Start einer Auslieferung verweigert. Ein Prozess, der den Benutzer nur
+über eine set-uid-Datei hält, die ein anderer Benutzer ausführt, wird von der
+Startprüfung gezählt, vom Killer aber nicht erreicht: Die Freigabe meldet dann,dass ein Prozess überlebt hat, und der nächste Start wird verweigert, bis er
+verschwunden ist (sicher im Fehlerfall). Überlebt ein Prozess das Budget von
+20 s, hängt der Hilfsprozess trotzdem aus (die Geheimnisse verschwinden), meldet
+den Fehler und endet mit einem Status ungleich null. Ein Benutzer gehört jeweils einer
 Auslieferung (die &lt;code&gt;.uid-&amp;lt;N&amp;gt;.lock&lt;/code&gt; in &lt;code&gt;/var/run/sdcreds&lt;/code&gt;), und &lt;code&gt;run&lt;/code&gt; verweigert
 einen Benutzer, der bereits andere Prozesse hat: Geben Sie dem Dienst einen
 eigenen Benutzer. Sterben sdcreds und der Hilfsprozess beide,entfernt &lt;code&gt;sdcreds sweep [--base DIR] [--service S]&lt;/code&gt; (oder der nächste Start des
 Dienstes) den Rest. Schlägt die Freigabe nach dem Ende des Programms fehl,beendet sich sdcreds mit Status 70 (oder dem Status des Programms, wenn das
 schon ein Fehler war) und nennt den Grund auf stderr.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Exit-Status von &lt;code&gt;run&lt;/code&gt;&lt;/strong&gt; (seit v0.4.0). Der Status des Programms wird
+durchgereicht (ein durch Signal &lt;code&gt;n&lt;/code&gt; beendetes Programm ergibt &lt;code&gt;128+n&lt;/code&gt;). Die
+eigenen Enden von sdcreds haben reservierte Status außerhalb der Bereiche 0-2
+und 64-78, die Daemonen üblicherweise nutzen: &lt;strong&gt;125&lt;/strong&gt; sdcreds hat verweigert,nichts wurde gestartet (falsche Option, unbekannter oder root-Benutzer,unverschlüsselter Swap, ein noch lebender Lauf; dauerhaft, bis sich etwas
+ändert); &lt;strong&gt;126&lt;/strong&gt; sdcreds ist nach dem Beginn gescheitert (Auslieferung,Hilfsprozess verloren, Programm nicht ausführbar; kann vorübergehend sein);&lt;strong&gt;70&lt;/strong&gt; das Programm ist beendet, aber die Freigabe ist fehlgeschlagen. Ein
+Programm, das selbst mit 125 oder 126 endet, ist nicht zu unterscheiden. Vor
+v0.4.0 endete eine Verweigerung mit 2 und ein Fehler mit 1.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Neustart.&lt;/strong&gt; Ein Start wartet bis zu 30 s, bis der vorherige Lauf desselben
+Dienstes den Abbau beendet hat, statt verweigert zu werden; ein danach noch
+lebender Lauf wird verweigert (125). Ein zweiter Dienst für denselben Benutzer
+wird weiterhin sofort verweigert.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Swap muss verschlüsselt sein.&lt;/strong&gt; &lt;code&gt;run&lt;/code&gt; startet nicht, wenn&lt;code&gt;sysctl vm.swapencrypt.enable&lt;/code&gt; 0 ist, nicht gelesen werden kann oder nicht
 existiert. Keine Option umgeht das. In der Bibliothek verlangt &lt;code&gt;s6.Config&lt;/code&gt; ein&lt;code&gt;ReadSource&lt;/code&gt; (der Befehl liefert den Leser, der die Vertrauenskette prüft),sonst verweigert &lt;code&gt;s6.Run&lt;/code&gt;.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Die eingebetteten Dateisystem-Abbilder sind festgeschrieben&lt;/strong&gt;: Der sha256
@@ -181,6 +198,13 @@ Klasse, die nicht gelesen oder geparst werden kann, wird verweigert. Priorität
 und umask werden nicht angewendet; das Programm erhält umask 077.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Die Umgebung des Programms ist eine Positivliste&lt;/strong&gt;: &lt;code&gt;PATH&lt;/code&gt; (fester
 Standardwert), &lt;code&gt;CREDENTIALS_DIRECTORY&lt;/code&gt;, &lt;code&gt;LANG&lt;/code&gt;, &lt;code&gt;TZ&lt;/code&gt;, &lt;code&gt;TERM&lt;/code&gt; und &lt;code&gt;LC_*&lt;/code&gt;.Deskriptoren über 2 werden vor dem Start geschlossen.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Umgebung und Deskriptoren durchreichen&lt;/strong&gt; (OpenBSD, seit v0.4.0).&lt;code&gt;--pass-env NAME&lt;/code&gt; (wiederholbar) reicht die Variable &lt;code&gt;NAME&lt;/code&gt; aus der Umgebung
+von sdcreds unverändert an das Programm weiter (nicht, wenn sie nicht gesetzt
+ist); &lt;code&gt;--pass-fd N&lt;/code&gt; (wiederholbar) hält den Deskriptor &lt;code&gt;N&lt;/code&gt; im Programm unter
+derselben Nummer offen. Beides wird für das verweigert, was sdcreds gehört:&lt;code&gt;PATH&lt;/code&gt;, &lt;code&gt;CREDENTIALS_DIRECTORY&lt;/code&gt;, &lt;code&gt;__SDCREDS_*&lt;/code&gt;; die Deskriptoren 0 bis 3; einen
+Deskriptor, der nicht offen oder close-on-exec ist. Ein Supervisor eines
+Dienstes vom Typ notify übergibt zum Beispiel&lt;code&gt;--pass-env NOTIFY_SOCKET --pass-env LISTEN_FDS --pass-env LISTEN_PID --pass-fd 4&lt;/code&gt;.&lt;code&gt;LISTEN_PID&lt;/code&gt; wird unverändert weitergereicht: Es nennt die pid, die der Aufrufer
+erwartet hat, nicht die des Programms.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Speicher.&lt;/strong&gt; Der Klartext liegt kurz im Speicher des sdcreds-Prozesses.&lt;code&gt;mlockall&lt;/code&gt; ist aus einem Go-Prozess unter OpenBSD nicht nutzbar (gemessen auf
 8.0); der Schutz sind daher &lt;code&gt;vm.swapencrypt.enable&lt;/code&gt; (beim Start geprüft),abgeschaltete Core-Dumps und &lt;code&gt;kern.nosuidcoredump&lt;/code&gt;. Ein von einem
 Administrator erzeugter Absturzabzug kann den Klartext weiterhin enthalten.&lt;/li&gt;

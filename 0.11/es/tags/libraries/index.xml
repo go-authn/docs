@@ -20,7 +20,7 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;La versión que describen estas páginas es la v0.3.0.&lt;/p&gt;
+&lt;p&gt;La versión que describen estas páginas es la v0.4.0.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="cli"&gt;Línea de comandos&lt;span class="hx:absolute hx:-mt-20" id="cli"&gt;&lt;/span&gt;
 &lt;a href="#cli" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds setup &lt;span class="c1"&gt;# create the host secret if missing&lt;/span&gt;
@@ -156,16 +156,40 @@ opción lo permite. El programa debe ser una ruta absoluta y normalizada que el
 usuario pueda ejecutar.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Matar sdcreds mata el programa&lt;/strong&gt; y desmonta, incluso con &lt;code&gt;SIGKILL&lt;/code&gt;. Un
 proceso auxiliar mantiene el cerrojo del servicio y vigila a sdcreds; sea cual
-sea el final, mata todo lo que ejecuta el usuario del servicio (por uid real,así que un programa que llamó a &lt;code&gt;setsid&lt;/code&gt; no escapa) y luego desmonta. La
-decisión de matar es de root: el auxiliar detiene cada proceso que encuentra,vuelve a leer la tabla de procesos hasta que deja de cambiar, envía &lt;code&gt;SIGKILL&lt;/code&gt; y
-repite hasta que el usuario no tiene ningún proceso. Un proceso cuyo uid
-efectivo es el del usuario del servicio, y solo ese, se cuenta como ocupado:se rechaza el arranque, pero no se mata. Si un proceso sobrevive al
+sea el final, mata todo lo que ejecuta el usuario del servicio (por uid, así
+que un programa que llamó a &lt;code&gt;setsid&lt;/code&gt; no escapa) y luego desmonta. root nunca
+envía una señal a un pid leído de una lista. Desde la v0.4.0 la muerte la
+provoca un proceso asesino de corta vida que root lanza y que pasa a
+credenciales divididas (uid real y guardado de un usuario asesino reservado,uid efectivo del usuario del servicio) antes de señalar nada: el núcleo le deja
+entonces señalar a todo proceso del usuario del servicio, mientras que ningún
+proceso de ese usuario puede señalarlo. El asesino envía &lt;code&gt;kill(-1, SIGKILL)&lt;/code&gt;
+hasta que el núcleo no encuentra nada; los asesinos se serializan con un
+cerrojo (&lt;code&gt;/var/run/sdcreds-killer.lock&lt;/code&gt;). &lt;strong&gt;Requisito de instalación:&lt;/strong&gt; cree
+el usuario asesino, que no debe poseer ningún proceso ni ser root ni un usuario
+de servicio:&lt;code&gt;useradd -s /sbin/nologin -d /var/empty -c &amp;quot;sdcreds killer&amp;quot; _sdkill&lt;/code&gt;. Sin él se
+rechaza el arranque de una entrega. Un proceso que solo retiene al usuario por
+un archivo set-uid ejecutado por otro usuario lo cuenta la comprobación de
+arranque, pero el asesino no lo alcanza: la liberación informa entonces de que
+un proceso sobrevivió y el siguiente arranque se rechaza hasta que desaparezca(falla de forma segura). Si un proceso sobrevive al
 presupuesto de 20 s, el auxiliar desmonta igualmente (los secretos
 desaparecen), informa del fallo y sale con un estado distinto de cero. Un
 usuario pertenece a una sola entrega a la vez (el &lt;code&gt;.uid-&amp;lt;N&amp;gt;.lock&lt;/code&gt; de&lt;code&gt;/var/run/sdcreds&lt;/code&gt;), y &lt;code&gt;run&lt;/code&gt; rechaza a un usuario que ya tiene otros procesos:dé al servicio su propio usuario. Si sdcreds y el auxiliar mueren ambos,&lt;code&gt;sdcreds sweep [--base DIR] [--service S]&lt;/code&gt; (o el siguiente arranque del
 servicio) elimina lo que queda. Si la liberación falla después de que el
 programa termine, sdcreds sale con estado 70 (o con el del programa si ya era
 un fallo) y explica el motivo por stderr.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Estado de salida de &lt;code&gt;run&lt;/code&gt;&lt;/strong&gt; (desde la v0.4.0). El estado del programa se
+transmite tal cual (un programa matado por la señal &lt;code&gt;n&lt;/code&gt; da &lt;code&gt;128+n&lt;/code&gt;). Los
+finales propios de sdcreds tienen estados reservados, fuera de los rangos 0-2 y
+64-78 que suelen usar los demonios: &lt;strong&gt;125&lt;/strong&gt; sdcreds se negó, no se inició nada(opción incorrecta, usuario desconocido o root, swap sin cifrar, una ejecución
+que sigue viva; permanente hasta que algo cambie); &lt;strong&gt;126&lt;/strong&gt; sdcreds falló tras
+empezar (entrega, auxiliar perdido, programa no ejecutable; puede ser
+transitorio); &lt;strong&gt;70&lt;/strong&gt; el programa terminó pero la liberación falló. Un programa
+que sale por sí mismo con 125 o 126 no se puede distinguir. Antes de la v0.4.0
+una negativa salía con 2 y un fallo con 1.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Reinicio.&lt;/strong&gt; Un arranque espera hasta 30 s a que la ejecución anterior del
+mismo servicio termine de desmontarse en lugar de ser rechazado; una ejecución
+que siga viva después se rechaza (125). Un segundo servicio para el mismo
+usuario sigue rechazándose de inmediato.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;El swap debe estar cifrado.&lt;/strong&gt; &lt;code&gt;run&lt;/code&gt; se niega a arrancar cuando&lt;code&gt;sysctl vm.swapencrypt.enable&lt;/code&gt; es 0, no se puede leer o no existe. Ninguna
 opción lo evita. En la biblioteca, &lt;code&gt;s6.Config&lt;/code&gt; necesita un &lt;code&gt;ReadSource&lt;/code&gt; (el
 comando entrega el lector que recorre la cadena de confianza), o &lt;code&gt;s6.Run&lt;/code&gt;
@@ -180,6 +204,12 @@ la umask; el programa recibe la umask 077.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;El entorno del programa es una lista de permitidos&lt;/strong&gt;: &lt;code&gt;PATH&lt;/code&gt; (valor fijo por
 defecto), &lt;code&gt;CREDENTIALS_DIRECTORY&lt;/code&gt;, &lt;code&gt;LANG&lt;/code&gt;, &lt;code&gt;TZ&lt;/code&gt;, &lt;code&gt;TERM&lt;/code&gt; y &lt;code&gt;LC_*&lt;/code&gt;. Los
 descriptores por encima de 2 se cierran antes de ejecutarlo.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Pasar el entorno y descriptores&lt;/strong&gt; (OpenBSD, desde la v0.4.0).&lt;code&gt;--pass-env NOMBRE&lt;/code&gt; (repetible) entrega tal cual al programa la variable&lt;code&gt;NOMBRE&lt;/code&gt; del entorno de sdcreds (no se pasa si no está definida); &lt;code&gt;--pass-fd N&lt;/code&gt;
+(repetible) mantiene abierto el descriptor &lt;code&gt;N&lt;/code&gt; en el programa con el mismo
+número. Ambos se rechazan para lo que pertenece a sdcreds: &lt;code&gt;PATH&lt;/code&gt;,&lt;code&gt;CREDENTIALS_DIRECTORY&lt;/code&gt;, &lt;code&gt;__SDCREDS_*&lt;/code&gt;; los descriptores 0 a 3; un descriptor
+que no está abierto o es close-on-exec. Un supervisor de un servicio de tipo
+notify pasa, por ejemplo,&lt;code&gt;--pass-env NOTIFY_SOCKET --pass-env LISTEN_FDS --pass-env LISTEN_PID --pass-fd 4&lt;/code&gt;.&lt;code&gt;LISTEN_PID&lt;/code&gt; se pasa tal cual: nombra el pid que esperaba quien llama, no el
+del programa.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Memoria.&lt;/strong&gt; El texto en claro está en la memoria del proceso sdcreds durante
 poco tiempo. &lt;code&gt;mlockall&lt;/code&gt; no se puede usar desde un proceso Go en OpenBSD(medido en 8.0), así que la protección es &lt;code&gt;vm.swapencrypt.enable&lt;/code&gt; (comprobado
 al arrancar), los volcados de memoria desactivados y &lt;code&gt;kern.nosuidcoredump&lt;/code&gt;. Un
