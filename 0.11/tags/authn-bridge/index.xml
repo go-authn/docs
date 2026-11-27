@@ -3302,7 +3302,8 @@ authenticator models they may use:&lt;/p&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admins&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admin_aaguids&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;9dd8d593-2213-438a-97f8-d6b813d51c27&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; mds_dir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/mds&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admin_min_certification&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;L2&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # optional
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Copy code"
@@ -3324,6 +3325,17 @@ go-authn/fido v0.16.0&amp;rsquo;s &lt;code&gt;mds&lt;/code&gt;. Only then does t
 the page reads nothing else. A model the metadata later reports revoked or
 compromised stops opening the page. A key registered without a proven model
 still signs in; it opens nothing.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;A least certification level.&lt;/strong&gt; &lt;code&gt;admin_min_certification&lt;/code&gt; (optional; &lt;code&gt;&amp;quot;L1&amp;quot;&lt;/code&gt;,&lt;code&gt;&amp;quot;L1plus&amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot;L2&amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot;L2plus&amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot;L3&amp;quot;&lt;/code&gt; or &lt;code&gt;&amp;quot;L3plus&amp;quot;&lt;/code&gt;; any other value is a
+configuration error, and it is refused without &lt;code&gt;admins&lt;/code&gt;) is the least FIDO
+certification level the model of an administrator&amp;rsquo;s passkey may have, read from
+the same MDS3 metadata. The order is the specification&amp;rsquo;s (MDS 3.1 §3.1.4.1):L1 &amp;lt; L1plus &amp;lt; L2 &amp;lt; L2plus &amp;lt; L3 &amp;lt; L3plus. The level is the model&amp;rsquo;s &lt;em&gt;current&lt;/em&gt;
+one: the latest effective &lt;code&gt;FIDO_CERTIFIED_Lx&lt;/code&gt; status report (§3.1.3). A model
+with no such report (the legacy &lt;code&gt;FIDO_CERTIFIED&lt;/code&gt; counts for none) fails any
+minimum. Like the revoked and compromised statuses, it is checked at
+registration &lt;strong&gt;and each time the page is opened&lt;/strong&gt;: a model later downgraded
+below the minimum, or revoked, keeps signing in but no longer opens the
+administrator page. Unset, no level is required. Available since
+authn-bridge v0.41.0 (go-authn/fido v0.17.0).&lt;/p&gt;
 &lt;p&gt;The metadata is kept in &lt;code&gt;mds_dir&lt;/code&gt;, which is optional, defaults to&lt;code&gt;/var/lib/authn-bridge/mds&lt;/code&gt;, must be an absolute path, and is refused without&lt;code&gt;admins&lt;/code&gt;. A background goroutine fetches it, never a request. The host needs:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;a directory the service may write (&lt;code&gt;mds_dir&lt;/code&gt;; another path than the default

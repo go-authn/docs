@@ -320,7 +320,8 @@ dürfen:&lt;/p&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admins&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;alice&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admin_aaguids&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="s2"&gt;&amp;#34;9dd8d593-2213-438a-97f8-d6b813d51c27&amp;#34;&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; mds_dir&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;/var/lib/authn-bridge/mds&amp;#34;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="n"&gt; admin_min_certification&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;L2&amp;#34;&lt;/span&gt;&lt;span class="c1"&gt; # optional
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;}&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;div class="hextra-code-copy-btn-container hx:opacity-0 hx:transition hx:group-hover/code:opacity-100 hx:flex hx:gap-1 hx:absolute hx:m-[11px] hx:right-0 hx:top-0"&gt;
 &lt;button
 class="hextra-code-copy-btn hx:group/copybtn hx:cursor-pointer hx:transition-all hx:active:opacity-50 hx:bg-primary-700/5 hx:border hx:border-black/5 hx:text-gray-600 hx:hover:text-gray-900 hx:rounded-md hx:p-1.5 hx:dark:bg-primary-300/10 hx:dark:border-white/10 hx:dark:text-gray-400 hx:dark:hover:text-gray-50"
 title="Code kopieren"
@@ -339,6 +340,17 @@ eine direkte Attestation, go-authn/webauthn v0.5.0 prüft sie (ein&lt;code&gt;pa
 ohne diese Erweiterung), und das Modell wird gegen die FIDO-MDS3-Metadaten geprüft,über &lt;code&gt;mds&lt;/code&gt; aus go-authn/fido v0.16.0. Erst dann speichert die Bridge das Modell,und die Seite liest nichts anderes. Ein Modell, das die Metadaten später als
 widerrufen oder kompromittiert melden, öffnet die Seite nicht mehr. Ein Schlüssel
 ohne bewiesenes Modell dient weiterhin zur Anmeldung; er öffnet nichts.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Eine Mindest-Zertifizierungsstufe.&lt;/strong&gt; &lt;code&gt;admin_min_certification&lt;/code&gt; (optional;&lt;code&gt;&amp;quot;L1&amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot;L1plus&amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot;L2&amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot;L2plus&amp;quot;&lt;/code&gt;, &lt;code&gt;&amp;quot;L3&amp;quot;&lt;/code&gt; oder &lt;code&gt;&amp;quot;L3plus&amp;quot;&lt;/code&gt;; jeder andere Wert
+ist ein Konfigurationsfehler, und der Schlüssel wird ohne &lt;code&gt;admins&lt;/code&gt; abgelehnt) ist
+die niedrigste FIDO-Zertifizierungsstufe, die das Modell des Passkeys eines
+Administrators haben darf, gelesen aus denselben MDS3-Metadaten. Die Reihenfolge
+ist die der Spezifikation (MDS 3.1 §3.1.4.1): L1 &amp;lt; L1plus &amp;lt; L2 &amp;lt; L2plus &amp;lt; L3 &amp;lt;
+L3plus. Maßgeblich ist die &lt;em&gt;aktuelle&lt;/em&gt; Stufe des Modells: der jüngste wirksame
+Statusbericht &lt;code&gt;FIDO_CERTIFIED_Lx&lt;/code&gt; (§3.1.3). Ein Modell ohne einen solchen Bericht(das alte &lt;code&gt;FIDO_CERTIFIED&lt;/code&gt; zählt für keine Stufe) scheitert an jedem Minimum. Wie
+die Status „widerrufen“ und „kompromittiert“ wird es bei der Registrierung &lt;strong&gt;und
+bei jedem Öffnen der Seite&lt;/strong&gt; geprüft: Ein Modell, das später unter das Minimum
+herabgestuft oder widerrufen wird, dient weiter zur Anmeldung, öffnet aber die
+Administratorseite nicht mehr. Ohne den Schlüssel wird keine Stufe verlangt.Verfügbar ab authn-bridge v0.41.0 (go-authn/fido v0.17.0).&lt;/p&gt;
 &lt;p&gt;Die Metadaten liegen in &lt;code&gt;mds_dir&lt;/code&gt;; der Schlüssel ist optional, hat den
 Standardwert &lt;code&gt;/var/lib/authn-bridge/mds&lt;/code&gt;, muss ein absoluter Pfad sein und wird
 ohne &lt;code&gt;admins&lt;/code&gt; abgelehnt. Eine Goroutine im Hintergrund lädt sie, nie eine
