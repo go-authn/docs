@@ -22,7 +22,7 @@ recognised and refused with `*UnsupportedModeError`; nothing is guessed.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-The version these pages describe is v0.3.0.
+The version these pages describe is v0.4.0.
 
 ## Command line {#cli}
 
@@ -135,20 +135,41 @@ service and zeroed at the end:
   execute.
 - **Killing sdcreds kills the program** and unmounts, even with `SIGKILL`. A
   helper process holds the service lock and watches sdcreds; on any end it kills
-  everything the service user runs (by real uid, so a program that called
-  `setsid` does not escape) and then unmounts. The kill is decided by root: the
-  helper stops every process it finds, reads the process table again until it no
-  longer changes, then sends `SIGKILL`, and repeats until the user has no
-  process. A process whose effective uid only is the service user's is counted
-  as busy, so the start is refused, but it is not killed. When a process survives
-  the 20 s budget, the helper still unmounts (the secrets go), reports the
-  failure and exits non-zero. A user is owned by one delivery at a time (the
+  everything the service user runs (by uid, so a program that called `setsid`
+  does not escape) and then unmounts. Root never signals a pid it read from a
+  list. Since v0.4.0 the kill is made by a short-lived killer process that root
+  starts and that drops to split credentials (real and saved uid of a reserved
+  killer user, effective uid of the service user) before it signals anything:
+  the kernel then lets it signal every process of the service user, while no
+  process of that user can signal it. The killer sends `kill(-1, SIGKILL)` until
+  the kernel reports nothing left; killers are serialised by a lock
+  (`/var/run/sdcreds-killer.lock`). **Install requirement:** create the killer
+  user, which must own no process and must not be root or a service user:
+  `useradd -s /sbin/nologin -d /var/empty -c "sdcreds killer" _sdkill`. A
+  delivery is refused to start without it. A process that holds the user only
+  through a set-uid file run by another user is counted by the start check but
+  is not reached by the killer: the release then reports that a process
+  survived and the next start is refused until it is gone (fail-closed). When a
+  process survives the 20 s budget, the helper still unmounts (the secrets go),
+  reports the failure and exits non-zero. A user is owned by one delivery at a time (the
   `.uid-<N>.lock` in `/var/run/sdcreds`), and `run` refuses a user that already
   has other processes: give the service its own user. If sdcreds and the helper
   both die, `sdcreds sweep [--base DIR] [--service S]` (or the next start of the
   service) removes the leftover. When the release fails after the program ends,
   sdcreds exits with status 70 (or the program's own status when that was
   already a failure) and says why on stderr.
+- **Exit status of `run`** (since v0.4.0). The program's own status is passed
+  through (a program killed by signal `n` gives `128+n`). sdcreds' own endings
+  have reserved statuses, outside the 0-2 and 64-78 ranges that daemons commonly
+  use: **125** sdcreds refused, nothing was started (bad flag, unknown or root
+  user, unencrypted swap, a run that is alive; permanent until something
+  changes); **126** sdcreds failed after it began (delivery, helper lost, the
+  program could not be executed; may be transient); **70** the program ended but
+  the release failed. A program that itself exits 125 or 126 cannot be told
+  apart. Before v0.4.0 a refusal exited 2 and a failure 1.
+- **Restart.** A start waits up to 30 s for the previous run of the same service
+  to finish tearing down instead of being refused; a run still alive after that
+  is refused (125). A second service for the same user is still refused at once.
 - **Swap must be encrypted.** `run` refuses to start when
   `sysctl vm.swapencrypt.enable` is 0, cannot be read, or does not exist. There
   is no flag to override it. In the library, `s6.Config` needs a `ReadSource`
@@ -163,6 +184,16 @@ service and zeroed at the end:
 - **The program's environment is an allow-list**: `PATH` (a fixed default),
   `CREDENTIALS_DIRECTORY`, `LANG`, `TZ`, `TERM` and `LC_*`. Descriptors above 2
   are closed before it runs.
+- **Passing the environment and descriptors** (OpenBSD, since v0.4.0).
+  `--pass-env NAME` (repeatable) hands the variable `NAME` of sdcreds' own
+  environment to the program as it is (not passed when unset); `--pass-fd N`
+  (repeatable) keeps descriptor `N` open in the program at the same number.
+  Both are refused for what sdcreds owns: `PATH`, `CREDENTIALS_DIRECTORY`,
+  `__SDCREDS_*`; descriptors 0 to 3; a descriptor that is not open or is
+  close-on-exec. A supervisor of a notify-type service passes, for example,
+  `--pass-env NOTIFY_SOCKET --pass-env LISTEN_FDS --pass-env LISTEN_PID --pass-fd 4`.
+  `LISTEN_PID` is passed as it is: it names the pid the caller expected, not the
+  program's.
 - **Memory.** The plaintext is in the memory of the sdcreds process for a short
   time. `mlockall` cannot be used from a Go process on OpenBSD (measured on
   8.0), so protection is `vm.swapencrypt.enable` (checked at start), core dumps
