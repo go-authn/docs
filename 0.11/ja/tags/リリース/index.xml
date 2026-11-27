@@ -863,6 +863,10 @@ data-copied-label="コピーしました！"
 &lt;td&gt;セキュリティ: &lt;a href="https://go-authn.github.io/docs/0.11/ja/libraries/kdc/"&gt;送信元アドレスごとに最大 16 の TCP 接続&lt;/a&gt; (IPv6 では /64 ごと) が同時に処理されます。全体の上限 256 だけでは、1 つのホストが 256 の待機接続を保持すると、ほかのすべてが 30 秒間飢餓状態になりました。&lt;code&gt;Config.Services&lt;/code&gt; と README は、サービスが KDC と同じ keytab を読むとは言わなくなりました。そのファイルには krbtgt 鍵とすべてのサービスの鍵が入っており、サービスには自分の鍵だけの keytab が渡されます。&lt;strong&gt;動作の変更:&lt;/strong&gt; 1 つのアドレスから 16 を超える同時接続を必要とするクライアントは、17 本目以降は処理されません&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
+&lt;td&gt;kdc v0.13.0&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.11/ja/libraries/kdc/#pac"&gt;本人がどうログインしたか&lt;/a&gt;: PAC があると、すべてが &lt;code&gt;S-1-18-1&lt;/code&gt; を持ち、発行されたチケットは作られた SID も持ちます。TGT は krbtgt 鍵で署名された CAMMAC（RFC 8129、MIT の形式）を持ち、ログイン方法と要求者の &lt;code&gt;uidNumber&lt;/code&gt; を記録します。作り直されたアカウントの古い TGT は拒否され（&lt;code&gt;KDC_ERR_TGT_REVOKED&lt;/code&gt;、CVE-2021-42287）、不正な印は &lt;code&gt;KRB_AP_ERR_MODIFIED&lt;/code&gt; です。&lt;strong&gt;破壊的変更:&lt;/strong&gt; PAC を設定した場合、発行要求には &lt;code&gt;&amp;quot;method&amp;quot;&lt;/code&gt;（&lt;code&gt;passkey&lt;/code&gt;、&lt;code&gt;federated&lt;/code&gt;、&lt;code&gt;machine&lt;/code&gt;）が必要です。アップグレード前の TGT は最長 10 時間受け付けられます。v0.12.1 と v0.12.2 は PAC の修正です（1465 バイトを超える応答は TCP で返ります）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
 &lt;td&gt;kdcd v0.3.1&lt;/td&gt;
 &lt;td&gt;セキュリティ: &lt;a href="https://go-authn.github.io/docs/0.11/ja/libraries/kdcd/"&gt;設定ファイルの所有者が検査されます&lt;/a&gt;。keytab とシークレットの所有者は既に検査されていました (root、またはデーモンが動くアカウント)。検査されるのはモードだけで、ファイルの所有者は検査後にそれを再び書き込み可能にできました。&lt;code&gt;dsn_file&lt;/code&gt; は名前で 2 度読まれなくなりました (検査され、その後 directory ライブラリが再び開く): ライブラリには、検査したファイルの &lt;code&gt;/dev/fd/N&lt;/code&gt; が渡されます (Windows は名前のままです)。go-authn/kdc v0.10.0 を使用し、送信元アドレスごとの TCP 接続 16 件という制限が付きます&lt;/td&gt;
 &lt;/tr&gt;

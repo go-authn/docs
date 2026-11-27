@@ -1566,6 +1566,19 @@ tickets ; &lt;code&gt;PAC.NetBIOSDomain&lt;/code&gt; doit être égal au &lt;cod
 &lt;p&gt;&lt;strong&gt;Un gros PAC et UDP.&lt;/strong&gt; Depuis v0.12.1 (RFC 4120 §7.2.1), une réponse de plus
 de 1465 octets n&amp;rsquo;est pas envoyée en datagramme : le client reçoit&lt;code&gt;KRB_ERR_RESPONSE_TOO_BIG&lt;/code&gt; et répète sa requête en TCP. 1465 est un choix de ce
 KDC, pas un standard.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Comment la personne s&amp;rsquo;est connectée.&lt;/strong&gt; Depuis v0.13.0, avec &lt;code&gt;Config.PAC&lt;/code&gt;, tout
+PAC porte &lt;code&gt;S-1-18-1&lt;/code&gt; (&lt;em&gt;authentication authority asserted identity&lt;/em&gt;), et un
+ticket émis par &lt;code&gt;MintHandler&lt;/code&gt; porte aussi un SID créé dans le domaine. Le TGT
+contient un CAMMAC ([RFC 8129], au format de MIT) signé avec la clé krbtgt : il
+note la méthode de connexion et le &lt;code&gt;uidNumber&lt;/code&gt; du demandeur. Une demande
+d&amp;rsquo;émission doit donc dire comment la personne s&amp;rsquo;est connectée, &lt;code&gt;&amp;quot;method&amp;quot;&lt;/code&gt; :&lt;code&gt;passkey&lt;/code&gt;, &lt;code&gt;federated&lt;/code&gt; ou &lt;code&gt;machine&lt;/code&gt; ; sans elle, avec un PAC configuré, la
+réponse est &lt;code&gt;400&lt;/code&gt;. Au TGS, un TGT dont la marque ne se vérifie pas est refusé
+avec &lt;code&gt;KRB_AP_ERR_MODIFIED&lt;/code&gt;, et celui dont le &lt;code&gt;uidNumber&lt;/code&gt; n&amp;rsquo;est plus celui de
+l&amp;rsquo;annuaire (compte supprimé puis recréé sous le même nom, CVE-2021-42287) avec&lt;code&gt;KDC_ERR_TGT_REVOKED&lt;/code&gt;. Les enc-authorization-data du client sont ignorées. Un TGT
+émis avant la mise à jour n&amp;rsquo;a pas de marque et est accepté 10 heures au plus,comme une connexion par mot de passe ; ensuite il est refusé. &lt;strong&gt;Note de mise à
+jour :&lt;/strong&gt; &lt;code&gt;go-authn/bridge&lt;/code&gt; doit envoyer &lt;code&gt;method&lt;/code&gt; avant que le KDC soit mis à
+jour avec un PAC configuré. L&amp;rsquo;indicateur sur les tickets de service n&amp;rsquo;est pas
+encore fait.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="finder"&gt;Lui donner un index : &lt;code&gt;Finder&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="finder"&gt;&lt;/span&gt;
 &lt;a href="#finder" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Chaque AS-REQ et TGS-REQ cherche une personne. Avec une simple &lt;code&gt;directory.Source&lt;/code&gt;,c&amp;rsquo;est &lt;code&gt;Identities()&lt;/code&gt; puis un parcours : avec 10 000 personnes, le parcours était la
 moitié du CPU d&amp;rsquo;une AS-REQ, et une source qui lit une base ou un serveur LDAP sur&lt;code&gt;Identities()&lt;/code&gt; est lue en entier par chaque requête, y compris une requête non

@@ -3018,6 +3018,21 @@ Tickets akzeptiert; &lt;code&gt;PAC.NetBIOSDomain&lt;/code&gt; muss Sambas &lt;c
 &lt;p&gt;&lt;strong&gt;Großes PAC und UDP.&lt;/strong&gt; Seit v0.12.1 (RFC 4120 §7.2.1) wird eine Antwort über
 1465 Bytes nicht als Datagramm gesendet: der Client erhält&lt;code&gt;KRB_ERR_RESPONSE_TOO_BIG&lt;/code&gt; und wiederholt die Anfrage über TCP. 1465 ist die
 Wahl dieses KDC, kein Standard.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Wie sich die Person angemeldet hat.&lt;/strong&gt; Seit v0.13.0 trägt mit &lt;code&gt;Config.PAC&lt;/code&gt;
+jedes PAC &lt;code&gt;S-1-18-1&lt;/code&gt; (&lt;em&gt;authentication authority asserted identity&lt;/em&gt;), und ein
+über &lt;code&gt;MintHandler&lt;/code&gt; ausgestelltes Ticket trägt zusätzlich eine in der Domäne
+erzeugte SID. Das TGT enthält ein CAMMAC ([RFC 8129], im Format von MIT), mit
+dem krbtgt-Schlüssel signiert: Es hält die Anmeldemethode und die &lt;code&gt;uidNumber&lt;/code&gt;
+des Anfragenden fest. Eine Ausstellungsanfrage muss daher sagen, wie sich die
+Person angemeldet hat, &lt;code&gt;&amp;quot;method&amp;quot;&lt;/code&gt;: &lt;code&gt;passkey&lt;/code&gt;, &lt;code&gt;federated&lt;/code&gt; oder &lt;code&gt;machine&lt;/code&gt;; ohne
+sie ist die Antwort bei konfiguriertem PAC &lt;code&gt;400&lt;/code&gt;. Am TGS wird ein TGT, dessen
+Markierung sich nicht prüfen lässt, mit &lt;code&gt;KRB_AP_ERR_MODIFIED&lt;/code&gt; abgewiesen, und
+eines, dessen &lt;code&gt;uidNumber&lt;/code&gt; nicht mehr die des Verzeichnisses ist (Konto gelöscht
+und unter demselben Namen neu angelegt, CVE-2021-42287), mit&lt;code&gt;KDC_ERR_TGT_REVOKED&lt;/code&gt;. Die enc-authorization-data des Clients werden ignoriert.Ein vor dem Update ausgestelltes TGT hat keine Markierung und wird höchstens 10
+Stunden als Passwort-Anmeldung akzeptiert, danach abgewiesen. &lt;strong&gt;Hinweis zum
+Update:&lt;/strong&gt; &lt;code&gt;go-authn/bridge&lt;/code&gt; muss &lt;code&gt;method&lt;/code&gt; senden, bevor der KDC mit
+konfiguriertem PAC aktualisiert wird. Der Indikator auf Diensttickets ist noch
+nicht umgesetzt.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="finder"&gt;Ihm einen Index geben: &lt;code&gt;Finder&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="finder"&gt;&lt;/span&gt;
 &lt;a href="#finder" class="subheading-anchor" aria-label="Permalink für diesen Abschnitt"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Jede AS-REQ und TGS-REQ sucht eine Person. Mit einer einfachen &lt;code&gt;directory.Source&lt;/code&gt;
 ist das &lt;code&gt;Identities()&lt;/code&gt; und ein Durchlauf: Bei 10.000 Personen war der Durchlauf die

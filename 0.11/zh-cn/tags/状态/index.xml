@@ -740,6 +740,10 @@ v0.18.6 内嵌 ldap v0.12.3 和 directory v0.20.0。上述任何程序的新次�
 &lt;td&gt;安全：&lt;a href="https://go-authn.github.io/docs/0.11/zh-cn/libraries/kdc/"&gt;每个源地址最多同时服务 16 个 TCP 连接&lt;/a&gt;（IPv6 按 /64）；此前只有 256 的全局上限，一台主机占住 256 个空闲连接，就会让其他所有人饿死 30 秒。&lt;code&gt;Config.Services&lt;/code&gt; 和 README 不再说服务读取与 KDC 相同的 keytab：该文件包含 krbtgt 密钥和每个服务的密钥，而服务得到的 keytab 只含它自己的密钥。**行为变化：**需要从同一地址同时建立超过 16 个连接的客户端，第 16 个之后不再被服务&lt;/td&gt;
 &lt;/tr&gt;
 &lt;tr&gt;
+&lt;td&gt;kdc v0.13.0&lt;/td&gt;
+&lt;td&gt;&lt;a href="https://go-authn.github.io/docs/0.11/zh-cn/libraries/kdc/#pac"&gt;此人是如何登录的&lt;/a&gt;：有 PAC 时，每个都带 &lt;code&gt;S-1-18-1&lt;/code&gt;，签发的票据还带生成的 SID；TGT 含用 krbtgt 密钥签名的 CAMMAC（RFC 8129，MIT 格式），记录登录方式和请求者的 &lt;code&gt;uidNumber&lt;/code&gt;；重建账户的旧 TGT 被拒绝（&lt;code&gt;KDC_ERR_TGT_REVOKED&lt;/code&gt;，CVE-2021-42287），标记无效为 &lt;code&gt;KRB_AP_ERR_MODIFIED&lt;/code&gt;。**破坏性变更：**配置了 PAC 时，签发请求需要 &lt;code&gt;&amp;quot;method&amp;quot;&lt;/code&gt;（&lt;code&gt;passkey&lt;/code&gt;、&lt;code&gt;federated&lt;/code&gt;、&lt;code&gt;machine&lt;/code&gt;）；升级前的 TGT 最多接受 10 小时。v0.12.1 和 v0.12.2 是对 PAC 的修复（超过 1465 字节的应答改走 TCP）&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
 &lt;td&gt;kdcd v0.3.1&lt;/td&gt;
 &lt;td&gt;安全：&lt;a href="https://go-authn.github.io/docs/0.11/zh-cn/libraries/kdcd/"&gt;检查配置文件的所有者&lt;/a&gt;，与 keytab 和密钥文件早已做的检查一样（root 或守护进程运行所用的账户）；此前只检查权限模式，而文件的所有者可以在检查之后再把它改为可写。&lt;code&gt;dsn_file&lt;/code&gt; 不再按名称读取两次（先检查，再由 directory 库重新打开）：库拿到的是已检查文件的 &lt;code&gt;/dev/fd/N&lt;/code&gt;（Windows 保留名称）。采用 go-authn/kdc v0.10.0，及其每个源地址 16 个 TCP 连接的上限&lt;/td&gt;
 &lt;/tr&gt;

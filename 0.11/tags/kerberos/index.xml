@@ -512,6 +512,18 @@ measured are in the repository&amp;rsquo;s &lt;code&gt;docs/design/pac.md&lt;/co
 is not sent as a datagram: the client gets &lt;code&gt;KRB_ERR_RESPONSE_TOO_BIG&lt;/code&gt; and
 repeats the request over TCP, where it is answered with the full reply. 1465 is
 this KDC&amp;rsquo;s choice, not a standard. A PAC of 256 groups is well over it.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;How the person logged in.&lt;/strong&gt; Since v0.13.0, with &lt;code&gt;Config.PAC&lt;/code&gt; set, every PAC
+carries &lt;code&gt;S-1-18-1&lt;/code&gt; (&lt;em&gt;authentication authority asserted identity&lt;/em&gt;), and a ticket
+minted through &lt;code&gt;MintHandler&lt;/code&gt; also carries a SID minted in the domain. The TGT
+holds a CAMMAC ([RFC 8129], in MIT&amp;rsquo;s format) signed with the krbtgt key: it
+records the login method and the requestor&amp;rsquo;s &lt;code&gt;uidNumber&lt;/code&gt;. A mint request must
+therefore say how the person logged in, &lt;code&gt;&amp;quot;method&amp;quot;&lt;/code&gt;: &lt;code&gt;passkey&lt;/code&gt;, &lt;code&gt;federated&lt;/code&gt; or&lt;code&gt;machine&lt;/code&gt;; without it, and with a PAC configured, the answer is &lt;code&gt;400&lt;/code&gt;. At the
+TGS, a TGT whose marking does not verify is refused with &lt;code&gt;KRB_AP_ERR_MODIFIED&lt;/code&gt;,and one whose &lt;code&gt;uidNumber&lt;/code&gt; is no longer the directory&amp;rsquo;s (an account deleted and
+recreated under the same name, CVE-2021-42287) with &lt;code&gt;KDC_ERR_TGT_REVOKED&lt;/code&gt;. A
+client&amp;rsquo;s own enc-authorization-data is ignored. A TGT issued before the upgrade
+carries no marking and is accepted for at most 10 hours, as a password logon;then it is refused. &lt;strong&gt;Upgrade note:&lt;/strong&gt; &lt;code&gt;go-authn/bridge&lt;/code&gt; must send &lt;code&gt;method&lt;/code&gt;
+before the KDC is upgraded with a PAC configured. The indicator on service
+tickets is not done yet.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="finder"&gt;Give it an index: &lt;code&gt;Finder&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="finder"&gt;&lt;/span&gt;
 &lt;a href="#finder" class="subheading-anchor" aria-label="Permalink for this section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Every AS-REQ and TGS-REQ looks one person up. With a plain &lt;code&gt;directory.Source&lt;/code&gt;
 that is &lt;code&gt;Identities()&lt;/code&gt; and a walk: with 10,000 people the walk was half of an

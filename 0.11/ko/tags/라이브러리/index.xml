@@ -2853,6 +2853,14 @@ RID이며, &lt;code&gt;gidNumber&lt;/code&gt;가 없는 그룹은 빠집니다. 
 &lt;p&gt;&lt;strong&gt;큰 PAC와 UDP.&lt;/strong&gt; v0.12.1부터(RFC 4120 §7.2.1) 1465바이트를 넘는 응답은
 데이터그램으로 보내지 않습니다. 클라이언트는 &lt;code&gt;KRB_ERR_RESPONSE_TOO_BIG&lt;/code&gt;을
 받고 TCP로 요청을 반복합니다. 1465는 이 KDC의 선택이며 표준이 아닙니다.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;사용자가 어떻게 로그인했는가.&lt;/strong&gt; v0.13.0부터 &lt;code&gt;Config.PAC&lt;/code&gt;을 설정하면 모든 PAC에&lt;code&gt;S-1-18-1&lt;/code&gt;(&lt;em&gt;authentication authority asserted identity&lt;/em&gt;)이 들어가고,&lt;code&gt;MintHandler&lt;/code&gt;로 발급한 티켓에는 도메인에서 만든 SID도 들어갑니다. TGT에는 krbtgt
+키로 서명한 CAMMAC([RFC 8129], MIT 형식)가 들어 있어 로그인 방법과 요청자의&lt;code&gt;uidNumber&lt;/code&gt;를 기록합니다. 따라서 발급 요청은 사용자가 어떻게 로그인했는지를&lt;code&gt;&amp;quot;method&amp;quot;&lt;/code&gt;(&lt;code&gt;passkey&lt;/code&gt;, &lt;code&gt;federated&lt;/code&gt;, &lt;code&gt;machine&lt;/code&gt;)로 알려야 하며, PAC이 설정된 상태에서
+없으면 응답은 &lt;code&gt;400&lt;/code&gt;입니다. TGS에서는 표시가 검증되지 않는 TGT는&lt;code&gt;KRB_AP_ERR_MODIFIED&lt;/code&gt;로, &lt;code&gt;uidNumber&lt;/code&gt;가 더 이상 디렉터리의 것과 같지 않은 TGT(같은
+이름으로 계정을 지웠다 다시 만든 경우, CVE-2021-42287)는 &lt;code&gt;KDC_ERR_TGT_REVOKED&lt;/code&gt;로
+거부됩니다. 클라이언트의 enc-authorization-data는 무시됩니다. 업그레이드 전에
+발급된 TGT에는 표시가 없으며 비밀번호 로그인으로 최대 10시간 받아들여지고, 그 뒤에는
+거부됩니다. &lt;strong&gt;업그레이드 주의:&lt;/strong&gt; PAC을 설정한 KDC를 업그레이드하기 전에&lt;code&gt;go-authn/bridge&lt;/code&gt;가 &lt;code&gt;method&lt;/code&gt;를 보내야 합니다. 서비스 티켓의 지시자는 아직 구현되지
+않았습니다.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="finder"&gt;색인 건네기: &lt;code&gt;Finder&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="finder"&gt;&lt;/span&gt;
 &lt;a href="#finder" class="subheading-anchor" aria-label="이 섹션에 대한 고유 링크"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;모든 AS-REQ와 TGS-REQ는 한 사람을 조회합니다. 일반 &lt;code&gt;directory.Source&lt;/code&gt;에서는 이것이&lt;code&gt;Identities()&lt;/code&gt;와 순회입니다. 10,000명일 때 순회가 AS-REQ CPU의 절반이었고,&lt;code&gt;Identities()&lt;/code&gt;에서 데이터베이스나 LDAP 서버를 읽는 소스는 인증되지 않은 요청을 포함한
 모든 요청마다 통째로 읽혔습니다. &lt;strong&gt;v0.6.0부터&lt;/strong&gt; 색인을 가진 소스는&lt;/p&gt;

@@ -3059,6 +3059,15 @@ data-copied-label="¡Copiado!"
 &lt;p&gt;&lt;strong&gt;PAC grande y UDP.&lt;/strong&gt; Desde v0.12.1 (RFC 4120 §7.2.1), una respuesta de más de
 1465 bytes no se envía como datagrama: el cliente recibe&lt;code&gt;KRB_ERR_RESPONSE_TOO_BIG&lt;/code&gt; y repite la petición por TCP. 1465 es una elección
 de este KDC, no un estándar.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Cómo inició sesión la persona.&lt;/strong&gt; Desde v0.13.0, con &lt;code&gt;Config.PAC&lt;/code&gt;, todo PAC
+lleva &lt;code&gt;S-1-18-1&lt;/code&gt; (&lt;em&gt;authentication authority asserted identity&lt;/em&gt;), y un ticket
+emitido por &lt;code&gt;MintHandler&lt;/code&gt; lleva además un SID creado en el dominio. El TGT
+contiene un CAMMAC ([RFC 8129], en el formato de MIT) firmado con la clave de
+krbtgt: registra el método de inicio de sesión y el &lt;code&gt;uidNumber&lt;/code&gt; del solicitante.Una petición de emisión debe, pues, decir cómo inició sesión la persona,&lt;code&gt;&amp;quot;method&amp;quot;&lt;/code&gt;: &lt;code&gt;passkey&lt;/code&gt;, &lt;code&gt;federated&lt;/code&gt; o &lt;code&gt;machine&lt;/code&gt;; sin él, con un PAC configurado,la respuesta es &lt;code&gt;400&lt;/code&gt;. En el TGS, un TGT cuya marca no se verifica se rechaza con&lt;code&gt;KRB_AP_ERR_MODIFIED&lt;/code&gt;, y uno cuyo &lt;code&gt;uidNumber&lt;/code&gt; ya no es el del directorio (cuenta
+borrada y recreada con el mismo nombre, CVE-2021-42287) con&lt;code&gt;KDC_ERR_TGT_REVOKED&lt;/code&gt;. Los enc-authorization-data del cliente se ignoran. Un TGT
+emitido antes de la actualización no lleva marca y se acepta como mucho 10 horas,como un inicio de sesión con contraseña; después se rechaza. &lt;strong&gt;Nota de
+actualización:&lt;/strong&gt; &lt;code&gt;go-authn/bridge&lt;/code&gt; debe enviar &lt;code&gt;method&lt;/code&gt; antes de actualizar el KDC
+con un PAC configurado. El indicador en los tickets de servicio aún no está hecho.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="finder"&gt;Darle un índice: &lt;code&gt;Finder&lt;/code&gt;&lt;span class="hx:absolute hx:-mt-20" id="finder"&gt;&lt;/span&gt;
 &lt;a href="#finder" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Cada AS-REQ y TGS-REQ busca a una persona. Con una &lt;code&gt;directory.Source&lt;/code&gt; simple eso es&lt;code&gt;Identities()&lt;/code&gt; y un recorrido: con 10 000 personas el recorrido era la mitad de la
 CPU de una AS-REQ, y una fuente que lee una base de datos o un servidor LDAP en&lt;code&gt;Identities()&lt;/code&gt; se lee entera en cada solicitud, incluida una no autenticada.&lt;strong&gt;Desde la v0.6.0&lt;/strong&gt; una fuente que mantiene un índice implementa&lt;/p&gt;
