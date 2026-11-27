@@ -265,7 +265,7 @@ local {
   admins        = ["alice"]
   admin_aaguids = ["9dd8d593-2213-438a-97f8-d6b813d51c27"]
   mds_dir       = "/var/lib/authn-bridge/mds"
-  admin_min_certification = "L2"   # facultatif
+  admin_min_certification = "L2"   # optional
 }
 ```
 
