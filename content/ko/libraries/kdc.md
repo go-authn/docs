@@ -73,6 +73,21 @@ RID이며, `gidNumber`가 없는 그룹은 빠집니다. `uidNumber`가 **없는
 데이터그램으로 보내지 않습니다. 클라이언트는 `KRB_ERR_RESPONSE_TOO_BIG`을
 받고 TCP로 요청을 반복합니다. 1465는 이 KDC의 선택이며 표준이 아닙니다.
 
+**사용자가 어떻게 로그인했는가.** v0.13.0부터 `Config.PAC`을 설정하면 모든 PAC에
+`S-1-18-1`(*authentication authority asserted identity*)이 들어가고,
+`MintHandler`로 발급한 티켓에는 도메인에서 만든 SID도 들어갑니다. TGT에는 krbtgt
+키로 서명한 CAMMAC([RFC 8129], MIT 형식)가 들어 있어 로그인 방법과 요청자의
+`uidNumber`를 기록합니다. 따라서 발급 요청은 사용자가 어떻게 로그인했는지를
+`"method"`(`passkey`, `federated`, `machine`)로 알려야 하며, PAC이 설정된 상태에서
+없으면 응답은 `400`입니다. TGS에서는 표시가 검증되지 않는 TGT는
+`KRB_AP_ERR_MODIFIED`로, `uidNumber`가 더 이상 디렉터리의 것과 같지 않은 TGT(같은
+이름으로 계정을 지웠다 다시 만든 경우, CVE-2021-42287)는 `KDC_ERR_TGT_REVOKED`로
+거부됩니다. 클라이언트의 enc-authorization-data는 무시됩니다. 업그레이드 전에
+발급된 TGT에는 표시가 없으며 비밀번호 로그인으로 최대 10시간 받아들여지고, 그 뒤에는
+거부됩니다. **업그레이드 주의:** PAC을 설정한 KDC를 업그레이드하기 전에
+`go-authn/bridge`가 `method`를 보내야 합니다. 서비스 티켓의 지시자는 아직 구현되지
+않았습니다.
+
 ## 색인 건네기: `Finder` {#finder}
 
 모든 AS-REQ와 TGS-REQ는 한 사람을 조회합니다. 일반 `directory.Source`에서는 이것이

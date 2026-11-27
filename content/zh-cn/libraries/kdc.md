@@ -72,6 +72,17 @@ Samba 的 `workgroup`。
 作为数据报发送：客户端收到 `KRB_ERR_RESPONSE_TOO_BIG`，改用 TCP 重复请求。
 1465 是此 KDC 的选择，不是标准。
 
+**此人是如何登录的。** 自 v0.13.0 起，设置 `Config.PAC` 后，每个 PAC 都带有
+`S-1-18-1`（*authentication authority asserted identity*），经 `MintHandler` 签发的
+票据还带有在域内生成的 SID。TGT 中含有用 krbtgt 密钥签名的 CAMMAC（[RFC 8129]，
+MIT 格式），记录登录方式和请求者的 `uidNumber`。因此签发请求必须说明此人是如何登录
+的，即 `"method"`：`passkey`、`federated` 或 `machine`；配置了 PAC 而缺少它时，应答为
+`400`。在 TGS，标记无法验证的 TGT 以 `KRB_AP_ERR_MODIFIED` 拒绝；`uidNumber` 与目录
+不再一致的 TGT（账户被删除后以同名重建，CVE-2021-42287）以 `KDC_ERR_TGT_REVOKED`
+拒绝。客户端自带的 enc-authorization-data 被忽略。升级前签发的 TGT 没有标记，按密码
+登录最多接受 10 小时，之后拒绝。**升级说明：**在配置了 PAC 的 KDC 升级之前，
+`go-authn/bridge` 必须先发送 `method`。服务票据上的指示符尚未实现。
+
 ## 给它一个索引：`Finder` {#finder}
 
 每个 AS-REQ 和 TGS-REQ 都要查找一个人。使用普通的 `directory.Source` 时，这就是

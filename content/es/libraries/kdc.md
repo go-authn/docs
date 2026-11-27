@@ -81,6 +81,22 @@ server` con `winbindd` y el SID de dominio del KDC aceptó estos tickets;
 `KRB_ERR_RESPONSE_TOO_BIG` y repite la petición por TCP. 1465 es una elección
 de este KDC, no un estándar.
 
+**Cómo inició sesión la persona.** Desde v0.13.0, con `Config.PAC`, todo PAC
+lleva `S-1-18-1` (*authentication authority asserted identity*), y un ticket
+emitido por `MintHandler` lleva además un SID creado en el dominio. El TGT
+contiene un CAMMAC ([RFC 8129], en el formato de MIT) firmado con la clave de
+krbtgt: registra el método de inicio de sesión y el `uidNumber` del solicitante.
+Una petición de emisión debe, pues, decir cómo inició sesión la persona,
+`"method"`: `passkey`, `federated` o `machine`; sin él, con un PAC configurado,
+la respuesta es `400`. En el TGS, un TGT cuya marca no se verifica se rechaza con
+`KRB_AP_ERR_MODIFIED`, y uno cuyo `uidNumber` ya no es el del directorio (cuenta
+borrada y recreada con el mismo nombre, CVE-2021-42287) con
+`KDC_ERR_TGT_REVOKED`. Los enc-authorization-data del cliente se ignoran. Un TGT
+emitido antes de la actualización no lleva marca y se acepta como mucho 10 horas,
+como un inicio de sesión con contraseña; después se rechaza. **Nota de
+actualización:** `go-authn/bridge` debe enviar `method` antes de actualizar el KDC
+con un PAC configurado. El indicador en los tickets de servicio aún no está hecho.
+
 ## Darle un índice: `Finder` {#finder}
 
 Cada AS-REQ y TGS-REQ busca a una persona. Con una `directory.Source` simple eso es
