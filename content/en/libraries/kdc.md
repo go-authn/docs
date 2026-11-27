@@ -83,6 +83,22 @@ is not sent as a datagram: the client gets `KRB_ERR_RESPONSE_TOO_BIG` and
 repeats the request over TCP, where it is answered with the full reply. 1465 is
 this KDC's choice, not a standard. A PAC of 256 groups is well over it.
 
+**How the person logged in.** Since v0.13.0, with `Config.PAC` set, every PAC
+carries `S-1-18-1` (*authentication authority asserted identity*), and a ticket
+minted through `MintHandler` also carries a SID minted in the domain. The TGT
+holds a CAMMAC ([RFC 8129], in MIT's format) signed with the krbtgt key: it
+records the login method and the requestor's `uidNumber`. A mint request must
+therefore say how the person logged in, `"method"`: `passkey`, `federated` or
+`machine`; without it, and with a PAC configured, the answer is `400`. At the
+TGS, a TGT whose marking does not verify is refused with `KRB_AP_ERR_MODIFIED`,
+and one whose `uidNumber` is no longer the directory's (an account deleted and
+recreated under the same name, CVE-2021-42287) with `KDC_ERR_TGT_REVOKED`. A
+client's own enc-authorization-data is ignored. A TGT issued before the upgrade
+carries no marking and is accepted for at most 10 hours, as a password logon;
+then it is refused. **Upgrade note:** `go-authn/bridge` must send `method`
+before the KDC is upgraded with a PAC configured. The indicator on service
+tickets is not done yet.
+
 ## Give it an index: `Finder` {#finder}
 
 Every AS-REQ and TGS-REQ looks one person up. With a plain `directory.Source`

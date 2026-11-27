@@ -81,6 +81,24 @@ Tickets akzeptiert; `PAC.NetBIOSDomain` muss Sambas `workgroup` entsprechen.
 `KRB_ERR_RESPONSE_TOO_BIG` und wiederholt die Anfrage über TCP. 1465 ist die
 Wahl dieses KDC, kein Standard.
 
+**Wie sich die Person angemeldet hat.** Seit v0.13.0 trägt mit `Config.PAC`
+jedes PAC `S-1-18-1` (*authentication authority asserted identity*), und ein
+über `MintHandler` ausgestelltes Ticket trägt zusätzlich eine in der Domäne
+erzeugte SID. Das TGT enthält ein CAMMAC ([RFC 8129], im Format von MIT), mit
+dem krbtgt-Schlüssel signiert: Es hält die Anmeldemethode und die `uidNumber`
+des Anfragenden fest. Eine Ausstellungsanfrage muss daher sagen, wie sich die
+Person angemeldet hat, `"method"`: `passkey`, `federated` oder `machine`; ohne
+sie ist die Antwort bei konfiguriertem PAC `400`. Am TGS wird ein TGT, dessen
+Markierung sich nicht prüfen lässt, mit `KRB_AP_ERR_MODIFIED` abgewiesen, und
+eines, dessen `uidNumber` nicht mehr die des Verzeichnisses ist (Konto gelöscht
+und unter demselben Namen neu angelegt, CVE-2021-42287), mit
+`KDC_ERR_TGT_REVOKED`. Die enc-authorization-data des Clients werden ignoriert.
+Ein vor dem Update ausgestelltes TGT hat keine Markierung und wird höchstens 10
+Stunden als Passwort-Anmeldung akzeptiert, danach abgewiesen. **Hinweis zum
+Update:** `go-authn/bridge` muss `method` senden, bevor der KDC mit
+konfiguriertem PAC aktualisiert wird. Der Indikator auf Diensttickets ist noch
+nicht umgesetzt.
+
 ## Ihm einen Index geben: `Finder` {#finder}
 
 Jede AS-REQ und TGS-REQ sucht eine Person. Mit einer einfachen `directory.Source`

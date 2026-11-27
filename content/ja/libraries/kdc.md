@@ -75,6 +75,21 @@ server` の Samba 4.22（`winbindd` あり）はこれらのチケットを受�
 `KRB_ERR_RESPONSE_TOO_BIG` を受け取り、TCP で要求を繰り返します。1465 は
 この KDC の選択であり、標準ではありません。
 
+**本人がどうログインしたか。** v0.13.0 以降、`Config.PAC` を設定すると、すべての
+PAC が `S-1-18-1`（*authentication authority asserted identity*）を持ち、
+`MintHandler` で発行されたチケットはドメイン内で作られた SID も持ちます。TGT には
+krbtgt 鍵で署名された CAMMAC（[RFC 8129]、MIT の形式）が入り、ログイン方法と要求者の
+`uidNumber` を記録します。そのため発行要求は、本人がどうログインしたかを
+`"method"`（`passkey`、`federated`、`machine`）で伝えなければならず、PAC 設定下で
+これがないと応答は `400` です。TGS では、印が検証できない TGT は
+`KRB_AP_ERR_MODIFIED` で、`uidNumber` がディレクトリのものと一致しなくなった TGT
+（同名でアカウントを削除して作り直した場合、CVE-2021-42287）は
+`KDC_ERR_TGT_REVOKED` で拒否されます。クライアントの enc-authorization-data は無視
+されます。アップグレード前に発行された TGT には印がなく、パスワードログインとして
+最長 10 時間受け付けられ、その後は拒否されます。**アップグレードの注意:** PAC を設定した
+KDC を更新する前に、`go-authn/bridge` が `method` を送るようにしてください。サービス
+チケットのインジケータはまだ実装されていません。
+
 ## 索引を渡す: `Finder` {#finder}
 
 AS-REQ と TGS-REQ はどれも一人を検索します。通常の `directory.Source` では、それは

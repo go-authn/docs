@@ -81,6 +81,23 @@ de 1465 octets n'est pas envoyée en datagramme : le client reçoit
 `KRB_ERR_RESPONSE_TOO_BIG` et répète sa requête en TCP. 1465 est un choix de ce
 KDC, pas un standard.
 
+**Comment la personne s'est connectée.** Depuis v0.13.0, avec `Config.PAC`, tout
+PAC porte `S-1-18-1` (*authentication authority asserted identity*), et un
+ticket émis par `MintHandler` porte aussi un SID créé dans le domaine. Le TGT
+contient un CAMMAC ([RFC 8129], au format de MIT) signé avec la clé krbtgt : il
+note la méthode de connexion et le `uidNumber` du demandeur. Une demande
+d'émission doit donc dire comment la personne s'est connectée, `"method"` :
+`passkey`, `federated` ou `machine` ; sans elle, avec un PAC configuré, la
+réponse est `400`. Au TGS, un TGT dont la marque ne se vérifie pas est refusé
+avec `KRB_AP_ERR_MODIFIED`, et celui dont le `uidNumber` n'est plus celui de
+l'annuaire (compte supprimé puis recréé sous le même nom, CVE-2021-42287) avec
+`KDC_ERR_TGT_REVOKED`. Les enc-authorization-data du client sont ignorées. Un TGT
+émis avant la mise à jour n'a pas de marque et est accepté 10 heures au plus,
+comme une connexion par mot de passe ; ensuite il est refusé. **Note de mise à
+jour :** `go-authn/bridge` doit envoyer `method` avant que le KDC soit mis à
+jour avec un PAC configuré. L'indicateur sur les tickets de service n'est pas
+encore fait.
+
 ## Lui donner un index : `Finder` {#finder}
 
 Chaque AS-REQ et TGS-REQ cherche une personne. Avec une simple `directory.Source`,
