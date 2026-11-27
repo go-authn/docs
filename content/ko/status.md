@@ -170,6 +170,15 @@ Go 1.27.2에서 `govulncheck`는 두 프로그램 모두에서 GO-2026-6809를 �
 | v0.31.2 | 보안, 감사 후속: **제거된 패스키의 토큰으로 더 이상 Kerberos 티켓을 얻을 수 없고, SSH 인증서의 사람을 계속 유효하게 둘 수도 없습니다.** 액세스 토큰은 발급 때 쓴 패스키를 기록하며(상태 필드 `credential`, 선택 사항입니다. 이전에 저장된 토큰은 계정에만 묶입니다), KDC에 묻기 전, 묻고 난 뒤, SSH 인증서를 철회할 때 그 패스키에 묶입니다. 갱신 승인이 이미 그랬던 것과 같습니다. Kerberos 티켓 수명은 호스트가 아니라 공급자의 시계를 씁니다. 방향 제어 문자와 보이지 않는 문자(U+202E, U+200B 등. ZWJ와 ZWNJ는 허용)가 든 표시 이름은 거부됩니다. 등록을 마칠 때 패스키가 열 개를 넘을 수 없습니다(409) |
 | v0.31.3 | 의존성, 감사의 두 번째 라운드: go-authn/directory v0.26.0(`Set`의 이름은 소스 사이에서 LDAP 동등 키로, 대소문자 구분 없이 비교됩니다. ldap v0.15.0은 간접 요구 사항으로 들어옵니다), oidc v0.8.0, webauthn v0.2.0, saml v0.7.2, revocation v0.7.1, servercert v0.7.1, wireguard v0.2.0. bridge 자체의 사용과 전체 테스트 스위트는 바뀌지 않습니다 |
 | v0.32.0 | [`mail` 블록]({{< relref "/authn-bridge/configuration.md#mail" >}}): 패스키 삭제를 요청하거나 취소하면 계정 자신의 주소(요청이 아니라 로컬 계정 파일에서 가져옴)로 대역 외 평문 이메일을 보내므로, 키 하나를 가진 도둑이 그 키로 소유자의 삭제를 몰래 취소할 수 없습니다. TLS만 사용하며(암시적, 또는 필수 STARTTLS) 인증서를 검증합니다. `username`과 `password_file`은 필수입니다(서비스 사용자 소유, 그룹·다른 사용자 비트 없음, 한 번 열기인 파일). AUTH(PLAIN, 없으면 LOGIN)는 TLS가 성립한 뒤에만 하며, 평문으로는 127.0.0.1에도 하지 않습니다. 본문에 링크가 없고, 헤더의 CR/LF는 거부됩니다. 계정당 `window`(기본 10m)마다 메일 하나이며, 그 사이의 이벤트는 요약 하나로 합쳐집니다. [알림을 보낼 수 없는 삭제 요청은 보류된 채로 남습니다]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})(5회 시도 후 큰 `GAVE UP` 로그, 재시작하면 재개). 취소는 메일이 실패해도 적용되며, 실패는 로그에 남고 계정 페이지에 표시됩니다. 주소가 없는 계정도 삭제는 됩니다. 로그와 페이지가 아무도 알림을 받지 못했다고 알려 줍니다. `mail` 블록이 없으면 아무것도 바뀌지 않습니다. 새 레코드 필드 `notice_pending` |
+| v0.33.0 | `mail`: SMTP 비밀번호를 secretsource 참조(`password_from`)로 지정할 수 있습니다 |
+| v0.33.1 | `check`가 `kerberos` 블록을 보고합니다 |
+| v0.34.0 | `kerberos`: `check`가 출력하는 줄, 그리고 동작할 수 없는 설정은 거부됩니다 |
+| v0.35.0 | SP 메타데이터에 제공자를 기술합니다: 조직, 연락처, 로고 |
+| v0.36.0 | go-authn/saml v0.9.0. 보안 연락처에는 `given_name`이 필요합니다 |
+| v0.37.0 | 성공한 로그인을 모두 기록합니다. root로서의 로컬 계정을 문서화했습니다 |
+| v0.38.0 | 클라이언트가 한 종류의 계정만 받을 수 있습니다(`accounts = ["local"]`) |
+| v0.39.0 | [관리자가 웹에서 로컬 계정을 초대할 수 있습니다]({{< relref "/authn-bridge/admin.md" >}}) |
+| v0.40.0 | 관리자 모델을 증명하려면 `id-fido-gen-ce-aaguid`가 필요합니다(go-authn/webauthn v0.5.0) |
 | v0.41.0 | [`admin_min_certification`]({{< relref "/authn-bridge/admin.md" >}}): 관리자 패스키 모델에 요구하는 FIDO 인증 최저 수준(L1~L3plus, MDS 3.1 순서). 등록할 때와 관리자 페이지를 열 때마다 확인합니다. go-authn/fido v0.17.0이 필요합니다 |
 
 ### authn-revokd {#authn-revokd}
