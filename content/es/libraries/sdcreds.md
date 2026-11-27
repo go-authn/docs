@@ -23,7 +23,7 @@ reconocen y se rechazan con `*UnsupportedModeError`; no se adivina nada.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-La versión que describen estas páginas es la v0.4.0.
+La versión que describen estas páginas es la v0.4.1.
 
 ## Línea de comandos {#cli}
 
@@ -147,12 +147,18 @@ servicio y puesto a cero al final:
   uid efectivo del usuario del servicio) antes de señalar nada: el núcleo le deja
   entonces señalar a todo proceso del usuario del servicio, mientras que ningún
   proceso de ese usuario puede señalarlo. El asesino envía `kill(-1, SIGKILL)`
-  hasta que el núcleo no encuentra nada; los asesinos se serializan con un
-  cerrojo (`/var/run/sdcreds-killer.lock`). **Requisito de instalación:** cree
+  hasta que el núcleo no encuentra nada; las muertes de un mismo usuario de servicio se
+  serializan con un cerrojo de ese usuario (`/var/run/sdcreds-killer-<uid>.lock`),
+  y la muerte de otro usuario nunca hace que una liberación espere ni se rinda.
+  Dos asesinos de usuarios distintos comparten el uid real del asesino y pueden
+  señalarse entre sí: un asesino que muere por ello se vuelve a lanzar, porque
+  decide la tabla de procesos, y un usuario que no está vacío al llegar al
+  presupuesto se notifica (falla de forma segura). **Requisito de instalación:** cree
   el usuario asesino, que no debe poseer ningún proceso ni ser root ni un usuario
   de servicio:
-  `useradd -s /sbin/nologin -d /var/empty -c "sdcreds killer" _sdkill`. Sin él se
-  rechaza el arranque de una entrega. Un proceso que solo retiene al usuario por
+  `useradd -s /sbin/nologin -d /var/empty -c "sdcreds killer" _sdkill`. Sin él, o
+  si posee un proceso, se rechaza el arranque de una entrega (un arranque espera
+  hasta 20 s al asesino de una liberación en curso). Un proceso que solo retiene al usuario por
   un archivo set-uid ejecutado por otro usuario lo cuenta la comprobación de
   arranque, pero el asesino no lo alcanza: la liberación informa entonces de que
   un proceso sobrevivió y el siguiente arranque se rechaza hasta que desaparezca
@@ -164,8 +170,8 @@ servicio y puesto a cero al final:
   dé al servicio su propio usuario. Si sdcreds y el auxiliar mueren ambos,
   `sdcreds sweep [--base DIR] [--service S]` (o el siguiente arranque del
   servicio) elimina lo que queda. Si la liberación falla después de que el
-  programa termine, sdcreds sale con estado 70 (o con el del programa si ya era
-  un fallo) y explica el motivo por stderr.
+  programa termine, sdcreds sale con estado 70, sea cual fuere el estado del
+  programa (se imprime por stderr, con el motivo).
 - **Estado de salida de `run`** (desde la v0.4.0). El estado del programa se
   transmite tal cual (un programa matado por la señal `n` da `128+n`). Los
   finales propios de sdcreds tienen estados reservados, fuera de los rangos 0-2 y
@@ -173,12 +179,13 @@ servicio y puesto a cero al final:
   (opción incorrecta, usuario desconocido o root, swap sin cifrar, una ejecución
   que sigue viva; permanente hasta que algo cambie); **126** sdcreds falló tras
   empezar (entrega, auxiliar perdido, programa no ejecutable; puede ser
-  transitorio); **70** el programa terminó pero la liberación falló. Un programa
+  transitorio); **70** el programa terminó pero la liberación falló, sea cual fuere el estado del
+  programa (entonces se imprime por stderr). Un programa
   que sale por sí mismo con 125 o 126 no se puede distinguir. Antes de la v0.4.0
   una negativa salía con 2 y un fallo con 1.
-- **Reinicio.** Un arranque espera hasta 30 s a que la ejecución anterior del
-  mismo servicio termine de desmontarse en lugar de ser rechazado; una ejecución
-  que siga viva después se rechaza (125). Un segundo servicio para el mismo
+- **Reinicio.** Un arranque espera hasta 47 s a que la ejecución anterior del
+  mismo servicio termine de desmontarse (lo que puede tardar hasta 46 s) en lugar
+  de ser rechazado; una ejecución que siga viva tras 47 s se rechaza (125). Un segundo servicio para el mismo
   usuario sigue rechazándose de inmediato.
 - **El swap debe estar cifrado.** `run` se niega a arrancar cuando
   `sysctl vm.swapencrypt.enable` es 0, no se puede leer o no existe. Ninguna

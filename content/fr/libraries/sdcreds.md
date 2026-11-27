@@ -22,7 +22,7 @@ sont reconnus et refusés avec `*UnsupportedModeError` ; rien n'est deviné.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-La version décrite par ces pages est la v0.4.0.
+La version décrite par ces pages est la v0.4.1.
 
 ## Ligne de commande {#cli}
 
@@ -145,12 +145,18 @@ monté pour le service et mis à zéro à la fin :
   uid effectif de l'utilisateur du service) avant de signaler quoi que ce soit :
   le noyau lui laisse alors signaler tout processus de l'utilisateur du service,
   alors qu'aucun processus de cet utilisateur ne peut le signaler. Le tueur envoie
-  `kill(-1, SIGKILL)` jusqu'à ce que le noyau ne trouve plus rien ; les tueurs
-  sont sérialisés par un verrou (`/var/run/sdcreds-killer.lock`). **Prérequis
+  `kill(-1, SIGKILL)` jusqu'à ce que le noyau ne trouve plus rien ; les morts d'un même utilisateur de service sont
+  sérialisées par un verrou de cet utilisateur (`/var/run/sdcreds-killer-<uid>.lock`),
+  et la mort d'un autre utilisateur ne fait jamais attendre ni renoncer une
+  libération. Deux tueurs d'utilisateurs différents partagent l'uid réel du tueur
+  et peuvent se signaler l'un l'autre : un tueur qui en meurt est relancé, car
+  c'est la table des processus qui tranche, et un utilisateur non vide au budget
+  est signalé (refus par prudence). **Prérequis
   d'installation :** créez l'utilisateur tueur, qui ne doit posséder aucun
   processus et ne doit être ni root ni un utilisateur de service :
   `useradd -s /sbin/nologin -d /var/empty -c "sdcreds killer" _sdkill`. Sans lui,
-  le démarrage d'une livraison est refusé. Un processus qui ne détient
+  ou s'il possède un processus, le démarrage d'une livraison est refusé (un
+  démarrage attend jusqu'à 20 s le tueur d'une libération en cours). Un processus qui ne détient
   l'utilisateur que par un fichier set-uid exécuté par un autre utilisateur est
   compté par le contrôle de démarrage mais n'est pas atteint par le tueur : la
   libération signale alors qu'un processus a survécu et le démarrage suivant est
@@ -162,8 +168,8 @@ monté pour le service et mis à zéro à la fin :
   processus : donnez au service son propre utilisateur. Si sdcreds et l'auxiliaire
   meurent tous deux, `sdcreds sweep [--base DIR] [--service S]` (ou le prochain
   démarrage du service) supprime ce qui reste. Si la libération échoue après la
-  fin du programme, sdcreds sort avec le statut 70 (ou celui du programme s'il
-  était déjà un échec) et en donne la raison sur stderr.
+  fin du programme, sdcreds sort avec le statut 70, quel qu'ait été le statut du
+  programme (il est affiché sur stderr, avec la raison).
 - **Statut de sortie de `run`** (depuis la v0.4.0). Le statut du programme est
   transmis tel quel (un programme tué par le signal `n` donne `128+n`). Les fins
   propres à sdcreds ont des statuts réservés, hors des plages 0-2 et 64-78 que
@@ -172,11 +178,12 @@ monté pour le service et mis à zéro à la fin :
   exécution encore vivante ; permanent tant que rien ne change) ; **126** sdcreds
   a échoué après avoir commencé (livraison, auxiliaire perdu, programme
   inexécutable ; peut être passager) ; **70** le programme s'est terminé mais la
-  libération a échoué. Un programme qui sort lui-même en 125 ou 126 ne peut pas
+  libération a échoué, quel qu'ait été le statut du programme (il est alors
+  affiché sur stderr). Un programme qui sort lui-même en 125 ou 126 ne peut pas
   être distingué. Avant la v0.4.0, un refus sortait en 2 et un échec en 1.
-- **Redémarrage.** Un démarrage attend jusqu'à 30 s que l'exécution précédente du
-  même service ait fini de se défaire au lieu d'être refusé ; une exécution
-  encore vivante après ce délai est refusée (125). Un second service pour le même
+- **Redémarrage.** Un démarrage attend jusqu'à 47 s que l'exécution précédente du
+  même service ait fini de se défaire (ce qui peut prendre jusqu'à 46 s) au lieu
+  d'être refusé ; une exécution encore vivante après 47 s est refusée (125). Un second service pour le même
   utilisateur reste refusé aussitôt.
 - **Le swap doit être chiffré.** `run` refuse de démarrer quand
   `sysctl vm.swapencrypt.enable` vaut 0, est illisible ou n'existe pas. Aucune

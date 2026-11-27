@@ -33,7 +33,7 @@ tags: [库]
 | [scim]({{< relref "/libraries/scim.md" >}}) | 身份提供方刚刚创建、更改或删除了谁？ | v0.2.1 | `github.com/go-authn/scim` |
 | [secretsource]({{< relref "/libraries/secretsource.md" >}}) | 不应留在文件里的 PIN 或密码，从哪里取得？ | v0.12.0 | `github.com/go-authn/secretsource` |
 | [harden]({{< relref "/libraries/harden.md" >}}) | 这个 URL 是 https 还是指向本机，私有文件又该如何安全地写入，密钥又如何不落入交换区？ | v0.3.0 | `github.com/go-authn/harden` |
-| [sdcreds]({{< relref "/libraries/sdcreds.md" >}}) | 没有 systemd 时如何读写 systemd 凭据，s6 服务又如何获得 `$CREDENTIALS_DIRECTORY`？ | v0.4.0 | `github.com/go-authn/sdcreds` |
+| [sdcreds]({{< relref "/libraries/sdcreds.md" >}}) | 没有 systemd 时如何读写 systemd 凭据，s6 服务又如何获得 `$CREDENTIALS_DIRECTORY`？ | v0.4.1 | `github.com/go-authn/sdcreds` |
 
 ## 它们如何分组 {#how-they-group}
 

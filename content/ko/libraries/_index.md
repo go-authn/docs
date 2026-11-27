@@ -33,7 +33,7 @@ tags: [라이브러리]
 | [scim]({{< relref "/libraries/scim.md" >}}) | 신원 공급자가 방금 누구를 생성, 변경, 삭제했는가? | v0.2.1 | `github.com/go-authn/scim` |
 | [secretsource]({{< relref "/libraries/secretsource.md" >}}) | 파일에 남겨 두면 안 되는 PIN이나 비밀번호는 어디에서 가져오는가? | v0.12.0 | `github.com/go-authn/secretsource` |
 | [harden]({{< relref "/libraries/harden.md" >}}) | 이 URL은 https이거나 이 컴퓨터인가, 그리고 개인 파일은 어떻게 안전하게 쓰고, 키는 어떻게 스왑에서 지키는가? | v0.3.0 | `github.com/go-authn/harden` |
-| [sdcreds]({{< relref "/libraries/sdcreds.md" >}}) | systemd 없이 systemd 자격 증명을 어떻게 읽고 쓰며, s6 서비스는 `$CREDENTIALS_DIRECTORY`를 어떻게 얻는가? | v0.4.0 | `github.com/go-authn/sdcreds` |
+| [sdcreds]({{< relref "/libraries/sdcreds.md" >}}) | systemd 없이 systemd 자격 증명을 어떻게 읽고 쓰며, s6 서비스는 `$CREDENTIALS_DIRECTORY`를 어떻게 얻는가? | v0.4.1 | `github.com/go-authn/sdcreds` |
 
 ## 모듈의 묶음 {#how-they-group}
 
