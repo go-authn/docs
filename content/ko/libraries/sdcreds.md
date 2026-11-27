@@ -22,7 +22,7 @@ systemd가 없다면?** `sdcreds`는
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-이 페이지가 설명하는 버전은 v0.4.2입니다. 32비트 OpenBSD(i386, armv7)는 거부됩니다. 마운트 레이아웃(`mfsArgsSize` 144와 마운트 구조체)은 amd64와 arm64의 LP64 레이아웃이며 32비트 헤더와 대조하지 않았으므로, 빌드는 의도적으로 실패합니다.
+이 페이지가 설명하는 버전은 v0.4.3입니다. 32비트 OpenBSD(i386, armv7)는 거부됩니다. 마운트 레이아웃(`mfsArgsSize` 144와 마운트 구조체)은 amd64와 arm64의 LP64 레이아웃이며 32비트 헤더와 대조하지 않았으므로, 빌드는 의도적으로 실패합니다.
 
 ## 명령줄 {#cli}
 

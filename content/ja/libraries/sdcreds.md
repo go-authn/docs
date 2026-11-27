@@ -21,7 +21,7 @@ s6 が監視するサービスに同じ `$CREDENTIALS_DIRECTORY` を与えるヘ
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-これらのページが説明するバージョンは v0.4.2 です。32 ビット OpenBSD（i386、armv7）は拒否されます。マウントのレイアウト（`mfsArgsSize` 144 とマウント構造体）は amd64 と arm64 の LP64 のもので、32 ビットのヘッダーとは照合していないため、ビルドは意図的に失敗します。
+これらのページが説明するバージョンは v0.4.3 です。32 ビット OpenBSD（i386、armv7）は拒否されます。マウントのレイアウト（`mfsArgsSize` 144 とマウント構造体）は amd64 と arm64 の LP64 のもので、32 ビットのヘッダーとは照合していないため、ビルドは意図的に失敗します。
 
 ## コマンドライン {#cli}
 
