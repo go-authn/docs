@@ -20,7 +20,7 @@ data-copied-label="¡Copiado!"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;La versión que describen estas páginas es la v0.4.0.&lt;/p&gt;
+&lt;p&gt;La versión que describen estas páginas es la v0.4.1.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="cli"&gt;Línea de comandos&lt;span class="hx:absolute hx:-mt-20" id="cli"&gt;&lt;/span&gt;
 &lt;a href="#cli" class="subheading-anchor" aria-label="Enlace permanente a esta sección"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds setup &lt;span class="c1"&gt;# create the host secret if missing&lt;/span&gt;
@@ -163,11 +163,15 @@ provoca un proceso asesino de corta vida que root lanza y que pasa a
 credenciales divididas (uid real y guardado de un usuario asesino reservado,uid efectivo del usuario del servicio) antes de señalar nada: el núcleo le deja
 entonces señalar a todo proceso del usuario del servicio, mientras que ningún
 proceso de ese usuario puede señalarlo. El asesino envía &lt;code&gt;kill(-1, SIGKILL)&lt;/code&gt;
-hasta que el núcleo no encuentra nada; los asesinos se serializan con un
-cerrojo (&lt;code&gt;/var/run/sdcreds-killer.lock&lt;/code&gt;). &lt;strong&gt;Requisito de instalación:&lt;/strong&gt; cree
+hasta que el núcleo no encuentra nada; las muertes de un mismo usuario de servicio se
+serializan con un cerrojo de ese usuario (&lt;code&gt;/var/run/sdcreds-killer-&amp;lt;uid&amp;gt;.lock&lt;/code&gt;),y la muerte de otro usuario nunca hace que una liberación espere ni se rinda.Dos asesinos de usuarios distintos comparten el uid real del asesino y pueden
+señalarse entre sí: un asesino que muere por ello se vuelve a lanzar, porque
+decide la tabla de procesos, y un usuario que no está vacío al llegar al
+presupuesto se notifica (falla de forma segura). &lt;strong&gt;Requisito de instalación:&lt;/strong&gt; cree
 el usuario asesino, que no debe poseer ningún proceso ni ser root ni un usuario
-de servicio:&lt;code&gt;useradd -s /sbin/nologin -d /var/empty -c &amp;quot;sdcreds killer&amp;quot; _sdkill&lt;/code&gt;. Sin él se
-rechaza el arranque de una entrega. Un proceso que solo retiene al usuario por
+de servicio:&lt;code&gt;useradd -s /sbin/nologin -d /var/empty -c &amp;quot;sdcreds killer&amp;quot; _sdkill&lt;/code&gt;. Sin él, o
+si posee un proceso, se rechaza el arranque de una entrega (un arranque espera
+hasta 20 s al asesino de una liberación en curso). Un proceso que solo retiene al usuario por
 un archivo set-uid ejecutado por otro usuario lo cuenta la comprobación de
 arranque, pero el asesino no lo alcanza: la liberación informa entonces de que
 un proceso sobrevivió y el siguiente arranque se rechaza hasta que desaparezca(falla de forma segura). Si un proceso sobrevive al
@@ -175,20 +179,21 @@ presupuesto de 20 s, el auxiliar desmonta igualmente (los secretos
 desaparecen), informa del fallo y sale con un estado distinto de cero. Un
 usuario pertenece a una sola entrega a la vez (el &lt;code&gt;.uid-&amp;lt;N&amp;gt;.lock&lt;/code&gt; de&lt;code&gt;/var/run/sdcreds&lt;/code&gt;), y &lt;code&gt;run&lt;/code&gt; rechaza a un usuario que ya tiene otros procesos:dé al servicio su propio usuario. Si sdcreds y el auxiliar mueren ambos,&lt;code&gt;sdcreds sweep [--base DIR] [--service S]&lt;/code&gt; (o el siguiente arranque del
 servicio) elimina lo que queda. Si la liberación falla después de que el
-programa termine, sdcreds sale con estado 70 (o con el del programa si ya era
-un fallo) y explica el motivo por stderr.&lt;/li&gt;
+programa termine, sdcreds sale con estado 70, sea cual fuere el estado del
+programa (se imprime por stderr, con el motivo).&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Estado de salida de &lt;code&gt;run&lt;/code&gt;&lt;/strong&gt; (desde la v0.4.0). El estado del programa se
 transmite tal cual (un programa matado por la señal &lt;code&gt;n&lt;/code&gt; da &lt;code&gt;128+n&lt;/code&gt;). Los
 finales propios de sdcreds tienen estados reservados, fuera de los rangos 0-2 y
 64-78 que suelen usar los demonios: &lt;strong&gt;125&lt;/strong&gt; sdcreds se negó, no se inició nada(opción incorrecta, usuario desconocido o root, swap sin cifrar, una ejecución
 que sigue viva; permanente hasta que algo cambie); &lt;strong&gt;126&lt;/strong&gt; sdcreds falló tras
 empezar (entrega, auxiliar perdido, programa no ejecutable; puede ser
-transitorio); &lt;strong&gt;70&lt;/strong&gt; el programa terminó pero la liberación falló. Un programa
+transitorio); &lt;strong&gt;70&lt;/strong&gt; el programa terminó pero la liberación falló, sea cual fuere el estado del
+programa (entonces se imprime por stderr). Un programa
 que sale por sí mismo con 125 o 126 no se puede distinguir. Antes de la v0.4.0
 una negativa salía con 2 y un fallo con 1.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Reinicio.&lt;/strong&gt; Un arranque espera hasta 30 s a que la ejecución anterior del
-mismo servicio termine de desmontarse en lugar de ser rechazado; una ejecución
-que siga viva después se rechaza (125). Un segundo servicio para el mismo
+&lt;li&gt;&lt;strong&gt;Reinicio.&lt;/strong&gt; Un arranque espera hasta 47 s a que la ejecución anterior del
+mismo servicio termine de desmontarse (lo que puede tardar hasta 46 s) en lugar
+de ser rechazado; una ejecución que siga viva tras 47 s se rechaza (125). Un segundo servicio para el mismo
 usuario sigue rechazándose de inmediato.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;El swap debe estar cifrado.&lt;/strong&gt; &lt;code&gt;run&lt;/code&gt; se niega a arrancar cuando&lt;code&gt;sysctl vm.swapencrypt.enable&lt;/code&gt; es 0, no se puede leer o no existe. Ninguna
 opción lo evita. En la biblioteca, &lt;code&gt;s6.Config&lt;/code&gt; necesita un &lt;code&gt;ReadSource&lt;/code&gt; (el

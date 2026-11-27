@@ -17,7 +17,7 @@ data-copied-label="Copié !"
 &lt;/button&gt;
 &lt;/div&gt;
 &lt;/div&gt;
-&lt;p&gt;La version décrite par ces pages est la v0.4.0.&lt;/p&gt;
+&lt;p&gt;La version décrite par ces pages est la v0.4.1.&lt;/p&gt;
 &lt;h2 data-hextra-search-id="cli"&gt;Ligne de commande&lt;span class="hx:absolute hx:-mt-20" id="cli"&gt;&lt;/span&gt;
 &lt;a href="#cli" class="subheading-anchor" aria-label="Lien permanent vers cette section"&gt;&lt;/a&gt;&lt;/h2&gt;&lt;div class="hextra-code-block hx:relative hx:mt-6 hx:first:mt-0 hx:group/code"&gt;
 &lt;div&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-sh" data-lang="sh"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sdcreds setup &lt;span class="c1"&gt;# create the host secret if missing&lt;/span&gt;
@@ -156,10 +156,15 @@ fin, il tue tout ce que l&amp;rsquo;utilisateur du service exécute (par uid, do
 programme qui a appelé &lt;code&gt;setsid&lt;/code&gt; n&amp;rsquo;y échappe pas), puis démonte. Root ne signale
 jamais un pid lu dans une liste. Depuis la v0.4.0, la mise à mort est faite par
 un processus tueur de courte durée que root lance et qui passe à des
-identifiants scindés (uid réel et sauvegardé d&amp;rsquo;un utilisateur tueur réservé,uid effectif de l&amp;rsquo;utilisateur du service) avant de signaler quoi que ce soit :le noyau lui laisse alors signaler tout processus de l&amp;rsquo;utilisateur du service,alors qu&amp;rsquo;aucun processus de cet utilisateur ne peut le signaler. Le tueur envoie&lt;code&gt;kill(-1, SIGKILL)&lt;/code&gt; jusqu&amp;rsquo;à ce que le noyau ne trouve plus rien ; les tueurs
-sont sérialisés par un verrou (&lt;code&gt;/var/run/sdcreds-killer.lock&lt;/code&gt;). &lt;strong&gt;Prérequis
+identifiants scindés (uid réel et sauvegardé d&amp;rsquo;un utilisateur tueur réservé,uid effectif de l&amp;rsquo;utilisateur du service) avant de signaler quoi que ce soit :le noyau lui laisse alors signaler tout processus de l&amp;rsquo;utilisateur du service,alors qu&amp;rsquo;aucun processus de cet utilisateur ne peut le signaler. Le tueur envoie&lt;code&gt;kill(-1, SIGKILL)&lt;/code&gt; jusqu&amp;rsquo;à ce que le noyau ne trouve plus rien ; les morts d&amp;rsquo;un même utilisateur de service sont
+sérialisées par un verrou de cet utilisateur (&lt;code&gt;/var/run/sdcreds-killer-&amp;lt;uid&amp;gt;.lock&lt;/code&gt;),et la mort d&amp;rsquo;un autre utilisateur ne fait jamais attendre ni renoncer une
+libération. Deux tueurs d&amp;rsquo;utilisateurs différents partagent l&amp;rsquo;uid réel du tueur
+et peuvent se signaler l&amp;rsquo;un l&amp;rsquo;autre : un tueur qui en meurt est relancé, car
+c&amp;rsquo;est la table des processus qui tranche, et un utilisateur non vide au budget
+est signalé (refus par prudence). &lt;strong&gt;Prérequis
 d&amp;rsquo;installation :&lt;/strong&gt; créez l&amp;rsquo;utilisateur tueur, qui ne doit posséder aucun
-processus et ne doit être ni root ni un utilisateur de service :&lt;code&gt;useradd -s /sbin/nologin -d /var/empty -c &amp;quot;sdcreds killer&amp;quot; _sdkill&lt;/code&gt;. Sans lui,le démarrage d&amp;rsquo;une livraison est refusé. Un processus qui ne détient
+processus et ne doit être ni root ni un utilisateur de service :&lt;code&gt;useradd -s /sbin/nologin -d /var/empty -c &amp;quot;sdcreds killer&amp;quot; _sdkill&lt;/code&gt;. Sans lui,ou s&amp;rsquo;il possède un processus, le démarrage d&amp;rsquo;une livraison est refusé (un
+démarrage attend jusqu&amp;rsquo;à 20 s le tueur d&amp;rsquo;une libération en cours). Un processus qui ne détient
 l&amp;rsquo;utilisateur que par un fichier set-uid exécuté par un autre utilisateur est
 compté par le contrôle de démarrage mais n&amp;rsquo;est pas atteint par le tueur : la
 libération signale alors qu&amp;rsquo;un processus a survécu et le démarrage suivant est
@@ -170,8 +175,8 @@ n&amp;rsquo;appartient qu&amp;rsquo;à une livraison à la fois (le &lt;code&gt;
 processus : donnez au service son propre utilisateur. Si sdcreds et l&amp;rsquo;auxiliaire
 meurent tous deux, &lt;code&gt;sdcreds sweep [--base DIR] [--service S]&lt;/code&gt; (ou le prochain
 démarrage du service) supprime ce qui reste. Si la libération échoue après la
-fin du programme, sdcreds sort avec le statut 70 (ou celui du programme s&amp;rsquo;il
-était déjà un échec) et en donne la raison sur stderr.&lt;/li&gt;
+fin du programme, sdcreds sort avec le statut 70, quel qu&amp;rsquo;ait été le statut du
+programme (il est affiché sur stderr, avec la raison).&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Statut de sortie de &lt;code&gt;run&lt;/code&gt;&lt;/strong&gt; (depuis la v0.4.0). Le statut du programme est
 transmis tel quel (un programme tué par le signal &lt;code&gt;n&lt;/code&gt; donne &lt;code&gt;128+n&lt;/code&gt;). Les fins
 propres à sdcreds ont des statuts réservés, hors des plages 0-2 et 64-78 que
@@ -180,11 +185,12 @@ démarré (option invalide, utilisateur inconnu ou root, swap non chiffré, une
 exécution encore vivante ; permanent tant que rien ne change) ; &lt;strong&gt;126&lt;/strong&gt; sdcreds
 a échoué après avoir commencé (livraison, auxiliaire perdu, programme
 inexécutable ; peut être passager) ; &lt;strong&gt;70&lt;/strong&gt; le programme s&amp;rsquo;est terminé mais la
-libération a échoué. Un programme qui sort lui-même en 125 ou 126 ne peut pas
+libération a échoué, quel qu&amp;rsquo;ait été le statut du programme (il est alors
+affiché sur stderr). Un programme qui sort lui-même en 125 ou 126 ne peut pas
 être distingué. Avant la v0.4.0, un refus sortait en 2 et un échec en 1.&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Redémarrage.&lt;/strong&gt; Un démarrage attend jusqu&amp;rsquo;à 30 s que l&amp;rsquo;exécution précédente du
-même service ait fini de se défaire au lieu d&amp;rsquo;être refusé ; une exécution
-encore vivante après ce délai est refusée (125). Un second service pour le même
+&lt;li&gt;&lt;strong&gt;Redémarrage.&lt;/strong&gt; Un démarrage attend jusqu&amp;rsquo;à 47 s que l&amp;rsquo;exécution précédente du
+même service ait fini de se défaire (ce qui peut prendre jusqu&amp;rsquo;à 46 s) au lieu
+d&amp;rsquo;être refusé ; une exécution encore vivante après 47 s est refusée (125). Un second service pour le même
 utilisateur reste refusé aussitôt.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Le swap doit être chiffré.&lt;/strong&gt; &lt;code&gt;run&lt;/code&gt; refuse de démarrer quand&lt;code&gt;sysctl vm.swapencrypt.enable&lt;/code&gt; vaut 0, est illisible ou n&amp;rsquo;existe pas. Aucune
 option ne le contourne. Dans la bibliothèque, &lt;code&gt;s6.Config&lt;/code&gt; exige un &lt;code&gt;ReadSource&lt;/code&gt;
