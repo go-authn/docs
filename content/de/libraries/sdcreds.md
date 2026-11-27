@@ -23,7 +23,7 @@ erkannt und mit `*UnsupportedModeError` abgelehnt; nichts wird geraten.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-Die Version, die diese Seiten beschreiben, ist v0.3.0.
+Die Version, die diese Seiten beschreiben, ist v0.4.0.
 
 ## Kommandozeile {#cli}
 
@@ -141,16 +141,26 @@ wird:
   den der Benutzer ausführen darf.
 - **Wer sdcreds beendet, beendet das Programm** und hängt aus, auch mit
   `SIGKILL`. Ein Hilfsprozess hält die Dienstsperre und überwacht sdcreds; bei
-  jedem Ende beendet er alles, was der Dienstbenutzer ausführt (nach realer uid,
-  ein Programm, das `setsid` aufgerufen hat, entkommt also nicht), und hängt dann
-  aus. Die Entscheidung zu töten trifft root: Der Hilfsprozess hält jeden
-  gefundenen Prozess an, liest die Prozesstabelle erneut, bis sie sich nicht mehr
-  ändert, sendet dann `SIGKILL` und wiederholt das, bis der Benutzer keinen
-  Prozess mehr hat. Ein Prozess, bei dem nur die effektive uid die des
-  Dienstbenutzers ist, gilt als beschäftigt, der Start wird also verweigert, er
-  wird aber nicht getötet. Überlebt ein Prozess das Budget von 20 s, hängt der
-  Hilfsprozess trotzdem aus (die Geheimnisse verschwinden), meldet den Fehler und
-  endet mit einem Status ungleich null. Ein Benutzer gehört jeweils einer
+  jedem Ende beendet er alles, was der Dienstbenutzer ausführt (nach uid, ein
+  Programm, das `setsid` aufgerufen hat, entkommt also nicht), und hängt dann
+  aus. root signalisiert nie eine pid, die es aus einer Liste gelesen hat. Seit
+  v0.4.0 übernimmt das Töten ein kurzlebiger Killer-Prozess, den root startet und
+  der vor jedem Signal auf geteilte Berechtigungen umschaltet (reale und
+  gespeicherte uid eines reservierten Killer-Benutzers, effektive uid des
+  Dienstbenutzers): Der Kernel lässt ihn dann jeden Prozess des Dienstbenutzers
+  signalisieren, während kein Prozess dieses Benutzers ihn signalisieren kann.
+  Der Killer sendet `kill(-1, SIGKILL)`, bis der Kernel nichts mehr findet;
+  Killer werden durch eine Sperre serialisiert (`/var/run/sdcreds-killer.lock`).
+  **Installationsvoraussetzung:** Legen Sie den Killer-Benutzer an, der keinen
+  Prozess besitzen und weder root noch ein Dienstbenutzer sein darf:
+  `useradd -s /sbin/nologin -d /var/empty -c "sdcreds killer" _sdkill`. Ohne ihn
+  wird der Start einer Auslieferung verweigert. Ein Prozess, der den Benutzer nur
+  über eine set-uid-Datei hält, die ein anderer Benutzer ausführt, wird von der
+  Startprüfung gezählt, vom Killer aber nicht erreicht: Die Freigabe meldet dann,
+  dass ein Prozess überlebt hat, und der nächste Start wird verweigert, bis er
+  verschwunden ist (sicher im Fehlerfall). Überlebt ein Prozess das Budget von
+  20 s, hängt der Hilfsprozess trotzdem aus (die Geheimnisse verschwinden), meldet
+  den Fehler und endet mit einem Status ungleich null. Ein Benutzer gehört jeweils einer
   Auslieferung (die `.uid-<N>.lock` in `/var/run/sdcreds`), und `run` verweigert
   einen Benutzer, der bereits andere Prozesse hat: Geben Sie dem Dienst einen
   eigenen Benutzer. Sterben sdcreds und der Hilfsprozess beide,
@@ -158,6 +168,21 @@ wird:
   Dienstes) den Rest. Schlägt die Freigabe nach dem Ende des Programms fehl,
   beendet sich sdcreds mit Status 70 (oder dem Status des Programms, wenn das
   schon ein Fehler war) und nennt den Grund auf stderr.
+- **Exit-Status von `run`** (seit v0.4.0). Der Status des Programms wird
+  durchgereicht (ein durch Signal `n` beendetes Programm ergibt `128+n`). Die
+  eigenen Enden von sdcreds haben reservierte Status außerhalb der Bereiche 0-2
+  und 64-78, die Daemonen üblicherweise nutzen: **125** sdcreds hat verweigert,
+  nichts wurde gestartet (falsche Option, unbekannter oder root-Benutzer,
+  unverschlüsselter Swap, ein noch lebender Lauf; dauerhaft, bis sich etwas
+  ändert); **126** sdcreds ist nach dem Beginn gescheitert (Auslieferung,
+  Hilfsprozess verloren, Programm nicht ausführbar; kann vorübergehend sein);
+  **70** das Programm ist beendet, aber die Freigabe ist fehlgeschlagen. Ein
+  Programm, das selbst mit 125 oder 126 endet, ist nicht zu unterscheiden. Vor
+  v0.4.0 endete eine Verweigerung mit 2 und ein Fehler mit 1.
+- **Neustart.** Ein Start wartet bis zu 30 s, bis der vorherige Lauf desselben
+  Dienstes den Abbau beendet hat, statt verweigert zu werden; ein danach noch
+  lebender Lauf wird verweigert (125). Ein zweiter Dienst für denselben Benutzer
+  wird weiterhin sofort verweigert.
 - **Swap muss verschlüsselt sein.** `run` startet nicht, wenn
   `sysctl vm.swapencrypt.enable` 0 ist, nicht gelesen werden kann oder nicht
   existiert. Keine Option umgeht das. In der Bibliothek verlangt `s6.Config` ein
@@ -174,6 +199,17 @@ wird:
 - **Die Umgebung des Programms ist eine Positivliste**: `PATH` (fester
   Standardwert), `CREDENTIALS_DIRECTORY`, `LANG`, `TZ`, `TERM` und `LC_*`.
   Deskriptoren über 2 werden vor dem Start geschlossen.
+- **Umgebung und Deskriptoren durchreichen** (OpenBSD, seit v0.4.0).
+  `--pass-env NAME` (wiederholbar) reicht die Variable `NAME` aus der Umgebung
+  von sdcreds unverändert an das Programm weiter (nicht, wenn sie nicht gesetzt
+  ist); `--pass-fd N` (wiederholbar) hält den Deskriptor `N` im Programm unter
+  derselben Nummer offen. Beides wird für das verweigert, was sdcreds gehört:
+  `PATH`, `CREDENTIALS_DIRECTORY`, `__SDCREDS_*`; die Deskriptoren 0 bis 3; einen
+  Deskriptor, der nicht offen oder close-on-exec ist. Ein Supervisor eines
+  Dienstes vom Typ notify übergibt zum Beispiel
+  `--pass-env NOTIFY_SOCKET --pass-env LISTEN_FDS --pass-env LISTEN_PID --pass-fd 4`.
+  `LISTEN_PID` wird unverändert weitergereicht: Es nennt die pid, die der Aufrufer
+  erwartet hat, nicht die des Programms.
 - **Speicher.** Der Klartext liegt kurz im Speicher des sdcreds-Prozesses.
   `mlockall` ist aus einem Go-Prozess unter OpenBSD nicht nutzbar (gemessen auf
   8.0); der Schutz sind daher `vm.swapencrypt.enable` (beim Start geprüft),

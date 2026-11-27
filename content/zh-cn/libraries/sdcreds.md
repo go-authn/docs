@@ -21,7 +21,7 @@ tags: [libraries, sdcreds, secrets, s6]
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-这些页面所描述的版本是 v0.3.0。
+这些页面所描述的版本是 v0.4.0。
 
 ## 命令行 {#cli}
 
@@ -109,14 +109,26 @@ sdcreds run --service=web --user=svc --source=/etc/creds [--class=daemon] -- /us
 - **`--user` 绝不能是 root**:uid 0、gid 0 以及任何属于组 0 的附加组都会被拒绝,`run` 与库
   (`s6.Run`、`delivery`)都是如此,没有任何参数可以允许。程序必须是用户可执行的、已规范化的绝对路径。
 - **杀死 sdcreds 会杀死程序**并卸载,即使用 `SIGKILL` 也一样。一个辅助进程持有服务锁并监视 sdcreds;
-  无论以何种方式结束,它都会杀死服务用户运行的所有进程(按真实 uid,所以调用过 `setsid` 的程序也逃不掉),
-  然后卸载。是否杀死由 root 决定:辅助进程停住它找到的每个进程,反复读取进程表直到不再变化,然后发送
-  `SIGKILL`,并重复直到该用户没有进程。只有有效 uid 是服务用户的进程会被计为“忙”,因此启动被拒绝,但它
-  不会被杀死。若有进程在 20 秒的预算后仍然存活,辅助进程依然会卸载(机密随之消失),报告失败并以非零状态
+  无论以何种方式结束,它都会杀死服务用户运行的所有进程(按 uid,所以调用过 `setsid` 的程序也逃不掉),
+  然后卸载。root 从不向从列表中读到的 pid 发送信号。自 v0.4.0 起,杀死由 root 启动的一个短命杀手进程
+  完成,它在发送任何信号之前先切换为分离的凭据(一个保留的杀手用户的真实 uid 与保存 uid,服务用户的有效
+  uid):内核于是允许它向服务用户的每个进程发信号,而该用户的任何进程都无法向它发信号。杀手反复发送
+  `kill(-1, SIGKILL)`,直到内核找不到任何进程;杀手之间由一把锁(`/var/run/sdcreds-killer.lock`)串行化。
+  **安装要求:** 创建杀手用户,它不得拥有任何进程,也不得是 root 或服务用户:
+  `useradd -s /sbin/nologin -d /var/empty -c "sdcreds killer" _sdkill`。没有它,交付的启动会被拒绝。
+  仅通过另一用户运行的 set-uid 文件持有该用户身份的进程,会被启动检查计入,但杀手够不到它:释放时会报告
+  有进程存活,下一次启动被拒绝,直到它消失(失败时保持安全)。若有进程在 20 秒的预算后仍然存活,辅助进程依然会卸载(机密随之消失),报告失败并以非零状态
   退出。一个用户同一时间只属于一次交付(`/var/run/sdcreds` 中的 `.uid-<N>.lock`),`run` 会拒绝已有其他
   进程的用户:请给服务一个专用用户。若 sdcreds 与辅助进程都死亡,`sdcreds sweep [--base DIR]
   [--service S]`(或服务的下一次启动)会清除残留。程序结束后若释放失败,sdcreds 以状态 70 退出(若程序
   本身已失败则用程序的状态),并在 stderr 说明原因。
+- **`run` 的退出状态**(自 v0.4.0 起)。程序自身的状态原样传递(被信号 `n` 杀死的程序为 `128+n`)。
+  sdcreds 自身的结束方式使用保留状态,位于守护进程常用的 0-2 与 64-78 范围之外:**125** sdcreds 拒绝,
+  未启动任何东西(参数错误、未知用户或 root、未加密的交换区、仍在运行的实例;在有变化之前一直如此);
+  **126** sdcreds 开始之后失败(交付、辅助进程丢失、程序无法执行;可能是暂时的);**70** 程序已结束,
+  但释放失败。自己以 125 或 126 退出的程序无法区分。v0.4.0 之前,拒绝以 2 退出,失败以 1 退出。
+- **重启。** 启动最多等待 30 秒,让同一服务的上一次运行完成拆除,而不是被拒绝;之后仍然存活的运行会被
+  拒绝(125)。同一用户的第二个服务仍会立即被拒绝。
 - **交换区必须加密。** 当 `sysctl vm.swapencrypt.enable` 为 0、无法读取或不存在时,`run` 拒绝启动,
   没有任何参数可以绕过。在库中,`s6.Config` 需要一个 `ReadSource`(命令会提供沿信任链检查的读取器),
   否则 `s6.Run` 拒绝。
@@ -127,6 +139,12 @@ sdcreds run --service=web --user=svc --source=/etc/creds [--class=daemon] -- /us
   优先级与 umask 不会应用,程序的 umask 为 077。
 - **程序的环境是白名单**:`PATH`(固定默认值)、`CREDENTIALS_DIRECTORY`、`LANG`、`TZ`、`TERM` 与
   `LC_*`。大于 2 的描述符在运行前关闭。
+- **传递环境与描述符**(OpenBSD,自 v0.4.0 起)。`--pass-env NAME`(可重复)把 sdcreds 自身环境中的变量
+  `NAME` 原样交给程序(未设置则不传递);`--pass-fd N`(可重复)让描述符 `N` 在程序中以相同编号保持打开。
+  对 sdcreds 自己拥有的内容会拒绝:`PATH`、`CREDENTIALS_DIRECTORY`、`__SDCREDS_*`,描述符 0 到 3,以及
+  未打开或带 close-on-exec 的描述符。notify 类型服务的监督者例如传入
+  `--pass-env NOTIFY_SOCKET --pass-env LISTEN_FDS --pass-env LISTEN_PID --pass-fd 4`。
+  `LISTEN_PID` 原样传递:它指的是调用者预期的 pid,而不是程序的 pid。
 - **内存。** 明文会短时间存在于 sdcreds 进程的内存中。在 OpenBSD 上 Go 进程无法使用 `mlockall`
   (在 8.0 上实测),因此保护手段是 `vm.swapencrypt.enable`(启动时检查)、关闭核心转储以及
   `kern.nosuidcoredump`。管理员生成的崩溃转储仍可能包含明文。

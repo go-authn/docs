@@ -22,7 +22,7 @@ sont reconnus et refusés avec `*UnsupportedModeError` ; rien n'est deviné.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-La version décrite par ces pages est la v0.3.0.
+La version décrite par ces pages est la v0.4.0.
 
 ## Ligne de commande {#cli}
 
@@ -137,15 +137,26 @@ monté pour le service et mis à zéro à la fin :
   que l'utilisateur peut exécuter.
 - **Tuer sdcreds tue le programme** et démonte, même avec `SIGKILL`. Un processus
   auxiliaire tient le verrou du service et surveille sdcreds ; quelle que soit la
-  fin, il tue tout ce que l'utilisateur du service exécute (par uid réel, donc un
-  programme qui a appelé `setsid` n'y échappe pas), puis démonte. La décision de
-  tuer revient à root : l'auxiliaire arrête chaque processus trouvé, relit la
-  table des processus jusqu'à ce qu'elle ne change plus, envoie `SIGKILL`, et
-  recommence jusqu'à ce que l'utilisateur n'ait plus de processus. Un processus
-  dont seul l'uid effectif est celui de l'utilisateur du service est compté comme
-  occupé, donc le démarrage est refusé, mais il n'est pas tué. Si un processus
-  survit au budget de 20 s, l'auxiliaire démonte quand même (les secrets
-  disparaissent), signale l'échec et sort avec un statut non nul. Un utilisateur
+  fin, il tue tout ce que l'utilisateur du service exécute (par uid, donc un
+  programme qui a appelé `setsid` n'y échappe pas), puis démonte. Root ne signale
+  jamais un pid lu dans une liste. Depuis la v0.4.0, la mise à mort est faite par
+  un processus tueur de courte durée que root lance et qui passe à des
+  identifiants scindés (uid réel et sauvegardé d'un utilisateur tueur réservé,
+  uid effectif de l'utilisateur du service) avant de signaler quoi que ce soit :
+  le noyau lui laisse alors signaler tout processus de l'utilisateur du service,
+  alors qu'aucun processus de cet utilisateur ne peut le signaler. Le tueur envoie
+  `kill(-1, SIGKILL)` jusqu'à ce que le noyau ne trouve plus rien ; les tueurs
+  sont sérialisés par un verrou (`/var/run/sdcreds-killer.lock`). **Prérequis
+  d'installation :** créez l'utilisateur tueur, qui ne doit posséder aucun
+  processus et ne doit être ni root ni un utilisateur de service :
+  `useradd -s /sbin/nologin -d /var/empty -c "sdcreds killer" _sdkill`. Sans lui,
+  le démarrage d'une livraison est refusé. Un processus qui ne détient
+  l'utilisateur que par un fichier set-uid exécuté par un autre utilisateur est
+  compté par le contrôle de démarrage mais n'est pas atteint par le tueur : la
+  libération signale alors qu'un processus a survécu et le démarrage suivant est
+  refusé tant qu'il existe (refus par prudence). Si un processus survit au budget
+  de 20 s, l'auxiliaire démonte quand même (les secrets disparaissent), signale
+  l'échec et sort avec un statut non nul. Un utilisateur
   n'appartient qu'à une livraison à la fois (le `.uid-<N>.lock` de
   `/var/run/sdcreds`), et `run` refuse un utilisateur qui a déjà d'autres
   processus : donnez au service son propre utilisateur. Si sdcreds et l'auxiliaire
@@ -153,6 +164,20 @@ monté pour le service et mis à zéro à la fin :
   démarrage du service) supprime ce qui reste. Si la libération échoue après la
   fin du programme, sdcreds sort avec le statut 70 (ou celui du programme s'il
   était déjà un échec) et en donne la raison sur stderr.
+- **Statut de sortie de `run`** (depuis la v0.4.0). Le statut du programme est
+  transmis tel quel (un programme tué par le signal `n` donne `128+n`). Les fins
+  propres à sdcreds ont des statuts réservés, hors des plages 0-2 et 64-78 que
+  les démons emploient couramment : **125** sdcreds a refusé, rien n'a été
+  démarré (option invalide, utilisateur inconnu ou root, swap non chiffré, une
+  exécution encore vivante ; permanent tant que rien ne change) ; **126** sdcreds
+  a échoué après avoir commencé (livraison, auxiliaire perdu, programme
+  inexécutable ; peut être passager) ; **70** le programme s'est terminé mais la
+  libération a échoué. Un programme qui sort lui-même en 125 ou 126 ne peut pas
+  être distingué. Avant la v0.4.0, un refus sortait en 2 et un échec en 1.
+- **Redémarrage.** Un démarrage attend jusqu'à 30 s que l'exécution précédente du
+  même service ait fini de se défaire au lieu d'être refusé ; une exécution
+  encore vivante après ce délai est refusée (125). Un second service pour le même
+  utilisateur reste refusé aussitôt.
 - **Le swap doit être chiffré.** `run` refuse de démarrer quand
   `sysctl vm.swapencrypt.enable` vaut 0, est illisible ou n'existe pas. Aucune
   option ne le contourne. Dans la bibliothèque, `s6.Config` exige un `ReadSource`
@@ -169,6 +194,17 @@ monté pour le service et mis à zéro à la fin :
 - **L'environnement du programme est une liste d'autorisation** : `PATH` (valeur
   fixe par défaut), `CREDENTIALS_DIRECTORY`, `LANG`, `TZ`, `TERM` et `LC_*`. Les
   descripteurs au-delà de 2 sont fermés avant l'exécution.
+- **Transmettre l'environnement et des descripteurs** (OpenBSD, depuis la
+  v0.4.0). `--pass-env NOM` (répétable) transmet tel quel au programme la
+  variable `NOM` de l'environnement de sdcreds (non transmise si elle est
+  absente) ; `--pass-fd N` (répétable) garde le descripteur `N` ouvert dans le
+  programme au même numéro. Les deux sont refusés pour ce que sdcreds possède :
+  `PATH`, `CREDENTIALS_DIRECTORY`, `__SDCREDS_*` ; les descripteurs 0 à 3 ; un
+  descripteur non ouvert ou close-on-exec. Un superviseur de service de type
+  notify passe par exemple
+  `--pass-env NOTIFY_SOCKET --pass-env LISTEN_FDS --pass-env LISTEN_PID --pass-fd 4`.
+  `LISTEN_PID` est transmis tel quel : il désigne le pid attendu par l'appelant,
+  pas celui du programme.
 - **Mémoire.** Le texte en clair est dans la mémoire du processus sdcreds pendant
   un court moment. `mlockall` est inutilisable depuis un processus Go sous
   OpenBSD (mesuré sur 8.0) ; la protection est donc `vm.swapencrypt.enable`
