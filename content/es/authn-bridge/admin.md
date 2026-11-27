@@ -267,6 +267,7 @@ local {
   admins        = ["alice"]
   admin_aaguids = ["9dd8d593-2213-438a-97f8-d6b813d51c27"]
   mds_dir       = "/var/lib/authn-bridge/mds"
+  admin_min_certification = "L2"   # optional
 }
 ```
 
@@ -283,6 +284,21 @@ Solo entonces el bridge registra el modelo, y la página no lee nada más. Un
 modelo que los metadatos declaren después revocado o comprometido deja de abrir
 la página. Una clave registrada sin modelo probado sigue permitiendo iniciar
 sesión; no abre nada.
+
+**Un nivel de certificación mínimo.** `admin_min_certification` (opcional;
+`"L1"`, `"L1plus"`, `"L2"`, `"L2plus"`, `"L3"` o `"L3plus"`; cualquier otro valor
+es un error de configuración, y la clave se rechaza sin `admins`) es el nivel de
+certificación FIDO mínimo que puede tener el modelo de la clave de acceso de un
+administrador, leído de los mismos metadatos MDS3. El orden es el de la
+especificación (MDS 3.1 §3.1.4.1): L1 < L1plus < L2 < L2plus < L3 < L3plus. El
+nivel es el nivel *actual* del modelo: el último informe de estado
+`FIDO_CERTIFIED_Lx` vigente (§3.1.3). Un modelo sin tal informe (el antiguo
+`FIDO_CERTIFIED` no cuenta para ninguno) no cumple ningún mínimo. Como los
+estados de revocado y comprometido, se comprueba en el registro **y cada vez que
+se abre la página**: un modelo rebajado después por debajo del mínimo, o
+revocado, sigue permitiendo iniciar sesión pero ya no abre la página de
+administración. Sin la clave, no se exige ningún nivel. Disponible desde
+authn-bridge v0.41.0 (go-authn/fido v0.17.0).
 
 Los metadatos se guardan en `mds_dir`, opcional, que por defecto es
 `/var/lib/authn-bridge/mds`, debe ser una ruta absoluta y se rechaza sin

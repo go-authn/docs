@@ -241,6 +241,7 @@ local {
   admins        = ["alice"]
   admin_aaguids = ["9dd8d593-2213-438a-97f8-d6b813d51c27"]
   mds_dir       = "/var/lib/authn-bridge/mds"
+  admin_min_certification = "L2"   # optional
 }
 ```
 
@@ -252,6 +253,16 @@ local {
 go-authn/fido v0.16.0 的 `mds` 与 FIDO MDS3 元数据核对该型号。到这一步，bridge
 才记录型号，页面也只读取这一项。此后被元数据报告为已撤销或已泄露的型号，不再能
 打开该页面。未能证明型号而注册的密钥仍可登录，但打不开任何东西。
+
+**最低认证级别。** `admin_min_certification`（可选；`"L1"`、`"L1plus"`、`"L2"`、
+`"L2plus"`、`"L3"` 或 `"L3plus"`，其他值是配置错误，没有 `admins` 时会被拒绝）
+是管理员通行密钥的型号至少应具备的 FIDO 认证级别，读取自同一份 MDS3 元数据。
+顺序以规范为准（MDS 3.1 §3.1.4.1）：L1 < L1plus < L2 < L2plus < L3 < L3plus。
+级别指型号的*当前*级别：已生效的最新 `FIDO_CERTIFIED_Lx` 状态报告（§3.1.3）。
+没有这类报告的型号（旧的 `FIDO_CERTIFIED` 不计入任何级别）无法满足任何最低
+要求。与已撤销、已泄露状态一样，它在注册时**以及每次打开页面时**检查：型号
+之后被降级到最低要求以下或被撤销，仍可登录，但不再能打开管理员页面。未设置时
+不要求任何级别。自 authn-bridge v0.41.0（go-authn/fido v0.17.0）起可用。
 
 元数据保存在 `mds_dir` 中。该项可选，默认值为 `/var/lib/authn-bridge/mds`，必须
 是绝对路径，没有 `admins` 时会被拒绝。下载由后台 goroutine 完成，从不在请求中

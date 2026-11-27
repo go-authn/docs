@@ -265,6 +265,7 @@ local {
   admins        = ["alice"]
   admin_aaguids = ["9dd8d593-2213-438a-97f8-d6b813d51c27"]
   mds_dir       = "/var/lib/authn-bridge/mds"
+  admin_min_certification = "L2"   # optional
 }
 ```
 
@@ -281,6 +282,21 @@ de go-authn/fido v0.16.0. Alors seulement le bridge enregistre le modèle, et la
 page ne lit rien d'autre. Un modèle que les métadonnées déclarent plus tard
 révoqué ou compromis cesse d'ouvrir la page. Une clé enregistrée sans modèle
 prouvé permet toujours de se connecter ; elle n'ouvre rien.
+
+**Un niveau de certification minimal.** `admin_min_certification`
+(facultatif ; `"L1"`, `"L1plus"`, `"L2"`, `"L2plus"`, `"L3"` ou `"L3plus"` ;
+toute autre valeur est une erreur de configuration, et la clé est refusée sans
+`admins`) est le niveau de certification FIDO minimal du modèle de la clé d'accès
+d'un administrateur, lu dans les mêmes métadonnées MDS3. L'ordre est celui de la
+spécification (MDS 3.1 §3.1.4.1) : L1 < L1plus < L2 < L2plus < L3 < L3plus. Le
+niveau est le niveau *courant* du modèle : le dernier rapport de statut
+`FIDO_CERTIFIED_Lx` en vigueur (§3.1.3). Un modèle sans un tel rapport (l'ancien
+`FIDO_CERTIFIED` ne compte pour aucun) échoue à tout minimum. Comme les statuts
+révoqué et compromis, il est vérifié à l'enregistrement **et à chaque ouverture
+de la page** : un modèle rétrogradé plus tard sous le minimum, ou révoqué, permet
+toujours de se connecter mais n'ouvre plus la page d'administration. Sans cette
+clé, aucun niveau n'est exigé. Disponible à partir de
+authn-bridge v0.41.0 (go-authn/fido v0.17.0).
 
 Les métadonnées sont conservées dans `mds_dir`, facultatif, qui vaut par défaut
 `/var/lib/authn-bridge/mds`, doit être un chemin absolu, et est refusé sans

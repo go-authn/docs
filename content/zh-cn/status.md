@@ -168,6 +168,7 @@ GO-2026-6809 所指明的已被攻破的中间证书。**v0.11.1 的
 | v0.31.2 | 安全，审计后续：**已移除通行密钥的令牌不再能换取 Kerberos 票据，也不再让 SSH 证书的人员保持有效。**访问令牌记录获取它时所用的通行密钥（状态字段 `credential`，可选：此前存储的令牌只对应到账户），并受其约束：在询问 KDC 之前、之后，以及撤销 SSH 证书时，刷新授权此前就是如此。Kerberos 票据的有效期使用提供方的时钟，而不是主机的；含有方向控制字符和不可见字符（U+202E、U+200B 等；ZWJ 和 ZWNJ 保留）的显示名称会被拒绝；完成注册时不再能超过十个通行密钥（409） |
 | v0.31.3 | 依赖项，审计的第二轮：go-authn/directory v0.26.0（`Set` 中的名称按其 LDAP 相等键比较，跨来源不区分大小写；ldap v0.15.0 作为间接依赖引入）、oidc v0.8.0、webauthn v0.2.0、saml v0.7.2、revocation v0.7.1、servercert v0.7.1 和 wireguard v0.2.0。bridge 自身的用法和完整测试套件不变 |
 | v0.32.0 | [`mail` 块]({{< relref "/authn-bridge/configuration.md#mail" >}})：当有人请求或取消删除通行密钥时，向账户自己的地址（取自本地账户文件，绝不取自请求）发送一封带外的纯文本邮件，这样持有一把密钥的窃贼就无法借它悄悄取消所有者的删除请求。仅限 TLS（隐式 TLS，或必需的 STARTTLS），并验证证书；`username` 和 `password_file` 为必填（该文件归服务用户所有，不带组或其他用户权限位，且只打开一次）；AUTH（PLAIN，否则 LOGIN）只在 TLS 之后进行，绝不以明文发送，即使对 127.0.0.1 也是如此。正文中不含链接；标头中的 CR/LF 被拒绝。每个账户在每个 `window`（默认 10m）内最多一封邮件，事件合并为摘要。[发不出通知的删除请求保持待处理]({{< relref "/authn-bridge/admin.md#passkey-removal-notices" >}})（重试 5 次，然后输出醒目的 `GAVE UP` 日志；重启后会继续）；取消即使邮件失败也会生效，失败会被记入日志并显示在账户页面上。没有地址的账户仍可完成删除；日志和页面会说明没有人被通知。没有 `mail` 块时，一切照旧。新增记录字段 `notice_pending` |
+| v0.41.0 | [`admin_min_certification`]({{< relref "/authn-bridge/admin.md" >}})：管理员通行密钥型号所需的最低 FIDO 认证级别（L1 到 L3plus，依 MDS 3.1 的顺序），在注册时以及每次打开管理员页面时检查。需要 go-authn/fido v0.17.0 |
 
 ### authn-revokd {#authn-revokd}
 

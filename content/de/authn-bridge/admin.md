@@ -265,6 +265,7 @@ local {
   admins        = ["alice"]
   admin_aaguids = ["9dd8d593-2213-438a-97f8-d6b813d51c27"]
   mds_dir       = "/var/lib/authn-bridge/mds"
+  admin_min_certification = "L2"   # optional
 }
 ```
 
@@ -281,6 +282,21 @@ ohne diese Erweiterung), und das Modell wird gegen die FIDO-MDS3-Metadaten gepr�
 und die Seite liest nichts anderes. Ein Modell, das die Metadaten später als
 widerrufen oder kompromittiert melden, öffnet die Seite nicht mehr. Ein Schlüssel
 ohne bewiesenes Modell dient weiterhin zur Anmeldung; er öffnet nichts.
+
+**Eine Mindest-Zertifizierungsstufe.** `admin_min_certification` (optional;
+`"L1"`, `"L1plus"`, `"L2"`, `"L2plus"`, `"L3"` oder `"L3plus"`; jeder andere Wert
+ist ein Konfigurationsfehler, und der Schlüssel wird ohne `admins` abgelehnt) ist
+die niedrigste FIDO-Zertifizierungsstufe, die das Modell des Passkeys eines
+Administrators haben darf, gelesen aus denselben MDS3-Metadaten. Die Reihenfolge
+ist die der Spezifikation (MDS 3.1 §3.1.4.1): L1 < L1plus < L2 < L2plus < L3 <
+L3plus. Maßgeblich ist die *aktuelle* Stufe des Modells: der jüngste wirksame
+Statusbericht `FIDO_CERTIFIED_Lx` (§3.1.3). Ein Modell ohne einen solchen Bericht
+(das alte `FIDO_CERTIFIED` zählt für keine Stufe) scheitert an jedem Minimum. Wie
+die Status „widerrufen“ und „kompromittiert“ wird es bei der Registrierung **und
+bei jedem Öffnen der Seite** geprüft: Ein Modell, das später unter das Minimum
+herabgestuft oder widerrufen wird, dient weiter zur Anmeldung, öffnet aber die
+Administratorseite nicht mehr. Ohne den Schlüssel wird keine Stufe verlangt.
+Verfügbar ab authn-bridge v0.41.0 (go-authn/fido v0.17.0).
 
 Die Metadaten liegen in `mds_dir`; der Schlüssel ist optional, hat den
 Standardwert `/var/lib/authn-bridge/mds`, muss ein absoluter Pfad sein und wird
