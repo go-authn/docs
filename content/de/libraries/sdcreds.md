@@ -23,7 +23,7 @@ erkannt und mit `*UnsupportedModeError` abgelehnt; nichts wird geraten.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-Die Version, die diese Seiten beschreiben, ist v0.4.3. 32-Bit-OpenBSD (i386, armv7) wird
+Die Version, die diese Seiten beschreiben, ist v0.4.4. 32-Bit-OpenBSD (i386, armv7) wird
 abgelehnt: Der Build schlägt absichtlich fehl, weil das Mount-Layout (`mfsArgsSize` 144 und die
 Mount-Strukturen) das LP64-Layout von amd64 und arm64 ist und nicht gegen die 32-Bit-Header
 geprüft wurde.

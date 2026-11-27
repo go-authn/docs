@@ -21,7 +21,7 @@ tags: [libraries, sdcreds, secrets, s6]
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-这些页面所描述的版本是 v0.4.3。32 位 OpenBSD（i386、armv7）会被拒绝：构建会有意失败，因为挂载布局（`mfsArgsSize` 144 和挂载结构）是 amd64 与 arm64 的 LP64 布局，尚未对照 32 位头文件检查。
+这些页面所描述的版本是 v0.4.4。32 位 OpenBSD（i386、armv7）会被拒绝：构建会有意失败，因为挂载布局（`mfsArgsSize` 144 和挂载结构）是 amd64 与 arm64 的 LP64 布局，尚未对照 32 位头文件检查。
 
 ## 命令行 {#cli}
 
