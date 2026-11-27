@@ -23,7 +23,7 @@ erkannt und mit `*UnsupportedModeError` abgelehnt; nichts wird geraten.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-Die Version, die diese Seiten beschreiben, ist v0.4.0.
+Die Version, die diese Seiten beschreiben, ist v0.4.1.
 
 ## Kommandozeile {#cli}
 
@@ -150,11 +150,19 @@ wird:
   Dienstbenutzers): Der Kernel lässt ihn dann jeden Prozess des Dienstbenutzers
   signalisieren, während kein Prozess dieses Benutzers ihn signalisieren kann.
   Der Killer sendet `kill(-1, SIGKILL)`, bis der Kernel nichts mehr findet;
-  Killer werden durch eine Sperre serialisiert (`/var/run/sdcreds-killer.lock`).
+  die Tötungen eines Dienstbenutzers werden durch eine Sperre dieses Benutzers
+  serialisiert (`/var/run/sdcreds-killer-<uid>.lock`), und eine Tötung eines
+  anderen Benutzers lässt eine Freigabe nie warten oder aufgeben. Zwei Killer
+  verschiedener Benutzer teilen die reale uid des Killers und können einander
+  signalisieren: Ein Killer, der daran stirbt, wird erneut gestartet, denn die
+  Prozesstabelle entscheidet, und ein Benutzer, der beim Budget nicht leer ist,
+  wird gemeldet (sicher im Fehlerfall).
   **Installationsvoraussetzung:** Legen Sie den Killer-Benutzer an, der keinen
   Prozess besitzen und weder root noch ein Dienstbenutzer sein darf:
   `useradd -s /sbin/nologin -d /var/empty -c "sdcreds killer" _sdkill`. Ohne ihn
-  wird der Start einer Auslieferung verweigert. Ein Prozess, der den Benutzer nur
+  oder wenn er einen Prozess besitzt, wird der Start einer Auslieferung
+  verweigert (ein Start wartet bis zu 20 s auf den Killer einer laufenden
+  Freigabe). Ein Prozess, der den Benutzer nur
   über eine set-uid-Datei hält, die ein anderer Benutzer ausführt, wird von der
   Startprüfung gezählt, vom Killer aber nicht erreicht: Die Freigabe meldet dann,
   dass ein Prozess überlebt hat, und der nächste Start wird verweigert, bis er
@@ -166,8 +174,8 @@ wird:
   eigenen Benutzer. Sterben sdcreds und der Hilfsprozess beide,
   entfernt `sdcreds sweep [--base DIR] [--service S]` (oder der nächste Start des
   Dienstes) den Rest. Schlägt die Freigabe nach dem Ende des Programms fehl,
-  beendet sich sdcreds mit Status 70 (oder dem Status des Programms, wenn das
-  schon ein Fehler war) und nennt den Grund auf stderr.
+  beendet sich sdcreds mit Status 70, gleich welchen Status das Programm selbst
+  hatte (er wird mit dem Grund auf stderr ausgegeben).
 - **Exit-Status von `run`** (seit v0.4.0). Der Status des Programms wird
   durchgereicht (ein durch Signal `n` beendetes Programm ergibt `128+n`). Die
   eigenen Enden von sdcreds haben reservierte Status außerhalb der Bereiche 0-2
@@ -176,12 +184,13 @@ wird:
   unverschlüsselter Swap, ein noch lebender Lauf; dauerhaft, bis sich etwas
   ändert); **126** sdcreds ist nach dem Beginn gescheitert (Auslieferung,
   Hilfsprozess verloren, Programm nicht ausführbar; kann vorübergehend sein);
-  **70** das Programm ist beendet, aber die Freigabe ist fehlgeschlagen. Ein
+  **70** das Programm ist beendet, aber die Freigabe ist fehlgeschlagen, gleich welchen
+  Status das Programm selbst hatte (er wird dann auf stderr ausgegeben). Ein
   Programm, das selbst mit 125 oder 126 endet, ist nicht zu unterscheiden. Vor
   v0.4.0 endete eine Verweigerung mit 2 und ein Fehler mit 1.
-- **Neustart.** Ein Start wartet bis zu 30 s, bis der vorherige Lauf desselben
-  Dienstes den Abbau beendet hat, statt verweigert zu werden; ein danach noch
-  lebender Lauf wird verweigert (125). Ein zweiter Dienst für denselben Benutzer
+- **Neustart.** Ein Start wartet bis zu 47 s, bis der vorherige Lauf desselben
+  Dienstes den Abbau beendet hat (der bis zu 46 s dauern kann), statt verweigert
+  zu werden; ein nach 47 s noch lebender Lauf wird verweigert (125). Ein zweiter Dienst für denselben Benutzer
   wird weiterhin sofort verweigert.
 - **Swap muss verschlüsselt sein.** `run` startet nicht, wenn
   `sysctl vm.swapencrypt.enable` 0 ist, nicht gelesen werden kann oder nicht

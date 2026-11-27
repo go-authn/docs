@@ -22,7 +22,7 @@ recognised and refused with `*UnsupportedModeError`; nothing is guessed.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-The version these pages describe is v0.4.0.
+The version these pages describe is v0.4.1.
 
 ## Command line {#cli}
 
@@ -142,11 +142,17 @@ service and zeroed at the end:
   killer user, effective uid of the service user) before it signals anything:
   the kernel then lets it signal every process of the service user, while no
   process of that user can signal it. The killer sends `kill(-1, SIGKILL)` until
-  the kernel reports nothing left; killers are serialised by a lock
-  (`/var/run/sdcreds-killer.lock`). **Install requirement:** create the killer
-  user, which must own no process and must not be root or a service user:
+  the kernel reports nothing left; the kills of one service user are serialised
+  by a lock of that user (`/var/run/sdcreds-killer-<uid>.lock`), and a kill of
+  another user never makes a release wait or give up. Two killers of different
+  users share the killer's real uid and can signal each other: a killer that
+  dies of it is run again, because the process table decides, and a user that is
+  not empty at the budget is reported (fail closed). **Install requirement:**
+  create the killer user, which must own no process and must not be root or a
+  service user:
   `useradd -s /sbin/nologin -d /var/empty -c "sdcreds killer" _sdkill`. A
-  delivery is refused to start without it. A process that holds the user only
+  delivery is refused to start without it, or when it owns a process (a start
+  waits up to 20 s for the killer of a release that is running). A process that holds the user only
   through a set-uid file run by another user is counted by the start check but
   is not reached by the killer: the release then reports that a process
   survived and the next start is refused until it is gone (fail-closed). When a
@@ -156,8 +162,8 @@ service and zeroed at the end:
   has other processes: give the service its own user. If sdcreds and the helper
   both die, `sdcreds sweep [--base DIR] [--service S]` (or the next start of the
   service) removes the leftover. When the release fails after the program ends,
-  sdcreds exits with status 70 (or the program's own status when that was
-  already a failure) and says why on stderr.
+  sdcreds exits with status 70, whatever the program's own status was (it is
+  printed on stderr, with the reason).
 - **Exit status of `run`** (since v0.4.0). The program's own status is passed
   through (a program killed by signal `n` gives `128+n`). sdcreds' own endings
   have reserved statuses, outside the 0-2 and 64-78 ranges that daemons commonly
@@ -165,11 +171,12 @@ service and zeroed at the end:
   user, unencrypted swap, a run that is alive; permanent until something
   changes); **126** sdcreds failed after it began (delivery, helper lost, the
   program could not be executed; may be transient); **70** the program ended but
-  the release failed. A program that itself exits 125 or 126 cannot be told
+  the release failed, whatever the program's own status was (it is then printed
+  on stderr). A program that itself exits 125 or 126 cannot be told
   apart. Before v0.4.0 a refusal exited 2 and a failure 1.
-- **Restart.** A start waits up to 30 s for the previous run of the same service
-  to finish tearing down instead of being refused; a run still alive after that
-  is refused (125). A second service for the same user is still refused at once.
+- **Restart.** A start waits up to 47 s for the previous run of the same service
+  to finish tearing down (which can take up to 46 s) instead of being refused; a
+  run still alive after 47 s is refused (125). A second service for the same user is still refused at once.
 - **Swap must be encrypted.** `run` refuses to start when
   `sysctl vm.swapencrypt.enable` is 0, cannot be read, or does not exist. There
   is no flag to override it. In the library, `s6.Config` needs a `ReadSource`
