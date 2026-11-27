@@ -22,7 +22,10 @@ sont reconnus et refusés avec `*UnsupportedModeError` ; rien n'est deviné.
 go install github.com/go-authn/sdcreds/cmd/sdcreds@latest
 ```
 
-La version décrite par ces pages est la v0.4.1.
+La version décrite par ces pages est la v0.4.2. OpenBSD 32 bits (i386, armv7) est refusé : la
+compilation échoue volontairement, car la disposition du montage (`mfsArgsSize` 144 et les
+structures de montage) est celle LP64 d'amd64 et d'arm64 et n'a pas été vérifiée contre les
+en-têtes 32 bits.
 
 ## Ligne de commande {#cli}
 
